@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {PausableWithRole} from "common/utils/PausableWithRole.sol";
 
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
@@ -29,8 +29,7 @@ contract PauseReentrancyTest is MethodReentrancyTest {
         LeverageRouter router = _getLeverageRouter();
 
         vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            address(this)
+            PausableWithRole.OnlyPauseRole.selector
         ));
 
         router.pause();

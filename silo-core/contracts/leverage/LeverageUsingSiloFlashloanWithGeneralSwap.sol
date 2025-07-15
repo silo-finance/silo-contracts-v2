@@ -25,9 +25,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwap is
 
     constructor (
         address _router,
-        address _native,
-        uint256 _feePrecision
-    ) RevenueModule(_router, _feePrecision) LeverageUsingSiloFlashloan(_native) {
+        address _native
+    ) RevenueModule(_router) LeverageUsingSiloFlashloan(_native) {
         SWAP_MODULE = new GeneralSwapModule();
     }
 

@@ -1,37 +1,30 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {PausableWithRole} from "common/utils/PausableWithRole.sol";
-
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract UnpauseReentrancyTest is MethodReentrancyTest {
+contract IsPauserReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
-        _expectRevert();
+        _callMethod();
     }
 
     function verifyReentrancy() external {
-        _expectRevert();
+        _callMethod();
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "unpause()";
+        description = "isPauser(address)";
     }
 
     function _getLeverageRouter() internal view returns (LeverageRouter) {
         return LeverageRouter(TestStateLib.leverageRouter());
     }
 
-    function _expectRevert() internal {
+    function _callMethod() internal {
         LeverageRouter router = _getLeverageRouter();
-
-        vm.expectRevert(abi.encodeWithSelector(
-            PausableWithRole.OnlyPauseRole.selector
-        ));
-
-        router.unpause();
+        router.isPauser(address(this));
     }
 }

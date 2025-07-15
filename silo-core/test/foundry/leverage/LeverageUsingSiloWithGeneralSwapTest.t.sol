@@ -9,6 +9,9 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
 import {MessageHashUtils} from "openzeppelin5/utils/cryptography/MessageHashUtils.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
+import {PausableWithRole} from "common/utils/PausableWithRole.sol";
+import {IPausableWithRole} from "silo-core/contracts/interfaces/IPausableWithRole.sol";
+import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
@@ -26,6 +29,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
+import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {SwapRouterMock} from "./mocks/SwapRouterMock.sol";
@@ -33,6 +37,7 @@ import {WETH} from "./mocks/WETH.sol";
 
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
+import {RevertingReceiver} from "../_mocks/RevertingReceiver.sol";
 
 
 /*
@@ -224,12 +229,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_openLeveragePosition -vv
     */
-    function test_leverage_pausable() public {
-        // OPEN
-
-        leverageRouter.pause();
+    function test_leverage_pausable_openLeveragePosition() public {
+        // The deployer (address(this)) is the owner and can pause
+        IPausableWithRole(address(leverageRouter)).pause();
 
         ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs;
         ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs;
@@ -237,13 +241,165 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         vm.expectRevert(Pausable.EnforcedPause.selector);
         leverageRouter.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
+    }
 
-        // CLOSE
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_openLeveragePositionPermit -vv
+    */
+    function test_leverage_pausable_openLeveragePositionPermit() public {
+        // The deployer (address(this)) is the owner and can pause
+        IPausableWithRole(address(leverageRouter)).pause();
+
+        ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs;
+        ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs;
+        ILeverageUsingSiloFlashloan.Permit memory depositAllowance;
+        IGeneralSwapModule.SwapArgs memory swapArgs;
+
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        leverageRouter.openLeveragePositionPermit(flashArgs, abi.encode(swapArgs), depositArgs, depositAllowance);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_closeLeveragePosition -vv
+    */
+    function test_leverage_pausable_closeLeveragePosition() public {
+        // The deployer (address(this)) is the owner and can pause
+        IPausableWithRole(address(leverageRouter)).pause();
 
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs;
+        IGeneralSwapModule.SwapArgs memory swapArgs;
 
         vm.expectRevert(Pausable.EnforcedPause.selector);
         leverageRouter.closeLeveragePosition(abi.encode(swapArgs), closeArgs);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_closeLeveragePositionPermit -vv
+    */
+    function test_leverage_pausable_closeLeveragePositionPermit() public {
+        // The deployer (address(this)) is the owner and can pause
+        IPausableWithRole(address(leverageRouter)).pause();
+
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs;
+        ILeverageUsingSiloFlashloan.Permit memory withdrawAllowance;
+        IGeneralSwapModule.SwapArgs memory swapArgs;
+
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        leverageRouter.closeLeveragePositionPermit(abi.encode(swapArgs), closeArgs, withdrawAllowance);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_grantAndRevoke -vv
+    */
+    function test_leverage_pauseRole_grantAndRevoke() public {
+        address pauser = makeAddr("pauser");
+        
+        // Initially, the deployer (address(this)) has pause role and is also the owner
+        assertTrue(leverageRouter.isPauser(address(this)), "Deployer should have pause role");
+        assertFalse(leverageRouter.isPauser(pauser), "New address should not have pause role");
+
+        // Grant pause role to new address
+        vm.expectEmit(true, false, false, false);
+        emit PausableWithRole.PauseRoleGranted(pauser);
+        leverageRouter.grantPauseRole(pauser);
+
+        assertTrue(leverageRouter.isPauser(pauser), "New address should have pause role");
+
+        // Test that the new pauser can pause
+        vm.prank(pauser);
+        IPausableWithRole(address(leverageRouter)).pause();
+        assertTrue(leverageRouter.paused(), "Contract should be paused");
+
+        // Test that the new pauser can unpause
+        vm.prank(pauser);
+        IPausableWithRole(address(leverageRouter)).unpause();
+        assertFalse(leverageRouter.paused(), "Contract should be unpaused");
+
+        // Revoke pause role
+        vm.expectEmit(true, false, false, false);
+        emit PausableWithRole.PauseRoleRevoked(pauser);
+        leverageRouter.revokePauseRole(pauser);
+
+        assertFalse(leverageRouter.isPauser(pauser), "Address should not have pause role");
+
+        // Test that revoked pauser cannot pause
+        vm.prank(pauser);
+        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.OnlyPauseRole.selector));
+        IPausableWithRole(address(leverageRouter)).pause();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_onlyOwnerCanGrantRevoke -vv
+    */
+    function test_leverage_pauseRole_onlyOwnerCanGrantRevoke() public {
+        address pauser = makeAddr("pauser");
+        address notOwner = makeAddr("notOwner");
+
+        // Non-owner cannot grant pause role
+        vm.prank(notOwner);
+        vm.expectRevert(); // Should revert with onlyOwner error
+        leverageRouter.grantPauseRole(pauser);
+
+        // Non-owner cannot revoke pause role
+        vm.prank(notOwner);
+        vm.expectRevert(); // Should revert with onlyOwner error
+        leverageRouter.revokePauseRole(address(this));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_onlyPauserCanPause -vv
+    */
+    function test_leverage_pauseRole_onlyPauserCanPause() public {
+        address notPauser = makeAddr("notPauser");
+
+        // Non-pauser cannot pause
+        vm.prank(notPauser);
+        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.OnlyPauseRole.selector));
+        IPausableWithRole(address(leverageRouter)).pause();
+
+        // Non-pauser cannot unpause
+        IPausableWithRole(address(leverageRouter)).pause(); // Pause first
+        vm.prank(notPauser);
+        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.OnlyPauseRole.selector));
+        IPausableWithRole(address(leverageRouter)).unpause();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_ownerCanAlwaysPause -vv
+    */
+    function test_leverage_pauseRole_ownerCanAlwaysPause() public {
+        address newOwner = makeAddr("newOwner");
+        
+        // Remove pause role from current deployer (this test address) before transferring ownership
+        leverageRouter.revokePauseRole(address(this));
+        
+        // Verify the deployer no longer has explicit pause role
+        assertFalse(leverageRouter.isPauser(address(this)), "Deployer should not have explicit pause role");
+        
+        // But the owner (current deployer) should still be able to pause
+        IPausableWithRole(address(leverageRouter)).pause();
+        assertTrue(leverageRouter.paused(), "Contract should be paused by owner");
+        
+        // And unpause
+        IPausableWithRole(address(leverageRouter)).unpause();
+        assertFalse(leverageRouter.paused(), "Contract should be unpaused by owner");
+        
+        // Transfer ownership to new owner
+        leverageRouter.transferOwnership1Step(newOwner);
+        
+        // The new owner should be able to pause even without explicit pause role
+        vm.prank(newOwner);
+        IPausableWithRole(address(leverageRouter)).pause();
+        assertTrue(leverageRouter.paused(), "Contract should be paused by new owner");
+        
+        // The new owner should be able to unpause
+        vm.prank(newOwner);
+        IPausableWithRole(address(leverageRouter)).unpause();
+        assertFalse(leverageRouter.paused(), "Contract should be unpaused by new owner");
+        
+        // Verify the old owner (deployer) cannot pause anymore since they're not owner and don't have pause role
+        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.OnlyPauseRole.selector));
+        IPausableWithRole(address(leverageRouter)).pause();
     }
 
     /*
@@ -523,10 +679,14 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         uint256 userBalanceBefore = token0.balanceOf(user);
         emit log_named_address("leverage", address(siloLeverage));
 
+        address swapModule = address(LeverageUsingSiloFlashloanWithGeneralSwap(
+            leverageRouter.LEVERAGE_IMPLEMENTATION()
+        ).SWAP_MODULE());
+
         _leverage_approvalAbuse(
             address(silo0.asset()),
             abi.encodeWithSignature("transferFrom(address,address,uint256)", user, attacker, 1),
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(siloLeverage.SWAP_MODULE()), 0, 1)
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, swapModule, 0, 1)
         );
 
         assertEq(userBalanceBefore, token0.balanceOf(user), "user allowance was abused");
@@ -873,14 +1033,18 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertEq(token1.allowance(address(siloLeverage), address(silo1)), 0, "[_assertNoApprovals] token1 for silo1");
 
         if (_checkSwap) {
+            address swapModule = address(LeverageUsingSiloFlashloanWithGeneralSwap(
+                leverageRouter.LEVERAGE_IMPLEMENTATION()
+            ).SWAP_MODULE());
+
             assertEq(
-                token0.allowance(address(siloLeverage.SWAP_MODULE()), address(swap)),
+                token0.allowance(swapModule, address(swap)),
                 0,
                 "[_assertNoApprovals] token0 for swap router"
             );
 
             assertEq(
-                token1.allowance(address(siloLeverage.SWAP_MODULE()), address(swap)),
+                token1.allowance(swapModule, address(swap)),
                 0,
                 "[_assertNoApprovals] token1 for swap router"
             );
@@ -933,5 +1097,199 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     function _flashFee(ISilo _flashloanTarget, uint256 _amount) internal view returns (uint256 fee) {
         address token = _flashloanTarget.asset();
         fee = _flashloanTarget.flashFee(token, _amount);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueTokens_singleToken_success
+    */
+    function test_rescueTokens_singleToken_success() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        // Get user's leverage contract
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+
+        // Send some tokens to the leverage contract
+        uint256 rescueAmount = 1e18;
+        token0.mint(userLeverageContract, rescueAmount);
+
+        uint256 userBalanceBefore = token0.balanceOf(user);
+
+        // Rescue tokens
+        vm.prank(user);
+        vm.expectEmit(true, true, false, true, userLeverageContract);
+        emit RevenueModule.TokensRescued(address(token0), rescueAmount);
+
+        siloLeverage.rescueTokens(token0);
+
+        // Verify tokens were transferred to user
+        assertEq(token0.balanceOf(user), userBalanceBefore + rescueAmount, "User should receive rescued tokens");
+        assertEq(token0.balanceOf(userLeverageContract), 0, "Leverage contract should have no tokens");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueTokens_singleToken_emptyBalance
+    */
+    function test_rescueTokens_singleToken_emptyBalance() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        // Get user's leverage contract
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+        
+        vm.prank(user);
+        vm.expectRevert(abi.encodeWithSelector(RevenueModule.EmptyBalance.selector, address(token0)));
+        siloLeverage.rescueTokens(token0);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueNativeTokens_success
+    */
+    function test_rescueNativeTokens_success() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        // Get user's leverage contract
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+
+        // Use vm.deal to directly set ETH balance on the leverage contract
+        uint256 rescueAmount = 1e18;
+        vm.deal(userLeverageContract, rescueAmount);
+
+        uint256 userBalanceBefore = user.balance;
+        uint256 contractBalanceBefore = userLeverageContract.balance;
+        
+        assertEq(contractBalanceBefore, rescueAmount, "Contract should have native tokens");
+
+        vm.expectEmit(true, true, false, true, userLeverageContract);
+        emit RevenueModule.TokensRescued(address(0), rescueAmount);
+
+        vm.prank(user);
+        siloLeverage.rescueNativeTokens();
+
+        // Verify native tokens were transferred to user
+        assertEq(user.balance, userBalanceBefore + rescueAmount, "User should receive rescued native tokens");
+        assertEq(userLeverageContract.balance, 0, "Leverage contract should have no native tokens");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueNativeTokens_noBalance
+    */
+    function test_rescueNativeTokens_noBalance() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        // Verify leverage contract has no native tokens
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+        assertEq(userLeverageContract.balance, 0, "Contract should have no native tokens");
+
+        // Try to rescue native tokens when there's no balance (should revert)
+        vm.prank(user);
+        vm.expectRevert(abi.encodeWithSelector(RevenueModule.EmptyBalance.selector, address(0)));
+        siloLeverage.rescueNativeTokens();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueNativeTokens_nativeTokenTransferFailed
+    */
+    function test_rescueNativeTokens_nativeTokenTransferFailed() public {
+        _openLeverageExample();
+
+        address user = wallet.addr;
+
+        // Get user's leverage contract
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+
+        // Use vm.deal to set native token balance on the leverage contract
+        uint256 rescueAmount = 1e18;
+        vm.deal(userLeverageContract, rescueAmount);
+        
+        // Deploy reverting receiver and get its bytecode
+        RevertingReceiver revertingReceiver = new RevertingReceiver();
+        bytes memory revertingCode = address(revertingReceiver).code;
+
+        // Replace user's code with reverting receiver code
+        vm.etch(user, revertingCode);
+
+        // Verify contract has native tokens to rescue
+        assertEq(userLeverageContract.balance, rescueAmount, "Contract should have native tokens");
+
+        // Try to rescue native tokens - should fail because user's receive() reverts
+        vm.prank(user);
+        vm.expectRevert(abi.encodeWithSelector(RevenueModule.NativeTokenTransferFailed.selector));
+        siloLeverage.rescueNativeTokens();
+
+        // Verify native tokens are still in the contract
+        assertEq(userLeverageContract.balance, rescueAmount, "Native tokens should still be in leverage contract");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_grant_emptyAddress -vv
+    */
+    function test_leverage_pauseRole_grant_emptyAddress() public {
+        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.EmptyAddress.selector));
+        leverageRouter.grantPauseRole(address(0));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_grant_alreadyPauser -vv
+    */
+    function test_leverage_pauseRole_grant_alreadyPauser() public {
+        address pauser = makeAddr("pauser");
+        leverageRouter.grantPauseRole(pauser);
+
+        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.AlreadyPauser.selector));
+        leverageRouter.grantPauseRole(pauser);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_revoke_emptyAddress -vv
+    */
+    function test_leverage_pauseRole_revoke_emptyAddress() public {
+        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.EmptyAddress.selector));
+        leverageRouter.revokePauseRole(address(0));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_setLeverageFee_pass -vv
+    */
+    function test_leverage_setLeverageFee_pass() public {
+        uint256 newFee = 0.01e18;
+        vm.expectEmit(true, false, false, false);
+        emit ILeverageRouter.LeverageFeeChanged(newFee);
+        leverageRouter.setLeverageFee(newFee);
+        assertEq(leverageRouter.leverageFee(), newFee, "Fee should be updated");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_setLeverageFee_fail_InvalidFee -vv
+    */
+    function test_leverage_setLeverageFee_fail_InvalidFee() public {
+        uint256 newFee = 0.06e18;
+        vm.expectRevert(abi.encodeWithSelector(ILeverageRouter.InvalidFee.selector));
+        leverageRouter.setLeverageFee(newFee);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_setLeverageFee_fail_FeeDidNotChanged -vv
+    */
+    function test_leverage_setLeverageFee_fail_FeeDidNotChanged() public {
+        uint256 newFee = leverageRouter.leverageFee();
+        vm.expectRevert(abi.encodeWithSelector(ILeverageRouter.FeeDidNotChanged.selector));
+        leverageRouter.setLeverageFee(newFee);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_setLeverageFee_fail_ReceiverZero -vv
+    */
+    function test_leverage_setLeverageFee_fail_ReceiverZero() public {
+        LeverageRouter newLeverageRouter = _deployLeverage();
+        uint256 newFee = 0.01e18;
+        vm.expectRevert(abi.encodeWithSelector(ILeverageRouter.ReceiverZero.selector));
+        newLeverageRouter.setLeverageFee(newFee);
     }
 }

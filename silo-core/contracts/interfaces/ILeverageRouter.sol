@@ -8,22 +8,25 @@ import {ILeverageUsingSiloFlashloan} from "./ILeverageUsingSiloFlashloan.sol";
 interface ILeverageRouter {
     /// @notice Emitted when a new leverage contract is created for a user
     event LeverageContractCreated(address indexed user, address indexed leverageContract);
+
     /// @notice Emitted when the leverage fee is updated
     /// @param leverageFee New leverage fee
     event LeverageFeeChanged(uint256 leverageFee);
+
     /// @notice Emitted when the revenue receiver address is changed
     /// @param receiver New receiver address
     event RevenueReceiverChanged(address indexed receiver);
 
-    /// @dev Thrown when the leverage implementation is empty
-    error EmptyLeverageImplementation();
     /// @dev Thrown when trying to set the same fee as the current one
     error FeeDidNotChanged();
+
     /// @dev Thrown when trying to set the same revenue receiver
     error ReceiverDidNotChanged();
+
     /// @dev Thrown when the receiver address is zero
     error ReceiverZero();
-    /// @dev Thrown when the provided fee is invalid (>= 100%)
+
+    /// @dev Thrown when the provided fee is invalid (>= 5%)
     error InvalidFee();
 
 
@@ -78,14 +81,8 @@ interface ILeverageRouter {
     function setRevenueReceiver(address _receiver) external;
 
     /// @notice Set the leverage fee
-    /// @param _fee New leverage fee (must be < FEE_PRECISION)
+    /// @param _fee New leverage fee (must be < 0.05e18)
     function setLeverageFee(uint256 _fee) external;
-
-    /// @notice Unpause the leverage router
-    function unpause() external;
-
-    /// @notice Pause the leverage router
-    function pause() external;
 
     /// @notice Returns the leverage fee
     /// @return fee The leverage fee

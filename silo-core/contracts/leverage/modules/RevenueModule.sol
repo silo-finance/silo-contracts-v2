@@ -14,29 +14,30 @@ abstract contract RevenueModule is TransientReentrancy {
     using SafeERC20 for IERC20;
 
     /// @notice Fee base constant (1e18 represents 100%)
-    uint256 public immutable FEE_PRECISION;
+    uint256 public constant FEE_PRECISION = 1e18;
 
     /// @notice The router of this leverage contract
     ILeverageRouter public immutable ROUTER;
 
-    /// @notice Emitted when leverage revenue is withdrawn
+    /// @notice Emitted when tokens are rescued
     /// @param token Address of the token
-    /// @param revenue Amount withdrawn
-    /// @param receiver Address that received the funds
-    event LeverageRevenue(address indexed token, uint256 revenue, address indexed receiver);
+    /// @param amount Amount rescued
+    event TokensRescued(address indexed token, uint256 amount);
 
-    /// @dev Thrown when there is no revenue to withdraw
-    error NoRevenue();
+    /// @dev Thrown when there is no tokens to rescue
+    error EmptyBalance(address token);
 
     /// @dev Thrown when the caller is not the router
     error OnlyRouter();
 
-    /// @dev Thrown when revenue receiver is not set
-    error ReceiverNotSet();
+    /// @dev Thrown when caller is not the leverage user
+    error OnlyLeverageUser();
 
-    constructor(address _router, uint256 _feePrecision) {
+    /// @dev Thrown when native token transfer fails
+    error NativeTokenTransferFailed();
+
+    constructor(address _router) {
         ROUTER = ILeverageRouter(_router);
-        FEE_PRECISION = _feePrecision;
     }
 
     modifier onlyRouter() {
@@ -44,16 +45,34 @@ abstract contract RevenueModule is TransientReentrancy {
         _;
     }
 
-    /// @param _token ERC20 token to rescue
-    function rescueTokens(IERC20 _token) public nonReentrant {
-        uint256 balance = _token.balanceOf(address(this));
-        require(balance != 0, NoRevenue());
+    modifier onlyLeverageUser() {
+        require(ROUTER.predictUserLeverageContract(msg.sender) == address(this), OnlyLeverageUser());
+        _;
+    }
 
-        address receiver = ROUTER.revenueReceiver();
-        require(receiver != address(0), ReceiverNotSet());
+    /// @notice We do not expect anyone else to engage with a contract except the user
+    /// for whom this contract instance was cloned.
+    function rescueNativeTokens() external nonReentrant onlyLeverageUser {
+        uint256 balance = address(this).balance;
+        require(balance != 0, EmptyBalance(address(0)));
+
+        (bool success, ) = payable(msg.sender).call{value: balance}("");
+        require(success, NativeTokenTransferFailed());
+
+        emit TokensRescued(address(0), balance);
+    }
+
+    /// @notice We do not expect anyone else to engage with a contract except the user
+    /// for whom this contract instance was cloned.
+    /// @param _token ERC20 token to rescue
+    function rescueTokens(IERC20 _token) public nonReentrant onlyLeverageUser {
+        uint256 balance = _token.balanceOf(address(this));
+        require(balance != 0, EmptyBalance(address(_token)));
+
+        address receiver = msg.sender;
 
         _token.safeTransfer(receiver, balance);
-        emit LeverageRevenue(address(_token), balance, receiver);
+        emit TokensRescued(address(_token), balance);
     }
 
     /// @notice Calculates the leverage fee for a given amount

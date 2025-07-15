@@ -37,7 +37,7 @@ contract LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        leverage = new LeverageRouter(dao, nativeToken);
+        leverage = new LeverageRouter(dao, dao, nativeToken);
 
         vm.stopBroadcast();
 
