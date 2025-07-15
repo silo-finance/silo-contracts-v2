@@ -6,8 +6,6 @@ import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {LeverageRouterRevenueModule} from "silo-core/contracts/leverage/modules/LeverageRouterRevenueModule.sol";
-import {PausableWithRole} from "common/utils/PausableWithRole.sol";
-import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 
 import {
     LeverageUsingSiloFlashloanWithGeneralSwap
@@ -24,14 +22,10 @@ contract LeverageRouter is LeverageRouterRevenueModule {
     /// @param _initialOwner The initial owner of the contract
     /// @param _initialPauser The initial pauser of the contract
     /// @param _native The native token address
-    constructor(
-        address _initialOwner,
-        address _initialPauser,
-        address _native
-    )
-        PausableWithRole(_initialPauser)
-        Ownable1and2Steps(_initialOwner)
-    {
+    constructor(address _initialOwner, address _initialPauser, address _native) {
+        _grantRole(OWNER_ROLE, _initialOwner);
+        _grantRole(PAUSER_ROLE, _initialPauser);
+
         LEVERAGE_IMPLEMENTATION = address(new LeverageUsingSiloFlashloanWithGeneralSwap({
             _router: address(this),
             _native: _native

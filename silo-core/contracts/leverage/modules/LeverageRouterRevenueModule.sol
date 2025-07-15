@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {PausableWithRole} from "common/utils/PausableWithRole.sol";
-
+import {PausableWithAccessControl} from "common/utils/PausableWithAccessControl.sol";
 import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 
 /// @title Leverage Router Revenue Module
-abstract contract LeverageRouterRevenueModule is ILeverageRouter, PausableWithRole {
+abstract contract LeverageRouterRevenueModule is ILeverageRouter, PausableWithAccessControl {    
     /// @notice Fee base constant (1e18 represents 100%)
     uint256 public constant FEE_PRECISION = 1e18;
 
@@ -20,7 +19,7 @@ abstract contract LeverageRouterRevenueModule is ILeverageRouter, PausableWithRo
     address public revenueReceiver;
 
     /// @inheritdoc ILeverageRouter
-    function setLeverageFee(uint256 _fee) external onlyOwner {
+    function setLeverageFee(uint256 _fee) external onlyRole(OWNER_ROLE) {
         require(revenueReceiver != address(0), ReceiverZero());
         require(leverageFee != _fee, FeeDidNotChanged());
         require(_fee < MAX_LEVERAGE_FEE, InvalidFee());
@@ -30,7 +29,7 @@ abstract contract LeverageRouterRevenueModule is ILeverageRouter, PausableWithRo
     }
 
     /// @inheritdoc ILeverageRouter
-    function setRevenueReceiver(address _receiver) external onlyOwner {
+    function setRevenueReceiver(address _receiver) external onlyRole(OWNER_ROLE) {
         require(revenueReceiver != _receiver, ReceiverDidNotChanged());
         require(_receiver != address(0), ReceiverZero());
 

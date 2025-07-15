@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {IAccessControl} from "openzeppelin5/access/IAccessControl.sol";
 
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
-import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract RevokePauseRoleReentrancyTest is MethodReentrancyTest {
+contract GrantRoleReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         _expectRevert();
     }
@@ -18,7 +17,7 @@ contract RevokePauseRoleReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "revokePauseRole(address)";
+        description = "grantRole(bytes32,address)";
     }
 
     function _getLeverageRouter() internal view returns (LeverageRouter) {
@@ -26,13 +25,19 @@ contract RevokePauseRoleReentrancyTest is MethodReentrancyTest {
     }
 
     function _expectRevert() internal {
+        address anyAccount = makeAddr("anyAccount");
+
         LeverageRouter router = _getLeverageRouter();
+        bytes32 adminRole = router.DEFAULT_ADMIN_ROLE();
+        bytes32 pauserRole = router.PAUSER_ROLE();
 
         vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            address(this)
+            IAccessControl.AccessControlUnauthorizedAccount.selector,
+            anyAccount,
+            adminRole
         ));
 
-        router.revokePauseRole(address(this));
+        vm.prank(anyAccount);
+        router.grantRole(pauserRole, address(this));
     }
 }
