@@ -38,6 +38,7 @@ import {PauseReentrancyTest} from "../methods/leverage/PauseReentrancyTest.sol";
 import {UnpauseReentrancyTest} from "../methods/leverage/UnpauseReentrancyTest.sol";
 import {SetLeverageFeeReentrancyTest} from "../methods/leverage/SetLeverageFeeReentrancyTest.sol";
 import {SetRevenueReceiverReentrancyTest} from "../methods/leverage/SetRevenueReceiverReentrancyTest.sol";
+import {OwnerRoleReentrancyTest} from "../methods/leverage/OwnerRoleReentrancyTest.sol";
 
 contract LeverageMethodsRegistry is IMethodsRegistry {
     mapping(bytes4 methodSig => IMethodReentrancyTest) public methods;
@@ -78,6 +79,7 @@ contract LeverageMethodsRegistry is IMethodsRegistry {
         _registerMethod(new UnpauseReentrancyTest());
         _registerMethod(new SetLeverageFeeReentrancyTest());
         _registerMethod(new SetRevenueReceiverReentrancyTest());
+        _registerMethod(new OwnerRoleReentrancyTest());
     }
 
     function supportedMethodsLength() external view returns (uint256) {

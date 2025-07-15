@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {AccessControl} from "openzeppelin5/access/AccessControl.sol";
+import {AccessControlEnumerable} from "openzeppelin5/access/extensions/AccessControlEnumerable.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
 
 /// @title Pausable contract with a separate role for pausing
