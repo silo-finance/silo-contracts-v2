@@ -96,7 +96,7 @@ abstract contract BaseStorage {
     /// @notice Secondary contracts
     ISiloDeployer siloDeployer;
     PartialLiquidation liquidationModule;
-    LeverageRouter siloLeverage;
+    LeverageRouter leverageRouter;
     SwapRouterMock swapRouterMock;
 
     /// @notice Implementations

@@ -45,7 +45,7 @@ contract SetupLeverage is Setup {
     }
 
     function _deployLeverage() internal {
-        siloLeverage = new LeverageRouter(address(this), address(_asset0));
+        leverageRouter = new LeverageRouter(address(this), address(this), address(_asset0));
         swapRouterMock = new SwapRouterMock();
     }
 
@@ -76,7 +76,7 @@ contract SetupLeverage is Setup {
         contracts[0] = address(_vault0);
         contracts[1] = address(_vault1);
         contracts[2] = address(liquidationModule);
-        contracts[3] = address(siloLeverage);
+        contracts[3] = address(leverageRouter);
         contracts[4] = address(swapRouterMock);
 
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {

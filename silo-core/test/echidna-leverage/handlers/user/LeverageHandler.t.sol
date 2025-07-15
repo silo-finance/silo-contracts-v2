@@ -32,7 +32,7 @@ contract LeverageHandler is BaseHandlerLeverage {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function rescueTokens(IERC20 _token, uint256 _i) external payable setupRandomActor(_i) {
-        RevenueModule revenueModule = RevenueModule(siloLeverage.predictUserLeverageContract(targetActor));
+        RevenueModule revenueModule = RevenueModule(leverageRouter.predictUserLeverageContract(targetActor));
 
         _before();
 
@@ -63,17 +63,17 @@ contract LeverageHandler is BaseHandlerLeverage {
     }
 
     function siloLeverageImplementationDonation(uint256 _t) external {
-        _donation(siloLeverage.LEVERAGE_IMPLEMENTATION(), _t);
+        _donation(leverageRouter.LEVERAGE_IMPLEMENTATION(), _t);
     }
 
     function revenueModelDonation(uint256 _t, uint256 _i) external {
-        RevenueModule revenueModule = RevenueModule(siloLeverage.predictUserLeverageContract(targetActor));
+        RevenueModule revenueModule = RevenueModule(leverageRouter.predictUserLeverageContract(targetActor));
 
         _donation(address(revenueModule), _t);
     }
 
     function siloLeverageDonation(uint256 _t) external {
-        _donation(address(siloLeverage), _t);
+        _donation(address(leverageRouter), _t);
     }
 
     // TODO onFlashLoan
@@ -95,7 +95,7 @@ contract LeverageHandler is BaseHandlerLeverage {
     //        address _borrowToken = ISilo(silo).asset();
     //
     //        (bool success,) = actor.proxy{value: msg.value}(
-    //            address(siloLeverage),
+    //            address(leverageRouter),
     //            abi.encodeWithSelector(
     //                ILeverageUsingSiloFlashloan.onFlashLoan.selector,
     //                _initiator,
@@ -175,7 +175,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         uint256 beforeDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
 
         (bool success,) = actor.proxy{value: msg.value}(
-            address(siloLeverage),
+            address(leverageRouter),
             abi.encodeWithSelector(
                 ILeverageUsingSiloFlashloan.openLeveragePosition.selector, flashArgs, abi.encode(swapArgs), depositArgs
             )
@@ -232,7 +232,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         _before();
 
         (bool success,) = actor.proxy(
-            address(siloLeverage),
+            address(leverageRouter),
             abi.encodeWithSelector(
                 ILeverageUsingSiloFlashloan.closeLeveragePosition.selector, abi.encode(swapArgs), closeArgs
             )
@@ -247,17 +247,17 @@ contract LeverageHandler is BaseHandlerLeverage {
     }
 
     function assert_SiloLeverage_NeverKeepsTokens() public {
-        assertEq(_asset0.balanceOf(address(siloLeverage)), 0, "SiloLeverage should have 0 asset0");
-        assertEq(_asset1.balanceOf(address(siloLeverage)), 0, "SiloLeverage should have 0 asset1");
-        assertEq(address(siloLeverage).balance, 0, "SiloLeverage should have 0 ETH");
+        assertEq(_asset0.balanceOf(address(leverageRouter)), 0, "SiloLeverage should have 0 asset0");
+        assertEq(_asset1.balanceOf(address(leverageRouter)), 0, "SiloLeverage should have 0 asset1");
+        assertEq(address(leverageRouter).balance, 0, "SiloLeverage should have 0 ETH");
     }
 
     function assert_AllowanceDoesNotChangedForUserWhoOnlyApprove() public {
         assertEq(
-            _asset0.allowance(_userWhoOnlyApprove(), address(siloLeverage)), type(uint256).max, "approval0 must stay"
+            _asset0.allowance(_userWhoOnlyApprove(), address(leverageRouter)), type(uint256).max, "approval0 must stay"
         );
         assertEq(
-            _asset1.allowance(_userWhoOnlyApprove(), address(siloLeverage)), type(uint256).max, "approval1 must stay"
+            _asset1.allowance(_userWhoOnlyApprove(), address(leverageRouter)), type(uint256).max, "approval1 must stay"
         );
     }
 
@@ -292,6 +292,6 @@ contract LeverageHandler is BaseHandlerLeverage {
     }
 
     function _swapModuleAddress() internal returns (IGeneralSwapModule swapModule) {
-        return LeverageUsingSiloFlashloanWithGeneralSwap(siloLeverage.LEVERAGE_IMPLEMENTATION()).SWAP_MODULE();
+        return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION()).SWAP_MODULE();
     }
 }
