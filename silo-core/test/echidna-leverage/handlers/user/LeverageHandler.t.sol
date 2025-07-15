@@ -58,16 +58,26 @@ contract LeverageHandler is BaseHandlerLeverage {
 
     // TODO direct transfer to leverage
 
-    function leverageRouterDonation(uint256 _t) external payable {
-        if (_t == 0) {
-            payable(address(siloLeverage)).transfer(1e18);
+    function revenueModelDonation(uint256 _t, uint256 _i) external {
+        RevenueModule revenueModule = RevenueModule(siloLeverage.predictUserLeverageContract(targetActor));
 
-            assertGt(address(siloLeverage).balance, 0, "[leverageRouterDonation] expect ETH to be send");
+        _donation(address(revenueModule), _t);
+    }
+
+    function siloLeverageDonation(uint256 _t) external {
+        _donation(address(siloLeverage), _t);
+    }
+
+    function _donation(address _target, uint256 _t) internal {
+        if (_t == 0) {
+            payable(_target).transfer(1e18);
+
+            assertGt(_target.balance, 0, "[_donation] expect ETH to be send");
         } else {
             TestERC20 token = _t % 2 == 0 ? _asset0 : _asset1;
-            token.mint(address(siloLeverage), 1e18);
+            token.mint(_target, 1e18);
 
-            assertGt(token.balanceOf(address(siloLeverage)), 0, "[leverageRouterDonation] expect tokens to be send");
+            assertGt(token.balanceOf(_target), 0, "[_donation] expect tokens to be send");
         }
     }
 
