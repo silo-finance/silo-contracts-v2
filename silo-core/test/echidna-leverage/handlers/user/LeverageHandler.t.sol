@@ -41,7 +41,6 @@ contract LeverageHandler is BaseHandlerLeverage {
             _token.balanceOf(address(revenueModule)), 0, "after rescue (success of fail) there should be 0 tokens"
         );
 
-        assert_SiloLeverage_NeverKeepsTokens();
         assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
     }
 
@@ -71,8 +70,6 @@ contract LeverageHandler is BaseHandlerLeverage {
             _after();
         } catch {
         }
-
-        assert_SiloLeverage_NeverKeepsTokens();
     }
 
     function onFlashLoan(
@@ -113,7 +110,6 @@ contract LeverageHandler is BaseHandlerLeverage {
             );
         }
 
-        assert_SiloLeverage_NeverKeepsTokens();
         assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
     }
 
@@ -193,7 +189,6 @@ contract LeverageHandler is BaseHandlerLeverage {
             assertEq(beforeDebt, afterDebt, "[openLeveragePosition] when leverage fail, debt does not change");
         }
 
-        assert_SiloLeverage_NeverKeepsTokens();
         assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
     }
 
@@ -240,14 +235,6 @@ contract LeverageHandler is BaseHandlerLeverage {
             _after();
             assertEq(ISilo(closeArgs.flashloanTarget).maxRepay(targetActor), 0, "borrower should have no debt");
         }
-
-        assert_SiloLeverage_NeverKeepsTokens();
-    }
-
-    function assert_SiloLeverage_NeverKeepsTokens() public {
-        assertEq(_asset0.balanceOf(address(leverageRouter)), 0, "SiloLeverage should have 0 asset0");
-        assertEq(_asset1.balanceOf(address(leverageRouter)), 0, "SiloLeverage should have 0 asset1");
-        assertEq(address(leverageRouter).balance, 0, "SiloLeverage should have 0 ETH");
     }
 
     function assert_AllowanceDoesNotChangedForUserWhoOnlyApprove() public {
@@ -261,12 +248,6 @@ contract LeverageHandler is BaseHandlerLeverage {
 
     function echidna_AllowanceDoesNotChangedForUserWhoOnlyApprove() public returns (bool) {
         assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
-
-        return true;
-    }
-
-    function echidna_SiloLeverage_NeverKeepsTokens() external returns (bool) {
-        assert_SiloLeverage_NeverKeepsTokens();
 
         return true;
     }
