@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {
-    LeverageUsingSiloFlashloanWithGeneralSwap
-} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract OwnerReentrancyTest is MethodReentrancyTest {
+contract HasRoleReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
-        emit log_string("\tEnsure it will not revert)");
         _ensureItWillNotRevert();
     }
 
@@ -19,12 +15,12 @@ contract OwnerReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "owner()";
+        description = "hasRole(bytes32,address)";
     }
 
     function _ensureItWillNotRevert() internal {
         LeverageRouter router = _getLeverageRouter();
-        router.owner();
+        router.hasRole(router.PAUSER_ROLE(), address(this));
     }
 
     function _getLeverageRouter() internal view returns (LeverageRouter) {

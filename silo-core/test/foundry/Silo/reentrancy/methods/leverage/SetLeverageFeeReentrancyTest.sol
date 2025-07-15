@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {IAccessControl} from "openzeppelin5/access/IAccessControl.sol";
 
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
-import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
@@ -26,13 +25,18 @@ contract SetLeverageFeeReentrancyTest is MethodReentrancyTest {
     }
 
     function _expectRevert() internal {
+        address anyAccount = makeAddr("anyAccount");
+
         LeverageRouter router = _getLeverageRouter();
+        bytes32 adminRole = router.DEFAULT_ADMIN_ROLE();
 
         vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            address(this)
+            IAccessControl.AccessControlUnauthorizedAccount.selector,
+            anyAccount,
+            adminRole
         ));
 
+        vm.prank(anyAccount);
         router.setLeverageFee(0.01e18);
     }
 }
