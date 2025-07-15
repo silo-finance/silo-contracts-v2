@@ -58,6 +58,6 @@ quiet: true
 format: "text"
 
 # concurrent workers
-workers: 3
+workers: 10
 
 #testMode: assertion
