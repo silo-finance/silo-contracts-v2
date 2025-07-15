@@ -29,7 +29,7 @@ abstract contract LeverageRouterRevenueModule is ILeverageRouter, PausableWithAc
     }
 
     /// @inheritdoc ILeverageRouter
-    function setRevenueReceiver(address _receiver) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setRevenueReceiver(address _receiver) external onlyRole(OWNER_ROLE) {
         require(revenueReceiver != _receiver, ReceiverDidNotChanged());
         require(_receiver != address(0), ReceiverZero());
 
