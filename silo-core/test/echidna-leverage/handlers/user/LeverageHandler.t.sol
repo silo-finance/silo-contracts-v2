@@ -8,6 +8,7 @@ import {IERC3156FlashLender} from "silo-core/contracts/interfaces/IERC3156FlashL
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {LeverageUsingSiloFlashloanWithGeneralSwap, LeverageUsingSiloFlashloan} from
     "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageRouterRevenueModule} from "silo-core/contracts/leverage/modules/LeverageRouterRevenueModule.sol";
 import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
@@ -60,7 +61,19 @@ contract LeverageHandler is BaseHandlerLeverage {
         _donation(address(leverageRouter), _t);
     }
 
-    // TODO setFee
+    function setLeverageFee(uint256 _fee) external onlyOwner {
+        address owner = leverageRouter.owner();
+
+        _before();
+
+        vm.prank(owner);
+        try leverageRouter.setLeverageFee(_fee) {
+            _after();
+        } catch {
+        }
+
+        assert_SiloLeverage_NeverKeepsTokens();
+    }
 
     function onFlashLoan(
         address _initiator,
