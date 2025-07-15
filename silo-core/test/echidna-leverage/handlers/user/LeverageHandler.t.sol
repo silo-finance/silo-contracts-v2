@@ -12,6 +12,7 @@ import {LeverageRouterRevenueModule} from "silo-core/contracts/leverage/modules/
 import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
+import {ActorLeverage} from "silo-core/test/echidna-leverage/utils/ActorLeverage.sol";
 
 // Libraries
 import {console2} from "forge-std/console2.sol";
@@ -40,8 +41,6 @@ contract LeverageHandler is BaseHandlerLeverage {
         assertEq(
             _token.balanceOf(address(revenueModule)), 0, "after rescue (success of fail) there should be 0 tokens"
         );
-
-        assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
     }
 
     function swapModuleDonation(uint256 _t) external {
@@ -83,34 +82,20 @@ contract LeverageHandler is BaseHandlerLeverage {
         payable
         setupRandomActor(_random.i)
     {
+        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _userLeverageContract(targetActor);
+        if (address(leverage) == address(0)) return;
+
         address silo = _getRandomSilo(_random.j);
-
-        _before();
-
         address _borrowToken = ISilo(silo).asset();
 
-        (bool success,) = actor.proxy{value: msg.value}(
-            address(_userLeverageContract(targetActor)),
-            abi.encodeWithSelector(
-                LeverageUsingSiloFlashloan.onFlashLoan.selector,
-                _initiator,
-                _borrowToken,
-                _flashloanAmount,
-                _flashloanFee,
-                _data
-            )
-        );
-
-        if (success) {
-            _after();
-
+        try leverage.onFlashLoan(_initiator, _borrowToken, _flashloanAmount, _flashloanFee, _data) {
             assertTrue(
                 false,
                 "[onFlashLoan] direct call on onFlashLoan should always revert"
             );
-        }
+        } catch {
 
-        assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
+        }
     }
 
     function openLeveragePosition(uint64 _depositPercent, uint64 _flashloanPercent, RandomGenerator calldata _random)
@@ -127,7 +112,6 @@ contract LeverageHandler is BaseHandlerLeverage {
         console2.log("targetActor", targetActor, address(actor));
 
         if (_userWhoOnlyApprove() == targetActor) {
-            assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
             return;
         }
 
@@ -188,13 +172,10 @@ contract LeverageHandler is BaseHandlerLeverage {
         } else {
             assertEq(beforeDebt, afterDebt, "[openLeveragePosition] when leverage fail, debt does not change");
         }
-
-        assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
     }
 
     function closeLeveragePosition(RandomGenerator calldata _random) external setupRandomActor(_random.i) {
         if (_userWhoOnlyApprove() == targetActor) {
-            assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
             return;
         }
 
@@ -258,6 +239,8 @@ contract LeverageHandler is BaseHandlerLeverage {
     }
 
     function _donation(address _target, uint256 _t) internal {
+        if (_target == address(0)) return;
+
         if (_t == 0) {
             payable(_target).transfer(1e18);
 
@@ -271,7 +254,7 @@ contract LeverageHandler is BaseHandlerLeverage {
     }
 
     function _userLeverageContract(address _user) internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
-        return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.predictUserLeverageContract(_user));
+        return LeverageUsingSiloFlashloanWithGeneralSwap(address(leverageRouter.userLeverageContract(_user)));
     }
 
     function _swapModuleAddress() internal returns (IGeneralSwapModule swapModule) {

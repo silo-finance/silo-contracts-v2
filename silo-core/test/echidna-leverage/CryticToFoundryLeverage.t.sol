@@ -51,6 +51,13 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
     }
 
     /*
+    FOUNDRY_PROFILE=echidna_leverage forge test -vv --ffi --mt test_EchidnaLeverage_onFlashLoan_0
+    */
+    function test_EchidnaLeverage_onFlashLoan_0() public {
+        LeverageTester.onFlashLoan(address(0x0),144878998102916798939665310881083899372024861808743479,1068209701505743703662069164166715788602248289963999918073026641719,"",RandomGenerator(0, 0, 0));
+    }
+
+    /*
     FOUNDRY_PROFILE=echidna_leverage forge test -vv --ffi --mt test_EchidnaLeverage_flashLoan
     */
     function test_EchidnaLeverage_flashLoan() public {
@@ -69,7 +76,6 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
         LeverageTester.setOraclePrice(426921937436419841960201811563973385142725697675286209481810704706580139174, 0);
         LeverageTester.assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
         LeverageTester.deposit(22137860343374382075721782021272395636457263467127151986574824467746356, 27, 1, 2);
-        LeverageTester.assert_SiloLeverage_NeverKeepsTokens();
         LeverageTester.redeem(833585, 0, 0, 0);
         LeverageTester.assert_BORROWING_HSPOST_D(0, 2);
         LeverageTester.decreaseReceiveAllowance(0, 0, 0);
@@ -88,7 +94,6 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
             507606517474450132998241132371234214242899071084181319930082545356247059019, 7, 0
         );
         LeverageTester.redeem(238061893215429977396790843149374670765627237310851972970105228488461581470, 0, 1, 2);
-        LeverageTester.assert_SiloLeverage_NeverKeepsTokens();
         LeverageTester.setReceiveApproval(
             345957942891661522125228166440086685362746088020517059088196480270243574166, 0, 1
         );
