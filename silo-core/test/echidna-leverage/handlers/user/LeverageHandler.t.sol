@@ -15,6 +15,8 @@ import {console2} from "forge-std/console2.sol";
 
 // Test Contracts
 import {BaseHandlerLeverage} from "../../base/BaseHandlerLeverage.t.sol";
+import {TestERC20} from "silo-core/test/invariants/utils/mocks/TestERC20.sol";
+import {TestWETH} from "silo-core/test/echidna-leverage/utils/mocks/TestWETH.sol";
 
 /// @title LeverageHandler
 /// @notice Handler test contract for a set of actions
@@ -55,6 +57,19 @@ contract LeverageHandler is BaseHandlerLeverage {
     // TODO direct transfer to Swap
 
     // TODO direct transfer to leverage
+
+    function leverageRouterDonation(uint256 _t) external payable {
+        if (_t == 0) {
+            payable(address(siloLeverage)).transfer(1e18);
+
+            assertGt(address(siloLeverage).balance, 0, "[leverageRouterDonation] expect ETH to be send");
+        } else {
+            TestERC20 token = _t % 2 == 0 ? _asset0 : _asset1;
+            token.mint(address(siloLeverage), 1e18);
+
+            assertGt(token.balanceOf(address(siloLeverage)), 0, "[leverageRouterDonation] expect tokens to be send");
+        }
+    }
 
     // TODO onFlashLoan
     //    function onFlashLoan(
