@@ -2,105 +2,77 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
-import {Pausable} from "openzeppelin5/utils/Pausable.sol";
-import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
+import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {TransientReentrancy} from "../../hooks/_common/TransientReentrancy.sol";
 
 /// @title Revenue Module for Leverage Operations
 /// @notice This contract collects and distributes revenue from leveraged operations.
-abstract contract RevenueModule is TransientReentrancy, Ownable2Step, Pausable {
+abstract contract RevenueModule is TransientReentrancy {
     using SafeERC20 for IERC20;
 
     /// @notice Fee base constant (1e18 represents 100%)
     uint256 public constant FEE_PRECISION = 1e18;
 
-    /// @notice The leverage fee expressed as a fraction of 1e18
-    uint256 public leverageFee;
+    /// @notice The router of this leverage contract
+    ILeverageRouter public immutable ROUTER;
 
-    /// @notice Address where collected fees are sent
-    address public revenueReceiver;
-
-    /// @notice Emitted when the leverage fee is updated
-    /// @param leverageFee New leverage fee
-    event LeverageFeeChanged(uint256 leverageFee);
-
-    /// @notice Emitted when the revenue receiver address is changed
-    /// @param receiver New receiver address
-    event RevenueReceiverChanged(address indexed receiver);
-
-    /// @notice Emitted when leverage revenue is withdrawn
+    /// @notice Emitted when tokens are rescued
     /// @param token Address of the token
-    /// @param revenue Amount withdrawn
-    /// @param receiver Address that received the funds
-    event LeverageRevenue(address indexed token, uint256 revenue, address indexed receiver);
+    /// @param amount Amount rescued
+    event TokensRescued(address indexed token, uint256 amount);
 
-    /// @dev Thrown when trying to set the same fee as the current one
-    error FeeDidNotChanged();
+    /// @dev Thrown when there is no tokens to rescue
+    error EmptyBalance(address token);
 
-    /// @dev Thrown when trying to set the same revenue receiver
-    error ReceiverDidNotChanged();
+    /// @dev Thrown when the caller is not the router
+    error OnlyRouter();
 
-    /// @dev Thrown when the receiver address is zero
-    error ReceiverZero();
+    /// @dev Thrown when caller is not the leverage user
+    error OnlyLeverageUser();
 
-    /// @dev Thrown when the provided fee is invalid (>= 100%)
-    error InvalidFee();
+    /// @dev Thrown when native token transfer fails
+    error NativeTokenTransferFailed();
 
-    /// @dev Thrown when there is no revenue to withdraw
-    error NoRevenue();
-    
-    /// @dev Thrown when revenue receiver is not set
-    error ReceiverNotSet();
-
-    function pause() external virtual onlyOwner {
-        _pause();
+    constructor(address _router) {
+        ROUTER = ILeverageRouter(_router);
     }
 
-    function unpause() external virtual onlyOwner {
-        _unpause();
+    modifier onlyRouter() {
+        require(msg.sender == address(ROUTER), OnlyRouter());
+        _;
     }
 
-    /// @notice Set the leverage fee
-    /// @param _fee New leverage fee (must be < FEE_PRECISION)
-    function setLeverageFee(uint256 _fee) external onlyOwner {
-        require(revenueReceiver != address(0), ReceiverZero());
-        require(leverageFee != _fee, FeeDidNotChanged());
-        require(_fee < FEE_PRECISION, InvalidFee());
-
-        leverageFee = _fee;
-        emit LeverageFeeChanged(_fee);
+    modifier onlyLeverageUser() {
+        require(ROUTER.predictUserLeverageContract(msg.sender) == address(this), OnlyLeverageUser());
+        _;
     }
 
-    /// @notice Set the address that receives collected revenue
-    /// @param _receiver New address to receive fees
-    function setRevenueReceiver(address _receiver) external onlyOwner {
-        require(revenueReceiver != _receiver, ReceiverDidNotChanged());
-        require(_receiver != address(0), ReceiverZero());
+    /// @notice We do not expect anyone else to engage with a contract except the user
+    /// for whom this contract instance was cloned.
+    function rescueNativeTokens() external nonReentrant onlyLeverageUser {
+        uint256 balance = address(this).balance;
+        require(balance != 0, EmptyBalance(address(0)));
 
-        revenueReceiver = _receiver;
-        emit RevenueReceiverChanged(_receiver);
+        (bool success, ) = payable(msg.sender).call{value: balance}("");
+        require(success, NativeTokenTransferFailed());
+
+        emit TokensRescued(address(0), balance);
     }
 
-    /// @param _tokens List of tokens to rescue
-    function rescueTokens(IERC20[] calldata _tokens) external {
-        for (uint256 i; i < _tokens.length; i++) {
-            rescueTokens(_tokens[i]);
-        }
-    }
-
+    /// @notice We do not expect anyone else to engage with a contract except the user
+    /// for whom this contract instance was cloned.
     /// @param _token ERC20 token to rescue
-    function rescueTokens(IERC20 _token) public nonReentrant {
+    function rescueTokens(IERC20 _token) public nonReentrant onlyLeverageUser {
         uint256 balance = _token.balanceOf(address(this));
-        require(balance != 0, NoRevenue());
+        require(balance != 0, EmptyBalance(address(_token)));
 
-        address receiver = revenueReceiver;
-        require(receiver != address(0), ReceiverNotSet());
+        address receiver = msg.sender;
 
         _token.safeTransfer(receiver, balance);
-        emit LeverageRevenue(address(_token), balance, receiver);
+        emit TokensRescued(address(_token), balance);
     }
 
     /// @notice Calculates the leverage fee for a given amount
@@ -108,7 +80,7 @@ abstract contract RevenueModule is TransientReentrancy, Ownable2Step, Pausable {
     /// @param _amount The amount to calculate the fee for
     /// @return leverageFeeAmount The calculated fee amount
     function calculateLeverageFee(uint256 _amount) public virtual view returns (uint256 leverageFeeAmount) {
-        uint256 fee = leverageFee;
+        uint256 fee = ROUTER.leverageFee();
         if (fee == 0) return 0;
 
         leverageFeeAmount = Math.mulDiv(_amount, fee, FEE_PRECISION, Math.Rounding.Ceil);
@@ -116,6 +88,6 @@ abstract contract RevenueModule is TransientReentrancy, Ownable2Step, Pausable {
     }
 
     function _payLeverageFee(address _token, uint256 _leverageFee) internal virtual {
-        if (_leverageFee != 0) IERC20(_token).safeTransfer(revenueReceiver, _leverageFee);
+        if (_leverageFee != 0) IERC20(_token).safeTransfer(ROUTER.revenueReceiver(), _leverageFee);
     }
 }

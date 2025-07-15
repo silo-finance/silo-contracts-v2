@@ -9,6 +9,8 @@ import {Vm} from "forge-std/Vm.sol";
 import {
     LeverageUsingSiloFlashloanWithGeneralSwap
 } from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
+import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -45,19 +47,24 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         ) = _prepareLeverageArgs(0, 0);
 
         // Execute leverage position opening
-        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
+        LeverageRouter router = _getLeverageRouter();
 
         vm.prank(user);
         vm.expectRevert(TransientReentrancy.ReentrancyGuardReentrantCall.selector);
-        leverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
+        router.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
     }
 
     function methodDescription() external pure virtual returns (string memory description) {
         description = "openLeveragePosition((address,uint256),bytes,(address,uint256,uint8))";
     }
 
-    function _getLeverage() internal view returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
-        return LeverageUsingSiloFlashloanWithGeneralSwap(TestStateLib.leverage());
+    function _getLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
+        ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
+        return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION());
+    }
+
+    function _getLeverageRouter() internal view returns (LeverageRouter) {
+        return LeverageRouter(TestStateLib.leverageRouter());
     }
 
     function _openLeverage() internal {
@@ -81,10 +88,10 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         TestStateLib.enableLeverageReentrancy();
         
         // Execute leverage position opening
-        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
+        LeverageRouter router = _getLeverageRouter();
 
         vm.prank(user);
-        leverage.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
+        router.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
 
         TestStateLib.disableLeverageReentrancy();
     }
@@ -116,7 +123,9 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         SwapRouterMock _swap,
         bool _approveAssets
     ) internal {
-        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
+        // Get user's leverage contract from router
+        LeverageRouter router = _getLeverageRouter();
+        address userLeverageContract = router.predictUserLeverageContract(_user);
 
         // Mint tokens for user. Silo reentrancy test is disabled.
         TestStateLib.disableReentrancy();
@@ -126,21 +135,25 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         vm.startPrank(_user);
 
         if (_approveAssets) {
-            // Approve leverage contract to pull deposit tokens
-            MaliciousToken(TestStateLib.token0()).approve(address(leverage), _depositAmount);
+            // Approve user's leverage contract to pull deposit tokens
+            MaliciousToken(TestStateLib.token0()).approve(userLeverageContract, _depositAmount);
         }
 
         // Get debt share token from silo1
         ISiloConfig config = TestStateLib.silo1().config();
         (,, address debtShareToken) = config.getShareTokens(address(TestStateLib.silo1()));
 
-        // Calculate and set debt receive approval
-        uint256 debtReceiveApproval = leverage.calculateDebtReceiveApproval(
+        // Calculate and set debt receive approval for user's leverage contract
+        // Need to get the leverage implementation to call calculateDebtReceiveApproval
+        LeverageUsingSiloFlashloanWithGeneralSwap leverageImpl =
+            LeverageUsingSiloFlashloanWithGeneralSwap(router.LEVERAGE_IMPLEMENTATION());
+
+        uint256 debtReceiveApproval = leverageImpl.calculateDebtReceiveApproval(
             TestStateLib.silo1(), 
             _flashloanAmount
         );
 
-        IERC20R(debtShareToken).setReceiveApproval(address(leverage), debtReceiveApproval);
+        IERC20R(debtShareToken).setReceiveApproval(userLeverageContract, debtReceiveApproval);
 
         vm.stopPrank();
     }
@@ -160,10 +173,14 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
             s: ""
         });
 
+        // Get user's leverage contract for the permit
+        LeverageRouter router = _getLeverageRouter();
+        address userLeverageContract = router.predictUserLeverageContract(wallet.addr);
+        
         (permit.v, permit.r, permit.s) = _createPermit({
             _signer: wallet.addr,
             _signerPrivateKey: wallet.privateKey,
-            _spender: address(_getLeverage()),
+            _spender: userLeverageContract,
             _value: permit.value,
             _nonce: nonce,
             _deadline: permit.deadline,

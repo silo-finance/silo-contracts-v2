@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {
     LeverageUsingSiloFlashloanWithGeneralSwap
 } from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
@@ -32,11 +33,11 @@ contract OpenLeveragePositionPermitReentrancyTest is OpenLeveragePositionReentra
         TestStateLib.enableLeverageReentrancy();
 
         // Execute leverage position opening
-        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
+        LeverageRouter router = _getLeverageRouter();
         ILeverageUsingSiloFlashloan.Permit memory permit = _generatePermit(TestStateLib.token0());
 
         vm.prank(user);
-        leverage.openLeveragePositionPermit({
+        router.openLeveragePositionPermit({
             _flashArgs: flashArgs,
             _swapArgs: abi.encode(swapArgs),
             _depositArgs: depositArgs,
@@ -56,12 +57,13 @@ contract OpenLeveragePositionPermitReentrancyTest is OpenLeveragePositionReentra
         ) = _prepareLeverageArgs(0, 0);
 
         // Execute leverage position opening
-        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
+        LeverageRouter router = _getLeverageRouter();
 
         ILeverageUsingSiloFlashloan.Permit memory permit = _generatePermit(TestStateLib.token0());
 
+        vm.prank(user);
         vm.expectRevert(TransientReentrancy.ReentrancyGuardReentrantCall.selector);
-        leverage.openLeveragePositionPermit(flashArgs, abi.encode(swapArgs), depositArgs, permit);
+        router.openLeveragePositionPermit(flashArgs, abi.encode(swapArgs), depositArgs, permit);
     }
 
     function methodDescription() external pure override returns (string memory description) {

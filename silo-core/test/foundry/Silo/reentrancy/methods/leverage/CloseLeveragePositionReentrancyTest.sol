@@ -6,6 +6,7 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {
     LeverageUsingSiloFlashloanWithGeneralSwap
 } from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -31,24 +32,26 @@ contract CloseLeveragePositionReentrancyTest is OpenLeveragePositionReentrancyTe
         uint256 amountIn = flashAmount * 111 / 100;
         swap.setSwap(TestStateLib.token0(), amountIn, TestStateLib.token1(), amountIn * 99 / 100);
 
-        LeverageUsingSiloFlashloanWithGeneralSwap siloLeverage = _getLeverage();
+        // Get user's leverage contract and approve it for collateral share token
+        LeverageRouter router = _getLeverageRouter();
+        address userLeverageContract = router.predictUserLeverageContract(user);
 
         address silo0 = address(TestStateLib.silo0());
 
         vm.prank(user);
-        IERC20(silo0).approve(address(siloLeverage), type(uint256).max);
+        IERC20(silo0).approve(userLeverageContract, type(uint256).max);
 
         TestStateLib.enableLeverageReentrancy();
 
         vm.prank(user);
-        siloLeverage.closeLeveragePosition(abi.encode(swapArgs), closeArgs);
+        router.closeLeveragePosition(abi.encode(swapArgs), closeArgs);
 
         TestStateLib.disableLeverageReentrancy();
     }
 
     function verifyReentrancy() external virtual override {
         emit log_string("[CloseLeveragePositionReentrancyTest] before closeLeveragePosition");
-        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
+        LeverageRouter router = _getLeverageRouter();
 
         bytes memory swapArgs = "";
 
@@ -59,8 +62,10 @@ contract CloseLeveragePositionReentrancyTest is OpenLeveragePositionReentrancyTe
                 collateralType: ISilo.CollateralType.Collateral
             });
 
+        address user = wallet.addr;
+        vm.prank(user);
         vm.expectRevert(TransientReentrancy.ReentrancyGuardReentrantCall.selector);
-        leverage.closeLeveragePosition(swapArgs, closeArgs);
+        router.closeLeveragePosition(swapArgs, closeArgs);
     }
 
     function methodDescription() external pure virtual override returns (string memory description) {
