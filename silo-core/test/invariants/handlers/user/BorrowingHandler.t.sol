@@ -218,7 +218,8 @@ contract BorrowingHandler is BaseHandler {
             }
             /* assertApproxEqAbs(
                 defaultVarsAfter[target].userAssets, defaultVarsBefore[target].userAssets, 2 wei, BORROWING_HSPOST_J
-            ); */ // TODO remove comment
+            ); */
+            // TODO remove comment
         }
     }
 

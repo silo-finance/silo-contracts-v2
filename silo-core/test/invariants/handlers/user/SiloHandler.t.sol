@@ -30,7 +30,7 @@ contract SiloHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function accrueInterest(uint8 i) external setupRandomActor (0){
+    function accrueInterest(uint8 i) external setupRandomActor(0) {
         bool success;
         bytes memory returnData;
 
@@ -38,10 +38,7 @@ contract SiloHandler is BaseHandler {
         address target = _getRandomSilo(i);
 
         _before();
-        (success, returnData) = actor.proxy(
-            target,
-            abi.encodeWithSelector(ISilo.accrueInterest.selector)
-        );
+        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(ISilo.accrueInterest.selector));
 
         if (success) {
             _after();
@@ -67,7 +64,7 @@ contract SiloHandler is BaseHandler {
 
         _before();
         ISilo(target).withdrawFees();
-        try ISilo(target).withdrawFees()  {
+        try ISilo(target).withdrawFees() {
             success = true;
         } catch {
             success = false;

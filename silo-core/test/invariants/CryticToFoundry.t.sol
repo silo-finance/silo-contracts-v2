@@ -357,7 +357,7 @@ contract CryticToFoundry is Invariants, Setup {
     // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_replayechidna_LENDING_INVARIANT
     function test_replayechidna_LENDING_INVARIANT() public {
         Tester.deposit(1, 0, 0, 1);
-//        echidna_LENDING_INVARIANT();
+        //        echidna_LENDING_INVARIANT();
     }
 
     function test_replayechidna_BORROWING_INVARIANT2() public {

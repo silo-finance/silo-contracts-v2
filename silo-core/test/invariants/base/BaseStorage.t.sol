@@ -33,7 +33,7 @@ import {
     IInterestRateModelV2, InterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
-import {LeverageRouter} from"silo-core/contracts/leverage/LeverageRouter.sol";
+import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {SwapRouterMock} from "silo-core/test/foundry/leverage/mocks/SwapRouterMock.sol";
 
 /// @notice BaseStorage contract for all test contracts, works in tandem with BaseTest
