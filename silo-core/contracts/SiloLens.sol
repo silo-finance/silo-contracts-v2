@@ -162,7 +162,7 @@ contract SiloLens is ISiloLens {
 
         uint256 availableLiquidity = ISilo(collateralConfig.silo).getLiquidity();
 
-        sTokenRequired = availableLiquidity +  protectedAssets  < collateralToLiquidate;
+        sTokenRequired = availableLiquidity + protectedAssets < collateralToLiquidate;
     }
 
     /// @inheritdoc ISiloLens
