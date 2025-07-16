@@ -38,14 +38,13 @@ contract CheckQuoteIsLinearFunction is ICheck {
     }
 
     function execute() external override returns (bool result) {
-        uint256 previousQuote;
+        uint256 previousQuote = type(uint256).max;
         uint256 maxAmountToQuote = 10**36;
-        uint amountToQuote = 100;
         bool success;
 
-        for (; amountToQuote <= maxAmountToQuote; amountToQuote *= 10) {
+        for (uint amountToQuote = maxAmountToQuote; amountToQuote >= 100; amountToQuote /= 10) {
             // init previous quote with the first element
-            if (previousQuote == 0) {
+            if (previousQuote == type(uint256).max) {
                 (success, previousQuote) = Utils.quote(oracle, token, amountToQuote);
 
                 if (!success) {
@@ -60,7 +59,7 @@ contract CheckQuoteIsLinearFunction is ICheck {
             uint256 currentQuote;
             (success, currentQuote) = Utils.quote(oracle, token, amountToQuote);
 
-            if (currentQuote / 10 != previousQuote) {
+            if (currentQuote != previousQuote / 10) {
                 breaksAtAmount = amountToQuote;
                 return false;
             }
