@@ -49,6 +49,16 @@
         "normalizationDivider": 0,
         "normalizationMultiplier": 1e4
     },
+    "EORACLE_HARDCODE_xBTC_BTC.b": {
+        "baseToken": "xBTC",
+        "quoteToken": "BTC.b",
+        "primaryAggregator": "EORACLE_xBTC_BTC_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e2
+    },
     "EORACLE_xUSD_USDC": {
         "baseToken": "xUSD",
         "quoteToken": "USDC",
