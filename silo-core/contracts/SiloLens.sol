@@ -129,6 +129,57 @@ contract SiloLens is ISiloLens {
         fullLiquidation = maxRepay == debtToRepay;
     }
 
+    /// @param _siloConfig The SiloConfig contract
+    /// @param _borrower Borrower address  
+    /// @return collateralToLiquidate Amount of collateral to liquidate
+    /// @return debtToRepay Amount of debt to repay
+    /// @return sTokenRequired TRUE when liquidation requires sTokens
+    function maxLiquidation(ISiloConfig _siloConfig, address _borrower)
+        external
+        view
+        virtual
+        returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired)
+    {
+        (address silo0,) = _siloConfig.getSilos();
+
+        ISiloConfig.ConfigData memory config = _siloConfig.getConfig(silo0);
+        IPartialLiquidation hook = IPartialLiquidation(config.hookReceiver);
+
+        (collateralToLiquidate, debtToRepay, sTokenRequired) = hook.maxLiquidation(_borrower);
+
+        if (!sTokenRequired) return (collateralToLiquidate, debtToRepay, sTokenRequired);
+
+        (ISiloConfig.ConfigData memory collateralConfig,) = _siloConfig.getConfigsForSolvency(_borrower);
+        
+        uint256 protectedShares = IERC20(collateralConfig.protectedShareToken).balanceOf(_borrower);
+
+        if (protectedShares == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired);
+
+        // Convert protected shares to assets
+        uint256 protectedAssets = ISilo(collateralConfig.silo).convertToAssets(
+            protectedShares,
+            ISilo.AssetType.Protected
+        );
+
+        if (protectedAssets == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired);
+
+        uint256 availableLiquidity = ISilo(collateralConfig.silo).getLiquidity();
+
+        // Calculate how much will be taken from each source
+        // Protected assets are prioritized and don't require liquidity
+        uint256 fromProtected = protectedAssets > collateralToLiquidate 
+            ? collateralToLiquidate
+            : protectedAssets;
+
+        uint256 fromCollateral = collateralToLiquidate > fromProtected 
+            ? collateralToLiquidate - fromProtected
+            : 0;
+
+        // Only collateral withdrawal requires liquidity
+        // sTokenRequired is true only if we need more collateral than available liquidity
+        sTokenRequired = fromCollateral > availableLiquidity;
+    }
+
     /// @inheritdoc ISiloLens
     function totalDeposits(ISilo _silo) external view returns (uint256 totalDepositsAmount) {
         totalDepositsAmount = _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
