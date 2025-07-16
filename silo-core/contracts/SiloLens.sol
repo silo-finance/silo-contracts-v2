@@ -127,6 +127,27 @@ contract SiloLens is ISiloLens {
 
         uint256 maxRepay = _silo.maxRepay(_borrower);
         fullLiquidation = maxRepay == debtToRepay;
+
+        if (!sTokenRequired) return (collateralToLiquidate, debtToRepay, sTokenRequired, fullLiquidation);
+
+        ISiloConfig siloConfig = _silo.config();
+
+        (ISiloConfig.ConfigData memory collateralConfig,) = siloConfig.getConfigsForSolvency(_borrower);
+
+        uint256 protectedShares = IERC20(collateralConfig.protectedShareToken).balanceOf(_borrower);
+
+        if (protectedShares == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired, fullLiquidation);
+
+        uint256 protectedAssets = ISilo(collateralConfig.silo).convertToAssets(
+            protectedShares,
+            ISilo.AssetType.Protected
+        );
+
+        if (protectedAssets == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired, fullLiquidation);
+
+        uint256 availableLiquidity = ISilo(collateralConfig.silo).getLiquidity();
+
+        sTokenRequired = availableLiquidity + protectedAssets < collateralToLiquidate;
     }
 
     /// @inheritdoc ISiloLens
