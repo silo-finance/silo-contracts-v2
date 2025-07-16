@@ -134,22 +134,22 @@ contract SiloLens is ISiloLens {
     /// @return collateralToLiquidate Amount of collateral to liquidate
     /// @return debtToRepay Amount of debt to repay
     /// @return sTokenRequired TRUE when liquidation requires sTokens
-    function maxLiquidation(ISiloConfig _siloConfig, address _borrower)
+    function maxLiquidation(ISilo _silo, address _borrower)
         external
         view
         virtual
         returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired)
     {
-        (address silo0,) = _siloConfig.getSilos();
+        ISiloConfig siloConfig = _silo.config();
 
-        ISiloConfig.ConfigData memory config = _siloConfig.getConfig(silo0);
+        ISiloConfig.ConfigData memory config = siloConfig.getConfig(address(_silo));
         IPartialLiquidation hook = IPartialLiquidation(config.hookReceiver);
 
         (collateralToLiquidate, debtToRepay, sTokenRequired) = hook.maxLiquidation(_borrower);
 
         if (!sTokenRequired) return (collateralToLiquidate, debtToRepay, sTokenRequired);
 
-        (ISiloConfig.ConfigData memory collateralConfig,) = _siloConfig.getConfigsForSolvency(_borrower);
+        (ISiloConfig.ConfigData memory collateralConfig,) = siloConfig.getConfigsForSolvency(_borrower);
         
         uint256 protectedShares = IERC20(collateralConfig.protectedShareToken).balanceOf(_borrower);
 
