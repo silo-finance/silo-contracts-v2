@@ -13,7 +13,7 @@ import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {IERC3156FlashLender} from "../interfaces/IERC3156FlashLender.sol";
 import {IWrappedNativeToken} from "../interfaces/IWrappedNativeToken.sol";
 
-import {RevenueModule} from "./modules/RevenueModule.sol";
+import {RescueModule} from "./modules/RescueModule.sol";
 import {LeverageTxState} from "./modules/LeverageTxState.sol";
 
 /*
@@ -45,7 +45,7 @@ import {LeverageTxState} from "./modules/LeverageTxState.sol";
 abstract contract LeverageUsingSiloFlashloan is
     ILeverageUsingSiloFlashloan,
     IERC3156FlashBorrower,
-    RevenueModule,
+    RescueModule,
     LeverageTxState
 {
     using SafeERC20 for IERC20;
@@ -58,17 +58,6 @@ abstract contract LeverageUsingSiloFlashloan is
         require(_native != address(0), EmptyNativeToken());
 
         NATIVE_TOKEN = IWrappedNativeToken(_native);
-    }
-
-    /// @inheritdoc ILeverageUsingSiloFlashloan
-    function calculateDebtReceiveApproval(ISilo _flashFrom, uint256 _flashAmount)
-        external
-        view
-        returns (uint256 debtReceiveApproval)
-    {
-        address token = _flashFrom.asset();
-        uint256 borrowAssets = _flashAmount + _flashFrom.flashFee(token, _flashAmount);
-        debtReceiveApproval = _flashFrom.convertToShares(borrowAssets, ISilo.AssetType.Debt);
     }
 
     /// @inheritdoc ILeverageUsingSiloFlashloan
@@ -196,7 +185,7 @@ abstract contract LeverageUsingSiloFlashloan is
         uint256 totalDeposit = depositArgs.amount + collateralAmountAfterSwap;
 
         // Fee is taken on totalDeposit = user deposit amount + collateral amount after swap
-        uint256 feeForLeverage = calculateLeverageFee(totalDeposit);
+        uint256 feeForLeverage = ROUTER.calculateLeverageFee(totalDeposit);
 
         totalDeposit -= feeForLeverage;
 
@@ -356,5 +345,9 @@ abstract contract LeverageUsingSiloFlashloan is
             NATIVE_TOKEN.deposit{value: _txMsgValue}();
             _txMsgValue = 0;
         }
+    }
+
+    function _payLeverageFee(address _token, uint256 _leverageFee) internal virtual {
+        if (_leverageFee != 0) IERC20(_token).safeTransfer(ROUTER.revenueReceiver(), _leverageFee);
     }
 }

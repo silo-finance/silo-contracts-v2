@@ -9,10 +9,9 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
 import {MessageHashUtils} from "openzeppelin5/utils/cryptography/MessageHashUtils.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
-import {PausableWithRole} from "common/utils/PausableWithRole.sol";
-import {IPausableWithRole} from "silo-core/contracts/interfaces/IPausableWithRole.sol";
 import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
+import {IAccessControl} from "openzeppelin5/access/IAccessControl.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
@@ -29,7 +28,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
-import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
+import {RescueModule} from "silo-core/contracts/leverage/modules/RescueModule.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 import {SwapRouterMock} from "./mocks/SwapRouterMock.sol";
@@ -62,6 +61,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     SwapRouterMock swap;
 
     Vm.Wallet wallet = vm.createWallet("Signer");
+    address public pauser;
 
     function setUp() public {
         // wallet = vm.createWallet("Signer");
@@ -95,6 +95,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         // for some weird reason, etch start to work only when I added below line
         WETH(nativeTokenForLocalTesting).deposit{value: 1}();
+
+        leverageRouter.grantRole(leverageRouter.PAUSER_ROLE(), pauser);
     }
     
     function _deployLeverage() internal returns (LeverageRouter) {
@@ -232,8 +234,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_openLeveragePosition -vv
     */
     function test_leverage_pausable_openLeveragePosition() public {
-        // The deployer (address(this)) is the owner and can pause
-        IPausableWithRole(address(leverageRouter)).pause();
+        // The deployer (address(this)) has PAUSER_ROLE and can pause
+        leverageRouter.pause();
 
         ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs;
         ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs;
@@ -247,8 +249,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_openLeveragePositionPermit -vv
     */
     function test_leverage_pausable_openLeveragePositionPermit() public {
-        // The deployer (address(this)) is the owner and can pause
-        IPausableWithRole(address(leverageRouter)).pause();
+        // The deployer (address(this)) has PAUSER_ROLE and can pause
+        leverageRouter.pause();
 
         ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs;
         ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs;
@@ -263,8 +265,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_closeLeveragePosition -vv
     */
     function test_leverage_pausable_closeLeveragePosition() public {
-        // The deployer (address(this)) is the owner and can pause
-        IPausableWithRole(address(leverageRouter)).pause();
+        // The deployer (address(this)) has PAUSER_ROLE and can pause
+        leverageRouter.pause();
 
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs;
         IGeneralSwapModule.SwapArgs memory swapArgs;
@@ -277,8 +279,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_closeLeveragePositionPermit -vv
     */
     function test_leverage_pausable_closeLeveragePositionPermit() public {
-        // The deployer (address(this)) is the owner and can pause
-        IPausableWithRole(address(leverageRouter)).pause();
+        vm.prank(pauser);
+        leverageRouter.pause();
 
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs;
         ILeverageUsingSiloFlashloan.Permit memory withdrawAllowance;
@@ -289,117 +291,123 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_grantAndRevoke -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_onlyPauserRoleCanPause -vv
     */
-    function test_leverage_pauseRole_grantAndRevoke() public {
-        address pauser = makeAddr("pauser");
-        
-        // Initially, the deployer (address(this)) has pause role and is also the owner
-        assertTrue(leverageRouter.isPauser(address(this)), "Deployer should have pause role");
-        assertFalse(leverageRouter.isPauser(pauser), "New address should not have pause role");
-
-        // Grant pause role to new address
-        vm.expectEmit(true, false, false, false);
-        emit PausableWithRole.PauseRoleGranted(pauser);
-        leverageRouter.grantPauseRole(pauser);
-
-        assertTrue(leverageRouter.isPauser(pauser), "New address should have pause role");
-
-        // Test that the new pauser can pause
+    function test_leverage_pausable_onlyPauserRoleCanPause() public {
         vm.prank(pauser);
-        IPausableWithRole(address(leverageRouter)).pause();
-        assertTrue(leverageRouter.paused(), "Contract should be paused");
+        leverageRouter.pause();
+        assertTrue(leverageRouter.paused(), "should be paused");
 
-        // Test that the new pauser can unpause
         vm.prank(pauser);
-        IPausableWithRole(address(leverageRouter)).unpause();
-        assertFalse(leverageRouter.paused(), "Contract should be unpaused");
-
-        // Revoke pause role
-        vm.expectEmit(true, false, false, false);
-        emit PausableWithRole.PauseRoleRevoked(pauser);
-        leverageRouter.revokePauseRole(pauser);
-
-        assertFalse(leverageRouter.isPauser(pauser), "Address should not have pause role");
-
-        // Test that revoked pauser cannot pause
-        vm.prank(pauser);
-        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.OnlyPauseRole.selector));
-        IPausableWithRole(address(leverageRouter)).pause();
+        leverageRouter.unpause();
+        assertFalse(leverageRouter.paused(), "should be unpaused");
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_onlyOwnerCanGrantRevoke -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_nonPauserCannotPause -vv
     */
-    function test_leverage_pauseRole_onlyOwnerCanGrantRevoke() public {
-        address pauser = makeAddr("pauser");
-        address notOwner = makeAddr("notOwner");
-
-        // Non-owner cannot grant pause role
-        vm.prank(notOwner);
-        vm.expectRevert(); // Should revert with onlyOwner error
-        leverageRouter.grantPauseRole(pauser);
-
-        // Non-owner cannot revoke pause role
-        vm.prank(notOwner);
-        vm.expectRevert(); // Should revert with onlyOwner error
-        leverageRouter.revokePauseRole(address(this));
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_onlyPauserCanPause -vv
-    */
-    function test_leverage_pauseRole_onlyPauserCanPause() public {
+    function test_leverage_pausable_nonPauserCannotPause() public {
         address notPauser = makeAddr("notPauser");
+        
+        bytes32 pauserRole = leverageRouter.PAUSER_ROLE();
 
-        // Non-pauser cannot pause
-        vm.prank(notPauser);
-        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.OnlyPauseRole.selector));
-        IPausableWithRole(address(leverageRouter)).pause();
+        vm.expectRevert(abi.encodeWithSelector(
+            IAccessControl.AccessControlUnauthorizedAccount.selector,
+            notPauser,
+            pauserRole
+        ));
 
-        // Non-pauser cannot unpause
-        IPausableWithRole(address(leverageRouter)).pause(); // Pause first
         vm.prank(notPauser);
-        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.OnlyPauseRole.selector));
-        IPausableWithRole(address(leverageRouter)).unpause();
+        leverageRouter.pause();
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_ownerCanAlwaysPause -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_nonPauserCannotUnpause -vv
     */
-    function test_leverage_pauseRole_ownerCanAlwaysPause() public {
-        address newOwner = makeAddr("newOwner");
+    function test_leverage_pausable_nonPauserCannotUnpause() public {
+        vm.prank(pauser);
+        leverageRouter.pause();
+        assertTrue(leverageRouter.paused(), "should be paused");
+
+        address notPauser = makeAddr("notPauser");
         
-        // Remove pause role from current deployer (this test address) before transferring ownership
-        leverageRouter.revokePauseRole(address(this));
-        
-        // Verify the deployer no longer has explicit pause role
-        assertFalse(leverageRouter.isPauser(address(this)), "Deployer should not have explicit pause role");
-        
-        // But the owner (current deployer) should still be able to pause
-        IPausableWithRole(address(leverageRouter)).pause();
-        assertTrue(leverageRouter.paused(), "Contract should be paused by owner");
-        
-        // And unpause
-        IPausableWithRole(address(leverageRouter)).unpause();
-        assertFalse(leverageRouter.paused(), "Contract should be unpaused by owner");
-        
-        // Transfer ownership to new owner
-        leverageRouter.transferOwnership1Step(newOwner);
-        
-        // The new owner should be able to pause even without explicit pause role
-        vm.prank(newOwner);
-        IPausableWithRole(address(leverageRouter)).pause();
-        assertTrue(leverageRouter.paused(), "Contract should be paused by new owner");
-        
-        // The new owner should be able to unpause
-        vm.prank(newOwner);
-        IPausableWithRole(address(leverageRouter)).unpause();
-        assertFalse(leverageRouter.paused(), "Contract should be unpaused by new owner");
-        
-        // Verify the old owner (deployer) cannot pause anymore since they're not owner and don't have pause role
-        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.OnlyPauseRole.selector));
-        IPausableWithRole(address(leverageRouter)).pause();
+        bytes32 pauserRole = leverageRouter.PAUSER_ROLE();
+
+        vm.expectRevert(abi.encodeWithSelector(
+            IAccessControl.AccessControlUnauthorizedAccount.selector,
+            notPauser,
+            pauserRole
+        ));
+
+        vm.prank(notPauser);
+        leverageRouter.unpause();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_adminCanGrantPauserRole -vv
+    */
+    function test_leverage_pausable_adminCanGrantPauserRole() public {
+        address newPauser = makeAddr("newPauser");
+        assertFalse(leverageRouter.hasRole(leverageRouter.PAUSER_ROLE(), newPauser), "should not have pauser role initially");
+
+        // address(this) has DEFAULT_ADMIN_ROLE from deployment
+        leverageRouter.grantRole(leverageRouter.PAUSER_ROLE(), newPauser);
+
+        assertTrue(leverageRouter.hasRole(leverageRouter.PAUSER_ROLE(), newPauser), "should have pauser role after granting");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_adminCanRevokePauserRole -vv
+    */
+    function test_leverage_pausable_adminCanRevokePauserRole() public {
+        leverageRouter.grantRole(leverageRouter.PAUSER_ROLE(), pauser);
+        assertTrue(leverageRouter.hasRole(leverageRouter.PAUSER_ROLE(), pauser), "should have pauser role initially");
+
+        // address(this) has DEFAULT_ADMIN_ROLE from deployment
+        leverageRouter.revokeRole(leverageRouter.PAUSER_ROLE(), pauser);
+
+        assertFalse(leverageRouter.hasRole(leverageRouter.PAUSER_ROLE(), pauser), "should not have pauser role after revoking");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_nonAdminCannotGrantPauserRole -vv
+    */
+    function test_leverage_pausable_nonAdminCannotGrantPauserRole() public {
+        address anyAccount = makeAddr("anyAccount");
+        address newPauser = makeAddr("newPauser");
+
+        bytes32 pauserRole = leverageRouter.PAUSER_ROLE();
+        bytes32 adminRole = leverageRouter.PAUSER_ADMIN_ROLE();
+
+        vm.expectRevert(abi.encodeWithSelector(
+            IAccessControl.AccessControlUnauthorizedAccount.selector,
+            anyAccount,
+            adminRole
+        ));
+
+        vm.prank(anyAccount);
+        leverageRouter.grantRole(pauserRole, newPauser);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pausable_nonAdminCannotRevokePauserRole -vv
+    */
+    function test_leverage_pausable_nonAdminCannotRevokePauserRole() public {
+        address anyAccount = makeAddr("anyAccount");
+        bytes32 pauserRole = leverageRouter.PAUSER_ROLE();
+        bytes32 adminRole = leverageRouter.PAUSER_ADMIN_ROLE();
+
+        leverageRouter.grantRole(pauserRole, pauser);
+        assertTrue(leverageRouter.hasRole(pauserRole, pauser));
+
+        vm.expectRevert(abi.encodeWithSelector(
+            IAccessControl.AccessControlUnauthorizedAccount.selector,
+            anyAccount,
+            adminRole
+        ));
+
+        vm.prank(anyAccount);
+        leverageRouter.revokeRole(pauserRole, pauser);
     }
 
     /*
@@ -809,7 +817,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             IERC20(_depositArgs.silo.asset()).forceApprove(userLeverage, _depositArgs.amount);
         }
 
-        uint256 debtReceiveApproval = siloLeverageImpl.calculateDebtReceiveApproval(
+        uint256 debtReceiveApproval = leverageRouter.calculateDebtReceiveApproval(
             ISilo(_flashArgs.flashloanTarget), _flashArgs.amount
         );
 
@@ -836,7 +844,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             uint256 swapAmountOut = _flashArgs.amount * 99 / 100;
             uint256 totalUserDeposit;
 
-            uint256 leverageFee = siloLeverageImpl.calculateLeverageFee(_depositArgs.amount + swapAmountOut);
+            uint256 leverageFee = leverageRouter.calculateLeverageFee(_depositArgs.amount + swapAmountOut);
             totalUserDeposit = _depositArgs.amount + swapAmountOut - leverageFee;
 
             uint256 flashloanFee = _flashFee(ISilo(_flashArgs.flashloanTarget), _flashArgs.amount);
@@ -1119,7 +1127,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         // Rescue tokens
         vm.prank(user);
         vm.expectEmit(true, true, false, true, userLeverageContract);
-        emit RevenueModule.TokensRescued(address(token0), rescueAmount);
+        emit RescueModule.TokensRescued(address(token0), rescueAmount);
 
         siloLeverage.rescueTokens(token0);
 
@@ -1140,7 +1148,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
         
         vm.prank(user);
-        vm.expectRevert(abi.encodeWithSelector(RevenueModule.EmptyBalance.selector, address(token0)));
+        vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(token0)));
         siloLeverage.rescueTokens(token0);
     }
 
@@ -1165,7 +1173,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertEq(contractBalanceBefore, rescueAmount, "Contract should have native tokens");
 
         vm.expectEmit(true, true, false, true, userLeverageContract);
-        emit RevenueModule.TokensRescued(address(0), rescueAmount);
+        emit RescueModule.TokensRescued(address(0), rescueAmount);
 
         vm.prank(user);
         siloLeverage.rescueNativeTokens();
@@ -1189,7 +1197,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         // Try to rescue native tokens when there's no balance (should revert)
         vm.prank(user);
-        vm.expectRevert(abi.encodeWithSelector(RevenueModule.EmptyBalance.selector, address(0)));
+        vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(0)));
         siloLeverage.rescueNativeTokens();
     }
 
@@ -1220,38 +1228,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         // Try to rescue native tokens - should fail because user's receive() reverts
         vm.prank(user);
-        vm.expectRevert(abi.encodeWithSelector(RevenueModule.NativeTokenTransferFailed.selector));
+        vm.expectRevert(abi.encodeWithSelector(RescueModule.NativeTokenTransferFailed.selector));
         siloLeverage.rescueNativeTokens();
 
         // Verify native tokens are still in the contract
         assertEq(userLeverageContract.balance, rescueAmount, "Native tokens should still be in leverage contract");
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_grant_emptyAddress -vv
-    */
-    function test_leverage_pauseRole_grant_emptyAddress() public {
-        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.EmptyAddress.selector));
-        leverageRouter.grantPauseRole(address(0));
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_grant_alreadyPauser -vv
-    */
-    function test_leverage_pauseRole_grant_alreadyPauser() public {
-        address pauser = makeAddr("pauser");
-        leverageRouter.grantPauseRole(pauser);
-
-        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.AlreadyPauser.selector));
-        leverageRouter.grantPauseRole(pauser);
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_pauseRole_revoke_emptyAddress -vv
-    */
-    function test_leverage_pauseRole_revoke_emptyAddress() public {
-        vm.expectRevert(abi.encodeWithSelector(PausableWithRole.EmptyAddress.selector));
-        leverageRouter.revokePauseRole(address(0));
     }
 
     /*

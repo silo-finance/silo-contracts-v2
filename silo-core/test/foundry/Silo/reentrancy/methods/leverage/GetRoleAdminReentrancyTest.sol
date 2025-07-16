@@ -1,17 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {
-    LeverageUsingSiloFlashloanWithGeneralSwap
-} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
-import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract CalculateLeverageFeeReentrancyTest is MethodReentrancyTest {
+contract GetRoleAdminReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
-        emit log_string("\tEnsure it will not revert)");
         _ensureItWillNotRevert();
     }
 
@@ -20,15 +15,15 @@ contract CalculateLeverageFeeReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "calculateLeverageFee(uint256)";
+        description = "getRoleAdmin(bytes32)";
     }
 
     function _ensureItWillNotRevert() internal {
-        LeverageRouter leverage = _getLeverage();
-        leverage.calculateLeverageFee(1000e18);
+        LeverageRouter router = _getLeverageRouter();
+        router.getRoleAdmin(router.PAUSER_ROLE());
     }
 
-    function _getLeverage() internal returns (LeverageRouter) {
+    function _getLeverageRouter() internal view returns (LeverageRouter) {
         return LeverageRouter(TestStateLib.leverageRouter());
     }
 }

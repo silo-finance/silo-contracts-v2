@@ -24,12 +24,11 @@ contract FeePrecisionReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal {
-        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
+        LeverageRouter leverage = _getLeverage();
         leverage.FEE_PRECISION();
     }
 
-    function _getLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
-        ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
-        return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION());
+    function _getLeverage() internal returns (LeverageRouter) {
+        return LeverageRouter(TestStateLib.leverageRouter());
     }
 }

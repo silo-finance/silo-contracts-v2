@@ -8,7 +8,7 @@ import {ILeverageUsingSiloFlashloan} from "../interfaces/ILeverageUsingSiloFlash
 
 import {GeneralSwapModule, IGeneralSwapModule} from "./modules/GeneralSwapModule.sol";
 import {LeverageUsingSiloFlashloan} from "./LeverageUsingSiloFlashloan.sol";
-import {RevenueModule} from "./modules/RevenueModule.sol";
+import {RescueModule} from "./modules/RescueModule.sol";
 
 /// @notice This contract allow to create and close leverage position using flashloan and swap.
 contract LeverageUsingSiloFlashloanWithGeneralSwap is
@@ -26,7 +26,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwap is
     constructor (
         address _router,
         address _native
-    ) RevenueModule(_router) LeverageUsingSiloFlashloan(_native) {
+    ) RescueModule(_router) LeverageUsingSiloFlashloan(_native) {
         SWAP_MODULE = new GeneralSwapModule();
     }
 

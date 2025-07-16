@@ -21,23 +21,24 @@ import {NativeTokenReentrancyTest} from "../methods/leverage/NativeTokenReentran
 import {FeePrecisionReentrancyTest} from "../methods/leverage/FeePrecisionReentrancyTest.sol";
 import {LeverageFeeReentrancyTest} from "../methods/leverage/LeverageFeeReentrancyTest.sol";
 import {RevenueReceiverReentrancyTest} from "../methods/leverage/RevenueReceiverReentrancyTest.sol";
+import {RescueTokensSingleReentrancyTest} from "../methods/leverage/RescueTokensSingleReentrancyTest.sol";
+import {RescueNativeTokensReentrancyTest} from "../methods/leverage/RescueNativeTokensReentrancyTest.sol";
+import {CalculateLeverageFeeReentrancyTest} from "../methods/leverage/CalculateLeverageFeeReentrancyTest.sol";
+import {PausedReentrancyTest} from "../methods/leverage/PausedReentrancyTest.sol";
+import {MaxLeverageFeeReentrancyTest} from "../methods/leverage/MaxLeverageFeeReentrancyTest.sol";
+import {DefaultAdminRoleReentrancyTest} from "../methods/leverage/DefaultAdminRoleReentrancyTest.sol";
+import {GetRoleAdminReentrancyTest} from "../methods/leverage/GetRoleAdminReentrancyTest.sol";
+import {GrantRoleReentrancyTest} from "../methods/leverage/GrantRoleReentrancyTest.sol";
+import {HasRoleReentrancyTest} from "../methods/leverage/HasRoleReentrancyTest.sol";
+import {PauserRoleReentrancyTest} from "../methods/leverage/PauserRoleReentrancyTest.sol";
+import {RenounceRoleReentrancyTest} from "../methods/leverage/RenounceRoleReentrancyTest.sol";
+import {RevokeRoleReentrancyTest} from "../methods/leverage/RevokeRoleReentrancyTest.sol";
+import {SupportsInterfaceReentrancyTest} from "../methods/leverage/SupportsInterfaceReentrancyTest.sol";
 import {PauseReentrancyTest} from "../methods/leverage/PauseReentrancyTest.sol";
 import {UnpauseReentrancyTest} from "../methods/leverage/UnpauseReentrancyTest.sol";
 import {SetLeverageFeeReentrancyTest} from "../methods/leverage/SetLeverageFeeReentrancyTest.sol";
 import {SetRevenueReceiverReentrancyTest} from "../methods/leverage/SetRevenueReceiverReentrancyTest.sol";
-import {RescueTokensSingleReentrancyTest} from "../methods/leverage/RescueTokensSingleReentrancyTest.sol";
-import {RescueNativeTokensReentrancyTest} from "../methods/leverage/RescueNativeTokensReentrancyTest.sol";
-import {CalculateLeverageFeeReentrancyTest} from "../methods/leverage/CalculateLeverageFeeReentrancyTest.sol";
-import {OwnerReentrancyTest} from "../methods/leverage/OwnerReentrancyTest.sol";
-import {PendingOwnerReentrancyTest} from "../methods/leverage/PendingOwnerReentrancyTest.sol";
-import {TransferOwnershipReentrancyTest} from "../methods/leverage/TransferOwnershipReentrancyTest.sol";
-import {AcceptOwnershipReentrancyTest} from "../methods/leverage/AcceptOwnershipReentrancyTest.sol";
-import {RenounceOwnershipReentrancyTest} from "../methods/leverage/RenounceOwnershipReentrancyTest.sol";
-import {PausedReentrancyTest} from "../methods/leverage/PausedReentrancyTest.sol";
-import {GrantPauseRoleReentrancyTest} from "../methods/leverage/GrantPauseRoleReentrancyTest.sol";
-import {RevokePauseRoleReentrancyTest} from "../methods/leverage/RevokePauseRoleReentrancyTest.sol";
-import {IsPauserReentrancyTest} from "../methods/leverage/IsPauserReentrancyTest.sol";
-import {MaxLeverageFeeReentrancyTest} from "../methods/leverage/MaxLeverageFeeReentrancyTest.sol";
+import {OwnerRoleReentrancyTest} from "../methods/leverage/OwnerRoleReentrancyTest.sol";
 
 contract LeverageMethodsRegistry is IMethodsRegistry {
     mapping(bytes4 methodSig => IMethodReentrancyTest) public methods;
@@ -62,22 +63,23 @@ contract LeverageMethodsRegistry is IMethodsRegistry {
         _registerMethod(new MaxLeverageFeeReentrancyTest());
         _registerMethod(new LeverageFeeReentrancyTest());
         _registerMethod(new RevenueReceiverReentrancyTest());
+        _registerMethod(new RescueTokensSingleReentrancyTest());
+        _registerMethod(new RescueNativeTokensReentrancyTest());
+        _registerMethod(new CalculateLeverageFeeReentrancyTest());
+        _registerMethod(new PausedReentrancyTest());
+        _registerMethod(new DefaultAdminRoleReentrancyTest());
+        _registerMethod(new GetRoleAdminReentrancyTest());
+        _registerMethod(new GrantRoleReentrancyTest());
+        _registerMethod(new HasRoleReentrancyTest());
+        _registerMethod(new PauserRoleReentrancyTest());
+        _registerMethod(new RenounceRoleReentrancyTest());
+        _registerMethod(new RevokeRoleReentrancyTest());
+        _registerMethod(new SupportsInterfaceReentrancyTest());
         _registerMethod(new PauseReentrancyTest());
         _registerMethod(new UnpauseReentrancyTest());
         _registerMethod(new SetLeverageFeeReentrancyTest());
         _registerMethod(new SetRevenueReceiverReentrancyTest());
-        _registerMethod(new RescueTokensSingleReentrancyTest());
-        _registerMethod(new RescueNativeTokensReentrancyTest());
-        _registerMethod(new CalculateLeverageFeeReentrancyTest());
-        _registerMethod(new OwnerReentrancyTest());
-        _registerMethod(new PendingOwnerReentrancyTest());
-        _registerMethod(new TransferOwnershipReentrancyTest());
-        _registerMethod(new AcceptOwnershipReentrancyTest());
-        _registerMethod(new RenounceOwnershipReentrancyTest());
-        _registerMethod(new PausedReentrancyTest());
-        _registerMethod(new GrantPauseRoleReentrancyTest());
-        _registerMethod(new RevokePauseRoleReentrancyTest());
-        _registerMethod(new IsPauserReentrancyTest());
+        _registerMethod(new OwnerRoleReentrancyTest());
     }
 
     function supportedMethodsLength() external view returns (uint256) {

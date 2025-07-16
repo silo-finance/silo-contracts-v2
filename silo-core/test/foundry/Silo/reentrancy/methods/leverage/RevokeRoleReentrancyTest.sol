@@ -7,7 +7,7 @@ import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
-contract SetLeverageFeeReentrancyTest is MethodReentrancyTest {
+contract RevokeRoleReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         _expectRevert();
     }
@@ -17,7 +17,7 @@ contract SetLeverageFeeReentrancyTest is MethodReentrancyTest {
     }
 
     function methodDescription() external pure returns (string memory description) {
-        description = "setLeverageFee(uint256)";
+        description = "revokeRole(bytes32,address)";
     }
 
     function _getLeverageRouter() internal view returns (LeverageRouter) {
@@ -25,10 +25,10 @@ contract SetLeverageFeeReentrancyTest is MethodReentrancyTest {
     }
 
     function _expectRevert() internal {
-        address anyAccount = makeAddr("anyAccount");
-
         LeverageRouter router = _getLeverageRouter();
-        bytes32 adminRole = router.DEFAULT_ADMIN_ROLE();
+        address anyAccount = makeAddr("anyAccount");
+        bytes32 adminRole = router.PAUSER_ADMIN_ROLE();
+        bytes32 pauserRole = router.PAUSER_ROLE();
 
         vm.expectRevert(abi.encodeWithSelector(
             IAccessControl.AccessControlUnauthorizedAccount.selector,
@@ -37,6 +37,6 @@ contract SetLeverageFeeReentrancyTest is MethodReentrancyTest {
         ));
 
         vm.prank(anyAccount);
-        router.setLeverageFee(0.01e18);
+        router.revokeRole(pauserRole, address(this));
     }
 }

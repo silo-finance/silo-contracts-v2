@@ -2,8 +2,8 @@
 pragma solidity ^0.8.28;
 
 import {
-    LeverageRouterRevenueModule
-} from "silo-core/contracts/leverage/modules/LeverageRouterRevenueModule.sol";
+    RevenueModule
+} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
 import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
@@ -24,11 +24,11 @@ contract MaxLeverageFeeReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        LeverageRouterRevenueModule leverage = _getLeverage();
+        RevenueModule leverage = _getLeverage();
         leverage.MAX_LEVERAGE_FEE();
     }
 
-    function _getLeverage() internal view returns (LeverageRouterRevenueModule) {
-        return LeverageRouterRevenueModule(TestStateLib.leverageRouter());
+    function _getLeverage() internal view returns (RevenueModule) {
+        return RevenueModule(TestStateLib.leverageRouter());
     }
 }
