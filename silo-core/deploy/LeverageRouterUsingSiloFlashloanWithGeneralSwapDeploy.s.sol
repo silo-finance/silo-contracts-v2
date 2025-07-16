@@ -15,12 +15,12 @@ import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 
 /**
     FOUNDRY_PROFILE=core \
-        forge script silo-core/deploy/LeverageUsingSiloFlashloanWithGeneralSwapDeploy.s.sol \
+        forge script silo-core/deploy/LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
 
     Resume verification:
     FOUNDRY_PROFILE=core \
-        forge script silo-core/deploy/LeverageUsingSiloFlashloanWithGeneralSwapDeploy.s.sol \
+        forge script silo-core/deploy/LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC \
         --verify \
         --verifier blockscout --verifier-url $VERIFIER_URL_INK \
