@@ -630,7 +630,6 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         silo0.accrueInterest();
         silo1.accrueInterest();
 
-        // // Verify borrower is insolvent
         assertFalse(silo0.isSolvent(protectedBorrower), "Borrower should be insolvent");
 
         // Get max liquidation from hook (original implementation with bug)
@@ -641,7 +640,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         ) = partialLiquidation.maxLiquidation(protectedBorrower);
 
         // Get max liquidation from SiloLens (corrected implementation)
-        // We can pass either silo0 or silo1 - using silo1 since that's where the debt is
+        // We can pass either silo0 or silo1
         (
             uint256 collateralToLiquidateLens,
             uint256 debtToRepayLens,
@@ -650,7 +649,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         assertEq(silo1.getLiquidity(), 0, "Silo should have zero liquidity");
         // // Verify the bug: Hook says sTokenRequired=true because liquidity is 0
-        // assertTrue(sTokenRequiredHook, "Hook should incorrectly report sTokenRequired=true due to zero liquidity");
+        assertTrue(sTokenRequiredHook, "Hook should incorrectly report sTokenRequired=true due to zero liquidity");
 
         // Verify the fix: SiloLens correctly considers protected assets
         assertFalse(sTokenRequiredLens, "SiloLens should correctly report sTokenRequired=false because protected assets are available");
