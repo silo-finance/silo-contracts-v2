@@ -36,6 +36,7 @@ contract GlobalPauseTest is Test {
     event ContractRemoved(address _contract);
     event Authorized(address _account);
     event Unauthorized(address _account);
+    event FailedToPause(address _contract);
 
     function setUp() public {
         address[] memory signers = new address[](2);
@@ -441,12 +442,19 @@ contract GlobalPauseTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_addContract_revertsIfNotOwner
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_addContract_allowsAuthorizedWithoutOwnership
     */
-    function test_addContract_revertsIfNotOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(IGlobalPause.GlobalPauseIsNotAnOwner.selector, address(pausableMock1)));
+    function test_addContract_allowsAuthorizedWithoutOwnership() public {
+        // Test that authorized users can add contracts even if GlobalPause is not the owner
+        vm.expectEmit(true, false, false, false);
+        emit ContractAdded(address(pausableMock1));
+
         vm.prank(address(gnosisSafeMock));
         globalPause.addContract(address(pausableMock1));
+
+        address[] memory contracts = globalPause.allContracts();
+        assertEq(contracts.length, 1);
+        assertEq(contracts[0], address(pausableMock1));
     }
 
     /*
@@ -479,9 +487,9 @@ contract GlobalPauseTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_removeContract_revertsIfStillOwner
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_removeContract_allowsRemovalEvenIfStillOwner
     */
-    function test_removeContract_revertsIfStillOwner() public {
+    function test_removeContract_allowsRemovalEvenIfStillOwner() public {
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
         
@@ -491,9 +499,15 @@ contract GlobalPauseTest is Test {
         vm.prank(address(gnosisSafeMock));
         globalPause.addContract(address(pausableMock1));
 
-        vm.expectRevert(abi.encodeWithSelector(IGlobalPause.GlobalPauseIsAnOwner.selector, address(pausableMock1)));
+        // The contract can be removed even if GlobalPause is still the owner
+        vm.expectEmit(true, false, false, false);
+        emit ContractRemoved(address(pausableMock1));
+
         vm.prank(address(gnosisSafeMock));
         globalPause.removeContract(address(pausableMock1));
+
+        address[] memory contracts = globalPause.allContracts();
+        assertEq(contracts.length, 0);
     }
 
     /*
@@ -693,5 +707,37 @@ contract GlobalPauseTest is Test {
         vm.expectRevert(IGlobalPause.Forbidden.selector);
         vm.prank(unauthorizedAccount);
         globalPause.unpauseAll();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_pauseAll_emitsFailedToPauseForContractsNotOwned
+    */
+    function test_pauseAll_emitsFailedToPauseForContractsNotOwned() public {
+        // Transfer ownership to GlobalPause for pausableMock1 only
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        // Add both contracts - GlobalPause owns pausableMock1 but not pausableMock2
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock2));
+
+        // Expect Paused for pausableMock1 and FailedToPause for pausableMock2
+        vm.expectEmit(true, false, false, false);
+        emit Paused(address(pausableMock1));
+        vm.expectEmit(true, false, false, false);
+        emit FailedToPause(address(pausableMock2));
+
+        // Call pauseAll - it should not revert
+        vm.prank(signer1);
+        globalPause.pauseAll();
+
+        // Verify pausableMock1 is paused but pausableMock2 is not
+        assertTrue(pausableMock1.paused());
+        assertFalse(pausableMock2.paused());
     }
 }

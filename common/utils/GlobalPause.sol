@@ -65,16 +65,12 @@ contract GlobalPause is Ownable1and2Steps, IGlobalPause {
 
     /// @inheritdoc IGlobalPause
     function addContract(address _contract) external onlyAuthorized {
-        require(Ownable2Step(_contract).owner() == address(this), GlobalPauseIsNotAnOwner(_contract));
-
         _contracts.add(_contract);
         emit ContractAdded(_contract);
     }
 
     /// @inheritdoc IGlobalPause
     function removeContract(address _contract) external onlyOwner {
-        require(Ownable2Step(_contract).owner() != address(this), GlobalPauseIsAnOwner(_contract));
-
         _contracts.remove(_contract);
         emit ContractRemoved(_contract);
     }
@@ -133,12 +129,13 @@ contract GlobalPause is Ownable1and2Steps, IGlobalPause {
     /// @dev Pause a contract
     /// @param _contract The contract to pause
     function _pause(address _contract) internal {
-        // Sanity check to avoid blockage of the `pauseAll` fn
-        // in case contract ownership was transferred and contract was not removed.
-        if (Ownable2Step(_contract).owner() != address(this)) return;
-
-        IPausable(_contract).pause();
-        emit Paused(_contract);
+        // Using try/catch to avoid blockage of the `pauseAll` fn
+        // in case contract permissions were revoked and contract was not removed.
+        try IPausable(_contract).pause() {
+            emit Paused(_contract);
+        } catch {
+            emit FailedToPause(_contract);
+        }
     }
 
     /// @dev Unpause a contract

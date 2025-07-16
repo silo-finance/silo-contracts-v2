@@ -9,10 +9,9 @@ interface IGlobalPause {
     event ContractRemoved(address _contract);
     event Authorized(address _account);
     event Unauthorized(address _account);
+    event FailedToPause(address _contract);
 
     error Forbidden();
-    error GlobalPauseIsAnOwner(address _contract);
-    error GlobalPauseIsNotAnOwner(address _contract);
 
     /// @notice Pause all contracts
     function pauseAll() external;
