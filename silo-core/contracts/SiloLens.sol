@@ -153,7 +153,6 @@ contract SiloLens is ISiloLens {
 
         if (protectedShares == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired);
 
-        // Convert protected shares to assets
         uint256 protectedAssets = ISilo(collateralConfig.silo).convertToAssets(
             protectedShares,
             ISilo.AssetType.Protected

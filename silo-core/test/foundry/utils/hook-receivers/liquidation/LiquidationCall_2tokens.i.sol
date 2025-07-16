@@ -606,6 +606,60 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         emit log("-----");
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxLiquidation_sTokenRequired_corrected_with_protected_assets
+    */
+    function test_maxLiquidation_sTokenRequired_corrected_with_protected_assets() public {
+        address protectedBorrower = makeAddr("protectedBorrower");
+
+        uint256 liquidity = silo1.getLiquidity();
+
+        _depositForBorrow(DEBT - liquidity, DEPOSITOR); // 0 liquidity
+        _makeDeposit(silo0, token0, COLLATERAL, protectedBorrower, ISilo.CollateralType.Protected);
+        _borrow(DEBT, protectedBorrower);
+
+        // Verify shares state
+        address protectedShareToken = siloConfig.getConfig(address(silo0)).protectedShareToken;
+        assertGt(IERC20(protectedShareToken).balanceOf(protectedBorrower), 0, "Borrower should have protected shares");
+        assertEq(silo0.balanceOf(protectedBorrower), 0, "Borrower should have no collateral shares");
+
+        // Move time forward to make borrower insolvent
+        vm.warp(block.timestamp + 30 days);
+
+        // Accrue interest
+        silo0.accrueInterest();
+        silo1.accrueInterest();
+
+        // // Verify borrower is insolvent
+        assertFalse(silo0.isSolvent(protectedBorrower), "Borrower should be insolvent");
+
+        // Get max liquidation from hook (original implementation with bug)
+        (
+            uint256 collateralToLiquidateHook,
+            uint256 debtToRepayHook,
+            bool sTokenRequiredHook
+        ) = partialLiquidation.maxLiquidation(protectedBorrower);
+
+        // Get max liquidation from SiloLens (corrected implementation)
+        // We can pass either silo0 or silo1 - using silo1 since that's where the debt is
+        (
+            uint256 collateralToLiquidateLens,
+            uint256 debtToRepayLens,
+            bool sTokenRequiredLens
+        ) = siloLens.maxLiquidation(silo1, protectedBorrower);
+
+        assertEq(silo1.getLiquidity(), 0, "Silo should have zero liquidity");
+        // // Verify the bug: Hook says sTokenRequired=true because liquidity is 0
+        // assertTrue(sTokenRequiredHook, "Hook should incorrectly report sTokenRequired=true due to zero liquidity");
+
+        // Verify the fix: SiloLens correctly considers protected assets
+        assertFalse(sTokenRequiredLens, "SiloLens should correctly report sTokenRequired=false because protected assets are available");
+
+        // Verify amounts are the same
+        assertEq(collateralToLiquidateHook, collateralToLiquidateLens, "Collateral amounts should match");
+        assertEq(debtToRepayHook, debtToRepayLens, "Debt amounts should match");
+    }
+
     function _liquidationModuleDoNotHaveTokens() private view {
         address module = address(partialLiquidation);
 
