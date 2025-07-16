@@ -6,8 +6,10 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IERC3156FlashLender} from "silo-core/contracts/interfaces/IERC3156FlashLender.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
-import {LeverageUsingSiloFlashloanWithGeneralSwap, LeverageUsingSiloFlashloan} from
-    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {
+    LeverageUsingSiloFlashloanWithGeneralSwap,
+    LeverageUsingSiloFlashloan
+} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {RescueModule} from "silo-core/contracts/leverage/modules/RescueModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
@@ -37,9 +39,7 @@ contract LeverageHandler is BaseHandlerLeverage {
             _after();
         }
 
-        assertEq(
-            _token.balanceOf(address(rescueModule)), 0, "after rescue (success of fail) there should be 0 tokens"
-        );
+        assertEq(_token.balanceOf(address(rescueModule)), 0, "after rescue (success of fail) there should be 0 tokens");
     }
 
     function swapModuleDonation(uint256 _t) external {
@@ -67,8 +67,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         vm.prank(owner);
         try leverageRouter.setLeverageFee(_fee) {
             _after();
-        } catch {
-        }
+        } catch {}
     }
 
     function onFlashLoan(
@@ -77,11 +76,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         uint256 _flashloanFee,
         bytes calldata _data,
         RandomGenerator calldata _random
-    )
-        external
-        payable
-        setupRandomActor(_random.i)
-    {
+    ) external payable setupRandomActor(_random.i) {
         LeverageUsingSiloFlashloanWithGeneralSwap leverage = _userLeverageContract(targetActor);
         if (address(leverage) == address(0)) return;
 
@@ -89,13 +84,8 @@ contract LeverageHandler is BaseHandlerLeverage {
         address _borrowToken = ISilo(silo).asset();
 
         try leverage.onFlashLoan(_initiator, _borrowToken, _flashloanAmount, _flashloanFee, _data) {
-            assertTrue(
-                false,
-                "[onFlashLoan] direct call on onFlashLoan should always revert"
-            );
-        } catch {
-
-        }
+            assertTrue(false, "[onFlashLoan] direct call on onFlashLoan should always revert");
+        } catch {}
     }
 
     function openLeveragePosition(uint64 _depositPercent, uint64 _flashloanPercent, RandomGenerator calldata _random)

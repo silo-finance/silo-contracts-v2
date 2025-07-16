@@ -54,7 +54,13 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
     FOUNDRY_PROFILE=echidna_leverage forge test -vv --ffi --mt test_EchidnaLeverage_onFlashLoan_0
     */
     function test_EchidnaLeverage_onFlashLoan_0() public {
-        LeverageTester.onFlashLoan(address(0x0),144878998102916798939665310881083899372024861808743479,1068209701505743703662069164166715788602248289963999918073026641719,"",RandomGenerator(0, 0, 0));
+        LeverageTester.onFlashLoan(
+            address(0x0),
+            144878998102916798939665310881083899372024861808743479,
+            1068209701505743703662069164166715788602248289963999918073026641719,
+            "",
+            RandomGenerator(0, 0, 0)
+        );
     }
 
     /*
