@@ -1,0 +1,697 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.28;
+
+import {Test} from "forge-std/Test.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+
+import {AddrKey} from "common/addresses/AddrKey.sol";
+import {GlobalPause} from "common/utils/GlobalPause.sol";
+import {IGlobalPause} from "common/utils/interfaces/IGlobalPause.sol";
+import {GlobalPauseDeploy} from "silo-core/deploy/GlobalPauseDeploy.s.sol";
+import {PausableMock} from "../_mocks/PausableMock.sol";
+import {GnosisSafeMock} from "../_mocks/GnosisSafeMock.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {Ownable2Step} from "openzeppelin5/access/Ownable2Step.sol";
+import {Pausable} from "openzeppelin5/utils/Pausable.sol";
+
+/*
+FOUNDRY_PROFILE=core_test forge test --ffi -vv --mc GlobalPauseTest
+*/
+contract GlobalPauseTest is Test {
+    IGlobalPause public globalPause;
+    PausableMock public pausableMock1;
+    PausableMock public pausableMock2;
+    GnosisSafeMock public gnosisSafeMock;
+    address public signer1 = makeAddr("signer1");
+    address public signer2 = makeAddr("signer2");
+    address public authorizedAccount = makeAddr("authorizedAccount");
+    address public unauthorizedAccount = makeAddr("unauthorizedAccount");
+    address public newOwner = makeAddr("newOwner");
+
+    event Paused(address _contract);
+    event Unpaused(address _contract);
+    event OwnershipAccepted(address _contract);
+    event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
+    event ContractAdded(address _contract);
+    event ContractRemoved(address _contract);
+    event Authorized(address _account);
+    event Unauthorized(address _account);
+
+    function setUp() public {
+        address[] memory signers = new address[](2);
+        signers[0] = signer1;
+        signers[1] = signer2;
+        gnosisSafeMock = new GnosisSafeMock(signers);
+
+        AddrLib.init();
+        AddrLib.setAddress(AddrKey.DAO, address(gnosisSafeMock));
+
+        GlobalPauseDeploy deploy = new GlobalPauseDeploy();
+        deploy.disableDeploymentsSync();
+        globalPause = deploy.run();
+
+        pausableMock1 = new PausableMock();
+        pausableMock2 = new PausableMock();
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            PERMISSIONS TESTS
+    //////////////////////////////////////////////////////////////*/
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_constructor_setsOwnerToMultisig
+    */
+    function test_constructor_setsOwnerToMultisig() public {
+        assertEq(Ownable(address(globalPause)).owner(), address(gnosisSafeMock));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_onlySigner_allowsMultisigSigners
+    */
+    function test_onlySigner_allowsMultisigSigners() public {
+        assertTrue(globalPause.isSigner(signer1));
+        assertTrue(globalPause.isSigner(signer2));
+        assertFalse(globalPause.isSigner(unauthorizedAccount));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_onlyAuthorized_allowsOwner
+    */
+    function test_onlyAuthorized_allowsOwner() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(address(gnosisSafeMock));
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        vm.expectEmit(true, false, false, false);
+        emit ContractAdded(address(pausableMock1));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_onlyAuthorized_allowsSigners
+    */
+    function test_onlyAuthorized_allowsSigners() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        vm.expectEmit(true, false, false, false);
+        emit ContractAdded(address(pausableMock1));
+
+        vm.prank(signer1);
+        globalPause.addContract(address(pausableMock1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_onlyAuthorized_allowsAuthorizedAccounts
+    */
+    function test_onlyAuthorized_allowsAuthorizedAccounts() public {
+        vm.prank(address(gnosisSafeMock));
+        globalPause.grantAuthorization(authorizedAccount);
+
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(authorizedAccount);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        vm.expectEmit(true, false, false, false);
+        emit ContractAdded(address(pausableMock1));
+
+        vm.prank(authorizedAccount);
+        globalPause.addContract(address(pausableMock1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_onlyAuthorized_revertsForUnauthorized
+    */
+    function test_onlyAuthorized_revertsForUnauthorized() public {
+        vm.expectRevert(IGlobalPause.Forbidden.selector);
+        vm.prank(unauthorizedAccount);
+        globalPause.pause(address(pausableMock1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_onlyOwner_revertsForNonOwner
+    */
+    function test_onlyOwner_revertsForNonOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            unauthorizedAccount
+        ));
+        vm.prank(unauthorizedAccount);
+        globalPause.grantAuthorization(authorizedAccount);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                      OWNERSHIP TRANSFER TESTS
+    //////////////////////////////////////////////////////////////*/
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_transferOwnership_startsOwnershipTransfer
+    */
+    function test_transferOwnership_startsOwnershipTransfer() public {
+        vm.expectEmit(true, true, false, false);
+        emit OwnershipTransferStarted(address(gnosisSafeMock), newOwner);
+
+        vm.prank(address(gnosisSafeMock));
+        Ownable2Step(address(globalPause)).transferOwnership(newOwner);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_acceptOwnership_completesOwnershipTransfer
+    */
+    function test_acceptOwnership_completesOwnershipTransfer() public {
+        vm.prank(address(gnosisSafeMock));
+        Ownable2Step(address(globalPause)).transferOwnership(newOwner);
+
+        assertEq(Ownable(address(globalPause)).owner(), address(gnosisSafeMock));
+        
+        vm.prank(newOwner);
+        Ownable2Step(address(globalPause)).acceptOwnership();
+
+        assertEq(Ownable(address(globalPause)).owner(), newOwner);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_acceptOwnership_acceptsContractOwnership
+    */
+    function test_acceptOwnership_acceptsContractOwnership() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+
+        vm.expectEmit(true, false, false, false);
+        emit OwnershipAccepted(address(pausableMock1));
+
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        assertEq(pausableMock1.owner(), address(globalPause));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_acceptOwnership_revertsForUnauthorized
+    */
+    function test_acceptOwnership_revertsForUnauthorized() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+
+        vm.expectRevert(IGlobalPause.Forbidden.selector);
+        vm.prank(unauthorizedAccount);
+        globalPause.acceptOwnership(address(pausableMock1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_transferOwnershipFrom_transfersContractOwnership
+    */
+    function test_transferOwnershipFrom_transfersContractOwnership() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+
+        vm.expectEmit(true, false, false, true);
+        emit OwnershipTransferStarted(address(pausableMock1), newOwner);
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.transferOwnershipFrom(address(pausableMock1), newOwner);
+
+        // New owner accepts ownership directly on the contract
+        vm.prank(newOwner);
+        pausableMock1.acceptOwnership();
+
+        assertEq(pausableMock1.owner(), newOwner);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_transferOwnershipAll_transfersAllContracts
+    */
+    function test_transferOwnershipAll_transfersAllContracts() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        vm.prank(pausableMock2.owner());
+        pausableMock2.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock2));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock2));
+
+        vm.expectEmit(true, false, false, true);
+        emit OwnershipTransferStarted(address(pausableMock1), newOwner);
+        vm.expectEmit(true, false, false, true);
+        emit OwnershipTransferStarted(address(pausableMock2), newOwner);
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.transferOwnershipAll(newOwner);
+
+        // New owner accepts ownership directly on both contracts
+        vm.prank(newOwner);
+        pausableMock1.acceptOwnership();
+        vm.prank(newOwner);
+        pausableMock2.acceptOwnership();
+
+        assertEq(pausableMock1.owner(), newOwner);
+        assertEq(pausableMock2.owner(), newOwner);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_transferOwnershipFrom_onlyOwner
+    */
+    function test_transferOwnershipFrom_onlyOwner() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+
+        // Test that unauthorized account cannot call transferOwnershipFrom
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            unauthorizedAccount
+        ));
+        vm.prank(unauthorizedAccount);
+        globalPause.transferOwnershipFrom(address(pausableMock1), newOwner);
+
+        // Test that signer cannot call transferOwnershipFrom (only owner can)
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            signer1
+        ));
+        vm.prank(signer1);
+        globalPause.transferOwnershipFrom(address(pausableMock1), newOwner);
+
+        // Test that authorized account cannot call transferOwnershipFrom (only owner can)
+        vm.prank(address(gnosisSafeMock));
+        globalPause.grantAuthorization(authorizedAccount);
+        
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            authorizedAccount
+        ));
+        vm.prank(authorizedAccount);
+        globalPause.transferOwnershipFrom(address(pausableMock1), newOwner);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_transferOwnershipAll_onlyOwner
+    */
+    function test_transferOwnershipAll_onlyOwner() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+
+        // Test that unauthorized account cannot call transferOwnershipAll
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            unauthorizedAccount
+        ));
+        vm.prank(unauthorizedAccount);
+        globalPause.transferOwnershipAll(newOwner);
+
+        // Test that signer cannot call transferOwnershipAll (only owner can)
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            signer1
+        ));
+        vm.prank(signer1);
+        globalPause.transferOwnershipAll(newOwner);
+
+        // Test that authorized account cannot call transferOwnershipAll (only owner can)
+        vm.prank(address(gnosisSafeMock));
+        globalPause.grantAuthorization(authorizedAccount);
+        
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            authorizedAccount
+        ));
+        vm.prank(authorizedAccount);
+        globalPause.transferOwnershipAll(newOwner);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                  AUTHORIZED ACCOUNTS MANAGEMENT TESTS
+    //////////////////////////////////////////////////////////////*/
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_grantAuthorization_addsAuthorizedAccount
+    */
+    function test_grantAuthorization_addsAuthorizedAccount() public {
+        vm.expectEmit(true, false, false, false);
+        emit Authorized(authorizedAccount);
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.grantAuthorization(authorizedAccount);
+
+        vm.prank(authorizedAccount);
+        globalPause.pause(address(pausableMock1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_revokeAuthorization_removesAuthorizedAccount
+    */
+    function test_revokeAuthorization_removesAuthorizedAccount() public {
+        vm.prank(address(gnosisSafeMock));
+        globalPause.grantAuthorization(authorizedAccount);
+
+        vm.expectEmit(true, false, false, false);
+        emit Unauthorized(authorizedAccount);
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.revokeAuthorization(authorizedAccount);
+
+        vm.expectRevert(IGlobalPause.Forbidden.selector);
+        vm.prank(authorizedAccount);
+        globalPause.pause(address(pausableMock1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_grantAuthorization_onlyOwner
+    */
+    function test_grantAuthorization_onlyOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            unauthorizedAccount
+        ));
+        vm.prank(unauthorizedAccount);
+        globalPause.grantAuthorization(authorizedAccount);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_revokeAuthorization_onlyOwner
+    */
+    function test_revokeAuthorization_onlyOwner() public {
+        vm.prank(address(gnosisSafeMock));
+        globalPause.grantAuthorization(authorizedAccount);
+
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            unauthorizedAccount
+        ));
+        vm.prank(unauthorizedAccount);
+        globalPause.revokeAuthorization(authorizedAccount);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                      CONTRACT MANAGEMENT TESTS
+    //////////////////////////////////////////////////////////////*/
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_addContract_addsToList
+    */
+    function test_addContract_addsToList() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        vm.expectEmit(true, false, false, false);
+        emit ContractAdded(address(pausableMock1));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+
+        address[] memory contracts = globalPause.allContracts();
+        assertEq(contracts.length, 1);
+        assertEq(contracts[0], address(pausableMock1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_addContract_revertsIfNotOwner
+    */
+    function test_addContract_revertsIfNotOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(IGlobalPause.GlobalPauseIsNotAnOwner.selector, address(pausableMock1)));
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_removeContract_removesFromList
+    */
+    function test_removeContract_removesFromList() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.transferOwnershipFrom(address(pausableMock1), newOwner);
+
+        vm.prank(newOwner);
+        pausableMock1.acceptOwnership();
+
+        vm.expectEmit(true, false, false, false);
+        emit ContractRemoved(address(pausableMock1));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.removeContract(address(pausableMock1));
+
+        address[] memory contracts = globalPause.allContracts();
+        assertEq(contracts.length, 0);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_removeContract_revertsIfStillOwner
+    */
+    function test_removeContract_revertsIfStillOwner() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+
+        vm.expectRevert(abi.encodeWithSelector(IGlobalPause.GlobalPauseIsAnOwner.selector, address(pausableMock1)));
+        vm.prank(address(gnosisSafeMock));
+        globalPause.removeContract(address(pausableMock1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_removeContract_onlyOwner
+    */
+    function test_removeContract_onlyOwner() public {
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            unauthorizedAccount
+        ));
+        vm.prank(unauthorizedAccount);
+        globalPause.removeContract(address(pausableMock1));
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        PAUSE/UNPAUSE TESTS
+    //////////////////////////////////////////////////////////////*/
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_pause_pausesSingleContract
+    */
+    function test_pause_pausesSingleContract() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+
+        assertFalse(pausableMock1.paused());
+
+        vm.expectEmit(true, false, false, false);
+        emit Paused(address(pausableMock1));
+
+        vm.prank(signer1);
+        globalPause.pause(address(pausableMock1));
+
+        assertTrue(pausableMock1.paused());
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_unpause_unpausesSingleContract
+    */
+    function test_unpause_unpausesSingleContract() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+
+        vm.prank(signer1);
+        globalPause.pause(address(pausableMock1));
+
+        assertTrue(pausableMock1.paused());
+
+        vm.expectEmit(true, false, false, false);
+        emit Unpaused(address(pausableMock1));
+
+        vm.prank(signer1);
+        globalPause.unpause(address(pausableMock1));
+
+        assertFalse(pausableMock1.paused());
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_pauseAll_pausesAllContracts
+    */
+    function test_pauseAll_pausesAllContracts() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        vm.prank(pausableMock2.owner());
+        pausableMock2.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock2));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock2));
+
+        assertFalse(pausableMock1.paused());
+        assertFalse(pausableMock2.paused());
+
+        vm.expectEmit(true, false, false, false);
+        emit Paused(address(pausableMock1));
+        vm.expectEmit(true, false, false, false);
+        emit Paused(address(pausableMock2));
+
+        vm.prank(signer1);
+        globalPause.pauseAll();
+
+        assertTrue(pausableMock1.paused());
+        assertTrue(pausableMock2.paused());
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_unpauseAll_unpausesAllContracts
+    */
+    function test_unpauseAll_unpausesAllContracts() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        vm.prank(pausableMock2.owner());
+        pausableMock2.transferOwnership(address(globalPause));
+
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock2));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock2));
+
+        vm.prank(signer1);
+        globalPause.pauseAll();
+
+        assertTrue(pausableMock1.paused());
+        assertTrue(pausableMock2.paused());
+
+        vm.expectEmit(true, false, false, false);
+        emit Unpaused(address(pausableMock1));
+        vm.expectEmit(true, false, false, false);
+        emit Unpaused(address(pausableMock2));
+
+        vm.prank(signer1);
+        globalPause.unpauseAll();
+
+        assertFalse(pausableMock1.paused());
+        assertFalse(pausableMock2.paused());
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_pauseAll_skipsContractsNotOwned
+    */
+    function test_pauseAll_skipsContractsNotOwned() public {
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+        
+        vm.prank(address(gnosisSafeMock));
+        globalPause.transferOwnershipFrom(address(pausableMock1), newOwner);
+        
+        vm.prank(newOwner);
+        pausableMock1.acceptOwnership();
+
+        vm.prank(signer1);
+        globalPause.pauseAll();
+
+        assertFalse(pausableMock1.paused());
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_pause_revertsForUnauthorized
+    */
+    function test_pause_revertsForUnauthorized() public {
+        vm.expectRevert(IGlobalPause.Forbidden.selector);
+        vm.prank(unauthorizedAccount);
+        globalPause.pause(address(pausableMock1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_unpause_revertsForUnauthorized
+    */
+    function test_unpause_revertsForUnauthorized() public {
+        vm.expectRevert(IGlobalPause.Forbidden.selector);
+        vm.prank(unauthorizedAccount);
+        globalPause.unpause(address(pausableMock1));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_pauseAll_revertsForUnauthorized
+    */
+    function test_pauseAll_revertsForUnauthorized() public {
+        vm.expectRevert(IGlobalPause.Forbidden.selector);
+        vm.prank(unauthorizedAccount);
+        globalPause.pauseAll();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_unpauseAll_revertsForUnauthorized
+    */
+    function test_unpauseAll_revertsForUnauthorized() public {
+        vm.expectRevert(IGlobalPause.Forbidden.selector);
+        vm.prank(unauthorizedAccount);
+        globalPause.unpauseAll();
+    }
+}
