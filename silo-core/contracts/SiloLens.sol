@@ -162,19 +162,7 @@ contract SiloLens is ISiloLens {
 
         uint256 availableLiquidity = ISilo(collateralConfig.silo).getLiquidity();
 
-        // Calculate how much will be taken from each source
-        // Protected assets are prioritized and don't require liquidity
-        uint256 fromProtected = protectedAssets > collateralToLiquidate 
-            ? collateralToLiquidate
-            : protectedAssets;
-
-        uint256 fromCollateral = collateralToLiquidate > fromProtected 
-            ? collateralToLiquidate - fromProtected
-            : 0;
-
-        // Only collateral withdrawal requires liquidity
-        // sTokenRequired is true only if we need more collateral than available liquidity
-        sTokenRequired = fromCollateral > availableLiquidity;
+        sTokenRequired = availableLiquidity +  protectedAssets  < collateralToLiquidate;
     }
 
     /// @inheritdoc ISiloLens
