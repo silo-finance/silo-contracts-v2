@@ -129,8 +129,6 @@ contract SiloLens is ISiloLens {
         fullLiquidation = maxRepay == debtToRepay;
     }
 
-    /// @param _siloConfig The SiloConfig contract
-    /// @param _borrower Borrower address  
     /// @return collateralToLiquidate Amount of collateral to liquidate
     /// @return debtToRepay Amount of debt to repay
     /// @return sTokenRequired TRUE when liquidation requires sTokens
