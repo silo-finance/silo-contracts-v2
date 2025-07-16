@@ -127,38 +127,23 @@ contract SiloLens is ISiloLens {
 
         uint256 maxRepay = _silo.maxRepay(_borrower);
         fullLiquidation = maxRepay == debtToRepay;
-    }
 
-    /// @return collateralToLiquidate Amount of collateral to liquidate
-    /// @return debtToRepay Amount of debt to repay
-    /// @return sTokenRequired TRUE when liquidation requires sTokens
-    function maxLiquidation(ISilo _silo, address _borrower)
-        external
-        view
-        virtual
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired)
-    {
+        if (!sTokenRequired) return (collateralToLiquidate, debtToRepay, sTokenRequired, fullLiquidation);
+
         ISiloConfig siloConfig = _silo.config();
 
-        ISiloConfig.ConfigData memory config = siloConfig.getConfig(address(_silo));
-        IPartialLiquidation hook = IPartialLiquidation(config.hookReceiver);
-
-        (collateralToLiquidate, debtToRepay, sTokenRequired) = hook.maxLiquidation(_borrower);
-
-        if (!sTokenRequired) return (collateralToLiquidate, debtToRepay, sTokenRequired);
-
         (ISiloConfig.ConfigData memory collateralConfig,) = siloConfig.getConfigsForSolvency(_borrower);
-        
+
         uint256 protectedShares = IERC20(collateralConfig.protectedShareToken).balanceOf(_borrower);
 
-        if (protectedShares == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired);
+        if (protectedShares == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired, fullLiquidation);
 
         uint256 protectedAssets = ISilo(collateralConfig.silo).convertToAssets(
             protectedShares,
             ISilo.AssetType.Protected
         );
 
-        if (protectedAssets == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired);
+        if (protectedAssets == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired, fullLiquidation);
 
         uint256 availableLiquidity = ISilo(collateralConfig.silo).getLiquidity();
 

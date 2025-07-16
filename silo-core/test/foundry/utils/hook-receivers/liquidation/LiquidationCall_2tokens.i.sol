@@ -610,11 +610,13 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxLiquidation_sTokenRequired_corrected_with_protected_assets
     */
     function test_maxLiquidation_sTokenRequired_corrected_with_protected_assets() public {
+        _repay(DEBT, BORROWER);
+        _withdraw(silo0.getLiquidity(), BORROWER);
+
+        assertEq(silo0.getLiquidity(), 0, "Silo should have zero liquidity");
+
         address protectedBorrower = makeAddr("protectedBorrower");
 
-        uint256 liquidity = silo1.getLiquidity();
-
-        _depositForBorrow(DEBT - liquidity, DEPOSITOR); // 0 liquidity
         _makeDeposit(silo0, token0, COLLATERAL, protectedBorrower, ISilo.CollateralType.Protected);
         _borrow(DEBT, protectedBorrower);
 
@@ -644,11 +646,11 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         (
             uint256 collateralToLiquidateLens,
             uint256 debtToRepayLens,
-            bool sTokenRequiredLens
-        ) = siloLens.maxLiquidation(silo1, protectedBorrower);
+            bool sTokenRequiredLens,
+            bool fullLiquidationLens
+        ) = siloLens.maxLiquidation(silo1, partialLiquidation, protectedBorrower);
 
-        assertEq(silo1.getLiquidity(), 0, "Silo should have zero liquidity");
-        // // Verify the bug: Hook says sTokenRequired=true because liquidity is 0
+        // Verify the bug: Hook says sTokenRequired=true because liquidity is 0
         assertTrue(sTokenRequiredHook, "Hook should incorrectly report sTokenRequired=true due to zero liquidity");
 
         // Verify the fix: SiloLens correctly considers protected assets
