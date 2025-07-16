@@ -8,8 +8,7 @@ import {IERC3156FlashLender} from "silo-core/contracts/interfaces/IERC3156FlashL
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {LeverageUsingSiloFlashloanWithGeneralSwap, LeverageUsingSiloFlashloan} from
     "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
-import {LeverageRouterRevenueModule} from "silo-core/contracts/leverage/modules/LeverageRouterRevenueModule.sol";
-import {RevenueModule} from "silo-core/contracts/leverage/modules/RevenueModule.sol";
+import {RescueModule} from "silo-core/contracts/leverage/modules/RescueModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
 import {ActorLeverage} from "silo-core/test/echidna-leverage/utils/ActorLeverage.sol";
@@ -26,12 +25,12 @@ import {TestWETH} from "silo-core/test/echidna-leverage/utils/mocks/TestWETH.sol
 /// @notice Handler test contract for a set of actions
 contract LeverageHandler is BaseHandlerLeverage {
     function rescueTokens(IERC20 _token, uint256 _i) external payable setupRandomActor(_i) {
-        RevenueModule revenueModule = RevenueModule(leverageRouter.predictUserLeverageContract(targetActor));
+        RescueModule rescueModule = RescueModule(leverageRouter.predictUserLeverageContract(targetActor));
 
         _before();
 
         (bool success,) = actor.proxy{value: msg.value}(
-            address(revenueModule), abi.encodeWithSelector(RevenueModule.rescueTokens.selector, _token)
+            address(rescueModule), abi.encodeWithSelector(RescueModule.rescueTokens.selector, _token)
         );
 
         if (success) {
@@ -39,7 +38,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         }
 
         assertEq(
-            _token.balanceOf(address(revenueModule)), 0, "after rescue (success of fail) there should be 0 tokens"
+            _token.balanceOf(address(rescueModule)), 0, "after rescue (success of fail) there should be 0 tokens"
         );
     }
 
@@ -60,7 +59,8 @@ contract LeverageHandler is BaseHandlerLeverage {
     }
 
     function setLeverageFee(uint256 _fee) external {
-        address owner = leverageRouter.owner();
+        address owner = leverageRouter.getRoleMember(leverageRouter.DEFAULT_ADMIN_ROLE(), 0);
+        assertTrue(owner != address(0), "[setLeverageFee] sanity check for not empty owner");
 
         _before();
 

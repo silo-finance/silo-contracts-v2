@@ -4,6 +4,10 @@ pragma solidity ^0.8.19;
 import {InvariantsLeverage} from "./InvariantsLeverage.t.sol";
 import {SetupLeverage} from "./SetupLeverage.t.sol";
 
+/*
+    make echidna-leverage-assert
+    make echidna-leverage
+*/
 /// @title LeverageTester
 /// @notice Entry point for invariant testing, inherits all contracts, invariants & handler
 /// @dev Mono contract that contains all the testing logic

@@ -27,6 +27,8 @@ import "forge-std/console.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract SetupLeverage is Setup {
+    address constant LEVERAGE_OWNER = address(0x111222333);
+
     function _setUp() internal override {
         super._setUp();
 
@@ -45,7 +47,7 @@ contract SetupLeverage is Setup {
     }
 
     function _deployLeverage() internal {
-        leverageRouter = new LeverageRouter(address(this), address(this), address(_asset0));
+        leverageRouter = new LeverageRouter(LEVERAGE_OWNER, LEVERAGE_OWNER, address(_asset0));
         swapRouterMock = new SwapRouterMock();
     }
 
