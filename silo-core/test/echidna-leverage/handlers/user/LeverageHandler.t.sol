@@ -4,6 +4,8 @@ pragma solidity ^0.8.19;
 // Interfaces
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
+import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
+
 import {IERC3156FlashLender} from "silo-core/contracts/interfaces/IERC3156FlashLender.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {
@@ -142,11 +144,12 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         uint256 beforeDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
 
-        (bool success,) = actor.proxy{value: msg.value}(
+        (bool success,) = actor.proxy(
             address(leverageRouter),
             abi.encodeWithSelector(
-                ILeverageUsingSiloFlashloan.openLeveragePosition.selector, flashArgs, abi.encode(swapArgs), depositArgs
-            )
+                ILeverageRouter.openLeveragePosition.selector, flashArgs, abi.encode(swapArgs), depositArgs
+            ),
+            msg.value
         );
 
         uint256 afterDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
@@ -238,7 +241,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         (bool success,) = actor.proxy(
             address(leverageRouter),
             abi.encodeWithSelector(
-                ILeverageUsingSiloFlashloan.closeLeveragePosition.selector, abi.encode(swapArgs), closeArgs
+                ILeverageRouter.closeLeveragePosition.selector, abi.encode(swapArgs), closeArgs
             )
         );
 
