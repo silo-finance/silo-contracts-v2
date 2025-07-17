@@ -10,7 +10,6 @@ import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
 import {LeverageTester} from "./LeverageTester.t.sol";
 import {SetupLeverage} from "./SetupLeverage.t.sol";
 import {InvariantsLeverage} from "./InvariantsLeverage.t.sol";
-import {LeverageHandler} from "./handlers/user/LeverageHandler.t.sol";
 
 /*
  * Test suite that converts from  "fuzz tests" to foundry "unit tests"
