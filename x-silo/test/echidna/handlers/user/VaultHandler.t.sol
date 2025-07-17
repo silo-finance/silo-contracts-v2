@@ -23,7 +23,7 @@ contract VaultHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function deposit(uint256 _assets, uint8 i) external setup {
+    function deposit(uint256 _assets, uint8 i) external setupRandomActor {
         bool success;
         bytes memory returnData;
 
@@ -74,7 +74,7 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function mint(uint256 _shares, uint8 i) external setup {
+    function mint(uint256 _shares, uint8 i) external setupRandomActor {
         bool success;
         bytes memory returnData;
 
@@ -103,7 +103,7 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function withdraw(uint256 _assets, uint8 i) external setup {
+    function withdraw(uint256 _assets, uint8 i) external setupRandomActor {
         bool success;
         bytes memory returnData;
 
@@ -139,7 +139,7 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function withdrawMax(uint8 i) external setup {
+    function withdrawMax(uint8 i) external setupRandomActor {
         bool success;
         bytes memory returnData;
 
@@ -174,7 +174,7 @@ contract VaultHandler is BaseHandler {
         }
     }
 
-    function redeem(uint256 _shares, uint8 i) external setup {
+    function redeem(uint256 _shares, uint8 i) external setupRandomActor {
         bool success;
         bytes memory returnData;
 

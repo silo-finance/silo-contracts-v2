@@ -29,7 +29,7 @@ contract FlashLoanHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function flashLoan(uint256 _amount, uint256 _amountToRepay, uint8 i, uint8 j) external setup {
+    function flashLoan(uint256 _amount, uint256 _amountToRepay, uint8 i, uint8 j) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 

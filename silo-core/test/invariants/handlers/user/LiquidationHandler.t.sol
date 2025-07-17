@@ -3,9 +3,7 @@ pragma solidity ^0.8.19;
 
 // Interfaces
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {
-    IPartialLiquidation
-} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
 // Libraries
 import "forge-std/console.sol";
@@ -25,11 +23,10 @@ contract LiquidationHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function liquidationCall(
-        uint256 _debtToCover,
-        bool _receiveSToken,
-        RandomGenerator memory random
-    ) external setup {
+    function liquidationCall(uint256 _debtToCover, bool _receiveSToken, RandomGenerator memory random)
+        external
+        setupRandomActor(random.i)
+    {
         bool success;
         bytes memory returnData;
 
@@ -67,11 +64,4 @@ contract LiquidationHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                           HELPERS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    /// @notice Random number struct to help with stack too deep errors
-    struct RandomGenerator {
-        uint8 i;
-        uint8 j;
-        uint8 k;
-    }
 }

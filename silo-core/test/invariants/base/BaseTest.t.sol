@@ -30,10 +30,18 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @dev Actor proxy mechanism
-    modifier setup() virtual {
-        actor = actors[msg.sender];
-        targetActor = address(actor);
+    modifier setupRandomActor(uint256 _i) virtual {
+        targetActor = actorAddresses[_i % actorAddresses.length];
+        actor = Actor(payable(targetActor));
+
+        assertTrue(targetActor != address(0), "setupActor fail: targetActor zero");
+        assertTrue(address(actor) != address(0), "setupActor fail: actor zero");
+
+        require(targetActor != address(0), "setupActor fail: targetActor zero");
+        require(address(actor) != address(0), "setupActor fail: actor zero");
+
         _;
+
         actor = Actor(payable(address(0)));
         targetActor = address(0);
     }
