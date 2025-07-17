@@ -52,6 +52,18 @@ fs_permissions = [
     { access = "read", path = "./silo-core/deploy/input/"}
 ]
 
+[profile.echidna_leverage]
+src = 'silo-core/contracts'
+test = 'silo-core/test/echidna-leverage'
+out = 'cache/foundry/out/silo-core'
+broadcast = 'silo-core/broadcast'
+
+fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"}
+]
+
 [profile.core_test]
 src = 'silo-core/test'
 out = 'cache/foundry/out/silo-core'

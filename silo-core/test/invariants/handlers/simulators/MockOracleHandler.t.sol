@@ -37,7 +37,7 @@ contract MockOracleHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function setOraclePrice(uint256 _price, uint8 i) external setup {
+    function setOraclePrice(uint256 _price, uint8 i) external setupRandomActor(i) {
         _price = clampBetween(_price, MIN_PRICE, MAX_PRICE);
 
         // Get one of the mock oracles randomly
