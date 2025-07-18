@@ -26,6 +26,21 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Run submodule update
+        run: git submodule update --init --recursive
+
+      - name: Build silo foundry utils
+        working-directory: ./gitmodules/silo-foundry-utils
+        run: |
+          cargo build --release
+          cp target/release/silo-foundry-utils ../../silo-foundry-utils
+          ../../silo-foundry-utils --version
+
       - name: Fetch addresses and send request for Sonic
         run: ./silo-core/scripts/hypernative/runHypernative.sh $RPC_SONIC sonic sonic
 
