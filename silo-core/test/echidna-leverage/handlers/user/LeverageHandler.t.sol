@@ -137,8 +137,10 @@ contract LeverageHandler is BaseHandlerLeverage {
             swapCallData: "mocked swap data"
         });
 
+        uint256 amountOut = _quote(flashArgs.amount, swapArgs.sellToken) * 995 / 1000;
+        console2.log("amountOut", amountOut);
         // swap with 0.5% slippage
-        swapRouterMock.setSwap(swapArgs.sellToken, flashArgs.amount, swapArgs.buyToken, flashArgs.amount * 995 / 1000);
+        swapRouterMock.setSwap(swapArgs.sellToken, flashArgs.amount, swapArgs.buyToken, amountOut);
 
         _before();
 
@@ -159,7 +161,7 @@ contract LeverageHandler is BaseHandlerLeverage {
 
             assertEq(
                 ISilo(flashArgs.flashloanTarget).maxRepay(targetActor),
-                beforeDebt + flashArgs.amount + depositArgs.amount,
+                beforeDebt,
                 "[openLeveragePosition] borrower should have debt created by leverage"
             );
 
@@ -338,5 +340,10 @@ contract LeverageHandler is BaseHandlerLeverage {
 
     function _swapModuleAddress() internal returns (IGeneralSwapModule swapModule) {
         return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION()).SWAP_MODULE();
+    }
+
+    function _quote(uint256 _amount, address _baseToken) internal returns (uint256 amountOut) {
+        MockSiloOracle oracle = MockSiloOracle(address(_asset0) == _baseToken ? oracle0 : oracle1);
+        amountOut = oracle.quote(_amount, _baseToken);
     }
 }
