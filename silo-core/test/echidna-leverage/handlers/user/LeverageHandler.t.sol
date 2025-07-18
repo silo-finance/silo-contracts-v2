@@ -243,9 +243,7 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         (bool success,) = actor.proxy(
             address(leverageRouter),
-            abi.encodeWithSelector(
-                ILeverageRouter.closeLeveragePosition.selector, abi.encode(swapArgs), closeArgs
-            )
+            abi.encodeWithSelector(ILeverageRouter.closeLeveragePosition.selector, abi.encode(swapArgs), closeArgs)
         );
 
         if (success) {
@@ -334,8 +332,10 @@ contract LeverageHandler is BaseHandlerLeverage {
         return LeverageUsingSiloFlashloanWithGeneralSwap(address(leverageRouter.userLeverageContract(_user)));
     }
 
-
-    function _userPredictedLeverageContract(address _user) internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
+    function _userPredictedLeverageContract(address _user)
+        internal
+        returns (LeverageUsingSiloFlashloanWithGeneralSwap)
+    {
         return LeverageUsingSiloFlashloanWithGeneralSwap(address(leverageRouter.predictUserLeverageContract(_user)));
     }
 
