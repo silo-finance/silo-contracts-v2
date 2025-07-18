@@ -24,6 +24,7 @@ import {console2} from "forge-std/console2.sol";
 import {BaseHandlerLeverage} from "../../base/BaseHandlerLeverage.t.sol";
 import {TestERC20} from "silo-core/test/invariants/utils/mocks/TestERC20.sol";
 import {TestWETH} from "silo-core/test/echidna-leverage/utils/mocks/TestWETH.sol";
+import {MockSiloOracle} from "silo-core/test/invariants/utils/mocks/MockSiloOracle.sol";
 
 /// @title LeverageHandler
 /// @notice Handler test contract for a set of actions
