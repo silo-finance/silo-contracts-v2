@@ -175,6 +175,6 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
             52829075790591245909921009569075756553518276768940526659247519093248397732, 0, 0
         );
         LeverageTester.accrueInterestForBothSilos();
-        LeverageTester.transitionCollateral(754, RandomGenerator(48, 36, 4));
+        LeverageTester.transitionCollateral(754, RandomGenerator(21, 27, 77));
     }
 }
