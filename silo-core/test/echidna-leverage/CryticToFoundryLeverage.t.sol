@@ -45,8 +45,8 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
     FOUNDRY_PROFILE=echidna_leverage forge test -vv --ffi --mt test_EchidnaLeverage_leverage
     */
     function test_EchidnaLeverage_leverage() public {
-        LeverageTester.deposit(3108972722022, 0, 1, 1);
-        LeverageTester.openLeveragePosition(100000000000000001, 23, RandomGenerator(25, 0, 10));
+        LeverageTester.deposit(1,0,0,0);
+        LeverageTester.openLeveragePosition(4506857007, 0, RandomGenerator(1, 0, 0));
     }
 
     /*

@@ -34,13 +34,9 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         _before();
 
-        (bool success,) = actor.proxy{value: msg.value}(
-            address(rescueModule), abi.encodeWithSelector(RescueModule.rescueTokens.selector, _token)
-        );
+        (bool success,) = actor.proxy(address(rescueModule), abi.encodeWithSelector(RescueModule.rescueTokens.selector, _token));
 
-        if (success) {
-            _after();
-        }
+        _after();
 
         assertEq(_token.balanceOf(address(rescueModule)), 0, "after rescue (success of fail) there should be 0 tokens");
     }
@@ -96,6 +92,10 @@ contract LeverageHandler is BaseHandlerLeverage {
         payable
         setupRandomActor(_random.i)
     {
+        if (_userWhoOnlyApprove() == targetActor) {
+            return;
+        }
+
         uint256 _PRECISION = 1e18;
 
         // it allows to set 110%, so we do not exclude cases when user pick value that is too high
@@ -103,10 +103,6 @@ contract LeverageHandler is BaseHandlerLeverage {
         _depositPercent = _depositPercent % 1.1e18;
 
         console2.log("targetActor", targetActor, address(actor));
-
-        if (_userWhoOnlyApprove() == targetActor) {
-            return;
-        }
 
         address silo = _getRandomSilo(_random.j);
 
@@ -123,15 +119,16 @@ contract LeverageHandler is BaseHandlerLeverage {
         });
 
         address depositAsset = ISilo(silo).asset();
+        uint256 depositAmount = IERC20(depositAsset).balanceOf(targetActor) * _depositPercent / _PRECISION;
 
         depositArgs = ILeverageUsingSiloFlashloan.DepositArgs({
-            amount: IERC20(depositAsset).balanceOf(targetActor) * _depositPercent / _PRECISION,
+            amount: depositAmount,
             collateralType: ISilo.CollateralType(_random.k % 2),
             silo: ISilo(silo)
         });
 
         swapArgs = IGeneralSwapModule.SwapArgs({
-            buyToken: depositArgs.silo.asset(),
+            buyToken: depositAsset,
             sellToken: ISilo(flashArgs.flashloanTarget).asset(),
             allowanceTarget: address(swapRouterMock),
             exchangeProxy: address(swapRouterMock),
@@ -143,23 +140,23 @@ contract LeverageHandler is BaseHandlerLeverage {
         // swap with 0.5% slippage
         swapRouterMock.setSwap(swapArgs.sellToken, flashArgs.amount, swapArgs.buyToken, amountOut);
 
-        _before();
-
         uint256 beforeDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
+        
+        _before();
 
         (bool success,) = actor.proxy(
             address(leverageRouter),
             abi.encodeWithSelector(
                 ILeverageRouter.openLeveragePosition.selector, flashArgs, abi.encode(swapArgs), depositArgs
             ),
-            msg.value
+            msg.value != 0 ? depositAmount : 0 // we need to keep msg.value in sync with depositArgs.amount
         );
+
+        _after();
 
         uint256 afterDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
 
         if (success) {
-            _after();
-
             assertGt(
                 ISilo(flashArgs.flashloanTarget).maxRepay(targetActor),
                 beforeDebt,
@@ -207,6 +204,9 @@ contract LeverageHandler is BaseHandlerLeverage {
             );
         } else {
             assertEq(beforeDebt, afterDebt, "[openLeveragePosition] when leverage fail, debt does not change");
+
+            _assert_openingLeverage_onFail_userSharesNotChange(silo);
+            _assert_openingLeverage_onFail_userSharesNotChange(otherSilo);
         }
     }
 
@@ -227,9 +227,16 @@ contract LeverageHandler is BaseHandlerLeverage {
         });
 
         uint256 flashAmount = ISilo(closeArgs.flashloanTarget).maxRepay(targetActor);
-        uint256 amountIn = flashAmount * 111 / 100;
-        // swap with 0.5% slippage
-        swapRouterMock.setSwap(swapArgs.sellToken, amountIn, swapArgs.buyToken, amountIn * 995 / 1000);
+
+        if (flashAmount == 0) {
+            return;
+        }
+
+        // we need to count for slippage, so we have to take higher amount in
+        uint256 amountIn = flashAmount * (100 + (_random.j % 5)) / 100;
+        
+        // omount out with some random slippage
+        uint256 amountOut = _quote(amountIn, ISilo(closeArgs.flashloanTarget).asset()) * (1000 - (_random.k % 50)) / 1000;
 
         swapArgs = IGeneralSwapModule.SwapArgs({
             buyToken: ISilo(closeArgs.flashloanTarget).asset(),
@@ -239,6 +246,8 @@ contract LeverageHandler is BaseHandlerLeverage {
             swapCallData: "mocked swap data"
         });
 
+        swapRouterMock.setSwap(swapArgs.sellToken, amountIn, swapArgs.buyToken, amountOut);
+
         _before();
 
         (bool success,) = actor.proxy(
@@ -246,8 +255,9 @@ contract LeverageHandler is BaseHandlerLeverage {
             abi.encodeWithSelector(ILeverageRouter.closeLeveragePosition.selector, abi.encode(swapArgs), closeArgs)
         );
 
+        _after();
+
         if (success) {
-            _after();
             assertEq(ISilo(closeArgs.flashloanTarget).maxRepay(targetActor), 0, "borrower should have no debt");
 
             assertTrue(
