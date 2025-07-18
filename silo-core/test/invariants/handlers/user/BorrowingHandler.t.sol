@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 // Interfaces
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {ISilo} from "silo-core/contracts/Silo.sol";
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 // Libraries
 import "forge-std/console.sol";
