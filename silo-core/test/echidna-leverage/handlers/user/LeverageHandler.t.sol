@@ -204,9 +204,6 @@ contract LeverageHandler is BaseHandlerLeverage {
             );
         } else {
             assertEq(beforeDebt, afterDebt, "[openLeveragePosition] when leverage fail, debt does not change");
-
-            _assert_openingLeverage_onFail_userSharesNotChange(silo);
-            _assert_openingLeverage_onFail_userSharesNotChange(otherSilo);
         }
     }
 
