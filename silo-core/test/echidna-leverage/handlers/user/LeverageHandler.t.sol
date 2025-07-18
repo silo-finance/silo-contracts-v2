@@ -160,10 +160,10 @@ contract LeverageHandler is BaseHandlerLeverage {
         if (success) {
             _after();
 
-            assertEq(
+            assertGt(
                 ISilo(flashArgs.flashloanTarget).maxRepay(targetActor),
                 beforeDebt,
-                "[openLeveragePosition] borrower should have debt created by leverage"
+                "[openLeveragePosition] borrower should have additional debt created by leverage"
             );
 
             assertTrue(
