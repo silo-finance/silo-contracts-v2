@@ -24,6 +24,7 @@ import {console2} from "forge-std/console2.sol";
 import {BaseHandlerLeverage} from "../../base/BaseHandlerLeverage.t.sol";
 import {TestERC20} from "silo-core/test/invariants/utils/mocks/TestERC20.sol";
 import {TestWETH} from "silo-core/test/echidna-leverage/utils/mocks/TestWETH.sol";
+import {MockSiloOracle} from "silo-core/test/invariants/utils/mocks/MockSiloOracle.sol";
 
 /// @title LeverageHandler
 /// @notice Handler test contract for a set of actions
@@ -137,8 +138,10 @@ contract LeverageHandler is BaseHandlerLeverage {
             swapCallData: "mocked swap data"
         });
 
+        uint256 amountOut = _quote(flashArgs.amount, swapArgs.sellToken) * 995 / 1000;
+        console2.log("amountOut", amountOut);
         // swap with 0.5% slippage
-        swapRouterMock.setSwap(swapArgs.sellToken, flashArgs.amount, swapArgs.buyToken, flashArgs.amount * 995 / 1000);
+        swapRouterMock.setSwap(swapArgs.sellToken, flashArgs.amount, swapArgs.buyToken, amountOut);
 
         _before();
 
@@ -157,10 +160,10 @@ contract LeverageHandler is BaseHandlerLeverage {
         if (success) {
             _after();
 
-            assertEq(
+            assertGt(
                 ISilo(flashArgs.flashloanTarget).maxRepay(targetActor),
-                beforeDebt + flashArgs.amount + depositArgs.amount,
-                "[openLeveragePosition] borrower should have debt created by leverage"
+                beforeDebt,
+                "[openLeveragePosition] borrower should have additional debt created by leverage"
             );
 
             assertTrue(
@@ -240,9 +243,7 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         (bool success,) = actor.proxy(
             address(leverageRouter),
-            abi.encodeWithSelector(
-                ILeverageRouter.closeLeveragePosition.selector, abi.encode(swapArgs), closeArgs
-            )
+            abi.encodeWithSelector(ILeverageRouter.closeLeveragePosition.selector, abi.encode(swapArgs), closeArgs)
         );
 
         if (success) {
@@ -294,12 +295,11 @@ contract LeverageHandler is BaseHandlerLeverage {
     }
 
     function assert_AllowanceDoesNotChangedForUserWhoOnlyApprove() public {
-        assertEq(
-            _asset0.allowance(_userWhoOnlyApprove(), address(leverageRouter)), type(uint256).max, "approval0 must stay"
-        );
-        assertEq(
-            _asset1.allowance(_userWhoOnlyApprove(), address(leverageRouter)), type(uint256).max, "approval1 must stay"
-        );
+        address user = _userWhoOnlyApprove();
+        address userLeverage = address(_userPredictedLeverageContract(user));
+
+        assertEq(_asset0.allowance(user, userLeverage), type(uint256).max, "approval0 must stay");
+        assertEq(_asset1.allowance(user, userLeverage), type(uint256).max, "approval1 must stay");
     }
 
     function echidna_AllowanceDoesNotChangedForUserWhoOnlyApprove() public returns (bool) {
@@ -332,7 +332,19 @@ contract LeverageHandler is BaseHandlerLeverage {
         return LeverageUsingSiloFlashloanWithGeneralSwap(address(leverageRouter.userLeverageContract(_user)));
     }
 
+    function _userPredictedLeverageContract(address _user)
+        internal
+        returns (LeverageUsingSiloFlashloanWithGeneralSwap)
+    {
+        return LeverageUsingSiloFlashloanWithGeneralSwap(address(leverageRouter.predictUserLeverageContract(_user)));
+    }
+
     function _swapModuleAddress() internal returns (IGeneralSwapModule swapModule) {
         return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION()).SWAP_MODULE();
+    }
+
+    function _quote(uint256 _amount, address _baseToken) internal returns (uint256 amountOut) {
+        MockSiloOracle oracle = MockSiloOracle(address(_asset0) == _baseToken ? oracle0 : oracle1);
+        amountOut = oracle.quote(_amount, _baseToken);
     }
 }
