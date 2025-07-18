@@ -294,12 +294,11 @@ contract LeverageHandler is BaseHandlerLeverage {
     }
 
     function assert_AllowanceDoesNotChangedForUserWhoOnlyApprove() public {
-        assertEq(
-            _asset0.allowance(_userWhoOnlyApprove(), address(leverageRouter)), type(uint256).max, "approval0 must stay"
-        );
-        assertEq(
-            _asset1.allowance(_userWhoOnlyApprove(), address(leverageRouter)), type(uint256).max, "approval1 must stay"
-        );
+        address user = _userWhoOnlyApprove();
+        address userLeverage = address(_userPredictedLeverageContract(user));
+
+        assertEq(_asset0.allowance(user, userLeverage), type(uint256).max, "approval0 must stay");
+        assertEq(_asset1.allowance(user, userLeverage), type(uint256).max, "approval1 must stay");
     }
 
     function echidna_AllowanceDoesNotChangedForUserWhoOnlyApprove() public returns (bool) {
@@ -330,6 +329,11 @@ contract LeverageHandler is BaseHandlerLeverage {
 
     function _userLeverageContract(address _user) internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
         return LeverageUsingSiloFlashloanWithGeneralSwap(address(leverageRouter.userLeverageContract(_user)));
+    }
+
+
+    function _userPredictedLeverageContract(address _user) internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
+        return LeverageUsingSiloFlashloanWithGeneralSwap(address(leverageRouter.predictUserLeverageContract(_user)));
     }
 
     function _swapModuleAddress() internal returns (IGeneralSwapModule swapModule) {
