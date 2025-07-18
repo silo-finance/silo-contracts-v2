@@ -40,47 +40,33 @@ done
 
 echo "Amount of addresses to submit is ${#ADDRESSES[@]}"
 
-echo "Sending request to update pause watchlist..."
-RESPONSE=$(curl -X 'PATCH' \
-    "$HYPERNATIVE_WATCHLIST_PAUSE" \
-    -H 'accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -H "x-client-id: $HYPERNATIVE_CLIENT_ID" \
-    -H "x-client-secret: $HYPERNATIVE_CLIENT_SECRET" \
-    -d '{
-    "description": "",
-    "assets": [
-    '"$JSON_ASSETS"'
-    ],
-    "mode": "add"
-}' 2>/dev/null)
+for WATCHLIST_TYPE in "pause" "alerts"; do
+    echo "Sending request to update ${WATCHLIST_TYPE} watchlist..."
 
-if echo "$RESPONSE" | grep -q '"success"[[:space:]]*:[[:space:]]*true'; then
-    echo "Success from Hypernative pause watchlist update response for $CHAIN_NAME"
-else
-    echo "Error: Hypernative pause watchlist update did not return \"success\":true in response" >&2
-    exit 1
-fi
+    if [ "$WATCHLIST_TYPE" = "pause" ]; then
+        URL="$HYPERNATIVE_WATCHLIST_PAUSE"
+    else
+        URL="$HYPERNATIVE_WATCHLIST_ALERTS"
+    fi
 
-echo "Sending request to update alerts watchlist..."
-RESPONSE=$(curl -X 'PATCH' \
-    "$HYPERNATIVE_WATCHLIST_ALERTS" \
-    -H 'accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -H "x-client-id: $HYPERNATIVE_CLIENT_ID" \
-    -H "x-client-secret: $HYPERNATIVE_CLIENT_SECRET" \
-    -d '{
-    "description": "",
-    "assets": [
-    '"$JSON_ASSETS"'
-    ],
-    "mode": "add"
-}' 2>/dev/null)
+    RESPONSE=$(curl -X 'PATCH' \
+        "$URL" \
+        -H 'accept: application/json' \
+        -H 'Content-Type: application/json' \
+        -H "x-client-id: $HYPERNATIVE_CLIENT_ID" \
+        -H "x-client-secret: $HYPERNATIVE_CLIENT_SECRET" \
+        -d '{
+        "description": "",
+        "assets": [
+        '"$JSON_ASSETS"'
+        ],
+        "mode": "add"
+    }' 2>/dev/null)
 
-if echo "$RESPONSE" | grep -q '"success"[[:space:]]*:[[:space:]]*true'; then
-    echo "Success from Hypernative alerts watchlist update response for $CHAIN_NAME"
-    exit 0
-else
-    echo "Error: Hypernative alerts watchlist update did not return \"success\":true in response" >&2
-    exit 1
-fi
+    if echo "$RESPONSE" | grep -q '"success"[[:space:]]*:[[:space:]]*true'; then
+        echo "Success from Hypernative ${WATCHLIST_TYPE} watchlist update response for $CHAIN_NAME"
+    else
+        echo "Error: Hypernative ${WATCHLIST_TYPE} watchlist update did not return \"success\":true in response" >&2
+        exit 1
+    fi
+done
