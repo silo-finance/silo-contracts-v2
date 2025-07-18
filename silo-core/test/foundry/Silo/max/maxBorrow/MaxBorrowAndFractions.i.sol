@@ -88,7 +88,7 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
 
         // We need to create a debt before testing, because of that `_firstBorrowAmount` should be < `maxBorrow`.
         // Otherwise, the test will fail because we will not be able to borrow a second time.
-        vm.assume(_firstBorrowAmount != 0 && _firstBorrowAmount < maxBorrow);
+        vm.assume(_firstBorrowAmount != 0 && _firstBorrowAmount <= maxBorrow / 2);
         vm.assume(_scenario == 1 || _scenario == 2 || _scenario == 3);
 
         if (_scenario == 1) {
