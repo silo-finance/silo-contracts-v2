@@ -133,7 +133,7 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
         );
     }
 
-    // FOUNDRY_PROFILE=echidna_leverage forge test -vv --ffi --mt test_replay_LENDING_HSPOST_D_transitionCollateral
+    // FOUNDRY_PROFILE=echidna_leverage forge test --ffi --mt test_replay_LENDING_HSPOST_D_transitionCollateral -vv
     function test_replay_LENDING_HSPOST_D_transitionCollateral() public {
         LeverageTester.mint(37377012585627349138416833614621264, 68, 8, 0);
         LeverageTester.assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
