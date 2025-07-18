@@ -23,7 +23,10 @@ echo "Submitting silo-core and silo-vaults deployments..."
 
 echo "Submitting Silo addresses..."
 
-silo-core/scripts/hypernative/printSilos.sh $DEPLOYMENTS_DIR | \
+FOUNDRY_PROFILE=core \
+    forge script silo-core/scripts/PrintSiloAddresses.s.sol \
+    --ffi --rpc-url $RPC_URL | \
+    grep 0x | \
     ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
 
 echo "Submitting SiloVault addresses..."
