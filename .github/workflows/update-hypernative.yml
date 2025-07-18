@@ -14,9 +14,9 @@ env:
 
 on:
   push:
-    paths:
-      - silo-core/scripts/PrintSiloAddresses.s.sol
-      - .github/workflows/update-hypernative.yml
+    branches:
+      - develop
+      - master
 
 jobs:
   hypernative:
