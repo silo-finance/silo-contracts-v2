@@ -84,6 +84,8 @@ contract SetupLeverage is Setup {
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             // Deploy actor proxies and approve system contracts
             address _actor = _setUpActor(addresses[i], tokens, contracts);
+            ActorLeverage(payable(_actor)).initLeverageApprovals(tokens[4], leverageRouter);
+            ActorLeverage(payable(_actor)).initLeverageApprovals(tokens[7], leverageRouter);
 
             // Mint initial balances to actors
             for (uint256 j = 0; j < underlyingAssetsLength; j++) {

@@ -30,7 +30,7 @@ contract SwapRouterMock {
     }
 
     fallback() external {
-        IERC20(sellToken).safeTransferFrom(msg.sender, address(this), amountIn);
-        MintableToken(buyToken).mint(msg.sender, amountOut);
+        if (amountIn != 0) IERC20(sellToken).safeTransferFrom(msg.sender, address(this), amountIn);
+        if (amountOut != 0) MintableToken(buyToken).mint(msg.sender, amountOut);
     }
 }
