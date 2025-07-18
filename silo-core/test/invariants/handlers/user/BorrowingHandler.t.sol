@@ -213,8 +213,10 @@ contract BorrowingHandler is BaseHandler {
         if (success) {
             _after();
 
+            uint256 receivedAssets = abi.decode(returnData, (uint256));
+
             if (_collateralType != ISilo.CollateralType.Protected) {
-                assertGe(liquidity, _assets, LENDING_HSPOST_D);
+                assertGe(liquidity, receivedAssets, LENDING_HSPOST_D);
             }
             /* assertApproxEqAbs(
                 defaultVarsAfter[target].userAssets, defaultVarsBefore[target].userAssets, 2 wei, BORROWING_HSPOST_J

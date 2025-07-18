@@ -132,4 +132,49 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
             1, 9300860518432582072233127002492206515438141778154890838101482432814708311882, 4, 18
         );
     }
+
+    // FOUNDRY_PROFILE=echidna_leverage forge test --ffi --mt test_replay_LENDING_HSPOST_D_transitionCollateral -vv
+    function test_replay_LENDING_HSPOST_D_transitionCollateral() public {
+        LeverageTester.mint(37377012585627349138416833614621264, 68, 8, 0);
+        LeverageTester.assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
+        LeverageTester.mint(91263930532508457067226357055013206427, 0, 43, 1);
+        LeverageTester.approve(
+            4693767025084829504728549001627725142013373768572652486144526826425602111, 0, 0
+        );
+        LeverageTester.assert_LENDING_INVARIANT_B(3, 77);
+        LeverageTester.approve(20173546881046558932246292342151680399901847244410817409700673862154371, 0, 0);
+        LeverageTester.repayShares(19761772054543692487490211516202293, 0, 0);
+        LeverageTester.assert_LENDING_INVARIANT_B(0, 0);
+        LeverageTester.transfer(1175745079946205372183956782191932569933290147407232973886925850268244772, 0, 0);
+        LeverageTester.deposit(1220121080980483341180088841458962008721083028397603315405087406194053711, 0, 0, 0);
+        LeverageTester.borrowSameAsset(1189295320661420378768046494214370, 0, 0);
+        LeverageTester.setOraclePrice(1941492113288175123799033573114228796966266920469697365830438140109601, 0);
+        LeverageTester.transfer(0, 0, 0);
+        LeverageTester.repay(0, 0, 0);
+        LeverageTester.mint(2, 0, 25, 1);
+        LeverageTester.closeLeveragePosition(RandomGenerator(1, 0, 0));
+        LeverageTester.borrowShares(106675216617470953612273915229355594252189242715585042259127104365034, 0, 0);
+        LeverageTester.assertBORROWING_HSPOST_F(14, 1);
+        LeverageTester.repay(367845465280968862049358840710100071837473236215553696354364305089055, 0, 0);
+        LeverageTester.receiveAllowance(
+            10042188267375893584101419355540308895267876422626915728310837304304726562, 0, 0, 0
+        );
+        LeverageTester.borrow(
+            14889316231293521303000638444000568759909077363103434890889418256578668, 0, 0
+        );
+        LeverageTester.withdraw(
+            70080046258413863271438511417722815567790071092488462672758693003983813176, 1, 0, 0
+        );
+        LeverageTester.liquidationCall(0, false, RandomGenerator(5, 2, 0));
+        LeverageTester.repay(270376388814837912840698, 0, 0);
+        LeverageTester.switchCollateralToThisSilo(0);
+        LeverageTester.repay(
+            259205741000817977977592448897897068162264841147220667615497787901496210, 0, 0
+        );
+        LeverageTester.borrowSameAsset(
+            52829075790591245909921009569075756553518276768940526659247519093248397732, 0, 0
+        );
+        LeverageTester.accrueInterestForBothSilos();
+        LeverageTester.transitionCollateral(754, RandomGenerator(21, 27, 77));
+    }
 }
