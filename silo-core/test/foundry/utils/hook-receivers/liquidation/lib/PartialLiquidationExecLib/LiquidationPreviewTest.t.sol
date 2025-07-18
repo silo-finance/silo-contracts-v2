@@ -106,7 +106,8 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
             ltvData.borrowerDebtAssets,
             ltvData.borrowerDebtAssets,
             params.liquidationTargetLtv,
-            params.liquidationFee
+            params.liquidationFee,
+            1e18
         );
 
         emit log_named_decimal_uint("maxDebtToCover", maxDebtToCover, 18);

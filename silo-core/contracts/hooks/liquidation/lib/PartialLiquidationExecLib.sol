@@ -96,23 +96,27 @@ library PartialLiquidationExecLib {
         uint256 ltvInDp = SiloSolvencyLib.ltvMath(debtValue, sumOfCollateralValue);
         if (ltvInDp <= collateralConfig.lt) return (0, 0, false); // user solvent
 
+        uint256 ratio = ISilo(collateralConfig.silo).convertToAssets(1e18);
+
         (collateralToLiquidate, debtToRepay) = PartialLiquidationLib.maxLiquidation(
             sumOfCollateralAssets,
             sumOfCollateralValue,
             ltvData.borrowerDebtAssets,
             debtValue,
             collateralConfig.liquidationTargetLtv,
-            collateralConfig.liquidationFee
+            collateralConfig.liquidationFee,
+            ratio
         );
 
-        // maxLiquidation() can underestimate collateral by `PartialLiquidationLib._UNDERESTIMATION`,
-        // when we do that, actual collateral that we will transfer will match exactly liquidity,
-        // but we will liquidate higher value by 1 or 2, then sTokenRequired will return false,
-        // but we can not withdraw (because we will be short by 2) solution is to include this 2wei here
+        // The maximum rounding error is calculated dynamically based on the asset-to-share ratio
+        // `maxLiquidation()` underestimates collateral by up to `2 * ratio` (where `ratio = convertToAssets(1e18)`)
+        // When checking if sTokens are required, we need to add back this dynamic underestimation
         unchecked {
-            // safe to uncheck, because we underestimated this value in a first place by _UNDERESTIMATION
-            uint256 overestimatedCollateral = collateralToLiquidate + PartialLiquidationLib._UNDERESTIMATION;
-            sTokenRequired = overestimatedCollateral > ISilo(collateralConfig.silo).getLiquidity();
+            // Calculate the same `maxRoundingError` used in `PartialLiquidationLib.maxLiquidation`
+            uint256 maxRoundingError = 2 * ratio;
+            // Add back the underestimation to get the actual collateral amount that would be needed
+            uint256 actualCollateralNeeded = collateralToLiquidate + maxRoundingError;
+            sTokenRequired = actualCollateralNeeded > ISilo(collateralConfig.silo).getLiquidity();
         }
     }
 

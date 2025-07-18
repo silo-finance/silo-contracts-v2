@@ -270,7 +270,8 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
             _borrowerDebtAssets,
             borrowerDebtValue,
             _liquidationTargetLtv,
-            _liquidationFee
+            _liquidationFee,
+            1e18
         );
 
         emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);

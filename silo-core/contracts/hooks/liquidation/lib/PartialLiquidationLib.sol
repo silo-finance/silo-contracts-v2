@@ -43,7 +43,8 @@ library PartialLiquidationLib {
         uint256 _borrowerDebtAssets,
         uint256 _borrowerDebtValue,
         uint256 _liquidationTargetLTV,
-        uint256 _liquidationFee
+        uint256 _liquidationFee,
+        uint256 _ratio
     )
         internal
         pure
@@ -64,13 +65,16 @@ library PartialLiquidationLib {
             _sumOfCollateralValue
         );
 
-        if (collateralToLiquidate > _UNDERESTIMATION) {
-            // -_UNDERESTIMATION here is to underestimate collateral that user gets on liquidation
-            // liquidation is executed based on sTokens, additional flow is: assets -> shares -> assets
-            // this two conversions are rounding down and can create 2 wei difference
+        // Why 2 * ?
+        // The factor of 2 accounts for two conversions during liquidation:
+        //   1. First conversion: Assets → Shares (when calculating how many shares to transfer)
+        //   2. Second conversion: Shares → Assets (when redeeming those shares)
+        // Each conversion can have a rounding error, so we multiply by 2 to account for both.
+        // _ratio == ISilo(collateralConfig.silo).convertToAssets(1e18)
+        uint256 maxRoundingError = 2 * _ratio;
 
-            // we will not underflow on -_UNDERESTIMATION because collateralToLiquidate is >= _UNDERESTIMATION
-            unchecked { collateralToLiquidate -= _UNDERESTIMATION; }
+        if (collateralToLiquidate > maxRoundingError) {
+            unchecked { collateralToLiquidate -= maxRoundingError; }
         } else {
             collateralToLiquidate = 0;
         }
