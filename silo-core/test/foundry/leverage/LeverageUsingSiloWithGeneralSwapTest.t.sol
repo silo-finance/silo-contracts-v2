@@ -1238,21 +1238,24 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_setLeverageFee_pass -vv
     */
-    function test_leverage_setLeverageFee_pass() public {
-        uint256 newFee = 0.01e18;
+    function test_leverage_setLeverageFee_pass_fuzz(uint256 _fee) public {
+        vm.assume(_fee <= leverageRouter.MAX_LEVERAGE_FEE());
+        vm.assume(_fee != leverageRouter.leverageFee());
+
         vm.expectEmit(true, false, false, false);
-        emit ILeverageRouter.LeverageFeeChanged(newFee);
-        leverageRouter.setLeverageFee(newFee);
-        assertEq(leverageRouter.leverageFee(), newFee, "Fee should be updated");
+        emit ILeverageRouter.LeverageFeeChanged(_fee);
+        leverageRouter.setLeverageFee(_fee);
+        assertEq(leverageRouter.leverageFee(), _fee, "Fee should be updated");
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_setLeverageFee_fail_InvalidFee -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_leverage_setLeverageFee_fail_InvalidFee_fuzz -vv
     */
-    function test_leverage_setLeverageFee_fail_InvalidFee() public {
-        uint256 newFee = 0.06e18;
+    function test_leverage_setLeverageFee_fail_InvalidFee_fuzz(uint256 _fee) public {
+        vm.assume(_fee > leverageRouter.MAX_LEVERAGE_FEE());
+
         vm.expectRevert(abi.encodeWithSelector(ILeverageRouter.InvalidFee.selector));
-        leverageRouter.setLeverageFee(newFee);
+        leverageRouter.setLeverageFee(_fee);
     }
 
     /*

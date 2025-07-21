@@ -22,7 +22,7 @@ abstract contract RevenueModule is ILeverageRouter, PausableWithAccessControl {
     function setLeverageFee(uint256 _fee) external onlyRole(OWNER_ROLE) {
         require(revenueReceiver != address(0), ReceiverZero());
         require(leverageFee != _fee, FeeDidNotChanged());
-        require(_fee < MAX_LEVERAGE_FEE, InvalidFee());
+        require(_fee <= MAX_LEVERAGE_FEE, InvalidFee());
 
         leverageFee = _fee;
         emit LeverageFeeChanged(_fee);
