@@ -110,13 +110,12 @@ abstract contract LeverageUsingSiloFlashloan is
         external
         virtual
     {
-        address shareTokenToApprove;
+        address shareTokenToApprove = address(_closeArgs.siloWithCollateral);
         
         if (_closeArgs.collateralType == ISilo.CollateralType.Protected) {
-            (address protectedShareToken,,) = _txSiloConfig.getShareTokens(address(_closeArgs.siloWithCollateral));
-            shareTokenToApprove = protectedShareToken;
-        } else {
-            shareTokenToApprove = address(_closeArgs.siloWithCollateral);
+            (
+                shareTokenToApprove,,
+            ) = _closeArgs.siloWithCollateral.config().getShareTokens(address(_closeArgs.siloWithCollateral));
         }
 
         _executePermit(_msgSender, _withdrawAllowance, shareTokenToApprove);

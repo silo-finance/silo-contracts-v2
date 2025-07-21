@@ -680,7 +680,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         (
             ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs,
             IGeneralSwapModule.SwapArgs memory swapArgs
-        ) = _defaultCloseArgs( address(silo1));
+        ) = _defaultCloseArgs(address(silo1));
 
         closeArgs.collateralType = _collateralType;
 
@@ -1071,7 +1071,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             vm.expectEmit(userLeverageContract);
 
             emit ILeverageUsingSiloFlashloan.CloseLeverage({
-                depositWithdrawn: silo0.previewRedeem(IERC20(shareCollateral).balanceOf(_user)),
+                depositWithdrawn: silo0.previewRedeem(IERC20(shareCollateral).balanceOf(_user), _closeArgs.collateralType),
                 swapAmountOut: (flashAmount * 111 / 100) * 99 / 100,
                 flashloanAmount: flashAmount,
                 flashloanFee: _flashFee(ISilo(_closeArgs.flashloanTarget), flashAmount),
