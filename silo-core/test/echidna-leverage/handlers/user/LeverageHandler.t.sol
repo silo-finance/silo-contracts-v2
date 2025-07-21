@@ -34,7 +34,10 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         _before();
 
-        (bool success,) = actor.proxy(address(rescueModule), abi.encodeWithSelector(RescueModule.rescueTokens.selector, _token));
+        (bool success,) = actor.proxy(
+            address(rescueModule),
+            abi.encodeWithSelector(RescueModule.rescueTokens.selector, _token)
+         );
 
         _after();
 
