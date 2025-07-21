@@ -350,6 +350,16 @@ contract LeverageHandler is BaseHandlerLeverage {
             address userBPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(otherUser));
 
             assertTrue(
+                userAPredictLeverageContract != address(0),
+                "predictUserLeverageContract(userA) != 0, sanity check"
+            );
+
+            assertTrue(
+                userBPredictLeverageContract != address(0),
+                "predictUserLeverageContract(userB) != 0, sanity check"
+            );
+
+            assertTrue(
                 userAPredictLeverageContract != userBPredictLeverageContract,
                 "userA != userB <=> predictUserLeverageContract(userA) != predictUserLeverageContract(userB)"
             );
@@ -370,13 +380,9 @@ contract LeverageHandler is BaseHandlerLeverage {
 
             address userPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(user));
 
-            assertTrue(
-                userPredictLeverageContract != address(0),
-                "predictUserLeverageContract(user) != 0, sanity check"
-            );
-
-            assertTrue(
-                userLeverageContract == userPredictLeverageContract,
+            assertEq(
+                userLeverageContract,
+                userPredictLeverageContract,
                 "predictUserLeverageContract(user) == userLeverageContract(user), userLeverageContract != 0"
             );
         }
