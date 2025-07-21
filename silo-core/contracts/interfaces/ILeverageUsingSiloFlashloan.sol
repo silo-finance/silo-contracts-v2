@@ -135,7 +135,7 @@ interface ILeverageUsingSiloFlashloan {
     /// @param _msgSender The address of the sender (provided by the leverage router)
     /// @param _swapArgs Swap call data and settings, it should swap enough collateral to repay flashloan in debt token
     /// @param _closeLeverageArgs configuration for closing position
-    /// @param _withdrawAllowance Permit for leverage contract to withdraw all borrower collateral tokens
+    /// @param _withdrawAllowance Permit for leverage contract to withdraw all borrower collateral or protected tokens
     function closeLeveragePositionPermit(
         address _msgSender,
         bytes calldata _swapArgs,
