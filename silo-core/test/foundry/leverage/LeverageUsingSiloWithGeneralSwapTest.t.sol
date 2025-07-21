@@ -595,9 +595,24 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_withDepositPermit
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_full_leverage_withPermit_collateral
     */
-    function test_leverage_withDepositPermit() public {
+    function test_full_leverage_withPermit_collateral() public {
+        _openleverage_withDepositPermit(ISilo.CollateralType.Collateral);
+
+        assertGt(IERC20(collateralShareToken).balanceOf(wallet.addr), 0, "user has collateral share token");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_full_leverage_withPermit_protected
+    */
+    function test_full_leverage_withPermit_protected() public {
+        _openleverage_withDepositPermit(ISilo.CollateralType.Protected);
+
+        assertGt(IERC20(protectedShareToken).balanceOf(wallet.addr), 0, "user has protected share token");
+    }
+
+    function _openleverage_withDepositPermit(ISilo.CollateralType _collateralType) internal {
         address user = wallet.addr;
         uint256 depositAmount = 0.1e18;
         uint256 multiplier = 2.0e18;
@@ -609,6 +624,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
             IGeneralSwapModule.SwapArgs memory swapArgs
         ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
+
+        depositArgs.collateralType = _collateralType;
 
         _prepareForOpeningLeverage({
             _user: user,
