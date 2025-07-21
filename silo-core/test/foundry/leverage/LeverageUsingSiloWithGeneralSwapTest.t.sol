@@ -57,6 +57,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     LeverageUsingSiloFlashloanWithGeneralSwap siloLeverageImpl;
     LeverageRouter leverageRouter;
     address collateralShareToken;
+    address protectedShareToken;
     address debtShareToken;
     SwapRouterMock swap;
 
@@ -71,7 +72,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         _deposit(1e18, address(1));
         _depositForBorrow(1e18, address(2));
 
-        (,collateralShareToken,) = cfg.getShareTokens(address(silo0));
+        (protectedShareToken, collateralShareToken,) = cfg.getShareTokens(address(silo0));
         (,, debtShareToken) = cfg.getShareTokens(address(silo1));
 
         leverageRouter = _deployLeverage();
@@ -516,6 +517,70 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_full_leverage_flow_native_collateral_pass
+    */
+    function test_full_leverage_flow_native_collateral_pass() public {
+        _open_leverage_native_pass(ISilo.CollateralType.Collateral);
+
+        assertGt(silo1.maxRepay(wallet.addr), 0, "sanity check: user has debt");
+
+        _closeLeverageExample(ISilo.CollateralType.Collateral);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_full_leverage_flow_native_protected_pass
+    */
+    function test_full_leverage_flow_native_protected_pass() public {
+        _open_leverage_native_pass(ISilo.CollateralType.Protected);
+
+        assertGt(silo1.maxRepay(wallet.addr), 0, "sanity check: user has debt");
+
+        _closeLeverageExample(ISilo.CollateralType.Protected);
+    }
+
+    function _open_leverage_native_pass(ISilo.CollateralType _collateralType) internal {
+        address user = wallet.addr;
+        vm.deal(user, 0.2e18);
+
+        uint256 depositAmount = 0.1e18;
+        uint256 multiplier = 2.0e18;
+
+        _depositForBorrow(1000e18, address(3));
+
+        (
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
+            IGeneralSwapModule.SwapArgs memory swapArgs
+        ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
+
+        depositArgs.collateralType = _collateralType;
+
+        _prepareForOpeningLeverage({
+            _user: user,
+            _flashArgs: flashArgs,
+            _depositArgs: depositArgs,
+            _swapArgs: swapArgs,
+            _approveAssets: false // we dont want approval, we will use ETH
+        });
+
+        assertEq(siloLens.getUserLTV(silo0, user), 0, "user has no position");
+
+        vm.prank(user);
+        leverageRouter.openLeveragePosition{value: depositArgs.amount}({
+            _flashArgs: flashArgs,
+            _swapArgs: abi.encode(swapArgs),
+            _depositArgs: depositArgs
+        });
+
+
+        assertEq(siloLens.getUserLTV(silo0, user), 0.677920141007389330e18, "user has leverage position");
+
+        _assertThereIsNoDebtApprovals(user);
+        _assertNoApprovalsFromLeverage({_checkSwap: true});
+        _assertSiloLeverageHasNoTokens();
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_withDepositPermit
     */
     function test_leverage_withDepositPermit() public {
@@ -580,7 +645,6 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         _assertNoApprovalsFromLeverage({_checkSwap: false});
         _assertSiloLeverageHasNoTokens();
     }
-
 
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_frontrun_closeWithPermit
@@ -871,14 +935,19 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         totalDeposit = silo0.previewRedeem(silo0.balanceOf(_user));
         totalBorrow = silo1.maxRepay(_user);
     }
-
     function _closeLeverageExample() internal {
+        _closeLeverageExample(ISilo.CollateralType.Collateral);
+    }   
+
+    function _closeLeverageExample(ISilo.CollateralType _collateralType) internal {
         address user = wallet.addr;
 
         (
             ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
             IGeneralSwapModule.SwapArgs memory _swapArgs
         ) = _defaultCloseArgs(address(silo1));
+
+        _closeArgs.collateralType = _collateralType;
 
         _closeLeverage(user, _closeArgs, _swapArgs);
 
@@ -919,7 +988,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         if (_withdrawPermit.value == 0) {
             // uint256 collateralSharesApproval = IERC20(collateralShareToken).balanceOf(_user);
-            IERC20(collateralShareToken).forceApprove(userLeverageContract, type(uint256).max);
+            address shareTokenToApprove = _closeArgs.collateralType == ISilo.CollateralType.Protected
+                ? protectedShareToken
+                : collateralShareToken;
+
+            IERC20(shareTokenToApprove).forceApprove(userLeverageContract, type(uint256).max);
         }
 
         vm.expectEmit(userLeverageContract);
