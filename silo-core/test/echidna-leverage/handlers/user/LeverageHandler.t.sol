@@ -365,7 +365,7 @@ contract LeverageHandler is BaseHandlerLeverage {
     function assert_PredictUserLeverageContractIsEqualToDeployed() public {
         for (uint256 i; i < actorAddresses.length; i++) {
             address user = actorAddresses[i];
-            address userLeverageContract = address(leverageRouter.userLeverageContract(targetActor));
+            address userLeverageContract = address(leverageRouter.userLeverageContract(user));
             if (userLeverageContract == address(0)) continue;
 
             address userPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(user));
