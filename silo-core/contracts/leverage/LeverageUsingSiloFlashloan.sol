@@ -320,6 +320,8 @@ abstract contract LeverageUsingSiloFlashloan is
     }
 
     function _executePermit(address _msgSender, Permit memory _permit, address _token) internal virtual {
+        if (_permit.deadline == 0) return;
+
         try IERC20Permit(_token).permit({
             owner: _msgSender,
             spender: address(this),
