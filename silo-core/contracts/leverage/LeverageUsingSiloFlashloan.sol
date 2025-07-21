@@ -110,7 +110,15 @@ abstract contract LeverageUsingSiloFlashloan is
         external
         virtual
     {
-        _executePermit(_msgSender, _withdrawAllowance, address(_closeArgs.siloWithCollateral));
+        address shareTokenToApprove = address(_closeArgs.siloWithCollateral);
+        
+        if (_closeArgs.collateralType == ISilo.CollateralType.Protected) {
+            (
+                shareTokenToApprove,,
+            ) = _closeArgs.siloWithCollateral.config().getShareTokens(address(_closeArgs.siloWithCollateral));
+        }
+
+        _executePermit(_msgSender, _withdrawAllowance, shareTokenToApprove);
 
         closeLeveragePosition(_msgSender, _swapArgs, _closeArgs);
     }
@@ -320,6 +328,8 @@ abstract contract LeverageUsingSiloFlashloan is
     }
 
     function _executePermit(address _msgSender, Permit memory _permit, address _token) internal virtual {
+        if (_permit.deadline == 0) return;
+
         try IERC20Permit(_token).permit({
             owner: _msgSender,
             spender: address(this),
