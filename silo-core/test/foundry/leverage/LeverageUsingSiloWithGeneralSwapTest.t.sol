@@ -1152,8 +1152,13 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         // Get user's leverage contract
         address userLeverageContract = leverageRouter.predictUserLeverageContract(wallet.addr);
         
+        if (_rescuer == wallet.addr) {
+            vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(0)));
+        } else {
+            vm.expectRevert(RescueModule.OnlyLeverageUser.selector);
+        }
+
         vm.prank(_rescuer);
-        vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(token0)));
         siloLeverage.rescueTokens(token0);
     }
 
@@ -1205,8 +1210,14 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertEq(userLeverageContract.balance, 0, "Contract should have no native tokens");
 
         // Try to rescue native tokens when there's no balance (should always revert)
+
+        if (_rescuer == wallet.addr) {
+            vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(0)));
+        } else {
+            vm.expectRevert(RescueModule.OnlyLeverageUser.selector);
+        }
+
         vm.prank(_rescuer);
-        vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(0)));
         siloLeverage.rescueNativeTokens();
     }
 
