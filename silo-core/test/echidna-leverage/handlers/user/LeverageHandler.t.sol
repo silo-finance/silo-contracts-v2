@@ -160,8 +160,9 @@ contract LeverageHandler is BaseHandlerLeverage {
         uint256 afterDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
 
         if (success) {
-            assert_UserLeverageContractInstancesAreUnique(_userWhoOnlyApprove(), targetActor);
-            assert_PredictUserLeverageContractIsUnique(_userWhoOnlyApprove(), targetActor);
+            assert_UserLeverageContractInstancesAreUnique();
+            assert_PredictUserLeverageContractIsUnique();
+            assert_PredictUserLeverageContractIsEqualToDeployed();
 
             assertGt(
                 ISilo(flashArgs.flashloanTarget).maxRepay(targetActor),
@@ -261,8 +262,9 @@ contract LeverageHandler is BaseHandlerLeverage {
         _after();
 
         if (success) {
-            assert_UserLeverageContractInstancesAreUnique(_userWhoOnlyApprove(), targetActor);
-            assert_PredictUserLeverageContractIsUnique(_userWhoOnlyApprove(), targetActor);
+            assert_UserLeverageContractInstancesAreUnique();
+            assert_PredictUserLeverageContractIsUnique();
+            assert_PredictUserLeverageContractIsEqualToDeployed();
 
             assertEq(ISilo(closeArgs.flashloanTarget).maxRepay(targetActor), 0, "borrower should have no debt");
 
@@ -310,40 +312,74 @@ contract LeverageHandler is BaseHandlerLeverage {
         }
     }
 
-    function assert_UserLeverageContractInstancesAreUnique(address _userA, address _userB) public {
-        if (_userA == _userB) return;
-        address userALeverageContract = address(leverageRouter.userLeverageContract(_userA));
-        if (userALeverageContract == address(0)) return;
-        address userBLeverageContract = address(leverageRouter.userLeverageContract(_userB));
-        if (userBLeverageContract == address(0)) return;
-
-        assertTrue(
-            userALeverageContract != userBLeverageContract,
-            "userA != userB <=> userLeverageContract(userA) != userLeverageContract(userB) when both contracts != 0"
-        );
-    }
-
     function echidna_UserLeverageContractInstancesAreUnique() public returns (bool) {
-        assert_UserLeverageContractInstancesAreUnique(_userWhoOnlyApprove(), targetActor);
+        assert_UserLeverageContractInstancesAreUnique();
 
         return true;
     }
 
-    function assert_PredictUserLeverageContractIsUnique(address _userA, address _userB) public {
-        if (_userA == _userB) return;
-        address userAPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(_userA));
-        address userBPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(_userB));
+    function assert_UserLeverageContractInstancesAreUnique() public {
+        for (uint256 i; i < actorAddresses.length; i++) {
+            address otherUser = actorAddresses[i];
+            if (otherUser == targetActor) continue;
 
-        assertTrue(
-            userAPredictLeverageContract != userBPredictLeverageContract,
-            "userA != userB <=> predictUserLeverageContract(userA) != predictUserLeverageContract(userB)"
-        );
+            address userALeverageContract = address(leverageRouter.userLeverageContract(targetActor));
+            if (userALeverageContract == address(0)) continue;
+            address userBLeverageContract = address(leverageRouter.userLeverageContract(otherUser));
+            if (userBLeverageContract == address(0)) continue;
+
+            assertTrue(
+                userALeverageContract != userBLeverageContract,
+                "userA != userB <=> userLeverageContract(userA) != userLeverageContract(userB) when both contracts != 0"
+            );
+        }
     }
 
     function echidna_PredictUserLeverageContractIsUnique() public returns (bool) {
-        assert_PredictUserLeverageContractIsUnique(_userWhoOnlyApprove(), targetActor);
+        assert_PredictUserLeverageContractIsUnique();
 
         return true;
+    }
+
+    function assert_PredictUserLeverageContractIsUnique() public {
+        for (uint256 i; i < actorAddresses.length; i++) {
+            address otherUser = actorAddresses[i];
+            if (otherUser == targetActor) continue;
+
+            address userAPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(targetActor));
+            address userBPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(otherUser));
+
+            assertTrue(
+                userAPredictLeverageContract != userBPredictLeverageContract,
+                "userA != userB <=> predictUserLeverageContract(userA) != predictUserLeverageContract(userB)"
+            );
+        }
+    }
+
+    function echidna_PredictUserLeverageContractIsEqualToDeployed() public returns (bool) {
+        assert_PredictUserLeverageContractIsEqualToDeployed();
+
+        return true;
+    }
+
+    function assert_PredictUserLeverageContractIsEqualToDeployed() public {
+        for (uint256 i; i < actorAddresses.length; i++) {
+            address user = actorAddresses[i];
+            address userLeverageContract = address(leverageRouter.userLeverageContract(targetActor));
+            if (userLeverageContract == address(0)) continue;
+
+            address userPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(user));
+
+            assertTrue(
+                userPredictLeverageContract != address(0),
+                "predictUserLeverageContract(user) != 0, sanity check"
+            );
+
+            assertTrue(
+                userLeverageContract == userPredictLeverageContract,
+                "predictUserLeverageContract(user) == userLeverageContract(user), userLeverageContract != 0"
+            );
+        }
     }
 
     function assert_AllowanceDoesNotChangedForUserWhoOnlyApprove() public {
