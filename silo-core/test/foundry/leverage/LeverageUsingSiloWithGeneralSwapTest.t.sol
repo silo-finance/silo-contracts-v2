@@ -595,18 +595,18 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_full_leverage_withPermit_collateral
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_openLeverage_withPermit_collateral
     */
-    function test_full_leverage_withPermit_collateral() public {
+    function test_openLeverage_withPermit_collateral() public {
         _openleverage_withDepositPermit(ISilo.CollateralType.Collateral);
 
         assertGt(IERC20(collateralShareToken).balanceOf(wallet.addr), 0, "user has collateral share token");
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_full_leverage_withPermit_protected
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_openLeverage_withPermit_protected
     */
-    function test_full_leverage_withPermit_protected() public {
+    function test_openLeverage_withPermit_protected() public {
         _openleverage_withDepositPermit(ISilo.CollateralType.Protected);
 
         assertGt(IERC20(protectedShareToken).balanceOf(wallet.addr), 0, "user has protected share token");
@@ -656,19 +656,35 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_closeWithPermit
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_closeWithPermit_collateral
     */
-    function test_leverage_closeWithPermit() public {
-        _openLeverageExample();
+    function test_leverage_closeWithPermit_collateral() public {
+        _leverage_closeWithPermit(ISilo.CollateralType.Collateral);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_closeWithPermit_protected
+    */
+    function test_leverage_closeWithPermit_protected() public {
+        _leverage_closeWithPermit(ISilo.CollateralType.Protected);
+    }
+
+    function _leverage_closeWithPermit(ISilo.CollateralType _collateralType) internal {
+        _openLeverageExample(_collateralType);
+
+        address shareCollateral = _collateralType == ISilo.CollateralType.Protected ? protectedShareToken : collateralShareToken;
+        assertGt(IERC20(shareCollateral).balanceOf(wallet.addr), 0, "user has collateral share token");
 
         address user = wallet.addr;
 
         (
-            ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
-            IGeneralSwapModule.SwapArgs memory _swapArgs
+            ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs,
+            IGeneralSwapModule.SwapArgs memory swapArgs
         ) = _defaultCloseArgs( address(silo1));
 
-        _closeLeverage(user, _closeArgs, _swapArgs, _generatePermit(collateralShareToken));
+        closeArgs.collateralType = _collateralType;
+
+        _closeLeverage(user, closeArgs, swapArgs, _generatePermit(shareCollateral));
 
         assertEq(silo0.balanceOf(user), 0, "user nas NO collateral");
         assertEq(silo1.maxRepay(user), 0, "user has NO debt");
