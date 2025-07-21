@@ -175,46 +175,6 @@ contract LeverageHandler is BaseHandlerLeverage {
                 beforeDebt,
                 "[openLeveragePosition] borrower should have additional debt created by leverage"
             );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] borrower protected collateral should NOT changed" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] borrower collateral should increase" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] flashloan fee should be applied" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] leverage fee should be applied" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] other user position should be intact" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] other user allowance should not changed" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] can only succeed when called to user cloned contract" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] silo liquidity should decrease (because we can open only collateral positions)" // TODO
-            );
         } else {
             assertEq(beforeDebt, afterDebt, "[openLeveragePosition] when leverage fail, debt does not change");
         }
@@ -269,46 +229,6 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         if (success) {
             assertEq(ISilo(closeArgs.flashloanTarget).maxRepay(targetActor), 0, "borrower should have no debt");
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] borrower protected collateral should le less or equal" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] borrower collateral should be less or equal" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] flashloan fee should be applied" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] leverage fee should NOT be applied" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] other users positions should be intact" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] other users allowance should not changed" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] can only succeed when called to user cloned contract" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] silo liquidity should increase (because we can close only collateral positions)" // TODO
-            );
         } else {
             // TODO anything to check here?
         }
