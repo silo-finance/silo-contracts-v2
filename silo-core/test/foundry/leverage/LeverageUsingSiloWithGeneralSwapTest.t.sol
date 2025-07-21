@@ -37,6 +37,7 @@ import {WETH} from "./mocks/WETH.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {RevertingReceiver} from "../_mocks/RevertingReceiver.sol";
+import {LeverageUsingSiloFlashloanHarness} from "../_mocks/LeverageUsingSiloFlashloanHarness.sol";
 
 
 /*
@@ -120,6 +121,26 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         vm.expectRevert(ILeverageUsingSiloFlashloan.InvalidFlashloanLender.selector);
 
         siloLeverageImpl.onFlashLoan(address(0), address(0), 0, 0, "");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_alwaysRevert_UnknownAction
+    */
+    function test_leverage_alwaysRevert_UnknownAction() public {
+        address nativeTokenForLocalTesting = address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+
+        LeverageUsingSiloFlashloanHarness harness = new LeverageUsingSiloFlashloanHarness(
+            address(leverageRouter),
+            nativeTokenForLocalTesting
+        );
+
+        harness.setTxData(address(0), cfg, ILeverageUsingSiloFlashloan.LeverageAction.Undefined, address(this), 0);
+
+        vm.expectRevert(abi.encodeWithSelector(
+            ILeverageUsingSiloFlashloan.UnknownAction.selector
+        ));
+
+        harness.onFlashLoan(address(0), address(0), 0, 0, "Any data");
     }
 
     /*
