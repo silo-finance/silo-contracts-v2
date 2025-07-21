@@ -160,6 +160,9 @@ contract LeverageHandler is BaseHandlerLeverage {
         uint256 afterDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
 
         if (success) {
+            assert_UserLeverageContractInstancesAreUnique(_userWhoOnlyApprove(), targetActor);
+            assert_PredictUserLeverageContractIsUnique(_userWhoOnlyApprove(), targetActor);
+
             assertGt(
                 ISilo(flashArgs.flashloanTarget).maxRepay(targetActor),
                 beforeDebt,
@@ -258,6 +261,9 @@ contract LeverageHandler is BaseHandlerLeverage {
         _after();
 
         if (success) {
+            assert_UserLeverageContractInstancesAreUnique(_userWhoOnlyApprove(), targetActor);
+            assert_PredictUserLeverageContractIsUnique(_userWhoOnlyApprove(), targetActor);
+
             assertEq(ISilo(closeArgs.flashloanTarget).maxRepay(targetActor), 0, "borrower should have no debt");
 
             assertTrue(
@@ -302,6 +308,42 @@ contract LeverageHandler is BaseHandlerLeverage {
         } else {
             // TODO anything to check here?
         }
+    }
+
+    function assert_UserLeverageContractInstancesAreUnique(address _userA, address _userB) public {
+        if (_userA == _userB) return;
+        address userALeverageContract = address(leverageRouter.userLeverageContract(_userA));
+        if (userALeverageContract == address(0)) return;
+        address userBLeverageContract = address(leverageRouter.userLeverageContract(_userB));
+        if (userBLeverageContract == address(0)) return;
+
+        assertTrue(
+            userALeverageContract != userBLeverageContract,
+            "userA != userB <=> userLeverageContract(userA) != userLeverageContract(userB) when both contracts != 0"
+        );
+    }
+
+    function echidna_UserLeverageContractInstancesAreUnique() public returns (bool) {
+        assert_UserLeverageContractInstancesAreUnique(_userWhoOnlyApprove(), targetActor);
+
+        return true;
+    }
+
+    function assert_PredictUserLeverageContractIsUnique(address _userA, address _userB) public {
+        if (_userA == _userB) return;
+        address userAPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(_userA));
+        address userBPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(_userB));
+
+        assertTrue(
+            userAPredictLeverageContract != userBPredictLeverageContract,
+            "userA != userB <=> predictUserLeverageContract(userA) != predictUserLeverageContract(userB)"
+        );
+    }
+
+    function echidna_PredictUserLeverageContractIsUnique() public returns (bool) {
+        assert_PredictUserLeverageContractIsUnique(_userWhoOnlyApprove(), targetActor);
+
+        return true;
     }
 
     function assert_AllowanceDoesNotChangedForUserWhoOnlyApprove() public {
