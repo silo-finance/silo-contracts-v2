@@ -1108,96 +1108,116 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueTokens_singleToken_success
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueTokens_singleToken_success_fuzz
     */
-    function test_rescueTokens_singleToken_success() public {
+    function test_rescueTokens_singleToken_success_fuzz(address _rescuer) public {
         _openLeverageExample();
 
-        address user = wallet.addr;
-
         // Get user's leverage contract
-        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(wallet.addr);
 
         // Send some tokens to the leverage contract
         uint256 rescueAmount = 1e18;
         token0.mint(userLeverageContract, rescueAmount);
 
-        uint256 userBalanceBefore = token0.balanceOf(user);
+        uint256 userBalanceBefore = token0.balanceOf(wallet.addr);
+
+        bool expectSuccess = wallet.addr == _rescuer;
 
         // Rescue tokens
-        vm.prank(user);
-        vm.expectEmit(true, true, false, true, userLeverageContract);
-        emit RescueModule.TokensRescued(address(token0), rescueAmount);
 
+        if (expectSuccess) {
+            vm.expectEmit(true, true, false, true, userLeverageContract);
+            emit RescueModule.TokensRescued(address(token0), rescueAmount);
+        } else {
+            vm.expectRevert(RescueModule.OnlyLeverageUser.selector);
+        }
+
+        vm.prank(_rescuer);
         siloLeverage.rescueTokens(token0);
 
-        // Verify tokens were transferred to user
-        assertEq(token0.balanceOf(user), userBalanceBefore + rescueAmount, "User should receive rescued tokens");
-        assertEq(token0.balanceOf(userLeverageContract), 0, "Leverage contract should have no tokens");
+        if (expectSuccess) {
+            // Verify tokens were transferred to user
+            assertEq(token0.balanceOf(_rescuer), userBalanceBefore + rescueAmount, "User should receive rescued tokens");
+            assertEq(token0.balanceOf(userLeverageContract), 0, "Leverage contract should have no tokens");
+        }
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueTokens_singleToken_emptyBalance
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueTokens_singleToken_emptyBalance_fuzz
     */
-    function test_rescueTokens_singleToken_emptyBalance() public {
+    function test_rescueTokens_singleToken_emptyBalance_fuzz(address _rescuer) public {
         _openLeverageExample();
 
-        address user = wallet.addr;
-
         // Get user's leverage contract
-        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(wallet.addr);
         
-        vm.prank(user);
-        vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(token0)));
+        if (_rescuer == wallet.addr) {
+            vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(0)));
+        } else {
+            vm.expectRevert(RescueModule.OnlyLeverageUser.selector);
+        }
+
+        vm.prank(_rescuer);
         siloLeverage.rescueTokens(token0);
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueNativeTokens_success
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueNativeTokens_success_fuzz
     */
-    function test_rescueNativeTokens_success() public {
+    function test_rescueNativeTokens_success_fuzz(address _rescuer) public {
         _openLeverageExample();
 
-        address user = wallet.addr;
-
         // Get user's leverage contract
-        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(wallet.addr);
 
         // Use vm.deal to directly set ETH balance on the leverage contract
         uint256 rescueAmount = 1e18;
         vm.deal(userLeverageContract, rescueAmount);
 
-        uint256 userBalanceBefore = user.balance;
+        uint256 userBalanceBefore = _rescuer.balance;
         uint256 contractBalanceBefore = userLeverageContract.balance;
         
         assertEq(contractBalanceBefore, rescueAmount, "Contract should have native tokens");
 
-        vm.expectEmit(true, true, false, true, userLeverageContract);
-        emit RescueModule.TokensRescued(address(0), rescueAmount);
+        bool expectSuccess = wallet.addr == _rescuer;
 
-        vm.prank(user);
+        if (expectSuccess) {
+            vm.expectEmit(true, true, false, true, userLeverageContract);
+            emit RescueModule.TokensRescued(address(0), rescueAmount);
+        } else {
+            vm.expectRevert(RescueModule.OnlyLeverageUser.selector);
+        }
+
+        vm.prank(_rescuer);
         siloLeverage.rescueNativeTokens();
 
-        // Verify native tokens were transferred to user
-        assertEq(user.balance, userBalanceBefore + rescueAmount, "User should receive rescued native tokens");
-        assertEq(userLeverageContract.balance, 0, "Leverage contract should have no native tokens");
+        if (expectSuccess) {
+            // Verify native tokens were transferred to user
+            assertEq(_rescuer.balance, userBalanceBefore + rescueAmount, "User should receive rescued native tokens");
+            assertEq(userLeverageContract.balance, 0, "Leverage contract should have no native tokens");
+        }
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueNativeTokens_noBalance
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_rescueNativeTokens_noBalance_fuzz
     */
-    function test_rescueNativeTokens_noBalance() public {
+    function test_rescueNativeTokens_noBalance_fuzz(address _rescuer) public {
         _openLeverageExample();
 
-        address user = wallet.addr;
-
         // Verify leverage contract has no native tokens
-        address userLeverageContract = leverageRouter.predictUserLeverageContract(user);
+        address userLeverageContract = leverageRouter.predictUserLeverageContract(wallet.addr);
         assertEq(userLeverageContract.balance, 0, "Contract should have no native tokens");
 
-        // Try to rescue native tokens when there's no balance (should revert)
-        vm.prank(user);
-        vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(0)));
+        // Try to rescue native tokens when there's no balance (should always revert)
+
+        if (_rescuer == wallet.addr) {
+            vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(0)));
+        } else {
+            vm.expectRevert(RescueModule.OnlyLeverageUser.selector);
+        }
+
+        vm.prank(_rescuer);
         siloLeverage.rescueNativeTokens();
     }
 
