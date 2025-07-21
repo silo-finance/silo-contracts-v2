@@ -229,8 +229,6 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         if (success) {
             assertEq(ISilo(closeArgs.flashloanTarget).maxRepay(targetActor), 0, "borrower should have no debt");
-        } else {
-            // TODO anything to check here?
         }
     }
 
