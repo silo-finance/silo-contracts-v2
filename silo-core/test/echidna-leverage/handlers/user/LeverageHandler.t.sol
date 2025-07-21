@@ -79,15 +79,25 @@ contract LeverageHandler is BaseHandlerLeverage {
         bytes calldata _data,
         RandomGenerator calldata _random
     ) external payable setupRandomActor(_random.i) {
-        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _userLeverageContract(targetActor);
+        LeverageUsingSiloFlashloan leverage = _userLeverageContract(targetActor);
         if (address(leverage) == address(0)) return;
 
         address silo = _getRandomSilo(_random.j);
         address _borrowToken = ISilo(silo).asset();
 
-        try leverage.onFlashLoan(_initiator, _borrowToken, _flashloanAmount, _flashloanFee, _data) {
-            assertTrue(false, "[onFlashLoan] direct call on onFlashLoan should always revert");
-        } catch {}
+        (bool success,) = actor.proxy(
+            address(leverage), 
+            abi.encodeWithSelector(
+                LeverageUsingSiloFlashloan.onFlashLoan.selector,
+                _initiator, 
+                _borrowToken,
+                _flashloanAmount, 
+                _flashloanFee, 
+                _data
+            )
+        );
+
+        assertFalse(success, "[onFlashLoan] direct call on onFlashLoan should always revert");
     }
 
     function openLeveragePosition(uint64 _depositPercent, uint64 _flashloanPercent, RandomGenerator calldata _random)
