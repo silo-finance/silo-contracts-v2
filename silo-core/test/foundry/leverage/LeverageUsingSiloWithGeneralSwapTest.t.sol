@@ -132,6 +132,14 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example_protected_noInterest
+    */
+    function test_leverage_example_protected_noInterest() public {
+        _openLeverageExample(ISilo.CollateralType.Protected);
+        _closeLeverageExample(ISilo.CollateralType.Protected);
+    }
+
+    /*
     accrue interest then close
 
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_leverage_example_withInterest_solvent
@@ -522,7 +530,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     function test_full_leverage_flow_native_collateral_pass() public {
         _open_leverage_native_pass(ISilo.CollateralType.Collateral);
 
-        assertGt(silo1.maxRepay(wallet.addr), 0, "sanity check: user has debt");
+        assertEq(
+            siloLens.getUserLTV(silo0, wallet.addr), 
+            0.677920141007389330e18, 
+            "sanity check: user has leverage position"
+        );
 
         _closeLeverageExample(ISilo.CollateralType.Collateral);
     }
@@ -533,7 +545,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     function test_full_leverage_flow_native_protected_pass() public {
         _open_leverage_native_pass(ISilo.CollateralType.Protected);
 
-        assertGt(silo1.maxRepay(wallet.addr), 0, "sanity check: user has debt");
+        assertEq(
+            siloLens.getUserLTV(silo0, wallet.addr), 
+            0.677920141007389330e18, 
+            "sanity check: user has leverage position"
+        );
 
         _closeLeverageExample(ISilo.CollateralType.Protected);
     }
@@ -572,8 +588,6 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             _depositArgs: depositArgs
         });
 
-
-        assertEq(siloLens.getUserLTV(silo0, user), 0.677920141007389330e18, "user has leverage position");
 
         _assertThereIsNoDebtApprovals(user);
         _assertNoApprovalsFromLeverage({_checkSwap: true});
@@ -773,6 +787,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         IERC20R(debtShareToken).setReceiveApproval(address(siloLeverage), type(uint256).max);
         IERC20(silo0.asset()).forceApprove(address(siloLeverage), type(uint256).max);
+        IERC20(protectedShareToken).forceApprove(address(siloLeverage), type(uint256).max);
         IERC20(collateralShareToken).forceApprove(address(siloLeverage), type(uint256).max);
 
         vm.stopPrank();
@@ -827,6 +842,10 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     function _openLeverageExample() internal {
+        _openLeverageExample(ISilo.CollateralType.Collateral);
+    }
+
+    function _openLeverageExample(ISilo.CollateralType _collateralType) internal {
         address user = wallet.addr;
         uint256 depositAmount = 0.1e18;
         uint256 multiplier = 1.08e18;
@@ -837,12 +856,24 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             IGeneralSwapModule.SwapArgs memory swapArgs
         ) = _defaultOpenArgs(depositAmount, multiplier, address(silo1));
 
+        depositArgs.collateralType = _collateralType;
+
         (uint256 totalDeposited, ) = _openLeverage(user, flashArgs, depositArgs, swapArgs);
 
+        emit log_named_uint("totalDeposited", totalDeposited);
         uint256 finalMultiplier = totalDeposited * _PRECISION / depositArgs.amount;
 
         assertEq(finalMultiplier, 2.06899308e18, "finalMultiplier");
-        assertEq(silo0.previewRedeem(silo0.balanceOf(user)), 0.206899308e18, "users collateral");
+
+        address shareCollateral = _collateralType == ISilo.CollateralType.Collateral
+            ? collateralShareToken
+            : protectedShareToken;
+
+        assertEq(
+            silo0.previewRedeem(IERC20(shareCollateral).balanceOf(user), _collateralType), 
+            0.206899308e18, 
+            "users collateral"
+        );
 
         uint256 flashFee = _flashFee(silo1, flashArgs.amount);
 
@@ -932,9 +963,14 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         _assertThereIsNoDebtApprovals(_user);
 
-        totalDeposit = silo0.previewRedeem(silo0.balanceOf(_user));
+        address shareCollateral = _depositArgs.collateralType == ISilo.CollateralType.Collateral
+            ? collateralShareToken
+            : protectedShareToken;
+
+        totalDeposit = silo0.previewRedeem(IERC20(shareCollateral).balanceOf(_user), _depositArgs.collateralType);
         totalBorrow = silo1.maxRepay(_user);
     }
+
     function _closeLeverageExample() internal {
         _closeLeverageExample(ISilo.CollateralType.Collateral);
     }   
@@ -978,32 +1014,37 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         // for this test case price is 1:1
         // we need swap bit more, so we can count for fee or slippage, here we simulate +11%
         uint256 flashAmount = silo1.maxRepay(_user);
-        uint256 amountIn = flashAmount * 111 / 100;
-        swap.setSwap(_swapArgs.sellToken, amountIn, _swapArgs.buyToken, amountIn * 99 / 100);
+
+        { // to deep
+            uint256 amountIn = flashAmount * 111 / 100;
+            swap.setSwap(_swapArgs.sellToken, amountIn, _swapArgs.buyToken, amountIn * 99 / 100);
+        }
 
         // APPROVALS
 
         // Get user's leverage contract
         address userLeverageContract = leverageRouter.predictUserLeverageContract(_user);
 
-        if (_withdrawPermit.value == 0) {
-            // uint256 collateralSharesApproval = IERC20(collateralShareToken).balanceOf(_user);
-            address shareTokenToApprove = _closeArgs.collateralType == ISilo.CollateralType.Protected
+        address shareCollateral = _closeArgs.collateralType == ISilo.CollateralType.Protected
                 ? protectedShareToken
                 : collateralShareToken;
 
-            IERC20(shareTokenToApprove).forceApprove(userLeverageContract, type(uint256).max);
+        if (_withdrawPermit.value == 0) {
+            // uint256 collateralSharesApproval = IERC20(collateralShareToken).balanceOf(_user);
+            IERC20(shareCollateral).forceApprove(userLeverageContract, type(uint256).max);
         }
 
-        vm.expectEmit(userLeverageContract);
+        { // to deep
+            vm.expectEmit(userLeverageContract);
 
-        emit ILeverageUsingSiloFlashloan.CloseLeverage({
-            depositWithdrawn: silo0.previewRedeem(silo0.balanceOf(_user)),
-            swapAmountOut: (flashAmount * 111 / 100) * 99 / 100,
-            flashloanAmount: flashAmount,
-            flashloanFee: _flashFee(ISilo(_closeArgs.flashloanTarget), flashAmount),
-            borrower: _user
-        });
+            emit ILeverageUsingSiloFlashloan.CloseLeverage({
+                depositWithdrawn: silo0.previewRedeem(IERC20(shareCollateral).balanceOf(_user)),
+                swapAmountOut: (flashAmount * 111 / 100) * 99 / 100,
+                flashloanAmount: flashAmount,
+                flashloanFee: _flashFee(ISilo(_closeArgs.flashloanTarget), flashAmount),
+                borrower: _user
+            });
+        }
 
         if (_withdrawPermit.value == 0) {
             leverageRouter.closeLeveragePosition(abi.encode(_swapArgs), _closeArgs);
