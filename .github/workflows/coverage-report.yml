@@ -1,0 +1,142 @@
+name: Coverage Report
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run coverage on'
+        required: true
+        default: 'develop'
+        type: string
+      workspace:
+        description: 'Workspace to generate coverage for'
+        required: true
+        type: choice
+        options:
+          - silo-core
+          - silo-oracles
+          - silo-vaults
+
+env:
+  RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
+  RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
+  RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
+  RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
+  RPC_SONIC: ${{ secrets.RPC_SONIC }}
+  PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
+
+jobs:
+  generate-coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.branch }}
+          submodules: recursive
+
+      - name: Cache gitmodules
+        uses: actions/cache@v3
+        with:
+          path: ./gitmodules/
+          key: coverage-submodules-${{ hashFiles('./.gitmodules') }}
+
+      - name: Cache contracts
+        uses: actions/cache@v3
+        with:
+          path: ./cache/
+          key: coverage-contracts-cache-${{ hashFiles('./${{ inputs.workspace }}/**/*.sol') }}
+          restore-keys: |
+            coverage-contracts-cache-${{ hashFiles('./${{ inputs.workspace }}/**/*.sol') }}
+            coverage-contracts-cache-
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Install lcov
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lcov
+
+      - name: Run submodule update
+        run: git submodule update --init --recursive
+
+      - name: Build silo foundry utils
+        working-directory: ./gitmodules/silo-foundry-utils
+        run: |
+          cargo build --release
+          cp target/release/silo-foundry-utils ../../silo-foundry-utils
+          ../../silo-foundry-utils --version
+
+      - name: Create coverage directory
+        run: mkdir -p coverage
+
+      - name: Generate coverage for silo-core
+        if: inputs.workspace == 'silo-core'
+        run: |
+          rm -f lcov.info
+          AGGREGATOR=1INCH FOUNDRY_PROFILE=core_with_test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-core.log || true
+          cat coverage/silo-core.log | grep -i 'silo-core/contracts/' > coverage/silo-core.txt || true
+          genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-core/ lcov.info
+
+      - name: Generate coverage for silo-oracles
+        if: inputs.workspace == 'silo-oracles'
+        run: |
+          rm -f lcov.info
+          FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov > coverage/silo-oracles.log || true
+          cat coverage/silo-oracles.log | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt || true
+          genhtml -o coverage/silo-oracles/ lcov.info
+
+      - name: Generate coverage for silo-vaults
+        if: inputs.workspace == 'silo-vaults'
+        run: |
+          rm -f lcov.info
+          FOUNDRY_PROFILE=vaults_with_tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 > coverage/silo-vaults.log || true
+          cat coverage/silo-vaults.log | grep -i 'silo-vaults/contracts/' > coverage/silo-vaults.txt || true
+          genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-vaults/ lcov.info
+
+      - name: Prepare deployment directory
+        run: |
+          mkdir -p deploy-coverage
+          cp -r coverage/${{ inputs.workspace }}/* deploy-coverage/
+          echo "<h1>Coverage Report - ${{ inputs.workspace }}</h1>" > deploy-coverage/header.html
+          echo "<p>Branch: ${{ inputs.branch }}</p>" >> deploy-coverage/header.html
+          echo "<p>Generated: $(date)</p>" >> deploy-coverage/header.html
+          echo "<hr>" >> deploy-coverage/header.html
+          if [ -f deploy-coverage/index.html ]; then
+            cat deploy-coverage/header.html deploy-coverage/index.html > deploy-coverage/index-new.html
+            mv deploy-coverage/index-new.html deploy-coverage/index.html
+          fi
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy-coverage
+          destination_dir: coverage/${{ inputs.branch }}/${{ inputs.workspace }}
+          keep_files: true
+
+      - name: Generate job summary
+        run: |
+          PAGES_URL="https://silo-finance.github.io/silo-contracts-v2/coverage/${{ inputs.branch }}/${{ inputs.workspace }}/"
+          echo "# Coverage Report Generated! 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Workspace**: ${{ inputs.workspace }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ inputs.branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Generated at**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 View Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "[Click here to view the coverage report]($PAGES_URL)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Direct URL: \`$PAGES_URL\`" >> $GITHUB_STEP_SUMMARY
+          
+          # Also output the URL for easy copying
+          echo "Coverage report available at: $PAGES_URL"
