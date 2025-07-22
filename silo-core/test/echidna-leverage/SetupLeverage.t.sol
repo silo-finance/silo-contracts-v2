@@ -98,6 +98,8 @@ contract SetupLeverage is Setup {
 
         // set first actor an admin for leverare router
         leverageRouter.grantRole(bytes32(0), actorAddresses[0]);
+        // set first actor an pauser for leverare router
+        leverageRouter.grantRole(leverageRouter.PAUSER_ROLE(), actorAddresses[0]);
     }
 
     /// @notice Deploy an actor proxy contract for a user address
