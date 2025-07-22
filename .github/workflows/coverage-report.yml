@@ -106,7 +106,7 @@ jobs:
           FOUNDRY_PROFILE=oracles forge build
 
           echo "Running forge coverage..."
-          FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov --ffi --no-match-test "_skip_" > coverage/silo-oracles.log 2>&1 || true
+          FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov --ffi --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-oracles.log 2>&1 || true
 
           echo "Coverage log contents:"
           cat coverage/silo-oracles.log || true
@@ -130,7 +130,7 @@ jobs:
           FOUNDRY_PROFILE=vaults forge build
 
           echo "Running forge coverage..."
-          FOUNDRY_PROFILE=vaults_with_tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_" > coverage/silo-vaults.log 2>&1 || true
+          FOUNDRY_PROFILE=vaults_with_tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-vaults.log 2>&1 || true
 
           echo "Coverage log contents:"
           cat coverage/silo-vaults.log || true
