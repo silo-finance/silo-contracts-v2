@@ -99,7 +99,7 @@ jobs:
           rm -f lcov.info
           FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov > coverage/silo-oracles.log || true
           cat coverage/silo-oracles.log | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt || true
-          genhtml -o coverage/silo-oracles/ lcov.info
+          genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-core/ lcov.info
 
       - name: Generate coverage for silo-vaults
         if: inputs.workspace == 'silo-vaults'
