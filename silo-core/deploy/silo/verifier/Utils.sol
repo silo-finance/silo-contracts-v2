@@ -126,6 +126,10 @@ library Utils {
         view
         returns (address primaryAggregator, address secondaryAggregator)
     {
+        if (_oracle == address(0)) {
+            return (address(0), address(0));
+        }
+
         try ChainlinkV3Oracle(address(_oracle)).oracleConfig() returns (ChainlinkV3OracleConfig oracleConfig) {
             (, bytes memory data) = address(oracleConfig).staticcall(abi.encodeWithSelector(
                 ChainlinkV3OracleConfig.getConfig.selector
