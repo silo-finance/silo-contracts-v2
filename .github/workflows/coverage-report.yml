@@ -39,16 +39,16 @@ jobs:
         with:
           version: stable
 
-      - name: Install lcov 2.1-1
+      - name: Install lcov 2.1
         run: |
           # Install dependencies
           sudo apt-get update
           sudo apt-get install -y perl libcapture-tiny-perl libdatetime-perl
           
-          # Download and install lcov 2.1-1
-          wget https://github.com/linux-test-project/lcov/releases/download/v2.1-1/lcov-2.1-1.tar.gz
-          tar -xzf lcov-2.1-1.tar.gz
-          cd lcov-2.1-1
+          # Download and install lcov 2.1
+          wget https://github.com/linux-test-project/lcov/releases/download/v2.1/lcov-2.1.tar.gz
+          tar -xzf lcov-2.1.tar.gz
+          cd lcov-2.1
           sudo make install
           
           # Verify installation
