@@ -100,17 +100,47 @@ jobs:
         if: inputs.workspace == 'silo-oracles'
         run: |
           rm -f lcov.info
-          FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov > coverage/silo-oracles.log || true
+          echo "Building contracts first to generate ABI files..."
+          FOUNDRY_PROFILE=oracles forge build
+
+          echo "Running forge coverage..."
+          FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov > coverage/silo-oracles.log 2>&1 || true
+
+          echo "Coverage log contents:"
+          cat coverage/silo-oracles.log || true
+
           cat coverage/silo-oracles.log | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt || true
-          genhtml -o coverage/silo-oracles/ lcov.info
+
+          if [ -f lcov.info ]; then
+            echo "lcov.info found, generating HTML report..."
+            genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-oracles/ lcov.info
+          else
+            echo "ERROR: lcov.info not generated. Check the coverage log above for errors."
+            exit 1
+          fi
 
       - name: Generate coverage for silo-vaults
         if: inputs.workspace == 'silo-vaults'
         run: |
           rm -f lcov.info
-          FOUNDRY_PROFILE=vaults_with_tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 > coverage/silo-vaults.log || true
+          echo "Building contracts first to generate ABI files..."
+          FOUNDRY_PROFILE=vaults forge build
+
+          echo "Running forge coverage..."
+          FOUNDRY_PROFILE=vaults_with_tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 > coverage/silo-vaults.log 2>&1 || true
+
+          echo "Coverage log contents:"
+          cat coverage/silo-vaults.log || true
+
           cat coverage/silo-vaults.log | grep -i 'silo-vaults/contracts/' > coverage/silo-vaults.txt || true
-          genhtml --ignore-errors inconsistent -o coverage/silo-vaults/ lcov.info
+
+          if [ -f lcov.info ]; then
+            echo "lcov.info found, generating HTML report..."
+            genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-vaults/ lcov.info
+          else
+            echo "ERROR: lcov.info not generated. Check the coverage log above for errors."
+            exit 1
+          fi
 
       - name: Get branch name
         id: branch-name
