@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - test/foundry/_common/Whales.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory test/foundry/_common">test/foundry/_common</a> - Whales.sol<span style="font-size: 80%;"> (source / <a href="Whales.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-07-22 11:54:23</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: BUSL-1.1</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity &gt;=0.7.6 &lt;0.9.0;</span>
+<span id="L3"><span class="lineNum">       3</span>              : pragma abicoder v2;</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : import &quot;./TokensGenerator.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : </span>
+<span id="L7"><span class="lineNum">       7</span>              : contract Whales is TokensGenerator {</span>
+<span id="L8"><span class="lineNum">       8</span>              :     // asset =&gt; whale</span>
+<span id="L9"><span class="lineNum">       9</span>              :     mapping (IERC20 =&gt; address) public whales;</span>
+<span id="L10"><span class="lineNum">      10</span>              : </span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaUNC tlaBgUNC">           0 :     constructor(BlockChain _chain) TokensGenerator(_chain) {</span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaUNC">           0 :         if (isEthereum(_chain)) {</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaUNC">           0 :             whales[tokens[&quot;WETH&quot;]] = address(0x6B44ba0a126a2A1a8aa6cD1AdeeD002e141Bcd44);</span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaUNC">           0 :             whales[tokens[&quot;1INCH&quot;]] = address(0x23360d94C13C1508bDA63BeB5A404b9e2E3f62b5);</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaUNC">           0 :             whales[tokens[&quot;BAL&quot;]] = address(0xcEacc82ddCdB00BFE19A9D3458db3e6b8aEF542B);</span></span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaUNC">           0 :             whales[tokens[&quot;cbETH&quot;]] = address(0xBC64BDE4C3b70147C47c16dD9277a6Aaef7e0f02);</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaUNC">           0 :             whales[tokens[&quot;gOHM&quot;]] = address(0x168fa4917e7cD18f4eD3dc313c4975851cA9E5E7);</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaUNC">           0 :             whales[tokens[&quot;OHM&quot;]] = address(0xD3D086B36d5502122F275F4Bc18e04c844Bd6E2e);</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaUNC">           0 :             whales[tokens[&quot;USDC&quot;]] = address(0x1B7BAa734C00298b9429b518D621753Bb0f6efF2);</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaUNC">           0 :             whales[tokens[&quot;USDT&quot;]] = address(0x68841a1806fF291314946EebD0cdA8b348E73d6D);</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 :             whales[tokens[&quot;stETH&quot;]] = address(0x7153D2ef9F14a6b1Bb2Ed822745f65E58d836C3F);</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC">           0 :             whales[tokens[&quot;wstETH&quot;]] = address(0xa0456eaAE985BDB6381Bd7BAac0796448933f04f);</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaUNC">           0 :             whales[tokens[&quot;XAI&quot;]] = address(0xC8CD77d4cd9511f2822f24aD14FE9e3C97C57836);</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaUNC">           0 :         } else if (isArbitrum(_chain)) {</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :             whales[tokens[&quot;WETH&quot;]] = address(0xC59836FEC63Cfb2E48b0aa00515056436D74Dc03);</span></span>
+<span id="L26"><span class="lineNum">      26</span>              :         }</span>
+<span id="L27"><span class="lineNum">      27</span>              :     }</span>
+<span id="L28"><span class="lineNum">      28</span>              : </span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaUNC">           0 :     function _doTokens(address _asset, uint256 _amount, address _recipient) internal override {</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaUNC">           0 :         address whale = whales[IERC20(_asset)];</span></span>
+<span id="L31"><span class="lineNum">      31</span>              : </span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaUNC">           0 :         if (whale == address(0)) {</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaUNC">           0 :             emit log(&quot;no whale - modify storage&quot;);</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC">           0 :             super._doTokens(_asset, _amount, _recipient);</span></span>
+<span id="L35"><span class="lineNum">      35</span>              :         } else {</span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :             emit log_named_address(&quot;whale&quot;, whale);</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaUNC">           0 :             vm.prank(whale);</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaUNC">           0 :             IERC20(_asset).transfer(_recipient, _amount);</span></span>
+<span id="L39"><span class="lineNum">      39</span>              :         }</span>
+<span id="L40"><span class="lineNum">      40</span>              :     }</span>
+<span id="L41"><span class="lineNum">      41</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

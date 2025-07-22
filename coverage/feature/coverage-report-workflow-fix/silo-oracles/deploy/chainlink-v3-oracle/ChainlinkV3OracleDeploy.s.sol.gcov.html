@@ -1,0 +1,167 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - deploy/chainlink-v3-oracle/ChainlinkV3OracleDeploy.s.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory deploy/chainlink-v3-oracle">deploy/chainlink-v3-oracle</a> - ChainlinkV3OracleDeploy.s.sol<span style="font-size: 80%;"> (source / <a href="ChainlinkV3OracleDeploy.s.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">95.3&nbsp;%</td>
+            <td class="headerCovTableEntry">43</td>
+            <td class="headerCovTableEntry">41</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-07-22 11:54:23</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+          </tr>
+                  <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: BUSL-1.1</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity 0.8.28;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {console2} from &quot;forge-std/console2.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {CommonDeploy} from &quot;../CommonDeploy.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {SiloOraclesFactoriesContracts} from &quot;../SiloOraclesFactoriesContracts.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : import {ChainlinkV3OraclesConfigsParser as ConfigParser} from &quot;./ChainlinkV3OraclesConfigsParser.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : import {ChainlinkV3Oracle} from &quot;silo-oracles/contracts/chainlinkV3/ChainlinkV3Oracle.sol&quot;;</span>
+<span id="L9"><span class="lineNum">       9</span>              : import {IChainlinkV3Oracle} from &quot;silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol&quot;;</span>
+<span id="L10"><span class="lineNum">      10</span>              : import {ChainlinkV3OracleFactory} from &quot;silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleFactory.sol&quot;;</span>
+<span id="L11"><span class="lineNum">      11</span>              : import {OraclesDeployments} from &quot;../OraclesDeployments.sol&quot;;</span>
+<span id="L12"><span class="lineNum">      12</span>              : import {ChainlinkV3OracleConfig} from &quot;silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol&quot;;</span>
+<span id="L13"><span class="lineNum">      13</span>              : import {PriceFormatter} from &quot;silo-core/deploy/lib/PriceFormatter.sol&quot;;</span>
+<span id="L14"><span class="lineNum">      14</span>              : </span>
+<span id="L15"><span class="lineNum">      15</span>              : /**</span>
+<span id="L16"><span class="lineNum">      16</span>              : FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_scUSD_USDC_USD \</span>
+<span id="L17"><span class="lineNum">      17</span>              :     forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleDeploy.s.sol \</span>
+<span id="L18"><span class="lineNum">      18</span>              :     --ffi --rpc-url $RPC_SONIC --broadcast --verify</span>
+<span id="L19"><span class="lineNum">      19</span>              :  */</span>
+<span id="L20"><span class="lineNum">      20</span>              : contract ChainlinkV3OracleDeploy is CommonDeploy {</span>
+<span id="L21"><span class="lineNum">      21</span>              :     string public useConfigName;</span>
+<span id="L22"><span class="lineNum">      22</span>              : </span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">           1 :     function setUseConfigName(string memory _useConfigName) public {</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">           1 :         useConfigName = _useConfigName;</span></span>
+<span id="L25"><span class="lineNum">      25</span>              :     }</span>
+<span id="L26"><span class="lineNum">      26</span>              :     </span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">           1 :     function run() public returns (ChainlinkV3Oracle oracle) {</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">           1 :         uint256 deployerPrivateKey = uint256(vm.envBytes32(&quot;PRIVATE_KEY&quot;));</span></span>
+<span id="L29"><span class="lineNum">      29</span>              : </span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">           1 :         string memory configName = bytes(useConfigName).length != 0 ? useConfigName : vm.envString(&quot;CONFIG&quot;);</span></span>
+<span id="L31"><span class="lineNum">      31</span>              : </span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">           1 :         IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config = ConfigParser.getConfig(</span></span>
+<span id="L33"><span class="lineNum">      33</span>              :             getChainAlias(),</span>
+<span id="L34"><span class="lineNum">      34</span>              :             configName</span>
+<span id="L35"><span class="lineNum">      35</span>              :         );</span>
+<span id="L36"><span class="lineNum">      36</span>              : </span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">           1 :         address factory = getDeployedAddress(SiloOraclesFactoriesContracts.CHAINLINK_V3_ORACLE_FACTORY);</span></span>
+<span id="L38"><span class="lineNum">      38</span>              : </span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">           1 :         vm.startBroadcast(deployerPrivateKey);</span></span>
+<span id="L40"><span class="lineNum">      40</span>              : </span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">           1 :         oracle = ChainlinkV3OracleFactory(factory).create(config, bytes32(0));</span></span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">           1 :         vm.stopBroadcast();</span></span>
+<span id="L44"><span class="lineNum">      44</span>              : </span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">           1 :         OraclesDeployments.save(getChainAlias(), configName, address(oracle));</span></span>
+<span id="L46"><span class="lineNum">      46</span>              : </span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">           1 :         console2.log(&quot;Config name&quot;, configName);</span></span>
+<span id="L48"><span class="lineNum">      48</span>              : </span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">           1 :         console2.log(&quot;Token name:&quot;, config.baseToken.name());</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">           1 :         console2.log(&quot;Token symbol:&quot;, config.baseToken.symbol());</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">           1 :         console2.log(&quot;Token decimals:&quot;, config.baseToken.decimals());</span></span>
+<span id="L52"><span class="lineNum">      52</span>              : </span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">           1 :         printQuote(oracle, config, 1);</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">           1 :         printQuote(oracle, config, 10);</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">           1 :         printQuote(oracle, config, 1e6);</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">           1 :         printQuote(oracle, config, 1e8);</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">           1 :         printQuote(oracle, config, 1e18);</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">           1 :         printQuote(oracle, config, 1e36);</span></span>
+<span id="L59"><span class="lineNum">      59</span>              : </span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">           1 :         console2.log(&quot;Using token decimals:&quot;);</span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC">           1 :         uint256 price = printQuote(oracle, config, uint256(10 ** config.baseToken.decimals()));</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">           1 :         console2.log(&quot;Price in quote token divided by 1e18: &quot;, PriceFormatter.formatPriceInE18(price / 1e18));</span></span>
+<span id="L63"><span class="lineNum">      63</span>              : </span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">           1 :         ChainlinkV3OracleConfig oracleConfig = oracle.oracleConfig();</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">           1 :         IChainlinkV3Oracle.ChainlinkV3Config memory oracleConfigLive = oracleConfig.getConfig();</span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">           1 :         console2.log(&quot;Oracle config:&quot;);</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">           1 :         console2.log(&quot;Primary aggregator: &quot;, address(oracleConfigLive.primaryAggregator));</span></span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">           1 :         console2.log(&quot;Secondary aggregator: &quot;, address(oracleConfigLive.secondaryAggregator));</span></span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">           1 :         console2.log(&quot;Primary heartbeat: &quot;, oracleConfigLive.primaryHeartbeat);</span></span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">           1 :         console2.log(&quot;Secondary heartbeat: &quot;, oracleConfigLive.secondaryHeartbeat);</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">           1 :         console2.log(&quot;Normalization divider: &quot;, PriceFormatter.formatNumberInE(oracleConfigLive.normalizationDivider));</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">           1 :         console2.log(&quot;Normalization multiplier: &quot;, PriceFormatter.formatNumberInE(oracleConfigLive.normalizationMultiplier));</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">           1 :         console2.log(&quot;Base token: &quot;, address(oracleConfigLive.baseToken));</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">           1 :         console2.log(&quot;Quote token: &quot;, address(oracleConfigLive.quoteToken));</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">           1 :         console2.log(&quot;Convert to quote: &quot;, oracleConfigLive.convertToQuote);</span></span>
+<span id="L76"><span class="lineNum">      76</span>              :     }</span>
+<span id="L77"><span class="lineNum">      77</span>              : </span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">           7 :     function printQuote(</span></span>
+<span id="L79"><span class="lineNum">      79</span>              :         ChainlinkV3Oracle _oracle,</span>
+<span id="L80"><span class="lineNum">      80</span>              :         IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config,</span>
+<span id="L81"><span class="lineNum">      81</span>              :         uint256 _baseAmount</span>
+<span id="L82"><span class="lineNum">      82</span>              :     ) internal view returns (uint256 quote) {</span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">           7 :          try _oracle.quote(_baseAmount, address(_config.baseToken)) returns (uint256 price) {</span></span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">           7 :             require(price &gt; 0, string.concat(&quot;Quote for &quot;, PriceFormatter.formatNumberInE(_baseAmount), &quot; wei is 0&quot;));</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">           7 :             console2.log(string.concat(&quot;Quote for &quot;, PriceFormatter.formatNumberInE(_baseAmount), &quot; wei is &quot;, PriceFormatter.formatPriceInE18(price)));</span></span>
+<span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">           7 :             quote = price;</span></span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaUNC tlaBgUNC">           0 :         } catch {</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaUNC">           0 :             console2.log(string.concat(&quot;Failed to quote&quot;, PriceFormatter.formatNumberInE(_baseAmount), &quot;wei&quot;));</span></span>
+<span id="L89"><span class="lineNum">      89</span>              :         }</span>
+<span id="L90"><span class="lineNum">      90</span>              :     }</span>
+<span id="L91"><span class="lineNum">      91</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

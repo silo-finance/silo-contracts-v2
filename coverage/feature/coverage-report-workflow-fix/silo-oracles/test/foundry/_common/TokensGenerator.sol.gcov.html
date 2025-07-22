@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - test/foundry/_common/TokensGenerator.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory test/foundry/_common">test/foundry/_common</a> - TokensGenerator.sol<span style="font-size: 80%;"> (source / <a href="TokensGenerator.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">48</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-07-22 11:54:23</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">20.0&nbsp;%</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">1</td>
+          </tr>
+                  <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: BUSL-1.1</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity &gt;=0.7.6 &lt;0.9.0;</span>
+<span id="L3"><span class="lineNum">       3</span>              : pragma abicoder v2;</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : import &quot;./Forking.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import &quot;../interfaces/IERC20Metadata.sol&quot;; // interfaces included BECAUSE OF 0.7.6</span>
+<span id="L7"><span class="lineNum">       7</span>              : </span>
+<span id="L8"><span class="lineNum">       8</span>              : </span>
+<span id="L9"><span class="lineNum">       9</span>              : contract TokensGenerator is Forking {</span>
+<span id="L10"><span class="lineNum">      10</span>              :     // token symbol =&gt; address</span>
+<span id="L11"><span class="lineNum">      11</span>              :     mapping (string =&gt; IERC20) public tokens;</span>
+<span id="L12"><span class="lineNum">      12</span>              : </span>
+<span id="L13"><span class="lineNum">      13</span>              :     // token =&gt; balance slot</span>
+<span id="L14"><span class="lineNum">      14</span>              :     mapping (address =&gt; uint256) public balanceMappingPosition;</span>
+<span id="L15"><span class="lineNum">      15</span>              : </span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaUNC tlaBgUNC">           0 :     constructor(BlockChain _chain) Forking(_chain) {</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaUNC">           0 :         if (isEthereum(_chain)) {</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaUNC">           0 :             tokens[&quot;WETH&quot;] = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaUNC">           0 :             tokens[&quot;1INCH&quot;] = IERC20(0x111111111117dC0aa78b770fA6A738034120C302);</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaUNC">           0 :             tokens[&quot;BAL&quot;] = IERC20(0xba100000625a3754423978a60c9317c58a424e3D);</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 :             tokens[&quot;cbETH&quot;] = IERC20(0xBe9895146f7AF43049ca1c1AE358B0541Ea49704);</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC">           0 :             tokens[&quot;gOHM&quot;] = IERC20(0x0ab87046fBb341D058F17CBC4c1133F25a20a52f);</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaUNC">           0 :             tokens[&quot;OHM&quot;] = IERC20(0x64aa3364F17a4D01c6f1751Fd97C2BD3D7e7f1D5);</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaUNC">           0 :             tokens[&quot;USDC&quot;] = IERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :             tokens[&quot;USDT&quot;] = IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaUNC">           0 :             tokens[&quot;stETH&quot;] = IERC20(0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84);</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaUNC">           0 :             tokens[&quot;wstETH&quot;] = IERC20(0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0);</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaUNC">           0 :             tokens[&quot;GNO&quot;] = IERC20(0x6810e776880C02933D47DB1b9fc05908e5386b96);</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaUNC">           0 :             tokens[&quot;UKY&quot;] = IERC20(0x6f448d8687Dd8004fD73da5A938FfF57339BA8bE);</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaUNC">           0 :             tokens[&quot;CRV&quot;] = IERC20(0xD533a949740bb3306d119CC777fa900bA034cd52);</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaUNC">           0 :             tokens[&quot;SP500&quot;] = IERC20(0xd73f0826f4115E4572dbA46b3311EE13029F5D22);</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaUNC">           0 :             tokens[&quot;SPELL&quot;] = IERC20(0x090185f2135308BaD17527004364eBcC2D37e5F6);</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaUNC">           0 :             tokens[&quot;DYDX&quot;] = IERC20(0x92D6C1e31e14520e676a687F0a93788B716BEff5);</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC">           0 :         } else if (isArbitrum(_chain)) {</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaUNC">           0 :             tokens[&quot;WETH&quot;] = IERC20(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :             tokens[&quot;UMAMI&quot;] = IERC20(0x1622bF67e6e5747b81866fE0b85178a93C7F86e3);</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaUNC">           0 :             tokens[&quot;USDC&quot;] = IERC20(0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8);</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaUNC">           0 :             tokens[&quot;USDT&quot;] = IERC20(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaUNC">           0 :             tokens[&quot;TUSD&quot;] = IERC20(0x4D15a3A2286D883AF0AA1B3f21367843FAc63E07);</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaUNC">           0 :             tokens[&quot;PLS&quot;] = IERC20(0x51318B7D00db7ACc4026C88c3952B66278B6A67F);</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaUNC">           0 :             tokens[&quot;GRAIL&quot;] = IERC20(0x3d9907F9a368ad0a51Be60f7Da3b97cf940982D8);</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaUNC">           0 :             tokens[&quot;RDPX&quot;] = IERC20(0x32Eb7902D4134bf98A28b963D26de779AF92A212);</span></span>
+<span id="L43"><span class="lineNum">      43</span>              : </span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaUNC">           0 :             balanceMappingPosition[address(tokens[&quot;USDC&quot;])] = 51;</span></span>
+<span id="L45"><span class="lineNum">      45</span>              :         }</span>
+<span id="L46"><span class="lineNum">      46</span>              :     }</span>
+<span id="L47"><span class="lineNum">      47</span>              : </span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaUNC">           0 :     function giveMeTokens(string calldata _tokenName, uint256 _amount) external returns (IERC20 token) {</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC">           0 :         return giveMeTokens(_tokenName, _amount, msg.sender);</span></span>
+<span id="L50"><span class="lineNum">      50</span>              :     }</span>
+<span id="L51"><span class="lineNum">      51</span>              : </span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaUNC">           0 :     function giveMeTokens(string calldata _tokenName, uint256 _amount, address _recipient) public returns (IERC20 token) {</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaUNC">           0 :         return giveMeTokens(address(tokens[_tokenName]), _amount, _recipient);</span></span>
+<span id="L54"><span class="lineNum">      54</span>              :     }</span>
+<span id="L55"><span class="lineNum">      55</span>              : </span>
+<span id="L56"><span class="lineNum">      56</span>              :     /// @param _amount Amount without decimals</span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaUNC">           0 :     function giveMeTokens(address _asset, uint256 _amount, address _recipient) public returns (IERC20 token) {</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaUNC">           0 :         token = IERC20(_asset);</span></span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaUNC">           0 :         uint256 decimals = IERC20Metadata(_asset).decimals();</span></span>
+<span id="L60"><span class="lineNum">      60</span>              : </span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaUNC">           0 :         giveMeExactTokens(_asset, _amount * 10 ** decimals, _recipient);</span></span>
+<span id="L62"><span class="lineNum">      62</span>              :     }</span>
+<span id="L63"><span class="lineNum">      63</span>              : </span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaUNC">           0 :     function giveMeExactTokens(address _asset, uint256 _amount, address _recipient) public returns (IERC20 token) {</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaUNC">           0 :         token = IERC20(_asset);</span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaUNC">           0 :         uint256 decimals = IERC20Metadata(_asset).decimals();</span></span>
+<span id="L67"><span class="lineNum">      67</span>              : </span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaUNC">           0 :         emit log_named_address(&quot;[giveMeExactTokens]&quot;, _asset);</span></span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaUNC">           0 :         emit log_named_decimal_uint(&quot;balance before =&gt;&quot;, token.balanceOf(_recipient), decimals);</span></span>
+<span id="L70"><span class="lineNum">      70</span>              : </span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaUNC">           0 :         _doTokens(_asset, _amount, _recipient);</span></span>
+<span id="L72"><span class="lineNum">      72</span>              : </span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaUNC">           0 :         emit log_named_decimal_uint(&quot;balance after =&gt;&quot;, token.balanceOf(_recipient), decimals);</span></span>
+<span id="L74"><span class="lineNum">      74</span>              :     }</span>
+<span id="L75"><span class="lineNum">      75</span>              : </span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaUNC">           0 :     function _doTokens(address _asset, uint256 _amount, address _recipient) internal virtual {</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaUNC">           0 :         emit log_named_uint(&quot;balanceMappingPosition&quot;, balanceMappingPosition[_asset]);</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaUNC">           0 :         vm.store(_asset, balanceSlot(_recipient, balanceMappingPosition[_asset]), bytes32(_amount));</span></span>
+<span id="L79"><span class="lineNum">      79</span>              :     }</span>
+<span id="L80"><span class="lineNum">      80</span>              : </span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaUNC">           0 :     function balanceSlot(address _holder, uint256 _mappingPosition) internal pure returns (bytes32) {</span></span>
+<span id="L82"><span class="lineNum">      82</span>              :         // mapping (address =&gt; uint256)</span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaUNC">           0 :         return keccak256(abi.encode(_holder, _mappingPosition));</span></span>
+<span id="L84"><span class="lineNum">      84</span>              :     }</span>
+<span id="L85"><span class="lineNum">      85</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - deploy/pendle/PendleLPTToAssetOracleDeploy.s.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory deploy/pendle">deploy/pendle</a> - PendleLPTToAssetOracleDeploy.s.sol<span style="font-size: 80%;"> (source / <a href="PendleLPTToAssetOracleDeploy.s.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryMed">83.3&nbsp;%</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">15</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-07-22 11:54:23</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+          </tr>
+                  <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: BUSL-1.1</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity 0.8.28;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {ChainsLib} from &quot;silo-foundry-utils/lib/ChainsLib.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {IERC20Metadata} from &quot;openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : </span>
+<span id="L7"><span class="lineNum">       7</span>              : import {CommonDeploy} from &quot;../CommonDeploy.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : import {SiloOraclesFactoriesContracts, SiloOraclesFactoriesDeployments} from &quot;../SiloOraclesFactoriesContracts.sol&quot;;</span>
+<span id="L9"><span class="lineNum">       9</span>              : import {ISiloOracle} from &quot;silo-core/contracts/interfaces/ISiloOracle.sol&quot;;</span>
+<span id="L10"><span class="lineNum">      10</span>              : import {PendleLPTToAssetOracleFactory} from &quot;silo-oracles/contracts/pendle/lp-tokens/PendleLPTToAssetOracleFactory.sol&quot;;</span>
+<span id="L11"><span class="lineNum">      11</span>              : import {PendleLPTToAssetOracle} from &quot;silo-oracles/contracts/pendle/lp-tokens/PendleLPTToAssetOracle.sol&quot;;</span>
+<span id="L12"><span class="lineNum">      12</span>              : import {OraclesDeployments} from &quot;silo-oracles/deploy/OraclesDeployments.sol&quot;;</span>
+<span id="L13"><span class="lineNum">      13</span>              : import {IPendleMarketV3Like} from &quot;silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol&quot;;</span>
+<span id="L14"><span class="lineNum">      14</span>              : </span>
+<span id="L15"><span class="lineNum">      15</span>              : /**</span>
+<span id="L16"><span class="lineNum">      16</span>              : FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE_NAME=PYTH_REDSTONE_wstkscETH_ETH MARKET=0xd14117baf6EC5D12BE68CD06e763A4B82C9B6d1D \</span>
+<span id="L17"><span class="lineNum">      17</span>              :     forge script silo-oracles/deploy/pendle/PendleLPTToAssetOracleDeploy.s.sol \</span>
+<span id="L18"><span class="lineNum">      18</span>              :     --ffi --rpc-url $RPC_SONIC --broadcast --verify</span>
+<span id="L19"><span class="lineNum">      19</span>              :  */</span>
+<span id="L20"><span class="lineNum">      20</span>              : contract PendleLPTToAssetOracleDeploy is CommonDeploy {</span>
+<span id="L21"><span class="lineNum">      21</span>              :     ISiloOracle underlyingOracle;</span>
+<span id="L22"><span class="lineNum">      22</span>              :     address market;</span>
+<span id="L23"><span class="lineNum">      23</span>              : </span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC tlaBgGNC">           1 :     function run() public returns (ISiloOracle oracle) {</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">           1 :         string memory chainAlias = ChainsLib.chainAlias();</span></span>
+<span id="L26"><span class="lineNum">      26</span>              : </span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">           1 :         PendleLPTToAssetOracleFactory factory = PendleLPTToAssetOracleFactory(SiloOraclesFactoriesDeployments.get(</span></span>
+<span id="L28"><span class="lineNum">      28</span>              :             SiloOraclesFactoriesContracts.PENDLE_LPT_TO_ASSET_ORACLE_FACTORY,</span>
+<span id="L29"><span class="lineNum">      29</span>              :             chainAlias</span>
+<span id="L30"><span class="lineNum">      30</span>              :         ));</span>
+<span id="L31"><span class="lineNum">      31</span>              : </span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">           1 :         string memory underlyingOracleName;</span></span>
+<span id="L33"><span class="lineNum">      33</span>              : </span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">           1 :         if (address(market) == address(0)) {</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaUNC tlaBgUNC">           0 :             underlyingOracleName = vm.envString(&quot;UNDERLYING_ORACLE_NAME&quot;);</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :             market = vm.envAddress(&quot;MARKET&quot;);</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaUNC">           0 :             underlyingOracle = ISiloOracle(OraclesDeployments.get(chainAlias, underlyingOracleName));</span></span>
+<span id="L38"><span class="lineNum">      38</span>              :         }</span>
+<span id="L39"><span class="lineNum">      39</span>              : </span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC tlaBgGNC">           1 :         uint256 deployerPrivateKey = uint256(vm.envBytes32(&quot;PRIVATE_KEY&quot;));</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">           1 :         vm.startBroadcast(deployerPrivateKey);</span></span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">           1 :         oracle = factory.create({</span></span>
+<span id="L44"><span class="lineNum">      44</span>              :             _underlyingOracle: underlyingOracle,</span>
+<span id="L45"><span class="lineNum">      45</span>              :             _market: market,</span>
+<span id="L46"><span class="lineNum">      46</span>              :             _externalSalt: bytes32(0)</span>
+<span id="L47"><span class="lineNum">      47</span>              :         });</span>
+<span id="L48"><span class="lineNum">      48</span>              : </span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">           1 :         vm.stopBroadcast();</span></span>
+<span id="L50"><span class="lineNum">      50</span>              : </span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">           1 :         (address syToken,,) = IPendleMarketV3Like(market).readTokens();</span></span>
+<span id="L52"><span class="lineNum">      52</span>              : </span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">           1 :         string memory oracleName = string.concat(</span></span>
+<span id="L54"><span class="lineNum">      54</span>              :             &quot;PENDLE_LPT_TO_ASSET_ORACLE_&quot;,</span>
+<span id="L55"><span class="lineNum">      55</span>              :             IERC20Metadata(syToken).symbol(),</span>
+<span id="L56"><span class="lineNum">      56</span>              :             &quot;_&quot;,</span>
+<span id="L57"><span class="lineNum">      57</span>              :             underlyingOracleName</span>
+<span id="L58"><span class="lineNum">      58</span>              :         );</span>
+<span id="L59"><span class="lineNum">      59</span>              : </span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">           1 :         OraclesDeployments.save(chainAlias, oracleName, address(oracle));</span></span>
+<span id="L61"><span class="lineNum">      61</span>              :     }</span>
+<span id="L62"><span class="lineNum">      62</span>              : </span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">           1 :     function setParams(address _market, ISiloOracle _underlyingOracle) external {</span></span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">           1 :         market = _market;</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">           1 :         underlyingOracle = _underlyingOracle;</span></span>
+<span id="L66"><span class="lineNum">      66</span>              :     }</span>
+<span id="L67"><span class="lineNum">      67</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - contracts/custom/X33ToUsdAdapter.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory contracts/custom">contracts/custom</a> - X33ToUsdAdapter.sol<span style="font-size: 80%;"> (source / <a href="X33ToUsdAdapter.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryMed">87.5&nbsp;%</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">14</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-07-22 11:54:23</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryMed">83.3&nbsp;%</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">5</td>
+          </tr>
+                  <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: BUSL-1.1</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity 0.8.28;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {IERC4626} from &quot;openzeppelin5/interfaces/IERC4626.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {SafeCast} from &quot;openzeppelin5/utils/math/SafeCast.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {AggregatorV3Interface} from &quot;chainlink/v0.8/interfaces/AggregatorV3Interface.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : </span>
+<span id="L8"><span class="lineNum">       8</span>              : /// @title x33 / USD adapter</span>
+<span id="L9"><span class="lineNum">       9</span>              : /// @notice This adapter multiplies the x33.convertToAssets() go get the rate between x33 and xShadow. To get the</span>
+<span id="L10"><span class="lineNum">      10</span>              : /// rate between xShadow and Shadow 50% multiplier is used (slashing penalty in Shadow is constant). AggregatorV3 feed</span>
+<span id="L11"><span class="lineNum">      11</span>              : /// provided in constructor is used as Shadow / USD price source. </span>
+<span id="L12"><span class="lineNum">      12</span>              : contract X33ToUsdAdapter is AggregatorV3Interface {</span>
+<span id="L13"><span class="lineNum">      13</span>              :     /// @dev 50% slashing penalty to redeem xShadow for Shadow. </span>
+<span id="L14"><span class="lineNum">      14</span>              :     int256 public constant SLASHING_PENALTY_DIVIDER = 2;</span>
+<span id="L15"><span class="lineNum">      15</span>              : </span>
+<span id="L16"><span class="lineNum">      16</span>              :     /// @dev sample amount for x33.convertToAssets(). </span>
+<span id="L17"><span class="lineNum">      17</span>              :     uint256 public constant SHARES_QUOTE_SAMPLE = 10 ** 18;</span>
+<span id="L18"><span class="lineNum">      18</span>              : </span>
+<span id="L19"><span class="lineNum">      19</span>              :     /// @dev x33 vault address to do x33.convertToAssets(). </span>
+<span id="L20"><span class="lineNum">      20</span>              :     IERC4626 public constant X33 = IERC4626(0x3333111A391cC08fa51353E9195526A70b333333);</span>
+<span id="L21"><span class="lineNum">      21</span>              : </span>
+<span id="L22"><span class="lineNum">      22</span>              :     /// @dev Shadow / USD feed. </span>
+<span id="L23"><span class="lineNum">      23</span>              :     AggregatorV3Interface public immutable SHADOW_USD_FEED; // solhint-disable-line var-name-mixedcase</span>
+<span id="L24"><span class="lineNum">      24</span>              : </span>
+<span id="L25"><span class="lineNum">      25</span>              :     error InvalidShadowUsdFeed();</span>
+<span id="L26"><span class="lineNum">      26</span>              :     error NotImplemented();</span>
+<span id="L27"><span class="lineNum">      27</span>              : </span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC tlaBgGNC">           9 :     constructor(AggregatorV3Interface _shadowUsdFeed) {</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">           9 :         require(address(_shadowUsdFeed) != address(0), InvalidShadowUsdFeed());</span></span>
+<span id="L30"><span class="lineNum">      30</span>              : </span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">           7 :         (, int256 answer,, uint256 updatedAt,) = _shadowUsdFeed.latestRoundData();</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">           7 :         require(answer &gt; 0 &amp;&amp; block.timestamp - updatedAt &lt; 24 hours, InvalidShadowUsdFeed());</span></span>
+<span id="L33"><span class="lineNum">      33</span>              : </span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">           6 :         SHADOW_USD_FEED = _shadowUsdFeed;</span></span>
+<span id="L35"><span class="lineNum">      35</span>              :     }</span>
+<span id="L36"><span class="lineNum">      36</span>              : </span>
+<span id="L37"><span class="lineNum">      37</span>              :     /// @inheritdoc AggregatorV3Interface</span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">           1 :     function latestRoundData()</span></span>
+<span id="L39"><span class="lineNum">      39</span>              :         external</span>
+<span id="L40"><span class="lineNum">      40</span>              :         view</span>
+<span id="L41"><span class="lineNum">      41</span>              :         virtual</span>
+<span id="L42"><span class="lineNum">      42</span>              :         returns (</span>
+<span id="L43"><span class="lineNum">      43</span>              :             uint80 roundId,</span>
+<span id="L44"><span class="lineNum">      44</span>              :             int256 answer,</span>
+<span id="L45"><span class="lineNum">      45</span>              :             uint256 startedAt,</span>
+<span id="L46"><span class="lineNum">      46</span>              :             uint256 updatedAt,</span>
+<span id="L47"><span class="lineNum">      47</span>              :             uint80 answeredInRound</span>
+<span id="L48"><span class="lineNum">      48</span>              :         )</span>
+<span id="L49"><span class="lineNum">      49</span>              :     {</span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">           1 :         (roundId, answer, startedAt, updatedAt, answeredInRound) = SHADOW_USD_FEED.latestRoundData();</span></span>
+<span id="L51"><span class="lineNum">      51</span>              : </span>
+<span id="L52"><span class="lineNum">      52</span>              :         // price := x33 --(rate)--&gt; xShadow --(50% penalty)--&gt; Shadow --(underlying feed)--&gt; USD</span>
+<span id="L53"><span class="lineNum">      53</span>              :         // price := (X33.convertToAssets(SHARES_QUOTE_SAMPLE) / int256(SHARES_QUOTE_SAMPLE)) / 2 * answer</span>
+<span id="L54"><span class="lineNum">      54</span>              : </span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">           1 :         answer = (</span></span>
+<span id="L56"><span class="lineNum">      56</span>              :             answer * SafeCast.toInt256(X33.convertToAssets(SHARES_QUOTE_SAMPLE)) / int256(SHARES_QUOTE_SAMPLE)</span>
+<span id="L57"><span class="lineNum">      57</span>              :         ) / SLASHING_PENALTY_DIVIDER;</span>
+<span id="L58"><span class="lineNum">      58</span>              :     }</span>
+<span id="L59"><span class="lineNum">      59</span>              : </span>
+<span id="L60"><span class="lineNum">      60</span>              :     /// @inheritdoc AggregatorV3Interface</span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC">           2 :     function decimals() external view virtual returns (uint8) {</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">           2 :         return SHADOW_USD_FEED.decimals();</span></span>
+<span id="L63"><span class="lineNum">      63</span>              :     }</span>
+<span id="L64"><span class="lineNum">      64</span>              : </span>
+<span id="L65"><span class="lineNum">      65</span>              :     /// @inheritdoc AggregatorV3Interface</span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">           1 :     function description() external pure virtual returns (string memory) {</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">           1 :         return &quot;x33 / USD adapter&quot;;</span></span>
+<span id="L68"><span class="lineNum">      68</span>              :     }</span>
+<span id="L69"><span class="lineNum">      69</span>              : </span>
+<span id="L70"><span class="lineNum">      70</span>              :     /// @inheritdoc AggregatorV3Interface</span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaUNC tlaBgUNC">           0 :     function version() external pure virtual returns (uint256) {</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaUNC">           0 :         return 1;</span></span>
+<span id="L73"><span class="lineNum">      73</span>              :     }</span>
+<span id="L74"><span class="lineNum">      74</span>              : </span>
+<span id="L75"><span class="lineNum">      75</span>              :     /// @inheritdoc AggregatorV3Interface</span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC tlaBgGNC">           1 :     function getRoundData(uint80) external pure virtual returns (uint80, int256, uint256, uint256, uint80) {</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">           1 :         revert NotImplemented();</span></span>
+<span id="L78"><span class="lineNum">      78</span>              :     }</span>
+<span id="L79"><span class="lineNum">      79</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
