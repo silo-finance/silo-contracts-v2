@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Branch to run coverage on'
+        description: 'Branch name to run coverage on (e.g., main, develop, feature/xyz)'
         required: true
         default: 'develop'
         type: string
@@ -34,7 +34,7 @@ jobs:
       id-token: write
     
     steps:
-      - name: Checkout branch
+      - name: Checkout repository
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.branch }}
