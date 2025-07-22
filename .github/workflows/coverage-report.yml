@@ -3,11 +3,6 @@ name: Coverage Report
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'Branch name to run coverage on (e.g., main, develop, feature/xyz)'
-        required: true
-        default: 'develop'
-        type: string
       workspace:
         description: 'Workspace to generate coverage for'
         required: true
@@ -37,7 +32,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.branch }}
           submodules: recursive
 
       - name: Cache gitmodules
@@ -102,12 +96,20 @@ jobs:
           cat coverage/silo-vaults.log | grep -i 'silo-vaults/contracts/' > coverage/silo-vaults.txt || true
           genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-vaults/ lcov.info
 
+      - name: Get branch name
+        id: branch-name
+        run: |
+          # github.ref_name contains the branch name when using workflow_dispatch
+          BRANCH_NAME="${{ github.ref_name }}"
+          echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "Running coverage on branch: $BRANCH_NAME"
+
       - name: Prepare deployment directory
         run: |
           mkdir -p deploy-coverage
           cp -r coverage/${{ inputs.workspace }}/* deploy-coverage/
           echo "<h1>Coverage Report - ${{ inputs.workspace }}</h1>" > deploy-coverage/header.html
-          echo "<p>Branch: ${{ inputs.branch }}</p>" >> deploy-coverage/header.html
+          echo "<p>Branch: ${{ steps.branch-name.outputs.branch }}</p>" >> deploy-coverage/header.html
           echo "<p>Generated: $(date)</p>" >> deploy-coverage/header.html
           echo "<hr>" >> deploy-coverage/header.html
           if [ -f deploy-coverage/index.html ]; then
@@ -120,17 +122,17 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./deploy-coverage
-          destination_dir: coverage/${{ inputs.branch }}/${{ inputs.workspace }}
+          destination_dir: coverage/${{ steps.branch-name.outputs.branch }}/${{ inputs.workspace }}
           keep_files: true
 
       - name: Generate job summary
         run: |
-          PAGES_URL="https://silo-finance.github.io/silo-contracts-v2/coverage/${{ inputs.branch }}/${{ inputs.workspace }}/"
+          PAGES_URL="https://silo-finance.github.io/silo-contracts-v2/coverage/${{ steps.branch-name.outputs.branch }}/${{ inputs.workspace }}/"
           echo "# Coverage Report Generated! 🎉" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Details" >> $GITHUB_STEP_SUMMARY
           echo "- **Workspace**: ${{ inputs.workspace }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: ${{ inputs.branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ steps.branch-name.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Generated at**: $(date)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 View Coverage Report" >> $GITHUB_STEP_SUMMARY
