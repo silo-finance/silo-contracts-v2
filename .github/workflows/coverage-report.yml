@@ -59,6 +59,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y lcov
 
+      - name: Show lcov version
+        run: |
+          lcov --version
+          genhtml --version
+
       - name: Run submodule update
         run: git submodule update --init --recursive
 
@@ -78,7 +83,7 @@ jobs:
           rm -f lcov.info
           AGGREGATOR=1INCH FOUNDRY_PROFILE=core_with_test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-core.log || true
           cat coverage/silo-core.log | grep -i 'silo-core/contracts/' > coverage/silo-core.txt || true
-          genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-core/ lcov.info
+          genhtml --ignore-errors inconsistent -o coverage/silo-core/ lcov.info
 
       - name: Generate coverage for silo-oracles
         if: inputs.workspace == 'silo-oracles'
@@ -94,7 +99,7 @@ jobs:
           rm -f lcov.info
           FOUNDRY_PROFILE=vaults_with_tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 > coverage/silo-vaults.log || true
           cat coverage/silo-vaults.log | grep -i 'silo-vaults/contracts/' > coverage/silo-vaults.txt || true
-          genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-vaults/ lcov.info
+          genhtml --ignore-errors inconsistent -o coverage/silo-vaults/ lcov.info
 
       - name: Get branch name
         id: branch-name
