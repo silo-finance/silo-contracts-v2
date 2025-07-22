@@ -10,6 +10,7 @@ import {ICheck} from "silo-core/deploy/silo/verifier/checks/ICheck.sol";
 import {CheckDaoFee} from "silo-core/deploy/silo/verifier/checks/silo/CheckDaoFee.sol";
 import {CheckDeployerFee} from "silo-core/deploy/silo/verifier/checks/silo/CheckDeployerFee.sol";
 import {CheckLiquidationFee} from "silo-core/deploy/silo/verifier/checks/silo/CheckLiquidationFee.sol";
+import {CheckPTLinearOracle} from "silo-core/deploy/silo/verifier/checks/silo/CheckPTLinearOracle.sol";
 import {CheckFlashloanFee} from "silo-core/deploy/silo/verifier/checks/silo/CheckFlashloanFee.sol";
 import {CheckIrmConfig} from "silo-core/deploy/silo/verifier/checks/silo/CheckIrmConfig.sol";
 import {CheckMaxLtvLtLiquidationFee} from "silo-core/deploy/silo/verifier/checks/silo/CheckMaxLtvLtLiquidationFee.sol";
@@ -93,6 +94,7 @@ contract SiloVerifier {
         _checks.push(new CheckIncentivesOwner(_configData, _isSiloZero));
         _checks.push(new CheckShareTokensInGauge(_configData, _isSiloZero));
         _checks.push(new CheckSiloImplementation(_configData, _isSiloZero));
+        _checks.push(new CheckPTLinearOracle(_configData.solvencyOracle, _configData.token));
     }
 
     function _buildBehaviorChecks(
