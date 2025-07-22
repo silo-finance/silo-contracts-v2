@@ -34,30 +34,26 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Cache gitmodules
-        uses: actions/cache@v3
-        with:
-          path: ./gitmodules/
-          key: coverage-submodules-${{ hashFiles('./.gitmodules') }}
-
-      - name: Cache contracts
-        uses: actions/cache@v3
-        with:
-          path: ./cache/
-          key: coverage-contracts-cache-${{ hashFiles('./${{ inputs.workspace }}/**/*.sol') }}
-          restore-keys: |
-            coverage-contracts-cache-${{ hashFiles('./${{ inputs.workspace }}/**/*.sol') }}
-            coverage-contracts-cache-
-
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: stable
 
-      - name: Install lcov
+      - name: Install lcov 2.1-1
         run: |
+          # Install dependencies
           sudo apt-get update
-          sudo apt-get install -y lcov
+          sudo apt-get install -y perl libcapture-tiny-perl libdatetime-perl
+          
+          # Download and install lcov 2.1-1
+          wget https://github.com/linux-test-project/lcov/releases/download/v2.1-1/lcov-2.1-1.tar.gz
+          tar -xzf lcov-2.1-1.tar.gz
+          cd lcov-2.1-1
+          sudo make install
+          
+          # Verify installation
+          which lcov
+          which genhtml
 
       - name: Show lcov version
         run: |
@@ -81,9 +77,21 @@ jobs:
         if: inputs.workspace == 'silo-core'
         run: |
           rm -f lcov.info
-          AGGREGATOR=1INCH FOUNDRY_PROFILE=core_with_test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-core.log || true
+          echo "Running forge coverage..."
+          AGGREGATOR=1INCH FOUNDRY_PROFILE=core_with_test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-core.log 2>&1 || true
+          
+          echo "Coverage log contents:"
+          cat coverage/silo-core.log || true
+          
           cat coverage/silo-core.log | grep -i 'silo-core/contracts/' > coverage/silo-core.txt || true
-          genhtml --ignore-errors inconsistent -o coverage/silo-core/ lcov.info
+          
+          if [ -f lcov.info ]; then
+            echo "lcov.info found, generating HTML report..."
+            genhtml --ignore-errors inconsistent -o coverage/silo-core/ lcov.info
+          else
+            echo "ERROR: lcov.info not generated. Check the coverage log above for errors."
+            exit 1
+          fi
 
       - name: Generate coverage for silo-oracles
         if: inputs.workspace == 'silo-oracles'
