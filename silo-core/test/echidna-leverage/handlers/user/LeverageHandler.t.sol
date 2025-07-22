@@ -12,6 +12,7 @@ import {
     LeverageUsingSiloFlashloanWithGeneralSwap,
     LeverageUsingSiloFlashloan
 } from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {PausableWithAccessControl} from "common/utils/PausableWithAccessControl.sol";
 import {RescueModule} from "silo-core/contracts/leverage/modules/RescueModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
@@ -70,6 +71,15 @@ contract LeverageHandler is BaseHandlerLeverage {
         (bool success,) = actor.proxy(address(leverageRouter), abi.encodeWithSelector(ILeverageRouter.setLeverageFee.selector, _fee % cap));
 
         if (!success) assertEq(fee, leverageRouter.leverageFee(), "when fail, fee is not changed");
+    }
+
+    function togglePauseRouter() external setupRandomActor(0) {
+        bool paused = leverageRouter.paused();
+
+        bytes4 selector = paused ? PausableWithAccessControl.unpause.selector : PausableWithAccessControl.pause.selector;
+        actor.proxy(address(leverageRouter), abi.encodeWithSelector(selector));
+
+        assertTrue(paused != leverageRouter.paused(), "pause/unpause should toggle state");
     }
 
     function onFlashLoan(
@@ -167,6 +177,8 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         _after();
 
+        _assert_userLEverageIsPausedWhenRouterIsPaused(success);
+
         uint256 afterDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
 
         if (success) {
@@ -227,9 +239,19 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         _after();
 
+        _assert_userLEverageIsPausedWhenRouterIsPaused(success);
+
         if (success) {
             assertEq(ISilo(closeArgs.flashloanTarget).maxRepay(targetActor), 0, "borrower should have no debt");
         }
+    }
+
+    function _assert_userLEverageIsPausedWhenRouterIsPaused(bool _txSuccessful) internal {
+        if (!leverageRouter.paused()) {
+            return;
+        }
+
+        assertFalse(_txSuccessful, "tx MUST be reverted when router is paused");
     }
 
     function assert_AllowanceDoesNotChangedForUserWhoOnlyApprove() public {
