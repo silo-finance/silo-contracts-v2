@@ -165,6 +165,9 @@ jobs:
           echo "[Click here to view the coverage report]($PAGES_URL)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Direct URL: \`$PAGES_URL\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Note:** The coverage report may take a few minutes to be available after deployment. If you get a 404 error, please wait a moment and refresh the page." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           # Also output the URL for easy copying
           echo "Coverage report available at: $PAGES_URL"
