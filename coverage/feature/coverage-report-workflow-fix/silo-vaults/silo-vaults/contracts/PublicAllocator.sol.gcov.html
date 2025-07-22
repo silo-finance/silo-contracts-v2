@@ -1,0 +1,238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - silo-vaults/contracts/PublicAllocator.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory silo-vaults/contracts">silo-vaults/contracts</a> - PublicAllocator.sol<span style="font-size: 80%;"> (source / <a href="PublicAllocator.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">62</td>
+            <td class="headerCovTableEntry">62</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-07-22 11:27:11</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">7</td>
+          </tr>
+                  <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: GPL-2.0-or-later</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity 0.8.28;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {IERC4626} from &quot;openzeppelin5/interfaces/IERC4626.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {UtilsLib} from &quot;morpho-blue/libraries/UtilsLib.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : </span>
+<span id="L7"><span class="lineNum">       7</span>              : import {RevertLib} from &quot;silo-core/contracts/lib/RevertLib.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : </span>
+<span id="L9"><span class="lineNum">       9</span>              : import {</span>
+<span id="L10"><span class="lineNum">      10</span>              :     FlowCaps,</span>
+<span id="L11"><span class="lineNum">      11</span>              :     FlowCapsConfig,</span>
+<span id="L12"><span class="lineNum">      12</span>              :     Withdrawal,</span>
+<span id="L13"><span class="lineNum">      13</span>              :     MAX_SETTABLE_FLOW_CAP,</span>
+<span id="L14"><span class="lineNum">      14</span>              :     IPublicAllocatorStaticTyping,</span>
+<span id="L15"><span class="lineNum">      15</span>              :     IPublicAllocatorBase</span>
+<span id="L16"><span class="lineNum">      16</span>              : } from &quot;./interfaces/IPublicAllocator.sol&quot;;</span>
+<span id="L17"><span class="lineNum">      17</span>              : import {ISiloVault, MarketAllocation} from &quot;./interfaces/ISiloVault.sol&quot;;</span>
+<span id="L18"><span class="lineNum">      18</span>              : </span>
+<span id="L19"><span class="lineNum">      19</span>              : import {ErrorsLib} from &quot;./libraries/ErrorsLib.sol&quot;;</span>
+<span id="L20"><span class="lineNum">      20</span>              : import {EventsLib} from &quot;./libraries/EventsLib.sol&quot;;</span>
+<span id="L21"><span class="lineNum">      21</span>              : </span>
+<span id="L22"><span class="lineNum">      22</span>              : /// @title PublicAllocator</span>
+<span id="L23"><span class="lineNum">      23</span>              : /// @author Forked with gratitude from Morpho Labs.</span>
+<span id="L24"><span class="lineNum">      24</span>              : /// @custom:contact security@morpho.org</span>
+<span id="L25"><span class="lineNum">      25</span>              : /// @notice Publicly callable allocator for SiloVault vaults.</span>
+<span id="L26"><span class="lineNum">      26</span>              : contract PublicAllocator is IPublicAllocatorStaticTyping {</span>
+<span id="L27"><span class="lineNum">      27</span>              :     using UtilsLib for uint256;</span>
+<span id="L28"><span class="lineNum">      28</span>              :     </span>
+<span id="L29"><span class="lineNum">      29</span>              :     /* STORAGE */</span>
+<span id="L30"><span class="lineNum">      30</span>              : </span>
+<span id="L31"><span class="lineNum">      31</span>              :     /// @inheritdoc IPublicAllocatorBase</span>
+<span id="L32"><span class="lineNum">      32</span>              :     mapping(ISiloVault =&gt; address) public admin;</span>
+<span id="L33"><span class="lineNum">      33</span>              :     /// @inheritdoc IPublicAllocatorBase</span>
+<span id="L34"><span class="lineNum">      34</span>              :     mapping(ISiloVault =&gt; uint256) public fee;</span>
+<span id="L35"><span class="lineNum">      35</span>              :     /// @inheritdoc IPublicAllocatorBase</span>
+<span id="L36"><span class="lineNum">      36</span>              :     mapping(ISiloVault =&gt; uint256) public accruedFee;</span>
+<span id="L37"><span class="lineNum">      37</span>              :     /// @inheritdoc IPublicAllocatorStaticTyping</span>
+<span id="L38"><span class="lineNum">      38</span>              :     mapping(ISiloVault =&gt; mapping(IERC4626 =&gt; FlowCaps)) public flowCaps;</span>
+<span id="L39"><span class="lineNum">      39</span>              : </span>
+<span id="L40"><span class="lineNum">      40</span>              :     /* MODIFIER */</span>
+<span id="L41"><span class="lineNum">      41</span>              : </span>
+<span id="L42"><span class="lineNum">      42</span>              :     /// @dev Reverts if the caller is not the admin nor the owner of this vault.</span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC tlaBgGNC">         515 :     modifier onlyAdminOrVaultOwner(ISiloVault vault) {</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">         515 :         if (msg.sender != admin[vault] &amp;&amp; msg.sender != ISiloVault(vault).owner()) {</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">         256 :             revert ErrorsLib.NotAdminNorVaultOwner();</span></span>
+<span id="L46"><span class="lineNum">      46</span>              :         }</span>
+<span id="L47"><span class="lineNum">      47</span>              :         _;</span>
+<span id="L48"><span class="lineNum">      48</span>              :     }</span>
+<span id="L49"><span class="lineNum">      49</span>              : </span>
+<span id="L50"><span class="lineNum">      50</span>              :     /* ADMIN OR VAULT OWNER ONLY */</span>
+<span id="L51"><span class="lineNum">      51</span>              : </span>
+<span id="L52"><span class="lineNum">      52</span>              :     /// @inheritdoc IPublicAllocatorBase</span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">        1538 :     function setAdmin(ISiloVault vault, address newAdmin) external virtual onlyAdminOrVaultOwner(vault) {</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">        1282 :         if (admin[vault] == newAdmin) revert ErrorsLib.AlreadySet();</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">        1281 :         admin[vault] = newAdmin;</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">        1281 :         emit EventsLib.SetAdmin(msg.sender, vault, newAdmin);</span></span>
+<span id="L57"><span class="lineNum">      57</span>              :     }</span>
+<span id="L58"><span class="lineNum">      58</span>              : </span>
+<span id="L59"><span class="lineNum">      59</span>              :     /// @inheritdoc IPublicAllocatorBase</span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">        2050 :     function setFee(ISiloVault vault, uint256 newFee) external virtual onlyAdminOrVaultOwner(vault) {</span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC">        1794 :         if (fee[vault] == newFee) revert ErrorsLib.AlreadySet();</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">        1538 :         fee[vault] = newFee;</span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">        1538 :         emit EventsLib.SetFee(msg.sender, vault, newFee);</span></span>
+<span id="L64"><span class="lineNum">      64</span>              :     }</span>
+<span id="L65"><span class="lineNum">      65</span>              : </span>
+<span id="L66"><span class="lineNum">      66</span>              :     /// @inheritdoc IPublicAllocatorBase</span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">        4616 :     function setFlowCaps(ISiloVault vault, FlowCapsConfig[] calldata config)</span></span>
+<span id="L68"><span class="lineNum">      68</span>              :         external</span>
+<span id="L69"><span class="lineNum">      69</span>              :         virtual</span>
+<span id="L70"><span class="lineNum">      70</span>              :         onlyAdminOrVaultOwner(vault)</span>
+<span id="L71"><span class="lineNum">      71</span>              :     {</span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">        4360 :         for (uint256 i = 0; i &lt; config.length; i++) {</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">        7441 :             FlowCapsConfig memory cfg = config[i];</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">        7441 :             IERC4626 market = cfg.market;</span></span>
+<span id="L75"><span class="lineNum">      75</span>              :             </span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">        7441 :             if (!vault.config(market).enabled &amp;&amp; (cfg.caps.maxIn &gt; 0 || cfg.caps.maxOut &gt; 0)) {</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">         256 :                 revert ErrorsLib.MarketNotEnabled(market);</span></span>
+<span id="L78"><span class="lineNum">      78</span>              :             }</span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">        7185 :             if (cfg.caps.maxIn &gt; MAX_SETTABLE_FLOW_CAP || cfg.caps.maxOut &gt; MAX_SETTABLE_FLOW_CAP) {</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">         512 :                 revert ErrorsLib.MaxSettableFlowCapExceeded();</span></span>
+<span id="L81"><span class="lineNum">      81</span>              :             }</span>
+<span id="L82"><span class="lineNum">      82</span>              :             </span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">        6673 :             flowCaps[vault][market] = cfg.caps;</span></span>
+<span id="L84"><span class="lineNum">      84</span>              :         }</span>
+<span id="L85"><span class="lineNum">      85</span>              : </span>
+<span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">        3592 :         emit EventsLib.SetFlowCaps(msg.sender, vault, config);</span></span>
+<span id="L87"><span class="lineNum">      87</span>              :     }</span>
+<span id="L88"><span class="lineNum">      88</span>              : </span>
+<span id="L89"><span class="lineNum">      89</span>              :     /// @inheritdoc IPublicAllocatorBase</span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">         515 :     function transferFee(ISiloVault vault, address payable feeRecipient) external virtual onlyAdminOrVaultOwner(vault) {</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">         259 :         uint256 claimed = accruedFee[vault];</span></span>
+<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC">         259 :         accruedFee[vault] = 0;</span></span>
+<span id="L93"><span class="lineNum">      93</span> <span class="tlaGNC">         259 :         (bool success, bytes memory data) = feeRecipient.call{value: claimed}(&quot;&quot;);</span></span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">         259 :         if (!success) RevertLib.revertBytes(data, &quot;fee transfer failed&quot;);</span></span>
+<span id="L95"><span class="lineNum">      95</span>              : </span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaGNC">         258 :         emit EventsLib.TransferFee(msg.sender, vault, claimed, feeRecipient);</span></span>
+<span id="L97"><span class="lineNum">      97</span>              :     }</span>
+<span id="L98"><span class="lineNum">      98</span>              : </span>
+<span id="L99"><span class="lineNum">      99</span>              :     /* PUBLIC */</span>
+<span id="L100"><span class="lineNum">     100</span>              : </span>
+<span id="L101"><span class="lineNum">     101</span>              :     /// @inheritdoc IPublicAllocatorBase</span>
+<span id="L102"><span class="lineNum">     102</span> <span class="tlaGNC">        4108 :     function reallocateTo(ISiloVault vault, Withdrawal[] calldata withdrawals, IERC4626 supplyMarket)</span></span>
+<span id="L103"><span class="lineNum">     103</span>              :         external</span>
+<span id="L104"><span class="lineNum">     104</span>              :         payable</span>
+<span id="L105"><span class="lineNum">     105</span>              :         virtual</span>
+<span id="L106"><span class="lineNum">     106</span>              :     {</span>
+<span id="L107"><span class="lineNum">     107</span> <span class="tlaGNC">        4108 :         if (msg.value != fee[vault]) revert ErrorsLib.IncorrectFee();</span></span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">        3852 :         if (msg.value &gt; 0) accruedFee[vault] += msg.value;</span></span>
+<span id="L109"><span class="lineNum">     109</span>              : </span>
+<span id="L110"><span class="lineNum">     110</span> <span class="tlaGNC">        3852 :         if (withdrawals.length == 0) revert ErrorsLib.EmptyWithdrawals();</span></span>
+<span id="L111"><span class="lineNum">     111</span>              : </span>
+<span id="L112"><span class="lineNum">     112</span> <span class="tlaGNC">        3851 :         if (!vault.config(supplyMarket).enabled) revert ErrorsLib.MarketNotEnabled(supplyMarket);</span></span>
+<span id="L113"><span class="lineNum">     113</span>              : </span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">        3595 :         MarketAllocation[] memory allocations = new MarketAllocation[](withdrawals.length + 1);</span></span>
+<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">        3595 :         uint128 totalWithdrawn;</span></span>
+<span id="L116"><span class="lineNum">     116</span>              : </span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">        3595 :         IERC4626 market;</span></span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">        3595 :         IERC4626 prevMarket;</span></span>
+<span id="L119"><span class="lineNum">     119</span>              :         </span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">        3595 :         for (uint256 i = 0; i &lt; withdrawals.length; i++) {</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC">        3853 :             prevMarket = market;</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">        3853 :             Withdrawal memory withdrawal = withdrawals[i];</span></span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">        3853 :             market = withdrawal.market;</span></span>
+<span id="L124"><span class="lineNum">     124</span>              : </span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">        3853 :             if (!vault.config(market).enabled) revert ErrorsLib.MarketNotEnabled(market);</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">        3597 :             if (withdrawal.amount == 0) revert ErrorsLib.WithdrawZero(market);</span></span>
+<span id="L127"><span class="lineNum">     127</span>              : </span>
+<span id="L128"><span class="lineNum">     128</span> <span class="tlaGNC">        3596 :             if (address(market) &lt;= address(prevMarket)) revert ErrorsLib.InconsistentWithdrawals();</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">        3594 :             if (address(market) == address(supplyMarket)) revert ErrorsLib.DepositMarketInWithdrawals();</span></span>
+<span id="L130"><span class="lineNum">     130</span>              : </span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">        3593 :             uint256 assets = _expectedSupplyAssets(market, address(vault));</span></span>
+<span id="L132"><span class="lineNum">     132</span>              : </span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">        3593 :             if (flowCaps[vault][market].maxOut &lt; withdrawal.amount) revert ErrorsLib.MaxOutflowExceeded(market);</span></span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">        3336 :             if (assets &lt; withdrawal.amount) revert ErrorsLib.NotEnoughSupply(market);</span></span>
+<span id="L135"><span class="lineNum">     135</span>              : </span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">        3335 :             flowCaps[vault][market].maxIn += withdrawal.amount;</span></span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">        3335 :             flowCaps[vault][market].maxOut -= withdrawal.amount;</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">        3335 :             allocations[i].market = market;</span></span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaGNC">        3335 :             allocations[i].assets = assets - withdrawal.amount;</span></span>
+<span id="L140"><span class="lineNum">     140</span>              : </span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">        3335 :             totalWithdrawn += withdrawal.amount;</span></span>
+<span id="L142"><span class="lineNum">     142</span>              : </span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">        3335 :             emit EventsLib.PublicWithdrawal(msg.sender, vault, market, withdrawal.amount);</span></span>
+<span id="L144"><span class="lineNum">     144</span>              :         }</span>
+<span id="L145"><span class="lineNum">     145</span>              : </span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">        3077 :         if (flowCaps[vault][supplyMarket].maxIn &lt; totalWithdrawn) revert ErrorsLib.MaxInflowExceeded(supplyMarket);</span></span>
+<span id="L147"><span class="lineNum">     147</span>              : </span>
+<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">        2820 :         flowCaps[vault][supplyMarket].maxIn -= totalWithdrawn;</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">        2820 :         flowCaps[vault][supplyMarket].maxOut += totalWithdrawn;</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">        2820 :         allocations[withdrawals.length].market = supplyMarket;</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">        2820 :         allocations[withdrawals.length].assets = type(uint256).max;</span></span>
+<span id="L152"><span class="lineNum">     152</span>              : </span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">        2820 :         vault.reallocate(allocations);</span></span>
+<span id="L154"><span class="lineNum">     154</span>              : </span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">        2820 :         emit EventsLib.PublicReallocateTo(msg.sender, vault, supplyMarket, totalWithdrawn);</span></span>
+<span id="L156"><span class="lineNum">     156</span>              :     }</span>
+<span id="L157"><span class="lineNum">     157</span>              : </span>
+<span id="L158"><span class="lineNum">     158</span>              :     /// @notice Returns the expected supply assets balance of `user` on a market after having accrued interest.</span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">        3593 :     function _expectedSupplyAssets(IERC4626 _market, address _user) internal view virtual returns (uint256 assets) {</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">        3593 :         assets = _market.convertToAssets(_market.balanceOf(_user));</span></span>
+<span id="L161"><span class="lineNum">     161</span>              :     }</span>
+<span id="L162"><span class="lineNum">     162</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

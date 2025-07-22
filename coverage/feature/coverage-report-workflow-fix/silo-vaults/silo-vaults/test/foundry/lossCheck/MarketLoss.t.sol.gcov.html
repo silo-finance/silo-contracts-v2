@@ -1,0 +1,389 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - silo-vaults/test/foundry/lossCheck/MarketLoss.t.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory silo-vaults/test/foundry/lossCheck">silo-vaults/test/foundry/lossCheck</a> - MarketLoss.t.sol<span style="font-size: 80%;"> (source / <a href="MarketLoss.t.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">10</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-07-22 11:27:11</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+          </tr>
+                  <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: GPL-2.0-or-later</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity ^0.8.28;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {IERC4626, IERC20} from &quot;openzeppelin5/interfaces/IERC4626.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {ERC4626} from &quot;openzeppelin5/token/ERC20/extensions/ERC4626.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {Math} from &quot;openzeppelin5/utils/math/Math.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : import {IERC20Metadata} from &quot;openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : </span>
+<span id="L9"><span class="lineNum">       9</span>              : import {ErrorsLib} from &quot;../../../contracts/libraries/ErrorsLib.sol&quot;;</span>
+<span id="L10"><span class="lineNum">      10</span>              : import {IdleVault} from &quot;../../../contracts/IdleVault.sol&quot;;</span>
+<span id="L11"><span class="lineNum">      11</span>              : </span>
+<span id="L12"><span class="lineNum">      12</span>              : import {IntegrationTest} from &quot;../helpers/IntegrationTest.sol&quot;;</span>
+<span id="L13"><span class="lineNum">      13</span>              : </span>
+<span id="L14"><span class="lineNum">      14</span>              : interface IBefore {</span>
+<span id="L15"><span class="lineNum">      15</span>              :     function beforeDeposit() external;</span>
+<span id="L16"><span class="lineNum">      16</span>              : }</span>
+<span id="L17"><span class="lineNum">      17</span>              : </span>
+<span id="L18"><span class="lineNum">      18</span>              : contract ERC4626WithBeforeHook is IdleVault {</span>
+<span id="L19"><span class="lineNum">      19</span>              :     IBefore hook;</span>
+<span id="L20"><span class="lineNum">      20</span>              :     uint8 offset = 6; // default for idle</span>
+<span id="L21"><span class="lineNum">      21</span>              : </span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC tlaBgGNC">           6 :     constructor(IBefore _hook, IERC4626 _vault) IdleVault(address(_vault), _vault.asset(), &quot;n&quot;, &quot;s&quot;) {</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">           6 :         hook = _hook;</span></span>
+<span id="L24"><span class="lineNum">      24</span>              :     }</span>
+<span id="L25"><span class="lineNum">      25</span>              : </span>
+<span id="L26"><span class="lineNum">      26</span>              :     /// @inheritdoc IERC4626</span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">        2476 :     function deposit(uint256 _assets, address _receiver) public virtual override returns (uint256 shares) {</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">        2476 :         hook.beforeDeposit();</span></span>
+<span id="L29"><span class="lineNum">      29</span>              : </span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">        2476 :         return super.deposit(_assets, _receiver);</span></span>
+<span id="L31"><span class="lineNum">      31</span>              :     }</span>
+<span id="L32"><span class="lineNum">      32</span>              : </span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">        1024 :     function setOffset(uint8 _offset) external {</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">        1024 :         require(totalSupply() == 0, &quot;vault must be empty to set offset&quot;);</span></span>
+<span id="L35"><span class="lineNum">      35</span>              : </span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">        1024 :         offset = _offset;</span></span>
+<span id="L37"><span class="lineNum">      37</span>              :     }</span>
+<span id="L38"><span class="lineNum">      38</span>              :     </span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">       19206 :     function _decimalsOffset() internal view virtual override returns (uint8) {</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">       19206 :         return offset;</span></span>
+<span id="L41"><span class="lineNum">      41</span>              :     }</span>
+<span id="L42"><span class="lineNum">      42</span>              : }</span>
+<span id="L43"><span class="lineNum">      43</span>              : </span>
+<span id="L44"><span class="lineNum">      44</span>              : /*</span>
+<span id="L45"><span class="lineNum">      45</span>              :  FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc MarketLossTest -vvv</span>
+<span id="L46"><span class="lineNum">      46</span>              : */</span>
+<span id="L47"><span class="lineNum">      47</span>              : contract MarketLossTest is IBefore, IntegrationTest {</span>
+<span id="L48"><span class="lineNum">      48</span>              :     address attacker = makeAddr(&quot;attacker&quot;);</span>
+<span id="L49"><span class="lineNum">      49</span>              :     uint256 donationAmount;</span>
+<span id="L50"><span class="lineNum">      50</span>              : </span>
+<span id="L51"><span class="lineNum">      51</span>              :     function setUp() public virtual override {</span>
+<span id="L52"><span class="lineNum">      52</span>              :         super.setUp();</span>
+<span id="L53"><span class="lineNum">      53</span>              : </span>
+<span id="L54"><span class="lineNum">      54</span>              :         // previous idle market removal</span>
+<span id="L55"><span class="lineNum">      55</span>              :         _setCapSimple(idleMarket, 0);</span>
+<span id="L56"><span class="lineNum">      56</span>              :         emit log_named_address(&quot;old idleMarket&quot;, address(idleMarket));</span>
+<span id="L57"><span class="lineNum">      57</span>              : </span>
+<span id="L58"><span class="lineNum">      58</span>              :         idleMarket = new ERC4626WithBeforeHook(this, vault);</span>
+<span id="L59"><span class="lineNum">      59</span>              :         allMarkets[allMarkets.length - 1] = idleMarket;</span>
+<span id="L60"><span class="lineNum">      60</span>              :         donationAmount = 0;</span>
+<span id="L61"><span class="lineNum">      61</span>              :         emit log_named_address(&quot;NEW idleMarket&quot;, address(idleMarket));</span>
+<span id="L62"><span class="lineNum">      62</span>              : </span>
+<span id="L63"><span class="lineNum">      63</span>              :         IERC4626[] memory supplyQueue = new IERC4626[](2);</span>
+<span id="L64"><span class="lineNum">      64</span>              :         supplyQueue[0] = allMarkets[0];</span>
+<span id="L65"><span class="lineNum">      65</span>              :         supplyQueue[1] = idleMarket;</span>
+<span id="L66"><span class="lineNum">      66</span>              : </span>
+<span id="L67"><span class="lineNum">      67</span>              :         _setCapSimple(allMarkets[0], 1);</span>
+<span id="L68"><span class="lineNum">      68</span>              :         _setCapSimple(idleMarket, type(uint128).max);</span>
+<span id="L69"><span class="lineNum">      69</span>              : </span>
+<span id="L70"><span class="lineNum">      70</span>              :         vm.prank(ALLOCATOR);</span>
+<span id="L71"><span class="lineNum">      71</span>              :         vault.setSupplyQueue(supplyQueue);</span>
+<span id="L72"><span class="lineNum">      72</span>              : </span>
+<span id="L73"><span class="lineNum">      73</span>              :         uint256[] memory indexes = new uint256[](2);</span>
+<span id="L74"><span class="lineNum">      74</span>              :         indexes[0] = 2;</span>
+<span id="L75"><span class="lineNum">      75</span>              :         indexes[1] = 1;</span>
+<span id="L76"><span class="lineNum">      76</span>              :         vm.prank(ALLOCATOR);</span>
+<span id="L77"><span class="lineNum">      77</span>              :         vault.updateWithdrawQueue(indexes);</span>
+<span id="L78"><span class="lineNum">      78</span>              : </span>
+<span id="L79"><span class="lineNum">      79</span>              :         assertEq(vault.supplyQueueLength(), 2, &quot;only 2 markets&quot;);</span>
+<span id="L80"><span class="lineNum">      80</span>              :         assertEq(vault.withdrawQueueLength(), 2, &quot;only 2 markets on withdraw&quot;);</span>
+<span id="L81"><span class="lineNum">      81</span>              :         assertEq(address(vault.supplyQueue(1)), address(idleMarket), &quot;ensure we have idle&quot;);</span>
+<span id="L82"><span class="lineNum">      82</span>              : </span>
+<span id="L83"><span class="lineNum">      83</span>              :         assertEq(</span>
+<span id="L84"><span class="lineNum">      84</span>              :             address(vault.withdrawQueue(0)),</span>
+<span id="L85"><span class="lineNum">      85</span>              :             address(idleMarket),</span>
+<span id="L86"><span class="lineNum">      86</span>              :             &quot;ensure we have idle at begin, so when we withdraw, we do it from 'invalid` market first&quot;</span>
+<span id="L87"><span class="lineNum">      87</span>              :         );</span>
+<span id="L88"><span class="lineNum">      88</span>              :     }</span>
+<span id="L89"><span class="lineNum">      89</span>              : </span>
+<span id="L90"><span class="lineNum">      90</span>              :     function beforeDeposit() external {</span>
+<span id="L91"><span class="lineNum">      91</span>              :         if (donationAmount == 0) return;</span>
+<span id="L92"><span class="lineNum">      92</span>              : </span>
+<span id="L93"><span class="lineNum">      93</span>              :         emit log_named_uint(&quot;executing donation attack with amount&quot;, donationAmount);</span>
+<span id="L94"><span class="lineNum">      94</span>              :         IERC20(idleMarket.asset()).transfer(address(idleMarket), donationAmount);</span>
+<span id="L95"><span class="lineNum">      95</span>              :     }</span>
+<span id="L96"><span class="lineNum">      96</span>              : </span>
+<span id="L97"><span class="lineNum">      97</span>              :     /*</span>
+<span id="L98"><span class="lineNum">      98</span>              :     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc MarketLossTest --mt test_idleVault_InflationAttackWithDonation -vvv</span>
+<span id="L99"><span class="lineNum">      99</span>              :     */</span>
+<span id="L100"><span class="lineNum">     100</span>              :     /// forge-config: vaults_tests.fuzz.runs = 10000</span>
+<span id="L101"><span class="lineNum">     101</span>              :     function test_idleVault_InflationAttackWithDonation(</span>
+<span id="L102"><span class="lineNum">     102</span>              :         uint64 _attackerDeposit,</span>
+<span id="L103"><span class="lineNum">     103</span>              :         uint64 _supplierDeposit,</span>
+<span id="L104"><span class="lineNum">     104</span>              :         uint64 _donation,</span>
+<span id="L105"><span class="lineNum">     105</span>              :         uint8 _idleVaultOffset</span>
+<span id="L106"><span class="lineNum">     106</span>              :     ) public {</span>
+<span id="L107"><span class="lineNum">     107</span>              :         // case where we can NOT detect loss on market:</span>
+<span id="L108"><span class="lineNum">     108</span>              : //        (uint64 _attackerDeposit,</span>
+<span id="L109"><span class="lineNum">     109</span>              : //            uint64 _supplierDeposit,</span>
+<span id="L110"><span class="lineNum">     110</span>              : //            uint64 _donation,</span>
+<span id="L111"><span class="lineNum">     111</span>              : //            uint8 _idleVaultOffset) = (14652472, 7522162, 18446744073709551614, 6);</span>
+<span id="L112"><span class="lineNum">     112</span>              : </span>
+<span id="L113"><span class="lineNum">     113</span>              :         _idleVault_InflationAttackWithDonation({</span>
+<span id="L114"><span class="lineNum">     114</span>              :             _attackUsingHookBeforeDeposit: false,</span>
+<span id="L115"><span class="lineNum">     115</span>              :             _attackerDeposit: _attackerDeposit,</span>
+<span id="L116"><span class="lineNum">     116</span>              :             _supplierDeposit: _supplierDeposit,</span>
+<span id="L117"><span class="lineNum">     117</span>              :             _donation: _donation,</span>
+<span id="L118"><span class="lineNum">     118</span>              :             _idleVaultOffset: _idleVaultOffset,</span>
+<span id="L119"><span class="lineNum">     119</span>              :             _acceptableLoss: vault.DEFAULT_LOST_THRESHOLD()</span>
+<span id="L120"><span class="lineNum">     120</span>              :         });</span>
+<span id="L121"><span class="lineNum">     121</span>              :     }</span>
+<span id="L122"><span class="lineNum">     122</span>              : </span>
+<span id="L123"><span class="lineNum">     123</span>              :     /*</span>
+<span id="L124"><span class="lineNum">     124</span>              :     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mc MarketLossTest --mt test_idleVault_hookAttackWithDonation -vvv</span>
+<span id="L125"><span class="lineNum">     125</span>              :     */</span>
+<span id="L126"><span class="lineNum">     126</span>              :     /// forge-config: vaults_tests.fuzz.runs = 10000</span>
+<span id="L127"><span class="lineNum">     127</span>              :     function test_idleVault_hookAttackWithDonation(</span>
+<span id="L128"><span class="lineNum">     128</span>              :         uint64 _attackerDeposit,</span>
+<span id="L129"><span class="lineNum">     129</span>              :         uint64 _supplierDeposit,</span>
+<span id="L130"><span class="lineNum">     130</span>              :         uint64 _donation,</span>
+<span id="L131"><span class="lineNum">     131</span>              :         uint8 _idleVaultOffset</span>
+<span id="L132"><span class="lineNum">     132</span>              :     ) public {</span>
+<span id="L133"><span class="lineNum">     133</span>              : //        (uint64 _attackerDeposit,</span>
+<span id="L134"><span class="lineNum">     134</span>              : //            uint64 _supplierDeposit,</span>
+<span id="L135"><span class="lineNum">     135</span>              : //            uint64 _donation,</span>
+<span id="L136"><span class="lineNum">     136</span>              : //            uint8 _idleVaultOffset) = (8707779, 9692708345249, 18446744073709551614, 0);</span>
+<span id="L137"><span class="lineNum">     137</span>              : </span>
+<span id="L138"><span class="lineNum">     138</span>              :         _idleVault_InflationAttackWithDonation({</span>
+<span id="L139"><span class="lineNum">     139</span>              :             _attackUsingHookBeforeDeposit: true,</span>
+<span id="L140"><span class="lineNum">     140</span>              :             _attackerDeposit: _attackerDeposit,</span>
+<span id="L141"><span class="lineNum">     141</span>              :             _supplierDeposit: _supplierDeposit,</span>
+<span id="L142"><span class="lineNum">     142</span>              :             _donation: _donation,</span>
+<span id="L143"><span class="lineNum">     143</span>              :             _idleVaultOffset: _idleVaultOffset,</span>
+<span id="L144"><span class="lineNum">     144</span>              :             _acceptableLoss: vault.DEFAULT_LOST_THRESHOLD()</span>
+<span id="L145"><span class="lineNum">     145</span>              :         });</span>
+<span id="L146"><span class="lineNum">     146</span>              :     }</span>
+<span id="L147"><span class="lineNum">     147</span>              : </span>
+<span id="L148"><span class="lineNum">     148</span>              :     function _idleVault_InflationAttackWithDonation(</span>
+<span id="L149"><span class="lineNum">     149</span>              :         bool _attackUsingHookBeforeDeposit,</span>
+<span id="L150"><span class="lineNum">     150</span>              :         uint64 _attackerDeposit,</span>
+<span id="L151"><span class="lineNum">     151</span>              :         uint64 _supplierDeposit,</span>
+<span id="L152"><span class="lineNum">     152</span>              :         uint64 _donation,</span>
+<span id="L153"><span class="lineNum">     153</span>              :         uint8 _idleVaultOffset,</span>
+<span id="L154"><span class="lineNum">     154</span>              :         uint256 _acceptableLoss</span>
+<span id="L155"><span class="lineNum">     155</span>              :     ) public {</span>
+<span id="L156"><span class="lineNum">     156</span>              :         vm.assume(uint256(_attackerDeposit) * _supplierDeposit * _donation != 0);</span>
+<span id="L157"><span class="lineNum">     157</span>              :         vm.assume(_supplierDeposit &gt;= 2);</span>
+<span id="L158"><span class="lineNum">     158</span>              :         vm.assume(_idleVaultOffset &lt;= 6);</span>
+<span id="L159"><span class="lineNum">     159</span>              : </span>
+<span id="L160"><span class="lineNum">     160</span>              :         ERC4626WithBeforeHook(address(idleMarket)).setOffset(_idleVaultOffset);</span>
+<span id="L161"><span class="lineNum">     161</span>              : </span>
+<span id="L162"><span class="lineNum">     162</span>              :         // we want some founds to go to idle market, so cap must be lower than supplier deposit</span>
+<span id="L163"><span class="lineNum">     163</span>              :         _setCap(allMarkets[0], _supplierDeposit / 2);</span>
+<span id="L164"><span class="lineNum">     164</span>              : </span>
+<span id="L165"><span class="lineNum">     165</span>              :         vm.prank(attacker);</span>
+<span id="L166"><span class="lineNum">     166</span>              :         vault.deposit(_attackerDeposit, attacker);</span>
+<span id="L167"><span class="lineNum">     167</span>              : </span>
+<span id="L168"><span class="lineNum">     168</span>              :         // we want cases where asset generates some shares</span>
+<span id="L169"><span class="lineNum">     169</span>              :         vm.assume(vault.convertToShares(_supplierDeposit) != 0);</span>
+<span id="L170"><span class="lineNum">     170</span>              : </span>
+<span id="L171"><span class="lineNum">     171</span>              :         // to avoid losses caused by rounding error, recalculate assets</span>
+<span id="L172"><span class="lineNum">     172</span>              :         emit log_named_uint(&quot;original _supplierDeposit&quot;, _supplierDeposit);</span>
+<span id="L173"><span class="lineNum">     173</span>              : </span>
+<span id="L174"><span class="lineNum">     174</span>              :         // here we have frontrun with donation</span>
+<span id="L175"><span class="lineNum">     175</span>              :         if (_attackUsingHookBeforeDeposit) donationAmount = _donation;</span>
+<span id="L176"><span class="lineNum">     176</span>              :         else IERC20(idleMarket.asset()).transfer(address(idleMarket), _donation);</span>
+<span id="L177"><span class="lineNum">     177</span>              : </span>
+<span id="L178"><span class="lineNum">     178</span>              :         vm.prank(SUPPLIER);</span>
+<span id="L179"><span class="lineNum">     179</span>              : </span>
+<span id="L180"><span class="lineNum">     180</span>              :         emit log(&quot;SUPPLIER doing deposit&quot;);</span>
+<span id="L181"><span class="lineNum">     181</span>              : </span>
+<span id="L182"><span class="lineNum">     182</span>              :         try vault.deposit(_supplierDeposit, SUPPLIER) returns (uint256 supplierShares) {</span>
+<span id="L183"><span class="lineNum">     183</span>              :             // if did not revert, we expect no loss</span>
+<span id="L184"><span class="lineNum">     184</span>              : </span>
+<span id="L185"><span class="lineNum">     185</span>              :             uint256 supplierWithdraw;</span>
+<span id="L186"><span class="lineNum">     186</span>              : </span>
+<span id="L187"><span class="lineNum">     187</span>              :             emit log(&quot;.................................. SUPPLIER withdraw&quot;);</span>
+<span id="L188"><span class="lineNum">     188</span>              :             supplierWithdraw = _vaultWithdrawAll(SUPPLIER);</span>
+<span id="L189"><span class="lineNum">     189</span>              : </span>
+<span id="L190"><span class="lineNum">     190</span>              :             if (supplierWithdraw &gt; _supplierDeposit) {</span>
+<span id="L191"><span class="lineNum">     191</span>              :                 emit log(&quot;there should be no gain for supplier on healthy markets, but we gain:&quot;);</span>
+<span id="L192"><span class="lineNum">     192</span>              :                 emit log_uint(supplierWithdraw - _supplierDeposit);</span>
+<span id="L193"><span class="lineNum">     193</span>              :             }</span>
+<span id="L194"><span class="lineNum">     194</span>              : </span>
+<span id="L195"><span class="lineNum">     195</span>              :             uint256 supplierLoss = _supplierDeposit &lt; supplierWithdraw ? 0 : _supplierDeposit - supplierWithdraw;</span>
+<span id="L196"><span class="lineNum">     196</span>              : </span>
+<span id="L197"><span class="lineNum">     197</span>              :             emit log_named_uint(&quot; SUPPLIER deposit&quot;, _supplierDeposit);</span>
+<span id="L198"><span class="lineNum">     198</span>              :             emit log_named_uint(&quot; SUPPLIER shares&quot;, supplierShares);</span>
+<span id="L199"><span class="lineNum">     199</span>              :             emit log_named_uint(&quot;SUPPLIER withdraw&quot;, supplierWithdraw);</span>
+<span id="L200"><span class="lineNum">     200</span>              :             emit log_named_uint(&quot;    SUPPLIER loss&quot;, supplierLoss);</span>
+<span id="L201"><span class="lineNum">     201</span>              : </span>
+<span id="L202"><span class="lineNum">     202</span>              :             uint256 supplierLostPercent = supplierLoss * 1e18 / _supplierDeposit;</span>
+<span id="L203"><span class="lineNum">     203</span>              :             emit log_named_decimal_uint(&quot;supplierLostPercent&quot;, supplierLostPercent, 18);</span>
+<span id="L204"><span class="lineNum">     204</span>              : </span>
+<span id="L205"><span class="lineNum">     205</span>              :             uint256 lostShares = vault.convertToShares(supplierLoss);</span>
+<span id="L206"><span class="lineNum">     206</span>              :             emit log_named_uint(&quot;lostShares&quot;, lostShares);</span>
+<span id="L207"><span class="lineNum">     207</span>              : </span>
+<span id="L208"><span class="lineNum">     208</span>              :             if (lostShares &gt; 1) {</span>
+<span id="L209"><span class="lineNum">     209</span>              :                 assertLe(</span>
+<span id="L210"><span class="lineNum">     210</span>              :                     supplierLoss,</span>
+<span id="L211"><span class="lineNum">     211</span>              :                     _acceptableLoss,</span>
+<span id="L212"><span class="lineNum">     212</span>              :                     &quot;% is higher than THRESHOLD, we should detect&quot;</span>
+<span id="L213"><span class="lineNum">     213</span>              :                 );</span>
+<span id="L214"><span class="lineNum">     214</span>              :             } else {</span>
+<span id="L215"><span class="lineNum">     215</span>              :                 // if we only lost up to 1 share, it is because of precision error or rounding</span>
+<span id="L216"><span class="lineNum">     216</span>              :             }</span>
+<span id="L217"><span class="lineNum">     217</span>              :         } catch (bytes memory data) {</span>
+<span id="L218"><span class="lineNum">     218</span>              :             emit log(&quot;deposit reverted for SUPPLIER&quot;);</span>
+<span id="L219"><span class="lineNum">     219</span>              : </span>
+<span id="L220"><span class="lineNum">     220</span>              :             bytes4 errorType = bytes4(data);</span>
+<span id="L221"><span class="lineNum">     221</span>              : </span>
+<span id="L222"><span class="lineNum">     222</span>              :             if (</span>
+<span id="L223"><span class="lineNum">     223</span>              :                 // AllCapsReached: in case we got 0 shares in idle because of price manipulation</span>
+<span id="L224"><span class="lineNum">     224</span>              :                 errorType == ErrorsLib.AllCapsReached.selector ||</span>
+<span id="L225"><span class="lineNum">     225</span>              :                 errorType == ErrorsLib.AssetLoss.selector ||</span>
+<span id="L226"><span class="lineNum">     226</span>              :                 errorType == ErrorsLib.ZeroShares.selector</span>
+<span id="L227"><span class="lineNum">     227</span>              :             ) {</span>
+<span id="L228"><span class="lineNum">     228</span>              :                 // ok</span>
+<span id="L229"><span class="lineNum">     229</span>              :             } else {</span>
+<span id="L230"><span class="lineNum">     230</span>              :                 revert(&quot;AssetLoss/ZeroShares is only acceptable revert here&quot;);</span>
+<span id="L231"><span class="lineNum">     231</span>              :             }</span>
+<span id="L232"><span class="lineNum">     232</span>              :         }</span>
+<span id="L233"><span class="lineNum">     233</span>              :     }</span>
+<span id="L234"><span class="lineNum">     234</span>              : </span>
+<span id="L235"><span class="lineNum">     235</span>              : </span>
+<span id="L236"><span class="lineNum">     236</span>              :     /*</span>
+<span id="L237"><span class="lineNum">     237</span>              :     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_idleVault_InflationAttack_permanentLoss -vvv</span>
+<span id="L238"><span class="lineNum">     238</span>              : </span>
+<span id="L239"><span class="lineNum">     239</span>              :     1. withdraw from idle</span>
+<span id="L240"><span class="lineNum">     240</span>              :     2. inflate price</span>
+<span id="L241"><span class="lineNum">     241</span>              :     3. deposit to idle (loss?): yes, it is the same as donation</span>
+<span id="L242"><span class="lineNum">     242</span>              : </span>
+<span id="L243"><span class="lineNum">     243</span>              :     */</span>
+<span id="L244"><span class="lineNum">     244</span>              :     function test_idleVault_InflationAttack_permanentLoss(</span>
+<span id="L245"><span class="lineNum">     245</span>              :         uint64 _supplierDeposit, uint64 donation</span>
+<span id="L246"><span class="lineNum">     246</span>              :     ) public {</span>
+<span id="L247"><span class="lineNum">     247</span>              : //        (uint64 _supplierDeposit, uint64 donation) = (104637192540, 2730, 18446744073709551615);</span>
+<span id="L248"><span class="lineNum">     248</span>              :         vm.assume(uint256(_supplierDeposit) * donation != 0);</span>
+<span id="L249"><span class="lineNum">     249</span>              :         vm.assume(_supplierDeposit &gt;= 2);</span>
+<span id="L250"><span class="lineNum">     250</span>              : </span>
+<span id="L251"><span class="lineNum">     251</span>              :         emit log_named_uint(&quot;_supplierDeposit&quot;, _supplierDeposit);</span>
+<span id="L252"><span class="lineNum">     252</span>              :         emit log_named_uint(&quot;donation&quot;, donation);</span>
+<span id="L253"><span class="lineNum">     253</span>              : </span>
+<span id="L254"><span class="lineNum">     254</span>              :         // we want some founds to go to idle market, so cap must be lower than deposit</span>
+<span id="L255"><span class="lineNum">     255</span>              :         _setCap(allMarkets[0], _supplierDeposit / 2);</span>
+<span id="L256"><span class="lineNum">     256</span>              : </span>
+<span id="L257"><span class="lineNum">     257</span>              :         vm.prank(SUPPLIER);</span>
+<span id="L258"><span class="lineNum">     258</span>              :         vault.deposit(_supplierDeposit, SUPPLIER);</span>
+<span id="L259"><span class="lineNum">     259</span>              : </span>
+<span id="L260"><span class="lineNum">     260</span>              :         // simulate reallocation (withdraw from idle)</span>
+<span id="L261"><span class="lineNum">     261</span>              :         vm.startPrank(address(vault));</span>
+<span id="L262"><span class="lineNum">     262</span>              :         // when redeem uses full balance, ratio will be correct even on donation, because market will be empty</span>
+<span id="L263"><span class="lineNum">     263</span>              :         // so we have to leave at least something in market, that's why -1</span>
+<span id="L264"><span class="lineNum">     264</span>              :         uint256 idleAmount = idleMarket.redeem(idleMarket.balanceOf(address(vault)) - 1, address(vault), address(vault));</span>
+<span id="L265"><span class="lineNum">     265</span>              :         vm.stopPrank();</span>
+<span id="L266"><span class="lineNum">     266</span>              : </span>
+<span id="L267"><span class="lineNum">     267</span>              :         // inflate price, possible eg on before deposit</span>
+<span id="L268"><span class="lineNum">     268</span>              :         IERC20(idleMarket.asset()).transfer(address(idleMarket), donation);</span>
+<span id="L269"><span class="lineNum">     269</span>              : </span>
+<span id="L270"><span class="lineNum">     270</span>              :         // simulate reallocation back</span>
+<span id="L271"><span class="lineNum">     271</span>              :         vm.startPrank(address(vault));</span>
+<span id="L272"><span class="lineNum">     272</span>              :         idleMarket.deposit(idleAmount, address(vault));</span>
+<span id="L273"><span class="lineNum">     273</span>              :         vm.stopPrank();</span>
+<span id="L274"><span class="lineNum">     274</span>              : </span>
+<span id="L275"><span class="lineNum">     275</span>              :         uint256 availableToRedeem = vault.balanceOf(SUPPLIER) - 1e6;</span>
+<span id="L276"><span class="lineNum">     276</span>              :         vm.assume(vault.convertToAssets(availableToRedeem) != 0);</span>
+<span id="L277"><span class="lineNum">     277</span>              : </span>
+<span id="L278"><span class="lineNum">     278</span>              :         vm.startPrank(SUPPLIER);</span>
+<span id="L279"><span class="lineNum">     279</span>              :         uint256 supplierWithdraw = vault.redeem(availableToRedeem, SUPPLIER, SUPPLIER);</span>
+<span id="L280"><span class="lineNum">     280</span>              :         vm.stopPrank();</span>
+<span id="L281"><span class="lineNum">     281</span>              : </span>
+<span id="L282"><span class="lineNum">     282</span>              :         uint256 supplierDiff = supplierWithdraw &gt; _supplierDeposit ? 0 : _supplierDeposit - supplierWithdraw;</span>
+<span id="L283"><span class="lineNum">     283</span>              :         uint256 supplierLostPercent = supplierDiff * 1e18 / _supplierDeposit;</span>
+<span id="L284"><span class="lineNum">     284</span>              :         emit log_named_uint(&quot;supplierLostPercent&quot;, supplierLostPercent);</span>
+<span id="L285"><span class="lineNum">     285</span>              : </span>
+<span id="L286"><span class="lineNum">     286</span>              :         assertLe(</span>
+<span id="L287"><span class="lineNum">     287</span>              :             supplierDiff,</span>
+<span id="L288"><span class="lineNum">     288</span>              :             2, // NOTICE: 1 or 2 wei can be 50% loss for dust deposits</span>
+<span id="L289"><span class="lineNum">     289</span>              :             &quot;SUPPLIER should not lost (2 wei acceptable for rounding)&quot;</span>
+<span id="L290"><span class="lineNum">     290</span>              :         );</span>
+<span id="L291"><span class="lineNum">     291</span>              :     }</span>
+<span id="L292"><span class="lineNum">     292</span>              : </span>
+<span id="L293"><span class="lineNum">     293</span>              :     function _vaultWithdrawAll(address _user) internal returns (uint256 amount) {</span>
+<span id="L294"><span class="lineNum">     294</span>              :         printUser(_user);</span>
+<span id="L295"><span class="lineNum">     295</span>              :         vm.startPrank(_user);</span>
+<span id="L296"><span class="lineNum">     296</span>              :         // we can use all shares instead of maxRedeem because maxRedeem can underestimate</span>
+<span id="L297"><span class="lineNum">     297</span>              :         uint256 balance = vault.balanceOf(_user);</span>
+<span id="L298"><span class="lineNum">     298</span>              :         emit log_named_uint(&quot;_vaultWithdrawAll&quot;, balance);</span>
+<span id="L299"><span class="lineNum">     299</span>              :         if (balance == 0) return 0;</span>
+<span id="L300"><span class="lineNum">     300</span>              : </span>
+<span id="L301"><span class="lineNum">     301</span>              :         amount = vault.redeem(balance, _user, _user);</span>
+<span id="L302"><span class="lineNum">     302</span>              :         vm.stopPrank();</span>
+<span id="L303"><span class="lineNum">     303</span>              :     }</span>
+<span id="L304"><span class="lineNum">     304</span>              : </span>
+<span id="L305"><span class="lineNum">     305</span>              :     function printUser(address _user) internal {</span>
+<span id="L306"><span class="lineNum">     306</span>              :         emit log_named_address(&quot;[printUser] user&quot;, _user);</span>
+<span id="L307"><span class="lineNum">     307</span>              :         emit log_named_uint(&quot;[printUser] totalAssets&quot;, vault.totalAssets());</span>
+<span id="L308"><span class="lineNum">     308</span>              :         emit log_named_uint(&quot;[printUser] total shares&quot;, vault.totalSupply());</span>
+<span id="L309"><span class="lineNum">     309</span>              :         emit log_named_uint(&quot;[printUser] shares&quot;,  vault.balanceOf(_user));</span>
+<span id="L310"><span class="lineNum">     310</span>              :         emit log_named_uint(&quot;[printUser] maxWithdraw (might be underestimated)&quot;,  vault.maxWithdraw(_user));</span>
+<span id="L311"><span class="lineNum">     311</span>              :         emit log_named_uint(&quot;[printUser] maxRedeem (might be underestimated)&quot;,  vault.maxRedeem(_user));</span>
+<span id="L312"><span class="lineNum">     312</span>              :     }</span>
+<span id="L313"><span class="lineNum">     313</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - silo-vaults/contracts/IdleVault.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory silo-vaults/contracts">silo-vaults/contracts</a> - IdleVault.sol<span style="font-size: 80%;"> (source / <a href="IdleVault.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">10</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-07-22 11:27:11</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">4</td>
+          </tr>
+                  <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: GPL-2.0-or-later</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity 0.8.28;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {ERC20, ERC4626} from &quot;openzeppelin5/token/ERC20/extensions/ERC4626.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {IERC4626, IERC20} from &quot;openzeppelin5/interfaces/IERC4626.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : </span>
+<span id="L7"><span class="lineNum">       7</span>              : import {ErrorsLib} from &quot;./libraries/ErrorsLib.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : </span>
+<span id="L9"><span class="lineNum">       9</span>              : contract IdleVault is ERC4626 {</span>
+<span id="L10"><span class="lineNum">      10</span>              :     /// @dev this is the only user that is allowed to deposit</span>
+<span id="L11"><span class="lineNum">      11</span>              :     address public immutable ONLY_DEPOSITOR;</span>
+<span id="L12"><span class="lineNum">      12</span>              : </span>
+<span id="L13"><span class="lineNum">      13</span>              :     /// @dev Initializes the contract.</span>
+<span id="L14"><span class="lineNum">      14</span>              :     /// @param onlyDepositor The only user allowed to use vault.</span>
+<span id="L15"><span class="lineNum">      15</span>              :     /// @param _asset The address of the underlying asset.</span>
+<span id="L16"><span class="lineNum">      16</span>              :     /// @param _name The name of the vault.</span>
+<span id="L17"><span class="lineNum">      17</span>              :     /// @param _symbol The symbol of the vault.</span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC tlaBgGNC">         298 :     constructor(</span></span>
+<span id="L19"><span class="lineNum">      19</span>              :         address onlyDepositor,</span>
+<span id="L20"><span class="lineNum">      20</span>              :         address _asset,</span>
+<span id="L21"><span class="lineNum">      21</span>              :         string memory _name,</span>
+<span id="L22"><span class="lineNum">      22</span>              :         string memory _symbol</span>
+<span id="L23"><span class="lineNum">      23</span>              :     ) ERC4626(IERC20(_asset)) ERC20(_name, _symbol) {</span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">         298 :         if (onlyDepositor == address(0)) revert ErrorsLib.ZeroAddress();</span></span>
+<span id="L25"><span class="lineNum">      25</span>              : </span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">         298 :         ONLY_DEPOSITOR = onlyDepositor;</span></span>
+<span id="L27"><span class="lineNum">      27</span>              :     }</span>
+<span id="L28"><span class="lineNum">      28</span>              : </span>
+<span id="L29"><span class="lineNum">      29</span>              :     /// @inheritdoc IERC4626</span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">       15735 :     function maxDeposit(address _depositor) public view virtual override returns (uint256) {</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">       32150 :         return _depositor != ONLY_DEPOSITOR ? 0 : super.maxDeposit(_depositor);</span></span>
+<span id="L32"><span class="lineNum">      32</span>              :     }</span>
+<span id="L33"><span class="lineNum">      33</span>              : </span>
+<span id="L34"><span class="lineNum">      34</span>              :     /// @inheritdoc IERC4626</span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaUNC tlaBgUNC">           0 :     function maxMint(address _depositor) public view virtual override returns (uint256) {</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :         return _depositor != ONLY_DEPOSITOR ? 0 : super.maxMint(_depositor);</span></span>
+<span id="L37"><span class="lineNum">      37</span>              :     }</span>
+<span id="L38"><span class="lineNum">      38</span>              : </span>
+<span id="L39"><span class="lineNum">      39</span>              :     /// @inheritdoc IERC4626</span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC tlaBgGNC">       16415 :     function deposit(uint256 _assets, address _receiver) public virtual override returns (uint256 shares) {</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">       16415 :         if (_receiver != ONLY_DEPOSITOR) revert();</span></span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">       16415 :         return super.deposit(_assets, _receiver);</span></span>
+<span id="L44"><span class="lineNum">      44</span>              :     }</span>
+<span id="L45"><span class="lineNum">      45</span>              : </span>
+<span id="L46"><span class="lineNum">      46</span>              :     /// @inheritdoc IERC4626</span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaUNC tlaBgUNC">           0 :     function mint(uint256 _shares, address _receiver) public virtual override returns (uint256 assets) {</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaUNC">           0 :         if (_receiver != ONLY_DEPOSITOR) revert();</span></span>
+<span id="L49"><span class="lineNum">      49</span>              : </span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaUNC">           0 :         return super.mint(_shares, _receiver);</span></span>
+<span id="L51"><span class="lineNum">      51</span>              :     }</span>
+<span id="L52"><span class="lineNum">      52</span>              : </span>
+<span id="L53"><span class="lineNum">      53</span>              :     /// @notice This would make the amount that the user would need to &quot;gift&quot; the market in order to significantly</span>
+<span id="L54"><span class="lineNum">      54</span>              :     /// inflate the share price very large and impractical.</span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC tlaBgGNC">      115988 :     function _decimalsOffset() internal view virtual override returns (uint8) {</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">      115988 :         return 6;</span></span>
+<span id="L57"><span class="lineNum">      57</span>              :     }</span>
+<span id="L58"><span class="lineNum">      58</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>

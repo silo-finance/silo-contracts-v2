@@ -1,0 +1,293 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - silo-vaults/test/foundry/helpers/BaseTest.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory silo-vaults/test/foundry/helpers">silo-vaults/test/foundry/helpers</a> - BaseTest.sol<span style="font-size: 80%;"> (source / <a href="BaseTest.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">67.6&nbsp;%</td>
+            <td class="headerCovTableEntry">74</td>
+            <td class="headerCovTableEntry">50</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-07-22 11:27:11</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">40.0&nbsp;%</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">6</td>
+          </tr>
+                  <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: GPL-2.0-or-later</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity ^0.8.28;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {Test} from &quot;forge-std/Test.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : </span>
+<span id="L6"><span class="lineNum">       6</span>              : import {Strings} from &quot;openzeppelin5/utils/Strings.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : import {Clones} from &quot;openzeppelin5/proxy/Clones.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : import {IERC4626} from &quot;openzeppelin5/interfaces/IERC4626.sol&quot;;</span>
+<span id="L9"><span class="lineNum">       9</span>              : </span>
+<span id="L10"><span class="lineNum">      10</span>              : import {IIncentivesClaimingLogic} from &quot;silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol&quot;;</span>
+<span id="L11"><span class="lineNum">      11</span>              : import {IIncentivesClaimingLogicFactory} from &quot;silo-vaults/contracts/interfaces/IIncentivesClaimingLogicFactory.sol&quot;;</span>
+<span id="L12"><span class="lineNum">      12</span>              : import {ISilo} from &quot;silo-core/contracts/interfaces/ISilo.sol&quot;;</span>
+<span id="L13"><span class="lineNum">      13</span>              : import {IPartialLiquidation} from &quot;silo-core/contracts/interfaces/IPartialLiquidation.sol&quot;;</span>
+<span id="L14"><span class="lineNum">      14</span>              : import {SiloLittleHelper, SiloFixture, SiloConfigOverride} from &quot;silo-core/test/foundry/_common/SiloLittleHelper.sol&quot;;</span>
+<span id="L15"><span class="lineNum">      15</span>              : import {MintableToken} from &quot;silo-core/test/foundry/_common/MintableToken.sol&quot;;</span>
+<span id="L16"><span class="lineNum">      16</span>              : import {SiloConfigsNames} from &quot;silo-core/deploy/silo/SiloDeployments.sol&quot;;</span>
+<span id="L17"><span class="lineNum">      17</span>              : </span>
+<span id="L18"><span class="lineNum">      18</span>              : import {SiloFixture, SiloConfigOverride} from &quot;silo-core/test/foundry/_common/fixtures/SiloFixture.sol&quot;;</span>
+<span id="L19"><span class="lineNum">      19</span>              : import {SiloFixture} from &quot;silo-core/test/foundry/_common/fixtures/SiloFixture.sol&quot;;</span>
+<span id="L20"><span class="lineNum">      20</span>              : </span>
+<span id="L21"><span class="lineNum">      21</span>              : import {SiloVaultsFactoryDeploy} from &quot;../../../deploy/SiloVaultsFactoryDeploy.s.sol&quot;;</span>
+<span id="L22"><span class="lineNum">      22</span>              : </span>
+<span id="L23"><span class="lineNum">      23</span>              : import {SiloVault} from &quot;../../../contracts/SiloVault.sol&quot;;</span>
+<span id="L24"><span class="lineNum">      24</span>              : import {IdleVault} from &quot;../../../contracts/IdleVault.sol&quot;;</span>
+<span id="L25"><span class="lineNum">      25</span>              : import {IdleVaultsFactory} from &quot;../../../contracts/IdleVaultsFactory.sol&quot;;</span>
+<span id="L26"><span class="lineNum">      26</span>              : import {SiloVaultsFactory} from &quot;../../../contracts/SiloVaultsFactory.sol&quot;;</span>
+<span id="L27"><span class="lineNum">      27</span>              : </span>
+<span id="L28"><span class="lineNum">      28</span>              : import {ISiloVault} from &quot;../../../contracts/interfaces/ISiloVault.sol&quot;;</span>
+<span id="L29"><span class="lineNum">      29</span>              : import {ConstantsLib} from &quot;../../../contracts/libraries/ConstantsLib.sol&quot;;</span>
+<span id="L30"><span class="lineNum">      30</span>              : </span>
+<span id="L31"><span class="lineNum">      31</span>              : uint256 constant BLOCK_TIME = 1;</span>
+<span id="L32"><span class="lineNum">      32</span>              : uint256 constant MIN_TEST_ASSETS = 1e8;</span>
+<span id="L33"><span class="lineNum">      33</span>              : uint256 constant MAX_TEST_ASSETS = 1e28;</span>
+<span id="L34"><span class="lineNum">      34</span>              : uint184 constant CAP = type(uint128).max;</span>
+<span id="L35"><span class="lineNum">      35</span>              : uint256 constant NB_MARKETS = ConstantsLib.MAX_QUEUE_LENGTH + 1;</span>
+<span id="L36"><span class="lineNum">      36</span>              : uint256 constant TIMELOCK = 1 weeks;</span>
+<span id="L37"><span class="lineNum">      37</span>              : </span>
+<span id="L38"><span class="lineNum">      38</span>              : contract BaseTest is SiloLittleHelper, Test {</span>
+<span id="L39"><span class="lineNum">      39</span>              :     address internal OWNER = makeAddr(&quot;Owner&quot;);</span>
+<span id="L40"><span class="lineNum">      40</span>              :     address internal SUPPLIER = makeAddr(&quot;Supplier&quot;);</span>
+<span id="L41"><span class="lineNum">      41</span>              :     address internal BORROWER = makeAddr(&quot;Borrower&quot;);</span>
+<span id="L42"><span class="lineNum">      42</span>              :     address internal REPAYER = makeAddr(&quot;Repayer&quot;);</span>
+<span id="L43"><span class="lineNum">      43</span>              :     address internal ONBEHALF = makeAddr(&quot;OnBehalf&quot;);</span>
+<span id="L44"><span class="lineNum">      44</span>              :     address internal RECEIVER = makeAddr(&quot;Receiver&quot;);</span>
+<span id="L45"><span class="lineNum">      45</span>              :     address internal ALLOCATOR = makeAddr(&quot;Allocator&quot;);</span>
+<span id="L46"><span class="lineNum">      46</span>              :     address internal CURATOR = makeAddr(&quot;Curator&quot;);</span>
+<span id="L47"><span class="lineNum">      47</span>              :     address internal GUARDIAN = makeAddr(&quot;Guardian&quot;);</span>
+<span id="L48"><span class="lineNum">      48</span>              :     address internal FEE_RECIPIENT = makeAddr(&quot;FeeRecipient&quot;);</span>
+<span id="L49"><span class="lineNum">      49</span>              : </span>
+<span id="L50"><span class="lineNum">      50</span>              :     MintableToken internal loanToken;</span>
+<span id="L51"><span class="lineNum">      51</span>              :     MintableToken internal collateralToken;</span>
+<span id="L52"><span class="lineNum">      52</span>              :     SiloVaultsFactory siloVaultsFactory;</span>
+<span id="L53"><span class="lineNum">      53</span>              : </span>
+<span id="L54"><span class="lineNum">      54</span>              :     IERC4626[] internal allMarkets;</span>
+<span id="L55"><span class="lineNum">      55</span>              :     mapping (IERC4626 collateral =&gt; IERC4626) internal collateralMarkets;</span>
+<span id="L56"><span class="lineNum">      56</span>              : </span>
+<span id="L57"><span class="lineNum">      57</span>              :     IERC4626 internal idleMarket;</span>
+<span id="L58"><span class="lineNum">      58</span>              : </span>
+<span id="L59"><span class="lineNum">      59</span>              :     ISiloVault internal vault;</span>
+<span id="L60"><span class="lineNum">      60</span>              :     uint256 internal OFFSET_POW;</span>
+<span id="L61"><span class="lineNum">      61</span>              : </span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC tlaBgGNC">         286 :     function setUp() public virtual {</span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">         286 :         _setTokens();</span></span>
+<span id="L64"><span class="lineNum">      64</span>              : </span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">         286 :         assertEq(allMarkets.length, 0, &quot;allMarkets is fresh&quot;);</span></span>
+<span id="L66"><span class="lineNum">      66</span>              : </span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">         286 :         collateralToken.setOnDemand(true);</span></span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">         286 :         loanToken.setOnDemand(true);</span></span>
+<span id="L69"><span class="lineNum">      69</span>              : </span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">         286 :         emit log_named_address(&quot;loanToken&quot;, address(loanToken));</span></span>
+<span id="L71"><span class="lineNum">      71</span>              : </span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">         286 :         SiloVaultsFactoryDeploy factoryDeploy = new SiloVaultsFactoryDeploy();</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">         286 :         factoryDeploy.disableDeploymentsSync();</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">         286 :         siloVaultsFactory = factoryDeploy.run();</span></span>
+<span id="L75"><span class="lineNum">      75</span>              : </span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">         286 :         vault = createSiloVault(OWNER, TIMELOCK, address(loanToken), &quot;SiloVault Vault&quot;, &quot;MMV&quot;);</span></span>
+<span id="L77"><span class="lineNum">      77</span>              : </span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">         286 :         IdleVaultsFactory factory = new IdleVaultsFactory();</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">         286 :         idleMarket = factory.createIdleVault(vault, bytes32(0));</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">         286 :         vm.label(address(idleMarket), &quot;idleMarket&quot;);</span></span>
+<span id="L81"><span class="lineNum">      81</span>              : </span>
+<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">         286 :         _createNewMarkets();</span></span>
+<span id="L83"><span class="lineNum">      83</span>              : </span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">         286 :         OFFSET_POW = 10 ** vault.DECIMALS_OFFSET();</span></span>
+<span id="L85"><span class="lineNum">      85</span>              :     }</span>
+<span id="L86"><span class="lineNum">      86</span>              : </span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaUNC tlaBgUNC">           0 :     function createSiloVault(</span></span>
+<span id="L88"><span class="lineNum">      88</span>              :         address owner,</span>
+<span id="L89"><span class="lineNum">      89</span>              :         uint256 initialTimelock,</span>
+<span id="L90"><span class="lineNum">      90</span>              :         address asset,</span>
+<span id="L91"><span class="lineNum">      91</span>              :         string memory name,</span>
+<span id="L92"><span class="lineNum">      92</span>              :         string memory symbol</span>
+<span id="L93"><span class="lineNum">      93</span>              :     ) public returns (ISiloVault) {</span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC tlaBgGNC">        1311 :         return siloVaultsFactory.createSiloVault(</span></span>
+<span id="L95"><span class="lineNum">      95</span>              :             owner,</span>
+<span id="L96"><span class="lineNum">      96</span>              :             initialTimelock,</span>
+<span id="L97"><span class="lineNum">      97</span>              :             asset,</span>
+<span id="L98"><span class="lineNum">      98</span>              :             name,</span>
+<span id="L99"><span class="lineNum">      99</span>              :             symbol,</span>
+<span id="L100"><span class="lineNum">     100</span>              :             bytes32(0),</span>
+<span id="L101"><span class="lineNum">     101</span>              :             address(0),</span>
+<span id="L102"><span class="lineNum">     102</span>              :             new IIncentivesClaimingLogic[](0),</span>
+<span id="L103"><span class="lineNum">     103</span>              :             new IERC4626[](0),</span>
+<span id="L104"><span class="lineNum">     104</span>              :             new IIncentivesClaimingLogicFactory[](0)</span>
+<span id="L105"><span class="lineNum">     105</span>              :         );</span>
+<span id="L106"><span class="lineNum">     106</span>              :     }</span>
+<span id="L107"><span class="lineNum">     107</span>              : </span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaUNC tlaBgUNC">           0 :     function _createNewMarkets() public virtual {</span></span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC tlaBgGNC">         288 :         SiloFixture siloFixture = new SiloFixture();</span></span>
+<span id="L110"><span class="lineNum">     110</span> <span class="tlaGNC">         288 :         SiloConfigOverride memory _override;</span></span>
+<span id="L111"><span class="lineNum">     111</span>              : </span>
+<span id="L112"><span class="lineNum">     112</span> <span class="tlaGNC">         288 :         _override.token0 = address(collateralToken);</span></span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">         288 :         _override.token1 = address(loanToken);</span></span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">         288 :         _override.configName = SiloConfigsNames.SILO_LOCAL_GAUGE_HOOK_RECEIVER;</span></span>
+<span id="L115"><span class="lineNum">     115</span>              : </span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">         288 :         for (uint256 i; i &lt; NB_MARKETS; i++) {</span></span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">        8928 :             (, ISilo silo0_, ISilo silo1_,,, address hook) = siloFixture.deploy_local(_override);</span></span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">        8928 :             vm.label(address(silo0_), string.concat(&quot;Market#&quot;, Strings.toString(i)));</span></span>
+<span id="L119"><span class="lineNum">     119</span>              : </span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">        8928 :             allMarkets.push(silo1_);</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC">        8928 :             collateralMarkets[silo1_] = silo0_;</span></span>
+<span id="L122"><span class="lineNum">     122</span>              : </span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">        8928 :             if (i == 0) {</span></span>
+<span id="L124"><span class="lineNum">     124</span>              :                 // setup default values for silo fixture</span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">         288 :                 silo0 = silo0_;</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">         288 :                 silo1 = silo1_;</span></span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaGNC">         288 :                 partialLiquidation = IPartialLiquidation(hook);</span></span>
+<span id="L128"><span class="lineNum">     128</span>              :             }</span>
+<span id="L129"><span class="lineNum">     129</span>              :         }</span>
+<span id="L130"><span class="lineNum">     130</span>              : </span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">         288 :         allMarkets.push(idleMarket); // Must be pushed last.</span></span>
+<span id="L132"><span class="lineNum">     132</span>              :     }</span>
+<span id="L133"><span class="lineNum">     133</span>              : </span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaUNC tlaBgUNC">           0 :     function _createNewMarket(address _collateralToken, address _loanToken) public virtual returns (IERC4626) {</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC tlaBgGNC">           2 :         SiloFixture siloFixture = new SiloFixture();</span></span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">           2 :         SiloConfigOverride memory _override;</span></span>
+<span id="L137"><span class="lineNum">     137</span>              : </span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">           2 :         _override.token0 = _collateralToken;</span></span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaGNC">           2 :         _override.token1 = _loanToken;</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">           2 :         _override.configName = SiloConfigsNames.SILO_LOCAL_NO_ORACLE_SILO;</span></span>
+<span id="L141"><span class="lineNum">     141</span>              : </span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">           2 :         (,, ISilo silo1_,,,) = siloFixture.deploy_local(_override);</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">           2 :         return silo1_;</span></span>
+<span id="L144"><span class="lineNum">     144</span>              :     }</span>
+<span id="L145"><span class="lineNum">     145</span>              : </span>
+<span id="L146"><span class="lineNum">     146</span>              :     /// @dev Rolls &amp; warps the given number of blocks forward the blockchain.</span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">        2561 :     function _forward(uint256 blocks) internal {</span></span>
+<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">        2561 :         vm.roll(block.number + blocks);</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">        2561 :         vm.warp(block.timestamp + blocks * BLOCK_TIME); // Block speed should depend on test network.</span></span>
+<span id="L150"><span class="lineNum">     150</span>              :     }</span>
+<span id="L151"><span class="lineNum">     151</span>              : </span>
+<span id="L152"><span class="lineNum">     152</span>              :     /// @dev Bounds the fuzzing input to a realistic number of blocks.</span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">        2560 :     function _boundBlocks(uint256 blocks) internal pure returns (uint256) {</span></span>
+<span id="L154"><span class="lineNum">     154</span>              :         // on silo we have much higher interest than on morpho, so we need to limit blocks more</span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">        2560 :         return bound(blocks, 2, 1e6);</span></span>
+<span id="L156"><span class="lineNum">     156</span>              :     }</span>
+<span id="L157"><span class="lineNum">     157</span>              : </span>
+<span id="L158"><span class="lineNum">     158</span>              :     /// @dev Bounds the fuzzing input to a non-zero address.</span>
+<span id="L159"><span class="lineNum">     159</span>              :     /// @dev This function should be used in place of `vm.assume` in invariant test handler functions:</span>
+<span id="L160"><span class="lineNum">     160</span>              :     /// https://github.com/foundry-rs/foundry/issues/4190.</span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaUNC tlaBgUNC">           0 :     function _boundAddressNotZero(address input) internal view virtual returns (address) {</span></span>
+<span id="L162"><span class="lineNum">     162</span> <span class="tlaUNC">           0 :         return address(uint160(bound(uint256(uint160(input)), 1, type(uint160).max)));</span></span>
+<span id="L163"><span class="lineNum">     163</span>              :     }</span>
+<span id="L164"><span class="lineNum">     164</span>              : </span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaUNC">           0 :     function _accrueInterest(IERC4626 _market) internal {</span></span>
+<span id="L166"><span class="lineNum">     166</span> <span class="tlaUNC">           0 :         ISilo(address(_market)).accrueInterest();</span></span>
+<span id="L167"><span class="lineNum">     167</span>              :     }</span>
+<span id="L168"><span class="lineNum">     168</span>              : </span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC tlaBgGNC">         283 :     function _setTokens() internal virtual {</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">         283 :         loanToken = new MintableToken(18);</span></span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC">         283 :         collateralToken = new MintableToken(18);</span></span>
+<span id="L172"><span class="lineNum">     172</span>              :     }</span>
+<span id="L173"><span class="lineNum">     173</span>              : </span>
+<span id="L174"><span class="lineNum">     174</span>              :     /// @dev Returns a random market params from the list of markets enabled on Blue (except the idle market).</span>
+<span id="L175"><span class="lineNum">     175</span> <span class="tlaGNC">        1024 :     function _randomMarket(uint256 seed) internal view returns (IERC4626) {</span></span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaGNC">        1024 :         return allMarkets[seed % (allMarkets.length - 1)];</span></span>
+<span id="L177"><span class="lineNum">     177</span>              :     }</span>
+<span id="L178"><span class="lineNum">     178</span>              : </span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaUNC tlaBgUNC">           0 :     function _randomCandidate(address[] memory candidates, uint256 seed) internal pure returns (address) {</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaUNC">           0 :         if (candidates.length == 0) return address(0);</span></span>
+<span id="L181"><span class="lineNum">     181</span>              : </span>
+<span id="L182"><span class="lineNum">     182</span> <span class="tlaUNC">           0 :         return candidates[seed % candidates.length];</span></span>
+<span id="L183"><span class="lineNum">     183</span>              :     }</span>
+<span id="L184"><span class="lineNum">     184</span>              : </span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaUNC">           0 :     function _removeAll(address[] memory inputs, address removed) internal pure returns (address[] memory result) {</span></span>
+<span id="L186"><span class="lineNum">     186</span> <span class="tlaUNC">           0 :         result = new address[](inputs.length);</span></span>
+<span id="L187"><span class="lineNum">     187</span>              : </span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaUNC">           0 :         uint256 nbAddresses;</span></span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaUNC">           0 :         for (uint256 i; i &lt; inputs.length; ++i) {</span></span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaUNC">           0 :             address input = inputs[i];</span></span>
+<span id="L191"><span class="lineNum">     191</span>              : </span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaUNC">           0 :             if (input != removed) {</span></span>
+<span id="L193"><span class="lineNum">     193</span> <span class="tlaUNC">           0 :                 result[nbAddresses] = input;</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaUNC">           0 :                 ++nbAddresses;</span></span>
+<span id="L195"><span class="lineNum">     195</span>              :             }</span>
+<span id="L196"><span class="lineNum">     196</span>              :         }</span>
+<span id="L197"><span class="lineNum">     197</span>              : </span>
+<span id="L198"><span class="lineNum">     198</span>              :         assembly {</span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaUNC">           0 :             mstore(result, nbAddresses)</span></span>
+<span id="L200"><span class="lineNum">     200</span>              :         }</span>
+<span id="L201"><span class="lineNum">     201</span>              :     }</span>
+<span id="L202"><span class="lineNum">     202</span>              : </span>
+<span id="L203"><span class="lineNum">     203</span> <span class="tlaUNC">           0 :     function _randomNonZero(address[] memory users, uint256 seed) internal pure returns (address) {</span></span>
+<span id="L204"><span class="lineNum">     204</span> <span class="tlaUNC">           0 :         users = _removeAll(users, address(0));</span></span>
+<span id="L205"><span class="lineNum">     205</span>              : </span>
+<span id="L206"><span class="lineNum">     206</span> <span class="tlaUNC">           0 :         return _randomCandidate(users, seed);</span></span>
+<span id="L207"><span class="lineNum">     207</span>              :     }</span>
+<span id="L208"><span class="lineNum">     208</span>              : </span>
+<span id="L209"><span class="lineNum">     209</span>              :     /// @notice Returns the expected supply assets balance of `user` on a market after having accrued interest.</span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaGNC tlaBgGNC">        4097 :     function _expectedSupplyAssets(IERC4626 _market, address _user) internal view virtual returns (uint256 assets) {</span></span>
+<span id="L211"><span class="lineNum">     211</span> <span class="tlaGNC">        4097 :         assets = _market.convertToAssets(_market.balanceOf(_user));</span></span>
+<span id="L212"><span class="lineNum">     212</span>              :     }</span>
+<span id="L213"><span class="lineNum">     213</span>              : </span>
+<span id="L214"><span class="lineNum">     214</span> <span class="tlaUNC tlaBgUNC">           0 :     function _lastUpdate(IERC4626 _market) internal view returns (uint256 lastUpdate) {</span></span>
+<span id="L215"><span class="lineNum">     215</span> <span class="tlaUNC">           0 :         lastUpdate = ISilo(address(_market)).utilizationData().interestRateTimestamp;</span></span>
+<span id="L216"><span class="lineNum">     216</span>              :     }</span>
+<span id="L217"><span class="lineNum">     217</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
