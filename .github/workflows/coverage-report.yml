@@ -70,19 +70,6 @@ jobs:
           cp target/release/silo-foundry-utils ../../silo-foundry-utils
           ../../silo-foundry-utils --version
 
-      - name: Cache silo-core contracts
-        uses: actions/cache@v3
-        with:
-          path: ./cache/
-          key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
-          restore-keys: |
-            silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
-            silo-core-contracts-cache-
-
-      - name: Run Forge build
-        run: |
-          FOUNDRY_PROFILE=core forge build --sizes
-
       - name: Create coverage directory
         run: mkdir -p coverage
 
@@ -90,6 +77,9 @@ jobs:
         if: inputs.workspace == 'silo-core'
         run: |
           rm -f lcov.info
+          echo "Building contracts first to generate ABI files..."
+          FOUNDRY_PROFILE=core forge build
+
           echo "Running forge coverage..."
           AGGREGATOR=1INCH FOUNDRY_PROFILE=core_with_test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-core.log 2>&1 || true
 
