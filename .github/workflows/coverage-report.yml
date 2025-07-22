@@ -106,7 +106,7 @@ jobs:
           FOUNDRY_PROFILE=oracles forge build
 
           echo "Running forge coverage..."
-          FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov --ffi --no-match-test "_skip_|_gas_|_anvil_|test_UniswapV3OracleFactory_create_reuseConfig" > coverage/silo-oracles.log 2>&1 || true
+          FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov --ffi --no-match-test "_skip_|_gas_|_gas|_anvil_|test_UniswapV3OracleFactory_create_reuseConfig" > coverage/silo-oracles.log 2>&1 || true
 
           echo "Coverage log contents:"
           cat coverage/silo-oracles.log || true
