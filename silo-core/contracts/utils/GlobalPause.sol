@@ -59,25 +59,25 @@ contract GlobalPause is Ownable1and2Steps, IGlobalPause {
 
     /// @inheritdoc IGlobalPause
     function addContract(address _contract) external onlyAuthorized {
-        _contracts.add(_contract);
+        require(_contracts.add(_contract), FailedToAdd());
         emit ContractAdded(_contract);
     }
 
     /// @inheritdoc IGlobalPause
     function removeContract(address _contract) external onlyOwner {
-        _contracts.remove(_contract);
+        require(_contracts.remove(_contract), FailedToRemove());
         emit ContractRemoved(_contract);
     }
 
     /// @inheritdoc IGlobalPause
     function grantAuthorization(address _account) external onlyOwner {
-        _authorizedToPause.add(_account);
+        require(_authorizedToPause.add(_account), FailedToAdd());
         emit Authorized(_account);
     }
 
     /// @inheritdoc IGlobalPause
     function revokeAuthorization(address _account) external onlyOwner {
-        _authorizedToPause.remove(_account);
+        require(_authorizedToPause.remove(_account), FailedToRemove());
         emit Unauthorized(_account);
     }
 
@@ -94,19 +94,21 @@ contract GlobalPause is Ownable1and2Steps, IGlobalPause {
     }
 
     /// @inheritdoc IGlobalPause
-    function transferOwnershipAll(address _newOwner) external onlyOwner {
-        uint256 length = _contracts.length();
-
-        for (uint256 i = 0; i < length; i++) {
-            address contractAddr = _contracts.at(i);
-            Ownable2Step(contractAddr).transferOwnership(_newOwner);
-            emit OwnershipTransferStarted(contractAddr, _newOwner);
-        }
+    function allContracts() external view returns (address[] memory) {
+        return _contracts.values();
     }
 
     /// @inheritdoc IGlobalPause
-    function allContracts() external view returns (address[] memory) {
-        return _contracts.values();
+    function authorizedToPause() external view returns (address[] memory) {
+        return _authorizedToPause.values();
+    }
+
+    /// @notice Renounce ownership of the contract and ensure that _contracts and _authorizedToPause are empty
+    function renounceOwnership() public virtual override {
+        require(_contracts.length() == 0, ContractsNotEmpty());
+        require(_authorizedToPause.length() == 0, AuthorizedToPauseNotEmpty());
+
+        super.renounceOwnership();
     }
 
     /// @inheritdoc IGlobalPause
@@ -135,7 +137,11 @@ contract GlobalPause is Ownable1and2Steps, IGlobalPause {
     /// @dev Unpause a contract
     /// @param _contract The contract to unpause
     function _unpause(address _contract) internal {
-        IPausable(_contract).unpause();
-        emit Unpaused(_contract);
+        // Using try/catch to avoid blockage of the `unpauseAll` fn
+        try IPausable(_contract).unpause() {
+            emit Unpaused(_contract);
+        } catch {
+            emit FailedToUnpause(_contract);
+        }
     }
 }

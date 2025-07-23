@@ -10,17 +10,19 @@ interface IGlobalPause {
     event Authorized(address _account);
     event Unauthorized(address _account);
     event FailedToPause(address _contract);
+    event FailedToUnpause(address _contract);
 
     error Forbidden();
+    error ContractsNotEmpty();
+    error AuthorizedToPauseNotEmpty();
+    error FailedToAdd();
+    error FailedToRemove();
 
     /// @notice Pause all contracts
     function pauseAll() external;
 
     /// @notice Unpause all contracts
     function unpauseAll() external;
-
-    /// @notice Transfer ownership of all contracts
-    function transferOwnershipAll(address _newOwner) external;
 
     /// @notice Add a contract to the list of contracts to pause and unpause
     /// @param _contract The contract to add
@@ -58,6 +60,10 @@ interface IGlobalPause {
     /// @notice Get all contracts
     /// @return _contracts The list of contracts
     function allContracts() external view returns (address[] memory);
+
+    /// @notice Get all authorized accounts to pause and unpause contracts
+    /// @return _authorizedToPause The list of authorized accounts
+    function authorizedToPause() external view returns (address[] memory);
 
     /// @notice Check if an account is a signer of the multisig contract
     /// @param _account The account to check
