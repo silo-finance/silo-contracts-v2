@@ -7,7 +7,7 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
-import {GlobalPause} from "common/utils/GlobalPause.sol";
+import {GlobalPause} from "silo-core/contracts/utils/GlobalPause.sol";
 import {IGlobalPause} from "common/utils/interfaces/IGlobalPause.sol";
 
 /**

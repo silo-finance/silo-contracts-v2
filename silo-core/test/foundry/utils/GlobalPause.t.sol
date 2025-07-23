@@ -5,8 +5,8 @@ import {Test} from "forge-std/Test.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {AddrKey} from "common/addresses/AddrKey.sol";
-import {GlobalPause} from "common/utils/GlobalPause.sol";
 import {IGlobalPause} from "common/utils/interfaces/IGlobalPause.sol";
+import {GlobalPause} from "silo-core/contracts/utils/GlobalPause.sol";
 import {GlobalPauseDeploy} from "silo-core/deploy/GlobalPauseDeploy.s.sol";
 import {PausableMock} from "../_mocks/PausableMock.sol";
 import {GnosisSafeMock} from "../_mocks/GnosisSafeMock.sol";

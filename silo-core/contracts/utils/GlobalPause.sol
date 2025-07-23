@@ -4,9 +4,9 @@ pragma solidity 0.8.28;
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
 import {Ownable1and2Steps, Ownable2Step} from "common/access/Ownable1and2Steps.sol";
-import {IPausable} from "./interfaces/IPausable.sol";
-import {IGnosisSafeLike} from "./interfaces/IGnosisSafeLike.sol";
-import {IGlobalPause} from "./interfaces/IGlobalPause.sol";
+import {IPausable} from "common/utils/interfaces/IPausable.sol";
+import {IGnosisSafeLike} from "common/utils/interfaces/IGnosisSafeLike.sol";
+import {IGlobalPause} from "common/utils/interfaces/IGlobalPause.sol";
 
 contract GlobalPause is Ownable1and2Steps, IGlobalPause {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -16,12 +16,6 @@ contract GlobalPause is Ownable1and2Steps, IGlobalPause {
 
     /// @notice The list of accounts who can pause and unpause contracts
     EnumerableSet.AddressSet private _authorizedToPause;
-
-    /// @dev Modifier to check if the caller is a signer of the multisig contract
-    modifier onlySigner() {
-        require(isSigner(msg.sender), Forbidden());
-        _;
-    }
 
     /// @dev Modifier to check if the caller is a signer of the multisig contract or a manager
     modifier onlyAuthorized() {
