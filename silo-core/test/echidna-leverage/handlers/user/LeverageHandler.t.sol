@@ -35,10 +35,7 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         _before();
 
-        (bool success,) = actor.proxy(
-            address(rescueModule),
-            abi.encodeWithSelector(RescueModule.rescueTokens.selector, _token)
-         );
+        actor.proxy(address(rescueModule), abi.encodeWithSelector(RescueModule.rescueTokens.selector, _token));
 
         _after();
 
@@ -53,7 +50,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         _donation(leverageRouter.LEVERAGE_IMPLEMENTATION(), _t);
     }
 
-    function revenueModelDonation(uint256 _t, uint256 _i) external {
+    function revenueModelDonation(uint256 _t) external {
         _donation(address(_userLeverageContract(targetActor)), _t);
     }
 
@@ -382,22 +379,23 @@ contract LeverageHandler is BaseHandlerLeverage {
         }
     }
 
-    function _userLeverageContract(address _user) internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
+    function _userLeverageContract(address _user) internal view returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
         return LeverageUsingSiloFlashloanWithGeneralSwap(address(leverageRouter.userLeverageContract(_user)));
     }
 
     function _userPredictedLeverageContract(address _user)
         internal
+        view
         returns (LeverageUsingSiloFlashloanWithGeneralSwap)
     {
         return LeverageUsingSiloFlashloanWithGeneralSwap(address(leverageRouter.predictUserLeverageContract(_user)));
     }
 
-    function _swapModuleAddress() internal returns (IGeneralSwapModule swapModule) {
+    function _swapModuleAddress() internal view returns (IGeneralSwapModule swapModule) {
         return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION()).SWAP_MODULE();
     }
 
-    function _quote(uint256 _amount, address _baseToken) internal returns (uint256 amountOut) {
+    function _quote(uint256 _amount, address _baseToken) internal view returns (uint256 amountOut) {
         MockSiloOracle oracle = MockSiloOracle(address(_asset0) == _baseToken ? oracle0 : oracle1);
         amountOut = oracle.quote(_amount, _baseToken);
     }
