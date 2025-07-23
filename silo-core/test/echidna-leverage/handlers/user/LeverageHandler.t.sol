@@ -319,20 +319,25 @@ contract LeverageHandler is BaseHandlerLeverage {
     }
 
     function assert_UserLeverageContractInstancesAreUnique() public {
-        for (uint256 i; i < actorAddresses.length; i++) {
-            address otherUser = actorAddresses[i];
-            if (otherUser == targetActor) continue;
-
-            address userALeverageContract = address(leverageRouter.userLeverageContract(targetActor));
-            if (userALeverageContract == address(0)) continue;
-            address userBLeverageContract = address(leverageRouter.userLeverageContract(otherUser));
-            if (userBLeverageContract == address(0)) continue;
-
-            assertTrue(
-                userALeverageContract != userBLeverageContract,
-                "userA != userB <=> userLeverageContract(userA) != userLeverageContract(userB) when both contracts != 0"
-            );
+        for (uint256 i; i + 1 < actorAddresses.length; i++) {
+            for (uint256 j = i + 1; j < actorAddresses.length; j++) {
+                _userLeverageContractInstancesAreUnique(actorAddresses[i], actorAddresses[j]);
+            }
         }
+    }
+
+    function _userLeverageContractInstancesAreUnique(address _actorA, address _actorB) internal {
+        if (_actorA == _actorB) return;
+
+        address actorALeverageContract = address(leverageRouter.userLeverageContract(_actorA));
+        if (actorALeverageContract == address(0)) return;
+        address actorBLeverageContract = address(leverageRouter.userLeverageContract(_actorB));
+        if (actorBLeverageContract == address(0)) return;
+
+        assertTrue(
+            actorALeverageContract != actorBLeverageContract,
+            "actorA != actorB <=> userLeverageContract(actorA) != userLeverageContract(actorB)"
+        );
     }
 
     function echidna_PredictUserLeverageContractIsUnique() public returns (bool) {
@@ -342,28 +347,33 @@ contract LeverageHandler is BaseHandlerLeverage {
     }
 
     function assert_PredictUserLeverageContractIsUnique() public {
-        for (uint256 i; i < actorAddresses.length; i++) {
-            address otherUser = actorAddresses[i];
-            if (otherUser == targetActor) continue;
-
-            address userAPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(targetActor));
-            address userBPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(otherUser));
-
-            assertTrue(
-                userAPredictLeverageContract != address(0),
-                "predictUserLeverageContract(userA) != 0, sanity check"
-            );
-
-            assertTrue(
-                userBPredictLeverageContract != address(0),
-                "predictUserLeverageContract(userB) != 0, sanity check"
-            );
-
-            assertTrue(
-                userAPredictLeverageContract != userBPredictLeverageContract,
-                "userA != userB <=> predictUserLeverageContract(userA) != predictUserLeverageContract(userB)"
-            );
+        for (uint256 i; i + 1 < actorAddresses.length; i++) {
+            for (uint256 j = i + 1; j < actorAddresses.length; j++) {
+                _predictUserLeverageContractIsUnique(actorAddresses[i], actorAddresses[j]);
+            }
         }
+    }
+
+    function _predictUserLeverageContractIsUnique(address _actorA, address _actorB) internal {
+        if (_actorA == _actorB) return;
+
+        address actorAPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(_actorA));
+        address actorBPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(_actorB));
+
+        assertTrue(
+            actorAPredictLeverageContract != address(0),
+            "predictUserLeverageContract(actorA) != 0, sanity check"
+        );
+
+        assertTrue(
+            actorBPredictLeverageContract != address(0),
+            "predictUserLeverageContract(actorB) != 0, sanity check"
+        );
+
+        assertTrue(
+            actorAPredictLeverageContract != actorBPredictLeverageContract,
+            "actorA != actorB <=> predictUserLeverageContract(actorA) != predictUserLeverageContract(actorB)"
+        );
     }
 
     function echidna_PredictUserLeverageContractIsEqualToDeployed() public returns (bool) {
