@@ -196,13 +196,6 @@ contract BorrowingHandler is BaseHandler {
 
         _getUserProtectedAssets(target, owner);
 
-        uint256 _assets = ISilo(target).convertToAssets(
-            _shares,
-            (_collateralType == ISilo.CollateralType.Protected)
-                ? ISilo.AssetType.Protected
-                : ISilo.AssetType.Collateral
-        );
-
         _before();
         (success, returnData) = actor.proxy(
             target, abi.encodeWithSelector(ISilo.transitionCollateral.selector, _shares, owner, _collateralType)

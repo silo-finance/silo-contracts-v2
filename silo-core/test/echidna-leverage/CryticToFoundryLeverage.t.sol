@@ -177,4 +177,55 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
         LeverageTester.accrueInterestForBothSilos();
         LeverageTester.transitionCollateral(754, RandomGenerator(21, 27, 77));
     }
+
+    /*
+    FOUNDRY_PROFILE=echidna_leverage forge test --ffi --mt test_replay_flashloan_01 -vv
+    */
+    function test_replay_flashloan_01() public {
+        LeverageTester.setReceiveApproval(0,0,1);
+        LeverageTester.accrueInterest(0);
+        LeverageTester.closeLeveragePosition(RandomGenerator(1, 1, 0));
+        LeverageTester.transfer(718054,0,0);
+        LeverageTester.onFlashLoan(address(0x0),2,12780801841864762489723522957270760606708406331348606168316444720689193744020,"",RandomGenerator(16, 212, 40));
+        LeverageTester.repay(8024500186558106128562437347906786904518362173633068064040652633161597469447,0,19);
+        LeverageTester.assert_BORROWING_HSPOST_D(0,0);
+        LeverageTester.mint(75736747354538440227190616304507821237,13,1,23);
+        LeverageTester.accrueInterestForSilo(0);
+        LeverageTester.accrueInterestForSilo(3);
+        LeverageTester.increaseReceiveAllowance(105088421810884567,1,33);
+        LeverageTester.liquidationCall(0,false,RandomGenerator(0, 0, 37));
+        LeverageTester.borrowSameAsset(1742744256016363456767913478769768337543793568642598889285944847608618677778,3,0);
+        LeverageTester.transitionCollateral(2381055509349605268845125936759200871347242184529868821691402614893202969300,RandomGenerator(255, 31, 1));
+        LeverageTester.assertBORROWING_HSPOST_F(4,1);
+        LeverageTester.assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
+        LeverageTester.deposit(45173755392117345949045042321083115312743552376553437449210996565517287088,0,0,0);
+        LeverageTester.setOraclePrice(48360200964784656631415371009019639834279281143781641666266516952684197472177,0);
+        LeverageTester.swapModuleDonation(47991551630814282440778065006753839032104611867349543614064551732504137507);
+        LeverageTester.closeLeveragePosition(RandomGenerator(78, 0, 1));
+        LeverageTester.borrowSameAsset(22196782784891236813677017045494085861190931117288500014454764901592915559,9,1);
+        LeverageTester.accrueInterest(0);
+        LeverageTester.flashLoan(4,94,1,65);
+        LeverageTester.setOraclePrice(5596950051894618896712163697522148227854298672411080983701202447615807155,5);
+        LeverageTester.assertBORROWING_HSPOST_F(6,184);
+        LeverageTester.assert_AllowanceDoesNotChangedForUserWhoOnlyApprove();
+        LeverageTester.liquidationCall(992403169246541674751081885672463947169567387119634568711375684882669846641,false,RandomGenerator(5, 73, 79));
+        LeverageTester.approve(437837496110236441133604804861222412920566703107631375348635456432958088754,33,0);
+        LeverageTester.repayShares(11099955059503608572160550313984436549307537631858672177472501750063905090,4,13);
+        LeverageTester.transferFrom(18,1,22,0);
+        LeverageTester.assert_BORROWING_HSPOST_D(0,0);
+        LeverageTester.mint(1132818721201107934417225517000587105625648136212319136125669561177092755499,0,0,0);
+        LeverageTester.transitionCollateral(967940581952422505533982068120314345873082785408359511246312103718865537496,RandomGenerator(11, 3, 174));
+        LeverageTester.deposit(3,5,0,36);
+        LeverageTester.receiveAllowance(611814457774336451546889246771749797794320765348047553125370491206507415399,0,21,4);
+        LeverageTester.setLeverageFee(12675697321674173);
+        LeverageTester.siloLeverageImplementationDonation(109294361554498602078446860929924720933824686393895108824197747330324531543);
+        LeverageTester.assert_PredictUserLeverageContractIsEqualToDeployed();
+        LeverageTester.switchCollateralToThisSilo(0);
+        LeverageTester.assert_UserLeverageContractInstancesAreUnique();
+        LeverageTester.assert_BORROWING_HSPOST_D(4,1);
+        LeverageTester.setOraclePrice(302640136460315843984877027532378656427346047427777809486030152107160224218,0);
+        LeverageTester.transitionCollateral(2,RandomGenerator(6, 35, 0));
+        LeverageTester.withdraw(13650553197721274359413836804265991604244647432443104894238468005013092971659,1,0,4);
+        LeverageTester.flashLoan(365,368,1,65);
+    }
 }
