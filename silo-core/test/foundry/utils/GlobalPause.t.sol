@@ -63,14 +63,14 @@ contract GlobalPauseTest is Test {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_constructor_setsOwnerToMultisig
     */
-    function test_constructor_setsOwnerToMultisig() public {
+    function test_constructor_setsOwnerToMultisig() public view {
         assertEq(Ownable(address(globalPause)).owner(), address(gnosisSafeMock));
     }
 
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_onlySigner_allowsMultisigSigners
     */
-    function test_onlySigner_allowsMultisigSigners() public {
+    function test_onlySigner_allowsMultisigSigners() public view {
         assertTrue(globalPause.isSigner(signer1));
         assertTrue(globalPause.isSigner(signer2));
         assertFalse(globalPause.isSigner(unauthorizedAccount));
@@ -945,6 +945,58 @@ contract GlobalPauseTest is Test {
         vm.prank(address(gnosisSafeMock));
         globalPause.revokeAuthorization(authorizedAccount);
 
+        vm.prank(address(gnosisSafeMock));
+        GlobalPause(address(globalPause)).renounceOwnership();
+
+        assertEq(Ownable(address(globalPause)).owner(), address(0));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_renounceOwnership_onlyOwner
+    */
+    function test_renounceOwnership_onlyOwner() public {
+        // Test that unauthorized account cannot renounce ownership
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            unauthorizedAccount
+        ));
+        vm.prank(unauthorizedAccount);
+        GlobalPause(address(globalPause)).renounceOwnership();
+
+        // Test that signer cannot renounce ownership (only owner can)
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            signer1
+        ));
+        vm.prank(signer1);
+        GlobalPause(address(globalPause)).renounceOwnership();
+
+        // Test that authorized account cannot renounce ownership (only owner can)
+        // Note: When there are authorized accounts, renounceOwnership reverts with AuthorizedToPauseNotEmpty
+        // before checking the onlyOwner modifier
+        vm.prank(address(gnosisSafeMock));
+        globalPause.grantAuthorization(authorizedAccount);
+        
+        vm.expectRevert(IGlobalPause.AuthorizedToPauseNotEmpty.selector);
+        vm.prank(authorizedAccount);
+        GlobalPause(address(globalPause)).renounceOwnership();
+
+        // Remove the authorized account and try again with unauthorized account
+        vm.prank(address(gnosisSafeMock));
+        globalPause.revokeAuthorization(authorizedAccount);
+
+        // Now it should revert with OwnableUnauthorizedAccount
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            authorizedAccount
+        ));
+        vm.prank(authorizedAccount);
+        GlobalPause(address(globalPause)).renounceOwnership();
+
+        // Verify that the owner is still the multisig
+        assertEq(Ownable(address(globalPause)).owner(), address(gnosisSafeMock));
+
+        // Owner can renounce ownership
         vm.prank(address(gnosisSafeMock));
         GlobalPause(address(globalPause)).renounceOwnership();
 
