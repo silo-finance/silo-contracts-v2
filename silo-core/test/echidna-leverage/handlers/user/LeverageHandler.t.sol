@@ -12,6 +12,7 @@ import {
     LeverageUsingSiloFlashloanWithGeneralSwap,
     LeverageUsingSiloFlashloan
 } from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {PausableWithAccessControl} from "common/utils/PausableWithAccessControl.sol";
 import {RescueModule} from "silo-core/contracts/leverage/modules/RescueModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
@@ -60,16 +61,25 @@ contract LeverageHandler is BaseHandlerLeverage {
         _donation(address(leverageRouter), _t);
     }
 
-    function setLeverageFee(uint256 _fee) external {
-        address owner = leverageRouter.getRoleMember(leverageRouter.DEFAULT_ADMIN_ROLE(), 0);
-        assertTrue(owner != address(0), "[setLeverageFee] sanity check for not empty owner");
+    function setLeverageFee(uint256 _fee) external setupRandomActor(0) {
+        address owner = leverageRouter.getRoleMember(leverageRouter.DEFAULT_ADMIN_ROLE(), 1);
+        assertEq(owner, targetActor, "[setLeverageFee] sanity check actor#0 is an owner#1");
 
-        _before();
+        uint256 cap = leverageRouter.MAX_LEVERAGE_FEE();
+        uint256 fee = leverageRouter.leverageFee();
 
-        vm.prank(owner);
-        try leverageRouter.setLeverageFee(_fee) {
-            _after();
-        } catch {}
+        (bool success,) = actor.proxy(address(leverageRouter), abi.encodeWithSelector(ILeverageRouter.setLeverageFee.selector, _fee % cap));
+
+        if (!success) assertEq(fee, leverageRouter.leverageFee(), "when fail, fee is not changed");
+    }
+
+    function togglePauseRouter() external setupRandomActor(0) {
+        bool paused = leverageRouter.paused();
+
+        bytes4 selector = paused ? PausableWithAccessControl.unpause.selector : PausableWithAccessControl.pause.selector;
+        actor.proxy(address(leverageRouter), abi.encodeWithSelector(selector));
+
+        assertTrue(paused != leverageRouter.paused(), "pause/unpause should toggle state");
     }
 
     function onFlashLoan(
@@ -79,15 +89,25 @@ contract LeverageHandler is BaseHandlerLeverage {
         bytes calldata _data,
         RandomGenerator calldata _random
     ) external payable setupRandomActor(_random.i) {
-        LeverageUsingSiloFlashloanWithGeneralSwap leverage = _userLeverageContract(targetActor);
+        LeverageUsingSiloFlashloan leverage = _userLeverageContract(targetActor);
         if (address(leverage) == address(0)) return;
 
         address silo = _getRandomSilo(_random.j);
         address _borrowToken = ISilo(silo).asset();
 
-        try leverage.onFlashLoan(_initiator, _borrowToken, _flashloanAmount, _flashloanFee, _data) {
-            assertTrue(false, "[onFlashLoan] direct call on onFlashLoan should always revert");
-        } catch {}
+        (bool success,) = actor.proxy(
+            address(leverage),
+            abi.encodeWithSelector(
+                LeverageUsingSiloFlashloan.onFlashLoan.selector,
+                _initiator,
+                _borrowToken,
+                _flashloanAmount,
+                _flashloanFee,
+                _data
+            )
+        );
+
+        assertFalse(success, "[onFlashLoan] direct call on onFlashLoan should always revert");
     }
 
     function openLeveragePosition(uint64 _depositPercent, uint64 _flashloanPercent, RandomGenerator calldata _random)
@@ -157,6 +177,8 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         _after();
 
+        _assert_userLEverageIsPausedWhenRouterIsPaused(success);
+
         uint256 afterDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
 
         if (success) {
@@ -168,46 +190,6 @@ contract LeverageHandler is BaseHandlerLeverage {
                 ISilo(flashArgs.flashloanTarget).maxRepay(targetActor),
                 beforeDebt,
                 "[openLeveragePosition] borrower should have additional debt created by leverage"
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] borrower protected collateral should NOT changed" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] borrower collateral should increase" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] flashloan fee should be applied" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] leverage fee should be applied" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] other user position should be intact" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] other user allowance should not changed" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] can only succeed when called to user cloned contract" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] silo liquidity should decrease (because we can open only collateral positions)" // TODO
             );
         } else {
             assertEq(beforeDebt, afterDebt, "[openLeveragePosition] when leverage fail, debt does not change");
@@ -261,55 +243,23 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         _after();
 
+        _assert_userLEverageIsPausedWhenRouterIsPaused(success);
+
         if (success) {
             assert_UserLeverageContractInstancesAreUnique();
             assert_PredictUserLeverageContractIsUnique();
             assert_PredictUserLeverageContractIsEqualToDeployed();
 
             assertEq(ISilo(closeArgs.flashloanTarget).maxRepay(targetActor), 0, "borrower should have no debt");
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] borrower protected collateral should le less or equal" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] borrower collateral should be less or equal" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] flashloan fee should be applied" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] leverage fee should NOT be applied" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] other users positions should be intact" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] other users allowance should not changed" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] can only succeed when called to user cloned contract" // TODO
-            );
-
-            assertTrue(
-                true,
-                "[openLeveragePosition] silo liquidity should increase (because we can close only collateral positions)" // TODO
-            );
-        } else {
-            // TODO anything to check here?
         }
+    }
+
+    function _assert_userLEverageIsPausedWhenRouterIsPaused(bool _txSuccessful) internal {
+        if (!leverageRouter.paused()) {
+            return;
+        }
+
+        assertFalse(_txSuccessful, "tx MUST be reverted when router is paused");
     }
 
     function echidna_UserLeverageContractInstancesAreUnique() public returns (bool) {
@@ -417,15 +367,15 @@ contract LeverageHandler is BaseHandlerLeverage {
         return actorAddresses[0];
     }
 
-    function _donation(address _target, uint256 _t) internal {
+    function _donation(address _target, uint256 _randomToken) internal {
         if (_target == address(0)) return;
 
-        if (_t == 0) {
+        if (_randomToken == 0) {
             payable(_target).transfer(1e18);
 
             assertGt(_target.balance, 0, "[_donation] expect ETH to be send");
         } else {
-            TestERC20 token = _t % 2 == 0 ? _asset0 : _asset1;
+            TestERC20 token = _randomToken % 2 == 0 ? _asset0 : _asset1;
             token.mint(_target, 1e18);
 
             assertGt(token.balanceOf(_target), 0, "[_donation] expect tokens to be send");

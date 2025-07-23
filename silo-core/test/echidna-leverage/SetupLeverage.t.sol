@@ -27,8 +27,6 @@ import "forge-std/console.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract SetupLeverage is Setup {
-    address constant LEVERAGE_OWNER = address(0x111222333);
-
     function _setUp() internal override {
         super._setUp();
 
@@ -47,7 +45,9 @@ contract SetupLeverage is Setup {
     }
 
     function _deployLeverage() internal {
-        leverageRouter = new LeverageRouter(LEVERAGE_OWNER, LEVERAGE_OWNER, address(_asset0));
+        leverageRouter = new LeverageRouter(address(this), address(this), address(_asset0));
+        leverageRouter.setRevenueReceiver(address(0xDA0));
+
         swapRouterMock = new SwapRouterMock();
     }
 
@@ -95,6 +95,11 @@ contract SetupLeverage is Setup {
 
             actorAddresses.push(_actor);
         }
+
+        // set first actor an admin for leverare router
+        leverageRouter.grantRole(bytes32(0), actorAddresses[0]);
+        // set first actor an pauser for leverare router
+        leverageRouter.grantRole(leverageRouter.PAUSER_ROLE(), actorAddresses[0]);
     }
 
     /// @notice Deploy an actor proxy contract for a user address
