@@ -131,7 +131,7 @@ contract CryticToFoundry is Invariants, Setup {
         Tester.liquidationCall(
             92376606079425577106588961289845324639688828464328356647373507302383077493937,
             false,
-            RandomGenerator(34, 37, 29)
+            RandomGenerator(34, 37, 29);
         );
         _setUpActor(0x0000000000000000000000000000000000020000);
         _delay(537688);
@@ -468,7 +468,7 @@ contract CryticToFoundry is Invariants, Setup {
         Tester.borrowShares(1, 0, 0);
         Tester.setOraclePrice(1, 1);
         Tester.liquidationCall(
-            1179245955276247436741786656479833618730492640882500598892, false, RandomGenerator(0, 0, 1)
+            1179245955276247436741786656479833618730492640882500598892, false, RandomGenerator(0, 0, 1);
         );
     }
 
@@ -575,7 +575,7 @@ contract CryticToFoundry is Invariants, Setup {
         _delay(3889);
 
         // Borrow same asset on Silo 1
-        // Lower price of Asset 0 to the minimum (not zero, the hander clamps the value to a minimum price)
+        // Lower price of Asset 0 to the minimum (not zero, the hander clamps the value to a minimum price);
         Tester.setOraclePrice(0, 0);
 
         // Borrow from Silo 0 using Silo 1 as collateral
