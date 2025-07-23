@@ -718,6 +718,86 @@ contract GlobalPauseTest is Test {
         assertFalse(pausableMock2.paused());
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_unpause_neverRevertsFromAuthorizedAddress
+    */
+    function test_unpause_neverRevertsFromAuthorizedAddress() public {
+        // Test 1: Unpause from owner (multisig) - contract not owned by GlobalPause
+        // Should emit FailedToUnpause because GlobalPause doesn't own the contract
+        vm.expectEmit(true, false, false, false);
+        emit FailedToUnpause(address(pausableMock1));
+        
+        vm.prank(address(gnosisSafeMock));
+        globalPause.unpause(address(pausableMock1)); // Should not revert, just emit FailedToUnpause
+
+        // Test 2: Unpause from signer - contract not owned by GlobalPause
+        vm.expectEmit(true, false, false, false);
+        emit FailedToUnpause(address(pausableMock1));
+        
+        vm.prank(signer1);
+        globalPause.unpause(address(pausableMock1)); // Should not revert, just emit FailedToUnpause
+
+        // Test 3: Unpause from authorized account
+        vm.prank(address(gnosisSafeMock));
+        globalPause.grantAuthorization(authorizedAccount);
+        
+        vm.expectEmit(true, false, false, false);
+        emit FailedToUnpause(address(pausableMock1));
+        
+        vm.prank(authorizedAccount);
+        globalPause.unpause(address(pausableMock1)); // Should not revert, just emit FailedToUnpause
+
+        // Test 4: Unpause a contract that's not owned by GlobalPause
+        vm.expectEmit(true, false, false, false);
+        emit FailedToUnpause(address(pausableMock2));
+        
+        vm.prank(signer1);
+        globalPause.unpause(address(pausableMock2)); // Should not revert, just emit FailedToUnpause
+
+        // Test 5: Unpause a contract that doesn't implement IPausable
+        address nonPausableContract = address(gnosisSafeMock);
+        vm.expectEmit(true, false, false, false);
+        emit FailedToUnpause(nonPausableContract);
+        
+        vm.prank(signer1);
+        globalPause.unpause(nonPausableContract); // Should not revert, just emit FailedToUnpause
+
+        // Test 6: Add contract to list and unpause when GlobalPause owns it
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+        
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+
+        // First pause it
+        vm.expectEmit(true, false, false, false);
+        emit Paused(address(pausableMock1));
+        
+        vm.prank(signer1);
+        globalPause.pause(address(pausableMock1));
+        assertTrue(pausableMock1.paused());
+
+        // Now unpause - should succeed
+        vm.expectEmit(true, false, false, false);
+        emit Unpaused(address(pausableMock1));
+        
+        vm.prank(signer1);
+        globalPause.unpause(address(pausableMock1)); // Should not revert and should emit Unpaused
+        assertFalse(pausableMock1.paused());
+
+        // Test 7: Unpause already unpaused contract - should still not revert
+        // The mock contract will revert with ExpectedPause() when trying to unpause an unpaused contract
+        vm.expectEmit(true, false, false, false);
+        emit FailedToUnpause(address(pausableMock1));
+        
+        vm.prank(signer1);
+        globalPause.unpause(address(pausableMock1)); // Should not revert, just emit FailedToUnpause
+        assertFalse(pausableMock1.paused());
+    }
+
     /*//////////////////////////////////////////////////////////////
                         FAILED TO ADD/REMOVE TESTS
     //////////////////////////////////////////////////////////////*/
