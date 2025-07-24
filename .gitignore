@@ -58,3 +58,5 @@ silo-core/deploy/input/_importFromCsv/
 .certora_internal
 certora/harness/vaults/contracts
 emv-**/*
+gambit_out/**
+collect.json
