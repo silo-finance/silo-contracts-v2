@@ -111,11 +111,11 @@ jobs:
           echo "Coverage log contents:"
           cat coverage/silo-oracles.log || true
 
-          cat coverage/silo-oracles.log | grep -i 'silo-oracles/contracts/' | grep -v -E '/(test|deploy|silo-core)/' > coverage/silo-oracles.txt || true
+          cat coverage/silo-oracles.log | grep -i 'silo-oracles/contracts/' | grep -v -E '/(test|deploy|common|silo-core)/' > coverage/silo-oracles.txt || true
 
           if [ -f lcov.info ]; then
             echo "lcov.info found, generating HTML report..."
-            genhtml --ignore-errors inconsistent --ignore-errors range --exclude 'silo-core/*' --exclude '*/test/*' --exclude '*/deploy/*' -o coverage/silo-oracles/ lcov.info
+            genhtml --ignore-errors inconsistent --ignore-errors range --exclude 'silo-core/*' -- exclude 'common/*' --exclude '*/test/*' --exclude '*/deploy/*' -o coverage/silo-oracles/ lcov.info
           else
             echo "ERROR: lcov.info not generated. Check the coverage log above for errors."
             exit 1

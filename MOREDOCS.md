@@ -132,8 +132,8 @@ AGGREGATOR=1INCH FOUNDRY_PROFILE=core_with_test forge coverage --report summary 
 
 rm lcov.info
 FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.log
-cat coverage/silo-oracles.log | grep -i 'silo-oracles/contracts/' | grep -v -E '/(test|deploy|silo-core)/' > coverage/silo-oracles.txt
-genhtml --ignore-errors inconsistent --ignore-errors range --exclude 'silo-core/*' --exclude '*/test/*' --exclude '*/deploy/*' -o coverage/silo-oracles/ lcov.info
+cat coverage/silo-oracles.log | grep -i 'silo-oracles/contracts/' | grep -v -E '/(test|deploy|common|silo-core)/' > coverage/silo-oracles.txt
+genhtml --ignore-errors inconsistent --ignore-errors range --exclude 'silo-core/*' -- exclude 'common/*' --exclude '*/test/*' --exclude '*/deploy/*' -o coverage/silo-oracles/ lcov.info
 
 rm lcov.info
 FOUNDRY_PROFILE=vaults_with_tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000
