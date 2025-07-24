@@ -122,6 +122,19 @@ contract GlobalPause is Ownable1and2Steps, IGlobalPause {
         }
     }
 
+    /// @inheritdoc IGlobalPause
+    function getAllContractsPauseStatus() external view returns (ContractPauseStatus[] memory result) {
+        uint256 length = _contracts.length();
+        result = new ContractPauseStatus[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            address contractAddress = _contracts.at(i);
+            bool isPaused = IPausable(contractAddress).paused();
+
+            result[i] = ContractPauseStatus({contractAddress: contractAddress, isPaused: isPaused});
+        }
+    }
+
     /// @dev Pause a contract
     /// @param _contract The contract to pause
     function _pause(address _contract) internal {

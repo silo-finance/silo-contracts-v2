@@ -2,6 +2,11 @@
 pragma solidity 0.8.28;
 
 interface IGlobalPause {
+    struct ContractPauseStatus {
+        address contractAddress;
+        bool isPaused;
+    }
+
     event Paused(address _contract);
     event Unpaused(address _contract);
     event OwnershipAccepted(address _contract);
@@ -69,4 +74,8 @@ interface IGlobalPause {
     /// @param _account The account to check
     /// @return result True if the account is a signer, false otherwise
     function isSigner(address _account) external view returns (bool result);
+
+    /// @notice Get the pause status of all contracts
+    /// @return result The list of contracts and their pause statuses
+    function getAllContractsPauseStatus() external view returns (ContractPauseStatus[] memory result);
 }

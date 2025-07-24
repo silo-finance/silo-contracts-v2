@@ -1002,4 +1002,36 @@ contract GlobalPauseTest is Test {
 
         assertEq(Ownable(address(globalPause)).owner(), address(0));
     }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_getAllContractsPauseStatus_returnsDifferentStatuses
+    */
+    function test_getAllContractsPauseStatus_returnsDifferentStatuses() public {
+        // Setup: Transfer ownership of both contracts to GlobalPause
+        vm.prank(pausableMock1.owner());
+        pausableMock1.transferOwnership(address(globalPause));
+        vm.prank(pausableMock2.owner());
+        pausableMock2.transferOwnership(address(globalPause));
+        
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock1));
+        vm.prank(signer1);
+        globalPause.acceptOwnership(address(pausableMock2));
+
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock1));
+        vm.prank(address(gnosisSafeMock));
+        globalPause.addContract(address(pausableMock2));
+
+        vm.prank(signer1);
+        globalPause.pause(address(pausableMock1));
+
+        IGlobalPause.ContractPauseStatus[] memory statuses = globalPause.getAllContractsPauseStatus();
+        
+        assertEq(statuses.length, 2);
+        assertEq(statuses[0].contractAddress, address(pausableMock1));
+        assertTrue(statuses[0].isPaused);
+        assertEq(statuses[1].contractAddress, address(pausableMock2));
+        assertFalse(statuses[1].isPaused);
+    }
 }
