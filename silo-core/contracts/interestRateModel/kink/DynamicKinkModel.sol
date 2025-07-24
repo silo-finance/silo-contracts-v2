@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {PRBMathSD59x18} from "../../lib/PRBMathSD59x18.sol";
+import {ISilo} from "../../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../../interfaces/IInterestRateModel.sol";
 import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.sol";
@@ -23,7 +24,7 @@ QA rules:
 /// @title DynamicKinkModel
 /// @notice Refer to Silo DynamicKinkModel paper for more details.
 /// @custom:security-contact security@silo.finance
-contract DynamicKinkModel is IDynamicKinkModel {
+contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel {
     /// @dev DP in 18 decimal points used for integer calculations
     int256 internal constant _DP = int256(1e18);
 
@@ -56,7 +57,7 @@ contract DynamicKinkModel is IDynamicKinkModel {
     /// @dev Config for the model
     IDynamicKinkModelConfig public irmConfig;
 
-    // TODO inherit IInterestRateModel /// @inheritdoc IInterestRateModel
+    /// @inheritdoc IInterestRateModel
     function initialize(address _irmConfig) external virtual {
         require(_irmConfig != address(0), AddressZero());
         require(address(irmConfig) == address(0), AlreadyInitialized());
@@ -64,6 +65,92 @@ contract DynamicKinkModel is IDynamicKinkModel {
         irmConfig = IDynamicKinkModelConfig(_irmConfig);
 
         emit Initialized(_irmConfig);
+    }
+
+    /// @inheritdoc IInterestRateModel
+    function decimals() external pure returns (uint256) {
+        return 18;
+    }
+
+    /// @inheritdoc IInterestRateModel
+    function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        virtual
+        returns (uint256 rcomp)
+    {
+        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
+
+        (int256 rcompInt,,,) = compoundInterestRate({
+            _setup: getSetup[_silo],
+            _t0: SafeCast.toInt256(data.interestRateTimestamp),
+            _t1: SafeCast.toInt256(_blockTimestamp),
+            _u: 0, // TODO calculate/get current utilization - but why we need this if we gave deposits and borrows?
+            _td: SafeCast.toInt256(data.collateralAssets),
+            _tba: SafeCast.toInt256(data.debtAssets)
+        });
+
+        rcomp = SafeCast.toUint256(rcompInt);
+    }
+
+    /// @inheritdoc IInterestRateModel
+    function getCompoundInterestRateAndUpdate(
+        uint256 _collateralAssets,
+        uint256 _debtAssets,
+        uint256 _interestRateTimestamp
+    )
+        external
+        virtual
+        view
+        returns (uint256 rcomp) 
+    {
+        // assume that caller is Silo
+        address silo = msg.sender;
+
+        Setup storage currentSetup = getSetup[silo];
+
+        (int256 rcompInt,,,) = compoundInterestRate({
+            _setup: currentSetup,
+            _t0: SafeCast.toInt256(_interestRateTimestamp),
+            _t1: SafeCast.toInt256(block.timestamp),
+            _u: 0, // TODO calculate/get current utilization - but why we need this if we gave deposits and borrows?
+            _td: SafeCast.toInt256(_collateralAssets),
+            _tba: SafeCast.toInt256(_debtAssets)
+        });
+
+        rcomp = SafeCast.toUint256(rcompInt);
+
+
+        // TODO do we need cap? check if already applied in compoundInterestRate
+        // TODO what we need to store?
+
+        // currentSetup.ri = ri > type(int112).max
+        //     ? type(int112).max
+        //     : ri < type(int112).min ? type(int112).min : int112(ri);
+
+        // currentSetup.Tcrit = Tcrit > type(int112).max
+        //     ? type(int112).max
+        //     : Tcrit < type(int112).min ? type(int112).min : int112(Tcrit);
+    }
+
+    /// @inheritdoc IInterestRateModel
+    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        returns (uint256 rcur)
+    {
+        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
+
+        (int256 rcurInt,,) = currentInterestRate({
+            _setup: getSetup[_silo],
+            _t0: SafeCast.toInt256(data.interestRateTimestamp),
+            _t1: SafeCast.toInt256(_blockTimestamp),
+            _u: 0, // TODO caluslate/get current utilization - but why we need this if we gave deposits and borrows?
+            _td: SafeCast.toInt256(data.collateralAssets),
+            _tba: SafeCast.toInt256(data.debtAssets)
+        });
+
+        rcur = SafeCast.toUint256(rcurInt);
     }
 
     /// @inheritdoc IDynamicKinkModel
