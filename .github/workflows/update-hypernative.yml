@@ -14,8 +14,9 @@ env:
 
 on:
   push:
-    paths:
-      - .github/workflows/update-hypernative.yml
+    branches:
+      - develop
+      - master
 
 jobs:
   hypernative:
