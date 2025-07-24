@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.21;
+pragma solidity 0.8.28;
 
 import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
 import {IDynamicKinkModelV1} from "../interfaces/IDynamicKinkModelV1.sol";
