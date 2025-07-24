@@ -19,14 +19,17 @@ DEPLOYMENTS_DIR="$3"
 echo "Submitting silo-core and silo-vaults deployments..."
 
 ./silo-core/scripts/hypernative/printDeployments.sh $DEPLOYMENTS_DIR | \
-    ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
+    ./silo-core/scripts/hypernative/updateWatchlists.sh $HYPERNATIVE_CHAIN_ALIAS
 
 echo "Submitting Silo addresses..."
 
-silo-core/scripts/hypernative/printSilos.sh $DEPLOYMENTS_DIR | \
-    ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
+FOUNDRY_PROFILE=core \
+    forge script silo-core/scripts/PrintSiloAddresses.s.sol \
+    --ffi --rpc-url $RPC_URL | \
+    grep 0x | \
+    ./silo-core/scripts/hypernative/updateWatchlists.sh $HYPERNATIVE_CHAIN_ALIAS
 
 echo "Submitting SiloVault addresses..."
 
 ./silo-core/scripts/hypernative/printSiloVaults.sh $HYPERNATIVE_CHAIN_ALIAS | \
-    ./silo-core/scripts/hypernative/sendSingleHypernativeRequest.sh $HYPERNATIVE_CHAIN_ALIAS
+    ./silo-core/scripts/hypernative/updateWatchlists.sh $HYPERNATIVE_CHAIN_ALIAS
