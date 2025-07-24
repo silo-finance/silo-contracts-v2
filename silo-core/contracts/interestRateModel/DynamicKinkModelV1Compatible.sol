@@ -16,15 +16,23 @@ contract DynamicKinkModelV1Compatible is DynamicKinkModelV1, IInterestRateModel 
     /// @param config config struct for asset in Silo
     event Initialized(address indexed config);
 
-    /// @inheritdoc IInterestRateModel
-    function initialize(address _irmConfig) external virtual {
+    // function initialize(address _irmConfig) external virtual {
+    //     // TODO - looks like code is very old and we need to rebase
+    //     // require(_irmConfig != address(0), AddressZero());
+    //     // require(address(irmConfig) == address(0), AlreadyInitialized());
+
+    //     // irmConfig = IInterestRateModelV2Config(_irmConfig); TODO
+
+    //     emit Initialized(_irmConfig);
+    // }
+
+    /// @dev this method creates 1:1 link between silo and config
+    function connect(address _configAddress) external virtual {
         // TODO
-        // require(_irmConfig != address(0), AddressZero());
-        // require(address(irmConfig) == address(0), AlreadyInitialized());
+        // if (address(getSetup[msg.sender].config) != address(0)) revert AlreadyConnected();
 
-        // irmConfig = IInterestRateModelV2Config(_irmConfig); TODO
-
-        emit Initialized(_irmConfig);
+        // getSetup[msg.sender].config = IInterestRateModelV2Config(_configAddress);
+        // emit Initialized(msg.sender, _configAddress);
     }
 
     function decimals() external view returns (uint256) {
