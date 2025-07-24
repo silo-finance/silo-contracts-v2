@@ -87,11 +87,11 @@ jobs:
           echo "Coverage log contents:"
           cat coverage/silo-core.log || true
 
-          cat coverage/silo-core.log | grep -i 'silo-core/contracts/' > coverage/silo-core.txt || true
+          cat coverage/silo-core.log | grep -i 'silo-core/contracts/' | grep -v -E '/(test|deploy|silo-oracles)/' > coverage/silo-core.txt || true
 
           if [ -f lcov.info ]; then
             echo "lcov.info found, generating HTML report..."
-            genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-core/ lcov.info
+            genhtml --ignore-errors inconsistent --ignore-errors range --exclude 'silo-oracles/*' --exclude '*/test/*' --exclude '*/deploy/*' -o coverage/silo-core/ lcov.info
           else
             echo "ERROR: lcov.info not generated. Check the coverage log above for errors."
             exit 1
@@ -111,11 +111,11 @@ jobs:
           echo "Coverage log contents:"
           cat coverage/silo-oracles.log || true
 
-          cat coverage/silo-oracles.log | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt || true
+          cat coverage/silo-oracles.log | grep -i 'silo-oracles/contracts/' | grep -v -E '/(test|deploy|silo-core)/' > coverage/silo-oracles.txt || true
 
           if [ -f lcov.info ]; then
             echo "lcov.info found, generating HTML report..."
-            genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-oracles/ lcov.info
+            genhtml --ignore-errors inconsistent --ignore-errors range --exclude 'silo-core/*' --exclude '*/test/*' --exclude '*/deploy/*' -o coverage/silo-oracles/ lcov.info
           else
             echo "ERROR: lcov.info not generated. Check the coverage log above for errors."
             exit 1
@@ -135,11 +135,11 @@ jobs:
           echo "Coverage log contents:"
           cat coverage/silo-vaults.log || true
 
-          cat coverage/silo-vaults.log | grep -i 'silo-vaults/contracts/' > coverage/silo-vaults.txt || true
+          cat coverage/silo-vaults.log | grep -i 'silo-vaults/contracts/' | grep -v -E '/(test|deploy|silo-core|silo-oracles)/' > coverage/silo-vaults.txt || true
 
           if [ -f lcov.info ]; then
             echo "lcov.info found, generating HTML report..."
-            genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-vaults/ lcov.info
+            genhtml --ignore-errors inconsistent --ignore-errors range --exclude 'silo-core/*' --exclude 'silo-oracles/*' --exclude '*/test/*' --exclude '*/deploy/*' -o coverage/silo-vaults/ lcov.info
           else
             echo "ERROR: lcov.info not generated. Check the coverage log above for errors."
             exit 1
