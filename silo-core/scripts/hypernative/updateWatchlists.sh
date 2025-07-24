@@ -40,13 +40,13 @@ done
 
 echo "Amount of addresses to submit is ${#ADDRESSES[@]}"
 
-for WATCHLIST_TYPE in "pause" "alerts"; do
+for WATCHLIST_TYPE in "pause" "sandbox"; do
     echo "Sending request to update ${WATCHLIST_TYPE} watchlist..."
 
     if [ "$WATCHLIST_TYPE" = "pause" ]; then
         URL="$HYPERNATIVE_WATCHLIST_PAUSE"
     else
-        URL="$HYPERNATIVE_WATCHLIST_ALERTS"
+        URL="$HYPERNATIVE_WATCHLIST_SANDBOX"
     fi
 
     RESPONSE=$(curl -X 'PATCH' \
