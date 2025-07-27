@@ -26,7 +26,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 
     /// @dev decimal points used by the model.
     uint256 public constant DECIMALS = 18;
-    
+
     /// @dev universal limit for several DynamicKinkModelV1 config parameters. Follow the model whitepaper for more
     ///     information. Units of measure are vary per variable type. Any config within these limits is considered
     ///     valid.
@@ -56,8 +56,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     /// at the same time this is safety feature because we will write to this mapping based on msg.sender
     /// silo => setup
     // todo InterestRateModel Config setup flow
-    mapping (address => Setup) public getSetup;
-
+    mapping(address => Setup) public getSetup;
 
     /// @inheritdoc IDynamicKinkModelV1
     function currentInterestRate(
@@ -73,14 +72,14 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         returns (int256 rcur, bool overflow, bool capped)
     {
         // _t0 < _t1 checks are included inside this function, may revert 
-        (,, overflow, capped) = compoundInterestRate(
-            _setup,
-            _t0,
-            _t1,
-            _u,
-            _td,
-            _tba
-        );
+        (,, overflow, capped) = compoundInterestRate({
+            _setup: _setup,
+            _t0: _t0,
+            _t1: _t1,
+            _u: _u,
+            _td: _td,
+            _tba: _tba
+        });
 
         if (overflow) {
             return (0, overflow, capped);
@@ -89,7 +88,8 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
         unchecked {
             int256 T = _t1 - _t0;
 
-            if (T > HUNDRED_YEARS) { // TODO if we dont care about overflow, remove
+            if (T > HUNDRED_YEARS) {
+                // TODO if we dont care about overflow, remove
                 T = HUNDRED_YEARS;
             }
 
@@ -165,16 +165,16 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 
         unchecked {
             if (_t1 < _t0) revert InvalidTimestamp(); // TODO remove if ok to overflow
-            
+
             _l.T = _t1 - _t0;
-            
+
             if (_l.T > HUNDRED_YEARS) {
                 _l.T = HUNDRED_YEARS;
             }
 
             // roc calculations
             if (_u < _setup.config.u1) {
-                _l.roc = - _setup.config.c1 - _setup.config.cminus * (_setup.config.u1 - _u) / _DP;
+                _l.roc = -_setup.config.c1 - _setup.config.cminus * (_setup.config.u1 - _u) / _DP;
             } else if (_u > _setup.config.u2) {
                 _l.roc = _min(
                     _setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP,
