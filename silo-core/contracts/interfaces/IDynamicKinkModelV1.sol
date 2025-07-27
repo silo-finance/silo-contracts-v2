@@ -7,8 +7,10 @@ interface IDynamicKinkModelV1 {
     /// @dev revert when t0 > t1. Must not calculate interest in the past before the latest interest rate update.
     error InvalidTimestamp();
 
+    error InvalidUlow();
     error InvalidU1();
-    error InvalidU1();
+    error InvalidU2();
+    error InvalidUcrit();
     error InvalidRmin();
     error InvalidKmin();
     error InvalidKmax();

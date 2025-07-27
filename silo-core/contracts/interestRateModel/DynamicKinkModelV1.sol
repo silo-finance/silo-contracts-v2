@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Math} from "openzeppelin5/utils/math/Math.sol";
-
+import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
 import {IDynamicKinkModelV1} from "../interfaces/IDynamicKinkModelV1.sol";
 
@@ -51,13 +50,14 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
 
     /// @dev maximum value for total borrow amount, total deposits amount and compounded interest. If these
     ///     values are above the threshold, compounded interest is reduced to prevent an overflow.
-    int256 public constant AMT_MAX = type(uint256).max / (2 ** 16 * _DP);
+    int256 public constant AMT_MAX = 1766847064778384329583297500742918515827483896875618958; // type(uint256).max / uint256(2 ** 16 * _DP);
 
     /// @dev each Silo setup is stored separately in mapping, that's why we do not need to clone IRM
     /// at the same time this is safety feature because we will write to this mapping based on msg.sender
     /// silo => setup
     // todo InterestRateModel Config setup flow
     mapping (address => Setup) public getSetup;
+
 
     /// @inheritdoc IDynamicKinkModelV1
     function currentInterestRate(
@@ -94,16 +94,16 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             }
 
             // TODO we changing `k` in `compoundInterestRate`, should we use it here, or we using `_setup.k`?
-            int256 k = Math.max(_setup.config.kmin, Math.min(_setup.config.kmax, _setup.k));
+            int256 k = _max(_setup.config.kmin, _min(_setup.config.kmax, _setup.k));
 
             if (_u < _setup.config.u1) {
-                k = Math.max(
+                k = _max(
                     k - (_setup.config.c1 + _setup.config.cminus * (_setup.config.u1 - _u) / _DP) * T,
                     _setup.config.kmin
                 );
             } else if (_u > _setup.config.u2) {
-                k = Math.min(
-                    k + Math.min(
+                k = _min(
+                    k + _min(
                         _setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP,
                         _setup.config.dmax
                     ) * T,
@@ -123,16 +123,16 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
                 rcur = rcur * k / _DP;
             }
 
-            rcur = Math.min(rcur + _setup.config.rmin) * ONE_YEAR, RCUR_CAP);
+            rcur = _min((rcur + _setup.config.rmin) * ONE_YEAR, RCUR_CAP);
         }
     }
 
     /// @inheritdoc IDynamicKinkModelV1
     function verifyConfig(Config calldata _config) public pure virtual {
-        require(_config.ulow >= 0 && _config.ulow < _DP, IInterestRateModelV2.InvalidUlow());
+        require(_config.ulow >= 0 && _config.ulow < _DP, IDynamicKinkModelV1.InvalidUlow());
         require(_config.u1 >= 0 && _config.u1 < _DP, IDynamicKinkModelV1.InvalidU1());
         require(_config.u2 >= _config.u1 && _config.u2 <= _DP, IDynamicKinkModelV1.InvalidU2());
-        require(_config.ucrit >= _config.ulow && _config.ucrit <= _DP, IInterestRateModelV2.InvalidUcrit());
+        require(_config.ucrit >= _config.ulow && _config.ucrit <= _DP, IDynamicKinkModelV1.InvalidUcrit());
         require(_config.rmin >= 0 && _config.rmin <= _DP, IDynamicKinkModelV1.InvalidRmin());
         require(_config.kmin >= 0 && _config.kmin <= UNIVERSAL_LIMIT, IDynamicKinkModelV1.InvalidKmin());
         require(_config.kmax >= _config.kmin && _config.kmin <= UNIVERSAL_LIMIT, IDynamicKinkModelV1.InvalidKmax());
@@ -176,13 +176,13 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             if (_u < _setup.config.u1) {
                 _l.roc = - _setup.config.c1 - _setup.config.cminus * (_setup.config.u1 - _u) / _DP;
             } else if (_u > _setup.config.u2) {
-                _l.roc = Math.min(
+                _l.roc = _min(
                     _setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP,
                     _setup.config.dmax
                 );
             }
 
-            k = Math.max(_setup.config.kmin, Math.min(_setup.config.kmax, _setup.k));
+            k = _max(_setup.config.kmin, _min(_setup.config.kmax, _setup.k));
             // slope of the kink at t1 ignoring lower and upper bounds
             _l.k1 = k + _l.roc * _l.T;
 
@@ -224,7 +224,7 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
                 rcomp = RCOMP_CAP * _l.T;
             }
 
-            _l.amt = Math.max(_tba, _td);
+            _l.amt = _max(_tba, _td);
 
             // stop compounding interest for critical assets amounts
             // this IF was added in additional to the paper
@@ -237,11 +237,12 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             }
 
             // TODO add check for overflow, we can still throw here
-            _l.interest = Math.muldiv(_tba, rcomp, _DP);
+            // TODO should we use mulDiv?
+            _l.interest = _tba * rcomp / _DP;
 
             // limit accrued interest if it results in critical assets amount
             if (_l.amt > AMT_MAX - _l.interest) {
-                didOverflow = true;
+                overflow = true;
                 // it will not underflow because above, we checking `if (_l.amt > AMT_MAX)`
                 _l.interest = AMT_MAX - _l.amt;
 
@@ -258,8 +259,15 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
             }
         }
     }
-}
 
+    function _min(int256 _a, int256 _b) internal pure returns (int256) {
+        return _a < _b ? _a : _b;
+    }
+
+    function _max(int256 _a, int256 _b) internal pure returns (int256) {
+        return _a > _b ? _a : _b;
+    }
+}
 // solhint-enable var-name-mixedcase
 // solhint-enable-line function-max-lines
 // solhint-enable-line code-complexity
