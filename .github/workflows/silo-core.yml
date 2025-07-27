@@ -12,6 +12,7 @@ env:
     PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
     VERIFIER_URL_SONIC: ${{ secrets.VERIFIER_URL_SONIC }}
     VERIFIER_API_KEY_SONIC: ${{ secrets.VERIFIER_API_KEY_SONIC }}
+    AGGREGATOR: "1INCH" # because it is available on all blockchains
 
 on:
     push:

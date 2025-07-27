@@ -99,7 +99,7 @@ contract ERC4626OracleTest is Test {
         address eoa1 = makeAddr("eoa1");
         address eoa2 = makeAddr("eoa2");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
         ISiloOracle oracle1 = _factory.createERC4626Oracle(
@@ -107,7 +107,7 @@ contract ERC4626OracleTest is Test {
             bytes32(0)
         );
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(eoa2);
         ISiloOracle oracle2 = _factory.createERC4626Oracle(

@@ -30,10 +30,18 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @dev Actor proxy mechanism
-    modifier setup() virtual {
-        actor = actors[msg.sender];
-        targetActor = address(actor);
+    modifier setupRandomActor(uint256 _i) virtual {
+        targetActor = actorAddresses[_i % actorAddresses.length];
+        actor = Actor(payable(targetActor));
+
+        assertTrue(targetActor != address(0), "setupActor fail: targetActor zero");
+        assertTrue(address(actor) != address(0), "setupActor fail: actor zero");
+
+        require(targetActor != address(0), "setupActor fail: targetActor zero");
+        require(address(actor) != address(0), "setupActor fail: actor zero");
+
         _;
+
         actor = Actor(payable(address(0)));
         targetActor = address(0);
     }
@@ -45,7 +53,7 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     }
 
     /// @dev Makes this Tester contract able to receive ERC721 using safeTransfer
-    function onERC721Received(address, address, uint256, bytes calldata) external returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -83,10 +91,12 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     //                                          HELPERS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _hasDebt(address user) internal returns (bool) {
+    function _hasDebt(address user) internal view returns (bool userHasDebt) {
         for (uint256 i; i < debtTokens.length; i++) {
             if (IERC20(debtTokens[i]).balanceOf(user) > 0) return true;
         }
+
+        return false;
     }
 
     function _getUserAssets(address silo, address user) internal view returns (uint256) {

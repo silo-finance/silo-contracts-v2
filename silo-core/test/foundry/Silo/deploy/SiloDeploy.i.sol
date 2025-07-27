@@ -89,7 +89,7 @@ contract SiloDeployTest is IntegrationTest {
     }
 
     // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_encodeCallWithSalt -vv
-    function test_encodeCallWithSalt() public {
+    function test_encodeCallWithSalt() public pure {
         bytes32 salt = keccak256(bytes("some string"));
 
         IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config;
@@ -110,7 +110,7 @@ contract SiloDeployTest is IntegrationTest {
         Vm.Wallet memory wallet1 = vm.createWallet("eoa1");
         Vm.Wallet memory wallet2 = vm.createWallet("eoa2");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         ISiloConfig siloConfig1 = _siloDeploy
             .useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST)
@@ -121,7 +121,7 @@ contract SiloDeployTest is IntegrationTest {
 
         ISiloConfig.ConfigData memory siloConfigData1 = siloConfig1.getConfig(silo0);
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         ISiloConfig siloConfig2 = _siloDeploy
             .useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST)

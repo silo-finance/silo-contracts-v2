@@ -2,7 +2,10 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
+import {AddrKey} from "common/addresses/AddrKey.sol";
 import {Registries} from "./registries/Registries.sol";
 import {IMethodsRegistry} from "./interfaces/IMethodsRegistry.sol";
 import {MaliciousToken} from "./MaliciousToken.sol";
@@ -14,7 +17,13 @@ import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloReentrancyTest
+import {
+    LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy
+} from "silo-core/deploy/LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
+
+/*
+FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloReentrancyTest
+*/
 contract SiloReentrancyTest is Test {
     ISiloConfig public siloConfig;
     
@@ -56,7 +65,7 @@ contract SiloReentrancyTest is Test {
 
         emit log_string("\n\nRunning reentrancy test");
 
-        uint256 stateBeforeTest = vm.snapshot();
+        uint256 stateBeforeTest = vm.snapshotState();
 
         for (uint j = 0; j < methodRegistries.length; j++) {
             uint256 totalMethods = methodRegistries[j].supportedMethodsLength();
@@ -77,7 +86,7 @@ contract SiloReentrancyTest is Test {
                 entered = siloConfig.reentrancyGuardEntered();
                 assertTrue(!entered, "Reentrancy should be disabled after calling the method");
 
-                vm.revertTo(stateBeforeTest);
+                vm.revertToState(stateBeforeTest);
             }
         }
     }
@@ -96,13 +105,22 @@ contract SiloReentrancyTest is Test {
 
         (siloConfig, silo0, silo1,,, hookReceiver) = siloFixture.deploy_local(configOverride);
 
+        AddrLib.setAddress(AddrKey.DAO, makeAddr("DAO"));
+
+        LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy leverageDeploy =
+            new LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy();
+
+        leverageDeploy.disableDeploymentsSync();
+        address leverageRouter = address(leverageDeploy.run());
+
         TestStateLib.init(
             address(siloConfig),
             address(silo0),
             address(silo1),
             configOverride.token0,
             configOverride.token1,
-            hookReceiver
+            hookReceiver,
+            leverageRouter
         );
     }
 }

@@ -14,11 +14,15 @@ import {SiloOraclesFactoriesDeployments} from "./SiloOraclesFactoriesContracts.s
 contract CommonDeploy is Deployer {
     string internal constant _FORGE_OUT_DIR = "cache/foundry/out/silo-oracles";
 
-    function _forgeOutDir() internal pure override virtual returns (string memory) {
+    function _forgeOutDir() internal view override virtual returns (string memory) {
         return _FORGE_OUT_DIR;
     }
 
-    function _deploymentsSubDir() internal pure override virtual returns (string memory) {
+    function _contractBaseDir() internal view override virtual returns (string memory baseDir) {
+        baseDir = "";
+    }
+
+    function _deploymentsSubDir() internal view override virtual returns (string memory) {
         return SiloOraclesFactoriesDeployments.DEPLOYMENTS_DIR;
     }
 

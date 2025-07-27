@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {ISilo, IERC3156FlashLender} from "./ISilo.sol";
+import {IGeneralSwapModule} from "./IGeneralSwapModule.sol";
 
 /// @title LeverageUsingSiloFlashloan Interface
 /// @notice Interface for a contract that enables leveraged deposits using flash loans from silo
@@ -79,54 +80,64 @@ interface ILeverageUsingSiloFlashloan {
     error SwapDidNotCoverObligations();
     error InvalidSilo();
 
-    /// @return debtReceiveApproval amount of approval (receive approval) that is required on debt share token
-    /// in order to borow on behalf of user when opening leverage position
-    function calculateDebtReceiveApproval(ISilo _flashFrom, uint256 _flashAmount)
-        external
-        view
-        returns (uint256 debtReceiveApproval);
+    function SWAP_MODULE() external view returns (IGeneralSwapModule);
 
-    /// @notice Performs leverage operation using a flash loan and token swap
+    /// @notice Performs leverage operation using a flash loan and token swap. Does not support fee on transfer tokens.
+    /// It also does not support borrow on same asset.
     /// @dev Reverts if the amount is so high that fee calculation fails
     /// This method requires approval for transfer collateral from borrower to leverage contract and to create
     /// debt position. Approval for collateral can be done using Permit (if asset supports it), for that case please
     /// use `openLeveragePositionPermit`
+    /// @param _msgSender The address of the sender (provided by the leverage router)
     /// @param _flashArgs Flash loan configuration
     /// @param _swapArgs Swap call data and settings, that will swap all flashloan amount into collateral
     /// @param _depositArgs Final deposit configuration into a Silo
     function openLeveragePosition(
+        address _msgSender,
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         DepositArgs calldata _depositArgs
     ) external payable;
 
-    /// @notice Performs leverage operation using a flash loan and token swap
+    /// @notice Performs leverage operation using a flash loan and token swap. Does not support fee on transfer tokens.
+    /// It also does not support borrow on same asset.
     /// @dev Reverts if the amount is so high that fee calculation fails
+    /// @param _msgSender The address of the sender (provided by the leverage router)
     /// @param _flashArgs Flash loan configuration
     /// @param _swapArgs Swap call data and settings, that will swap all flashloan amount into collateral
     /// @param _depositArgs Final deposit configuration into a Silo
     /// @param _depositAllowance Permit for leverage contract to transfer collateral from borrower
     function openLeveragePositionPermit(
+        address _msgSender,
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         DepositArgs calldata _depositArgs,
         Permit calldata _depositAllowance
     ) external;
 
+    /// @notice Closes opened leveraged position.
+    /// Does not support fee on transfer tokens. It also does not support borrow on same asset.
     /// @dev This method requires approval for withdraw all collateral (so minimal requires amount for allowance is
     /// borrower balance). Approval can be done using Permit, for that case please use `closeLeveragePositionPermit`
-    /// @param _swapArgs Swap call data and settings,
-    /// that should swap enough collateral to repay flashloan in debt token
+    /// @param _msgSender The address of the sender (provided by the leverage router)
+    /// @param _swapArgs Swap call data and settings, it should swap enough collateral to repay flashloan in debt token
     /// @param _closeLeverageArgs configuration for closing position
     function closeLeveragePosition(
+        address _msgSender,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeLeverageArgs
     ) external;
 
-    /// that should swap enough collateral to repay flashloan in debt token
+    /// @notice Closes opened leveraged position.
+    /// Does not support fee on transfer tokens. It also does not support borrow on same asset.
+    /// @dev This method requires approval for withdraw all collateral (so minimal requires amount for allowance is
+    /// borrower balance). Approval is done using Permit
+    /// @param _msgSender The address of the sender (provided by the leverage router)
+    /// @param _swapArgs Swap call data and settings, it should swap enough collateral to repay flashloan in debt token
     /// @param _closeLeverageArgs configuration for closing position
-    /// @param _withdrawAllowance Permit for leverage contract to withdraw all borrower collateral tokens
+    /// @param _withdrawAllowance Permit for leverage contract to withdraw all borrower collateral or protected tokens
     function closeLeveragePositionPermit(
+        address _msgSender,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeLeverageArgs,
         Permit calldata _withdrawAllowance

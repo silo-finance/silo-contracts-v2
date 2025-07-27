@@ -92,6 +92,13 @@ contract OracleScalerTest is Test {
         assertEq(scaler.quote(bigAmountToScale, USDC) / bigAmountToScale, 10 ** 12, "scaling multiplies by factor");
     }
 
+    function test_OracleScaler_quote_reverts_ZeroPrice() public {
+        ISiloOracle scaler = factory.createOracleScaler(USDC, bytes32(0));
+
+        vm.expectRevert(OracleScaler.ZeroPrice.selector);
+        scaler.quote(0, USDC);
+    }
+
     function test_OracleScaler_quoteReverts() public {
         ISiloOracle scaler = factory.createOracleScaler(USDC, bytes32(0));
 
@@ -103,12 +110,12 @@ contract OracleScalerTest is Test {
         address eoa1 = makeAddr("eoa1");
         address eoa2 = makeAddr("eoa2");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
         ISiloOracle scaler1 = factory.createOracleScaler(USDC, bytes32(0));
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(eoa2);
         ISiloOracle scaler2 = factory.createOracleScaler(USDC, bytes32(0));

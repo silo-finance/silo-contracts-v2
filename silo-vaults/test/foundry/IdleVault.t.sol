@@ -67,12 +67,12 @@ contract IdleVaultTest is IntegrationTest {
         address devWallet = makeAddr("dev wallet");
         address otherWallet = makeAddr("other wallet");
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         vm.prank(devWallet);
         IdleVault idleVault1 = factory.createIdleVault(IERC4626(idleMarket), bytes32(0));
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         vm.prank(otherWallet);
         IdleVault idleVault2 = factory.createIdleVault(IERC4626(idleMarket), bytes32(0));

@@ -5,9 +5,93 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- add `getOracleAddresses` to SiloLens 
+
+## [3.9.0] - 2025-07-03
+### Added
+- silo-core: Silo hook deployment (#1453)
+- silo-core: GaugeHookReceiver with Ownable 1-step transfer (#1447)
+- silo-core: Manual liquidation helper accepts native tokens (#1439)
+- silo-core: Allow multiple instances of liquidation helper (#1436)
+- new markets:
+  - silo-core: wmetaS/wS market on Sonic (#1437)
+  - silo-core: Anon/USDC.e market on Sonic (#1438)
+  - silo-core: yUSD/USDC Silo on Arbitrum (#1446)
+  - silo-core: sACRED/USDC market on Avalanche (#1452)
+  - silo-core: USDf/USDC market on mainnet (#1442)
+
+### Fixed
+- silo-core: fix leverage bug with swap abusing debt share token receive allowance and ERC-20 approval (#1434)
+
+### [3.8.0] - 2025-06-26
+### Added
+- silo-core: Ethereum mainnet deployment
+- silo-core: Avalanche deployment  
+- silo-vaults: Avalanche deployment
+- silo-oracles: Avalanche deployment
+- silo-oracles: Wrapped Pendle LP tokens price providers
+- silo-oracles: WrappedMetaVaultOracleAdapter
+- silo-oracles: ERC4626Oracle with hardcoded quote token
+- silo-oracles: ERC4626OracleWithUnderlying
+- silo-oracles: Oracle scaler factory mainnet deployment
+- silo-oracles: PT oracles deployments
+- silo-oracles: Adjust PT oracles for different decimals case
+- silo-core: SiloIncentivesControllerFactory deployment
+- silo-core: SiloHookV1 deployment
+- silo-core: SiloVerifier for the Pendle LPT markets
+- silo-core: SiloRouterV2 deployment with Pendle LP tokens wrap/unwrap support
+- silo-core: leverage live deployment for sonic, mainnet
+- silo-core: certora rules for leverage debt token approvals
+- silo-core: protect permit in leverage from frontrun
+- new markets:
+  - silo-core: PT-stS-18DEC2025 wS market on Sonic
+  - silo-core: xUSD scUSD Silo on Sonic
+  - silo-core: sUSDX USDC Silo on Arbitrum
+  - silo-core: ARB USDC Silo on Arbitrum
+  - silo-core: WBTC USDC Silo on Arbitrum
+  - silo-core: sUSDf/USDC mainnet market
+  - silo-core: PT-sUSDf-25SEP2025/USDC mainnet market
+  - silo-core: wmetaUSD/USDC Sonic market
+  - silo-core: USR/USD market on mainnet
+  - silo-core: ezETH/WETH mainnet market
+  - silo-core: weETH WETH Silo on mainnet
+  - silo-core: LPT-sUSDE-25SEP2025/USD mainnet market
+  - silo-core: LPT-sUSDE-31JUL2025/USD mainnet market
+  - silo-core: LPT-eUSDe-14AUG25/USD mainnet market
+  - silo-core: PT-eUSDE-14AUG2025/USDC mainnet market
+  - silo-core: PT-cUSDO-20NOV2025/USDC mainnet market
+  - silo-core: PT-sUSDE-25SEP2025/USDC mainnet market
+  - silo-core: PT-USDS-14AUG2025/USDC mainnet market
+  - silo-core: PT-eUSDE-14AUG2025/USDf mainnet market
+  - silo-core: WBTC/USDC market on mainnet
+  - silo-core: RLP/USDC market on mainnet
+  - silo-core: wsrUSD/USDC mainnet market
+  - silo-core: USR/USDC mainnet market redeployment
+  - silo-core: wstUSR/USD mainnet market
+  - silo-core: PT-USDe 25 Sep 2025 / USDC mainnet market
+  - silo-core: mMEV/USDC mainnet market
+  - silo-core: PT-USR-4SEP2025/USDC mainnet market
+  - silo-core: PT-wstUSR-25SEP2025/USDC mainnet market
+  - silo-core: PT-RLP-4SEP2025/USDC mainnet market
+  - silo-core: WAVAX/USDC avalanche market
+  - silo-core: sdeUSD/USDC avalanche market
+  - silo-core: deUSD/USDC avalanche market
+  - silo-core: BTC.b/WAVAX Avalanche market
+  - silo-core: ggAVAX/WAVAX Avalanche market
+  - silo-core: sBUIDL/USDC Avalanche market
+  - silo-core: sAVAX/WAVAX Avalanche market
+  - silo-core: scBTC/scUSD sonic market
+  - silo-core: savBTC/WBTC.b avalanche market
+  - silo-core: AUSD/USDC avalanche market
+  - silo-core: savUSD/USDC avalanche market
+  - silo-core: wsrUSD/USDC sonic market
+  - silo-core: wmetaUSD/scUSD sonic market
+
 ### Removed
 - silo-oracles: remove heartbeat check from DIA oracle
 - silo-oracles: remove heartbeat check from Chainlink oracle
+- Removed ve-silo and proposals
 
 ### [3.7.0] - 2025-06-10
 ### Added

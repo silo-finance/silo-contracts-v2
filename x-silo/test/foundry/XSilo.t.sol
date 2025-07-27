@@ -215,7 +215,7 @@ contract XSiloTest is Test {
 
         vm.startPrank(user);
 
-        uint256 checkpoint = vm.snapshot();
+        uint256 checkpoint = vm.snapshotState();
 
         vm.assume(xSilo.previewWithdraw(assetsToWithdraw) > 0);
 
@@ -223,7 +223,7 @@ contract XSiloTest is Test {
 
         assertEq(asset.balanceOf(user), assetsToWithdraw, "user got exact amount of tokens");
 
-        vm.revertTo(checkpoint);
+        vm.revertToState(checkpoint);
 
         emit log_named_uint("withdrawnShares after rollback", withdrawnShares);
         emit log_named_uint("_siloToWithdraw", assetsToWithdraw);

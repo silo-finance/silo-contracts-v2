@@ -8,16 +8,21 @@ contract PendleMarketGasWaster is ERC20 {
 
     constructor() ERC20("PendleMarketGasWaster", "PendleMarketGasWaster") {}
 
-    function redeemRewards(address user) external returns (address[] memory rewardTokens, uint256[] memory rewards) {
+    function redeemRewards(address /* user */)
+        external
+        returns (address[] memory rewardTokens, uint256[] memory rewards)
+    {
         uint256 i = 0;
 
         while (true) {
             counter.push(i);
             i++;
         }
+
+        return (rewardTokens, rewards);
     }
 
-    function getRewardTokens() external view returns (address[] memory) {
+    function getRewardTokens() external pure returns (address[] memory) {
         return new address[](0);
     }
 }

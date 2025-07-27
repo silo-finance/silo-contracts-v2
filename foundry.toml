@@ -23,7 +23,8 @@ fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"},
-    { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json"}
+    { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json"},
+    { access = "read", path = "./silo-core/deploy/silo/_siloDeployments.json"}
 ]
 
 [profile.core_with_test]
@@ -43,6 +44,18 @@ fs_permissions = [
 [profile.core-with-invariants]
 src = 'silo-core/contracts'
 test = 'silo-core/test/invariants'
+out = 'cache/foundry/out/silo-core'
+broadcast = 'silo-core/broadcast'
+
+fs_permissions = [
+    { access = "read", path = "./cache/foundry/"},
+    { access = "read", path = "./silo-core/test/foundry/data/"},
+    { access = "read", path = "./silo-core/deploy/input/"}
+]
+
+[profile.echidna_leverage]
+src = 'silo-core/contracts'
+test = 'silo-core/test/echidna-leverage'
 out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
 
@@ -143,5 +156,6 @@ ink = "${RPC_INK}"
 
 [etherscan]
 sonic = { key = "${VERIFIER_API_KEY_SONIC}", chain = 146, url = "${VERIFIER_URL_SONIC}" }
+ink = { key = "", chain = 57073, url = "https://explorer.inkonchain.com/api/", verifier = "blockscout" }
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

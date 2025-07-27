@@ -1,2 +1,10 @@
 {
+  "sonic": {
+    "SIC wmetaUSD/USDC(121) wmetaUSD:Collateral": "0x8F4a9E711903d7F03192625C2FB75c92D01C4242",
+    "SIC wmetaUSD/USDC(121) USDC:Collateral": "0x66379fe459285B840aF6CDDe1Dfa4f849567e08b"
+  },
+  "avalanche": {
+    "SIC savUSD/USDC(125) USDC:Collateral": "0x4e4CB33eB59206e7097DBC65bD28Ee0E230617A3",
+    "SIC savBTC/BTC.b(121) BTC.b:Collateral": "0x2F87C76Fe9Efc1caB4d6d29Fdb15e22525564736"
+  }
 }

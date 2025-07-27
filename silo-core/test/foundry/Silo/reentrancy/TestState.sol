@@ -13,8 +13,10 @@ contract ReentrancyTestState {
     address public token0;
     address public token1;
     address public hookReceiver;
+    address public leverageRouter;
     bool public reenter = true;
     bool public reenterViaLiquidationCall = false;
+    bool public leverageReenter = true;
 
     function set(
         address _siloConfig,
@@ -22,7 +24,8 @@ contract ReentrancyTestState {
         address _silo1,
         address _token0,
         address _token1,
-        address _hookReceiver
+        address _hookReceiver,
+        address _leverageRouter
     ) external {
         siloConfig = _siloConfig;
         silo0 = _silo0;
@@ -30,6 +33,7 @@ contract ReentrancyTestState {
         token0 = _token0;
         token1 = _token1;
         hookReceiver = _hookReceiver;
+        leverageRouter = _leverageRouter;
     }
 
     function setReenter(bool _status) external {
@@ -38,6 +42,10 @@ contract ReentrancyTestState {
 
     function setReenterViaLiquidationCall(bool _status) external {
         reenterViaLiquidationCall = _status;
+    }
+
+    function setLeverageReenter(bool _status) external {
+        leverageReenter = _status;
     }
 }
 
@@ -50,7 +58,8 @@ library TestStateLib {
         address _silo1,
         address _token0,
         address _token1,
-        address _hookReceiver
+        address _hookReceiver,
+        address _leverageRouter
     ) internal {
         bytes memory code = Utils.getCodeAt(_ADDRESS);
 
@@ -62,8 +71,9 @@ library TestStateLib {
 
         VmLib.vm().etch(_ADDRESS, deployedCode);
 
-        ReentrancyTestState(_ADDRESS).set(_siloConfig, _silo0, _silo1, _token0, _token1, _hookReceiver);
+        ReentrancyTestState(_ADDRESS).set(_siloConfig, _silo0, _silo1, _token0, _token1, _hookReceiver, _leverageRouter);
         ReentrancyTestState(_ADDRESS).setReenter(true);
+        ReentrancyTestState(_ADDRESS).setLeverageReenter(false);
     }
 
     function silo0() internal view returns (ISilo) {
@@ -90,6 +100,10 @@ library TestStateLib {
         return ReentrancyTestState(_ADDRESS).hookReceiver();
     }
 
+    function leverageRouter() internal view returns (address) {
+        return ReentrancyTestState(_ADDRESS).leverageRouter();
+    }
+
     function reenter() internal view returns (bool) {
         return ReentrancyTestState(_ADDRESS).reenter();
     }
@@ -108,5 +122,17 @@ library TestStateLib {
 
     function reenterViaLiquidationCall() internal view returns (bool) {
         return ReentrancyTestState(_ADDRESS).reenterViaLiquidationCall();
+    }
+
+    function leverageReenter() internal view returns (bool) {
+        return ReentrancyTestState(_ADDRESS).leverageReenter();
+    }
+
+    function disableLeverageReentrancy() internal {
+        ReentrancyTestState(_ADDRESS).setLeverageReenter(false);
+    }
+
+    function enableLeverageReentrancy() internal {
+        ReentrancyTestState(_ADDRESS).setLeverageReenter(true);
     }
 }

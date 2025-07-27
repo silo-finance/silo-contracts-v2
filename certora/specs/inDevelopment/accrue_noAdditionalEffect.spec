@@ -1,6 +1,6 @@
 import "../setup/CompleteSiloSetup.spec";
-import "unresolved.spec";
-import "../simplifications/SiloMathLib.spec";
+import "../silo/unresolved.spec";
+import "../simplifications/SiloMathLib_SAFE.spec";
 import "../simplifications/Oracle_quote_one_UNSAFE.spec";
 import "../simplifications/SimplifiedGetCompoundInterestRateAndUpdate_SAFE.spec";
 
