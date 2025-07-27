@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import {IDynamicKinkModelV1} from "../../../contracts/interfaces/IDynamicKinkModelV1.sol";
+import {IDynamicKinkModel} from "../../../contracts/interfaces/IDynamicKinkModel.sol";
 
-contract RcurTestDynamicKink is Test {
+contract RcompDynamicKinkTestData is Test {
     // must be in alphabetic order
-    struct InputRcur {
+    struct InputRcomp {
         int256 currentTime;
         int256 lastSlope;
         int256 lastTransactionTime;
@@ -16,7 +16,7 @@ contract RcurTestDynamicKink is Test {
         int256 totalDeposits;
     }
 
-    struct ConstantsRcur {
+    struct ConstantsRcomp {
         int256 alpha;
         int256 c1;
         int256 c2;
@@ -32,37 +32,45 @@ contract RcurTestDynamicKink is Test {
         int256 ulow;
     }
 
-    struct ExpectedRcur {
-        int256 currentAnnualInterest;
+    struct ExpectedRcomp {
+        int256 compoundInterest;
         int256 didCap;
         int256 didOverflow;
+        int256 newSlope;
     }
 
-    struct DebugRcur {
+    struct DebugRcomp {
         int256 T;
-        int256 k;
-        int256 r;
-        int256 rcur;
+        int256 f;
+        int256 k1;
+        int256 roc;
         int256 u0;
+        int256 x;
+        int256 x_checked;
+        int256 x_prelim;
     }
 
-    struct RcurData {
-        ConstantsRcur constants;
-        DebugRcur debug;
-        ExpectedRcur expected;
+    struct RcompData {
+        ConstantsRcomp constants;
+        DebugRcomp debug;
+        ExpectedRcomp expected;
         uint256 id;
-        InputRcur input;
+        InputRcomp input;
     }
 
-    function _readDataFromJsonRcur() internal returns (RcurData[] memory data) {
+    function _readDataFromJsonRcomp() internal returns (RcompData[] memory data) {
         string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/silo-core/test/foundry/data/RcurDynamicKinkv8.json");
+        string memory path = string.concat(root, "/silo-core/test/foundry/data/RcompDynamicKinkv8.json");
         string memory json = vm.readFile(path);
 
-        data = abi.decode(vm.parseJson(json, string(abi.encodePacked("."))), (RcurData[]));
+        data = abi.decode(vm.parseJson(json, string(abi.encodePacked("."))), (RcompData[]));
+
+        for (uint i; i < data.length; i++) {
+            //_printRcomp(data[i]);
+        }
     }
 
-    function _printRcur(RcurData memory _data) internal {
+    function _printRcomp(RcompData memory _data) internal {
         emit log_named_uint("ID#", _data.id);
 
         emit log_string("INPUT");
@@ -90,22 +98,26 @@ contract RcurTestDynamicKink is Test {
         emit log_named_int("ulow", _data.constants.ulow);
 
         emit log_string("Expected");
-        emit log_named_int("currentAnnualInterest", _data.expected.currentAnnualInterest);
+        emit log_named_int("compoundInterest", _data.expected.compoundInterest);
         emit log_named_int("didCap", _data.expected.didCap);
         emit log_named_int("didOverflow", _data.expected.didOverflow);
+        emit log_named_int("newSlope", _data.expected.newSlope);
 
         emit log_string("Debug");
         emit log_named_int("T", _data.debug.T);
-        emit log_named_int("k", _data.debug.k);
-        emit log_named_int("r", _data.debug.r);
-        emit log_named_int("rcur", _data.debug.rcur);
+        emit log_named_int("f", _data.debug.f);
+        emit log_named_int("k1", _data.debug.k1);
+        emit log_named_int("roc", _data.debug.roc);
         emit log_named_int("u0", _data.debug.u0);
+        emit log_named_int("x", _data.debug.x);
+        emit log_named_int("x_checked", _data.debug.x_checked);
+        emit log_named_int("x_prelim", _data.debug.x_prelim);
     }
 
-    function _toSetupRcur(RcurData memory _data)
+    function _toSetupRcomp(RcompData memory _data)
         internal
         pure
-        returns (IDynamicKinkModelV1.Setup memory setup, DebugRcur memory debug)
+        returns (IDynamicKinkModel.Setup memory setup, DebugRcomp memory debug)
     {
 
         setup.config.alpha = _data.constants.alpha;
@@ -125,12 +137,12 @@ contract RcurTestDynamicKink is Test {
         setup.k = _data.input.lastSlope;
     }
 
-    function _toConfigStructRcur(RcurData memory _data)
+    function _toConfigStructRcomp(RcompData memory _data)
         internal
         pure
-        returns (IDynamicKinkModelV1.Config memory cfg)
+        returns (IDynamicKinkModel.Config memory cfg)
     {
-        (IDynamicKinkModelV1.Setup memory setup,) = _toSetupRcur(_data);
+        (IDynamicKinkModel.Setup memory setup,) = _toSetupRcomp(_data);
         cfg = setup.config;
     }
 }

@@ -1,19 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
-import {DynamicKinkModelV1} from "../../../contracts/interestRateModel/DynamicKinkModelV1.sol";
-import "../data-readers/RcompTestDynamicKink.sol";
-import "../data-readers/RcurTestDynamicKink.sol";
+import {Test} from "forge-std/Test.sol";
 
-// FOUNDRY_PROFILE=core forge test -vv --mc DynamicKinkModelV1Test
-contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
-    DynamicKinkModelV1 immutable INTEREST_RATE_MODEL;
+import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
+import {RcompDynamicKinkTestData} from "../../data-readers/RcompDynamicKinkTestData.sol";
+import {RcurDynamicKinkTestData} from "../../data-readers/RcurDynamicKinkTestData.sol";
+
+/* 
+FOUNDRY_PROFILE=core_test forge test -vv --mc DynamicKinkModelTest
+*/
+contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestData {
+    DynamicKinkModel immutable INTEREST_RATE_MODEL;
 
     int256 constant DP = 10 ** 18;
 
     constructor() {
-        INTEREST_RATE_MODEL = new DynamicKinkModelV1();
+        INTEREST_RATE_MODEL = new DynamicKinkModel();
     }
 
     function relativeAssertion(
@@ -57,7 +60,7 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
         RcurData[] memory data = _readDataFromJsonRcur();
 
         for (uint i; i < data.length; i++) {
-            (IDynamicKinkModelV1.Setup memory setup, DebugRcur memory debug) = _toSetupRcur(data[i]);
+            (IDynamicKinkModel.Setup memory setup, DebugRcur memory debug) = _toSetupRcur(data[i]);
             // _printRcur(data[i]);
 
             (int256 rcur, bool didCap, bool didOverflow) = INTEREST_RATE_MODEL.currentInterestRate(
@@ -82,7 +85,7 @@ contract DynamicKinkModelV1Test is RcompTestDynamicKink, RcurTestDynamicKink {
         RcompData[] memory data = _readDataFromJsonRcomp();
 
         for (uint i; i < data.length; i++) {
-            (IDynamicKinkModelV1.Setup memory setup, DebugRcomp memory debug) = _toSetupRcomp(data[i]);
+            (IDynamicKinkModel.Setup memory setup, DebugRcomp memory debug) = _toSetupRcomp(data[i]);
             // _printRcomp(data[i]);
 
             (int256 rcomp, int256 k, bool didCap, bool didOverflow) = INTEREST_RATE_MODEL.compoundInterestRate(
