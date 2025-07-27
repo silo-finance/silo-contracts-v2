@@ -12,7 +12,8 @@ import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.
 // solhint-disable-line code-complexity
 
 /*
-rules:
+TODO 
+QA rules:
 - if utilization goes up -> rcomp always go up (unless overflow, then == 0)
 - if utilization goes down -> rcomp always go down?
 - there should be no overflow when utilization goes down
