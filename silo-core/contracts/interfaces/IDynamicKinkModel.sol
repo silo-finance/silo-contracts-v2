@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-
 interface IDynamicKinkModel {
     /// @notice Emitted on config init
     /// @param config config struct for asset in Silo

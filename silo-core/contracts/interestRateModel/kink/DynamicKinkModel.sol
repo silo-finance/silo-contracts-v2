@@ -118,13 +118,12 @@ contract DynamicKinkModel is IDynamicKinkModel {
                 );
             }
 
-
             // additional interest rate
             if (_u >= _setup.config.ulow) {
                 rcur = _u - _setup.config.ulow;
 
                 if (_u >= _setup.config.ucrit) {
-                    rcur = rcur + _setup.config.alpha * (_u - _setup.config.ucrit ) / _DP;
+                    rcur = rcur + _setup.config.alpha * (_u - _setup.config.ucrit) / _DP;
                 }
 
                 rcur = rcur * k / _DP;
