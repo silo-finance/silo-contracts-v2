@@ -41,7 +41,7 @@ interface IDynamicKinkModelV1 {
     /// @param f factor for the slope in kink.
     /// @param roc internal variable for slope calculations.
     /// @param x internal variable for slope calculations.
-    /// @param assetsAmount maximum of total deposits and total borrwed amounts.
+    /// @param amt assetsAmount maximum of total deposits and total borrwed amounts.
     /// @param interest absolute value of compounded interest.
     struct LocalVarsRCOMP {
         int256 T;
@@ -49,7 +49,7 @@ interface IDynamicKinkModelV1 {
         int256 f;
         int256 roc;
         int256 x;
-        int256 assetsAmount;
+        int256 amt;
         int256 interest;
     }
 
@@ -71,44 +71,44 @@ interface IDynamicKinkModelV1 {
     /// @param _setup DynamicKinkModelV1 config struct with model state.
     /// @param _t0 timestamp of the last interest rate update.
     /// @param _t1 timestamp of the compounded interest rate calculations (current time).
-    /// @param _u utilization ratio of silo and asset at _t1.
-    /// @param _totalDeposits total deposits at _t1.
-    /// @param _totalBorrowAmount total borrow amount at _t1.
+    /// @param _u utilization ratio of silo and asset at _t0 TODO ask if this is for sure t0??
+    /// @param _td total deposits at _t1.
+    /// @param _tba total borrow amount at _t1.
     /// @return rcomp compounded interest in decimal points.
-    /// @return k new state of the model.
-    /// @return didCap compounded interest rate was above the treshold and was capped.
-    /// @return didOverflow compounded interest rate was limited to prevent overflow.
+    /// @return k new state of the model at _t1
+    /// @return overflow compounded interest rate was limited to prevent overflow.
+    /// @return capped compounded interest rate was above the treshold and was capped.
     function compoundInterestRate(
         Setup memory _setup, 
         int256 _t0,
         int256 _t1, 
         int256 _u,
-        int256 _totalDeposits,
-        int256 _totalBorrowAmount
+        int256 _td,
+        int256 _tba
     )
         external
         pure
-        returns (int256 rcomp, int256 k, bool didCap, bool didOverflow);
+        returns (int256 rcomp, int256 k, bool overflow, bool capped);
 
     /// @notice Calculate current interest rate, refer model whitepaper for more details.
     /// @param _setup DynamicKinkModelV1 config struct with model state.
     /// @param _t0 timestamp of the last interest rate update.
     /// @param _t1 timestamp of the current interest rate calculations (current time).
     /// @param _u utilization ratio of silo and asset at _t1.
-    /// @param _totalDeposits total deposits at _t1.
-    /// @param _totalBorrowAmount total borrow amount at _t1.
+    /// @param _td total deposits at _t1.
+    /// @param _tba total borrow amount at _t1.
     /// @return rcur current interest in decimal points.
-    /// @return didCap current interest rate was above the treshold and was capped.
-    /// @return didOverflow current interest rate was limited to prevent overflow.
+    /// @return overflow current interest rate was limited to prevent overflow.
+    /// @return capped current interest rate was above the treshold and was capped.
     function currentInterestRate(
         Setup memory _setup, 
         int256 _t0, 
         int256 _t1, 
         int256 _u,
-        int256 _totalDeposits,
-        int256 _totalBorrowAmount
+        int256 _td,
+        int256 _tba
     )
         external
         pure
-        returns (int256 rcur, bool didCap, bool didOverflow);
+        returns (int256 rcur, bool overflow, bool capped);
 }
