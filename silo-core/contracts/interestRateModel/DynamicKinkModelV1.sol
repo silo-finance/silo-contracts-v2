@@ -128,20 +128,21 @@ contract DynamicKinkModelV1 is IDynamicKinkModelV1 {
     }
 
     /// @inheritdoc IDynamicKinkModelV1
-    function validateConfig(Config memory _config) public pure returns (bool) {
-        return (_config.ulow >= 0 && _config.ulow < _DP) &&
-            (_config.u1 >= 0 && _config.u1 < _DP) && 
-            (_config.u2 >= _config.u1 && _config.u2 < _DP) &&
-            (_config.ucrit >= _config.ulow && _config.ucrit < _DP) &&
-            (_config.rmin >= 0 && _config.rmin < _DP) &&
-            (_config.kmin >= 0 && _config.kmin < UNIVERSAL_LIMIT) &&
-            (_config.kmax >= _config.kmin && _config.kmin < UNIVERSAL_LIMIT) &&
-            (_config.dmax >= 0 && _config.dmax < UNIVERSAL_LIMIT) &&
-            (_config.alpha >= 0 && _config.alpha < UNIVERSAL_LIMIT) &&
-            (_config.cminus >= 0 && _config.cminus < UNIVERSAL_LIMIT) &&
-            (_config.cplus >= 0 && _config.cplus < UNIVERSAL_LIMIT) &&
-            (_config.c1 >= 0 && _config.c1 < UNIVERSAL_LIMIT) &&
-            (_config.c2 >= 0 && _config.c2 < UNIVERSAL_LIMIT);
+    function verifyConfig(Config calldata _config) public pure virtual {
+        require(_config.ulow >= 0 && _config.ulow < _DP, IInterestRateModelV2.InvalidUlow());
+        require(_config.u1 >= 0 && _config.u1 < _DP, IDynamicKinkModelV1.InvalidU1());
+        require(_config.u2 >= _config.u1 && _config.u2 <= _DP, IDynamicKinkModelV1.InvalidU2());
+        require(_config.ucrit >= _config.ulow && _config.ucrit <= _DP, IInterestRateModelV2.InvalidUcrit());
+        require(_config.rmin >= 0 && _config.rmin <= _DP, IDynamicKinkModelV1.InvalidRmin());
+        require(_config.kmin >= 0 && _config.kmin <= UNIVERSAL_LIMIT, IDynamicKinkModelV1.InvalidKmin());
+        require(_config.kmax >= _config.kmin && _config.kmin <= UNIVERSAL_LIMIT, IDynamicKinkModelV1.InvalidKmax());
+        require(_config.alpha >= 0 && _config.alpha <= UNIVERSAL_LIMIT, IDynamicKinkModelV1.InvalidAlpha());
+        require(_config.cminus >= 0 && _config.cminus <= UNIVERSAL_LIMIT, IDynamicKinkModelV1.InvalidCminus());
+        require(_config.cplus >= 0 && _config.cplus <= UNIVERSAL_LIMIT, IDynamicKinkModelV1.InvalidCplus());
+        require(_config.c1 >= 0 && _config.c1 <= UNIVERSAL_LIMIT, IDynamicKinkModelV1.InvalidC1());
+        require(_config.c2 >= 0 && _config.c2 <= UNIVERSAL_LIMIT, IDynamicKinkModelV1.InvalidC2());
+        // TODO here is conflicted info - whitepaper Dmax => c2, but internal doc [0, LIMIT]
+        require(_config.dmax >= 0 && _config.dmax < UNIVERSAL_LIMIT, IDynamicKinkModelV1.InvalidDmax());
     }
 
     /// @inheritdoc IDynamicKinkModelV1

@@ -7,6 +7,18 @@ interface IDynamicKinkModelV1 {
     /// @dev revert when t0 > t1. Must not calculate interest in the past before the latest interest rate update.
     error InvalidTimestamp();
 
+    error InvalidU1();
+    error InvalidU1();
+    error InvalidRmin();
+    error InvalidKmin();
+    error InvalidKmax();
+    error InvalidAlpha();
+    error InvalidCminus();
+    error InvalidCplus();
+    error InvalidC1();
+    error InvalidC2();
+    error InvalidDmax();
+
     /// @param ulow ∈ [0, 1) – threshold of low utilization.
     /// @param u1 ∈ [0, 1) – lower bound of optimal utilization range.
     /// @param u2 ∈ [u1, 1] – upper bound of optimal utilization range.
@@ -63,9 +75,11 @@ interface IDynamicKinkModelV1 {
     }
 
     /// @notice Check if variables in config match the limits from model whitepaper.
+    /// Some limits are narrower than in whhitepaper, because of additional research, see:
+    /// https://silofinance.atlassian.net/wiki/spaces/SF/pages/347963393/DynamicKink+model+config+limits+V1
+    /// @dev it throws when config is invalid
     /// @param _config DynamicKinkModelV1 config struct, does not include the state of the model.
-    /// @return true if the config is valid, false if the config is invalid.
-    function validateConfig(Config memory _config) external pure returns (bool);
+    function verifyConfig(Config calldata _config) external pure;
 
     /// @notice Calculate compound interest rate, refer model whitepaper for more details.
     /// @param _setup DynamicKinkModelV1 config struct with model state.
