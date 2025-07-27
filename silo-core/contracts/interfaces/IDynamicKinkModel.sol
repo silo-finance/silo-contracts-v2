@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0;
 
 
-interface IDynamicKinkModelV1 {
+interface IDynamicKinkModel {
     // solhint-disable var-name-mixedcase
     /// @dev revert when t0 > t1. Must not calculate interest in the past before the latest interest rate update.
     error InvalidTimestamp();
@@ -75,13 +75,6 @@ interface IDynamicKinkModelV1 {
         Config config;
         int256 k;
     }
-
-    /// @notice Check if variables in config match the limits from model whitepaper.
-    /// Some limits are narrower than in whhitepaper, because of additional research, see:
-    /// https://silofinance.atlassian.net/wiki/spaces/SF/pages/347963393/DynamicKink+model+config+limits+V1
-    /// @dev it throws when config is invalid
-    /// @param _config DynamicKinkModelV1 config struct, does not include the state of the model.
-    function verifyConfig(Config calldata _config) external pure;
 
     /// @notice Calculate compound interest rate, refer model whitepaper for more details.
     /// @param _setup DynamicKinkModelV1 config struct with model state.
