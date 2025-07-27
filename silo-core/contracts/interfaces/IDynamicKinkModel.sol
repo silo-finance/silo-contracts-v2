@@ -3,10 +3,16 @@ pragma solidity >=0.5.0;
 
 
 interface IDynamicKinkModel {
+    /// @notice Emitted on config init
+    /// @param config config struct for asset in Silo
+    event Initialized(address indexed config);
+
     // solhint-disable var-name-mixedcase
     /// @dev revert when t0 > t1. Must not calculate interest in the past before the latest interest rate update.
     error InvalidTimestamp();
 
+    error AddressZero();
+    error AlreadyInitialized();
     error InvalidUlow();
     error InvalidU1();
     error InvalidU2();
@@ -28,12 +34,12 @@ interface IDynamicKinkModel {
     /// @param rmin ⩾ 0 – minimal per-second interest rate.
     /// @param kmin ⩾ 0 – minimal slope k of central segment of the kink.
     /// @param kmax ⩾ kmin – maximal slope k of central segment of the kink.
-    /// @param dmax – maximal growth rate of the slope k.
     /// @param alpha ⩾ 0 – factor for the slope for the critical segment of the kink.
     /// @param cminus ⩾ 0 – coefficient of decrease of the slope k.
     /// @param cplus ⩾ 0 – growth coefficient of the slope k.
     /// @param c1 ⩾ 0 – minimal rate of decrease of the slope k.
     /// @param c2 ⩾ 0 – minimal growth rate of the slope k.
+    /// @param dmax – maximal growth rate of the slope k.
     struct Config {
         int256 ulow;
         int256 u1;
@@ -42,12 +48,12 @@ interface IDynamicKinkModel {
         int256 rmin;
         int256 kmin;
         int256 kmax;
-        int256 dmax;
         int256 alpha;
         int256 cminus;
         int256 cplus;
         int256 c1;
         int256 c2;
+        int256 dmax;
     }
 
     /// @param T time since the last transaction.
@@ -77,7 +83,7 @@ interface IDynamicKinkModel {
     }
 
     /// @notice Calculate compound interest rate, refer model whitepaper for more details.
-    /// @param _setup DynamicKinkModelV1 config struct with model state.
+    /// @param _setup DynamicKinkModel config struct with model state.
     /// @param _t0 timestamp of the last interest rate update.
     /// @param _t1 timestamp of the compounded interest rate calculations (current time).
     /// @param _u utilization ratio of silo and asset at _t0 TODO ask if this is for sure t0??
@@ -100,7 +106,7 @@ interface IDynamicKinkModel {
         returns (int256 rcomp, int256 k, bool overflow, bool capped);
 
     /// @notice Calculate current interest rate, refer model whitepaper for more details.
-    /// @param _setup DynamicKinkModelV1 config struct with model state.
+    /// @param _setup DynamicKinkModel config struct with model state.
     /// @param _t0 timestamp of the last interest rate update.
     /// @param _t1 timestamp of the current interest rate calculations (current time).
     /// @param _u utilization ratio of silo and asset at _t1.

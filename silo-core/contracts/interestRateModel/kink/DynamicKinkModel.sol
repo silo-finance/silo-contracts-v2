@@ -2,8 +2,10 @@
 pragma solidity 0.8.28;
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
-import {PRBMathSD59x18} from "../lib/PRBMathSD59x18.sol";
-import {IDynamicKinkModel} from "../interfaces/IDynamicKinkModel.sol";
+import {PRBMathSD59x18} from "../../lib/PRBMathSD59x18.sol";
+import {IInterestRateModel} from "../../interfaces/IInterestRateModel.sol";
+import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
+import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.sol";
 
 // solhint-disable var-name-mixedcase
 // solhint-disable-line function-max-lines
@@ -17,20 +19,12 @@ rules:
 - function should never throw (unless we will decive to remove uncheck)
 */
 
-/// @title DynamicKinkModelV1
-/// @notice Refer to Silo DynamicKinkModelV1 paper for more details.
+/// @title DynamicKinkModel
+/// @notice Refer to Silo DynamicKinkModel paper for more details.
 /// @custom:security-contact security@silo.finance
-contract DynamicKinkModelV1 is IDynamicKinkModel {
-    /// @dev DP is 18 decimal points used for integer calculations
-    int256 internal constant _DP = int256(10 ** DECIMALS);
-
-    /// @dev decimal points used by the model.
-    uint256 public constant DECIMALS = 18;
-
-    /// @dev universal limit for several DynamicKinkModelV1 config parameters. Follow the model whitepaper for more
-    ///     information. Units of measure are vary per variable type. Any config within these limits is considered
-    ///     valid.
-    int256 public constant UNIVERSAL_LIMIT = 1e9 * _DP;
+contract DynamicKinkModel is IDynamicKinkModel {
+    /// @dev DP in 18 decimal points used for integer calculations
+    int256 internal constant _DP = int256(1e18);
 
     /// @dev maximum value of current interest rate the model will return. This is 10,000% APR in 18-decimals.
     int256 public constant RCUR_CAP = 100 * _DP;
@@ -56,7 +50,20 @@ contract DynamicKinkModelV1 is IDynamicKinkModel {
     /// at the same time this is safety feature because we will write to this mapping based on msg.sender
     /// silo => setup
     // todo InterestRateModel Config setup flow
-    mapping(address => Setup) public getSetup;
+    mapping(address silo => Setup irmStorage) public getSetup;
+
+    /// @dev Config for the model
+    IDynamicKinkModelConfig public irmConfig;
+
+    // TODO inherit IInterestRateModel /// @inheritdoc IInterestRateModel
+    function initialize(address _irmConfig) external virtual {
+        require(_irmConfig != address(0), AddressZero());
+        require(address(irmConfig) == address(0), AlreadyInitialized());
+
+        irmConfig = IDynamicKinkModelConfig(_irmConfig);
+
+        emit Initialized(_irmConfig);
+    }
 
     /// @inheritdoc IDynamicKinkModel
     function currentInterestRate(
@@ -240,24 +247,6 @@ contract DynamicKinkModelV1 is IDynamicKinkModel {
                 k = _setup.config.kmin;
             }
         }
-    }
-
-    /// @inheritdoc IDynamicKinkModel
-    function verifyConfig(Config calldata _config) public pure virtual {
-        require(_config.ulow >= 0 && _config.ulow < _DP, IDynamicKinkModel.InvalidUlow());
-        require(_config.u1 >= 0 && _config.u1 < _DP, IDynamicKinkModel.InvalidU1());
-        require(_config.u2 >= _config.u1 && _config.u2 <= _DP, IDynamicKinkModel.InvalidU2());
-        require(_config.ucrit >= _config.ulow && _config.ucrit <= _DP, IDynamicKinkModel.InvalidUcrit());
-        require(_config.rmin >= 0 && _config.rmin <= _DP, IDynamicKinkModel.InvalidRmin());
-        require(_config.kmin >= 0 && _config.kmin <= UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidKmin());
-        require(_config.kmax >= _config.kmin && _config.kmin <= UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidKmax());
-        require(_config.alpha >= 0 && _config.alpha <= UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidAlpha());
-        require(_config.cminus >= 0 && _config.cminus <= UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidCminus());
-        require(_config.cplus >= 0 && _config.cplus <= UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidCplus());
-        require(_config.c1 >= 0 && _config.c1 <= UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidC1());
-        require(_config.c2 >= 0 && _config.c2 <= UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidC2());
-        // TODO here is conflicted info - whitepaper Dmax => c2, but internal doc [0, LIMIT]
-        require(_config.dmax >= 0 && _config.dmax < UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidDmax());
     }
 
     function _min(int256 _a, int256 _b) internal pure returns (int256) {
