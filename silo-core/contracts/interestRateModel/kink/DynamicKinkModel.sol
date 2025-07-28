@@ -13,8 +13,6 @@ import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.sol";
 
 // solhint-disable var-name-mixedcase
-// solhint-disable-line function-max-lines
-// solhint-disable-line code-complexity
 
 /*
 TODO 
@@ -23,6 +21,12 @@ QA rules:
 - if utilization goes down -> rcomp always go down?
 - there should be no overflow when utilization goes down
 - function should never throw (unless we will decive to remove uncheck)
+
+TODO owner
+TODO deployment
+TODO try-catch check if possible, use max CAP on catch
+TODO try to remove overflow checks
+
 */
 
 /// @title DynamicKinkModel
@@ -429,5 +433,3 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
     }
 }
 // solhint-enable var-name-mixedcase
-// solhint-enable-line function-max-lines
-// solhint-enable-line code-complexity

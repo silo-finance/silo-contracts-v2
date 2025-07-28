@@ -106,4 +106,12 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
             relativeAssertion(true, data[i].id, "relative error for didCap", cap, data[i].expected.didCap);
         }
     }
+
+    /* 
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_AMT_MAX
+    */
+    function test_kink_AMT_MAX() public {
+        int256 amtMax = INTEREST_RATE_MODEL.AMT_MAX();
+        assertEq(amtMax, type(uint256).max / uint256(2 ** 16 * _DP), "AMT_MAX is not correct");
+    }
 }
