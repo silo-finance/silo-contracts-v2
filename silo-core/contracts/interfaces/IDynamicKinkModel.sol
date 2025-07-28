@@ -102,6 +102,7 @@ interface IDynamicKinkModel {
     /// @dev revert when t0 > t1. Must not calculate interest in the past before the latest interest rate update.
     error InvalidTimestamp();
 
+    error InvalidDefaultConfig();
     error AddressZero();
     error NotInitialized();
     error AlreadyInitialized();
@@ -110,6 +111,8 @@ interface IDynamicKinkModel {
     error InvalidU2();
     error InvalidUcrit();
     error InvalidRmin();
+    error InvalidRcritMin();
+    error InvalidRcritMax();
     error InvalidK();
     error InvalidKmin();
     error InvalidKmax();
@@ -119,6 +122,11 @@ interface IDynamicKinkModel {
     error InvalidC1();
     error InvalidC2();
     error InvalidDmax();
+    error InvalidTMin();
+    error InvalidT1();
+    error InvalidT2();
+    error InvalidTMinus();
+    error InvalidTPlus();
 
     /// @notice Check if variables in config match the limits from model whitepaper.
     /// Some limits are narrower than in whhitepaper, because of additional research, see:

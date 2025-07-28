@@ -45,7 +45,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
             return (configHash, irm);
         }
 
-        IRM.verifyConfig(_config);
+        IDynamicKinkModel(address(IRM)).verifyConfig(_config);
 
         bytes32 salt = _salt(_externalSalt);
 
@@ -72,59 +72,59 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         virtual
         returns (IDynamicKinkModel.Config memory config)
     {
-        require(_default.ulow >= 0, IDynamicKinkModel.InvalidUlow());
-        require(_default.u1 > _default.ulow, IDynamicKinkModel.InvalidU1());
-        require(_default.u2 > _default.u1, IDynamicKinkModel.InvalidU2());
-        require(_default.ucrit > _default.u2 && _default.ucrit <= _DP, IDynamicKinkModel.InvalidUcrit());
+        // uint256 dp = uint256(_DP);
 
-        require(_default.rmin >= 0, IDynamicKinkModel.InvalidRmin());
-        require(_default.rcritMin > _default.rmin, IDynamicKinkModel.InvalidRcritMin());
-        require(
-            _default.rcritMax >= _default.rcritMin && _default.rcritMax <= _default.r100,
-            IDynamicKinkModel.InvalidRcritMax()
-        );
+        // require(_default.ulow >= 0, IDynamicKinkModel.InvalidUlow());
+        // require(_default.u1 > _default.ulow, IDynamicKinkModel.InvalidU1());
+        // require(_default.u2 > _default.u1, IDynamicKinkModel.InvalidU2());
+        // require(_default.ucrit > _default.u2 && _default.ucrit <= dp, IDynamicKinkModel.InvalidUcrit());
 
-        uint256 rCheckHi = (_default.r100 - _default.rcritMin) / (_default.rcritMax - _default.rcritMin);
-        uint256 rCheckLo = (_DP - _default.ucrit) / (_default.ucrit - _default.ulow);
-        require(rCheckHi >= rCheckLo, IDynamicKinkModel.InvalidDefaultConfig());
+        // require(_default.rmin >= 0, IDynamicKinkModel.InvalidRmin());
+        // require(_default.rcritMin > _default.rmin, IDynamicKinkModel.InvalidRcritMin());
+        // require(
+        //     _default.rcritMax >= _default.rcritMin && _default.rcritMax <= _default.r100,
+        //     IDynamicKinkModel.InvalidRcritMax()
+        // );
 
-        require(_default.tMin > 0, IDynamicKinkModel.InvalidTMin());
-        require(_default.tPlus >= _default.tMin, IDynamicKinkModel.InvalidTPlus());
-        require(_default.t2 >= _default.tPlus && _default.t2 <= 100 * 365 days, IDynamicKinkModel.InvalidT2());
+        // uint256 rCheckHi = (_default.r100 - _default.rcritMin) / (_default.rcritMax - _default.rcritMin);
+        // uint256 rCheckLo = (dp - _default.ucrit) / (_default.ucrit - _default.ulow);
+        // require(rCheckHi >= rCheckLo, IDynamicKinkModel.InvalidDefaultConfig());
 
-        require(_default.tMinus > 0, IDynamicKinkModel.InvalidTMinus());
-        require(_default.t1 >= _default.tMinus && _default.t1 <= 100 * 365 days, IDynamicKinkModel.InvalidT1());
+        // require(_default.tMin > 0, IDynamicKinkModel.InvalidTMin());
+        // require(_default.tPlus >= _default.tMin, IDynamicKinkModel.InvalidTPlus());
+        // require(_default.t2 >= _default.tPlus && _default.t2 <= 100 * 365 days, IDynamicKinkModel.InvalidT2());
 
-        uint256 s = 365 days;
+        // require(_default.tMinus > 0, IDynamicKinkModel.InvalidTMinus());
+        // require(_default.t1 >= _default.tMinus && _default.t1 <= 100 * 365 days, IDynamicKinkModel.InvalidT1());
 
-        config.rmin = SafeCast.toInt256(_default.rmin / s);
-        config.kmin = SafeCast.toInt256((_default.rcritMin - _default.rmin) / (_default.ucrit - _default.ulow) / s);
-        config.kmax = SafeCast.toInt256((_default.rcritMax - _default.rmin) / (_default.ucrit - _default.ulow) / s);
+        // uint256 s = 365 days;
 
-        config.alpha = SafeCast.toInt256(
-            (_default.r100 - _default.rmin - s * config.kmax * (_DP - _default.ulow))
-                / (s * config.kmax * (_DP - _default.ucrit))
-        );
+        // config.rmin = SafeCast.toInt256(_default.rmin / s);
+        // config.kmin = SafeCast.toInt256((_default.rcritMin - _default.rmin) / (_default.ucrit - _default.ulow) / s);
+        // config.kmax = SafeCast.toInt256((_default.rcritMax - _default.rmin) / (_default.ucrit - _default.ulow) / s);
 
-        config.c1 = SafeCast.toInt256((config.kmax - config.kmin) / _default.t1);
-        config.c2 = SafeCast.toInt256((config.kmax - config.kmin) / _default.t2);
+        // config.alpha = SafeCast.toInt256(
+        //     (_default.r100 - _default.rmin - s * config.kmax * (dp - _default.ulow))
+        //         / (s * config.kmax * (dp - _default.ucrit))
+        // );
+
+        // config.c1 = (config.kmax - config.kmin) / SafeCast.toInt256(_default.t1);
+        // config.c2 = (config.kmax - config.kmin) / SafeCast.toInt256(_default.t2);
         
-        config.cminus = SafeCast.toInt256(
-            ((config.kmax - config.kmin) / _default.tMinus - config.c1) / (_default.u1 - _default.ulow)
-        );
+        // config.cminus = ((config.kmax - config.kmin) / SafeCast.toInt256(_default.tMinus) - config.c1) 
+        //         / SafeCast.toInt256(_default.u1 - _default.ulow);
         
-        config.cplus = SafeCast.toInt256(
-            ((config.kmax - config.kmin) / _default.tPlus - config.c2) / (_default.ucrit - _default.u2)
-        );
+        // config.cplus = ((config.kmax - config.kmin) / SafeCast.toInt256(_default.tPlus) - config.c2) 
+        //     / SafeCast.toInt256(_default.ucrit - _default.u2);
         
-        config.dmax = SafeCast.toInt256((config.kmax - config.kmin) / _default.tMin);
+        // config.dmax = (config.kmax - config.kmin) / SafeCast.toInt256(_default.tMin);
 
-        IRM.verifyConfig(config);
+        // IDynamicKinkModel(address(IRM)).verifyConfig(config);
     }
 
-    /// @inheritdoc IDynamicKinkModelFactory
+    // tODO /// @inheritdoc IDynamicKinkModelFactory
     function verifyConfig(IDynamicKinkModel.Config calldata _config) external view virtual {
-        IRM.verifyConfig(_config);
+        IDynamicKinkModel(address(IRM)).verifyConfig(_config);
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
