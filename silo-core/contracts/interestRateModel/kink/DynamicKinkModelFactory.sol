@@ -45,7 +45,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
             return (configHash, irm);
         }
 
-        verifyConfig(_config);
+        IRM.verifyConfig(_config);
 
         bytes32 salt = _salt(_externalSalt);
 
