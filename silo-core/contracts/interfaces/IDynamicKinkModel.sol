@@ -32,6 +32,22 @@ interface IDynamicKinkModel {
         uint256 tMin;
     }
 
+    struct DefaultConfigInt {
+        int256 ulow;
+        int256 ucrit;
+        int256 u1;
+        int256 u2;
+        int256 rmin;
+        int256 rcritMin;
+        int256 rcritMax;
+        int256 r100;
+        int256 t1;
+        int256 t2;
+        int256 tMinus;
+        int256 tPlus;
+        int256 tMin;
+    }
+
     /// @param ulow ∈ [0, 1) – threshold of low utilization.
     /// @param u1 ∈ [0, 1) – lower bound of optimal utilization range.
     /// @param u2 ∈ [u1, 1] – upper bound of optimal utilization range.

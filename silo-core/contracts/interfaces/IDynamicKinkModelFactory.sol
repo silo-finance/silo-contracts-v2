@@ -26,6 +26,13 @@ interface IDynamicKinkModelFactory {
         view 
         returns (IDynamicKinkModel.Config memory config);
 
+    /// @notice Check if variables in config match the limits from model whitepaper.
+    /// Some limits are narrower than in whhitepaper, because of additional research, see:
+    /// https://silofinance.atlassian.net/wiki/spaces/SF/pages/347963393/DynamicKink+model+config+limits+V1
+    /// @dev it throws when config is invalid
+    /// @param _config DynamicKinkModel config struct, does not include the state of the model.
+    function verifyConfig(IDynamicKinkModel.Config calldata _config) external view;
+
     /// @dev DP in 18 decimal points used for integer calculations
     // solhint-disable-next-line func-name-mixedcase
     function DP() external view returns (uint256);
