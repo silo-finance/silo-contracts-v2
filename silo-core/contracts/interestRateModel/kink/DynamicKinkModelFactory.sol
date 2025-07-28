@@ -141,8 +141,8 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         require(_config.cplus >= 0 && _config.cplus <= UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidCplus());
         require(_config.c1 >= 0 && _config.c1 <= UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidC1());
         require(_config.c2 >= 0 && _config.c2 <= UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidC2());
-        // TODO here is conflicted info - whitepaper Dmax => c2, but internal doc [0, LIMIT]
-        require(_config.dmax >= 0 && _config.dmax < UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidDmax());
+        // TODO do we still need upper limit
+        require(_config.dmax >= _contig.c2 && _config.dmax < UNIVERSAL_LIMIT, IDynamicKinkModel.InvalidDmax());
 
         // overflow check
         // DynamicKinkModel(IRM).configOverflowCheck(_config); TODO
