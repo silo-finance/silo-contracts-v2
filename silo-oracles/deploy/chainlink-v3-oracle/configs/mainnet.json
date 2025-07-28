@@ -51,7 +51,7 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
-    "CHAINLINK_HARDCODE_wstETH_WETH": {
+    "ADAPTER_HARDCODE_wstETH_WETH": {
         "baseToken": "wstETH",
         "quoteToken": "WETH",
         "primaryAggregator": "WSTETH_ADAPTER_wstETH_stETH_aggregator",
