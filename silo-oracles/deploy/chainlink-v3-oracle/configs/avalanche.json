@@ -69,6 +69,17 @@
         "normalizationDivider": 1e6,
         "normalizationMultiplier": 0
     },
+    "EORACLE_CHAINLINK_xUSD_USD": {
+        "baseToken": "xUSD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "EORACLE_xUSD_USDC_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_USDC_USD_AGGREGATOR",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e14,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "CHAINLINK_sAVAX_USD": {
         "baseToken": "sAVAX",
         "quoteToken": "SILO_VIRTUAL_USD_8",
