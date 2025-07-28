@@ -7,7 +7,7 @@ interface IDynamicKinkModel {
     /// @param ucrit threshold of critical utilization.
     /// @param u1 lower bound of optimal utilization range (the model is static while utilization is in this interval).
     /// @param u2 upper bound of optimal utilization range (the model is static while utilization is in this interval).
-    /// @param rmin ⩾ 0 – minimal per-second interest rate (minimal APR), active below ulow.
+    /// @param rmin >= 0 – minimal per-second interest rate (minimal APR), active below ulow.
     /// @param rcritMin minimal APR that the model can output at the critical utilization ucrit
     /// @param rcritMax maximal APR that the model can output at the critical utilization ucrit
     /// @param r100 maximal possible APR at 100% utilization
@@ -36,14 +36,14 @@ interface IDynamicKinkModel {
     /// @param u1 ∈ [0, 1) – lower bound of optimal utilization range.
     /// @param u2 ∈ [u1, 1] – upper bound of optimal utilization range.
     /// @param ucrit ∈ [ulow, 1] – threshold of critical utilization.
-    /// @param rmin ⩾ 0 – minimal per-second interest rate.
-    /// @param kmin ⩾ 0 – minimal slope k of central segment of the kink.
-    /// @param kmax ⩾ kmin – maximal slope k of central segment of the kink.
-    /// @param alpha ⩾ 0 – factor for the slope for the critical segment of the kink.
-    /// @param cminus ⩾ 0 – coefficient of decrease of the slope k.
-    /// @param cplus ⩾ 0 – growth coefficient of the slope k.
-    /// @param c1 ⩾ 0 – minimal rate of decrease of the slope k.
-    /// @param c2 ⩾ 0 – minimal growth rate of the slope k.
+    /// @param rmin >= 0 – minimal per-second interest rate.
+    /// @param kmin >= 0 – minimal slope k of central segment of the kink.
+    /// @param kmax >= kmin – maximal slope k of central segment of the kink.
+    /// @param alpha >= 0 – factor for the slope for the critical segment of the kink.
+    /// @param cminus >= 0 – coefficient of decrease of the slope k.
+    /// @param cplus >= 0 – growth coefficient of the slope k.
+    /// @param c1 >= 0 – minimal rate of decrease of the slope k.
+    /// @param c2 >= 0 – minimal growth rate of the slope k.
     /// @param dmax – maximal growth rate of the slope k.
     struct Config {
         int256 ulow;
@@ -80,9 +80,13 @@ interface IDynamicKinkModel {
 
     /// @param config model parameters for particular silo and asset.
     /// @param k state of the slope after latest interest rate accrual.
+    /// @param u utilization ratio of silo and asset at _t0 (utulization at the last interest rate update), in 18 decimal points.
+    /// @param initialized true if the config is initialized with factory defaults, false if it is not initialized.
     struct Setup {
         Config config;
         int256 k;
+        int232 u;
+        bool initialized;
     }
 
     /// @notice Emitted on config init
@@ -90,7 +94,7 @@ interface IDynamicKinkModel {
     event Initialized(address indexed config);
 
     /// @notice Emitted on config reset to factory defaults
-    event ConfigReset(address indexed silo);
+    event FactorySetup(address indexed silo);
 
     event ConfigUpdated(address indexed silo, Config config, int256 k);
 
@@ -127,7 +131,7 @@ interface IDynamicKinkModel {
     /// @param _setup DynamicKinkModel config struct with model state.
     /// @param _t0 timestamp of the last interest rate update.
     /// @param _t1 timestamp of the compounded interest rate calculations (current time).
-    /// @param _u utilization ratio of silo and asset at _t0 TODO ask if this is for sure t0??
+    /// @param _u utilization ratio of silo and asset at _t0
     /// @param _td total deposits at _t1.
     /// @param _tba total borrow amount at _t1.
     /// @return rcomp compounded interest in decimal points.
