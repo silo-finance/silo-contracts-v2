@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
+
 import {PRBMathSD59x18} from "../../lib/PRBMathSD59x18.sol";
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../../interfaces/IInterestRateModel.sol";
@@ -119,7 +120,6 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel {
         });
 
         rcomp = SafeCast.toUint256(rcompInt);
-
 
         // TODO do we need cap? check if already applied in compoundInterestRate
         // TODO what we need to store?

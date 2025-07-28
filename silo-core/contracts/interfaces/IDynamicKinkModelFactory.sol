@@ -7,6 +7,15 @@ interface IDynamicKinkModelFactory {
     /// @dev config hash and IRM should be easily accessible directly from oracle contract
     event NewDynamicKinkModel(bytes32 indexed configHash, IDynamicKinkModel indexed irm);
 
+    /// @notice Generates a default config for the DynamicKinkModel based on the provided parameters.
+    /// @dev This function is used to create a config that can be used to initialize a DynamicKinkModel instance.
+    /// @param _default Default configuration parameters for the DynamicKinkModel.
+    /// @return config The generated configuration for the DynamicKinkModel.
+    function generateDefaultConfig(IDynamicKinkModel.DefaultConfig calldata _default) 
+        external 
+        view 
+        returns (IDynamicKinkModel.Config memory config);
+
     /// @dev verifies config and creates IRM config contract
     /// @notice it can be used in separate tx eg config can be prepared before it will be used for Silo creation
     /// @param _config IRM configuration

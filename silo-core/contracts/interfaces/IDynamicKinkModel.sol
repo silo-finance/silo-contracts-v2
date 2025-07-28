@@ -26,6 +26,36 @@ interface IDynamicKinkModel {
     error InvalidC2();
     error InvalidDmax();
 
+    /// @dev structure that user can provide as input to generage Kink model default config.
+    /// @param ulow threshold of low utilization.
+    /// @param ucrit threshold of critical utilization.
+    /// @param u1 lower bound of optimal utilization range (the model is static while utilization is in this interval).
+    /// @param u2 upper bound of optimal utilization range (the model is static while utilization is in this interval).
+    /// @param rmin ⩾ 0 – minimal per-second interest rate (minimal APR), active below ulow.
+    /// @param rcritMin minimal APR that the model can output at the critical utilization ucrit
+    /// @param rcritMax maximal APR that the model can output at the critical utilization ucrit
+    /// @param r100 maximal possible APR at 100% utilization
+    /// @param t1 time that it takes to drop from the maximal to the minimal APR at utilization u1
+    /// @param t2 time that it takes to grow from the minimal to the maximal APR at utilization u2
+    /// @param tMinus time that it takes to reset the model from the maximal to the minimal APR when utilization is ulow
+    /// @param tPlus time that it takes to grow from the minimal to the maximal APR at utilization ucrit
+    /// @param tMin minimal time it takes to grow from the minimal to the maximal APR at any utilization
+    struct DefaultConfig {
+        uint256 ulow;
+        uint256 ucrit;
+        uint256 u1;
+        uint256 u2;
+        uint256 rmin;
+        uint256 rcritMin;
+        uint256 rcritMax;
+        uint256 r100;
+        uint256 t1;
+        uint256 t2;
+        uint256 tMinus;
+        uint256 tPlus;
+        uint256 tMin;
+    }
+
     /// @param ulow ∈ [0, 1) – threshold of low utilization.
     /// @param u1 ∈ [0, 1) – lower bound of optimal utilization range.
     /// @param u2 ∈ [u1, 1] – upper bound of optimal utilization range.

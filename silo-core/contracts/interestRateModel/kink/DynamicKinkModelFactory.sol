@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
+import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
 import {Create2Factory} from "common/utils/Create2Factory.sol";
 
@@ -16,7 +17,7 @@ import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
 /// @dev It creates DynamicKinkModelConfig.
 contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     /// @dev DP in 18 decimal points used for integer calculations
-    int256 internal constant _DP = int256(1e18);
+    int256 internal constant _DP = 1e18;
 
     /// @dev universal limit for several DynamicKinkModel config parameters. Follow the model whitepaper for more
     ///     information. Units of measure are vary per variable type. Any config within these limits is considered
@@ -69,6 +70,63 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
+    function generateDefaultConfig(IDynamicKinkModel.DefaultConfig calldata _default)
+        external
+        view
+        virtual
+        returns (IDynamicKinkModel.Config memory config)
+    {
+        require(_default.ulow >= 0, IDynamicKinkModel.InvalidUlow());
+        require(_default.u1 > _default.ulow, IDynamicKinkModel.InvalidU1());
+        require(_default.u2 > _default.u1, IDynamicKinkModel.InvalidU2());
+        require(_default.ucrit > _default.u2 && _default.ucrit <= _DP, IDynamicKinkModel.InvalidUcrit());
+
+        require(_default.rmin >= 0, IDynamicKinkModel.InvalidRmin());
+        require(_default.rcritMin > _default.rmin, IDynamicKinkModel.InvalidRcritMin());
+        require(
+            _default.rcritMax >= _default.rcritMin && _default.rcritMax <= _default.r100,
+            IDynamicKinkModel.InvalidRcritMax()
+        );
+
+        uint256 rCheckHi = (_default.r100 - _default.rcritMin) / (_default.rcritMax - _default.rcritMin);
+        uint256 rCheckLo = (_DP - _default.ucrit) / (_default.ucrit - _default.ulow);
+        require(rCheckHi >= rCheckLo, IDynamicKinkModel.InvalidDefaultConfig());
+
+        require(_default.tMin > 0, IDynamicKinkModel.InvalidTMin());
+        require(_default.tPlus >= _default.tMin, IDynamicKinkModel.InvalidTPlus());
+        require(_default.t2 >= _default.tPlus && _default.t2 <= 100 * 365 days, IDynamicKinkModel.InvalidT2());
+
+        require(_default.tMinus > 0, IDynamicKinkModel.InvalidTMinus());
+        require(_default.t1 >= _default.tMinus && _default.t1 <= 100 * 365 days, IDynamicKinkModel.InvalidT1());
+
+        uint256 s = 365 days;
+
+        config.rmin = SafeCast.toInt256(_default.rmin / s);
+        config.kmin = SafeCast.toInt256((_default.rcritMin - _default.rmin) / (_default.ucrit - _default.ulow) / s);
+        config.kmax = SafeCast.toInt256((_default.rcritMax - _default.rmin) / (_default.ucrit - _default.ulow) / s);
+
+        config.alpha = SafeCast.toInt256(
+            (_default.r100 - _default.rmin - s * config.kmax * (_DP - _default.ulow))
+                / (s * config.kmax * (_DP - _default.ucrit))
+        );
+
+        config.c1 = SafeCast.toInt256((config.kmax - config.kmin) / _default.t1);
+        config.c2 = SafeCast.toInt256((config.kmax - config.kmin) / _default.t2);
+        
+        config.cminus = SafeCast.toInt256(
+            ((config.kmax - config.kmin) / _default.tMinus - config.c1) / (_default.u1 - _default.ulow)
+        );
+        
+        config.cplus = SafeCast.toInt256(
+            ((config.kmax - config.kmin) / _default.tPlus - config.c2) / (_default.ucrit - _default.u2)
+        );
+        
+        config.dmax = SafeCast.toInt256((config.kmax - config.kmin) / _default.tMin);
+
+        verifyConfig(config);
+    }
+
+    /// @inheritdoc IDynamicKinkModelFactory
     // solhint-disable-next-line code-complexity
     function verifyConfig(IDynamicKinkModel.Config calldata _config) public view virtual {
         require(_config.ulow >= 0 && _config.ulow < _DP, IDynamicKinkModel.InvalidUlow());
@@ -91,12 +149,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
-    function hashConfig(IDynamicKinkModel.Config calldata _config)
-        public
-        pure
-        virtual
-        returns (bytes32 configId)
-    {
+    function hashConfig(IDynamicKinkModel.Config calldata _config) public pure virtual returns (bytes32 configId) {
         configId = keccak256(abi.encode(_config));
     }
 }
