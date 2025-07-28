@@ -63,7 +63,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
             IDynamicKinkModel.Setup memory setup = _toSetupRcur(data[i]);
             // _printRcur(data[i]);
 
-            (int256 rcur, bool didCap, bool didOverflow) = INTEREST_RATE_MODEL.currentInterestRate(
+            (int256 rcur, bool didOverflow, bool didCap) = INTEREST_RATE_MODEL.currentInterestRate(
                 setup,
                 data[i].input.lastTransactionTime,
                 data[i].input.currentTime,
@@ -88,7 +88,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
             IDynamicKinkModel.Setup memory setup = _toSetupRcomp(data[i]);
             // _printRcomp(data[i]);
 
-            (int256 rcomp, int256 k, bool didCap, bool didOverflow) = INTEREST_RATE_MODEL.compoundInterestRate(
+            (int256 rcomp, int256 k, bool didOverflow, bool didCap) = INTEREST_RATE_MODEL.compoundInterestRate(
                 setup,
                 data[i].input.lastTransactionTime,
                 data[i].input.currentTime,
