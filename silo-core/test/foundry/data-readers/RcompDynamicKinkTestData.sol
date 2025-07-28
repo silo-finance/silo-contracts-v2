@@ -39,26 +39,14 @@ contract RcompDynamicKinkTestData is Test {
         int256 newSlope;
     }
 
-    struct DebugRcomp {
-        int256 T;
-        int256 f;
-        int256 k1;
-        int256 roc;
-        int256 u0;
-        int256 x;
-        int256 x_checked;
-        int256 x_prelim;
-    }
-
     struct RcompData {
         ConstantsRcomp constants;
-        DebugRcomp debug;
         ExpectedRcomp expected;
         uint256 id;
         InputRcomp input;
     }
 
-    function _readDataFromJsonRcomp() internal returns (RcompData[] memory data) {
+    function _readDataFromJsonRcomp() internal view returns (RcompData[] memory data) {
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/silo-core/test/foundry/data/RcompDynamicKinkv8.json");
         string memory json = vm.readFile(path);
@@ -102,22 +90,12 @@ contract RcompDynamicKinkTestData is Test {
         emit log_named_int("didCap", _data.expected.didCap);
         emit log_named_int("didOverflow", _data.expected.didOverflow);
         emit log_named_int("newSlope", _data.expected.newSlope);
-
-        emit log_string("Debug");
-        emit log_named_int("T", _data.debug.T);
-        emit log_named_int("f", _data.debug.f);
-        emit log_named_int("k1", _data.debug.k1);
-        emit log_named_int("roc", _data.debug.roc);
-        emit log_named_int("u0", _data.debug.u0);
-        emit log_named_int("x", _data.debug.x);
-        emit log_named_int("x_checked", _data.debug.x_checked);
-        emit log_named_int("x_prelim", _data.debug.x_prelim);
     }
 
     function _toSetupRcomp(RcompData memory _data)
         internal
         pure
-        returns (IDynamicKinkModel.Setup memory setup, DebugRcomp memory debug)
+        returns (IDynamicKinkModel.Setup memory setup)
     {
 
         setup.config.alpha = _data.constants.alpha;
@@ -142,7 +120,7 @@ contract RcompDynamicKinkTestData is Test {
         pure
         returns (IDynamicKinkModel.Config memory cfg)
     {
-        (IDynamicKinkModel.Setup memory setup,) = _toSetupRcomp(_data);
+        IDynamicKinkModel.Setup memory setup = _toSetupRcomp(_data);
         cfg = setup.config;
     }
 }

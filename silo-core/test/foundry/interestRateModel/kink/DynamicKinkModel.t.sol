@@ -25,7 +25,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
         string memory details,
         int256 a,
         int256 b
-    ) internal {
+    ) internal pure {
         int256 relativeError;
 
         if (b != 0) {
@@ -60,7 +60,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
         RcurData[] memory data = _readDataFromJsonRcur();
 
         for (uint i; i < data.length; i++) {
-            (IDynamicKinkModel.Setup memory setup, DebugRcur memory debug) = _toSetupRcur(data[i]);
+            IDynamicKinkModel.Setup memory setup = _toSetupRcur(data[i]);
             // _printRcur(data[i]);
 
             (int256 rcur, bool didCap, bool didOverflow) = INTEREST_RATE_MODEL.currentInterestRate(
@@ -85,7 +85,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
         RcompData[] memory data = _readDataFromJsonRcomp();
 
         for (uint i; i < data.length; i++) {
-            (IDynamicKinkModel.Setup memory setup, DebugRcomp memory debug) = _toSetupRcomp(data[i]);
+            IDynamicKinkModel.Setup memory setup = _toSetupRcomp(data[i]);
             // _printRcomp(data[i]);
 
             (int256 rcomp, int256 k, bool didCap, bool didOverflow) = INTEREST_RATE_MODEL.compoundInterestRate(

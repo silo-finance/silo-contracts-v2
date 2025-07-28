@@ -38,23 +38,14 @@ contract RcurDynamicKinkTestData is Test {
         int256 didOverflow;
     }
 
-    struct DebugRcur {
-        int256 T;
-        int256 k;
-        int256 r;
-        int256 rcur;
-        int256 u0;
-    }
-
     struct RcurData {
         ConstantsRcur constants;
-        DebugRcur debug;
         ExpectedRcur expected;
         uint256 id;
         InputRcur input;
     }
 
-    function _readDataFromJsonRcur() internal returns (RcurData[] memory data) {
+    function _readDataFromJsonRcur() internal view returns (RcurData[] memory data) {
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/silo-core/test/foundry/data/RcurDynamicKinkv8.json");
         string memory json = vm.readFile(path);
@@ -93,19 +84,12 @@ contract RcurDynamicKinkTestData is Test {
         emit log_named_int("currentAnnualInterest", _data.expected.currentAnnualInterest);
         emit log_named_int("didCap", _data.expected.didCap);
         emit log_named_int("didOverflow", _data.expected.didOverflow);
-
-        emit log_string("Debug");
-        emit log_named_int("T", _data.debug.T);
-        emit log_named_int("k", _data.debug.k);
-        emit log_named_int("r", _data.debug.r);
-        emit log_named_int("rcur", _data.debug.rcur);
-        emit log_named_int("u0", _data.debug.u0);
     }
 
     function _toSetupRcur(RcurData memory _data)
         internal
         pure
-        returns (IDynamicKinkModel.Setup memory setup, DebugRcur memory debug)
+        returns (IDynamicKinkModel.Setup memory setup)
     {
 
         setup.config.alpha = _data.constants.alpha;
@@ -130,7 +114,7 @@ contract RcurDynamicKinkTestData is Test {
         pure
         returns (IDynamicKinkModel.Config memory cfg)
     {
-        (IDynamicKinkModel.Setup memory setup,) = _toSetupRcur(_data);
+        IDynamicKinkModel.Setup memory setup = _toSetupRcur(_data);
         cfg = setup.config;
     }
 }
