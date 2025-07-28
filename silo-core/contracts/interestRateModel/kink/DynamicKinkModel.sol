@@ -218,6 +218,9 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel {
             }
 
             rcur = _min((rcur + _setup.config.rmin) * ONE_YEAR, RCUR_CAP);
+
+            // TODO whitepapar says: if the current interest rate (rcur) is above the cap, value is capped and k is reset to kmin 
+            // but we only reset k if overflow or capped in compoundInterestRate, should we do it here? and then return k and save.
         }
     }
 
