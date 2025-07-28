@@ -3,8 +3,11 @@ pragma solidity 0.8.28;
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
+import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
+
 import {PRBMathSD59x18} from "../../lib/PRBMathSD59x18.sol";
 import {ISilo} from "../../interfaces/ISilo.sol";
+import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {IInterestRateModel} from "../../interfaces/IInterestRateModel.sol";
 import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.sol";
@@ -25,9 +28,14 @@ QA rules:
 /// @title DynamicKinkModel
 /// @notice Refer to Silo DynamicKinkModel paper for more details.
 /// @custom:security-contact security@silo.finance
-contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel {
+contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2Steps {
     /// @dev DP in 18 decimal points used for integer calculations
     int256 internal constant _DP = int256(1e18);
+
+    /// @dev universal limit for several DynamicKinkModel config parameters. Follow the model whitepaper for more
+    ///     information. Units of measure are vary per variable type. Any config within these limits is considered
+    ///     valid.
+    int256 public constant UNIVERSAL_LIMIT = 1e9 * _DP;
 
     /// @dev maximum value of current interest rate the model will return. This is 5,000% APR in 18-decimals.
     int256 public constant RCUR_CAP = 50 * _DP;
@@ -47,7 +55,8 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel {
 
     /// @dev maximum value for total borrow amount, total deposits amount and compounded interest. If these
     ///     values are above the threshold, compounded interest is reduced to prevent an overflow.
-    int256 public constant AMT_MAX = 1766847064778384329583297500742918515827483896875618958; // type(uint256).max / uint256(2 ** 16 * _DP);
+    /// value = type(uint256).max / uint256(2 ** 16 * _DP);
+    int256 public constant AMT_MAX = 1766847064778384329583297500742918515827483896875618958; 
 
     /// @dev each Silo setup is stored separately in mapping, that's why we do not need to clone IRM
     /// at the same time this is safety feature because we will write to this mapping based on msg.sender
@@ -58,6 +67,14 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel {
     /// @dev Config for the model
     IDynamicKinkModelConfig public irmConfig;
 
+    modifier onlySiloDeployer(ISiloConfig _siloConfig) {
+        // require(msg.sender == address(irmConfig), "Only config can call this function");
+        // TODO
+        _;
+    }
+
+    constructor() Ownable1and2Steps(msg.sender) {}
+
     /// @inheritdoc IInterestRateModel
     function initialize(address _irmConfig) external virtual {
         require(_irmConfig != address(0), AddressZero());
@@ -66,11 +83,38 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel {
         irmConfig = IDynamicKinkModelConfig(_irmConfig);
 
         emit Initialized(_irmConfig);
+
+        // Ownable2Step._transferOwnership(newOwner);
     }
 
-    /// @inheritdoc IInterestRateModel
-    function decimals() external pure returns (uint256) {
-        return 18;
+    function resetConfigToFactorySetup(ISilo _silo) external onlySiloDeployer(_silo.config()) {
+        require(address(irmConfig) != address(0), NotInitialized());
+
+        IDynamicKinkModel.Config memory config = irmConfig.getConfig();
+
+        getSetup[address(_silo)] = Setup({
+            config: config,
+            k: config.kmin
+        });
+
+        emit ConfigReset(address(_silo));
+    }
+
+    function updateSetup(ISilo _silo, IDynamicKinkModel.Config calldata _config, int256 _k) 
+        external 
+        onlySiloDeployer(_silo.config()) 
+    {
+        require(address(irmConfig) != address(0), NotInitialized());
+        require(_k >= _config.kmin && _k <= _config.kmax, InvalidK());
+
+        verifyConfig(_config);
+
+        getSetup[address(_silo)] = Setup({
+            config: _config,
+            k: _k // TODO or we should use config.kmin?
+        });
+
+        emit ConfigUpdated(address(_silo), _config, _k);
     }
 
     /// @inheritdoc IInterestRateModel
@@ -153,8 +197,34 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel {
         rcur = SafeCast.toUint256(rcurInt);
     }
 
+    /// @inheritdoc IInterestRateModel
+    function decimals() external pure returns (uint256) {
+        return 18;
+    }
+
     /// @inheritdoc IDynamicKinkModel
-    function currentInterestRate(
+    function verifyConfig(IDynamicKinkModel.Config calldata _config) public view virtual {
+        require(_config.ulow >= 0 && _config.ulow < _DP, InvalidUlow());
+        require(_config.u1 >= 0 && _config.u1 < _DP, InvalidU1());
+        require(_config.u2 >= _config.u1 && _config.u2 <= _DP, InvalidU2());
+        require(_config.ucrit >= _config.ulow && _config.ucrit <= _DP, InvalidUcrit());
+        require(_config.rmin >= 0 && _config.rmin <= _DP, InvalidRmin());
+        require(_config.kmin >= 0 && _config.kmin <= UNIVERSAL_LIMIT, InvalidKmin());
+        require(_config.kmax >= _config.kmin && _config.kmin <= UNIVERSAL_LIMIT, InvalidKmax());
+        require(_config.alpha >= 0 && _config.alpha <= UNIVERSAL_LIMIT, InvalidAlpha());
+        require(_config.cminus >= 0 && _config.cminus <= UNIVERSAL_LIMIT, InvalidCminus());
+        require(_config.cplus >= 0 && _config.cplus <= UNIVERSAL_LIMIT, InvalidCplus());
+        require(_config.c1 >= 0 && _config.c1 <= UNIVERSAL_LIMIT, InvalidC1());
+        require(_config.c2 >= 0 && _config.c2 <= UNIVERSAL_LIMIT, InvalidC2());
+        // TODO do we still need upper limit
+        require(_config.dmax >= _config.c2 && _config.dmax < UNIVERSAL_LIMIT, InvalidDmax());
+
+        // overflow check
+        // DynamicKinkModel(IRM).configOverflowCheck(_config); TODO
+    }
+
+    /// @inheritdoc IDynamicKinkModel
+    function currentInterestRate( // solhint-disable-line function-max-lines
         Setup memory _setup, 
         int256 _t0, 
         int256 _t1, 
@@ -225,7 +295,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel {
     }
 
     /// @inheritdoc IDynamicKinkModel
-    function compoundInterestRate(
+    function compoundInterestRate( // solhint-disable-line code-complexity, function-max-lines
         Setup memory _setup, 
         int256 _t0,
         int256 _t1, 

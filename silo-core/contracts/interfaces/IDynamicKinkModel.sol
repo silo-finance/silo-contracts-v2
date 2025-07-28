@@ -2,30 +2,6 @@
 pragma solidity >=0.5.0;
 
 interface IDynamicKinkModel {
-    /// @notice Emitted on config init
-    /// @param config config struct for asset in Silo
-    event Initialized(address indexed config);
-
-    // solhint-disable var-name-mixedcase
-    /// @dev revert when t0 > t1. Must not calculate interest in the past before the latest interest rate update.
-    error InvalidTimestamp();
-
-    error AddressZero();
-    error AlreadyInitialized();
-    error InvalidUlow();
-    error InvalidU1();
-    error InvalidU2();
-    error InvalidUcrit();
-    error InvalidRmin();
-    error InvalidKmin();
-    error InvalidKmax();
-    error InvalidAlpha();
-    error InvalidCminus();
-    error InvalidCplus();
-    error InvalidC1();
-    error InvalidC2();
-    error InvalidDmax();
-
     /// @dev structure that user can provide as input to generage Kink model default config.
     /// @param ulow threshold of low utilization.
     /// @param ucrit threshold of critical utilization.
@@ -102,14 +78,50 @@ interface IDynamicKinkModel {
         int256 interest;
     }
 
-    // solhint-enable var-name-mixedcase
-
     /// @param config model parameters for particular silo and asset.
     /// @param k state of the slope after latest interest rate accrual.
     struct Setup {
         Config config;
         int256 k;
     }
+
+    /// @notice Emitted on config init
+    /// @param config config struct for asset in Silo
+    event Initialized(address indexed config);
+
+    /// @notice Emitted on config reset to factory defaults
+    event ConfigReset(address indexed silo);
+
+    event ConfigUpdated(address indexed silo, Config config, int256 k);
+
+    // solhint-disable var-name-mixedcase
+    /// @dev revert when t0 > t1. Must not calculate interest in the past before the latest interest rate update.
+    error InvalidTimestamp();
+
+    error AddressZero();
+    error NotInitialized();
+    error AlreadyInitialized();
+    error InvalidUlow();
+    error InvalidU1();
+    error InvalidU2();
+    error InvalidUcrit();
+    error InvalidRmin();
+    error InvalidK();
+    error InvalidKmin();
+    error InvalidKmax();
+    error InvalidAlpha();
+    error InvalidCminus();
+    error InvalidCplus();
+    error InvalidC1();
+    error InvalidC2();
+    error InvalidDmax();
+
+    /// @notice Check if variables in config match the limits from model whitepaper.
+    /// Some limits are narrower than in whhitepaper, because of additional research, see:
+    /// https://silofinance.atlassian.net/wiki/spaces/SF/pages/347963393/DynamicKink+model+config+limits+V1
+    /// @dev it throws when config is invalid
+    /// @param _config DynamicKinkModel config struct, does not include the state of the model.
+    function verifyConfig(IDynamicKinkModel.Config calldata _config) external view;
 
     /// @notice Calculate compound interest rate, refer model whitepaper for more details.
     /// @param _setup DynamicKinkModel config struct with model state.

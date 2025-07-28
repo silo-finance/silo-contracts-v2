@@ -56,7 +56,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
         assertTrue(satisfied, errorMessage);
     }
 
-    function test_rcur() public {
+    function test_rcur() public view {
         RcurData[] memory data = _readDataFromJsonRcur();
 
         for (uint i; i < data.length; i++) {
@@ -81,7 +81,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
         }
     }
 
-    function test_rcomp() public {
+    function test_rcomp() public view {
         RcompData[] memory data = _readDataFromJsonRcomp();
 
         for (uint i; i < data.length; i++) {
