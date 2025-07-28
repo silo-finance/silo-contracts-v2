@@ -308,9 +308,6 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         pure
         returns (int256 rcomp, int256 k, bool overflow, bool capped)
     {
-        // TODO can we do early return? and what is correct `k` here? probably kmin?
-        if (_tba == 0) return (0, 0, false, false);
-
         LocalVarsRCOMP memory _l = LocalVarsRCOMP(0, 0, 0, 0, 0, 0, 0);
 
         unchecked {
