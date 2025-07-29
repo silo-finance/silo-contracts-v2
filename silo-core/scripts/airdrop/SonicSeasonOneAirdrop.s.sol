@@ -7,6 +7,7 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {IMulticall3} from "silo-core/scripts/interfaces/IMulticall3.sol";
 import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
+import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 
 /*
     AIRDROP_PRIVATE_KEY must be set in env.
@@ -55,6 +56,8 @@ contract SonicSeasonOneAirdrop is Script {
         uint256 totalToTransfer;
 
         for (uint256 i = _start; i < _end; i++) {
+            require(!IsContract.isContract(_data[i].addr), "receiver should not be a contract");
+
             call3Values[i - _start] = IMulticall3.Call3Value({
                 target: _data[i].addr,
                 allowFailure: false,
