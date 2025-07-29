@@ -25,7 +25,6 @@ QA rules:
 
 TODO owner
 TODO deployment
-TODO try-catch check if possible, use max CAP on catch
 TODO try to remove overflow checks
 TODO set 5000% but then json tests needs to be adjusted
 
@@ -71,7 +70,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
     /// @dev Config for the model
     IDynamicKinkModelConfig public irmConfig;
 
-    modifier onlySiloDeployer(ISiloConfig _siloConfig) {
+    modifier onlySiloDeployer(ISilo _silo) {
         // require(msg.sender == address(irmConfig), "Only config can call this function");
         // TODO
         _;
@@ -91,16 +90,17 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         // Ownable2Step._transferOwnership(newOwner);
     }
 
-    function resetConfigToFactorySetup(address _silo) external onlySiloDeployer(ISilo(_silo).config()) {
+    function resetConfigToFactorySetup(address _silo) external onlySiloDeployer(ISilo(_silo)) {
         _factorySetup(_silo);
     }
 
     function updateSetup(ISilo _silo, IDynamicKinkModel.Config calldata _config, int256 _k) 
         external 
-        onlySiloDeployer(_silo.config()) 
+        onlySiloDeployer(ISilo(_silo)) 
     {
         require(address(irmConfig) != address(0), NotInitialized());
-        require(_k >= _config.kmin && _k <= _config.kmax, InvalidK());
+        // TODO json files has k, that is not in kmin and kmax range, what should be condition here for valid k?
+        // require(_k >= _config.kmin && _k <= _config.kmax, InvalidK());
 
         verifyConfig(_config);
 
