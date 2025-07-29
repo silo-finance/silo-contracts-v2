@@ -59,14 +59,12 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
     int256 public constant X_MAX = 11 * _DP;
 
     /// @dev maximum value for total borrow amount, total deposits amount and compounded interest. If these
-    ///     values are above the threshold, compounded interest is reduced to prevent an overflow.
+    /// values are above the threshold, compounded interest is reduced to prevent an overflow.
     /// value = type(uint256).max / uint256(2 ** 16 * _DP);
     int256 public constant AMT_MAX = 1766847064778384329583297500742918515827483896875618958; 
 
     /// @dev each Silo setup is stored separately in mapping, that's why we do not need to clone IRM
     /// at the same time this is safety feature because we will write to this mapping based on msg.sender
-    /// silo => setup
-    // todo InterestRateModel Config setup flow
     mapping(address silo => Setup irmStorage) internal _getSetup;
 
     /// @dev Config for the model
@@ -313,7 +311,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         pure
         returns (int256 rcomp, int256 k, bool overflow, bool capped)
     {
-        LocalVarsRCOMP memory _l = LocalVarsRCOMP(0, 0, 0, 0, 0, 0, 0);
+        LocalVarsRCOMP memory _l;
 
         unchecked {
             if (_t1 < _t0) revert InvalidTimestamp(); // TODO remove if ok to overflow
@@ -343,7 +341,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
                 _l.x = _setup.config.kmax * _l.T - (_setup.config.kmax - k) ** 2 / (2 * _l.roc);
                 k = _setup.config.kmax;
             } else if (_l.k1 < _setup.config.kmin) {
-                _l.x = _setup.config.kmin * _l.T - ((_setup.k - _setup.config.kmin) ** 2) / (2 * _l.roc);
+                _l.x = _setup.config.kmin * _l.T - (_setup.k - _setup.config.kmin) ** 2 / (2 * _l.roc);
                 k = _setup.config.kmin;
             } else {
                 _l.x = (k + _l.k1) * _l.T / 2;
