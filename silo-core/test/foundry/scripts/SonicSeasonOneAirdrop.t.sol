@@ -71,5 +71,16 @@ contract SonicSeasonOneAirdropTest is Test {
         SonicSeasonOneVerifier verifier = new SonicSeasonOneVerifier();
         verifier.setBatch(start, end, block.number - 100, block.number);
         verifier.run();
+
+        verifier.setBatch(start - 1, end, block.number - 100, block.number);
+        vm.expectRevert();
+        verifier.run();
+
+        verifier.setBatch(start, end + 1, block.number - 100, block.number);
+        vm.expectRevert();
+        verifier.run();
+
+        verifier.setBatch(start, end, block.number - 100, block.number);
+        verifier.run();
     }
 }

@@ -46,16 +46,16 @@ contract SonicSeasonOneVerifier is SonicSeasonOneDataReader {
             vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), blockAfter);
         }
 
-        uint256[] memory balancesAfterAirdrop = new uint256[](end - start);
+        uint256[] memory balancesAfterAirdrop = new uint256[](data.length);
 
         for (uint256 i = start; i < end; i++) {
-            balancesAfterAirdrop[i - start] = data[i].addr.balance;
+            balancesAfterAirdrop[i] = data[i].addr.balance;
         }
 
         vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), blockBefore);
 
         for (uint256 i = start; i < end; i++) {
-            if (data[i].addr.balance + data[i].amount != balancesAfterAirdrop[i - start]) {
+            if (data[i].addr.balance + data[i].amount != balancesAfterAirdrop[i]) {
                 addressWithProblem = data[i].addr;
                 break;
             }
