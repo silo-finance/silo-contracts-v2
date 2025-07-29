@@ -21,6 +21,7 @@ QA rules:
 - if utilization goes down -> rcomp always go down?
 - there should be no overflow when utilization goes down
 - function should never throw (unless we will decive to remove uncheck)
+- hard rule: utilization (setup.u) in the model should never be above 100%.
 
 TODO owner
 TODO deployment
@@ -143,7 +144,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
         currentSetup.u = _collateralAssets != 0
             ? SafeCast.toInt232(SafeCast.toInt256(_debtAssets * uint256(_DP) / _collateralAssets))
-            : SafeCast.toInt232(_DP); // TODO should we use more for bad debt?
+            : SafeCast.toInt232(_DP); // hard rule: utilization in the model should never be above 100%.
 
         // TODO do we need cap? check if already applied in compoundInterestRate
     }
