@@ -159,16 +159,18 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
         Setup memory currentSetup = getSetup(_silo);
 
-        (int256 rcompInt,,,) = compoundInterestRate({
+        try this.compoundInterestRate({
             _setup: currentSetup,
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
             _t1: SafeCast.toInt256(_blockTimestamp),
             _u: currentSetup.u,
             _td: SafeCast.toInt256(data.collateralAssets),
             _tba: SafeCast.toInt256(data.debtAssets)
-        });
-
-        rcomp = SafeCast.toUint256(rcompInt);
+        }) returns (int256 rcompInt, int256, bool, bool ) {
+            rcomp = SafeCast.toUint256(rcompInt);
+        } catch {
+            rcomp = SafeCast.toUint256(RCOMP_CAP);
+        }
     }
 
     /// @inheritdoc IInterestRateModel
@@ -180,16 +182,18 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
         Setup memory currentSetup = getSetup(_silo);
 
-        (int256 rcurInt,,) = currentInterestRate({
+        try this.currentInterestRate({
             _setup: currentSetup,
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
             _t1: SafeCast.toInt256(_blockTimestamp),
             _u: currentSetup.u,
             _td: SafeCast.toInt256(data.collateralAssets),
             _tba: SafeCast.toInt256(data.debtAssets)
-        });
-
-        rcur = SafeCast.toUint256(rcurInt);
+        }) returns (int256 rcurInt, bool, bool) {
+            rcur = SafeCast.toUint256(rcurInt);
+        } catch {
+            rcur = SafeCast.toUint256(RCUR_CAP);
+        }
     }
 
     /// @inheritdoc IInterestRateModel
