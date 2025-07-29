@@ -23,7 +23,7 @@ struct TransferData {
 
 contract SonicSeasonOneAirdrop is Script {
     // https://www.multicall3.com/deployments
-    IMulticall3 internal constant MULTICALL3 = IMulticall3(0xcA11bde05977b3631167028862bE2a173976CA11);
+    IMulticall3 public constant MULTICALL3 = IMulticall3(0xcA11bde05977b3631167028862bE2a173976CA11);
 
     uint256 start;
     uint256 end;

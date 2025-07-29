@@ -35,9 +35,10 @@ contract SonicSeasonOneAirdropTest is Test {
         uint256 rightFromBatchBalance = data[end].addr.balance;
         uint256 firstFromBatchBalance = data[start].addr.balance;
         uint256 lastFromBatchBalance = data[end - 1].addr.balance;
+        uint256 multicall3Balance = address(airdrop.MULTICALL3()).balance;
 
         uint256 totalToSend;
-        uint256 senderBalanceBefore = airdropWallet.addr.balance;
+        uint256 senderBalance = airdropWallet.addr.balance;
 
         for (uint256 i = start; i < end; i++) {
             balancesBefore.push(data[i].addr.balance);
@@ -51,10 +52,11 @@ contract SonicSeasonOneAirdropTest is Test {
             assertEq(data[i + start].addr.balance, balancesBefore[i] + data[i + start].amount, "amount is received");
         }
 
-        assertEq(airdropWallet.addr.balance, senderBalanceBefore - totalToSend, "sent expected total amount");
+        assertEq(airdropWallet.addr.balance, senderBalance - totalToSend, "sent expected total amount");
         assertEq(data[start - 1].addr.balance, leftFromBatchBalance, "left from batch address did not receive");
         assertEq(data[end].addr.balance, rightFromBatchBalance, "right from batch address did not receive");
         assertTrue(data[start].addr.balance > firstFromBatchBalance, "first from batch received");
         assertTrue(data[end - 1].addr.balance > lastFromBatchBalance, "last from batch received");
+        assertEq(address(airdrop.MULTICALL3()).balance, multicall3Balance, "no dust left");
     }
 }
