@@ -241,6 +241,8 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         pure
         returns (int256 rcur, bool overflow, bool capped)
     {
+        Config memory cfg = _setup.config;
+
         // _t0 < _t1 checks are included inside this function, may revert 
         (,, overflow, capped) = compoundInterestRate({
             _setup: _setup,
@@ -264,35 +266,35 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
             }
 
             // TODO we changing `k` in `compoundInterestRate`, should we use it here, or we using `_setup.k`?
-            int256 k = _max(_setup.config.kmin, _min(_setup.config.kmax, _setup.k));
+            int256 k = _max(cfg.kmin, _min(cfg.kmax, _setup.k));
 
-            if (_u < _setup.config.u1) {
+            if (_u < cfg.u1) {
                 k = _max(
-                    k - (_setup.config.c1 + _setup.config.cminus * (_setup.config.u1 - _u) / _DP) * T,
-                    _setup.config.kmin
+                    k - (cfg.c1 + cfg.cminus * (cfg.u1 - _u) / _DP) * T,
+                    cfg.kmin
                 );
-            } else if (_u > _setup.config.u2) {
+            } else if (_u > cfg.u2) {
                 k = _min(
                     k + _min(
-                        _setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP,
-                        _setup.config.dmax
+                        cfg.c2 + cfg.cplus * (_u - cfg.u2) / _DP,
+                        cfg.dmax
                     ) * T,
-                    _setup.config.kmax
+                    cfg.kmax
                 );
             }
 
             // additional interest rate
-            if (_u >= _setup.config.ulow) {
-                rcur = _u - _setup.config.ulow;
+            if (_u >= cfg.ulow) {
+                rcur = _u - cfg.ulow;
 
-                if (_u >= _setup.config.ucrit) {
-                    rcur = rcur + _setup.config.alpha * (_u - _setup.config.ucrit) / _DP;
+                if (_u >= cfg.ucrit) {
+                    rcur = rcur + cfg.alpha * (_u - cfg.ucrit) / _DP;
                 }
 
                 rcur = rcur * k / _DP;
             }
 
-            rcur = _min((rcur + _setup.config.rmin) * ONE_YEAR, RCUR_CAP);
+            rcur = _min((rcur + cfg.rmin) * ONE_YEAR, RCUR_CAP);
 
             // TODO whitepapar says: if the current interest rate (rcur) is above the cap, value is capped and k is reset to kmin 
             // but we only reset k if overflow or capped in compoundInterestRate, should we do it here? and then return k and save.
@@ -313,6 +315,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         returns (int256 rcomp, int256 k, bool overflow, bool capped)
     {
         LocalVarsRCOMP memory _l;
+        Config memory cfg = _setup.config;
 
         unchecked {
             if (_t1 < _t0) revert InvalidTimestamp(); // TODO remove if ok to overflow
@@ -324,40 +327,40 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
             }
 
             // roc calculations
-            if (_u < _setup.config.u1) {
-                _l.roc = -_setup.config.c1 - _setup.config.cminus * (_setup.config.u1 - _u) / _DP;
-            } else if (_u > _setup.config.u2) {
+            if (_u < cfg.u1) {
+                _l.roc = -cfg.c1 - cfg.cminus * (cfg.u1 - _u) / _DP;
+            } else if (_u > cfg.u2) {
                 _l.roc = _min(
-                    _setup.config.c2 + _setup.config.cplus * (_u - _setup.config.u2) / _DP,
-                    _setup.config.dmax
+                    cfg.c2 + cfg.cplus * (_u - cfg.u2) / _DP,
+                    cfg.dmax
                 );
             }
 
-            k = _max(_setup.config.kmin, _min(_setup.config.kmax, _setup.k));
+            k = _max(cfg.kmin, _min(cfg.kmax, _setup.k));
             // slope of the kink at t1 ignoring lower and upper bounds
             _l.k1 = k + _l.roc * _l.T;
 
             // calculate the resulting slope state
-            if (_l.k1 > _setup.config.kmax) {
-                _l.x = _setup.config.kmax * _l.T - (_setup.config.kmax - k) ** 2 / (2 * _l.roc);
-                k = _setup.config.kmax;
-            } else if (_l.k1 < _setup.config.kmin) {
-                _l.x = _setup.config.kmin * _l.T - (_setup.k - _setup.config.kmin) ** 2 / (2 * _l.roc);
-                k = _setup.config.kmin;
+            if (_l.k1 > cfg.kmax) {
+                _l.x = cfg.kmax * _l.T - (cfg.kmax - k) ** 2 / (2 * _l.roc);
+                k = cfg.kmax;
+            } else if (_l.k1 < cfg.kmin) {
+                _l.x = cfg.kmin * _l.T - (_setup.k - cfg.kmin) ** 2 / (2 * _l.roc);
+                k = cfg.kmin;
             } else {
                 _l.x = (k + _l.k1) * _l.T / 2;
                 k = _l.k1;
             }
 
-            if (_u >= _setup.config.ulow) {
-                _l.f = _u - _setup.config.ulow;
+            if (_u >= cfg.ulow) {
+                _l.f = _u - cfg.ulow;
 
-                if (_u >= _setup.config.ucrit) {
-                    _l.f = _l.f + _setup.config.alpha * (_u - _setup.config.ucrit) / _DP;
+                if (_u >= cfg.ucrit) {
+                    _l.f = _l.f + cfg.alpha * (_u - cfg.ucrit) / _DP;
                 }
             }
 
-            _l.x = _setup.config.rmin * _l.T + _l.f * _l.x / _DP;
+            _l.x = cfg.rmin * _l.T + _l.f * _l.x / _DP;
 
             // Overflow Checks
 
@@ -379,16 +382,16 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
             // stop compounding interest for critical assets amounts
             // this IF was added in additional to the paper
+            // TODO remove if we will remove overflow checks
             if (_l.amt > AMT_MAX) {
                 overflow = true;
                 rcomp = 0;
-                k = _setup.config.kmin;
+                k = cfg.kmin;
 
                 return (rcomp, k, overflow, capped);
             }
 
             // TODO add check for overflow, we can still throw here
-            // TODO should we use mulDiv?
             _l.interest = _tba * rcomp / _DP;
 
             // limit accrued interest if it results in critical assets amount
@@ -406,7 +409,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
             // reset the k to the min value in overflow and cap cases
             if (overflow || capped) {
-                k = _setup.config.kmin;
+                k = cfg.kmin;
             }
         }
     }
