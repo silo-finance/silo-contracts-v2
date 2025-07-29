@@ -5,7 +5,6 @@ import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {SonicSeasonOneAirdrop, TransferData} from "silo-core/scripts/airdrop/SonicSeasonOneAirdrop.s.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
-import {console2} from "forge-std/console2.sol";
 
 /*
     FOUNDRY_PROFILE=core_test forge test -vv --match-contract SonicSeasonOneAirdropTest --ffi
@@ -18,7 +17,6 @@ contract SonicSeasonOneAirdropTest is Test {
         vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 40727841);
         airdropWallet = vm.createWallet(uint256(keccak256(bytes("1"))));
         vm.setEnv("AIRDROP_PRIVATE_KEY", Strings.toHexString(airdropWallet.privateKey));
-        console2.log(Strings.toHexString(airdropWallet.privateKey));
         deal(airdropWallet.addr, 10**18 * 10**18);
     }
 
