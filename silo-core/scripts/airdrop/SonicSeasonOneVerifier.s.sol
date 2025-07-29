@@ -3,11 +3,6 @@ pragma solidity ^0.8.28;
 
 import {console2} from "forge-std/console2.sol";
 import {SonicSeasonOneDataReader, TransferData} from "silo-core/scripts/airdrop/SonicSeasonOneDataReader.s.sol";
-import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
-import {Strings} from "openzeppelin5/utils/Strings.sol";
-import {IMulticall3} from "silo-core/scripts/interfaces/IMulticall3.sol";
-import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
-import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 
 /*
     Verifies that amount is sent correctly. BLOCK is from tx sending funds.
