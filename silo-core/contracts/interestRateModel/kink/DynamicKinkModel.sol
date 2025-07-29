@@ -26,6 +26,7 @@ TODO owner
 TODO deployment
 TODO try-catch check if possible, use max CAP on catch
 TODO try to remove overflow checks
+TODO set 5000% but then json tests needs to be adjusted
 
 */
 
@@ -41,8 +42,8 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
     ///     valid.
     int256 public constant UNIVERSAL_LIMIT = 1e9 * _DP;
 
-    /// @dev maximum value of current interest rate the model will return. This is 5,000% APR in 18-decimals.
-    int256 public constant RCUR_CAP = 50 * _DP;
+    /// @dev maximum value of current interest rate the model will return. This is 10,000% APR in 18-decimals.
+    int256 public constant RCUR_CAP = 100 * _DP;
 
     /// @dev seconds per year used in interest calculations.
     int256 public constant ONE_YEAR = 365 days;
