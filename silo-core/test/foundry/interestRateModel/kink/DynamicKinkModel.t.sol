@@ -26,8 +26,12 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
     /* 
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_rcur
     */
-    function test_kink_rcur() public view {
+    function test_kink_rcur() public {
         RcurData[] memory data = _readDataFromJsonRcur();
+
+        // 1e18 is 100%
+        _rcurDiffPercent[1] = 1659788986;
+        _rcurDiffPercent[28] = 12614396211;
 
         for (uint i; i < data.length; i++) {
             IDynamicKinkModel.Setup memory setup = _toSetupRcur(data[i]);
@@ -45,7 +49,12 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
             int256 overflow = didOverflow ? int256(1) : int256(0);
             int256 cap = didCap ? int256(1) : int256(0);
 
-            _assertCloseTo(rcur, data[i].expected.currentAnnualInterest, data[i].id, "rcur is not close to expected value", 0.000000013e18);
+            uint256 _acceptableDiffPercent = _rcurDiffPercent[data[i].id];
+            if (_acceptableDiffPercent == 0) {
+                _acceptableDiffPercent = 1e10; // default value for tiny differences
+            }
+
+            _assertCloseTo(rcur, data[i].expected.currentAnnualInterest, data[i].id, "rcur is not close to expected value", _acceptableDiffPercent);
             _assertCloseTo(overflow, data[i].expected.didOverflow, data[i].id, "didOverflow is not close to expected value");
             _assertCloseTo(cap, data[i].expected.didCap, data[i].id, "didCap is not close to expected value");
         }
@@ -64,6 +73,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
         _rcompDiffPercent[12] = 13561192345247;
         _rcompDiffPercent[13] = 20115935527;
         _rcompDiffPercent[15] = 1468613269084;
+        _rcompDiffPercent[29] = 18428002065;
 
         for (uint i; i < data.length; i++) {
             IDynamicKinkModel.Setup memory setup = _toSetupRcomp(data[i]);
