@@ -93,7 +93,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
 
             uint256 _acceptableDiffPercent = _rcompDiffPercent[data[i].id];
             if (_acceptableDiffPercent == 0) {
-                _acceptableDiffPercent = 0.00000001e18; // default value for tiny differences
+                _acceptableDiffPercent = 1e10; // default value for tiny differences
             }
 
             // TODO isn't that too much precision?
