@@ -28,7 +28,7 @@ contract SonicSeasonOneAirdropTest is Test {
 
     function test_VerifierDoesNotGiveFalsePositive() public {
         SonicSeasonOneVerifier verifier = new SonicSeasonOneVerifier();
-        verifier.setBatch(0, 10, block.number - 100);
+        verifier.setBatch(0, 10, block.number - 100, block.number);
         vm.expectRevert();
         verifier.run();
     }
@@ -69,7 +69,7 @@ contract SonicSeasonOneAirdropTest is Test {
         assertEq(address(airdrop.MULTICALL3()).balance, multicall3Balance, "no dust left");
 
         SonicSeasonOneVerifier verifier = new SonicSeasonOneVerifier();
-        verifier.setBatch(start, end, block.number - 100);
+        verifier.setBatch(start, end, block.number - 100, block.number);
         verifier.run();
     }
 }
