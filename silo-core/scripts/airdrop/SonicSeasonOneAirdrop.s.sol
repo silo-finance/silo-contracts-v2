@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {console2} from "forge-std/console2.sol";
-import {Script} from "forge-std/Script.sol";
+import {SonicSeasonOneDataReader, TransferData} from "silo-core/scripts/airdrop/SonicSeasonOneDataReader.s.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {IMulticall3} from "silo-core/scripts/interfaces/IMulticall3.sol";
@@ -17,12 +17,7 @@ import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
     --ffi --rpc-url $RPC_SONIC -- --dry-run
  */
 
-struct TransferData {
-    address addr;
-    uint256 amount;
-}
-
-contract SonicSeasonOneAirdrop is Script {
+contract SonicSeasonOneAirdrop is SonicSeasonOneDataReader {
     // https://www.multicall3.com/deployments
     IMulticall3 public constant MULTICALL3 = IMulticall3(0xcA11bde05977b3631167028862bE2a173976CA11);
 
@@ -48,17 +43,17 @@ contract SonicSeasonOneAirdrop is Script {
         }
 
         console2.log("Total to send in current batch", PriceFormatter.formatPriceInE18(totalToTransfer));
-        _sendTokens(data, start, end);
+        _sendTokens(data);
     }
 
-    function _sendTokens(TransferData[] memory _data, uint256 _start, uint256 _end) internal {
-        IMulticall3.Call3Value[] memory call3Values = new IMulticall3.Call3Value[](_end - _start);
+    function _sendTokens(TransferData[] memory _data) internal {
+        IMulticall3.Call3Value[] memory call3Values = new IMulticall3.Call3Value[](end - start);
         uint256 totalToTransfer;
 
-        for (uint256 i = _start; i < _end; i++) {
+        for (uint256 i = start; i < end; i++) {
             require(!IsContract.isContract(_data[i].addr), "receiver should not be a contract");
 
-            call3Values[i - _start] = IMulticall3.Call3Value({
+            call3Values[i - start] = IMulticall3.Call3Value({
                 target: _data[i].addr,
                 allowFailure: false,
                 value: _data[i].amount,
@@ -71,14 +66,6 @@ contract SonicSeasonOneAirdrop is Script {
         vm.startBroadcast(uint256(vm.envBytes32("AIRDROP_PRIVATE_KEY")));
         MULTICALL3.aggregate3Value{ value: totalToTransfer }(call3Values);
         vm.stopBroadcast();
-    }
-
-    function readTransferData() public view returns (TransferData[] memory data) {
-        string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/silo-core/scripts/airdrop/output.json");
-        string memory json = vm.readFile(path);
-
-        data = abi.decode(vm.parseJson(json, string(abi.encodePacked("."))), (TransferData[]));
     }
 
     function setBatch(uint256 _start, uint256 _end) external {

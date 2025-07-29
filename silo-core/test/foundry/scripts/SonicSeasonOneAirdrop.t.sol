@@ -3,7 +3,9 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
-import {SonicSeasonOneAirdrop, TransferData} from "silo-core/scripts/airdrop/SonicSeasonOneAirdrop.s.sol";
+import {SonicSeasonOneAirdrop} from "silo-core/scripts/airdrop/SonicSeasonOneAirdrop.s.sol";
+import {SonicSeasonOneVerifier} from "silo-core/scripts/airdrop/SonicSeasonOneVerifier.s.sol";
+import {TransferData} from "silo-core/scripts/airdrop/SonicSeasonOneDataReader.s.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 /*
@@ -22,6 +24,13 @@ contract SonicSeasonOneAirdropTest is Test {
 
     function test_CheckQAWalletBalance() public view {
         assertTrue(airdropWallet.addr.balance > 0);
+    }
+
+    function test_VerifierDoesNotGiveFalsePositive() public {
+        SonicSeasonOneVerifier verifier = new SonicSeasonOneVerifier();
+        verifier.setBatch(0, 10, block.number - 100);
+        vm.expectRevert();
+        verifier.run();
     }
 
     function test_BalancesIncreaseExpected() public {
@@ -58,5 +67,9 @@ contract SonicSeasonOneAirdropTest is Test {
         assertTrue(data[start].addr.balance > firstFromBatchBalance, "first from batch received");
         assertTrue(data[end - 1].addr.balance > lastFromBatchBalance, "last from batch received");
         assertEq(address(airdrop.MULTICALL3()).balance, multicall3Balance, "no dust left");
+
+        SonicSeasonOneVerifier verifier = new SonicSeasonOneVerifier();
+        verifier.setBatch(start, end, block.number - 100);
+        verifier.run();
     }
 }
