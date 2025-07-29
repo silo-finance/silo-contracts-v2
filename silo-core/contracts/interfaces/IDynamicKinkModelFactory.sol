@@ -2,6 +2,7 @@
 pragma solidity >=0.5.0;
 
 import {IDynamicKinkModel} from "./IDynamicKinkModel.sol";
+import {IInterestRateModel} from "./IInterestRateModel.sol";
 
 interface IDynamicKinkModelFactory {
     /// @dev config hash and IRM should be easily accessible directly from oracle contract
@@ -15,15 +16,15 @@ interface IDynamicKinkModelFactory {
     /// @return irm deployed (or existing one, depends on the config) contract address
     function create(IDynamicKinkModel.Config calldata _config, bytes32 _externalSalt)
         external
-        returns (bytes32 configHash, IDynamicKinkModel irm);
+        returns (bytes32 configHash, IInterestRateModel irm);
 
     /// @notice Generates a default config for the DynamicKinkModel based on the provided parameters.
     /// @dev This function is used to create a config that can be used to initialize a DynamicKinkModel instance.
     /// @param _default Default configuration parameters for the DynamicKinkModel.
     /// @return config The generated configuration for the DynamicKinkModel.
-    function generateDefaultConfig(IDynamicKinkModel.DefaultConfig calldata _default) 
-        external 
-        view 
+    function generateDefaultConfig(IDynamicKinkModel.DefaultConfig calldata _default)
+        external
+        view
         returns (IDynamicKinkModel.Config memory config);
 
     /// @notice Check if variables in config match the limits from model whitepaper.
@@ -32,10 +33,6 @@ interface IDynamicKinkModelFactory {
     /// @dev it throws when config is invalid
     /// @param _config DynamicKinkModel config struct, does not include the state of the model.
     function verifyConfig(IDynamicKinkModel.Config calldata _config) external view;
-
-    /// @dev DP in 18 decimal points used for integer calculations
-    // solhint-disable-next-line func-name-mixedcase
-    function DP() external view returns (uint256);
 
     /// @dev hashes IRM config
     /// @param _config IRM config

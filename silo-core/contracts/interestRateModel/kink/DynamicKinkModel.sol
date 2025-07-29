@@ -61,7 +61,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
     /// @dev maximum value for total borrow amount, total deposits amount and compounded interest. If these
     /// values are above the threshold, compounded interest is reduced to prevent an overflow.
     /// value = type(uint256).max / uint256(2 ** 16 * _DP);
-    int256 public constant AMT_MAX = 1766847064778384329583297500742918515827483896875618958; 
+    int256 public constant AMT_MAX = 1766847064778384329583297500742918515827483896875618958;
 
     /// @dev each Silo setup is stored separately in mapping, that's why we do not need to clone IRM
     /// at the same time this is safety feature because we will write to this mapping based on msg.sender
@@ -94,9 +94,9 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         _factorySetup(_silo);
     }
 
-    function updateSetup(ISilo _silo, IDynamicKinkModel.Config calldata _config, int256 _k) 
-        external 
-        onlySiloDeployer(ISilo(_silo)) 
+    function updateSetup(ISilo _silo, IDynamicKinkModel.Config calldata _config, int256 _k)
+        external
+        onlySiloDeployer(ISilo(_silo))
     {
         require(address(irmConfig) != address(0), NotInitialized());
         // TODO json files has k, that is not in kmin and kmax range, what should be condition here for valid k?
@@ -104,7 +104,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
         verifyConfig(_config);
 
-        _getSetup[address(_silo)].config = _config; 
+        _getSetup[address(_silo)].config = _config;
         _getSetup[address(_silo)].k = _k; // TODO or we should use config.kmin?
 
         emit ConfigUpdated(address(_silo), _config, _k);
@@ -166,7 +166,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
             _u: currentSetup.u,
             _td: SafeCast.toInt256(data.collateralAssets),
             _tba: SafeCast.toInt256(data.debtAssets)
-        }) returns (int256 rcompInt, int256, bool, bool ) {
+        }) returns (int256 rcompInt, int256, bool, bool) {
             rcomp = SafeCast.toUint256(rcompInt);
         } catch {
             rcomp = SafeCast.toUint256(RCOMP_CAP);
@@ -423,7 +423,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
         IDynamicKinkModel.Config memory config = irmConfig.getConfig();
 
-        _getSetup[address(_silo)].config = config; 
+        _getSetup[address(_silo)].config = config;
         _getSetup[address(_silo)].k = config.kmin;
         // u is not set here, because at begin is 0, and on future reset it must stay as last value
         _getSetup[address(_silo)].initialized = true;

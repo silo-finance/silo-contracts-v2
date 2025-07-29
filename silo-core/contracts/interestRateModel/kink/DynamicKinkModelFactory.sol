@@ -9,57 +9,49 @@ import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {IInterestRateModel} from "../../interfaces/IInterestRateModel.sol";
 import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 import {IDynamicKinkModelFactory} from "../../interfaces/IDynamicKinkModelFactory.sol";
+import {IInterestRateModelFactory} from "../../interfaces/IInterestRateModelFactory.sol";
 
 import {DynamicKinkModel} from "./DynamicKinkModel.sol";
 import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
 
 /// @title DynamicKinkModelFactory
 /// @dev It creates DynamicKinkModelConfig.
-contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
+contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory, IInterestRateModelFactory {
     /// @dev DP in 18 decimal points used for integer calculations
     int256 internal constant _DP = int256(1e18);
 
     /// @dev IRM contract implementation address to clone
-    address public immutable IRM;
+    DynamicKinkModel public immutable IRM;
 
     /// Config hash is determine by initial configuration, the logic is the same, so config is the only difference
     /// that's why we can use it as ID, at the same time we can detect duplicated and save gas by reusing same config
     /// multiple times
-    mapping(bytes32 configHash => IDynamicKinkModel) public irmByConfigHash;
+    mapping(bytes32 configHash => IInterestRateModel) public irmByConfigHash;
 
     constructor() {
-        IRM = address(new DynamicKinkModel());
+        IRM = new DynamicKinkModel();
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
     function create(IDynamicKinkModel.Config calldata _config, bytes32 _externalSalt)
         external
         virtual
-        returns (bytes32 configHash, IDynamicKinkModel irm)
+        returns (bytes32 configHash, IInterestRateModel irm)
     {
-        configHash = hashConfig(_config);
-
-        irm = irmByConfigHash[configHash];
-
-        if (address(irm) != address(0)) {
-            return (configHash, irm);
-        }
-
-        IDynamicKinkModel(address(IRM)).verifyConfig(_config);
-
-        bytes32 salt = _salt(_externalSalt);
-
-        address configContract = address(new DynamicKinkModelConfig{salt: salt}(_config));
-
-        irm = IDynamicKinkModel(Clones.cloneDeterministic(IRM, salt));
-        IInterestRateModel(address(irm)).initialize(configContract);
-
-        irmByConfigHash[configHash] = irm;
-
-        emit NewDynamicKinkModel(configHash, irm);
+        return _create(_config, _externalSalt);
     }
 
-    /// @inheritdoc IDynamicKinkModelFactory
+    /// @inheritdoc IInterestRateModelFactory
+    function create(bytes calldata _config, bytes32 _externalSalt)
+        external
+        virtual
+        returns (bytes32 configHash, IInterestRateModel irm)
+    {
+        (IDynamicKinkModel.Config memory config) = abi.decode(_config, (IDynamicKinkModel.Config));
+        return _create(config, _externalSalt);
+    }
+
+    /// @inheritdoc IInterestRateModelFactory
     function DP() external view virtual override returns (uint256) { // solhint-disable-line func-name-mixedcase
         return uint256(_DP);
     }
@@ -121,14 +113,52 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         IDynamicKinkModel(address(IRM)).verifyConfig(config);
     }
 
-    /// @inheritdoc IDynamicKinkModelFactory
-    function verifyConfig(IDynamicKinkModel.Config calldata _config) external view virtual {
-        IDynamicKinkModel(address(IRM)).verifyConfig(_config);
+    /// @inheritdoc IInterestRateModelFactory
+    function verifyConfig(bytes calldata _config) external view virtual {
+        IDynamicKinkModel.Config memory config = abi.decode(_config, (IDynamicKinkModel.Config));
+        IRM.verifyConfig(config);
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
-    function hashConfig(IDynamicKinkModel.Config calldata _config) public pure virtual returns (bytes32 configId) {
+    function verifyConfig(IDynamicKinkModel.Config calldata _config) external view virtual {
+        IRM.verifyConfig(_config);
+    }
+
+    /// @inheritdoc IInterestRateModelFactory
+    function hashConfig(bytes memory _config) public pure virtual returns (bytes32 configId) {
+        configId = keccak256(_config);
+    }
+
+    /// @inheritdoc IDynamicKinkModelFactory
+    function hashConfig(IDynamicKinkModel.Config memory _config) public pure virtual returns (bytes32 configId) {
         configId = keccak256(abi.encode(_config));
+    }
+
+    function _create(IDynamicKinkModel.Config memory _config, bytes32 _externalSalt)
+        internal
+        virtual
+        returns (bytes32 configHash, IInterestRateModel irm)
+    {
+        configHash = hashConfig(_config);
+
+        irm = irmByConfigHash[configHash];
+
+        if (address(irm) != address(0)) {
+            return (configHash, irm);
+        }
+
+        IRM.verifyConfig(_config);
+
+        bytes32 salt = _salt(_externalSalt);
+
+        address configContract = address(new DynamicKinkModelConfig{salt: salt}(_config));
+
+        irm = IInterestRateModel(Clones.cloneDeterministic(address(IRM), salt));
+        irm.initialize(configContract);
+
+        irmByConfigHash[configHash] = irm;
+
+        emit NewDynamicKinkModel(configHash, IDynamicKinkModel(address(irm)));
     }
 
     function _copyDefaultConfig(
