@@ -40,10 +40,9 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
 
     constructor() {
         IDynamicKinkModel.Config memory cfg;
-        cfg.initialOwner = address(this);
         
         IRM = new DynamicKinkModelMock();
-        IRM.initialize(address(new DynamicKinkModelConfig(cfg)));
+        IRM.initialize(address(new DynamicKinkModelConfig(cfg)), address(this));
 
         // 1e18 is 100%
         _rcurDiffPercent[1] = 1659788986;

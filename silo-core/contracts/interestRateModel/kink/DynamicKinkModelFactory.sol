@@ -9,16 +9,15 @@ import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {IInterestRateModel} from "../../interfaces/IInterestRateModel.sol";
 import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 import {IDynamicKinkModelFactory} from "../../interfaces/IDynamicKinkModelFactory.sol";
-import {IInterestRateModelFactory} from "../../interfaces/IInterestRateModelFactory.sol";
 
 import {DynamicKinkModel} from "./DynamicKinkModel.sol";
 import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
 
 /// @title DynamicKinkModelFactory
 /// @dev It creates DynamicKinkModelConfig.
-contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory, IInterestRateModelFactory {
+contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     /// @dev DP in 18 decimal points used for integer calculations
-    int256 internal constant _DP = int256(1e18);
+    int256 public constant DP = int256(1e18);
 
     /// @dev IRM contract implementation address to clone
     DynamicKinkModel public immutable IRM;
@@ -33,27 +32,12 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory, II
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
-    function create(IDynamicKinkModel.Config calldata _config, bytes32 _externalSalt)
+    function create(IDynamicKinkModel.Config calldata _config, address _initialOwner)
         external
         virtual
         returns (bytes32 configHash, IInterestRateModel irm)
     {
-        return _create(_config, _externalSalt);
-    }
-
-    /// @inheritdoc IInterestRateModelFactory
-    function create(bytes calldata _config, bytes32 _externalSalt)
-        external
-        virtual
-        returns (bytes32 configHash, IInterestRateModel irm)
-    {
-        (IDynamicKinkModel.Config memory config) = abi.decode(_config, (IDynamicKinkModel.Config));
-        return _create(config, _externalSalt);
-    }
-
-    /// @inheritdoc IInterestRateModelFactory
-    function DP() external view virtual override returns (uint256) { // solhint-disable-line func-name-mixedcase
-        return uint256(_DP);
+        return _create(_config, _initialOwner, _salt());
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
@@ -69,7 +53,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory, II
         require(defaultInt.ulow >= 0, IDynamicKinkModel.InvalidUlow());
         require(defaultInt.u1 >= defaultInt.ulow, IDynamicKinkModel.InvalidU1());
         require(defaultInt.u2 >= defaultInt.u1, IDynamicKinkModel.InvalidU2());
-        require(defaultInt.ucrit >= defaultInt.u2 && defaultInt.ucrit <= _DP, IDynamicKinkModel.InvalidUcrit());
+        require(defaultInt.ucrit >= defaultInt.u2 && defaultInt.ucrit <= DP, IDynamicKinkModel.InvalidUcrit());
 
         require(defaultInt.rmin >= 0, IDynamicKinkModel.InvalidRmin());
         require(defaultInt.rcritMin > defaultInt.rmin, IDynamicKinkModel.InvalidRcritMin());
@@ -80,7 +64,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory, II
         );
 
         int256 rCheckHi = (defaultInt.r100 - defaultInt.rcritMin) / (defaultInt.rcritMax - defaultInt.rcritMin);
-        int256 rCheckLo = (_DP - defaultInt.ucrit) / (defaultInt.ucrit - defaultInt.ulow);
+        int256 rCheckLo = (DP - defaultInt.ucrit) / (defaultInt.ucrit - defaultInt.ulow);
         require(rCheckHi >= rCheckLo, IDynamicKinkModel.InvalidDefaultConfig());
 
         require(defaultInt.tMin > 0, IDynamicKinkModel.InvalidTMin());
@@ -96,8 +80,8 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory, II
         config.kmin = (defaultInt.rcritMin - defaultInt.rmin) / (defaultInt.ucrit - defaultInt.ulow) / s;
         config.kmax = (defaultInt.rcritMax - defaultInt.rmin) / (defaultInt.ucrit - defaultInt.ulow) / s;
 
-        config.alpha = (defaultInt.r100 - defaultInt.rmin - s * config.kmax * (_DP - defaultInt.ulow))
-            / (s * config.kmax * (_DP - defaultInt.ucrit));
+        config.alpha = (defaultInt.r100 - defaultInt.rmin - s * config.kmax * (DP - defaultInt.ulow))
+            / (s * config.kmax * (DP - defaultInt.ucrit));
 
         config.c1 = (config.kmax - config.kmin) / defaultInt.t1;
         config.c2 = (config.kmax - config.kmin) / defaultInt.t2;
@@ -113,20 +97,9 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory, II
         IDynamicKinkModel(address(IRM)).verifyConfig(config);
     }
 
-    /// @inheritdoc IInterestRateModelFactory
-    function verifyConfig(bytes calldata _config) external view virtual {
-        IDynamicKinkModel.Config memory config = abi.decode(_config, (IDynamicKinkModel.Config));
-        IRM.verifyConfig(config);
-    }
-
     /// @inheritdoc IDynamicKinkModelFactory
     function verifyConfig(IDynamicKinkModel.Config calldata _config) external view virtual {
         IRM.verifyConfig(_config);
-    }
-
-    /// @inheritdoc IInterestRateModelFactory
-    function hashConfig(bytes memory _config) public pure virtual returns (bytes32 configId) {
-        configId = keccak256(_config);
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
@@ -134,7 +107,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory, II
         configId = keccak256(abi.encode(_config));
     }
 
-    function _create(IDynamicKinkModel.Config memory _config, bytes32 _externalSalt)
+    function _create(IDynamicKinkModel.Config memory _config,address _initialOwner, bytes32 _externalSalt)
         internal
         virtual
         returns (bytes32 configHash, IInterestRateModel irm)
@@ -154,7 +127,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory, II
         address configContract = address(new DynamicKinkModelConfig{salt: salt}(_config));
 
         irm = IInterestRateModel(Clones.cloneDeterministic(address(IRM), salt));
-        irm.initialize(configContract);
+        IDynamicKinkModel(address(irm)).initialize(configContract, _initialOwner);
 
         irmByConfigHash[configHash] = irm;
 

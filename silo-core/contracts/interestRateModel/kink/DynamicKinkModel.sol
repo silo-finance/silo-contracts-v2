@@ -75,26 +75,27 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         _transferOwnership(address(0));
     }
 
-    /// @inheritdoc IInterestRateModel
     function initialize(address _irmConfig) external virtual {
+        initialize(_irmConfig, address(0));
+    }
+
+    function initialize(address _irmConfig, address _initialOwner) public virtual {
         require(_irmConfig != address(0), AddressZero());
         require(address(irmConfig) == address(0), AlreadyInitialized());
 
         irmConfig = IDynamicKinkModelConfig(_irmConfig);
 
-        emit Initialized(_irmConfig);
-
-        address initialOwner = IDynamicKinkModelConfig(_irmConfig).INITIAL_OWNER();
-
-        if (initialOwner == address(0)) {
-            // allow for owner to be empty if config is empty
+        if (_initialOwner == address(0)) {
+            // allow owner to be empty only if config is empty
             IDynamicKinkModel.Config memory empty;
             IDynamicKinkModel.Config memory config = IDynamicKinkModelConfig(_irmConfig).getConfig();
 
             require(keccak256(abi.encode(empty)) == keccak256(abi.encode(config)), MissingOwner());
         }
 
-        _transferOwnership(initialOwner);
+        _transferOwnership(_initialOwner);
+
+        emit Initialized(_irmConfig, _initialOwner);
     }
 
     function resetConfigToFactorySetup(address _silo) external onlyOwner {

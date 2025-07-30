@@ -16,7 +16,6 @@ contract InterestRateModelKinkConfigData {
         int256 cminus;
         int256 cplus;
         int256 dmax;
-        address initialOwner;
         int256 kmax;
         int256 kmin;
         int256 rmin;
@@ -35,29 +34,31 @@ contract InterestRateModelKinkConfigData {
         return _readDataFromJson();
     }
 
-    function getConfigData(string memory _name) public view virtual returns (bytes memory modelConfig) {
+    function getConfigData(string memory _name) 
+        external 
+        view 
+        virtual 
+        returns (IDynamicKinkModel.Config memory modelConfig) 
+    {
         KinkConfigData[] memory configs = _readDataFromJson();
 
         for (uint256 index = 0; index < configs.length; index++) {
             if (keccak256(bytes(configs[index].name)) == keccak256(bytes(_name))) {
-                modelConfig = abi.encode(
-                    IDynamicKinkModel.Config({
-                        ulow: configs[index].config.u1,
-                        u1: configs[index].config.u1,
-                        u2: configs[index].config.u2,
-                        ucrit: configs[index].config.ucrit,
-                        rmin: configs[index].config.rmin,
-                        kmin: configs[index].config.kmin,
-                        kmax: configs[index].config.kmax,
-                        alpha: configs[index].config.alpha,
-                        cminus: configs[index].config.cminus,
-                        cplus: configs[index].config.cplus,
-                        c1: configs[index].config.c1,
-                        c2: configs[index].config.c2,
-                        dmax: configs[index].config.dmax,
-                        initialOwner: configs[index].config.initialOwner
-                    })
-                );
+                modelConfig = IDynamicKinkModel.Config({
+                    ulow: configs[index].config.u1,
+                    u1: configs[index].config.u1,
+                    u2: configs[index].config.u2,
+                    ucrit: configs[index].config.ucrit,
+                    rmin: configs[index].config.rmin,
+                    kmin: configs[index].config.kmin,
+                    kmax: configs[index].config.kmax,
+                    alpha: configs[index].config.alpha,
+                    cminus: configs[index].config.cminus,
+                    cplus: configs[index].config.cplus,
+                    c1: configs[index].config.c1,
+                    c2: configs[index].config.c2,
+                    dmax: configs[index].config.dmax
+                });
 
                 print(modelConfig, _name);
 
@@ -68,24 +69,21 @@ contract InterestRateModelKinkConfigData {
         revert(string.concat("IRM Kink Config with name `", _name, "` not found"));
     }
 
-    function print(bytes memory _configData, string memory _name) public pure virtual {
-        IDynamicKinkModel.Config memory cfg = abi.decode(_configData, (IDynamicKinkModel.Config));
-
+    function print(IDynamicKinkModel.Config memory _configData, string memory _name) public pure virtual {
         console2.log("DynamicKinkModel.Config:", _name);
-        console2.log("ulow: ", cfg.ulow);
-        console2.log("u1: ", cfg.u1);
-        console2.log("u2: ", cfg.u2);
-        console2.log("ucrit: ", cfg.ucrit);
-        console2.log("rmin: ", cfg.rmin);
-        console2.log("kmin: ", cfg.kmin);
-        console2.log("kmax: ", cfg.kmax);
-        console2.log("alpha: ", cfg.alpha);
-        console2.log("cminus: ", cfg.cminus);
-        console2.log("cplus: ", cfg.cplus);
-        console2.log("c1: ", cfg.c1);
-        console2.log("c2: ", cfg.c2);
-        console2.log("dmax: ", cfg.dmax);
-        console2.log("initial owner: ", cfg.initialOwner);
+        console2.log("ulow: ", _configData.ulow);
+        console2.log("u1: ", _configData.u1);
+        console2.log("u2: ", _configData.u2);
+        console2.log("ucrit: ", _configData.ucrit);
+        console2.log("rmin: ", _configData.rmin);
+        console2.log("kmin: ", _configData.kmin);
+        console2.log("kmax: ", _configData.kmax);
+        console2.log("alpha: ", _configData.alpha);
+        console2.log("cminus: ", _configData.cminus);
+        console2.log("cplus: ", _configData.cplus);
+        console2.log("c1: ", _configData.c1);
+        console2.log("c2: ", _configData.c2);
+        console2.log("dmax: ", _configData.dmax);
     }
 
     function _readInput(string memory input) internal view virtual returns (string memory fileData) {

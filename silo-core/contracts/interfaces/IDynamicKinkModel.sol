@@ -62,7 +62,6 @@ interface IDynamicKinkModel {
     /// @param c1 >= 0 – minimal rate of decrease of the slope k.
     /// @param c2 >= 0 – minimal growth rate of the slope k.
     /// @param dmax – maximal growth rate of the slope k.
-    /// @param initialOwner initial owner of the model
     struct Config {
         int256 ulow;
         int256 u1;
@@ -77,7 +76,6 @@ interface IDynamicKinkModel {
         int256 c1;
         int256 c2;
         int256 dmax;
-        address initialOwner;
     }
 
     /// @param T time since the last transaction.
@@ -110,7 +108,7 @@ interface IDynamicKinkModel {
 
     /// @notice Emitted on config init
     /// @param config config struct for asset in Silo
-    event Initialized(address indexed config);
+    event Initialized(address indexed config, address _owner);
 
     /// @notice Emitted on config reset to factory defaults
     event FactorySetup(address indexed silo);
@@ -147,6 +145,8 @@ interface IDynamicKinkModel {
     error InvalidT2();
     error InvalidTMinus();
     error InvalidTPlus();
+
+    function initialize(address _irmConfig, address _initialOwner) external;
 
     /// @notice Check if variables in config match the limits from model whitepaper.
     /// Some limits are narrower than in whhitepaper, because of additional research, see:
