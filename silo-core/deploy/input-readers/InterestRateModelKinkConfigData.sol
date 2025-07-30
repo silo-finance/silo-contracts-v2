@@ -22,6 +22,7 @@ contract InterestRateModelKinkConfigData {
         int256 u1;
         int256 u2;
         int256 ucrit;
+        int256 ulow;
     }
 
     struct KinkConfigData {
@@ -37,8 +38,6 @@ contract InterestRateModelKinkConfigData {
         KinkConfigData[] memory configs = _readDataFromJson();
 
         for (uint256 index = 0; index < configs.length; index++) {
-            console2.log("Checking config: ", configs[index].name);
-
             if (keccak256(bytes(configs[index].name)) == keccak256(bytes(_name))) {
                 modelConfig = abi.encode(
                     IDynamicKinkModel.Config({
@@ -58,7 +57,7 @@ contract InterestRateModelKinkConfigData {
                     })
                 );
 
-                print(modelConfig);
+                print(modelConfig, name);
 
                 return modelConfig;
             }
@@ -67,10 +66,10 @@ contract InterestRateModelKinkConfigData {
         revert(string.concat("IRM Kink Config with name `", _name, "` not found"));
     }
 
-    function print(bytes memory _configData) public pure virtual {
+    function print(bytes memory _configData, string memory _name) public pure virtual {
         IDynamicKinkModel.Config memory cfg = abi.decode(_configData, (IDynamicKinkModel.Config));
 
-        console2.log("DynamicKinkModel.Config:");
+        console2.log("DynamicKinkModel.Config:", _name);
         console2.log("ulow: ", cfg.ulow);
         console2.log("u1: ", cfg.u1);
         console2.log("u2: ", cfg.u2);
@@ -86,10 +85,11 @@ contract InterestRateModelKinkConfigData {
         console2.log("dmax: ", cfg.dmax);
     }
 
-    function _readInput(string memory input) internal view virtual returns (string memory) {
+    function _readInput(string memory input) internal view virtual returns (string memory fileData) {
         string memory inputDir = string.concat(VmLib.vm().projectRoot(), "/silo-core/deploy/input/");
         string memory file = string.concat(input, ".json");
-        return VmLib.vm().readFile(string.concat(inputDir, file));
+        fileData = VmLib.vm().readFile(string.concat(inputDir, file));
+        console2.log("%s: %s bytes", file, bytes(fileData).length);
     }
 
     function _readDataFromJson() internal view virtual returns (KinkConfigData[] memory) {
