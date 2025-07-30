@@ -140,9 +140,9 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
         rcomp = SafeCast.toUint256(rcompInt);
 
-        currentSetup.k = k;
+        _getSetup[silo].k = k;
 
-        currentSetup.u = _collateralAssets != 0
+        _getSetup[silo].u = _collateralAssets != 0
             ? SafeCast.toInt232(SafeCast.toInt256(_debtAssets * uint256(_DP) / _collateralAssets))
             : SafeCast.toInt232(_DP); // hard rule: utilization in the model should never be above 100%.
 
