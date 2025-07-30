@@ -24,7 +24,8 @@ fs_permissions = [
     { access = "read", path = "./silo-core/test/foundry/data/"},
     { access = "read", path = "./silo-core/deploy/input/"},
     { access = "read", path = "./silo-core/deploy/silo/_siloImplementations.json"},
-    { access = "read", path = "./silo-core/deploy/silo/_siloDeployments.json"}
+    { access = "read", path = "./silo-core/deploy/silo/_siloDeployments.json"},
+    { access = "read", path = "./silo-core/scripts/airdrop/output.json"}
 ]
 
 [profile.core_with_test]
