@@ -245,6 +245,8 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         pure
         returns (int256 rcur, bool overflow, bool capped)
     {
+        if (_tba == 0) return (0, false, false); // no debt, no interest
+
         Config memory cfg = _setup.config;
 
         // _t0 < _t1 checks are included inside this function, may revert 
@@ -318,6 +320,8 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         pure
         returns (int256 rcomp, int256 k, bool overflow, bool capped)
     {
+        if (_tba == 0) return (0, _setup.k, false, false); // no debt, no interest
+        
         LocalVarsRCOMP memory _l;
         Config memory cfg = _setup.config;
 
