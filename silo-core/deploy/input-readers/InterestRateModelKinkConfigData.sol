@@ -57,7 +57,7 @@ contract InterestRateModelKinkConfigData {
                     })
                 );
 
-                print(modelConfig, name);
+                print(modelConfig, _name);
 
                 return modelConfig;
             }
