@@ -47,7 +47,6 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
         ISiloConfig.InitData memory _siloInitData
     )
         external
-        virtual
         returns (ISiloConfig siloConfig)
     {
         // setUp IRMs (create if needed) and update `_siloInitData`
@@ -76,11 +75,7 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
     /// @notice Deploy `SiloConfig` with predicted addresses
     /// @param _siloInitData Silo configuration for the silo creation
     /// @return siloConfig Deployed `SiloConfig`
-    function _deploySiloConfig(ISiloConfig.InitData memory _siloInitData) 
-        internal 
-        virtual 
-        returns (ISiloConfig siloConfig) 
-    {
+    function _deploySiloConfig(ISiloConfig.InitData memory _siloInitData) internal returns (ISiloConfig siloConfig) {
         uint256 creatorSiloCounter = SILO_FACTORY.creatorSiloCounter(msg.sender);
 
         ISiloConfig.ConfigData memory configData0;
@@ -152,7 +147,7 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
         IInterestRateModelV2.Config calldata _irmConfigData0,
         IInterestRateModelV2.Config calldata _irmConfigData1,
         ISiloConfig.InitData memory _siloInitData
-    ) internal virtual{
+    ) internal {
         bytes32 irmFactorySalt = _salt();
 
         (, IInterestRateModelV2 interestRateModel0) = IRM_CONFIG_FACTORY.create(_irmConfigData0, irmFactorySalt);
@@ -165,7 +160,7 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
     /// @notice Create an oracle if it is not specified in the `_siloInitData` and has tx details for the creation
     /// @param _siloInitData Silo configuration for the silo creation
     /// @param _oracles Oracles creation details (factory and creation tx input)
-    function _createOracles(ISiloConfig.InitData memory _siloInitData, Oracles memory _oracles) internal virtual {
+    function _createOracles(ISiloConfig.InitData memory _siloInitData, Oracles memory _oracles) internal {
         if (_siloInitData.solvencyOracle0 == address(0)) {
             _siloInitData.solvencyOracle0 = _createOracle(_oracles.solvencyOracle0);
         }
@@ -185,7 +180,7 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
 
     /// @notice Create an oracle
     /// @param _txData Oracle creation details (factory and creation tx input)
-    function _createOracle(OracleCreationTxData memory _txData) internal virtual returns (address _oracle) {
+    function _createOracle(OracleCreationTxData memory _txData) internal returns (address _oracle) {
         if (_txData.deployed != address(0)) return _txData.deployed;
 
         address factory = _txData.factory;
@@ -208,7 +203,7 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
     function _cloneHookReceiver(
         ISiloConfig.InitData memory _siloInitData,
         address _hookReceiverImplementation
-    ) internal virtual{
+    ) internal {
         require(
             _hookReceiverImplementation == address(0) || _siloInitData.hookReceiver == address(0),
             HookReceiverMisconfigured()
@@ -228,7 +223,7 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
         ISiloConfig.InitData memory _siloInitData,
         ISiloConfig _siloConfig,
         ClonableHookReceiver calldata _clonableHookReceiver
-    ) internal virtual{
+    ) internal {
         if (_clonableHookReceiver.implementation != address(0)) {
             IHookReceiver(_siloInitData.hookReceiver).initialize(
                 _siloConfig,
@@ -239,7 +234,7 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
 
     /// @notice Update the salt of the tx input
     /// @param _txInput The tx input for the oracle factory
-    function _updateSalt(bytes memory _txInput) internal virtual{
+    function _updateSalt(bytes memory _txInput) internal {
         bytes32 salt = _salt();
 
         assembly { // solhint-disable-line no-inline-assembly
