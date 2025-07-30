@@ -33,13 +33,8 @@ contract SiloDeployValidation is IntegrationTest {
         _siloDeploy.run();
     }
 
-    /*
-    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_invalidIRM
-    */
-    function test_skip_invalidIRM() public {
-        // TODO this test started to fail when I changed deployer script and remove resolving IRM contract
-        // because we not resolving, we should clone it.
-
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_invalidIRM
+    function test_invalidIRM() public {
         // mocking contracts that are before an interest rate model
         AddrLib.setAddress(_INVALID_HOOK_RECEIVER, makeAddr(_INVALID_HOOK_RECEIVER));
 
