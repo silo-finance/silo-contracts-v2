@@ -57,6 +57,10 @@ abstract contract SiloDeployKink is SiloDeploy {
 
         SiloDeployerKink siloDeployer =
             SiloDeployerKink(_resolveDeployedContract(SiloCoreContracts.SILO_DEPLOYER_KINK));
+        
+        if (address(siloDeployer) == address(0)) {
+            revert("[SiloDeployKink] SiloDeployerKink not deployed");
+        }
 
         console2.log("[SiloDeployKink] siloInitData.token0", siloInitData.token0);
         console2.log("[SiloDeployKink] siloInitData.token1", siloInitData.token1);
