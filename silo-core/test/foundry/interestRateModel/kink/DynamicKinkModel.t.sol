@@ -19,6 +19,10 @@ contract DynamicKinkModelMock is DynamicKinkModel {
     function mockU(address _silo, int256 _u) external {
         _getSetup[_silo].u = SafeCast.toInt232(_u);
     }
+
+    function mockK(address _silo, int256 _k) external {
+        _getSetup[_silo].k = SafeCast.toInt232(_k);
+    }
 }
 
 /* 
@@ -36,6 +40,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
 
     constructor() {
         IDynamicKinkModel.Config memory cfg;
+        cfg.initialOwner = address(this);
         
         IRM = new DynamicKinkModelMock();
         IRM.initialize(address(new DynamicKinkModelConfig(cfg)));
@@ -74,6 +79,11 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
                 data[i].input.totalBorrowAmount
             );
 
+            if (data[i].input.totalBorrowAmount == 0) {
+                assertEq(rcur, 0, "when no debt we always return early");
+                continue;
+            }
+
             int256 overflow = didOverflow ? int256(1) : int256(0);
             int256 cap = didCap ? int256(1) : int256(0);
 
@@ -95,14 +105,21 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
 
         for (uint i; i < data.length; i++) {
             IDynamicKinkModel.Setup memory setup = _toSetupRcur(data[i]);
+
             vm.warp(uint256(data[i].input.currentTime));
             _setUtilizationData(data[i]);
-            IRM.updateSetup(ISilo(silo), setup.config, setup.k);
+            IRM.updateSetup(ISilo(silo), setup.config, setup.config.kmin); // note, we using kmin instead of k
             IRM.mockU(silo, data[i].input.lastUtilization);
+            IRM.mockK(silo, setup.k);
 
             // _printRcur(data[i]);
 
             uint256 rcur = IRM.getCurrentInterestRate(silo, uint256(data[i].input.currentTime));
+
+            if (data[i].input.totalBorrowAmount == 0) {
+                assertEq(rcur, 0, "[getCurrentInterestRate] when no debt we always return early");
+                continue;
+            }
 
             uint256 acceptableDiffPercent = _getAcceptableDiffPercent(data[i].id, _rcurDiffPercent);
 
@@ -134,6 +151,11 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
                 data[i].input.totalBorrowAmount
             );
 
+            if (data[i].input.totalBorrowAmount == 0) {
+                assertEq(rcomp, 0, "[compoundInterestRate] when no debt we always return early");
+                continue;
+            }
+
             int256 overflow = didOverflow ? int256(1) : int256(0);
             int256 cap = didCap ? int256(1) : int256(0);
 
@@ -156,14 +178,21 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
 
         for (uint i; i < data.length; i++) {
             IDynamicKinkModel.Setup memory setup = _toSetupRcomp(data[i]);
+
             vm.warp(uint256(data[i].input.currentTime));
             _setUtilizationData(data[i]);
-            IRM.updateSetup(ISilo(silo), setup.config, setup.k);
+            IRM.updateSetup(ISilo(silo), setup.config, setup.config.kmin); // note, we using kmin instead of k
             IRM.mockU(silo, data[i].input.lastUtilization);
+            IRM.mockK(silo, setup.k);
 
             // _printRcomp(data[i]);
 
             uint256 rcomp = IRM.getCompoundInterestRate(silo, uint256(data[i].input.currentTime));
+
+            if (data[i].input.totalBorrowAmount == 0) {
+                assertEq(rcomp, 0, "[getCompoundInterestRate] when no debt we always return early");
+                continue;
+            }
 
             uint256 acceptableDiffPercent = _getAcceptableDiffPercent(data[i].id, _rcompDiffPercent);
 
