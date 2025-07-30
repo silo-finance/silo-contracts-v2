@@ -58,3 +58,7 @@ silo-core/deploy/input/_importFromCsv/
 .certora_internal
 certora/harness/vaults/contracts
 emv-**/*
+
+#scripts
+silo-core/scripts/airdrop/data.csv
+silo-core/scripts/airdrop/output.json
