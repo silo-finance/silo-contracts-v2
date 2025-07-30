@@ -5,7 +5,6 @@ import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
 import {Create2Factory} from "common/utils/Create2Factory.sol";
-import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 
 import {IInterestRateModel} from "../../interfaces/IInterestRateModel.sol";
 import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
@@ -156,7 +155,6 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory, II
 
         irm = IInterestRateModel(Clones.cloneDeterministic(address(IRM), salt));
         irm.initialize(configContract);
-        Ownable1and2Steps(address(configContract)).transferOwnership1Step(msg.sender);
 
         irmByConfigHash[configHash] = irm;
 

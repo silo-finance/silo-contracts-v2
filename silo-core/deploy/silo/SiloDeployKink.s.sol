@@ -81,8 +81,6 @@ abstract contract SiloDeployKink is SiloDeploy {
 
         vm.stopBroadcast();
 
-        _transferIRMOwnership(siloConfig);
-
         console2.log("[SiloDeployKink] deploy done");
 
         SiloDeployments.save(ChainsLib.chainAlias(), configName, address(siloConfig));
@@ -93,8 +91,6 @@ abstract contract SiloDeployKink is SiloDeploy {
 
         _printAndValidateDetails(siloConfig, siloInitData);
     }
-
-    function _transferIRMOwnership(ISiloConfig _siloConfig) internal virtual;
 
     // TODO we using a low of helper methods is tests, check if we should adjust tests and use this deployer?
     // for sure for new onces.
