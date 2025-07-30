@@ -147,13 +147,18 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
         rcomp = SafeCast.toUint256(rcompInt);
 
-        _getSetup[silo].k = k;
+        _update(k, _collateralAssets, _debtAssets);
+    }
+
+    function _update(int256 _k, uint256 _collateralAssets, uint256 _debtAssets) internal {
+        // assume that caller is Silo
+        address silo = msg.sender;
+
+        _getSetup[silo].k = _k;
 
         _getSetup[silo].u = _collateralAssets != 0
             ? SafeCast.toInt232(SafeCast.toInt256(_debtAssets * uint256(_DP) / _collateralAssets))
             : SafeCast.toInt232(_DP); // hard rule: utilization in the model should never be above 100%.
-
-        // TODO do we need cap? check if already applied in compoundInterestRate
     }
 
     /// @inheritdoc IInterestRateModel
@@ -224,9 +229,6 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         require(_config.c2 >= 0 && _config.c2 <= UNIVERSAL_LIMIT, InvalidC2());
         // TODO do we still need upper limit
         require(_config.dmax >= _config.c2 && _config.dmax < UNIVERSAL_LIMIT, InvalidDmax());
-
-        // overflow check
-        // DynamicKinkModel(IRM).configOverflowCheck(_config); TODO
     }
 
     function getSetup(address _silo) public view returns (Setup memory setup) {
