@@ -99,7 +99,7 @@ interface IDynamicKinkModel {
 
     /// @param config model parameters for particular silo and asset.
     /// @param k state of the slope after latest interest rate accrual.
-    /// @param u utilization ratio of silo and asset at _t0 (utulization at the last interest rate update), in 18 decimal points.
+    /// @param u utilization ratio of silo and asset at _t0 (utulization at the last interest rate update), in 18 dp.
     /// @param initialized true if the config is initialized with factory defaults, false if it is not initialized.
     struct Setup {
         Config config;
@@ -117,8 +117,8 @@ interface IDynamicKinkModel {
 
     event ConfigUpdated(address indexed silo, Config config, int256 k);
 
-    // solhint-disable var-name-mixedcase
-    /// @dev revert when t0 > t1. Must not calculate interest in the past before the latest interest rate update.
+    /// @dev revert when t0 > t1. 
+    /// Must not calculate interest in the past before the latest interest rate update.
     error InvalidTimestamp();
 
     error InvalidDefaultConfig();

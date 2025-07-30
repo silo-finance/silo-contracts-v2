@@ -85,7 +85,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         emit Initialized(_irmConfig);
 
         address initialOwner = IDynamicKinkModelConfig(_irmConfig).INITIAL_OWNER();
-        
+
         if (initialOwner == address(0)) {
             // allow for owner to be empty if config is empty
             IDynamicKinkModel.Config memory empty;
@@ -240,7 +240,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
     }
 
     /// @inheritdoc IDynamicKinkModel
-    function currentInterestRate( // solhint-disable-line function-max-lines
+    function currentInterestRate( // solhint-disable-line function-max-lines, code-complexity
         Setup memory _setup, 
         int256 _t0, 
         int256 _t1, 
@@ -309,8 +309,9 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
             rcur = _min((rcur + cfg.rmin) * ONE_YEAR, RCUR_CAP);
 
-            // TODO whitepapar says: if the current interest rate (rcur) is above the cap, value is capped and k is reset to kmin 
-            // but we only reset k if overflow or capped in compoundInterestRate, should we do it here? and then return k and save.
+            // TODO whitepapar says: if the current interest rate (rcur) is above the cap, 
+            // value is capped and k is reset to kmin but we only reset k if overflow 
+            // or capped in compoundInterestRate, should we do it here? and then return k and save.
         }
     }
 

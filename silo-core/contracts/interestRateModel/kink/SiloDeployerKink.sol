@@ -39,7 +39,7 @@ contract SiloDeployerKink is SiloDeployer {
         external
         override
         virtual
-        returns (ISiloConfig siloConfig)
+        returns (ISiloConfig)
     {
         revert("use other `deploy` function");
     }

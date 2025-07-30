@@ -76,7 +76,11 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
     /// @notice Deploy `SiloConfig` with predicted addresses
     /// @param _siloInitData Silo configuration for the silo creation
     /// @return siloConfig Deployed `SiloConfig`
-    function _deploySiloConfig(ISiloConfig.InitData memory _siloInitData) internal virtual returns (ISiloConfig siloConfig) {
+    function _deploySiloConfig(ISiloConfig.InitData memory _siloInitData) 
+        internal 
+        virtual 
+        returns (ISiloConfig siloConfig) 
+    {
         uint256 creatorSiloCounter = SILO_FACTORY.creatorSiloCounter(msg.sender);
 
         ISiloConfig.ConfigData memory configData0;
