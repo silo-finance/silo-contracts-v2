@@ -70,13 +70,10 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
     /// @dev Config for the model
     IDynamicKinkModelConfig public irmConfig;
 
-    modifier onlySiloDeployer(ISilo _silo) {
-        // require(msg.sender == address(irmConfig), "Only config can call this function");
-        // TODO
-        _;
+    constructor() Ownable1and2Steps(msg.sender) {
+        // lock the implementation
+        _transferOwnership(address(0));
     }
-
-    constructor() Ownable1and2Steps(msg.sender) {}
 
     /// @inheritdoc IInterestRateModel
     function initialize(address _irmConfig) external virtual {
@@ -87,16 +84,16 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
         emit Initialized(_irmConfig);
 
-        // Ownable2Step._transferOwnership(newOwner);
+        transferOwnership1Step(msg.sender);
     }
 
-    function resetConfigToFactorySetup(address _silo) external onlySiloDeployer(ISilo(_silo)) {
+    function resetConfigToFactorySetup(address _silo) external onlyOwner {
         _factorySetup(_silo);
     }
 
     function updateSetup(ISilo _silo, IDynamicKinkModel.Config calldata _config, int256 _k)
         external
-        onlySiloDeployer(ISilo(_silo))
+        onlyOwner
     {
         require(address(irmConfig) != address(0), NotInitialized());
         // TODO json files has k, that is not in kmin and kmax range, what should be condition here for valid k?
@@ -321,7 +318,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         returns (int256 rcomp, int256 k, bool overflow, bool capped)
     {
         if (_tba == 0) return (0, _setup.k, false, false); // no debt, no interest
-        
+
         LocalVarsRCOMP memory _l;
         Config memory cfg = _setup.config;
 

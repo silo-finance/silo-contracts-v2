@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
+
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
@@ -101,6 +103,9 @@ contract SiloDeployerKink is SiloDeployer {
 
         (, IInterestRateModel interestRateModel0) = irmFactory.create(_irmConfigData0, irmFactorySalt);
         (, IInterestRateModel interestRateModel1) = irmFactory.create(_irmConfigData1, irmFactorySalt);
+
+        Ownable1and2Steps(address(interestRateModel0)).transferOwnership1Step(msg.sender);
+        Ownable1and2Steps(address(interestRateModel1)).transferOwnership1Step(msg.sender);
 
         _siloInitData.interestRateModel0 = address(interestRateModel0);
         _siloInitData.interestRateModel1 = address(interestRateModel1);

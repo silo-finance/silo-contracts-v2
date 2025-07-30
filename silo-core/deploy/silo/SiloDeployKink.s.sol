@@ -55,10 +55,10 @@ abstract contract SiloDeployKink is SiloDeploy {
 
         console2.log("[SiloDeployKink] `beforeCreateSilo` executed");
 
-        SiloDeployerKink siloDeployer =
+        SiloDeployerKink siloDeployerKink =
             SiloDeployerKink(_resolveDeployedContract(SiloCoreContracts.SILO_DEPLOYER_KINK));
         
-        if (address(siloDeployer) == address(0)) {
+        if (address(siloDeployerKink) == address(0)) {
             revert("[SiloDeployKink] SiloDeployerKink not deployed");
         }
 
@@ -71,7 +71,7 @@ abstract contract SiloDeployKink is SiloDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        siloConfig = siloDeployer.deploy(
+        siloConfig = siloDeployerKink.deploy(
             oracles,
             irmConfigData0,
             irmConfigData1,
@@ -80,6 +80,8 @@ abstract contract SiloDeployKink is SiloDeploy {
         );
 
         vm.stopBroadcast();
+
+        _transferIRMOwnership(siloConfig);
 
         console2.log("[SiloDeployKink] deploy done");
 
@@ -91,6 +93,8 @@ abstract contract SiloDeployKink is SiloDeploy {
 
         _printAndValidateDetails(siloConfig, siloInitData);
     }
+
+    function _transferIRMOwnership(ISiloConfig _siloConfig) internal virtual;
 
     // TODO we using a low of helper methods is tests, check if we should adjust tests and use this deployer?
     // for sure for new onces.
