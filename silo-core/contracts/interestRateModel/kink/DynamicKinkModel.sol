@@ -106,13 +106,13 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         onlyOwner
     {
         require(address(irmConfig) != address(0), NotInitialized());
-        // TODO json files has k, that is not in kmin and kmax range, what should be condition here for valid k?
-        // require(_k >= _config.kmin && _k <= _config.kmax, InvalidK());
+        require(_k >= _config.kmin && _k <= _config.kmax, InvalidK());
 
         verifyConfig(_config);
 
         _getSetup[address(_silo)].config = _config;
         _getSetup[address(_silo)].k = _k; // TODO or we should use config.kmin?
+        _getSetup[address(_silo)].initialized = true;
 
         emit ConfigUpdated(address(_silo), _config, _k);
     }
