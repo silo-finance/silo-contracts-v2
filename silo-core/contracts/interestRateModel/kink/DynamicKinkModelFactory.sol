@@ -67,9 +67,9 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory, II
         IDynamicKinkModel.DefaultConfigInt memory defaultInt = _copyDefaultConfig(_default);
 
         require(defaultInt.ulow >= 0, IDynamicKinkModel.InvalidUlow());
-        require(defaultInt.u1 > defaultInt.ulow, IDynamicKinkModel.InvalidU1());
-        require(defaultInt.u2 > defaultInt.u1, IDynamicKinkModel.InvalidU2());
-        require(defaultInt.ucrit > defaultInt.u2 && defaultInt.ucrit <= _DP, IDynamicKinkModel.InvalidUcrit());
+        require(defaultInt.u1 >= defaultInt.ulow, IDynamicKinkModel.InvalidU1());
+        require(defaultInt.u2 >= defaultInt.u1, IDynamicKinkModel.InvalidU2());
+        require(defaultInt.ucrit >= defaultInt.u2 && defaultInt.ucrit <= _DP, IDynamicKinkModel.InvalidUcrit());
 
         require(defaultInt.rmin >= 0, IDynamicKinkModel.InvalidRmin());
         require(defaultInt.rcritMin > defaultInt.rmin, IDynamicKinkModel.InvalidRcritMin());

@@ -203,8 +203,8 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
     /// @inheritdoc IDynamicKinkModel
     function verifyConfig(IDynamicKinkModel.Config calldata _config) public view virtual {
-        require(_config.ulow >= 0 && _config.ulow < _DP, InvalidUlow());
-        require(_config.u1 >= 0 && _config.u1 < _DP, InvalidU1());
+        require(_config.ulow >= 0 && _config.ulow <= _DP, InvalidUlow());
+        require(_config.u1 >= 0 && _config.u1 <= _DP, InvalidU1());
         require(_config.u2 >= _config.u1 && _config.u2 <= _DP, InvalidU2());
         require(_config.ucrit >= _config.ulow && _config.ucrit <= _DP, InvalidUcrit());
         require(_config.rmin >= 0 && _config.rmin <= _DP, InvalidRmin());
