@@ -7,6 +7,8 @@ import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 /// @title InterestRateModelV2Config
 /// @notice Please never deploy config manually, always use factory, because factory does necessary checks.
 contract DynamicKinkModelConfig is IDynamicKinkModelConfig {
+    address public immutable INITIAL_OWNER;
+
     int256 internal immutable _ULOW;
     int256 internal immutable _U1;
     int256 internal immutable _U2;
@@ -22,6 +24,8 @@ contract DynamicKinkModelConfig is IDynamicKinkModelConfig {
     int256 internal immutable _DMAX;
 
     constructor(IDynamicKinkModel.Config memory _config) {
+        INITIAL_OWNER = _config.initialOwner;
+        
         _ULOW = _config.ulow;
         _U1 = _config.u1;
         _U2 = _config.u2;

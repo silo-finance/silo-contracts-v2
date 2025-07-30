@@ -16,6 +16,7 @@ contract InterestRateModelKinkConfigData {
         int256 cminus;
         int256 cplus;
         int256 dmax;
+        address initialOwner;
         int256 kmax;
         int256 kmin;
         int256 rmin;
@@ -53,7 +54,8 @@ contract InterestRateModelKinkConfigData {
                         cplus: configs[index].config.cplus,
                         c1: configs[index].config.c1,
                         c2: configs[index].config.c2,
-                        dmax: configs[index].config.dmax
+                        dmax: configs[index].config.dmax,
+                        initialOwner: configs[index].config.initialOwner
                     })
                 );
 
@@ -83,6 +85,7 @@ contract InterestRateModelKinkConfigData {
         console2.log("c1: ", cfg.c1);
         console2.log("c2: ", cfg.c2);
         console2.log("dmax: ", cfg.dmax);
+        console2.log("initial owner: ", cfg.initialOwner);
     }
 
     function _readInput(string memory input) internal view virtual returns (string memory fileData) {

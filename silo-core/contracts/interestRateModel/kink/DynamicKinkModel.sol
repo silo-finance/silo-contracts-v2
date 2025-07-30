@@ -22,9 +22,9 @@ QA rules:
 - there should be no overflow when utilization goes down
 - function should never throw (unless we will decive to remove uncheck)
 - hard rule: utilization (setup.u) in the model should never be above 100%.
+- no debt no intrest
 
-TODO owner
-TODO deployment
+
 TODO try to remove overflow checks
 TODO set 5000% but then json tests needs to be adjusted
 
@@ -70,7 +70,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
     /// @dev Config for the model
     IDynamicKinkModelConfig public irmConfig;
 
-    constructor() Ownable1and2Steps(msg.sender) {
+    constructor() Ownable1and2Steps(address(0xdead)) {
         // lock the implementation
         _transferOwnership(address(0));
     }
@@ -84,7 +84,17 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
         emit Initialized(_irmConfig);
 
-        transferOwnership1Step(msg.sender);
+        address initialOwner = IDynamicKinkModelConfig(_irmConfig).INITIAL_OWNER();
+        
+        if (initialOwner == address(0)) {
+            // allow for owner to be empty if config is empty
+            IDynamicKinkModel.Config memory empty;
+            IDynamicKinkModel.Config memory config = IDynamicKinkModelConfig(_irmConfig).getConfig();
+
+            require(keccak256(abi.encode(empty)) == keccak256(abi.encode(config)), MissingOwner());
+        }
+
+        _transferOwnership(initialOwner);
     }
 
     function resetConfigToFactorySetup(address _silo) external onlyOwner {

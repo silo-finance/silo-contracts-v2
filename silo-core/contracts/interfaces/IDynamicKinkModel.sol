@@ -62,6 +62,7 @@ interface IDynamicKinkModel {
     /// @param c1 >= 0 – minimal rate of decrease of the slope k.
     /// @param c2 >= 0 – minimal growth rate of the slope k.
     /// @param dmax – maximal growth rate of the slope k.
+    /// @param initialOwner initial owner of the model
     struct Config {
         int256 ulow;
         int256 u1;
@@ -76,6 +77,7 @@ interface IDynamicKinkModel {
         int256 c1;
         int256 c2;
         int256 dmax;
+        address initialOwner;
     }
 
     /// @param T time since the last transaction.
@@ -121,6 +123,7 @@ interface IDynamicKinkModel {
 
     error InvalidDefaultConfig();
     error AddressZero();
+    error MissingOwner();
     error NotInitialized();
     error AlreadyInitialized();
     error InvalidUlow();
