@@ -8,10 +8,8 @@ import {VmLib} from "silo-foundry-utils/lib/VmLib.sol";
 import {IDynamicKinkModel} from "silo-core/contracts/interfaces/IDynamicKinkModel.sol";
 
 contract InterestRateModelKinkConfigData {
-    error ConfigNotFound();
-
     // must be in alphabetic order
-    struct ModelConfig {
+    struct KinkJsonConfig {
         int256 alpha;
         int256 c1;
         int256 c2;
@@ -26,19 +24,21 @@ contract InterestRateModelKinkConfigData {
         int256 ucrit;
     }
 
-    struct ConfigData {
-        ModelConfig config;
+    struct KinkConfigData {
+        KinkJsonConfig config;
         string name;
     }
 
-    function getAllConfigs() public view virtual returns (ConfigData[] memory) {
+    function getAllConfigs() public view virtual returns (KinkConfigData[] memory) {
         return _readDataFromJson();
     }
 
     function getConfigData(string memory _name) public view virtual returns (bytes memory modelConfig) {
-        ConfigData[] memory configs = _readDataFromJson();
+        KinkConfigData[] memory configs = _readDataFromJson();
 
         for (uint256 index = 0; index < configs.length; index++) {
+            console2.log("Checking config: ", configs[index].name);
+
             if (keccak256(bytes(configs[index].name)) == keccak256(bytes(_name))) {
                 modelConfig = abi.encode(
                     IDynamicKinkModel.Config({
@@ -64,7 +64,7 @@ contract InterestRateModelKinkConfigData {
             }
         }
 
-        revert ConfigNotFound();
+        revert(string.concat("IRM Kink Config with name `", _name, "` not found"));
     }
 
     function print(bytes memory _configData) public pure virtual {
@@ -92,10 +92,10 @@ contract InterestRateModelKinkConfigData {
         return VmLib.vm().readFile(string.concat(inputDir, file));
     }
 
-    function _readDataFromJson() internal view virtual returns (ConfigData[] memory) {
+    function _readDataFromJson() internal view virtual returns (KinkConfigData[] memory) {
         return abi.decode(
             VmLib.vm().parseJson(_readInput("InterestRateModelKinkConfigs"), string(abi.encodePacked("."))),
-            (ConfigData[])
+            (KinkConfigData[])
         );
     }
 }

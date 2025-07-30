@@ -32,6 +32,7 @@ interface IDynamicKinkModel {
         uint256 tMin;
     }
 
+    /// @dev same as DefaultConfig but with int256 values to help with calculations 
     struct DefaultConfigInt {
         int256 ulow;
         int256 ucrit;
