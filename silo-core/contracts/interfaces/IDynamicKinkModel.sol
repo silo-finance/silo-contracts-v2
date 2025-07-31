@@ -137,6 +137,7 @@ interface IDynamicKinkModel {
     error InvalidT2();
     error InvalidTMinus();
     error InvalidTPlus();
+    error XOverflow();
 
     function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo) external;
 
@@ -156,7 +157,6 @@ interface IDynamicKinkModel {
     /// @param _tba total borrow amount at _t1.
     /// @return rcomp compounded interest in decimal points.
     /// @return k new state of the model at _t1
-    /// @return overflow compounded interest rate was limited to prevent overflow.
     function compoundInterestRate(
         Config memory _cfg,
         ModelState memory _setup, 
@@ -167,7 +167,7 @@ interface IDynamicKinkModel {
     )
         external
         pure
-        returns (int256 rcomp, int256 k, bool overflow);
+        returns (int256 rcomp, int256 k);
 
     /// @notice Calculate current interest rate, refer model whitepaper for more details.
     /// @param _cfg Config config struct with model configuration.

@@ -124,7 +124,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _t1: SafeCast.toInt256(block.timestamp),
             _u: state.u,
             _tba: SafeCast.toInt256(_debtAssets)
-        }) returns (int256 rcompInt, int256 k, bool) {
+        }) returns (int256 rcompInt, int256 k) {
             rcomp = SafeCast.toUint256(rcompInt);  
             _updateState(k, _collateralAssets, _debtAssets);  
         } catch {
@@ -153,7 +153,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _t1: SafeCast.toInt256(_blockTimestamp),
             _u: currentSetup.u,
             _tba: SafeCast.toInt256(data.debtAssets)
-        }) returns (int256 rcompInt, int256, bool) {
+        }) returns (int256 rcompInt, int256) {
             rcomp = SafeCast.toUint256(rcompInt);
         } catch {
             rcomp = 0;
@@ -224,8 +224,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     {
         if (_tba == 0) return 0; // no debt, no interest
 
-        // _t0 < _t1 checks are included inside this function, may revert 
-        (,, bool overflow) = compoundInterestRate({
+        // call it to verify if we revert
+        compoundInterestRate({
             _cfg: _cfg,
             _setup: _setup,
             _t0: _t0,
@@ -233,8 +233,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _u: _u,
             _tba: _tba
         });
-
-        if (overflow) return 0;
 
         int256 T = _t1 - _t0;
 
@@ -281,9 +279,9 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     )
         public
         pure
-        returns (int256 rcomp, int256 k, bool overflow)
+        returns (int256 rcomp, int256 k)
     {
-        if (_tba == 0) return (0, _setup.k, false); // no debt, no interest
+        if (_tba == 0) return (0, _setup.k); // no debt, no interest
 
         LocalVarsRCOMP memory _l;
 
@@ -328,11 +326,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         // Overflow Checks
 
         // limit x, so the exp() function will not overflow, we have unchecked math there
-        if (_l.x > X_MAX) {
-            overflow = true;
-            rcomp = RCOMP_CAP * _l.T; // TODO this is overflow case, should we return 0?
-            k = _cfg.kmin;
-        }
+        require(_l.x <= X_MAX, XOverflow());
 
         rcomp = PRBMathSD59x18.exp(_l.x) - _DP;
 

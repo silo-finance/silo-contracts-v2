@@ -14,13 +14,10 @@ import {RcurDynamicKinkTestData} from "../../data-readers/RcurDynamicKinkTestDat
 
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 
-
 contract DynamicKinkModelMock is DynamicKinkModel {
-    function mockU(int256 _u) external {
+    function mockState(IDynamicKinkModel.Config memory _c, int256 _u, int256 _k) external {
+        irmConfig = new DynamicKinkModelConfig(_c);
         modelState.u = SafeCast.toInt96(_u);
-    }
-
-    function mockK(int256 _k) external {
         modelState.k = _k;
     }
 }
@@ -128,25 +125,25 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
             (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c) = _toSetupRcur(data[i]);
             // _printRcur(data[i]);
 
-            (int256 rcur) = IRM.currentInterestRate(
+            try IRM.currentInterestRate(
                 c,
                 state,
                 data[i].input.lastTransactionTime,
                 data[i].input.currentTime,
                 data[i].input.lastUtilization,
                 data[i].input.totalBorrowAmount
-            );
+            ) returns (int256 rcur) {
+                if (data[i].input.totalBorrowAmount == 0) {
+                    assertEq(rcur, 0, "when no debt we always return early");
+                    continue;
+                }
 
-            if (data[i].input.totalBorrowAmount == 0) {
-                assertEq(rcur, 0, "when no debt we always return early");
-                continue;
+                uint256 acceptableDiffPercent = _getAcceptableDiffPercent(data[i].id, _rcurDiffPercent);
+
+                _assertCloseTo(rcur, data[i].expected.currentAnnualInterest, data[i].id, "rcur is not close to expected value", acceptableDiffPercent);
+            } catch {
+                assertTrue(data[i].expected.didOverflow == 1, "didOverflow");
             }
-
-            uint256 acceptableDiffPercent = _getAcceptableDiffPercent(data[i].id, _rcurDiffPercent);
-
-            _assertCloseTo(rcur, data[i].expected.currentAnnualInterest, data[i].id, "rcur is not close to expected value", acceptableDiffPercent);
-
-            if (data[i].expected.didOverflow == 1) assertEq(rcur, 0, "didOverflow expecte 0 result");
         }
     }
 
@@ -163,9 +160,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
 
             vm.warp(uint256(data[i].input.currentTime));
             _setUtilizationData(data[i]);
-            IRM.updateSetup(c, c.kmin); // note, we using kmin instead of k
-            IRM.mockU(data[i].input.lastUtilization);
-            IRM.mockK(state.k);
+            IRM.mockState(c, data[i].input.lastUtilization, state.k);
 
             // _printRcur(data[i]);
 
@@ -217,7 +212,9 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
             _assertCloseTo(rcomp, data[i].expected.compoundInterest, data[i].id, "rcomp is not close to expected value", acceptableDiffPercent);
             _assertCloseTo(k, data[i].expected.newSlope, data[i].id, "k is not close to expected value");
 
-            if (data[i].expected.didOverflow == 1) assertEq(rcomp, 0, "didOverflow expecte 0 result");
+            if (data[i].expected.didOverflow == 1) {
+                assertEq(rcomp, 0, "didOverflow expecte 0 result");
+            }
         }
     }
 
@@ -234,9 +231,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
 
             vm.warp(uint256(data[i].input.currentTime));
             _setUtilizationData(data[i]);
-            IRM.updateSetup(c, c.kmin); // note, we using kmin instead of k
-            IRM.mockU(data[i].input.lastUtilization);
-            IRM.mockK(state.k);
+            IRM.mockState(c, data[i].input.lastUtilization, state.k);
 
             // _printRcomp(data[i]);
 
