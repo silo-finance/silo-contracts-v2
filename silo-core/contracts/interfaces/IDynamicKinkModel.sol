@@ -183,7 +183,6 @@ interface IDynamicKinkModel {
     /// @param _setup DynamicKinkModel config struct with model state.
     /// @param _t0 timestamp of the last interest rate update.
     /// @param _t1 timestamp of the current interest rate calculations (current time).
-    /// @param _u utilization ratio of silo and asset at _t1.
     /// @param _td total deposits at _t1.
     /// @param _tba total borrow amount at _t1.
     /// @return rcur current interest in decimal points.
@@ -194,7 +193,6 @@ interface IDynamicKinkModel {
         Setup memory _setup, 
         int256 _t0, 
         int256 _t1, 
-        int256 _u,
         int256 _td,
         int256 _tba
     )

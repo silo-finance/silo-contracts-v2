@@ -173,7 +173,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _setup: currentSetup,
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
             _t1: SafeCast.toInt256(_blockTimestamp),
-            _u: currentSetup.u,
             _td: SafeCast.toInt256(data.collateralAssets),
             _tba: SafeCast.toInt256(data.debtAssets)
         }) returns (int256 rcurInt, bool, bool) {
@@ -206,8 +205,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         Config memory _cfg,
         Setup memory _setup, 
         int256 _t0, 
-        int256 _t1, 
-        int256 _u,
+        int256 _t1,
         int256 _td,
         int256 _tba
     )
@@ -223,7 +221,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _setup: _setup,
             _t0: _t0,
             _t1: _t1,
-            _u: _u,
+            _u: _setup.u,
             _td: _td,
             _tba: _tba
         });
@@ -243,15 +241,15 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             // TODO we changing `k` in `compoundInterestRate`, should we use it here, or we using `_setup.k`?
             int256 k = _max(_cfg.kmin, _min(_cfg.kmax, _setup.k));
 
-            if (_u < _cfg.u1) {
+            if (_setup.u < _cfg.u1) {
                 k = _max(
-                    k - (_cfg.c1 + _cfg.cminus * (_cfg.u1 - _u) / _DP) * T,
+                    k - (_cfg.c1 + _cfg.cminus * (_cfg.u1 - _setup.u) / _DP) * T,
                     _cfg.kmin
                 );
-            } else if (_u > _cfg.u2) {
+            } else if (_setup.u > _cfg.u2) {
                 k = _min(
                     k + _min(
-                        _cfg.c2 + _cfg.cplus * (_u - _cfg.u2) / _DP,
+                        _cfg.c2 + _cfg.cplus * (_setup.u - _cfg.u2) / _DP,
                         _cfg.dmax
                     ) * T,
                     _cfg.kmax
@@ -259,11 +257,11 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             }
 
             // additional interest rate
-            if (_u >= _cfg.ulow) {
-                rcur = _u - _cfg.ulow;
+            if (_setup.u >= _cfg.ulow) {
+                rcur = _setup.u - _cfg.ulow;
 
-                if (_u >= _cfg.ucrit) {
-                    rcur = rcur + _cfg.alpha * (_u - _cfg.ucrit) / _DP;
+                if (_setup.u >= _cfg.ucrit) {
+                    rcur = rcur + _cfg.alpha * (_setup.u - _cfg.ucrit) / _DP;
                 }
 
                 rcur = rcur * k / _DP;
@@ -295,100 +293,98 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
         LocalVarsRCOMP memory _l;
 
-        unchecked {
-            if (_t1 < _t0) revert InvalidTimestamp(); // TODO remove if ok to overflow
+        if (_t1 < _t0) revert InvalidTimestamp(); // TODO remove if ok to overflow
 
-            _l.T = _t1 - _t0;
+        _l.T = _t1 - _t0;
 
-            if (_l.T > HUNDRED_YEARS) {
-                _l.T = HUNDRED_YEARS;
+        if (_l.T > HUNDRED_YEARS) {
+            _l.T = HUNDRED_YEARS;
+        }
+
+        // roc calculations
+        if (_u < _cfg.u1) {
+            _l.roc = -_cfg.c1 - _cfg.cminus * (_cfg.u1 - _u) / _DP;
+        } else if (_u > _cfg.u2) {
+            _l.roc = _min(
+                _cfg.c2 + _cfg.cplus * (_u - _cfg.u2) / _DP,
+                _cfg.dmax
+            );
+        }
+
+        k = _max(_cfg.kmin, _min(_cfg.kmax, _setup.k));
+        // slope of the kink at t1 ignoring lower and upper bounds
+        _l.k1 = k + _l.roc * _l.T;
+
+        // calculate the resulting slope state
+        if (_l.k1 > _cfg.kmax) {
+            _l.x = _cfg.kmax * _l.T - (_cfg.kmax - k) ** 2 / (2 * _l.roc);
+            k = _cfg.kmax;
+        } else if (_l.k1 < _cfg.kmin) {
+            _l.x = _cfg.kmin * _l.T - (_setup.k - _cfg.kmin) ** 2 / (2 * _l.roc);
+            k = _cfg.kmin;
+        } else {
+            _l.x = (k + _l.k1) * _l.T / 2;
+            k = _l.k1;
+        }
+
+        if (_u >= _cfg.ulow) {
+            _l.f = _u - _cfg.ulow;
+
+            if (_u >= _cfg.ucrit) {
+                _l.f = _l.f + _cfg.alpha * (_u - _cfg.ucrit) / _DP;
             }
+        }
 
-            // roc calculations
-            if (_u < _cfg.u1) {
-                _l.roc = -_cfg.c1 - _cfg.cminus * (_cfg.u1 - _u) / _DP;
-            } else if (_u > _cfg.u2) {
-                _l.roc = _min(
-                    _cfg.c2 + _cfg.cplus * (_u - _cfg.u2) / _DP,
-                    _cfg.dmax
-                );
-            }
+        _l.x = _cfg.rmin * _l.T + _l.f * _l.x / _DP;
 
-            k = _max(_cfg.kmin, _min(_cfg.kmax, _setup.k));
-            // slope of the kink at t1 ignoring lower and upper bounds
-            _l.k1 = k + _l.roc * _l.T;
+        // Overflow Checks
 
-            // calculate the resulting slope state
-            if (_l.k1 > _cfg.kmax) {
-                _l.x = _cfg.kmax * _l.T - (_cfg.kmax - k) ** 2 / (2 * _l.roc);
-                k = _cfg.kmax;
-            } else if (_l.k1 < _cfg.kmin) {
-                _l.x = _cfg.kmin * _l.T - (_setup.k - _cfg.kmin) ** 2 / (2 * _l.roc);
-                k = _cfg.kmin;
+        // limit x, so the exp() function will not overflow
+        if (_l.x > X_MAX) {
+            overflow = true;
+            _l.x = X_MAX;
+        }
+
+        rcomp = PRBMathSD59x18.exp(_l.x) - _DP;
+
+        // limit rcomp
+        if (rcomp > RCOMP_CAP * _l.T) {
+            capped = true;
+            rcomp = RCOMP_CAP * _l.T;
+        }
+
+        _l.amt = _max(_tba, _td);
+
+        // stop compounding interest for critical assets amounts
+        // this IF was added in additional to the paper
+        // TODO remove if we will remove overflow checks
+        if (_l.amt > AMT_MAX) {
+            overflow = true;
+            rcomp = 0;
+            k = _cfg.kmin;
+
+            return (rcomp, k, overflow, capped);
+        }
+
+        // TODO add check for overflow, we can still throw here
+        _l.interest = _tba * rcomp / _DP;
+
+        // limit accrued interest if it results in critical assets amount
+        if (_l.amt > AMT_MAX - _l.interest) {
+            overflow = true;
+            // it will not underflow because above, we checking `if (_l.amt > AMT_MAX)`
+            _l.interest = AMT_MAX - _l.amt;
+
+            if (_tba == 0) {
+                rcomp = 0; // tODO if we early return, this will never happen
             } else {
-                _l.x = (k + _l.k1) * _l.T / 2;
-                k = _l.k1;
+                rcomp = _l.interest * _DP / _tba;
             }
+        }
 
-            if (_u >= _cfg.ulow) {
-                _l.f = _u - _cfg.ulow;
-
-                if (_u >= _cfg.ucrit) {
-                    _l.f = _l.f + _cfg.alpha * (_u - _cfg.ucrit) / _DP;
-                }
-            }
-
-            _l.x = _cfg.rmin * _l.T + _l.f * _l.x / _DP;
-
-            // Overflow Checks
-
-            // limit x, so the exp() function will not overflow
-            if (_l.x > X_MAX) {
-                overflow = true;
-                _l.x = X_MAX;
-            }
-
-            rcomp = PRBMathSD59x18.exp(_l.x) - _DP;
-
-            // limit rcomp
-            if (rcomp > RCOMP_CAP * _l.T) {
-                capped = true;
-                rcomp = RCOMP_CAP * _l.T;
-            }
-
-            _l.amt = _max(_tba, _td);
-
-            // stop compounding interest for critical assets amounts
-            // this IF was added in additional to the paper
-            // TODO remove if we will remove overflow checks
-            if (_l.amt > AMT_MAX) {
-                overflow = true;
-                rcomp = 0;
-                k = _cfg.kmin;
-
-                return (rcomp, k, overflow, capped);
-            }
-
-            // TODO add check for overflow, we can still throw here
-            _l.interest = _tba * rcomp / _DP;
-
-            // limit accrued interest if it results in critical assets amount
-            if (_l.amt > AMT_MAX - _l.interest) {
-                overflow = true;
-                // it will not underflow because above, we checking `if (_l.amt > AMT_MAX)`
-                _l.interest = AMT_MAX - _l.amt;
-
-                if (_tba == 0) {
-                    rcomp = 0; // tODO if we early return, this will never happen
-                } else {
-                    rcomp = _l.interest * _DP / _tba;
-                }
-            }
-
-            // reset the k to the min value in overflow and cap cases
-            if (overflow || capped) {
-                k = _cfg.kmin;
-            }
+        // reset the k to the min value in overflow and cap cases
+        if (overflow || capped) {
+            k = _cfg.kmin;
         }
     }
 
