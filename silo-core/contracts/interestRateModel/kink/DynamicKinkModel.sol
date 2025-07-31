@@ -53,11 +53,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     /// @dev maximum value of compound interest per second the model will return. This is per-second rate.
     int256 public constant RCOMP_CAP = RCUR_CAP / ONE_YEAR;
 
-    /// @dev maximum value for total borrow amount, total deposits amount and compounded interest. If these
-    /// values are above the threshold, compounded interest is reduced to prevent an overflow.
-    /// value = type(uint256).max / uint256(2 ** 16 * _DP);
-    int256 public constant AMT_MAX = 1766847064778384329583297500742918515827483896875618958;
-
     ModelState public modelState;
 
     /// @dev Map of all configs for the model, used for restoring to last state
