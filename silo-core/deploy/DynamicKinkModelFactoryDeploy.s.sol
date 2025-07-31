@@ -4,7 +4,10 @@ pragma solidity 0.8.28;
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 
-import {DynamicKinkModelFactory, IDynamicKinkModelFactory} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
+import {
+    DynamicKinkModelFactory,
+    IDynamicKinkModelFactory
+} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 
 /*
     FOUNDRY_PROFILE=core \

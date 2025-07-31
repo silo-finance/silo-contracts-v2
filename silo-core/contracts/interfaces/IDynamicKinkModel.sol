@@ -98,7 +98,7 @@ interface IDynamicKinkModel {
     /// @param k state of the slope after latest interest rate accrual.
     /// @param silo silo address for which model is created.
     struct ModelState {
-        int256 k;
+        int96 k; // TODO ensure we can limit to 95 bytes (-1 for int)
         address silo;
     }
 
@@ -157,9 +157,9 @@ interface IDynamicKinkModel {
     /// @return k new state of the model at _t1
     function compoundInterestRate(
         Config memory _cfg,
-        ModelState memory _setup, 
+        ModelState memory _setup,
         int256 _t0,
-        int256 _t1, 
+        int256 _t1,
         int256 _u,
         int256 _tba
     )
@@ -177,9 +177,9 @@ interface IDynamicKinkModel {
     /// @return rcur current interest in decimal points.
     function currentInterestRate(
         Config memory _cfg,
-        ModelState memory _setup, 
-        int256 _t0, 
-        int256 _t1, 
+        ModelState memory _setup,
+        int256 _t0,
+        int256 _t1,
         int256 _u,
         int256 _tba
     )

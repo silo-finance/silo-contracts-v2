@@ -16,7 +16,6 @@ import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateMo
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {InterestRateModelKinkConfigData} from "./input-readers/InterestRateModelKinkConfigData.sol";
 
-
 /*
 FOUNDRY_PROFILE=core CONFIG=empty MODEL_OWNER=0x0000000000000000000000000000000000000000 \
     forge script silo-core/deploy/KinkModelDeploy.s.sol \
@@ -58,7 +57,7 @@ contract KinkModelDeploy is CommonDeploy {
         console2.log("[KinkModelDeploy] run() finished.");
     }
 
-    function _modelOwner() internal virtual returns(address modelOwner) {
+    function _modelOwner() internal virtual returns (address modelOwner) {
         modelOwner = vm.envAddress("MODEL_OWNER");
     }
 }

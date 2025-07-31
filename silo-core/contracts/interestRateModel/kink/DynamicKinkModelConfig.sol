@@ -6,7 +6,7 @@ import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 
 /// @title InterestRateModelV2Config
 /// @notice Please never deploy config manually, always use factory, because factory does necessary checks.
-contract DynamicKinkModelConfig is IDynamicKinkModelConfig { // TODO try to pack variables, will that save gas a lot?
+contract DynamicKinkModelConfig is IDynamicKinkModelConfig {
     int256 internal immutable _ULOW;
     int256 internal immutable _U1;
     int256 internal immutable _U2;

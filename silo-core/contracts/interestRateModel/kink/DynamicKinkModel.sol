@@ -72,13 +72,13 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         _transferOwnership(address(0));
     }
 
-    function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo) 
-        external 
-        virtual 
+    function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo)
+        external
+        virtual
     {
         require(modelState.silo == address(0), AlreadyInitialized());
         modelState.silo = _silo;
-        
+
         _updateConfiguration(_config);
 
         _transferOwnership(_initialOwner);
@@ -86,10 +86,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         emit Initialized(_initialOwner, _silo);
     }
 
-    function updateSetup(IDynamicKinkModel.Config calldata _config)
-        external
-        onlyOwner
-    {
+    function updateSetup(IDynamicKinkModel.Config calldata _config) external onlyOwner {
         _updateConfiguration(_config);
     }
 
@@ -113,8 +110,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         (ModelState memory state, Config memory cfg) = getModelState();
         require(msg.sender == state.silo, OnlySilo());
 
-        // TODO whitepapar says: if the current interest rate (rcur) is above the cap, 
-        // value is capped and k is reset to kmin but we only reset k if overflow 
+        // TODO whitepapar says: if the current interest rate (rcur) is above the cap,
+        // value is capped and k is reset to kmin but we only reset k if overflow
         // or capped in compoundInterestRate, should we do it here? and then return k and save.
 
         try this.compoundInterestRate({
@@ -125,16 +122,11 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _u: _calculateUtiliation(_collateralAssets, _debtAssets),
             _tba: SafeCast.toInt256(_debtAssets)
         }) returns (int256 rcompInt, int256 k) {
-            rcomp = SafeCast.toUint256(rcompInt);  
+            rcomp = SafeCast.toUint256(rcompInt);
             modelState.k = k;
         } catch {
             // return 0
         }
-    }
-
-    function getModelState() public view returns (ModelState memory s, Config memory c) {
-        s = modelState;
-        c = irmConfig.getConfig();
     }
 
     function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)
@@ -160,11 +152,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         }
     }
 
-    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
-        external
-        view
-        returns (uint256 rcur)
-    {
+    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp) external view returns (uint256 rcur) {
         (ModelState memory state, Config memory cfg) = getModelState();
         ISilo.UtilizationData memory data = ISilo(state.silo).utilizationData();
 
@@ -184,6 +172,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         }
     }
 
+    function getModelState() public view returns (ModelState memory s, Config memory c) {
+        s = modelState;
+        c = irmConfig.getConfig();
+    }
 
     /// @inheritdoc IDynamicKinkModel
     function verifyConfig(IDynamicKinkModel.Config memory _config) public view virtual {
@@ -338,9 +330,9 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         }
     }
 
-    function _updateConfiguration(IDynamicKinkModel.Config memory _config) 
-        internal 
-        returns (IDynamicKinkModelConfig newCfg) 
+    function _updateConfiguration(IDynamicKinkModel.Config memory _config)
+        internal
+        returns (IDynamicKinkModelConfig newCfg)
     {
         newCfg = _deployConfig(_config);
 
@@ -349,7 +341,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         emit ConfigUpdated(newCfg);
     }
 
-    function _deployConfig(IDynamicKinkModel.Config memory _config) internal returns (IDynamicKinkModelConfig newCfg) {
+    function _deployConfig(IDynamicKinkModel.Config memory _config)
+        internal
+        returns (IDynamicKinkModelConfig newCfg)
+    {
         verifyConfig(_config);
 
         newCfg = new DynamicKinkModelConfig(_config);

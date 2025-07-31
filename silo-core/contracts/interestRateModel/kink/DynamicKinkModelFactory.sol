@@ -102,9 +102,9 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     }
 
     function _create(
-        IDynamicKinkModel.Config memory _config, 
-        address _initialOwner, 
-        address _silo, 
+        IDynamicKinkModel.Config memory _config,
+        address _initialOwner,
+        address _silo,
         bytes32 _externalSalt
     )
         internal
@@ -121,9 +121,11 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         emit NewDynamicKinkModel(IDynamicKinkModel(address(irm)));
     }
 
-    function _copyDefaultConfig(
-        IDynamicKinkModel.UserFriendlyConfig calldata _default
-    ) internal pure returns (IDynamicKinkModel.UserFriendlyConfigInt memory config) {
+    function _copyDefaultConfig(IDynamicKinkModel.UserFriendlyConfig calldata _default)
+        internal
+        pure
+        returns (IDynamicKinkModel.UserFriendlyConfigInt memory config)
+    {
         config.ulow = SafeCast.toInt256(_default.ulow);
         config.u1 = SafeCast.toInt256(_default.u1);
         config.u2 = SafeCast.toInt256(_default.u2);
