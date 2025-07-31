@@ -120,20 +120,19 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         // value is capped and k is reset to kmin but we only reset k if overflow 
         // or capped in compoundInterestRate, should we do it here? and then return k and save.
 
-        // TODO should we try/catch here as well?
-
-        (int256 rcompInt, int256 k) = compoundInterestRate({
+        try this.compoundInterestRate({
             _cfg: cfg,
             _setup: state,
             _t0: SafeCast.toInt256(_interestRateTimestamp),
             _t1: SafeCast.toInt256(block.timestamp),
             _u: state.u,
             _tba: SafeCast.toInt256(_debtAssets)
-        });
-
-        rcomp = SafeCast.toUint256(rcompInt);
-
-        _updateState(k, _collateralAssets, _debtAssets);
+        }) returns (int256 rcompInt, int256 k) {
+            rcomp = SafeCast.toUint256(rcompInt);  
+            _updateState(k, _collateralAssets, _debtAssets);  
+        } catch {
+            // return 0
+        }
     }
 
     function getModelState() public view returns (ModelState memory s, Config memory c) {
