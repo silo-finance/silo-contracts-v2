@@ -40,7 +40,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
     /// @inheritdoc IDynamicKinkModelFactory
     // solhint-disable-next-line code-complexity, function-max-lines
-    function generateDefaultConfig(IDynamicKinkModel.UserFriendlyConfig calldata _default)
+    function generateConfig(IDynamicKinkModel.UserFriendlyConfig calldata _default)
         external
         view
         virtual
