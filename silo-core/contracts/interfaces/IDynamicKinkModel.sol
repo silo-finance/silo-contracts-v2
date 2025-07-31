@@ -96,11 +96,9 @@ interface IDynamicKinkModel {
     }
 
     /// @param k state of the slope after latest interest rate accrual.
-    /// @param u utilization ratio of silo and asset at _t0 (utulization at the last interest rate update), in 18 dp.
     /// @param silo silo address for which model is created.
     struct ModelState {
         int256 k;
-        int96 u;
         address silo;
     }
 

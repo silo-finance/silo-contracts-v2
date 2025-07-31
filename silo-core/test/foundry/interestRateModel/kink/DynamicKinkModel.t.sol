@@ -15,9 +15,8 @@ import {RcurDynamicKinkTestData} from "../../data-readers/RcurDynamicKinkTestDat
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 
 contract DynamicKinkModelMock is DynamicKinkModel {
-    function mockState(IDynamicKinkModel.Config memory _c, int256 _u, int256 _k) external {
+    function mockState(IDynamicKinkModel.Config memory _c, int256 _k) external {
         irmConfig = new DynamicKinkModelConfig(_c);
-        modelState.u = SafeCast.toInt96(_u);
         modelState.k = _k;
     }
 }
@@ -160,7 +159,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
 
             vm.warp(uint256(data[i].input.currentTime));
             _setUtilizationData(data[i]);
-            IRM.mockState(c, data[i].input.lastUtilization, state.k);
+            IRM.mockState(c, state.k);
 
             // _printRcur(data[i]);
 
@@ -231,7 +230,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
 
             vm.warp(uint256(data[i].input.currentTime));
             _setUtilizationData(data[i]);
-            IRM.mockState(c, data[i].input.lastUtilization, state.k);
+            IRM.mockState(c, state.k);
 
             // _printRcomp(data[i]);
 

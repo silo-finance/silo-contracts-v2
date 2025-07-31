@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 
@@ -121,11 +122,11 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _setup: state,
             _t0: SafeCast.toInt256(_interestRateTimestamp),
             _t1: SafeCast.toInt256(block.timestamp),
-            _u: state.u,
+            _u: _calculateUtiliation(_collateralAssets, _debtAssets),
             _tba: SafeCast.toInt256(_debtAssets)
         }) returns (int256 rcompInt, int256 k) {
             rcomp = SafeCast.toUint256(rcompInt);  
-            _updateState(k, _collateralAssets, _debtAssets);  
+            modelState.k = k;
         } catch {
             // return 0
         }
@@ -150,7 +151,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _setup: currentSetup,
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
             _t1: SafeCast.toInt256(_blockTimestamp),
-            _u: currentSetup.u,
+            _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
             _tba: SafeCast.toInt256(data.debtAssets)
         }) returns (int256 rcompInt, int256) {
             rcomp = SafeCast.toUint256(rcompInt);
@@ -174,7 +175,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _setup: state,
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
             _t1: SafeCast.toInt256(_blockTimestamp),
-            _u: state.u,
+            _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
             _tba: SafeCast.toInt256(data.debtAssets)
         }) returns (int256 rcurInt) {
             rcur = SafeCast.toUint256(rcurInt);
@@ -182,6 +183,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             rcur = 0;
         }
     }
+
 
     /// @inheritdoc IDynamicKinkModel
     function verifyConfig(IDynamicKinkModel.Config memory _config) public view virtual {
@@ -336,19 +338,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         }
     }
 
-    function _updateState(int256 _k, uint256 _collateralAssets, uint256 _debtAssets) internal {
-        modelState.k = _k;
-
-        int256 u = _collateralAssets != 0
-            ? SafeCast.toInt232(SafeCast.toInt256(_debtAssets * uint256(_DP) / _collateralAssets))
-            : SafeCast.toInt232(_DP); 
-
-        if (u > _DP) u = _DP; // hard rule: utilization in the model should never be above 100%.
-
-        // case to int96 safe, max value is DP
-        modelState.u = int96(u);
-    }
-
     function _updateConfiguration(IDynamicKinkModel.Config memory _config) 
         internal 
         returns (IDynamicKinkModelConfig newCfg) 
@@ -370,6 +359,14 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         irmConfig = newCfg;
 
         emit NewConfig(newCfg);
+    }
+
+    // hard rule: utilization in the model should never be above 100%.
+    function _calculateUtiliation(uint256 _collateralAssets, uint256 _debtAssets) internal pure returns (int256) {
+        if (_debtAssets == 0) return 0;
+        if (_collateralAssets == 0 || _debtAssets >= _collateralAssets) return _DP;
+
+        return int256(Math.mulDiv(_debtAssets, uint256(_DP), _collateralAssets, Math.Rounding.Floor));
     }
 
     function _min(int256 _a, int256 _b) internal pure returns (int256) {
