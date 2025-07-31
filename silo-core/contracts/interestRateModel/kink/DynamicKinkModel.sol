@@ -129,7 +129,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _t0: SafeCast.toInt256(_interestRateTimestamp),
             _t1: SafeCast.toInt256(block.timestamp),
             _u: state.u,
-            _td: SafeCast.toInt256(_collateralAssets),
             _tba: SafeCast.toInt256(_debtAssets)
         });
 
@@ -158,7 +157,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
             _t1: SafeCast.toInt256(_blockTimestamp),
             _u: currentSetup.u,
-            _td: SafeCast.toInt256(data.collateralAssets),
             _tba: SafeCast.toInt256(data.debtAssets)
         }) returns (int256 rcompInt, int256) {
             rcomp = SafeCast.toUint256(rcompInt);
@@ -183,7 +181,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
             _t1: SafeCast.toInt256(_blockTimestamp),
             _u: state.u,
-            _td: SafeCast.toInt256(data.collateralAssets),
             _tba: SafeCast.toInt256(data.debtAssets)
         }) returns (int256 rcurInt) {
             rcur = SafeCast.toUint256(rcurInt);
@@ -217,7 +214,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         int256 _t0, 
         int256 _t1,
         int256 _u,
-        int256 _td,
         int256 _tba
     )
         public
@@ -233,7 +229,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _t0: _t0,
             _t1: _t1,
             _u: _u,
-            _td: _td,
             _tba: _tba
         });
 
@@ -278,7 +273,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         int256 _t0,
         int256 _t1, 
         int256 _u,
-        int256 _td,
         int256 _tba
     )
         public
