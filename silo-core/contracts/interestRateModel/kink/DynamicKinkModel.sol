@@ -40,7 +40,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     int256 internal constant _DP = int256(1e18);
 
     /// @dev universal limit for several DynamicKinkModel config parameters. Follow the model whitepaper for more
-    ///     information. Units of measure are vary per variable type. Any config within these limits is considered
+    ///     information. Units of measure vary per variable type. Any config within these limits is considered
     ///     valid.
     int256 public constant UNIVERSAL_LIMIT = 1e9 * _DP;
 
@@ -64,6 +64,9 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     /// @dev each Silo setup is stored separately in mapping, that's why we do not need to clone IRM
     /// at the same time this is safety feature because we will write to this mapping based on msg.sender
     mapping(address silo => Setup irmStorage) internal _getSetup;
+
+    /// @dev Map of all configs for the model, used for restoring to last state
+    mapping(IDynamicKinkModelConfig current => IDynamicKinkModelConfig prev) public configsHistory;
 
     /// @dev Config for the model
     IDynamicKinkModelConfig public irmConfig;
@@ -94,6 +97,14 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         onlyOwner
     {
         _updateSetup(_silo, _config, _k);
+    }
+
+    function restoreLastConfig() external onlyOwner {
+        IDynamicKinkModelConfig lastOne = configsHistory[irmConfig];
+        require(address(lastOne) != address(0), AddressZero());
+
+        irmConfig = lastOne;
+        // TODO what with the k?
     }
 
     function getCompoundInterestRateAndUpdate(
@@ -402,13 +413,15 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         emit ConfigUpdated(address(_silo), newCfg, _k);
     }
 
-
     function _deployConfig(IDynamicKinkModel.Config memory _config) internal returns (IDynamicKinkModelConfig newCfg) {
         verifyConfig(_config);
 
         newCfg = new DynamicKinkModelConfig(_config);
 
+        configsHistory[newCfg] = irmConfig;
+
         irmConfig = newCfg;
+
 
         emit NewConfig(newCfg);
     }
