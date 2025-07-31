@@ -12,6 +12,7 @@ import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.sol";
 
 import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
+import {KinkMath} from "./KinkMath.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -36,6 +37,8 @@ TODO set 5000% but then json tests needs to be adjusted
 /// @dev it follows `IInterestRateModel` interface except `initialize` method
 /// @custom:security-contact security@silo.finance
 contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
+    using KinkMath for int256;
+
     /// @dev DP in 18 decimal points used for integer calculations
     int256 internal constant _DP = int256(1e18);
 
@@ -187,20 +190,27 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
     /// @inheritdoc IDynamicKinkModel
     function verifyConfig(IDynamicKinkModel.Config memory _config) public view virtual {
-        require(_config.ulow >= 0 && _config.ulow <= _DP, InvalidUlow());
-        require(_config.ulow <= _config.u1 && _config.u1 >= 0 && _config.u1 <= _DP, InvalidU1());
-        require(_config.u2 <= _config.ucrit && _config.u2 >= _config.u1 && _config.u2 <= _DP, InvalidU2());
-        require(_config.ucrit >= _config.ulow && _config.ucrit <= _DP, InvalidUcrit());
-        require(_config.rmin >= 0 && _config.rmin <= _DP, InvalidRmin());
-        require(_config.kmin >= 0 && _config.kmin <= UNIVERSAL_LIMIT, InvalidKmin());
-        require(_config.kmax >= _config.kmin && _config.kmin <= UNIVERSAL_LIMIT, InvalidKmax());
-        require(_config.alpha >= 0 && _config.alpha <= UNIVERSAL_LIMIT, InvalidAlpha());
-        require(_config.cminus >= 0 && _config.cminus <= UNIVERSAL_LIMIT, InvalidCminus());
-        require(_config.cplus >= 0 && _config.cplus <= UNIVERSAL_LIMIT, InvalidCplus());
-        require(_config.c1 >= 0 && _config.c1 <= UNIVERSAL_LIMIT, InvalidC1());
-        require(_config.c2 >= 0 && _config.c2 <= UNIVERSAL_LIMIT, InvalidC2());
-        // TODO do we still need upper limit
-        require(_config.dmax >= _config.c2 && _config.dmax < UNIVERSAL_LIMIT, InvalidDmax());
+        // 0 <= ulow <= u1 <= u2 <= ucrit <= DP
+        require(_config.ulow.isBetween(0, _config.u1), InvalidUlow());
+        require(_config.u1.isBetween(_config.ulow, _config.u2), InvalidU1());
+        require(_config.u2.isBetween(_config.u1, _config.ucrit), InvalidU2());
+        require(_config.ucrit.isBetween(_config.u2, _DP), InvalidUcrit());
+
+        require(_config.rmin.isBetween(0, _DP), InvalidRmin());
+
+        require(_config.kmin.isBetween(0, UNIVERSAL_LIMIT), InvalidKmin());
+        require(_config.kmax.isBetween(_config.kmin, UNIVERSAL_LIMIT), InvalidKmax());
+
+        require(_config.alpha.isBetween(0, UNIVERSAL_LIMIT), InvalidAlpha());
+
+        require(_config.cminus.isBetween(0, UNIVERSAL_LIMIT), InvalidCminus());
+        require(_config.cplus.isBetween(0, UNIVERSAL_LIMIT), InvalidCplus());
+
+        require(_config.c1.isBetween(0, UNIVERSAL_LIMIT), InvalidC1());
+        require(_config.c2.isBetween(0, UNIVERSAL_LIMIT), InvalidC2());
+
+        // TODO do we still need upper limit?
+        require(_config.dmax.isBetween(_config.c2, UNIVERSAL_LIMIT), InvalidDmax());
     }
 
     /// @inheritdoc IDynamicKinkModel
