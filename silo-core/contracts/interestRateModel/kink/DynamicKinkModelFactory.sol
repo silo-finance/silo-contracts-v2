@@ -12,13 +12,13 @@ import {IDynamicKinkModelFactory} from "../../interfaces/IDynamicKinkModelFactor
 
 import {DynamicKinkModel} from "./DynamicKinkModel.sol";
 import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
-import {KinkMath} from "./KinkMath.sol";
+import {KinkMath} from ".../lib/KinkMath.sol";
 
 /// @title DynamicKinkModelFactory
 /// @dev It creates DynamicKinkModelConfig.
 contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     using KinkMath for int256;
-    
+
     /// @dev DP in 18 decimal points used for integer calculations
     int256 public constant DP = int256(1e18);
 

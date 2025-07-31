@@ -16,12 +16,12 @@ import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 
 
 contract DynamicKinkModelMock is DynamicKinkModel {
-    function mockU(address _silo, int256 _u) external {
-        _getSetup[_silo].u = SafeCast.toInt232(_u);
+    function mockU(int256 _u) external {
+        modelState.u = SafeCast.toInt96(_u);
     }
 
-    function mockK(address _silo, int256 _k) external {
-        _getSetup[_silo].k = SafeCast.toInt232(_k);
+    function mockK(int256 _k) external {
+        modelState.k = _k;
     }
 }
 
@@ -42,7 +42,7 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
         IDynamicKinkModel.Config memory cfg;
         
         IRM = new DynamicKinkModelMock();
-        IRM.initialize(address(new DynamicKinkModelConfig(cfg)), address(this));
+        IRM.initialize(cfg, address(this), address(this));
 
         // 1e18 is 100%
         _rcurDiffPercent[1] = 1659788986;
@@ -66,15 +66,15 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
         RcurData[] memory data = _readDataFromJsonRcur();
 
         for (uint i; i < data.length; i++) {
-            IDynamicKinkModel.Setup memory setup = _toSetupRcur(data[i]);
+            (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c) = _toSetupRcur(data[i]);
             // _printRcur(data[i]);
 
-            (int256 rcur, bool didOverflow, bool didCap) = IRM.currentInterestRate(
-                setup,
+            (int256 rcur) = IRM.currentInterestRate(
+                c,
+                state,
                 data[i].input.lastTransactionTime,
                 data[i].input.currentTime,
                 data[i].input.lastUtilization,
-                data[i].input.totalDeposits,
                 data[i].input.totalBorrowAmount
             );
 
@@ -83,14 +83,11 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
                 continue;
             }
 
-            int256 overflow = didOverflow ? int256(1) : int256(0);
-            int256 cap = didCap ? int256(1) : int256(0);
-
             uint256 acceptableDiffPercent = _getAcceptableDiffPercent(data[i].id, _rcurDiffPercent);
 
             _assertCloseTo(rcur, data[i].expected.currentAnnualInterest, data[i].id, "rcur is not close to expected value", acceptableDiffPercent);
-            _assertCloseTo(overflow, data[i].expected.didOverflow, data[i].id, "didOverflow is not close to expected value");
-            _assertCloseTo(cap, data[i].expected.didCap, data[i].id, "didCap is not close to expected value");
+
+            if (data[i].expected.didOverflow == 1) assertEq(rcur, 0, "didOverflow expecte 0 result");
         }
     }
 
@@ -103,13 +100,13 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
         address silo = address(this);
 
         for (uint i; i < data.length; i++) {
-            IDynamicKinkModel.Setup memory setup = _toSetupRcur(data[i]);
+            (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c) = _toSetupRcur(data[i]);
 
             vm.warp(uint256(data[i].input.currentTime));
             _setUtilizationData(data[i]);
-            IRM.updateSetup(ISilo(silo), setup.config, setup.config.kmin); // note, we using kmin instead of k
-            IRM.mockU(silo, data[i].input.lastUtilization);
-            IRM.mockK(silo, setup.k);
+            IRM.updateSetup(c, c.kmin); // note, we using kmin instead of k
+            IRM.mockU(data[i].input.lastUtilization);
+            IRM.mockK(state.k);
 
             // _printRcur(data[i]);
 
@@ -138,15 +135,16 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
         RcompData[] memory data = _readDataFromJsonRcomp();
 
         for (uint i; i < data.length; i++) {
-            IDynamicKinkModel.Setup memory setup = _toSetupRcomp(data[i]);
+            (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c) = _toSetupRcomp(data[i]);
+
             // _printRcomp(data[i]);
 
-            (int256 rcomp, int256 k, bool didOverflow, bool didCap) = IRM.compoundInterestRate(
-                setup,
+            (int256 rcomp, int256 k) = IRM.compoundInterestRate(
+                c,
+                state,
                 data[i].input.lastTransactionTime,
                 data[i].input.currentTime,
                 data[i].input.lastUtilization,
-                data[i].input.totalDeposits,
                 data[i].input.totalBorrowAmount
             );
 
@@ -155,15 +153,12 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
                 continue;
             }
 
-            int256 overflow = didOverflow ? int256(1) : int256(0);
-            int256 cap = didCap ? int256(1) : int256(0);
-
             uint256 acceptableDiffPercent = _getAcceptableDiffPercent(data[i].id, _rcompDiffPercent);
 
             _assertCloseTo(rcomp, data[i].expected.compoundInterest, data[i].id, "rcomp is not close to expected value", acceptableDiffPercent);
             _assertCloseTo(k, data[i].expected.newSlope, data[i].id, "k is not close to expected value");
-            _assertCloseTo(overflow, data[i].expected.didOverflow, data[i].id, "didOverflow is not close to expected value");
-            _assertCloseTo(cap, data[i].expected.didCap, data[i].id, "didCap is not close to expected value");
+
+            if (data[i].expected.didOverflow == 1) assertEq(rcomp, 0, "didOverflow expecte 0 result");
         }
     }
 
@@ -176,13 +171,13 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
         address silo = address(this);
 
         for (uint i; i < data.length; i++) {
-            IDynamicKinkModel.Setup memory setup = _toSetupRcomp(data[i]);
+            (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c) = _toSetupRcomp(data[i]);
 
             vm.warp(uint256(data[i].input.currentTime));
             _setUtilizationData(data[i]);
-            IRM.updateSetup(ISilo(silo), setup.config, setup.config.kmin); // note, we using kmin instead of k
-            IRM.mockU(silo, data[i].input.lastUtilization);
-            IRM.mockK(silo, setup.k);
+            IRM.updateSetup(c, c.kmin); // note, we using kmin instead of k
+            IRM.mockU(data[i].input.lastUtilization);
+            IRM.mockK(state.k);
 
             // _printRcomp(data[i]);
 
@@ -203,14 +198,6 @@ contract DynamicKinkModelTest is RcompDynamicKinkTestData, RcurDynamicKinkTestDa
                 acceptableDiffPercent
             );
         }
-    }
-
-    /* 
-    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_AMT_MAX
-    */
-    function test_kink_AMT_MAX() public view {
-        int256 amtMax = IRM.AMT_MAX();
-        assertEq(uint256(amtMax), type(uint256).max / uint256(2 ** 16 * 1e18), "AMT_MAX is not correct");
     }
 
     function _assertCloseTo(

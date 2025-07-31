@@ -95,32 +95,23 @@ contract RcompDynamicKinkTestData is Test {
     function _toSetupRcomp(RcompData memory _data)
         internal
         pure
-        returns (IDynamicKinkModel.Setup memory setup)
+        returns (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c)
     {
 
-        setup.config.alpha = _data.constants.alpha;
-        setup.config.c1 = _data.constants.c1;
-        setup.config.c2 = _data.constants.c2;
-        setup.config.cminus = _data.constants.cminus;
-        setup.config.cplus = _data.constants.cplus;
-        setup.config.dmax = _data.constants.dmax;
-        setup.config.kmax = _data.constants.kmax;
-        setup.config.kmin = _data.constants.kmin;
-        setup.config.rmin = _data.constants.rmin;
-        setup.config.u1 = _data.constants.u1;
-        setup.config.u2 = _data.constants.u2;
-        setup.config.ucrit = _data.constants.ucrit;
-        setup.config.ulow = _data.constants.ulow;
+        c.alpha = _data.constants.alpha;
+        c.c1 = _data.constants.c1;
+        c.c2 = _data.constants.c2;
+        c.cminus = _data.constants.cminus;
+        c.cplus = _data.constants.cplus;
+        c.dmax = _data.constants.dmax;
+        c.kmax = _data.constants.kmax;
+        c.kmin = _data.constants.kmin;
+        c.rmin = _data.constants.rmin;
+        c.u1 = _data.constants.u1;
+        c.u2 = _data.constants.u2;
+        c.ucrit = _data.constants.ucrit;
+        c.ulow = _data.constants.ulow;
 
-        setup.k = _data.input.lastSlope;
-    }
-
-    function _toConfigStructRcomp(RcompData memory _data)
-        internal
-        pure
-        returns (IDynamicKinkModel.Config memory cfg)
-    {
-        IDynamicKinkModel.Setup memory setup = _toSetupRcomp(_data);
-        cfg = setup.config;
+        state.k = _data.input.lastSlope;
     }
 }
