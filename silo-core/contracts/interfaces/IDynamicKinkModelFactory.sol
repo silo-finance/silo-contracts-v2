@@ -11,10 +11,12 @@ interface IDynamicKinkModelFactory {
     /// @notice it can be used in separate tx eg config can be prepared before it will be used for Silo creation
     /// @param _config IRM configuration
     /// @param _initialOwner initial owner of model
+    /// @param _silo address of silo for which model is created
     /// @return irm deployed (or existing one, depends on the config) contract address
     function create(
         IDynamicKinkModel.Config calldata _config, 
-        address _initialOwner
+        address _initialOwner,
+        address _silo
     )
         external
         returns (IInterestRateModel irm);

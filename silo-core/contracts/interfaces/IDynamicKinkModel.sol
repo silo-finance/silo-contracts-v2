@@ -95,22 +95,23 @@ interface IDynamicKinkModel {
         int256 interest;
     }
 
-    /// @param config model parameters for particular silo and asset.
     /// @param k state of the slope after latest interest rate accrual.
     /// @param u utilization ratio of silo and asset at _t0 (utulization at the last interest rate update), in 18 dp.
-    /// @param initialized true if the config is initialized with factory defaults, false if it is not initialized.
-    struct Setup {
+    /// @param silo silo address for which model is created.
+    struct ModelState {
         int256 k;
-        int232 u;
-        bool initialized;
+        int96 u;
+        address silo;
     }
 
-    event Initialized(address _owner);
+    event Initialized(address indexed owner, address indexed silo);
 
     event NewConfig(IDynamicKinkModelConfig indexed config);
 
-    event ConfigUpdated(address indexed silo, IDynamicKinkModelConfig indexed config, int256 k);
+    event ConfigUpdated(IDynamicKinkModelConfig indexed config, int256 k);
 
+    error OnlySilo();
+    error InvalidSilo();
     error InvalidDefaultConfig();
     error AddressZero();
     error MissingOwner();
@@ -138,7 +139,7 @@ interface IDynamicKinkModel {
     error InvalidTMinus();
     error InvalidTPlus();
 
-    function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner) external;
+    function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo) external;
 
     /// @notice Check if variables in config match the limits from model whitepaper.
     /// Some limits are narrower than in whhitepaper, because of additional research, see:
@@ -159,7 +160,7 @@ interface IDynamicKinkModel {
     /// @return k new state of the model at _t1
     function compoundInterestRate(
         Config memory _cfg,
-        Setup memory _setup, 
+        ModelState memory _setup, 
         int256 _t0,
         int256 _t1, 
         int256 _u,
@@ -175,14 +176,16 @@ interface IDynamicKinkModel {
     /// @param _setup DynamicKinkModel config struct with model state.
     /// @param _t0 timestamp of the last interest rate update.
     /// @param _t1 timestamp of the current interest rate calculations (current time).
+    /// @param _u utilization ratio of silo and asset at _t1.
     /// @param _td total deposits at _t1.
     /// @param _tba total borrow amount at _t1.
     /// @return rcur current interest in decimal points.
     function currentInterestRate(
         Config memory _cfg,
-        Setup memory _setup, 
+        ModelState memory _setup, 
         int256 _t0, 
         int256 _t1, 
+        int256 _u,
         int256 _td,
         int256 _tba
     )
