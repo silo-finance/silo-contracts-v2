@@ -114,7 +114,6 @@ interface IDynamicKinkModel {
     error InvalidSilo();
     error InvalidDefaultConfig();
     error AddressZero();
-    error MissingOwner();
     error NotInitialized();
     error AlreadyInitialized();
     error InvalidUlow();

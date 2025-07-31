@@ -76,12 +76,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         external 
         virtual 
     {
-        if (_initialOwner == address(0)) {
-            // allow owner to be empty only if config is empty
-            IDynamicKinkModel.Config memory empty;
-            require(keccak256(abi.encode(empty)) == keccak256(abi.encode(_config)), MissingOwner());
-        }
-
         require(modelState.silo == address(0), AlreadyInitialized());
         modelState.silo = _silo;
         
