@@ -40,13 +40,13 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
     /// @inheritdoc IDynamicKinkModelFactory
     // solhint-disable-next-line code-complexity, function-max-lines
-    function generateDefaultConfig(IDynamicKinkModel.DefaultConfig calldata _default)
+    function generateDefaultConfig(IDynamicKinkModel.UserFriendlyConfig calldata _default)
         external
         view
         virtual
         returns (IDynamicKinkModel.Config memory config)
     {
-        IDynamicKinkModel.DefaultConfigInt memory defaultInt = _copyDefaultConfig(_default);
+        IDynamicKinkModel.UserFriendlyConfigInt memory defaultInt = _copyDefaultConfig(_default);
 
         // 0 <= ulow <= u1 <= u2 <= ucrit <= DP
         require(defaultInt.ulow.isBetween(0, defaultInt.u1), IDynamicKinkModel.InvalidUlow());
@@ -122,8 +122,8 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     }
 
     function _copyDefaultConfig(
-        IDynamicKinkModel.DefaultConfig calldata _default
-    ) internal pure returns (IDynamicKinkModel.DefaultConfigInt memory config) {
+        IDynamicKinkModel.UserFriendlyConfig calldata _default
+    ) internal pure returns (IDynamicKinkModel.UserFriendlyConfigInt memory config) {
         config.ulow = SafeCast.toInt256(_default.ulow);
         config.u1 = SafeCast.toInt256(_default.u1);
         config.u2 = SafeCast.toInt256(_default.u2);

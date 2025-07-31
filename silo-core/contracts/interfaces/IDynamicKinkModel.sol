@@ -18,7 +18,7 @@ interface IDynamicKinkModel {
     /// @param tMinus time that it takes to reset the model from the maximal to the minimal APR when utilization is ulow
     /// @param tPlus time that it takes to grow from the minimal to the maximal APR at utilization ucrit
     /// @param tMin minimal time it takes to grow from the minimal to the maximal APR at any utilization
-    struct DefaultConfig {
+    struct UserFriendlyConfig {
         uint256 ulow;
         uint256 ucrit;
         uint256 u1;
@@ -34,8 +34,8 @@ interface IDynamicKinkModel {
         uint256 tMin;
     }
 
-    /// @dev same as DefaultConfig but with int256 values to help with calculations 
-    struct DefaultConfigInt {
+    /// @dev same as UserFriendlyConfig but with int256 values to help with calculations
+    struct UserFriendlyConfigInt {
         int256 ulow;
         int256 ucrit;
         int256 u1;

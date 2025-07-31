@@ -25,7 +25,7 @@ interface IDynamicKinkModelFactory {
     /// @dev This function is used to create a config that can be used to initialize a DynamicKinkModel instance.
     /// @param _default Default configuration parameters for the DynamicKinkModel.
     /// @return config The generated configuration for the DynamicKinkModel.
-    function generateDefaultConfig(IDynamicKinkModel.DefaultConfig calldata _default)
+    function generateDefaultConfig(IDynamicKinkModel.UserFriendlyConfig calldata _default)
         external
         view
         returns (IDynamicKinkModel.Config memory config);
