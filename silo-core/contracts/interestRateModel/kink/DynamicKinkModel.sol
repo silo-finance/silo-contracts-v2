@@ -27,7 +27,6 @@ QA rules:
 - no debt no intrest
 - AlreadyInitialized: only one init
 
-TODO try to remove overflow checks
 TODO set 2500% but then json tests needs to be adjusted
 
 */
@@ -79,18 +78,18 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         require(modelState.silo == address(0), AlreadyInitialized());
         modelState.silo = _silo;
         
-        _updateConfiguration(_config, _config.kmin);
+        _updateConfiguration(_config);
 
         _transferOwnership(_initialOwner);
 
         emit Initialized(_initialOwner, _silo);
     }
 
-    function updateSetup(IDynamicKinkModel.Config calldata _config, int256 _k)
+    function updateSetup(IDynamicKinkModel.Config calldata _config)
         external
         onlyOwner
     {
-        _updateConfiguration(_config, _k);
+        _updateConfiguration(_config);
     }
 
     function restoreLastConfig() external onlyOwner {
@@ -98,7 +97,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         require(address(lastOne) != address(0), AddressZero());
 
         irmConfig = lastOne;
-        // TODO what with the k?
+        modelState.k = irmConfig.getConfig().kmin;
     }
 
     function getCompoundInterestRateAndUpdate(
@@ -350,17 +349,15 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         modelState.u = int96(u);
     }
 
-    function _updateConfiguration(IDynamicKinkModel.Config memory _config, int256 _k) 
+    function _updateConfiguration(IDynamicKinkModel.Config memory _config) 
         internal 
         returns (IDynamicKinkModelConfig newCfg) 
     {
-        require(_k >= _config.kmin && _k <= _config.kmax, InvalidK());
-
         newCfg = _deployConfig(_config);
 
-        modelState.k = _k;
+        modelState.k = _config.kmin;
 
-        emit ConfigUpdated(newCfg, _k);
+        emit ConfigUpdated(newCfg);
     }
 
     function _deployConfig(IDynamicKinkModel.Config memory _config) internal returns (IDynamicKinkModelConfig newCfg) {
