@@ -53,10 +53,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     /// @dev maximum value of compound interest per second the model will return. This is per-second rate.
     int256 public constant RCOMP_CAP = RCUR_CAP / ONE_YEAR;
 
-    /// @dev the time limit for compounding interest. If the 100 years is exceeded, time since last transaction
-    ///     is capped to this limit.
-    int256 public constant HUNDRED_YEARS = 100 * ONE_YEAR;
-
     /// @dev maximum exp() input to prevent an overflow.
     int256 public constant X_MAX = 11 * _DP;
 
@@ -233,11 +229,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         unchecked {
             int256 T = _t1 - _t0;
 
-            if (T > HUNDRED_YEARS) {
-                // TODO if we dont care about overflow, remove
-                T = HUNDRED_YEARS;
-            }
-
             // TODO we changing `k` in `compoundInterestRate`, should we use it here, or we using `_setup.k`?
             int256 k = _max(_cfg.kmin, _min(_cfg.kmax, _setup.k));
 
@@ -296,10 +287,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         if (_t1 < _t0) revert InvalidTimestamp(); // TODO remove if ok to overflow
 
         _l.T = _t1 - _t0;
-
-        if (_l.T > HUNDRED_YEARS) {
-            _l.T = HUNDRED_YEARS;
-        }
 
         // roc calculations
         if (_u < _cfg.u1) {
