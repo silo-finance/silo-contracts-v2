@@ -85,7 +85,6 @@ interface IDynamicKinkModel {
     /// @param f factor for the slope in kink.
     /// @param roc internal variable for slope calculations.
     /// @param x internal variable for slope calculations.
-    /// @param amt assetsAmount maximum of total deposits and total borrwed amounts.
     /// @param interest absolute value of compounded interest.
     struct LocalVarsRCOMP {
         int256 T;
@@ -93,7 +92,6 @@ interface IDynamicKinkModel {
         int256 f;
         int256 roc;
         int256 x;
-        int256 amt;
         int256 interest;
     }
 
@@ -112,10 +110,6 @@ interface IDynamicKinkModel {
     event NewConfig(IDynamicKinkModelConfig indexed config);
 
     event ConfigUpdated(address indexed silo, IDynamicKinkModelConfig indexed config, int256 k);
-
-    /// @dev revert when t0 > t1. 
-    /// Must not calculate interest in the past before the latest interest rate update.
-    error InvalidTimestamp();
 
     error InvalidDefaultConfig();
     error AddressZero();
@@ -163,8 +157,6 @@ interface IDynamicKinkModel {
     /// @param _tba total borrow amount at _t1.
     /// @return rcomp compounded interest in decimal points.
     /// @return k new state of the model at _t1
-    /// @return overflow compounded interest rate was limited to prevent overflow.
-    /// @return capped compounded interest rate was above the treshold and was capped.
     function compoundInterestRate(
         Config memory _cfg,
         Setup memory _setup, 
@@ -176,7 +168,7 @@ interface IDynamicKinkModel {
     )
         external
         pure
-        returns (int256 rcomp, int256 k, bool overflow, bool capped);
+        returns (int256 rcomp, int256 k);
 
     /// @notice Calculate current interest rate, refer model whitepaper for more details.
     /// @param _cfg Config config struct with model configuration.
@@ -186,8 +178,6 @@ interface IDynamicKinkModel {
     /// @param _td total deposits at _t1.
     /// @param _tba total borrow amount at _t1.
     /// @return rcur current interest in decimal points.
-    /// @return overflow current interest rate was limited to prevent overflow.
-    /// @return capped current interest rate was above the treshold and was capped.
     function currentInterestRate(
         Config memory _cfg,
         Setup memory _setup, 
@@ -198,5 +188,5 @@ interface IDynamicKinkModel {
     )
         external
         pure
-        returns (int256 rcur, bool overflow, bool capped);
+        returns (int256 rcur);
 }

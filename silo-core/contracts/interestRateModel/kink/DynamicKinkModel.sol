@@ -53,9 +53,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     /// @dev maximum value of compound interest per second the model will return. This is per-second rate.
     int256 public constant RCOMP_CAP = RCUR_CAP / ONE_YEAR;
 
-    /// @dev maximum exp() input to prevent an overflow.
-    int256 public constant X_MAX = 11 * _DP;
-
     /// @dev maximum value for total borrow amount, total deposits amount and compounded interest. If these
     /// values are above the threshold, compounded interest is reduced to prevent an overflow.
     /// value = type(uint256).max / uint256(2 ** 16 * _DP);
@@ -121,7 +118,13 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
         (Setup memory currentSetup, Config memory cfg) = getSetup(silo);
 
-        (int256 rcompInt, int256 k,,) = compoundInterestRate({
+        // TODO whitepapar says: if the current interest rate (rcur) is above the cap, 
+        // value is capped and k is reset to kmin but we only reset k if overflow 
+        // or capped in compoundInterestRate, should we do it here? and then return k and save.
+
+        // TODO should we try/catch here as well?
+
+        (int256 rcompInt, int256 k) = compoundInterestRate({
             _cfg: cfg,
             _setup: currentSetup,
             _t0: SafeCast.toInt256(_interestRateTimestamp),
@@ -160,7 +163,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _u: currentSetup.u,
             _td: SafeCast.toInt256(data.collateralAssets),
             _tba: SafeCast.toInt256(data.debtAssets)
-        }) returns (int256 rcompInt, int256, bool, bool) {
+        }) returns (int256 rcompInt, int256) {
             rcomp = SafeCast.toUint256(rcompInt);
         } catch {
             rcomp = 0;
@@ -182,10 +185,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _t1: SafeCast.toInt256(_blockTimestamp),
             _td: SafeCast.toInt256(data.collateralAssets),
             _tba: SafeCast.toInt256(data.debtAssets)
-        }) returns (int256 rcurInt, bool, bool) {
+        }) returns (int256 rcurInt) {
             rcur = SafeCast.toUint256(rcurInt);
         } catch {
-            rcur = SafeCast.toUint256(RCUR_CAP);
+            rcur = 0;
         }
     }
 
@@ -218,12 +221,12 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     )
         public
         pure
-        returns (int256 rcur, bool overflow, bool capped)
+        returns (int256 rcur)
     {
-        if (_tba == 0) return (0, false, false); // no debt, no interest
+        if (_tba == 0) return (0); // no debt, no interest
 
         // _t0 < _t1 checks are included inside this function, may revert 
-        (,, overflow, capped) = compoundInterestRate({
+        compoundInterestRate({
             _cfg: _cfg,
             _setup: _setup,
             _t0: _t0,
@@ -233,48 +236,38 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _tba: _tba
         });
 
-        if (overflow) {
-            return (0, overflow, capped);
+        int256 T = _t1 - _t0;
+
+        // TODO we changing `k` in `compoundInterestRate`, should we use it here, or we using `_setup.k`?
+        int256 k = _max(_cfg.kmin, _min(_cfg.kmax, _setup.k));
+
+        if (_setup.u < _cfg.u1) {
+            k = _max(
+                k - (_cfg.c1 + _cfg.cminus * (_cfg.u1 - _setup.u) / _DP) * T,
+                _cfg.kmin
+            );
+        } else if (_setup.u > _cfg.u2) {
+            k = _min(
+                k + _min(
+                    _cfg.c2 + _cfg.cplus * (_setup.u - _cfg.u2) / _DP,
+                    _cfg.dmax
+                ) * T,
+                _cfg.kmax
+            );
         }
 
-        unchecked {
-            int256 T = _t1 - _t0;
+        // additional interest rate
+        if (_setup.u >= _cfg.ulow) {
+            rcur = _setup.u - _cfg.ulow;
 
-            // TODO we changing `k` in `compoundInterestRate`, should we use it here, or we using `_setup.k`?
-            int256 k = _max(_cfg.kmin, _min(_cfg.kmax, _setup.k));
-
-            if (_setup.u < _cfg.u1) {
-                k = _max(
-                    k - (_cfg.c1 + _cfg.cminus * (_cfg.u1 - _setup.u) / _DP) * T,
-                    _cfg.kmin
-                );
-            } else if (_setup.u > _cfg.u2) {
-                k = _min(
-                    k + _min(
-                        _cfg.c2 + _cfg.cplus * (_setup.u - _cfg.u2) / _DP,
-                        _cfg.dmax
-                    ) * T,
-                    _cfg.kmax
-                );
+            if (_setup.u >= _cfg.ucrit) {
+                rcur = rcur + _cfg.alpha * (_setup.u - _cfg.ucrit) / _DP;
             }
 
-            // additional interest rate
-            if (_setup.u >= _cfg.ulow) {
-                rcur = _setup.u - _cfg.ulow;
-
-                if (_setup.u >= _cfg.ucrit) {
-                    rcur = rcur + _cfg.alpha * (_setup.u - _cfg.ucrit) / _DP;
-                }
-
-                rcur = rcur * k / _DP;
-            }
-
-            rcur = _min((rcur + _cfg.rmin) * ONE_YEAR, RCUR_CAP);
-
-            // TODO whitepapar says: if the current interest rate (rcur) is above the cap, 
-            // value is capped and k is reset to kmin but we only reset k if overflow 
-            // or capped in compoundInterestRate, should we do it here? and then return k and save.
+            rcur = rcur * k / _DP;
         }
+
+        rcur = _min((rcur + _cfg.rmin) * ONE_YEAR, RCUR_CAP);
     }
 
     /// @inheritdoc IDynamicKinkModel
@@ -289,13 +282,11 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     )
         public
         pure
-        returns (int256 rcomp, int256 k, bool overflow, bool capped)
+        returns (int256 rcomp, int256 k)
     {
-        if (_tba == 0) return (0, _setup.k, false, false); // no debt, no interest
+        if (_tba == 0) return (0, _setup.k); // no debt, no interest
 
         LocalVarsRCOMP memory _l;
-
-        if (_t1 < _t0) revert InvalidTimestamp(); // TODO remove if ok to overflow
 
         _l.T = _t1 - _t0;
 
@@ -337,51 +328,11 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
         // Overflow Checks
 
-        // limit x, so the exp() function will not overflow
-        if (_l.x > X_MAX) {
-            overflow = true;
-            _l.x = X_MAX;
-        }
-
         rcomp = PRBMathSD59x18.exp(_l.x) - _DP;
 
         // limit rcomp
         if (rcomp > RCOMP_CAP * _l.T) {
-            capped = true;
             rcomp = RCOMP_CAP * _l.T;
-        }
-
-        _l.amt = _max(_tba, _td);
-
-        // stop compounding interest for critical assets amounts
-        // this IF was added in additional to the paper
-        // TODO remove if we will remove overflow checks
-        if (_l.amt > AMT_MAX) {
-            overflow = true;
-            rcomp = 0;
-            k = _cfg.kmin;
-
-            return (rcomp, k, overflow, capped);
-        }
-
-        // TODO add check for overflow, we can still throw here
-        _l.interest = _tba * rcomp / _DP;
-
-        // limit accrued interest if it results in critical assets amount
-        if (_l.amt > AMT_MAX - _l.interest) {
-            overflow = true;
-            // it will not underflow because above, we checking `if (_l.amt > AMT_MAX)`
-            _l.interest = AMT_MAX - _l.amt;
-
-            if (_tba == 0) {
-                rcomp = 0; // tODO if we early return, this will never happen
-            } else {
-                rcomp = _l.interest * _DP / _tba;
-            }
-        }
-
-        // reset the k to the min value in overflow and cap cases
-        if (overflow || capped) {
             k = _cfg.kmin;
         }
     }
