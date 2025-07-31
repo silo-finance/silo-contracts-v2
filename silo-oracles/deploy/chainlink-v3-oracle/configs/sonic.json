@@ -444,5 +444,16 @@
         "normalizationDivider": 1e8,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "EORACLE_HARDCODE_smsUSD_USDC": {
+        "baseToken": "smsUSD",
+        "quoteToken": "USDC.e",
+        "primaryAggregator": "EORACLE_smsUSD_msUSD_aggregator",
+        "primaryHeartbeat": 0,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }
