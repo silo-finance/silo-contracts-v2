@@ -49,7 +49,7 @@ contract KinkModelDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        (, irm) = kinkFactory.create(irmConfigData, _initialOwner);
+        irm = kinkFactory.create(irmConfigData, _initialOwner);
 
         vm.stopBroadcast();
 

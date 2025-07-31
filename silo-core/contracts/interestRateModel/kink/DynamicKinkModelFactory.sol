@@ -22,11 +22,6 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     /// @dev IRM contract implementation address to clone
     DynamicKinkModel public immutable IRM;
 
-    /// Config hash is determine by initial configuration, the logic is the same, so config is the only difference
-    /// that's why we can use it as ID, at the same time we can detect duplicated and save gas by reusing same config
-    /// multiple times
-    mapping(bytes32 configHash => IInterestRateModel) public irmByConfigHash;
-
     constructor() {
         IRM = new DynamicKinkModel();
     }
@@ -35,7 +30,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     function create(IDynamicKinkModel.Config calldata _config, address _initialOwner)
         external
         virtual
-        returns (bytes32 configHash, IInterestRateModel irm)
+        returns (IInterestRateModel irm)
     {
         return _create(_config, _initialOwner, _salt());
     }
@@ -102,24 +97,11 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         IRM.verifyConfig(_config);
     }
 
-    /// @inheritdoc IDynamicKinkModelFactory
-    function hashConfig(IDynamicKinkModel.Config memory _config) public pure virtual returns (bytes32 configId) {
-        configId = keccak256(abi.encode(_config));
-    }
-
     function _create(IDynamicKinkModel.Config memory _config,address _initialOwner, bytes32 _externalSalt)
         internal
         virtual
-        returns (bytes32 configHash, IInterestRateModel irm)
+        returns (IInterestRateModel irm)
     {
-        configHash = hashConfig(_config);
-
-        irm = irmByConfigHash[configHash];
-
-        if (address(irm) != address(0)) {
-            return (configHash, irm);
-        }
-
         IRM.verifyConfig(_config);
 
         bytes32 salt = _salt(_externalSalt);
@@ -129,9 +111,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         irm = IInterestRateModel(Clones.cloneDeterministic(address(IRM), salt));
         IDynamicKinkModel(address(irm)).initialize(configContract, _initialOwner);
 
-        irmByConfigHash[configHash] = irm;
-
-        emit NewDynamicKinkModel(configHash, IDynamicKinkModel(address(irm)));
+        emit NewDynamicKinkModel(IDynamicKinkModel(address(irm)));
     }
 
     function _copyDefaultConfig(
