@@ -12,7 +12,7 @@ import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.sol";
 
 import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
-import {KinkMath} from "../lib/KinkMath.sol";
+import {KinkMath} from "../../lib/KinkMath.sol";
 
 // solhint-disable var-name-mixedcase
 

@@ -12,7 +12,7 @@ import {IDynamicKinkModelFactory} from "../../interfaces/IDynamicKinkModelFactor
 
 import {DynamicKinkModel} from "./DynamicKinkModel.sol";
 import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
-import {KinkMath} from ".../lib/KinkMath.sol";
+import {KinkMath} from "../../lib/KinkMath.sol";
 
 /// @title DynamicKinkModelFactory
 /// @dev It creates DynamicKinkModelConfig.
