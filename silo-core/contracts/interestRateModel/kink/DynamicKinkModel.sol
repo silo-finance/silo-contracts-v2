@@ -152,7 +152,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         }) returns (int256 rcompInt, int256, bool, bool) {
             rcomp = SafeCast.toUint256(rcompInt);
         } catch {
-            rcomp = SafeCast.toUint256(RCOMP_CAP);
+            rcomp = 0;
         }
     }
 
