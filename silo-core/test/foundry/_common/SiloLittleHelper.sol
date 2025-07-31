@@ -284,6 +284,19 @@ abstract contract SiloLittleHelper is CommonBase {
         siloFactory = silo0.factory();
     }
 
+    function _mockIRM(ISilo _silo, address _irm) internal {
+        ISiloConfig siloConfig = _silo.config();
+        ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(_silo));
+
+        configData.interestRateModel = _irm;
+
+        vm.mockCall(
+            address(siloConfig),
+            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(_silo)),
+            abi.encode(configData)
+        );
+    }
+
     function _getShareTokenStorage() internal pure returns (IShareToken.ShareTokenStorage storage _sharedStorage) {
         _sharedStorage = ShareTokenLib.getShareTokenStorage();
     }
