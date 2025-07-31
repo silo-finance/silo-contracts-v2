@@ -28,7 +28,7 @@ QA rules:
 - AlreadyInitialized: only one init
 
 TODO try to remove overflow checks
-TODO set 5000% but then json tests needs to be adjusted
+TODO set 2500% but then json tests needs to be adjusted
 
 */
 
