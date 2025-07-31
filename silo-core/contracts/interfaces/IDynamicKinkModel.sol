@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
+import {IDynamicKinkModelConfig} from "./IDynamicKinkModelConfig.sol";
+
 interface IDynamicKinkModel {
     /// @dev structure that user can provide as input to generage Kink model default config.
     /// @param ulow threshold of low utilization.
@@ -100,20 +102,16 @@ interface IDynamicKinkModel {
     /// @param u utilization ratio of silo and asset at _t0 (utulization at the last interest rate update), in 18 dp.
     /// @param initialized true if the config is initialized with factory defaults, false if it is not initialized.
     struct Setup {
-        Config config;
         int256 k;
         int232 u;
         bool initialized;
     }
 
-    /// @notice Emitted on config init
-    /// @param config config struct for asset in Silo
-    event Initialized(address indexed config, address _owner);
+    event Initialized(address _owner);
 
-    /// @notice Emitted on config reset to factory defaults
-    event FactorySetup(address indexed silo);
+    event NewConfig(IDynamicKinkModelConfig indexed config);
 
-    event ConfigUpdated(address indexed silo, Config config, int256 k);
+    event ConfigUpdated(address indexed silo, IDynamicKinkModelConfig indexed config, int256 k);
 
     /// @dev revert when t0 > t1. 
     /// Must not calculate interest in the past before the latest interest rate update.
@@ -146,7 +144,7 @@ interface IDynamicKinkModel {
     error InvalidTMinus();
     error InvalidTPlus();
 
-    function initialize(address _irmConfig, address _initialOwner) external;
+    function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner) external;
 
     /// @notice Check if variables in config match the limits from model whitepaper.
     /// Some limits are narrower than in whhitepaper, because of additional research, see:
@@ -156,6 +154,7 @@ interface IDynamicKinkModel {
     function verifyConfig(IDynamicKinkModel.Config calldata _config) external view;
 
     /// @notice Calculate compound interest rate, refer model whitepaper for more details.
+    /// @param _cfg Config config struct with model configuration.
     /// @param _setup DynamicKinkModel config struct with model state.
     /// @param _t0 timestamp of the last interest rate update.
     /// @param _t1 timestamp of the compounded interest rate calculations (current time).
@@ -167,6 +166,7 @@ interface IDynamicKinkModel {
     /// @return overflow compounded interest rate was limited to prevent overflow.
     /// @return capped compounded interest rate was above the treshold and was capped.
     function compoundInterestRate(
+        Config memory _cfg,
         Setup memory _setup, 
         int256 _t0,
         int256 _t1, 
@@ -179,6 +179,7 @@ interface IDynamicKinkModel {
         returns (int256 rcomp, int256 k, bool overflow, bool capped);
 
     /// @notice Calculate current interest rate, refer model whitepaper for more details.
+    /// @param _cfg Config config struct with model configuration.
     /// @param _setup DynamicKinkModel config struct with model state.
     /// @param _t0 timestamp of the last interest rate update.
     /// @param _t1 timestamp of the current interest rate calculations (current time).
@@ -189,6 +190,7 @@ interface IDynamicKinkModel {
     /// @return overflow current interest rate was limited to prevent overflow.
     /// @return capped current interest rate was above the treshold and was capped.
     function currentInterestRate(
+        Config memory _cfg,
         Setup memory _setup, 
         int256 _t0, 
         int256 _t1, 

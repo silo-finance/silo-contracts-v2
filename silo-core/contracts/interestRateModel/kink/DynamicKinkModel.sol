@@ -8,9 +8,10 @@ import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 import {PRBMathSD59x18} from "../../lib/PRBMathSD59x18.sol";
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
-import {IInterestRateModel} from "../../interfaces/IInterestRateModel.sol";
 import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.sol";
+
+import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
 
 // solhint-disable var-name-mixedcase
 
@@ -32,8 +33,9 @@ TODO set 5000% but then json tests needs to be adjusted
 
 /// @title DynamicKinkModel
 /// @notice Refer to Silo DynamicKinkModel paper for more details.
+/// @dev it follows `IInterestRateModel` interface except `initialize` method
 /// @custom:security-contact security@silo.finance
-contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2Steps {
+contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     /// @dev DP in 18 decimal points used for integer calculations
     int256 internal constant _DP = int256(1e18);
 
@@ -75,50 +77,29 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         _transferOwnership(address(0));
     }
 
-    function initialize(address _irmConfig) external virtual {
-        initialize(_irmConfig, address(0));
-    }
-
-    function initialize(address _irmConfig, address _initialOwner) public virtual {
-        require(_irmConfig != address(0), AddressZero());
-        require(address(irmConfig) == address(0), AlreadyInitialized());
-
-        irmConfig = IDynamicKinkModelConfig(_irmConfig);
-
+    // TODO it would help if we can have silo as argument
+    function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner) external virtual {
         if (_initialOwner == address(0)) {
             // allow owner to be empty only if config is empty
             IDynamicKinkModel.Config memory empty;
-            IDynamicKinkModel.Config memory config = IDynamicKinkModelConfig(_irmConfig).getConfig();
-
-            require(keccak256(abi.encode(empty)) == keccak256(abi.encode(config)), MissingOwner());
+            require(keccak256(abi.encode(empty)) == keccak256(abi.encode(_config)), MissingOwner());
         }
 
+        _deployConfig(_config);
         _transferOwnership(_initialOwner);
 
-        emit Initialized(_irmConfig, _initialOwner);
+        emit Initialized(_initialOwner);
     }
 
-    function resetConfigToFactorySetup(address _silo) external onlyOwner {
-        _factorySetup(_silo);
-    }
-
+    // TODO is it safe to allow to provide silo as input? it is per silo anyway, 
+    // but maybe we can find a way to not pass it
     function updateSetup(ISilo _silo, IDynamicKinkModel.Config calldata _config, int256 _k)
         external
         onlyOwner
     {
-        require(address(irmConfig) != address(0), NotInitialized());
-        require(_k >= _config.kmin && _k <= _config.kmax, InvalidK());
-
-        verifyConfig(_config);
-
-        _getSetup[address(_silo)].config = _config;
-        _getSetup[address(_silo)].k = _k; // TODO or we should use config.kmin?
-        _getSetup[address(_silo)].initialized = true;
-
-        emit ConfigUpdated(address(_silo), _config, _k);
+        _updateSetup(_silo, _config, _k);
     }
 
-    /// @inheritdoc IInterestRateModel
     function getCompoundInterestRateAndUpdate(
         uint256 _collateralAssets,
         uint256 _debtAssets,
@@ -131,13 +112,10 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         // assume that caller is Silo
         address silo = msg.sender;
 
-        Setup memory currentSetup = getSetup(silo);
-
-        if (!currentSetup.initialized) {
-            _factorySetup(silo);
-        }
+        (Setup memory currentSetup, Config memory cfg) = getSetup(silo);
 
         (int256 rcompInt, int256 k,,) = compoundInterestRate({
+            _cfg: cfg,
             _setup: currentSetup,
             _t0: SafeCast.toInt256(_interestRateTimestamp),
             _t1: SafeCast.toInt256(block.timestamp),
@@ -148,21 +126,16 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
         rcomp = SafeCast.toUint256(rcompInt);
 
-        _update(k, _collateralAssets, _debtAssets);
+        _updateState(k, _collateralAssets, _debtAssets);
     }
 
-    function _update(int256 _k, uint256 _collateralAssets, uint256 _debtAssets) internal {
-        // assume that caller is Silo
-        address silo = msg.sender;
+    function getSetup(address _silo) public view returns (Setup memory s, Config memory c) {
+        c = irmConfig.getConfig();
+        s = _getSetup[_silo];
 
-        _getSetup[silo].k = _k;
-
-        _getSetup[silo].u = _collateralAssets != 0
-            ? SafeCast.toInt232(SafeCast.toInt256(_debtAssets * uint256(_DP) / _collateralAssets))
-            : SafeCast.toInt232(_DP); // hard rule: utilization in the model should never be above 100%.
+        if (!s.initialized) s.k = c.kmin;
     }
 
-    /// @inheritdoc IInterestRateModel
     function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)
         external
         view
@@ -170,9 +143,10 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         returns (uint256 rcomp)
     {
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
-        Setup memory currentSetup = getSetup(_silo);
+        (Setup memory currentSetup, Config memory cfg) = getSetup(_silo);
 
         try this.compoundInterestRate({
+            _cfg: cfg,
             _setup: currentSetup,
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
             _t1: SafeCast.toInt256(_blockTimestamp),
@@ -186,16 +160,16 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         }
     }
 
-    /// @inheritdoc IInterestRateModel
     function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
         external
         view
         returns (uint256 rcur)
     {
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
-        Setup memory currentSetup = getSetup(_silo);
+        (Setup memory currentSetup, Config memory cfg) = getSetup(_silo);
 
         try this.currentInterestRate({
+            _cfg: cfg,
             _setup: currentSetup,
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
             _t1: SafeCast.toInt256(_blockTimestamp),
@@ -209,13 +183,8 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         }
     }
 
-    /// @inheritdoc IInterestRateModel
-    function decimals() external pure returns (uint256) {
-        return 18;
-    }
-
     /// @inheritdoc IDynamicKinkModel
-    function verifyConfig(IDynamicKinkModel.Config calldata _config) public view virtual {
+    function verifyConfig(IDynamicKinkModel.Config memory _config) public view virtual {
         require(_config.ulow >= 0 && _config.ulow <= _DP, InvalidUlow());
         require(_config.u1 >= 0 && _config.u1 <= _DP, InvalidU1());
         require(_config.u2 >= _config.u1 && _config.u2 <= _DP, InvalidU2());
@@ -232,18 +201,9 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         require(_config.dmax >= _config.c2 && _config.dmax < UNIVERSAL_LIMIT, InvalidDmax());
     }
 
-    function getSetup(address _silo) public view returns (Setup memory setup) {
-        setup = _getSetup[_silo];
-
-        if (!setup.initialized) {
-            setup.config = irmConfig.getConfig();
-            setup.k = setup.config.kmin;
-            // `initialized` stays false and `u` we never modify
-        }
-    }
-
     /// @inheritdoc IDynamicKinkModel
     function currentInterestRate( // solhint-disable-line function-max-lines, code-complexity
+        Config memory _cfg,
         Setup memory _setup, 
         int256 _t0, 
         int256 _t1, 
@@ -257,10 +217,9 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
     {
         if (_tba == 0) return (0, false, false); // no debt, no interest
 
-        Config memory cfg = _setup.config;
-
         // _t0 < _t1 checks are included inside this function, may revert 
         (,, overflow, capped) = compoundInterestRate({
+            _cfg: _cfg,
             _setup: _setup,
             _t0: _t0,
             _t1: _t1,
@@ -282,35 +241,35 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
             }
 
             // TODO we changing `k` in `compoundInterestRate`, should we use it here, or we using `_setup.k`?
-            int256 k = _max(cfg.kmin, _min(cfg.kmax, _setup.k));
+            int256 k = _max(_cfg.kmin, _min(_cfg.kmax, _setup.k));
 
-            if (_u < cfg.u1) {
+            if (_u < _cfg.u1) {
                 k = _max(
-                    k - (cfg.c1 + cfg.cminus * (cfg.u1 - _u) / _DP) * T,
-                    cfg.kmin
+                    k - (_cfg.c1 + _cfg.cminus * (_cfg.u1 - _u) / _DP) * T,
+                    _cfg.kmin
                 );
-            } else if (_u > cfg.u2) {
+            } else if (_u > _cfg.u2) {
                 k = _min(
                     k + _min(
-                        cfg.c2 + cfg.cplus * (_u - cfg.u2) / _DP,
-                        cfg.dmax
+                        _cfg.c2 + _cfg.cplus * (_u - _cfg.u2) / _DP,
+                        _cfg.dmax
                     ) * T,
-                    cfg.kmax
+                    _cfg.kmax
                 );
             }
 
             // additional interest rate
-            if (_u >= cfg.ulow) {
-                rcur = _u - cfg.ulow;
+            if (_u >= _cfg.ulow) {
+                rcur = _u - _cfg.ulow;
 
-                if (_u >= cfg.ucrit) {
-                    rcur = rcur + cfg.alpha * (_u - cfg.ucrit) / _DP;
+                if (_u >= _cfg.ucrit) {
+                    rcur = rcur + _cfg.alpha * (_u - _cfg.ucrit) / _DP;
                 }
 
                 rcur = rcur * k / _DP;
             }
 
-            rcur = _min((rcur + cfg.rmin) * ONE_YEAR, RCUR_CAP);
+            rcur = _min((rcur + _cfg.rmin) * ONE_YEAR, RCUR_CAP);
 
             // TODO whitepapar says: if the current interest rate (rcur) is above the cap, 
             // value is capped and k is reset to kmin but we only reset k if overflow 
@@ -320,6 +279,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
     /// @inheritdoc IDynamicKinkModel
     function compoundInterestRate( // solhint-disable-line code-complexity, function-max-lines
+        Config memory _cfg,
         Setup memory _setup, 
         int256 _t0,
         int256 _t1, 
@@ -334,7 +294,6 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
         if (_tba == 0) return (0, _setup.k, false, false); // no debt, no interest
 
         LocalVarsRCOMP memory _l;
-        Config memory cfg = _setup.config;
 
         unchecked {
             if (_t1 < _t0) revert InvalidTimestamp(); // TODO remove if ok to overflow
@@ -346,40 +305,40 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
             }
 
             // roc calculations
-            if (_u < cfg.u1) {
-                _l.roc = -cfg.c1 - cfg.cminus * (cfg.u1 - _u) / _DP;
-            } else if (_u > cfg.u2) {
+            if (_u < _cfg.u1) {
+                _l.roc = -_cfg.c1 - _cfg.cminus * (_cfg.u1 - _u) / _DP;
+            } else if (_u > _cfg.u2) {
                 _l.roc = _min(
-                    cfg.c2 + cfg.cplus * (_u - cfg.u2) / _DP,
-                    cfg.dmax
+                    _cfg.c2 + _cfg.cplus * (_u - _cfg.u2) / _DP,
+                    _cfg.dmax
                 );
             }
 
-            k = _max(cfg.kmin, _min(cfg.kmax, _setup.k));
+            k = _max(_cfg.kmin, _min(_cfg.kmax, _setup.k));
             // slope of the kink at t1 ignoring lower and upper bounds
             _l.k1 = k + _l.roc * _l.T;
 
             // calculate the resulting slope state
-            if (_l.k1 > cfg.kmax) {
-                _l.x = cfg.kmax * _l.T - (cfg.kmax - k) ** 2 / (2 * _l.roc);
-                k = cfg.kmax;
-            } else if (_l.k1 < cfg.kmin) {
-                _l.x = cfg.kmin * _l.T - (_setup.k - cfg.kmin) ** 2 / (2 * _l.roc);
-                k = cfg.kmin;
+            if (_l.k1 > _cfg.kmax) {
+                _l.x = _cfg.kmax * _l.T - (_cfg.kmax - k) ** 2 / (2 * _l.roc);
+                k = _cfg.kmax;
+            } else if (_l.k1 < _cfg.kmin) {
+                _l.x = _cfg.kmin * _l.T - (_setup.k - _cfg.kmin) ** 2 / (2 * _l.roc);
+                k = _cfg.kmin;
             } else {
                 _l.x = (k + _l.k1) * _l.T / 2;
                 k = _l.k1;
             }
 
-            if (_u >= cfg.ulow) {
-                _l.f = _u - cfg.ulow;
+            if (_u >= _cfg.ulow) {
+                _l.f = _u - _cfg.ulow;
 
-                if (_u >= cfg.ucrit) {
-                    _l.f = _l.f + cfg.alpha * (_u - cfg.ucrit) / _DP;
+                if (_u >= _cfg.ucrit) {
+                    _l.f = _l.f + _cfg.alpha * (_u - _cfg.ucrit) / _DP;
                 }
             }
 
-            _l.x = cfg.rmin * _l.T + _l.f * _l.x / _DP;
+            _l.x = _cfg.rmin * _l.T + _l.f * _l.x / _DP;
 
             // Overflow Checks
 
@@ -405,7 +364,7 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
             if (_l.amt > AMT_MAX) {
                 overflow = true;
                 rcomp = 0;
-                k = cfg.kmin;
+                k = _cfg.kmin;
 
                 return (rcomp, k, overflow, capped);
             }
@@ -428,22 +387,47 @@ contract DynamicKinkModel is IInterestRateModel, IDynamicKinkModel, Ownable1and2
 
             // reset the k to the min value in overflow and cap cases
             if (overflow || capped) {
-                k = cfg.kmin;
+                k = _cfg.kmin;
             }
         }
     }
 
-    function _factorySetup(address _silo) internal {
-        require(address(irmConfig) != address(0), NotInitialized());
+    function _updateState(int256 _k, uint256 _collateralAssets, uint256 _debtAssets) internal {
+        // assume that caller is Silo
+        address silo = msg.sender;
 
-        IDynamicKinkModel.Config memory config = irmConfig.getConfig();
+        _getSetup[silo].k = _k;
 
-        _getSetup[address(_silo)].config = config;
-        _getSetup[address(_silo)].k = config.kmin;
-        // u is not set here, because at begin is 0, and on future reset it must stay as last value
+        _getSetup[silo].u = _collateralAssets != 0
+            ? SafeCast.toInt232(SafeCast.toInt256(_debtAssets * uint256(_DP) / _collateralAssets))
+            : SafeCast.toInt232(_DP); // hard rule: utilization in the model should never be above 100%.
+
+        _getSetup[silo].initialized = true;
+    }
+
+    function _updateSetup(ISilo _silo, IDynamicKinkModel.Config memory _config, int256 _k) 
+        internal 
+        returns (IDynamicKinkModelConfig newCfg) 
+    {
+        require(_k >= _config.kmin && _k <= _config.kmax, InvalidK());
+
+        newCfg = _deployConfig(_config);
+
+        _getSetup[address(_silo)].k = _k; // TODO or we should use config.kmin?
         _getSetup[address(_silo)].initialized = true;
 
-        emit FactorySetup(address(_silo));
+        emit ConfigUpdated(address(_silo), newCfg, _k);
+    }
+
+
+    function _deployConfig(IDynamicKinkModel.Config memory _config) internal returns (IDynamicKinkModelConfig newCfg) {
+        verifyConfig(_config);
+
+        newCfg = new DynamicKinkModelConfig(_config);
+
+        irmConfig = newCfg;
+
+        emit NewConfig(newCfg);
     }
 
     function _min(int256 _a, int256 _b) internal pure returns (int256) {

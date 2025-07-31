@@ -106,10 +106,8 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
         bytes32 salt = _salt(_externalSalt);
 
-        address configContract = address(new DynamicKinkModelConfig{salt: salt}(_config));
-
         irm = IInterestRateModel(Clones.cloneDeterministic(address(IRM), salt));
-        IDynamicKinkModel(address(irm)).initialize(configContract, _initialOwner);
+        IDynamicKinkModel(address(irm)).initialize(_config, _initialOwner);
 
         emit NewDynamicKinkModel(IDynamicKinkModel(address(irm)));
     }
