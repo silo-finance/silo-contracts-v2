@@ -24,7 +24,7 @@ QA rules:
 - function should never throw (unless we will decive to remove uncheck)
 - hard rule: utilization (setup.u) in the model should never be above 100%.
 - no debt no intrest
-
+- AlreadyInitialized: only one init
 
 TODO try to remove overflow checks
 TODO set 5000% but then json tests needs to be adjusted
@@ -76,6 +76,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             require(keccak256(abi.encode(empty)) == keccak256(abi.encode(_config)), MissingOwner());
         }
 
+        require(modelState.silo == address(0), AlreadyInitialized());
         modelState.silo = _silo;
         
         _updateConfiguration(_config, _config.kmin);
