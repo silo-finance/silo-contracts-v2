@@ -125,7 +125,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             rcomp = SafeCast.toUint256(rcompInt);
             modelState.k = k;
         } catch {
-            // return 0
+            rcomp = 0;
         }
     }
 
