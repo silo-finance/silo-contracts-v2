@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
+import {IDynamicKinkModelConfig} from "./IDynamicKinkModelConfig.sol";
+
 interface IDynamicKinkModel {
     /// @dev structure that user can provide as input to generage Kink model default config.
     /// @param ulow threshold of low utilization.
@@ -16,7 +18,7 @@ interface IDynamicKinkModel {
     /// @param tMinus time that it takes to reset the model from the maximal to the minimal APR when utilization is ulow
     /// @param tPlus time that it takes to grow from the minimal to the maximal APR at utilization ucrit
     /// @param tMin minimal time it takes to grow from the minimal to the maximal APR at any utilization
-    struct DefaultConfig {
+    struct UserFriendlyConfig {
         uint256 ulow;
         uint256 ucrit;
         uint256 u1;
@@ -32,8 +34,8 @@ interface IDynamicKinkModel {
         uint256 tMin;
     }
 
-    /// @dev same as DefaultConfig but with int256 values to help with calculations 
-    struct DefaultConfigInt {
+    /// @dev same as UserFriendlyConfig but with int256 values to help with calculations
+    struct UserFriendlyConfigInt {
         int256 ulow;
         int256 ucrit;
         int256 u1;
@@ -83,7 +85,6 @@ interface IDynamicKinkModel {
     /// @param f factor for the slope in kink.
     /// @param roc internal variable for slope calculations.
     /// @param x internal variable for slope calculations.
-    /// @param amt assetsAmount maximum of total deposits and total borrwed amounts.
     /// @param interest absolute value of compounded interest.
     struct LocalVarsRCOMP {
         int256 T;
@@ -91,37 +92,26 @@ interface IDynamicKinkModel {
         int256 f;
         int256 roc;
         int256 x;
-        int256 amt;
         int256 interest;
     }
 
-    /// @param config model parameters for particular silo and asset.
     /// @param k state of the slope after latest interest rate accrual.
-    /// @param u utilization ratio of silo and asset at _t0 (utulization at the last interest rate update), in 18 dp.
-    /// @param initialized true if the config is initialized with factory defaults, false if it is not initialized.
-    struct Setup {
-        Config config;
-        int256 k;
-        int232 u;
-        bool initialized;
+    /// @param silo silo address for which model is created.
+    struct ModelState {
+        int256 k; // TODO ensure we can limit to 95 bytes (-1 for int)
+        address silo;
     }
 
-    /// @notice Emitted on config init
-    /// @param config config struct for asset in Silo
-    event Initialized(address indexed config, address _owner);
+    event Initialized(address indexed owner, address indexed silo);
 
-    /// @notice Emitted on config reset to factory defaults
-    event FactorySetup(address indexed silo);
+    event NewConfig(IDynamicKinkModelConfig indexed config);
 
-    event ConfigUpdated(address indexed silo, Config config, int256 k);
+    event ConfigUpdated(IDynamicKinkModelConfig indexed config);
 
-    /// @dev revert when t0 > t1. 
-    /// Must not calculate interest in the past before the latest interest rate update.
-    error InvalidTimestamp();
-
+    error OnlySilo();
+    error InvalidSilo();
     error InvalidDefaultConfig();
     error AddressZero();
-    error MissingOwner();
     error NotInitialized();
     error AlreadyInitialized();
     error InvalidUlow();
@@ -145,8 +135,9 @@ interface IDynamicKinkModel {
     error InvalidT2();
     error InvalidTMinus();
     error InvalidTPlus();
+    error XOverflow();
 
-    function initialize(address _irmConfig, address _initialOwner) external;
+    function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo) external;
 
     /// @notice Check if variables in config match the limits from model whitepaper.
     /// Some limits are narrower than in whhitepaper, because of additional research, see:
@@ -156,47 +147,43 @@ interface IDynamicKinkModel {
     function verifyConfig(IDynamicKinkModel.Config calldata _config) external view;
 
     /// @notice Calculate compound interest rate, refer model whitepaper for more details.
+    /// @param _cfg Config config struct with model configuration.
     /// @param _setup DynamicKinkModel config struct with model state.
     /// @param _t0 timestamp of the last interest rate update.
     /// @param _t1 timestamp of the compounded interest rate calculations (current time).
     /// @param _u utilization ratio of silo and asset at _t0
-    /// @param _td total deposits at _t1.
     /// @param _tba total borrow amount at _t1.
     /// @return rcomp compounded interest in decimal points.
     /// @return k new state of the model at _t1
-    /// @return overflow compounded interest rate was limited to prevent overflow.
-    /// @return capped compounded interest rate was above the treshold and was capped.
     function compoundInterestRate(
-        Setup memory _setup, 
+        Config memory _cfg,
+        ModelState memory _setup,
         int256 _t0,
-        int256 _t1, 
+        int256 _t1,
         int256 _u,
-        int256 _td,
         int256 _tba
     )
         external
         pure
-        returns (int256 rcomp, int256 k, bool overflow, bool capped);
+        returns (int256 rcomp, int256 k);
 
     /// @notice Calculate current interest rate, refer model whitepaper for more details.
+    /// @param _cfg Config config struct with model configuration.
     /// @param _setup DynamicKinkModel config struct with model state.
     /// @param _t0 timestamp of the last interest rate update.
     /// @param _t1 timestamp of the current interest rate calculations (current time).
     /// @param _u utilization ratio of silo and asset at _t1.
-    /// @param _td total deposits at _t1.
     /// @param _tba total borrow amount at _t1.
     /// @return rcur current interest in decimal points.
-    /// @return overflow current interest rate was limited to prevent overflow.
-    /// @return capped current interest rate was above the treshold and was capped.
     function currentInterestRate(
-        Setup memory _setup, 
-        int256 _t0, 
-        int256 _t1, 
+        Config memory _cfg,
+        ModelState memory _setup,
+        int256 _t0,
+        int256 _t1,
         int256 _u,
-        int256 _td,
         int256 _tba
     )
         external
         pure
-        returns (int256 rcur, bool overflow, bool capped);
+        returns (int256 rcur);
 }
