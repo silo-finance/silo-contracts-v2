@@ -85,7 +85,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         emit Initialized(_initialOwner, _silo);
     }
 
-    function updateSetup(IDynamicKinkModel.Config calldata _config) external onlyOwner {
+    function updateConfig(IDynamicKinkModel.Config calldata _config) external onlyOwner {
         _updateConfiguration(_config);
     }
 
@@ -94,7 +94,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         require(address(lastOne) != address(0), AddressZero());
 
         irmConfig = lastOne;
-        modelState.k = irmConfig.getConfig().kmin;
+        modelState.k = lastOne.getConfig().kmin;
     }
 
     function getCompoundInterestRateAndUpdate(
