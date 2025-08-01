@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {SignedMath} from "openzeppelin5/utils/math/SignedMath.sol";
 
 import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 
@@ -225,16 +226,16 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
         int256 T = _t1 - _t0;
 
-        int256 k = _max(_cfg.kmin, _min(_cfg.kmax, _setup.k));
+        int256 k = SignedMath.max(_cfg.kmin, SignedMath.min(_cfg.kmax, _setup.k));
 
         if (_u < _cfg.u1) {
-            k = _max(
+            k = SignedMath.max(
                 k - (_cfg.c1 + _cfg.cminus * (_cfg.u1 - _u) / _DP) * T,
                 _cfg.kmin
             );
         } else if (_u > _cfg.u2) {
-            k = _min(
-                k + _min(
+            k = SignedMath.min(
+                k + SignedMath.min(
                     _cfg.c2 + _cfg.cplus * (_u - _cfg.u2) / _DP,
                     _cfg.dmax
                 ) * T,
@@ -253,7 +254,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             rcur = rcur * k / _DP;
         }
 
-        rcur = _min((rcur + _cfg.rmin) * ONE_YEAR, RCUR_CAP);
+        rcur = SignedMath.min((rcur + _cfg.rmin) * ONE_YEAR, RCUR_CAP);
     }
 
     /// @inheritdoc IDynamicKinkModel
@@ -279,13 +280,13 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         if (_u < _cfg.u1) {
             _l.roc = -_cfg.c1 - _cfg.cminus * (_cfg.u1 - _u) / _DP;
         } else if (_u > _cfg.u2) {
-            _l.roc = _min(
+            _l.roc = SignedMath.min(
                 _cfg.c2 + _cfg.cplus * (_u - _cfg.u2) / _DP,
                 _cfg.dmax
             );
         }
 
-        k = _max(_cfg.kmin, _min(_cfg.kmax, _setup.k));
+        k = SignedMath.max(_cfg.kmin, SignedMath.min(_cfg.kmax, _setup.k));
         // slope of the kink at t1 ignoring lower and upper bounds
         _l.k1 = k + _l.roc * _l.T;
 
@@ -357,14 +358,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         if (_collateralAssets == 0 || _debtAssets >= _collateralAssets) return _DP;
 
         return int256(Math.mulDiv(_debtAssets, uint256(_DP), _collateralAssets, Math.Rounding.Floor));
-    }
-
-    function _min(int256 _a, int256 _b) internal pure returns (int256) {
-        return _a < _b ? _a : _b;
-    }
-
-    function _max(int256 _a, int256 _b) internal pure returns (int256) {
-        return _a > _b ? _a : _b;
     }
 }
 // solhint-enable var-name-mixedcase
