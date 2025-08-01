@@ -28,8 +28,6 @@ QA rules:
 - no debt no intrest
 - AlreadyInitialized: only one init
 
-TODO set 2500% but then json tests needs to be adjusted
-
 */
 
 /// @title DynamicKinkModel
@@ -47,8 +45,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     ///     valid.
     int256 public constant UNIVERSAL_LIMIT = 1e9 * _DP;
 
-    /// @dev maximum value of current interest rate the model will return. This is 10,000% APR in 18-decimals.
-    int256 public constant RCUR_CAP = 100 * _DP;
+    /// @dev maximum value of current interest rate the model will return. This is 2,500% APR in 18-decimals.
+    int256 public constant RCUR_CAP = 25 * _DP;
 
     /// @dev seconds per year used in interest calculations.
     int256 public constant ONE_YEAR = 365 days;
@@ -110,10 +108,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         (ModelState memory state, Config memory cfg) = getModelState();
         require(msg.sender == state.silo, OnlySilo());
 
-        // TODO whitepapar says: if the current interest rate (rcur) is above the cap,
-        // value is capped and k is reset to kmin but we only reset k if overflow
-        // or capped in compoundInterestRate, should we do it here? and then return k and save.
-
         try this.compoundInterestRate({
             _cfg: cfg,
             _setup: state,
@@ -152,11 +146,12 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         }
     }
 
+    /// @notice it reverts for invalid silo
     function getCurrentInterestRate(address _silo, uint256 _blockTimestamp) external view returns (uint256 rcur) {
         (ModelState memory state, Config memory cfg) = getModelState();
         ISilo.UtilizationData memory data = ISilo(state.silo).utilizationData();
 
-        require(_silo == state.silo, InvalidSilo()); // TODO should we return 0?
+        require(_silo == state.silo, InvalidSilo());
 
         try this.currentInterestRate({
             _cfg: cfg,
