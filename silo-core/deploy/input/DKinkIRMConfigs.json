@@ -1,6 +1,6 @@
 [
     {
-      "name": "default",
+      "name": "defaultAsset",
       "config": {
             "ulow": 0.8e18,
             "u1": 0.85e18,

@@ -38,6 +38,8 @@ import {
     InterestRateModelV2Config
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {ISilo} from "silo-core/contracts/Silo.sol";
+import {DynamicKinkModelFactory} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
+import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
 
 import "forge-std/console.sol";
 
@@ -176,6 +178,7 @@ contract Setup is BaseTest {
     }
 
     function core_deploySiloDeployer() internal {
+        address dkinkIRMConfigFactory = address(new DynamicKinkModelFactory());
         siloImpl = address(new Silo(siloFactory));
         shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         shareDebtTokenImpl = address(new ShareDebtToken());
@@ -184,6 +187,7 @@ contract Setup is BaseTest {
             address(
                 new SiloDeployer(
                     interestRateModelV2ConfigFactory,
+                    IDynamicKinkModelFactory(dkinkIRMConfigFactory),
                     siloFactory,
                     siloImpl,
                     shareProtectedCollateralTokenImpl,

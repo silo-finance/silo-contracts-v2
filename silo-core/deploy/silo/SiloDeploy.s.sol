@@ -9,6 +9,7 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 import {CommonDeploy} from "../_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
+import {IDynamicKinkModel} from "silo-core/contracts/interfaces/IDynamicKinkModel.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
 import {DKinkIRMConfigData} from "../input-readers/DKinkIRMConfigData.sol";
 import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
@@ -314,7 +315,7 @@ abstract contract SiloDeploy is CommonDeploy {
                 _config.interestRateModelConfig0
             );
 
-            DKinkIRMConfig memory dkinkIRMConfig = DKinkIRMConfig({
+            ISiloDeployer.DKinkIRMConfig memory dkinkIRMConfig = ISiloDeployer.DKinkIRMConfig({
                 config: dkinkIRMConfigData0,
                 initialOwner: _getDKinkIRMInitialOwner()
             });
@@ -331,7 +332,7 @@ abstract contract SiloDeploy is CommonDeploy {
                 _config.interestRateModelConfig1
             );
 
-            DKinkIRMConfig memory dkinkIRMConfig = DKinkIRMConfig({
+            ISiloDeployer.DKinkIRMConfig memory dkinkIRMConfig = ISiloDeployer.DKinkIRMConfig({
                 config: dkinkIRMConfigData1,
                 initialOwner: _getDKinkIRMInitialOwner()
             });

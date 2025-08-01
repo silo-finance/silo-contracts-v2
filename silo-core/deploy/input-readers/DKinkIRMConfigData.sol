@@ -12,19 +12,19 @@ contract DKinkIRMConfigData {
 
     // must be in alphabetic order for JSON parsing
     struct ModelConfig {
-        uint256 alpha;
-        uint256 c1;
-        uint256 c2;
-        uint256 cminus;
-        uint256 cplus;
-        uint256 dmax;
-        uint256 kmax;
-        uint256 kmin;
-        uint256 rmin;
-        uint256 u1;
-        uint256 u2;
-        uint256 ucrit;
-        uint256 ulow;
+        int256 alpha;
+        int256 c1;
+        int256 c2;
+        int256 cminus;
+        int256 cplus;
+        int256 dmax;
+        int256 kmax;
+        int256 kmin;
+        int256 rmin;
+        int256 u1;
+        int256 u2;
+        int256 ucrit;
+        int256 ulow;
     }
 
     struct ConfigData {
@@ -74,7 +74,7 @@ contract DKinkIRMConfigData {
         revert ConfigNotFound();
     }
 
-    function print(IDKinkInterestRateModel.Config memory _configData) public pure {
+    function print(IDynamicKinkModel.Config memory _configData) public pure {
         console2.log("ulow", _configData.ulow);
         console2.log("u1", _configData.u1);
         console2.log("u2", _configData.u2);
