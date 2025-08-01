@@ -230,7 +230,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
         int256 T = _t1 - _t0;
 
-        // TODO we changing `k` in `compoundInterestRate`, should we use it here, or we using `_setup.k`?
         int256 k = _max(_cfg.kmin, _min(_cfg.kmax, _setup.k));
 
         if (_u < _cfg.u1) {
