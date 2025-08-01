@@ -42,6 +42,7 @@ contract MainnetDeploy is CommonDeploy {
 
         _deploySiloFactory();
         interestRateModelV2ConfigFactoryDeploy.run();
+        dkinkIRMFactoryDeploy.run();
         interestRateModelV2Deploy.run();
         siloHookV1Deploy.run();
         pendleRewardsClaimerDeploy.run();
@@ -52,7 +53,6 @@ contract MainnetDeploy is CommonDeploy {
         siloRouterV2Deploy.run();
         siloIncentivesControllerFactoryDeploy.run();
         manualLiquidationHelperDeploy.run();
-        dkinkIRMFactoryDeploy.run();
     }
 
     function _deploySiloFactory() internal virtual {

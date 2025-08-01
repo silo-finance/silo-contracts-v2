@@ -153,29 +153,47 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
         bytes calldata _irmConfigData1,
         ISiloConfig.InitData memory _siloInitData
     ) internal {
+        bytes32 salt = _salt();
+
         if (_siloInitData.interestRateModel0 == address(IRM_CONFIG_FACTORY)) {
-            _siloInitData.interestRateModel0 = _createInterestRateModel(_irmConfigData0);
+            _siloInitData.interestRateModel0 = _createInterestRateModel(_irmConfigData0, salt);
         }
 
         if (_siloInitData.interestRateModel1 == address(IRM_CONFIG_FACTORY)) {
-            _siloInitData.interestRateModel1 = _createInterestRateModel(_irmConfigData1);
+            _siloInitData.interestRateModel1 = _createInterestRateModel(_irmConfigData1, salt);
         }
 
+        uint256 creatorSiloCounter = SILO_FACTORY.creatorSiloCounter(msg.sender);
+
         if (_siloInitData.interestRateModel0 == address(DYNAMIC_KINK_MODEL_FACTORY)) {
-            _siloInitData.interestRateModel0 = _createInterestRateModel(_irmConfigData0);
+            address silo = CloneDeterministic.predictSilo0Addr(
+                SILO_IMPL,
+                creatorSiloCounter,
+                address(SILO_FACTORY),
+                msg.sender
+            );
+
+            _siloInitData.interestRateModel0 = _createDKinkIRM(_irmConfigData0, silo, salt);
         }
 
         if (_siloInitData.interestRateModel1 == address(DYNAMIC_KINK_MODEL_FACTORY)) {
-            _siloInitData.interestRateModel1 = _createInterestRateModel(_irmConfigData1);
+            address silo = CloneDeterministic.predictSilo1Addr(
+                SILO_IMPL,
+                creatorSiloCounter,
+                address(SILO_FACTORY),
+                msg.sender
+            );
+
+            _siloInitData.interestRateModel1 = _createDKinkIRM(_irmConfigData1, silo, salt);
         }
     }
 
     /// @notice Create an interest rate model
     /// @param _irmConfigData IRM config data
     /// @return interestRateModel Deployed interest rate model
-    function _createInterestRateModel(bytes memory _irmConfigData) internal returns (address) {
+    function _createInterestRateModel(bytes memory _irmConfigData, bytes32 _salt) internal returns (address) {
         IInterestRateModelV2.Config memory config = abi.decode(_irmConfigData, (IInterestRateModelV2.Config));
-        (, IInterestRateModelV2 interestRateModel) = IRM_CONFIG_FACTORY.create(config, _salt());
+        (, IInterestRateModelV2 interestRateModel) = IRM_CONFIG_FACTORY.create(config, _salt);
 
         return address(interestRateModel);
     }
@@ -184,9 +202,15 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
     /// @param _irmConfigData DKinkIRM config data
     /// @param _silo Silo address
     /// @return interestRateModel Deployed DKinkIRM
-    function _createDKinkIRM(bytes memory _irmConfigData, address _silo) internal returns (address) {
+    function _createDKinkIRM(bytes memory _irmConfigData, address _silo, bytes32 _salt) internal returns (address) {
         DKinkIRMConfig memory dkink = abi.decode(_irmConfigData, (DKinkIRMConfig));
-        IInterestRateModel interestRateModel = DYNAMIC_KINK_MODEL_FACTORY.create(dkink.config, dkink.initialOwner, _silo);
+
+        IInterestRateModel interestRateModel = DYNAMIC_KINK_MODEL_FACTORY.create(
+            dkink.config,
+            dkink.initialOwner,
+            _silo,
+            _salt
+        );
 
         return address(interestRateModel);
     }

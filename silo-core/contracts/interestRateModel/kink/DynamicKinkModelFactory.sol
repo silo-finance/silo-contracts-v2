@@ -25,17 +25,25 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     /// @dev IRM contract implementation address to clone
     DynamicKinkModel public immutable IRM;
 
+    /// @dev Mapping to track if an IRM was created in this factory
+    mapping(address irm => bool isDeployed) public createdInFactory;
+
     constructor() {
         IRM = new DynamicKinkModel();
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
-    function create(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo)
+    function create(
+        IDynamicKinkModel.Config calldata _config,
+        address _initialOwner,
+        address _silo,
+        bytes32 _externalSalt
+    )
         external
         virtual
         returns (IInterestRateModel irm)
     {
-        return _create(_config, _initialOwner, _silo, _salt());
+        return _create(_config, _initialOwner, _silo, _externalSalt);
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
@@ -117,6 +125,8 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
         irm = IInterestRateModel(Clones.cloneDeterministic(address(IRM), salt));
         IDynamicKinkModel(address(irm)).initialize(_config, _initialOwner, _silo);
+
+        createdInFactory[address(irm)] = true;
 
         emit NewDynamicKinkModel(IDynamicKinkModel(address(irm)));
     }

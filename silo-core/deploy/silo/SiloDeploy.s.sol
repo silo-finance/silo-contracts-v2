@@ -303,7 +303,6 @@ abstract contract SiloDeploy is CommonDeploy {
         )
     {
         InterestRateModelConfigData irmModelData = new InterestRateModelConfigData();
-        DKinkIRMConfigData dkinkIRMModelData = new DKinkIRMConfigData();
 
         address irmConfigFactory = _resolveDeployedContract(SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY);
         address dkinkIRMConfigFactory = _resolveDeployedContract(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY);
@@ -311,16 +310,7 @@ abstract contract SiloDeploy is CommonDeploy {
         if (_siloInitData.interestRateModel0 == irmConfigFactory) {
             irmConfigData0 = abi.encode(irmModelData.getConfigData(_config.interestRateModelConfig0));
         } else if (_siloInitData.interestRateModel0 == dkinkIRMConfigFactory) {
-            IDynamicKinkModel.Config memory dkinkIRMConfigData0 = dkinkIRMModelData.getConfigData(
-                _config.interestRateModelConfig0
-            );
-
-            ISiloDeployer.DKinkIRMConfig memory dkinkIRMConfig = ISiloDeployer.DKinkIRMConfig({
-                config: dkinkIRMConfigData0,
-                initialOwner: _getDKinkIRMInitialOwner()
-            });
-
-            irmConfigData0 = abi.encode(dkinkIRMConfig);
+            irmConfigData0 = _prepareDKinkIRMConfig(_config.interestRateModelConfig0);
         } else {
             revert UnknownInterestRateModelFactory();
         }
@@ -328,19 +318,23 @@ abstract contract SiloDeploy is CommonDeploy {
         if (_siloInitData.interestRateModel1 == irmConfigFactory) {
             irmConfigData1 = abi.encode(irmModelData.getConfigData(_config.interestRateModelConfig1));
         } else if (_siloInitData.interestRateModel1 == dkinkIRMConfigFactory) {
-            IDynamicKinkModel.Config memory dkinkIRMConfigData1 = dkinkIRMModelData.getConfigData(
-                _config.interestRateModelConfig1
-            );
-
-            ISiloDeployer.DKinkIRMConfig memory dkinkIRMConfig = ISiloDeployer.DKinkIRMConfig({
-                config: dkinkIRMConfigData1,
-                initialOwner: _getDKinkIRMInitialOwner()
-            });
-
-            irmConfigData1 = abi.encode(dkinkIRMConfig);
+            irmConfigData1 = _prepareDKinkIRMConfig(_config.interestRateModelConfig1);
         } else {
             revert UnknownInterestRateModelFactory();
         }
+    }
+
+    function _prepareDKinkIRMConfig(string memory _configName) internal returns (bytes memory irmConfigData) {
+        DKinkIRMConfigData dkinkIRMModelData = new DKinkIRMConfigData();
+
+        IDynamicKinkModel.Config memory dkinkIRMConfigData = dkinkIRMModelData.getConfigData(_configName);
+
+        ISiloDeployer.DKinkIRMConfig memory dkinkIRMConfig = ISiloDeployer.DKinkIRMConfig({
+            config: dkinkIRMConfigData,
+            initialOwner: _getDKinkIRMInitialOwner()
+        });
+
+        irmConfigData = abi.encode(dkinkIRMConfig);
     }
 
     function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {
