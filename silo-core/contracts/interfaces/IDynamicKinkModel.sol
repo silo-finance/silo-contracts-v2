@@ -98,7 +98,7 @@ interface IDynamicKinkModel {
     /// @param k state of the slope after latest interest rate accrual.
     /// @param silo silo address for which model is created.
     struct ModelState {
-        int96 k; // TODO ensure we can limit to 95 bytes (-1 for int)
+        int256 k; // TODO ensure we can limit to 95 bytes (-1 for int)
         address silo;
     }
 
