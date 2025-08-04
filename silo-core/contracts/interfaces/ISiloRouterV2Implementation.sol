@@ -8,6 +8,9 @@ import {IWrappedNativeToken} from "./IWrappedNativeToken.sol";
 import {IPendleWrapperLike} from "./IPendleWrapperLike.sol";
 
 interface ISiloRouterV2Implementation {
+    error OnlySiloRouter();
+    error Paused();
+
     /// @notice Wrap native token to wrapped native token
     /// @dev Tokens are wrapped to the router's balance.
     /// Caller is responsible to transfer the wrapped tokens to the desired address.

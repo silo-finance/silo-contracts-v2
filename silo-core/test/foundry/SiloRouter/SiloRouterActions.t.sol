@@ -6,7 +6,7 @@ import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
-import {ReentrancyGuardUpgradeable} from "openzeppelin5-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 
 import {SiloRouterV2Deploy} from "silo-core/deploy/SiloRouterV2Deploy.s.sol";
 import {SiloRouterV2} from "silo-core/contracts/silo-router/SiloRouterV2.sol";
@@ -16,6 +16,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloRouterV2} from "silo-core/contracts/interfaces/ISiloRouterV2.sol";
 import {SiloRouterV2Implementation} from "silo-core/contracts/silo-router/SiloRouterV2Implementation.sol";
 import {IWrappedNativeToken} from "silo-core/contracts/interfaces/IWrappedNativeToken.sol";
+import {ISiloRouterV2Implementation} from "silo-core/contracts/interfaces/ISiloRouterV2Implementation.sol";
 import {ShareTokenDecimalsPowLib} from "../_common/ShareTokenDecimalsPowLib.sol";
 
 // solhint-disable function-max-lines
@@ -80,14 +81,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         vm.prank(wsWhale);
         IERC20(token0).transfer(borrower, _TOKEN0_AMOUNT);
 
-        vm.prank(depositor);
-        IERC20(token0).approve(address(router), type(uint256).max);
-
-        vm.prank(depositor);
-        IERC20(token1).approve(address(router), type(uint256).max);
-
-        vm.prank(borrower);
-        IERC20(token0).approve(address(router), type(uint256).max);
+        // Note: approvals will be given to user routers as needed in each test
 
         vm.label(siloConfig, "siloConfig");
         vm.label(silo0, "silo0");
@@ -150,14 +144,17 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
     function test_siloRouterV2_unwrapAndTransfer_nativeToken() public {
         assertEq(wsWhale.balance, 0, "Account should not have any native tokens");
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(wsWhale);
+
         vm.prank(wsWhale);
-        IERC20(nativeToken).approve(address(router), _S_BALANCE);
+        IERC20(nativeToken).approve(userRouter, _S_BALANCE);
 
         address receiver = makeAddr("Receiver");
 
         bytes[] memory data = new bytes[](3);
 
-        data[0] = abi.encodeCall(SiloRouterV2Implementation.transferFrom, (IWrappedNativeToken(nativeToken), address(router), _S_BALANCE));
+        data[0] = abi.encodeCall(SiloRouterV2Implementation.transferFrom, (IWrappedNativeToken(nativeToken), userRouter, _S_BALANCE));
         data[1] = abi.encodeCall(SiloRouterV2Implementation.unwrap, (IWrappedNativeToken(nativeToken), _S_BALANCE));
         data[2] = abi.encodeCall(SiloRouterV2Implementation.sendValue, (payable(receiver), _S_BALANCE));
 
@@ -173,12 +170,15 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
 
         uint256 someAmount = _S_BALANCE + 1;
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(wsWhale);
+
         vm.prank(wsWhale);
-        nativeToken.transfer(address(router), someAmount);
+        nativeToken.transfer(userRouter, someAmount);
 
         address receiver = makeAddr("Receiver");
 
-        assertEq(nativeToken.balanceOf(address(router)), someAmount, "Router should have native tokens");
+        assertEq(nativeToken.balanceOf(userRouter), someAmount, "User router should have native tokens");
 
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.unwrapAll, (IWrappedNativeToken(nativeToken)));
@@ -192,7 +192,10 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_approve
     function test_siloRouterV2_approve() public {
-        assertEq(nativeToken.allowance(address(router), address(this)), 0, "Router should not have any allowance");
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(wsWhale);
+        
+        assertEq(nativeToken.allowance(userRouter, address(this)), 0, "User router should not have any allowance");
 
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.approve, (IERC20(nativeToken), address(this), type(uint256).max));
@@ -201,9 +204,9 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         router.multicall(data);
 
         assertEq(
-            nativeToken.allowance(address(router), address(this)),
+            nativeToken.allowance(userRouter, address(this)),
             type(uint256).max,
-            "Router should have max allowance"
+            "User router should have max allowance"
         );
     }
 
@@ -211,10 +214,13 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
     function test_siloRouterV2_transfer() public {
         assertEq(nativeToken.balanceOf(address(this)), 0, "Account should not have any native tokens");
 
-        vm.prank(wsWhale);
-        nativeToken.transfer(address(router), _S_BALANCE);
-
         address anyAddress = makeAddr("AnyAddress");
+        
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(anyAddress);
+
+        vm.prank(wsWhale);
+        nativeToken.transfer(userRouter, _S_BALANCE);
 
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.transfer, (IERC20(nativeToken), address(this), _S_BALANCE));
@@ -229,8 +235,11 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
     function test_siloRouterV2_transferFrom() public {
         assertEq(nativeToken.balanceOf(address(this)), 0, "Account should not have any native tokens");
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(wsWhale);
+
         vm.prank(wsWhale);
-        IERC20(nativeToken).approve(address(router), _S_BALANCE);
+        IERC20(nativeToken).approve(userRouter, _S_BALANCE);
 
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.transferFrom, (IERC20(nativeToken), address(this), _S_BALANCE));
@@ -245,8 +254,15 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
     function test_siloRouterV2_depositFlow() public {
         assertEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should not have any collateral tokens");
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(depositor);
+
+        // Approve user's router to spend tokens
+        vm.prank(depositor);
+        IERC20(token0).approve(userRouter, _S_BALANCE);
+
         bytes[] memory data = new bytes[](3);
-        data[0] = abi.encodeCall(SiloRouterV2Implementation.transferFrom, (IERC20(token0), address(router), _S_BALANCE));
+        data[0] = abi.encodeCall(SiloRouterV2Implementation.transferFrom, (IERC20(token0), userRouter, _S_BALANCE));
         data[1] = abi.encodeCall(SiloRouterV2Implementation.approve, (IERC20(token0), address(silo0), _S_BALANCE));
         data[2] = abi.encodeCall(SiloRouterV2Implementation.deposit, (ISilo(silo0), _S_BALANCE, ISilo.CollateralType.Collateral));
 
@@ -286,8 +302,11 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
 
         assertNotEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should have collateral tokens");
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(depositor);
+
         vm.prank(depositor);
-        IERC20(collateralToken0).approve(address(router), type(uint256).max);
+        IERC20(collateralToken0).approve(userRouter, type(uint256).max);
 
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.withdraw, (ISilo(silo0), _S_BALANCE - 1, depositor, ISilo.CollateralType.Collateral));
@@ -309,13 +328,16 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
 
         assertNotEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should have collateral tokens");
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(depositor);
+
         vm.prank(depositor);
-        IERC20(collateralToken0).approve(address(router), type(uint256).max);
+        IERC20(collateralToken0).approve(userRouter, type(uint256).max);
 
         uint256 toWithdraw = _S_BALANCE - 1;
 
         bytes[] memory data = new bytes[](3);
-        data[0] = abi.encodeCall(SiloRouterV2Implementation.withdraw, (ISilo(silo0), toWithdraw, address(router), ISilo.CollateralType.Collateral));
+        data[0] = abi.encodeCall(SiloRouterV2Implementation.withdraw, (ISilo(silo0), toWithdraw, userRouter, ISilo.CollateralType.Collateral));
         data[1] = abi.encodeCall(SiloRouterV2Implementation.unwrap, (IWrappedNativeToken(nativeToken), toWithdraw));
         data[2] = abi.encodeCall(SiloRouterV2Implementation.sendValue, (payable(depositor), toWithdraw));
 
@@ -339,8 +361,11 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(depositor.balance, 0, "Account should not have any native tokens");
         assertNotEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should have collateral tokens");
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(depositor);
+
         vm.prank(depositor);
-        IERC20(collateralToken0).approve(address(router), type(uint256).max);
+        IERC20(collateralToken0).approve(userRouter, type(uint256).max);
 
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.withdrawAll, (ISilo(silo0), depositor, ISilo.CollateralType.Collateral));
@@ -363,11 +388,14 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertEq(depositor.balance, 0, "Account should not have any native tokens");
         assertNotEq(IERC20(collateralToken0).balanceOf(depositor), 0, "Account should have collateral tokens");
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(depositor);
+
         vm.prank(depositor);
-        IERC20(collateralToken0).approve(address(router), type(uint256).max);
+        IERC20(collateralToken0).approve(userRouter, type(uint256).max);
 
         bytes[] memory data = new bytes[](3);
-        data[0] = abi.encodeCall(SiloRouterV2Implementation.withdrawAll, (ISilo(silo0), address(router), ISilo.CollateralType.Collateral));
+        data[0] = abi.encodeCall(SiloRouterV2Implementation.withdrawAll, (ISilo(silo0), userRouter, ISilo.CollateralType.Collateral));
         data[1] = abi.encodeCall(SiloRouterV2Implementation.unwrapAll, (IWrappedNativeToken(nativeToken)));
         data[2] = abi.encodeCall(SiloRouterV2Implementation.sendValueAll, (payable(depositor)));
 
@@ -390,8 +418,11 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
 
         assertEq(IERC20(debtToken1).balanceOf(borrower), 0, "Account should not have any debt tokens");
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(borrower);
+
         vm.prank(borrower);
-        IERC20(debtToken1).approve(address(router), type(uint256).max);
+        IERC20(debtToken1).approve(userRouter, type(uint256).max);
 
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.borrow, (ISilo(silo1), borrowAmount, address(borrower)));
@@ -416,13 +447,16 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
 
         assertEq(IERC20(debtToken0).balanceOf(borrower), 0, "Account should not have any debt tokens");
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(borrower);
+
         vm.prank(borrower);
-        IERC20(debtToken0).approve(address(router), type(uint256).max);
+        IERC20(debtToken0).approve(userRouter, type(uint256).max);
 
         uint256 borrowAmount = ISilo(silo0).maxBorrow(borrower);
 
         bytes[] memory data = new bytes[](3);
-        data[0] = abi.encodeCall(SiloRouterV2Implementation.borrow, (ISilo(silo0), borrowAmount, address(router)));
+        data[0] = abi.encodeCall(SiloRouterV2Implementation.borrow, (ISilo(silo0), borrowAmount, userRouter));
         data[1] = abi.encodeCall(SiloRouterV2Implementation.unwrap, (IWrappedNativeToken(nativeToken), borrowAmount));
         data[2] = abi.encodeCall(SiloRouterV2Implementation.sendValue, (payable(borrower), borrowAmount));
 
@@ -447,8 +481,11 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
 
         uint256 balanceBefore = IERC20(token0).balanceOf(borrower);
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(borrower);
+
         vm.prank(borrower);
-        IERC20(debtToken0).approve(address(router), type(uint256).max);
+        IERC20(debtToken0).approve(userRouter, type(uint256).max);
 
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.borrowSameAsset, (ISilo(silo0), borrowAmount, address(borrower)));
@@ -485,11 +522,14 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
 
         uint256 repayAmount = ISilo(silo0).previewRepay(borrowAmount) / 2;
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(borrower);
+
         vm.prank(borrower);
-        IERC20(token0).approve(address(router), type(uint256).max);
+        IERC20(token0).approve(userRouter, type(uint256).max);
 
         bytes[] memory data = new bytes[](3);
-        data[0] = abi.encodeCall(SiloRouterV2Implementation.transferFrom, (IERC20(token0), address(router), repayAmount));
+        data[0] = abi.encodeCall(SiloRouterV2Implementation.transferFrom, (IERC20(token0), userRouter, repayAmount));
         data[1] = abi.encodeCall(SiloRouterV2Implementation.approve, (IERC20(token0), address(silo0), type(uint256).max));
         data[2] = abi.encodeCall(SiloRouterV2Implementation.repay, (ISilo(silo0), repayAmount));
 
@@ -561,6 +601,14 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         assertNotEq(debtBalanceBefore, 0, "Account should have debt tokens");
         assertEq(borrower.balance, 0, "Account should not have any native tokens");
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(borrower);
+
+        // Approve router to spend tokens for repayment
+        uint256 repayAmount = ISilo(silo0).maxRepay(borrower);
+        vm.prank(borrower);
+        IERC20(token0).approve(userRouter, repayAmount);
+
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.repayAll, (ISilo(silo0)));
 
@@ -602,6 +650,9 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         vm.prank(wsWhale);
         payable(borrower).transfer(repayAmount);
 
+        // Get the user's router address
+        address userRouter = router.predictUserSiloRouterContract(borrower);
+
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.repayAllNative, (IWrappedNativeToken(nativeToken), ISilo(silo0)));
         data[1] = abi.encodeCall(SiloRouterV2Implementation.sendValueAll, (payable(borrower)));
@@ -610,7 +661,7 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         router.multicall{value: repayAmount}(data);
 
         assertEq(IERC20(debtToken0).balanceOf(borrower), 0, "Account should not have any debt tokens");
-        assertEq(address(router).balance, 0, "Router should not have any native tokens");
+        assertEq(userRouter.balance, 0, "User router should not have any native tokens");
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_pause_allActions_viaMulticall
@@ -641,6 +692,12 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         vm.prank(wsWhale);
         payable(router).transfer(_S_BALANCE);
+
+        address userRouterImpl = router.IMPLEMENTATION();
+
+        vm.expectRevert(abi.encodeWithSelector(ISiloRouterV2Implementation.Paused.selector));
+        vm.prank(wsWhale);
+        payable(userRouterImpl).transfer(_S_BALANCE);
     }
 
     /// @dev only to test reentrancy
@@ -655,9 +712,9 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
     function test_siloRouterV2_multicall_reentrancy() public {
         bytes[] memory data = new bytes[](1);
 
-        // testing multicall with pause with a few actions calls
+        // testing multicall with reentrancy attempt
         data[0] = abi.encodeCall(SiloRouterV2Implementation.transfer, (IERC20(address(this)), address(0), 0));
-        vm.expectRevert(abi.encodeWithSelector(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector));
+        vm.expectRevert(abi.encodeWithSelector(ReentrancyGuard.ReentrancyGuardReentrantCall.selector));
         router.multicall(data);
     }
 }

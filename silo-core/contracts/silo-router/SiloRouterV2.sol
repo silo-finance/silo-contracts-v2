@@ -3,10 +3,12 @@ pragma solidity 0.8.28;
 
 import {Address} from "openzeppelin5/utils/Address.sol";
 import {Pausable} from "openzeppelin5/utils/Pausable.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 
 import {ISiloRouterV2} from "../interfaces/ISiloRouterV2.sol";
+import {SiloRouterV2Implementation} from "./SiloRouterV2Implementation.sol";
 
 /// @title SiloRouterV2
 /// @custom:security-contact security@silo.finance
@@ -18,12 +20,16 @@ contract SiloRouterV2 is Pausable, Ownable2Step, ReentrancyGuard, ISiloRouterV2 
     /// @notice The address of the implementation contract
     address public immutable IMPLEMENTATION;
 
+    /// @notice Transient variable to store the msg.sender
+    address public transient msgSender;
+
+    /// @notice Mapping of user to their silo router contract
+    mapping(address user => address siloRouter) public userSiloRouterContract;
+
     /// @notice Constructor for the SiloRouterV2 contract
     /// @param _initialOwner The address of the initial owner
-    /// @param _implementation The address of the implementation contract
-    constructor (address _initialOwner, address _implementation) Ownable(_initialOwner) {
-        // expect implementation to not work with storage
-        IMPLEMENTATION = _implementation;
+    constructor (address _initialOwner) Ownable(_initialOwner) {
+        IMPLEMENTATION = address(new SiloRouterV2Implementation(address(this)));
     }
 
     /// @dev Needed for unwrapping native tokens
@@ -41,12 +47,21 @@ contract SiloRouterV2 is Pausable, Ownable2Step, ReentrancyGuard, ISiloRouterV2 
         whenNotPaused
         returns (bytes[] memory results)
     {
+        msgSender = msg.sender;
+
+        address userSiloRouter = _resolveSiloRouterContract();
+
+        if (msg.value != 0) {
+            Address.sendValue(payable(userSiloRouter), msg.value);
+        }
+
         results = new bytes[](data.length);
 
         for (uint256 i = 0; i < data.length; i++) {
-            // expect implementation not to use `msg.value`
-            results[i] = Address.functionDelegateCall(IMPLEMENTATION, data[i]);
+            results[i] = Address.functionCall(userSiloRouter, data[i]);
         }
+
+        msgSender = address(0);
 
         return results;
     }
@@ -59,5 +74,39 @@ contract SiloRouterV2 is Pausable, Ownable2Step, ReentrancyGuard, ISiloRouterV2 
     /// @inheritdoc ISiloRouterV2
     function unpause() external virtual onlyOwner {
         _unpause();
+    }
+
+    /// @inheritdoc ISiloRouterV2
+    function predictUserSiloRouterContract(address _user) external view returns (address siloRouter) {
+        siloRouter = Clones.predictDeterministicAddress({
+            implementation: IMPLEMENTATION,
+            salt: _getSalt(_user),
+            deployer: address(this)
+        });
+    }
+
+    /// @dev This function is used to get the silo router contract for a user.
+    /// If the silo router contract does not exist, it will be created.
+    /// @return siloRouter
+    function _resolveSiloRouterContract() internal returns (address siloRouter) {
+        siloRouter = userSiloRouterContract[msg.sender];
+
+        if (address(siloRouter) != address(0)) {
+            return siloRouter;
+        }
+
+        siloRouter = Clones.cloneDeterministic({
+            implementation: IMPLEMENTATION,
+            salt: _getSalt(msg.sender)
+        });
+
+        userSiloRouterContract[msg.sender] = siloRouter;
+
+        emit SiloRouterContractCreated(msg.sender, address(siloRouter));
+    }
+
+    /// @dev This function is used to get the salt for a user.
+    function _getSalt(address _user) internal pure returns (bytes32) {
+        return bytes32(bytes20(_user));
     }
 }
