@@ -1,10 +1,7 @@
-FIRM.increaseTotalInterest(collateralShares) // protected only silo hook
-   accrueInterest();
-   totalInterestToDistribute += collateralShares;
-
-
 FIRM.accrueInterest() returns (interest)
   if (lastUpdateTimestamp == block.timestamp) return 0;
+
+  totalInterestToDistribute = ShareCollateralToken.balanceOf(address(this));
 
   if (totalInterestToDistribute == 0) {
       lastUpdateTimestamp = block.timestamp;
@@ -23,7 +20,6 @@ FIRM.accrueInterest() returns (interest)
 
   if (interest == 0) return 0;
 
-  totalInterestToDistribute -= interest; // update a state
   ShareCollateralToken.transfer(FIRMVault, interest);
 
 
@@ -33,6 +29,7 @@ FIRM.getCurrentInterestRate() returns (rcur)
 
 FIRM.getCurrentInterestRateDepositor() returns (rcur)
   sharesBalance = ShareCollateralToken.balanceOf(FIRMVault);
+  totalInterestToDistribute = ShareCollateralToken.balanceOf(address(this));
 
   distributeTillTime = block.timestamp >= maturityDate ? block.timestamp : maturityDate;
   interestTimeDelta = distributeTillTime - lastUpdateTimestamp;
@@ -42,11 +39,11 @@ FIRM.getCurrentInterestRateDepositor() returns (rcur)
 
 
 FIRM.capInterest(interest) returns (cappedInterest) {
+  cap = block.timestamp < maturityDate ? APR : 100; // 100 is 10_000%
   sharesBalance = ShareCollateralToken.balanceOf(FIRMVault);
   interestTimeDelta = block.timestamp - lastUpdateTimestamp;
 
-  // 100 is 10_000%
-  maxInterest = 100 * sharesBalance * interestTimeDelta / 365 days;
+  maxInterest = cap * sharesBalance * interestTimeDelta / 365 days;
 
   cappedInterest = Math.min(interest, maxInterest);
 }
