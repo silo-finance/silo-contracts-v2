@@ -39,11 +39,11 @@ FIRM.getCurrentInterestRateDepositor() returns (rcur)
 
 
 FIRM.capInterest(interest) returns (cappedInterest) {
-  cap = block.timestamp < maturityDate ? APR : 100; // 100 is 10_000%
   sharesBalance = ShareCollateralToken.balanceOf(FIRMVault);
   interestTimeDelta = block.timestamp - lastUpdateTimestamp;
 
-  maxInterest = cap * sharesBalance * interestTimeDelta / 365 days;
+  // 100 is 10_000%
+  maxInterest = 100 * sharesBalance * interestTimeDelta / 365 days;
 
   cappedInterest = Math.min(interest, maxInterest);
 }
