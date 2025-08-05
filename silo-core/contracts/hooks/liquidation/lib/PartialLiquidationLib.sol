@@ -302,8 +302,8 @@ library PartialLiquidationLib {
         }
     }
 
-    // @dev if hook is not implemented, we will return MAX_UINT256, 
-    /// which will result in fallback to default liquidation model and change is compatible with regular silo
+    // @dev if maturityDate is not implemented, we will return MAX_UINT256, 
+    /// which will result in fallback to default liquidation model, change is compatible with regular silo
     function getMaturityDate() internal view returns (uint256 maturityDate) {
         try IFirmHook(address(this)).maturityDate() returns (uint256 _date) {
             maturityDate = _date;
