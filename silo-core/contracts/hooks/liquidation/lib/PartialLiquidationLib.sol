@@ -238,7 +238,7 @@ library PartialLiquidationLib {
         if (_totalBorrowerDebtValue == 0) return 0;
         if (_liquidationFee >= _PRECISION_DECIMALS) return 0;
         // after maturity date, we immediately allow to liquidate all debt
-        if (block.timestamp >= _maturityDate()) return _totalBorrowerDebtValue;
+        if (block.timestamp >= getMaturityDate()) return _totalBorrowerDebtValue;
 
         // this will cover case, when _totalBorrowerCollateralValue == 0
         if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) return _totalBorrowerDebtValue;
@@ -302,6 +302,16 @@ library PartialLiquidationLib {
         }
     }
 
+    // @dev if hook is not implemented, we will return MAX_UINT256, 
+    /// which will result in fallback to default liquidation model and change is compatible with regular silo
+    function getMaturityDate() internal view returns (uint256 maturityDate) {
+        try IFirmHook(address(this)).maturityDate() returns (uint256 _date) {
+            maturityDate = _date;
+        } catch {
+            maturityDate = type(uint256).max;
+        }
+    }
+
     /// @notice must stay private because this is not for general LTV, only for ltv after internally
     function _calculateLtvAfter(
         uint256 _sumOfCollateralValue,
@@ -330,15 +340,5 @@ library PartialLiquidationLib {
         // previous calculation of LTV
         ltv = _debt * _PRECISION_DECIMALS;
         ltv = Math.ceilDiv(ltv, _collateral); // Rounding.LTV is up/ceil
-    }
-
-    /// @dev if hook is not implemented, we will return MAX_UINT256, 
-    /// which will result in fallback to default liquidation model and change is compatible with regular silo
-    function _maturityDate() internal view returns (uint256 maturityDate) {
-        try IFirmHook(address(this)).maturityDate() returns (uint256 _date) {
-            maturityDate = _date;
-        } catch {
-            maturityDate = type(uint256).max;
-        }
     }
 }
