@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+import {ERC4626Oracle} from "silo-oracles/contracts/erc4626/ERC4626Oracle.sol";
 
 import {
     ERC4626OracleHardcodeQuoteFactoryDeploy
@@ -52,13 +53,13 @@ contract ERC4626OracleHardcodeQuoteTest is Test {
 
     // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626OracleHardcodeQuote_quote_wrongBaseToken -vvv
     function test_ERC4626OracleHardcodeQuote_quote_wrongBaseToken() public {
-        vm.expectRevert(ERC4626OracleHardcodeQuote.AssetNotSupported.selector);
+        vm.expectRevert(ERC4626Oracle.AssetNotSupported.selector);
         oracle.quote(1 ether, address(1));
     }
 
     // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626OracleHardcodeQuote_quote_revertsZeroPrice -vvv
     function test_ERC4626OracleHardcodeQuote_quote_revertsZeroPrice() public {
-        vm.expectRevert(ERC4626OracleHardcodeQuote.ZeroPrice.selector);
+        vm.expectRevert(ERC4626Oracle.ZeroPrice.selector);
         oracle.quote(0, address(vault));
 
         vm.mockCall(
@@ -67,12 +68,12 @@ contract ERC4626OracleHardcodeQuoteTest is Test {
             abi.encode(0)
         );
 
-        vm.expectRevert(ERC4626OracleHardcodeQuote.ZeroPrice.selector);
+        vm.expectRevert(ERC4626Oracle.ZeroPrice.selector);
         oracle.quote(1 ether, address(vault));
     }
 
     // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626OracleHardcodeQuote_quoteToken -vvv
-    function test_ERC4626OracleHardcodeQuote_quoteToken() public {
+    function test_ERC4626OracleHardcodeQuote_quoteToken() public view {
         assertEq(oracle.quoteToken(), quoteToken);
     }
 
