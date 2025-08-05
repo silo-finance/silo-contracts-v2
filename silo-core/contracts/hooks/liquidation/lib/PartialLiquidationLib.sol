@@ -102,12 +102,13 @@ library PartialLiquidationLib {
             debtToRepay = _params.maxDebtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.maxDebtToCover;
             debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
         } else {
-            uint256 maxRepayValue = estimateMaxRepayValue({
-                _totalBorrowerDebtValue: _borrowerDebtValue,
-                _totalBorrowerCollateralValue: _sumOfCollateralValue,
-                _ltvAfterLiquidation: _params.liquidationTargetLtv,
-                _liquidationFee: _params.liquidationFee
-            });
+            uint256 maxRepayValue = estimateMaxRepayValue(
+                _borrowerDebtValue,
+                _sumOfCollateralValue,
+                _params.liquidationTargetLtv,
+                _params.liquidationFee
+            );
+
 
             if (maxRepayValue == _borrowerDebtValue) {
                 // forced full liquidation
@@ -186,12 +187,10 @@ library PartialLiquidationLib {
         uint256 _ltvAfterLiquidation,
         uint256 _liquidationFee
     ) internal view returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
-        repayValue = estimateMaxRepayValue({
-             _totalBorrowerDebtValue: _totalBorrowerDebtValue,
-             _totalBorrowerCollateralValue: _totalBorrowerCollateralValue,
-             _ltvAfterLiquidation: _ltvAfterLiquidation,
-             _liquidationFee: _liquidationFee
-        });
+        repayValue = estimateMaxRepayValue(
+            _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidation, _liquidationFee
+        );
+
 
         collateralValueToLiquidate = calculateCollateralToLiquidate(
             repayValue, _totalBorrowerCollateralValue, _liquidationFee
@@ -238,7 +237,7 @@ library PartialLiquidationLib {
     ) internal view returns (uint256 repayValue) {
         if (_totalBorrowerDebtValue == 0) return 0;
         if (_liquidationFee >= _PRECISION_DECIMALS) return 0;
-        // if we passed maturity date, we immediately allow to liquidate all debt
+        // after maturity date, we immediately allow to liquidate all debt
         if (block.timestamp >= _maturityDate()) return _totalBorrowerDebtValue;
 
         // this will cover case, when _totalBorrowerCollateralValue == 0
