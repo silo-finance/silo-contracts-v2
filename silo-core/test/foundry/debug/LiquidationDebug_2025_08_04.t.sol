@@ -91,16 +91,18 @@ Collateral:
         ISilo debtsilo = ISilo(0xf55902DE87Bd80c6a35614b48d7f8B612a083C12);
 
         // deposit for user to enable liquidaiton
-        vm.prank(wSwhale);
-        wS.approve(address(debtsilo), type(uint256).max);
+        // vm.prank(wSwhale);
+        // wS.approve(address(debtsilo), type(uint256).max);
 
-        vm.prank(wSwhale);
-        debtsilo.mint(1000, user, ISilo.CollateralType.Protected);
+        // vm.prank(wSwhale);
+        // debtsilo.mint(1000, user, ISilo.CollateralType.Protected);
 
         _print(silo, user);
 
-        manualHelper.executeLiquidation(silo, user);
-        // manualHelper.executeLiquidation(silo, user, type(uint256).max, true);
+        // manualHelper.executeLiquidation(silo, user);
+        manualHelper.executeLiquidation(silo, user, type(uint256).max, true);
+
+        _print(silo, user);
     }
 
     function _print(ISilo _silo, address _user) internal {
@@ -142,5 +144,9 @@ Collateral:
         console2.log("debtToRepay: ", debtToRepay);
         console2.log("%s% to repay", debtToRepay * 100 / _silo.maxRepay(_user));
         console2.log("fullLiquidation: ", fullLiquidation ? "full" : "partial");
+
+        console2.log("TOKENS_RECEIVER: ", manualHelper.TOKENS_RECEIVER());
+        console2.log("collateralShareToken: ", IERC20(collateralCfg.collateralShareToken).balanceOf(manualHelper.TOKENS_RECEIVER()));
+        console2.log("protectedShareToken: ", IERC20(collateralCfg.protectedShareToken).balanceOf(manualHelper.TOKENS_RECEIVER()));
     }
 }
