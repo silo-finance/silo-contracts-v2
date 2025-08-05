@@ -8,7 +8,8 @@ import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "openzeppelin5/utils/ReentrancyGuard.sol";
 
 import {ISiloRouterV2} from "../interfaces/ISiloRouterV2.sol";
-import {SiloRouterV2Implementation} from "./SiloRouterV2Implementation.sol";
+import {IUserSiloRouter} from "../interfaces/IUserSiloRouter.sol";
+import {UserSiloRouterV2} from "./UserSiloRouterV2.sol";
 
 /// @title SiloRouterV2
 /// @custom:security-contact security@silo.finance
@@ -18,24 +19,15 @@ import {SiloRouterV2Implementation} from "./SiloRouterV2Implementation.sol";
 /// @dev Caller should ensure that the router balance is empty after multicall.
 contract SiloRouterV2 is Pausable, Ownable2Step, ReentrancyGuard, ISiloRouterV2 {
     /// @notice The address of the implementation contract
-    address public immutable IMPLEMENTATION;
-
-    /// @notice Transient variable to store the msg.sender
-    address public transient msgSender;
+    address public immutable USER_SILO_ROUTER_IMPL;
 
     /// @notice Mapping of user to their silo router contract
-    mapping(address user => address siloRouter) public userSiloRouterContract;
+    mapping(address user => IUserSiloRouter siloRouter) public userSiloRouterContract;
 
     /// @notice Constructor for the SiloRouterV2 contract
     /// @param _initialOwner The address of the initial owner
     constructor (address _initialOwner) Ownable(_initialOwner) {
-        IMPLEMENTATION = address(new SiloRouterV2Implementation(address(this)));
-    }
-
-    /// @dev Needed for unwrapping native tokens
-    receive() external whenNotPaused payable {
-        // `multicall` method may call `IWrappedNativeToken.withdraw()`
-        // and we need to receive the withdrawn native token unconditionally
+        USER_SILO_ROUTER_IMPL = address(new UserSiloRouterV2(address(this)));
     }
 
     /// @inheritdoc ISiloRouterV2
@@ -47,23 +39,8 @@ contract SiloRouterV2 is Pausable, Ownable2Step, ReentrancyGuard, ISiloRouterV2 
         whenNotPaused
         returns (bytes[] memory results)
     {
-        msgSender = msg.sender;
-
-        address userSiloRouter = _resolveSiloRouterContract();
-
-        if (msg.value != 0) {
-            Address.sendValue(payable(userSiloRouter), msg.value);
-        }
-
-        results = new bytes[](data.length);
-
-        for (uint256 i = 0; i < data.length; i++) {
-            results[i] = Address.functionCall(userSiloRouter, data[i]);
-        }
-
-        msgSender = address(0);
-
-        return results;
+        IUserSiloRouter userSiloRouter = _resolveSiloRouterContract();
+        results = userSiloRouter.multicall{value: msg.value}(data, msg.sender);
     }
 
     /// @inheritdoc ISiloRouterV2
@@ -77,28 +54,28 @@ contract SiloRouterV2 is Pausable, Ownable2Step, ReentrancyGuard, ISiloRouterV2 
     }
 
     /// @inheritdoc ISiloRouterV2
-    function predictUserSiloRouterContract(address _user) external view returns (address siloRouter) {
-        siloRouter = Clones.predictDeterministicAddress({
-            implementation: IMPLEMENTATION,
+    function predictUserSiloRouterContract(address _user) external view returns (IUserSiloRouter siloRouter) {
+        siloRouter = IUserSiloRouter(Clones.predictDeterministicAddress({
+            implementation: USER_SILO_ROUTER_IMPL,
             salt: _getSalt(_user),
             deployer: address(this)
-        });
+        }));
     }
 
     /// @dev This function is used to get the silo router contract for a user.
     /// If the silo router contract does not exist, it will be created.
     /// @return siloRouter
-    function _resolveSiloRouterContract() internal returns (address siloRouter) {
+    function _resolveSiloRouterContract() internal returns (IUserSiloRouter siloRouter) {
         siloRouter = userSiloRouterContract[msg.sender];
 
         if (address(siloRouter) != address(0)) {
             return siloRouter;
         }
 
-        siloRouter = Clones.cloneDeterministic({
-            implementation: IMPLEMENTATION,
+        siloRouter = IUserSiloRouter(Clones.cloneDeterministic({
+            implementation: USER_SILO_ROUTER_IMPL,
             salt: _getSalt(msg.sender)
-        });
+        }));
 
         userSiloRouterContract[msg.sender] = siloRouter;
 

@@ -3,7 +3,7 @@ pragma solidity >=0.5.0;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
-import {ISilo} from "./ISilo.sol";
+import {IUserSiloRouter} from "./IUserSiloRouter.sol";
 import {IWrappedNativeToken} from "./IWrappedNativeToken.sol";
 
 interface ISiloRouterV2 {
@@ -19,12 +19,8 @@ interface ISiloRouterV2 {
     /// @notice Unpause the router
     function unpause() external;
 
-    /// @notice Get the initiator of the multicall
-    /// @return msgSender
-    function msgSender() external view returns (address);
-
     /// @notice Predict the address of the silo router contract for a user
     /// @param _user The user to predict the address for
     /// @return siloRouter The address of the silo router contract
-    function predictUserSiloRouterContract(address _user) external view returns (address siloRouter);
+    function predictUserSiloRouterContract(address _user) external view returns (IUserSiloRouter siloRouter);
 }

@@ -50,8 +50,7 @@ contract SiloRouterPendleLPTsTest is Test {
 
         assertEq(pendleLPToken.balanceOf(depositor), amount, "Expect to have 100 pendle LP tokens");
 
-        // Get the user's router address
-        address userRouter = router.predictUserSiloRouterContract(depositor);
+        address userRouter = address(router.predictUserSiloRouterContract(depositor));
 
         vm.prank(depositor);
         pendleLPToken.approve(userRouter, amount);
@@ -78,8 +77,7 @@ contract SiloRouterPendleLPTsTest is Test {
         vm.prank(pendleLPWhale);
         pendleLPToken.transfer(depositor, amount);
 
-        // Get the user's router address
-        address userRouter = router.predictUserSiloRouterContract(depositor);
+        address userRouter = address(router.predictUserSiloRouterContract(depositor));
 
         vm.prank(depositor);
         pendleLPToken.approve(address(wrapper), amount);
@@ -112,8 +110,7 @@ contract SiloRouterPendleLPTsTest is Test {
         vm.prank(pendleLPWhale);
         pendleLPToken.transfer(depositor, amount);
 
-        // Get the user's router address
-        address userRouter = router.predictUserSiloRouterContract(depositor);
+        address userRouter = address(router.predictUserSiloRouterContract(depositor));
 
         vm.prank(depositor);
         pendleLPToken.approve(address(wrapper), amount);
