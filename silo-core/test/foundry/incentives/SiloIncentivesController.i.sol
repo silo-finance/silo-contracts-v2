@@ -121,24 +121,24 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 41707056);
         IShareToken shareToken = IShareToken(0x0Cc5bD24b04FE8Ef3e5de500CE2cC77b421406F7);
 
-        IGaugeHookReceiver hookAfterVeSiloRemoval =
+        IGaugeHookReceiver hookBeforeVeSiloRemoval =
             IGaugeHookReceiver(0xfc8a8138221a978C98f01A71c6f7300a4cd3Cdbe);
 
         _controller = new SiloIncentivesController({
             _owner: address(this),
-            _notifier: address(hookAfterVeSiloRemoval),
+            _notifier: address(hookBeforeVeSiloRemoval),
             _shareToken: address(shareToken)
         });
 
         assertEq(_controller.share_token(), address(shareToken), "required method for .setGauge works");
-        vm.prank(Ownable(address(hookAfterVeSiloRemoval)).owner());
+        vm.prank(Ownable(address(hookBeforeVeSiloRemoval)).owner());
 
-        hookAfterVeSiloRemoval.setGauge({
+        hookBeforeVeSiloRemoval.setGauge({
             _gauge: ISiloIncentivesController(_controller),
             _shareToken: shareToken
         });
 
-        assertEq(address(hookAfterVeSiloRemoval.configuredGauges(shareToken)), address(_controller));
+        assertEq(address(hookBeforeVeSiloRemoval.configuredGauges(shareToken)), address(_controller));
     }
 
     /*
