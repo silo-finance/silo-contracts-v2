@@ -11,6 +11,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {ShareTokenDecimalsPowLib} from "../../_common/ShareTokenDecimalsPowLib.sol";
+import {RevertingIRM} from "silo-core/test/foundry/_mocks/RevertingIRM.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 
@@ -383,6 +384,56 @@ contract BorrowIntegrationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrow_scenarios
     */
     function test_borrow_scenarios_1token() public {
+        _borrow_scenarios();
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_scenarios_1token_revertingIRM_standardRevert
+    */
+    function test_borrow_scenarios_1token_revertingIRM_standardRevert() public {
+        address irm = address(new RevertingIRM(RevertingIRM.RevertReasons.StandardRevert));
+        _mockIRM(silo0, irm);
+        _mockIRM(silo1, irm);
+        _borrow_scenarios();
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_scenarios_1token_revertingIRM_zeroDiv
+    */
+    function test_borrow_scenarios_1token_revertingIRM_zeroDiv() public {
+        address irm = address(new RevertingIRM(RevertingIRM.RevertReasons.ZeroDiv));
+        _mockIRM(silo0, irm);
+        _mockIRM(silo1, irm);
+        _borrow_scenarios();
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_scenarios_1token_revertingIRM_underflow
+    */
+    function test_borrow_scenarios_1token_revertingIRM_underflow() public {
+        address irm = address(new RevertingIRM(RevertingIRM.RevertReasons.Underflow));
+        _mockIRM(silo0, irm);
+        _mockIRM(silo1, irm);
+        _borrow_scenarios();
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_scenarios_1token_revertingIRM_overflow
+    */
+    function test_borrow_scenarios_1token_revertingIRM_overflow() public {
+        address irm = address(new RevertingIRM(RevertingIRM.RevertReasons.Overflow));
+        _mockIRM(silo0, irm);
+        _mockIRM(silo1, irm);
+        _borrow_scenarios();
+    }
+
+    /*
+    forge test -vv --ffi --mt test_borrow_scenarios_1token_revertingIRM_customError
+    */
+    function test_borrow_scenarios_1token_revertingIRM_customError() public {
+        address irm = address(new RevertingIRM(RevertingIRM.RevertReasons.CustomError));
+        _mockIRM(silo0, irm);
+        _mockIRM(silo1, irm);
         _borrow_scenarios();
     }
 
