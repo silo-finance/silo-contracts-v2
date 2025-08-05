@@ -5,6 +5,7 @@ import {IERC20} from "openzeppelin5/interfaces/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IFirmHook} from "silo-core/contracts/interfaces/IFirmHook.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -33,6 +34,10 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
         uint256 withdrawAssetsFromCollateral;
         uint256 withdrawAssetsFromProtected;
         bytes4 customError;
+    }
+
+    function maturityDate() public view virtual returns (uint256) {
+        return IFirmHook(address(this)).maturityDate();
     }
 
     /// @inheritdoc IPartialLiquidation
@@ -69,7 +74,8 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
             debtConfig,
             _borrower,
             _maxDebtToCover,
-            collateralConfig.liquidationFee
+            collateralConfig.liquidationFee,
+            maturityDate()
         );
 
         RevertLib.revertIfError(params.customError);

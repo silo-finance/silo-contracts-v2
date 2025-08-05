@@ -16,6 +16,7 @@ library PartialLiquidationLib {
         uint256 maxDebtToCover;
         uint256 liquidationFee;
         uint256 liquidationTargetLtv;
+        uint256 maturityDate;
     }
 
     /// @dev this is basically LTV == 100%
@@ -43,10 +44,11 @@ library PartialLiquidationLib {
         uint256 _borrowerDebtAssets,
         uint256 _borrowerDebtValue,
         uint256 _liquidationTargetLTV,
-        uint256 _liquidationFee
+        uint256 _liquidationFee,
+        uint256 _maturityDate
     )
         internal
-        pure
+        view
         returns (uint256 collateralToLiquidate, uint256 debtToRepay)
     {
         (
@@ -55,7 +57,8 @@ library PartialLiquidationLib {
             _sumOfCollateralValue,
             _borrowerDebtValue,
             _liquidationTargetLTV,
-            _liquidationFee
+            _liquidationFee,
+            _maturityDate
         );
 
         collateralToLiquidate = valueToAssetsByRatio(
@@ -90,7 +93,7 @@ library PartialLiquidationLib {
         LiquidationPreviewParams memory _params
     )
         internal
-        pure
+        view
         returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter)
     {
         uint256 collateralValueToLiquidate;
@@ -101,12 +104,13 @@ library PartialLiquidationLib {
             debtToRepay = _params.maxDebtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.maxDebtToCover;
             debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
         } else {
-            uint256 maxRepayValue = estimateMaxRepayValue(
-                _borrowerDebtValue,
-                _sumOfCollateralValue,
-                _params.liquidationTargetLtv,
-                _params.liquidationFee
-            );
+            uint256 maxRepayValue = estimateMaxRepayValue({
+                _totalBorrowerDebtValue: _borrowerDebtValue,
+                _totalBorrowerCollateralValue: _sumOfCollateralValue,
+                _ltvAfterLiquidation: _params.liquidationTargetLtv,
+                _liquidationFee: _params.liquidationFee,
+                _maturityDate: _params.maturityDate
+            });
 
             if (maxRepayValue == _borrowerDebtValue) {
                 // forced full liquidation
@@ -183,11 +187,16 @@ library PartialLiquidationLib {
         uint256 _totalBorrowerCollateralValue,
         uint256 _totalBorrowerDebtValue,
         uint256 _ltvAfterLiquidation,
-        uint256 _liquidationFee
-    ) internal pure returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
-        repayValue = estimateMaxRepayValue(
-            _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidation, _liquidationFee
-        );
+        uint256 _liquidationFee,
+        uint256 _maturityDate
+    ) internal view returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
+        repayValue = estimateMaxRepayValue({
+             _totalBorrowerDebtValue: _totalBorrowerDebtValue,
+             _totalBorrowerCollateralValue: _totalBorrowerCollateralValue,
+             _ltvAfterLiquidation: _ltvAfterLiquidation,
+             _liquidationFee: _liquidationFee,
+             _maturityDate: _maturityDate
+        });
 
         collateralValueToLiquidate = calculateCollateralToLiquidate(
             repayValue, _totalBorrowerCollateralValue, _liquidationFee
@@ -230,10 +239,12 @@ library PartialLiquidationLib {
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidation,
-        uint256 _liquidationFee
-    ) internal pure returns (uint256 repayValue) {
+        uint256 _liquidationFee,
+        uint256 _maturityDate
+    ) internal view returns (uint256 repayValue) {
         if (_totalBorrowerDebtValue == 0) return 0;
         if (_liquidationFee >= _PRECISION_DECIMALS) return 0;
+        if (_maturityDate >= block.timestamp) return _totalBorrowerDebtValue; // full liquidation
 
         // this will cover case, when _totalBorrowerCollateralValue == 0
         if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) return _totalBorrowerDebtValue;
