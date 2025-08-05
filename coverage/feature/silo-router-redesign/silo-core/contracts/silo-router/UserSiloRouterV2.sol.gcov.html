@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-08-05 08:07:51</td>
+            <td class="headerValue">2025-08-05 08:37:39</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -87,14 +87,14 @@
 <span id="L25"><span class="lineNum">      25</span>              : </span>
 <span id="L26"><span class="lineNum">      26</span>              :     /// @notice Constructor for the SiloRouterV2 contract</span>
 <span id="L27"><span class="lineNum">      27</span>              :     /// @param _siloRouter The address of the silo router</span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC tlaBgGNC">         903 :     constructor (address _siloRouter) {</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC tlaBgGNC">         904 :     constructor (address _siloRouter) {</span></span>
 <span id="L29"><span class="lineNum">      29</span>              :         // expect implementation to not work with storage</span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">         903 :         IMPLEMENTATION = address(new SiloRouterV2Implementation());</span></span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">         903 :         SILO_ROUTER = _siloRouter;</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">         904 :         IMPLEMENTATION = address(new SiloRouterV2Implementation());</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">         904 :         SILO_ROUTER = _siloRouter;</span></span>
 <span id="L32"><span class="lineNum">      32</span>              :     }</span>
 <span id="L33"><span class="lineNum">      33</span>              : </span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">          23 :     modifier onlySiloRouter() {</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">          23 :         require(msg.sender == SILO_ROUTER, OnlySiloRouter());</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">          25 :     modifier onlySiloRouter() {</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">          25 :         require(msg.sender == SILO_ROUTER, OnlySiloRouter());</span></span>
 <span id="L36"><span class="lineNum">      36</span>              :         _;</span>
 <span id="L37"><span class="lineNum">      37</span>              :     }</span>
 <span id="L38"><span class="lineNum">      38</span>              : </span>
@@ -110,23 +110,23 @@
 <span id="L48"><span class="lineNum">      48</span>              :     }</span>
 <span id="L49"><span class="lineNum">      49</span>              : </span>
 <span id="L50"><span class="lineNum">      50</span>              :     /// @inheritdoc IUserSiloRouter</span>
-<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">          23 :     function multicall(bytes[] calldata data, address _msgSender)</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">          25 :     function multicall(bytes[] calldata data, address _msgSender)</span></span>
 <span id="L52"><span class="lineNum">      52</span>              :         external</span>
 <span id="L53"><span class="lineNum">      53</span>              :         virtual</span>
 <span id="L54"><span class="lineNum">      54</span>              :         onlySiloRouter</span>
 <span id="L55"><span class="lineNum">      55</span>              :         payable</span>
 <span id="L56"><span class="lineNum">      56</span>              :         returns (bytes[] memory results)</span>
 <span id="L57"><span class="lineNum">      57</span>              :     {</span>
-<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">          23 :         msgSender = _msgSender;</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">          25 :         msgSender = _msgSender;</span></span>
 <span id="L59"><span class="lineNum">      59</span>              : </span>
-<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">          23 :         results = new bytes[](data.length);</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">          25 :         results = new bytes[](data.length);</span></span>
 <span id="L61"><span class="lineNum">      61</span>              : </span>
-<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">          23 :         for (uint256 i = 0; i &lt; data.length; i++) {</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">          25 :         for (uint256 i = 0; i &lt; data.length; i++) {</span></span>
 <span id="L63"><span class="lineNum">      63</span>              :             // expect implementation not to use `msg.value`</span>
-<span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">          42 :             results[i] = Address.functionDelegateCall(IMPLEMENTATION, data[i]);</span></span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">          46 :             results[i] = Address.functionDelegateCall(IMPLEMENTATION, data[i]);</span></span>
 <span id="L65"><span class="lineNum">      65</span>              :         }</span>
 <span id="L66"><span class="lineNum">      66</span>              : </span>
-<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">          22 :         msgSender = address(0);</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">          24 :         msgSender = address(0);</span></span>
 <span id="L68"><span class="lineNum">      68</span>              :     }</span>
 <span id="L69"><span class="lineNum">      69</span>              : }</span>
         </pre>

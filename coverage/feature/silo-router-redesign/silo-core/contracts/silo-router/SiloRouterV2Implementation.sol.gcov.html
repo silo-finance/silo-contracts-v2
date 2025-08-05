@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryHi">92.9&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">56</td>
-            <td class="headerCovTableEntry">52</td>
+            <td class="headerCovTableEntry">56</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-08-05 08:07:51</td>
+            <td class="headerValue">2025-08-05 08:37:39</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryHi">95.0&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">20</td>
-            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntry">20</td>
           </tr>
                   <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -214,35 +214,35 @@
 <span id="L152"><span class="lineNum">     152</span>              : </span>
 <span id="L153"><span class="lineNum">     153</span>              :     /// @inheritdoc ISiloRouterV2Implementation</span>
 <span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">           3 :     function transfer(IERC20 _token, address _to, uint256 _amount) public payable virtual {</span></span>
-<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">           3 :         _token.safeTransfer(_to, _amount);</span></span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">           4 :         _token.safeTransfer(_to, _amount);</span></span>
 <span id="L156"><span class="lineNum">     156</span>              :     }</span>
 <span id="L157"><span class="lineNum">     157</span>              : </span>
 <span id="L158"><span class="lineNum">     158</span>              :     /// @inheritdoc ISiloRouterV2Implementation</span>
-<span id="L159"><span class="lineNum">     159</span> <span class="tlaUNC tlaBgUNC">           0 :     function transferAll(IERC20 _token, address _to) external payable virtual {</span></span>
-<span id="L160"><span class="lineNum">     160</span> <span class="tlaUNC">           0 :         uint256 balance = _token.balanceOf(address(this));</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">           1 :     function transferAll(IERC20 _token, address _to) external payable virtual {</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">           1 :         uint256 balance = _token.balanceOf(address(this));</span></span>
 <span id="L161"><span class="lineNum">     161</span>              : </span>
-<span id="L162"><span class="lineNum">     162</span> <span class="tlaUNC">           0 :         if (balance != 0) { // expect this fn to be used as a sanity check at the end of the multicall</span></span>
-<span id="L163"><span class="lineNum">     163</span> <span class="tlaUNC">           0 :             transfer(_token, _to, balance);</span></span>
+<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">           1 :         if (balance != 0) { // expect this fn to be used as a sanity check at the end of the multicall</span></span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">           1 :             transfer(_token, _to, balance);</span></span>
 <span id="L164"><span class="lineNum">     164</span>              :         }</span>
 <span id="L165"><span class="lineNum">     165</span>              :     }</span>
 <span id="L166"><span class="lineNum">     166</span>              : </span>
 <span id="L167"><span class="lineNum">     167</span>              :     /// @inheritdoc ISiloRouterV2Implementation</span>
-<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC tlaBgGNC">           4 :     function transferFrom(IERC20 _token, address _to, uint256 _amount) public payable virtual {</span></span>
-<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC">           6 :         _token.safeTransferFrom(msgSender, _to, _amount);</span></span>
+<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">           5 :     function transferFrom(IERC20 _token, address _to, uint256 _amount) public payable virtual {</span></span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC">           7 :         _token.safeTransferFrom(msgSender, _to, _amount);</span></span>
 <span id="L170"><span class="lineNum">     170</span>              :     }</span>
 <span id="L171"><span class="lineNum">     171</span>              : </span>
 <span id="L172"><span class="lineNum">     172</span>              :     /// @inheritdoc ISiloRouterV2Implementation</span>
-<span id="L173"><span class="lineNum">     173</span> <span class="tlaGNC">           5 :     function approve(IERC20 _token, address _spender, uint256 _amount) public payable virtual {</span></span>
-<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">           8 :         _token.forceApprove(_spender, _amount);</span></span>
+<span id="L173"><span class="lineNum">     173</span> <span class="tlaGNC">           6 :     function approve(IERC20 _token, address _spender, uint256 _amount) public payable virtual {</span></span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">           9 :         _token.forceApprove(_spender, _amount);</span></span>
 <span id="L175"><span class="lineNum">     175</span>              :     }</span>
 <span id="L176"><span class="lineNum">     176</span>              : </span>
 <span id="L177"><span class="lineNum">     177</span>              :     /// @inheritdoc ISiloRouterV2Implementation</span>
-<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">           2 :     function deposit(</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">           3 :     function deposit(</span></span>
 <span id="L179"><span class="lineNum">     179</span>              :         ISilo _silo,</span>
 <span id="L180"><span class="lineNum">     180</span>              :         uint256 _amount,</span>
 <span id="L181"><span class="lineNum">     181</span>              :         ISilo.CollateralType _collateral</span>
 <span id="L182"><span class="lineNum">     182</span>              :     ) external payable virtual returns (uint256 shares) {</span>
-<span id="L183"><span class="lineNum">     183</span> <span class="tlaGNC">           2 :         shares = _silo.deposit(_amount, msgSender, _collateral);</span></span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaGNC">           3 :         shares = _silo.deposit(_amount, msgSender, _collateral);</span></span>
 <span id="L184"><span class="lineNum">     184</span>              :     }</span>
 <span id="L185"><span class="lineNum">     185</span>              : </span>
 <span id="L186"><span class="lineNum">     186</span>              :     /// @inheritdoc ISiloRouterV2Implementation</span>
