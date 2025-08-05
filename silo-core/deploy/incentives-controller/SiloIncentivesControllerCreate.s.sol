@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {console2} from "forge-std/console2.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
@@ -18,12 +19,23 @@ import {SiloDeployments} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloIncentivesControllerDeployments} from "./SiloIncentivesControllerDeployments.sol";
 
 /**
-    INCENTIVES_OWNER=DAO SILO=wS_scUSD_Silo INCENTIVIZED_ASSET=scUSD \
+    INCENTIVES_OWNER=DAO SILO=Silo_woS_wS_borrowable INCENTIVIZED_ASSET=wS \
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/incentives-controller/SiloIncentivesControllerCreate.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
+    
+    It is possible to define an optional parameter for share token type:
+    SHARE_TOKEN_TYPE=COLLATERAL (borrowable collateral, default value)
+    SHARE_TOKEN_TYPE=COLLATERAL_ONLY (protected deposits)
+    SHARE_TOKEN_TYPE=DEBT (debt share token)
+
  */
 contract SiloIncentivesControllerCreate is CommonDeploy {
+    string constant public SHARE_TOKEN_TYPE_KEY = "SHARE_TOKEN_TYPE";
+    string constant public SHARE_TOKEN_TYPE_COLLATERAL = "COLLATERAL";
+    string constant public SHARE_TOKEN_TYPE_COLLATERAL_ONLY = "COLLATERAL_ONLY";
+    string constant public SHARE_TOKEN_TYPE_DEBT = "DEBT";
+
     error OwnerNotFound();
     error SiloNotFound();
     error IncentivizedAssetNotFound();
@@ -33,6 +45,8 @@ contract SiloIncentivesControllerCreate is CommonDeploy {
     address public incentivizedAsset;
     address public siloConfig;
     address public hookReceiver;
+    string public shareTokenType;
+    address public shareToken;
 
     function setIncentivesOwner(address _incentivesOwner) public {
         incentivesOwner = _incentivesOwner;
@@ -48,6 +62,8 @@ contract SiloIncentivesControllerCreate is CommonDeploy {
 
     function run() public returns (address incentivesController) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+
+        shareTokenType = vm.envOr(SHARE_TOKEN_TYPE_KEY, SHARE_TOKEN_TYPE_COLLATERAL);
 
         if (incentivesOwner == address(0)) {
             string memory incentivesOwnerKey = vm.envString("INCENTIVES_OWNER");
@@ -83,26 +99,45 @@ contract SiloIncentivesControllerCreate is CommonDeploy {
             require(config.token == incentivizedAsset, IncentivizedAssetMismatch());
         }
 
+        (
+            address protectedShareToken,
+            address collateralShareToken,
+            address debtShareToken
+        ) = ISiloConfig(siloConfig).getShareTokens(incentivizedSilo);
+
+        if (Strings.equal(shareTokenType, SHARE_TOKEN_TYPE_DEBT)) {
+            shareToken = debtShareToken;
+        } else if (Strings.equal(shareTokenType, SHARE_TOKEN_TYPE_COLLATERAL_ONLY)) {
+            shareToken = protectedShareToken;
+        } else if (Strings.equal(shareTokenType, SHARE_TOKEN_TYPE_COLLATERAL)) {
+            shareToken = collateralShareToken;
+        } else {
+            revert(string.concat("Unknown type of share token ", shareTokenType));
+        }
+
         hookReceiver = config.hookReceiver;
-        incentivizedAsset = incentivizedSilo; // collateral share token
 
         console2.log("\n--------------------------------");
         console2.log("Incentives controller created for:");
         console2.log("silo", incentivizedSilo);
         console2.log("hookReceiver", hookReceiver);
-        console2.log("shareToken", incentivizedSilo);
+        console2.log("shareToken", shareToken);
 
         vm.startBroadcast(deployerPrivateKey);
 
         incentivesController = SiloIncentivesControllerFactory(factory).create({
             _owner: incentivesOwner,
             _notifier: hookReceiver,
-            _shareToken: incentivizedSilo,
+            _shareToken: shareToken,
             _externalSalt: bytes32(0)
         });
 
         vm.stopBroadcast();
 
-        SiloIncentivesControllerDeployments.save(ChainsLib.chainAlias(), incentivizedSilo, incentivesController);
+        SiloIncentivesControllerDeployments.save({
+            _chain: ChainsLib.chainAlias(),
+            _shareToken: shareToken,
+            _deployed: incentivesController
+        });
     }
 }
