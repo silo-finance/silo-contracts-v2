@@ -682,6 +682,33 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
         payable(userRouter).transfer(_S_BALANCE);
     }
 
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_transferAll
+    function test_siloRouterV2_transferAll() public {
+        // Do deposit action only to create a user router
+        test_siloRouterV2_depositFlow();
+
+        address userRouter = address(router.predictUserSiloRouterContract(depositor));
+
+        vm.label(userRouter, "UserRouter");
+
+        vm.prank(wsWhale);
+        IERC20(token0).transfer(userRouter, _TOKEN0_AMOUNT);
+
+        address someAddress = makeAddr("SomeAddress");
+
+        assertEq(IERC20(token0).balanceOf(someAddress), 0, "Some address should not have any tokens");
+        assertNotEq(IERC20(token0).balanceOf(userRouter), 0, "User router should have tokens");
+
+        bytes[] memory data = new bytes[](1);
+        data[0] = abi.encodeCall(SiloRouterV2Implementation.transferAll, (IERC20(token0), someAddress));
+
+        vm.prank(depositor);
+        router.multicall(data);
+
+        assertEq(IERC20(token0).balanceOf(someAddress), _TOKEN0_AMOUNT, "Some address should have tokens");
+        assertEq(IERC20(token0).balanceOf(userRouter), 0, "User router should not have tokens");
+    }
+
     /// @dev only to test reentrancy
     function transfer(address, uint256) external {
         bytes[] memory data = new bytes[](1);
