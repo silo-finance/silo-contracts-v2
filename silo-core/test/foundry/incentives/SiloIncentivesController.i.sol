@@ -124,7 +124,6 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         IGaugeHookReceiver hookAfterVeSiloRemoval =
             IGaugeHookReceiver(0xfc8a8138221a978C98f01A71c6f7300a4cd3Cdbe);
 
-
         _controller = new SiloIncentivesController({
             _owner: address(this),
             _notifier: address(hookAfterVeSiloRemoval),
