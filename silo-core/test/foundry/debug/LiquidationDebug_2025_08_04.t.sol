@@ -88,28 +88,59 @@ Collateral:
 
         address wSwhale = 0xBA12222222228d8Ba445958a75a0704d566BF2C8;
 
+        ISilo debtsilo = ISilo(0xf55902DE87Bd80c6a35614b48d7f8B612a083C12);
+
         // deposit for user to enable liquidaiton
         vm.prank(wSwhale);
-        usdc.approve(address(silo), type(uint256).max);
+        wS.approve(address(debtsilo), type(uint256).max);
 
         vm.prank(wSwhale);
-        silo.deposit(1000, user);
+        debtsilo.mint(1000, user, ISilo.CollateralType.Protected);
 
-        manualHelper.executeLiquidation(silo, user, type(uint256).max, true);
+        _print(silo, user);
+
+        manualHelper.executeLiquidation(silo, user);
         // manualHelper.executeLiquidation(silo, user, type(uint256).max, true);
     }
 
-
-    function _print(ISilo _silo, address _user) internal view {
+    function _print(ISilo _silo, address _user) internal {
         ISiloConfig config = ISiloConfig(_silo.config());
         (
             ISiloConfig.ConfigData memory collateralCfg, ISiloConfig.ConfigData memory debtCfg
         ) = config.getConfigsForSolvency(_user);
 
+        (address protected, address collateral, address debt) = config.getShareTokens(address(_silo));
+
         console2.log("collateral silo: ", collateralCfg.silo);
+        console2.log("collateral silo asset: ", ISilo(collateralCfg.silo).asset());
+        vm.label(collateralCfg.silo, "CollateralSilo");
         console2.log("debt silo: ", debtCfg.silo);
+        console2.log("debt silo asset: ", ISilo(debtCfg.silo).asset());
+        vm.label(debtCfg.silo, "DebtSilo");
         console2.log("collateral Liquidation Threshold: ", collateralCfg.lt);
         console2.log(".     debt Liquidation Threshold: ", debtCfg.lt);
         console2.log("                        user LTV: ", lens.getUserLTV(_silo, _user));
+        console2.log("                    user solvent? ", _silo.isSolvent(_user) ? "YES" : "NO!");
+
+        {
+            uint256 collateralShares = IERC20(collateralCfg.silo).balanceOf(_user);
+            uint256 protectedShares = IERC20(collateralCfg.protectedShareToken).balanceOf(_user);
+
+            console2.log("collateral share balance: ", collateralShares);
+            console2.log("collateral balance: ", ISilo(collateralCfg.silo).convertToAssets(collateralShares));
+
+            console2.log(" protected share balance: ", protectedShares);
+        }
+
+        console2.log("debt share balance: ", IERC20(debtCfg.debtShareToken).balanceOf(_user));
+
+        (
+            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired, bool fullLiquidation
+        ) = lens.maxLiquidation(ISilo(debtCfg.silo), IPartialLiquidation(debtCfg.hookReceiver), _user);
+
+        console2.log("collateralToLiquidate: ", collateralToLiquidate);
+        console2.log("debtToRepay: ", debtToRepay);
+        console2.log("%s% to repay", debtToRepay * 100 / _silo.maxRepay(_user));
+        console2.log("fullLiquidation: ", fullLiquidation ? "full" : "partial");
     }
 }
