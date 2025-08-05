@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IFirmHook} from "silo-core/contracts/interfaces/IFirmHook.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloSolvencyLib} from "silo-core/contracts/lib/SiloSolvencyLib.sol";
@@ -15,8 +14,7 @@ library PartialLiquidationExecLib {
         ISiloConfig.ConfigData memory _debtConfig,
         address _user,
         uint256 _maxDebtToCover,
-        uint256 _liquidationFee,
-        uint256 _maturityDate
+        uint256 _liquidationFee
     )
         external
         view
@@ -48,8 +46,7 @@ library PartialLiquidationExecLib {
                 debtConfigAsset: _debtConfig.token,
                 maxDebtToCover: _maxDebtToCover,
                 liquidationTargetLtv: _collateralConfig.liquidationTargetLtv,
-                liquidationFee: _liquidationFee,
-                maturityDate: _maturityDate
+                liquidationFee: _liquidationFee
             })
         );
 
@@ -105,8 +102,7 @@ library PartialLiquidationExecLib {
             ltvData.borrowerDebtAssets,
             debtValue,
             collateralConfig.liquidationTargetLtv,
-            collateralConfig.liquidationFee,
-            _maturityDate()
+            collateralConfig.liquidationFee
         );
 
         // maxLiquidation() can underestimate collateral by `PartialLiquidationLib._UNDERESTIMATION`,
@@ -118,10 +114,6 @@ library PartialLiquidationExecLib {
             uint256 overestimatedCollateral = collateralToLiquidate + PartialLiquidationLib._UNDERESTIMATION;
             sTokenRequired = overestimatedCollateral > ISilo(collateralConfig.silo).getLiquidity();
         }
-    }
-
-    function _maturityDate() internal view returns (uint256) {
-        return IFirmHook(address(this)).maturityDate();
     }
 
     /// @return receiveCollateralAssets collateral + protected to liquidate, on self liquidation when borrower repay

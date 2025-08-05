@@ -74,8 +74,7 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
             debtConfig,
             _borrower,
             _maxDebtToCover,
-            collateralConfig.liquidationFee,
-            maturityDate()
+            collateralConfig.liquidationFee
         );
 
         RevertLib.revertIfError(params.customError);

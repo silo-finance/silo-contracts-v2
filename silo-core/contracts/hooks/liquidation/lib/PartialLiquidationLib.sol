@@ -5,6 +5,7 @@ import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
+import {IFirmHook} from "silo-core/contracts/interfaces/IFirmHook.sol";
 
 library PartialLiquidationLib {
     using Math for uint256;
@@ -16,7 +17,6 @@ library PartialLiquidationLib {
         uint256 maxDebtToCover;
         uint256 liquidationFee;
         uint256 liquidationTargetLtv;
-        uint256 maturityDate;
     }
 
     /// @dev this is basically LTV == 100%
@@ -44,8 +44,7 @@ library PartialLiquidationLib {
         uint256 _borrowerDebtAssets,
         uint256 _borrowerDebtValue,
         uint256 _liquidationTargetLTV,
-        uint256 _liquidationFee,
-        uint256 _maturityDate
+        uint256 _liquidationFee
     )
         internal
         view
@@ -57,8 +56,7 @@ library PartialLiquidationLib {
             _sumOfCollateralValue,
             _borrowerDebtValue,
             _liquidationTargetLTV,
-            _liquidationFee,
-            _maturityDate
+            _liquidationFee
         );
 
         collateralToLiquidate = valueToAssetsByRatio(
@@ -108,8 +106,7 @@ library PartialLiquidationLib {
                 _totalBorrowerDebtValue: _borrowerDebtValue,
                 _totalBorrowerCollateralValue: _sumOfCollateralValue,
                 _ltvAfterLiquidation: _params.liquidationTargetLtv,
-                _liquidationFee: _params.liquidationFee,
-                _maturityDate: _params.maturityDate
+                _liquidationFee: _params.liquidationFee
             });
 
             if (maxRepayValue == _borrowerDebtValue) {
@@ -187,15 +184,13 @@ library PartialLiquidationLib {
         uint256 _totalBorrowerCollateralValue,
         uint256 _totalBorrowerDebtValue,
         uint256 _ltvAfterLiquidation,
-        uint256 _liquidationFee,
-        uint256 _maturityDate
+        uint256 _liquidationFee
     ) internal view returns (uint256 collateralValueToLiquidate, uint256 repayValue) {
         repayValue = estimateMaxRepayValue({
              _totalBorrowerDebtValue: _totalBorrowerDebtValue,
              _totalBorrowerCollateralValue: _totalBorrowerCollateralValue,
              _ltvAfterLiquidation: _ltvAfterLiquidation,
-             _liquidationFee: _liquidationFee,
-             _maturityDate: _maturityDate
+             _liquidationFee: _liquidationFee
         });
 
         collateralValueToLiquidate = calculateCollateralToLiquidate(
@@ -239,12 +234,11 @@ library PartialLiquidationLib {
         uint256 _totalBorrowerDebtValue,
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidation,
-        uint256 _liquidationFee,
-        uint256 _maturityDate
+        uint256 _liquidationFee
     ) internal view returns (uint256 repayValue) {
         if (_totalBorrowerDebtValue == 0) return 0;
         if (_liquidationFee >= _PRECISION_DECIMALS) return 0;
-        if (_maturityDate >= block.timestamp) return _totalBorrowerDebtValue; // full liquidation
+        if (_maturityDate() >= block.timestamp) return _totalBorrowerDebtValue; // full liquidation
 
         // this will cover case, when _totalBorrowerCollateralValue == 0
         if (_totalBorrowerDebtValue >= _totalBorrowerCollateralValue) return _totalBorrowerDebtValue;
@@ -336,5 +330,9 @@ library PartialLiquidationLib {
         // previous calculation of LTV
         ltv = _debt * _PRECISION_DECIMALS;
         ltv = Math.ceilDiv(ltv, _collateral); // Rounding.LTV is up/ceil
+    }
+
+    function _maturityDate() internal view returns (uint256) {
+        return IFirmHook(address(this)).maturityDate();
     }
 }
