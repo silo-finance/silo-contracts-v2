@@ -6,7 +6,6 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 contract ERC4626OracleHardcodeQuote is ISiloOracle {
     IERC4626 public immutable VAULT;
-    address public immutable UNDERLYING;
     address internal immutable _QUOTE_TOKEN;
 
     error AssetNotSupported();
@@ -15,10 +14,6 @@ contract ERC4626OracleHardcodeQuote is ISiloOracle {
     constructor(IERC4626 _vault, address _quoteToken) {
         VAULT = _vault;
         _QUOTE_TOKEN = _quoteToken;
-
-        try _vault.asset() returns (address asset) {
-            UNDERLYING = asset;
-        } catch {}
     }
 
     /// @inheritdoc ISiloOracle

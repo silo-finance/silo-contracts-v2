@@ -73,25 +73,7 @@ contract ERC4626OracleHardcodeQuoteTest is Test {
 
     // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626OracleHardcodeQuote_quoteToken -vvv
     function test_ERC4626OracleHardcodeQuote_quoteToken() public {
-        IERC4626 vaultWithUnderlying = IERC4626(0xfA85Fe5A8F5560e9039C04f2b0a90dE1415aBD70);
-        oracle = factory.createERC4626Oracle(vaultWithUnderlying, quoteToken, bytes32(0));
-
         assertEq(oracle.quoteToken(), quoteToken);
-
-        assertEq(
-            ERC4626OracleHardcodeQuote(address(oracle)).UNDERLYING(),
-            vaultWithUnderlying.asset()
-        );
-    }
-
-    // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626OracleHardcodeQuote_underlyingReverts -vvv
-    function test_ERC4626OracleHardcodeQuote_underlyingReverts() public view {
-        assertEq(oracle.quoteToken(), quoteToken);
-
-        assertEq(
-            ERC4626OracleHardcodeQuote(address(oracle)).UNDERLYING(),
-            address(0)
-        );
     }
 
     // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626OracleHardcodeQuote_beforeQuote -vvv
