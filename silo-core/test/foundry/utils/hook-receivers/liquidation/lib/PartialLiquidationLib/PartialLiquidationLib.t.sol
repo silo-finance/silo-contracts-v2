@@ -133,7 +133,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_estimateMaxRepayValue_raw
     */
-    function test_PartialLiquidationLib_estimateMaxRepayValue_raw() public pure {
+    function test_PartialLiquidationLib_estimateMaxRepayValue_raw() public view {
         // debtValue, CollateralValue, ltv, fee
         assertEq(
             PartialLiquidationLib.estimateMaxRepayValue(1e18, 1e18, 0.0080e18, 0.0010e18),
@@ -249,7 +249,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         uint256 _liquidationFee,
         uint16 _quote,
         uint64 _liquidationTargetLtv
-    ) public pure {
+    ) public view {
         vm.assume(_liquidationFee <= 0.1e18);
         vm.assume(_maxDebtToCover <= _totalBorrowerDebtAssets);
         vm.assume(_totalBorrowerDebtAssets > 0);
@@ -316,7 +316,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         uint128 _ltvBefore,
         uint128 _sumOfCollateralAssets,
         uint128 _maxDebtToCover
-    ) public pure {
+    ) public view {
         // total assets/values must be != 0, if they are not, then revert possible
         uint256 borrowerDebtAssets = 1e18;
         uint256 borrowerDebtValue = 1e18;
@@ -333,7 +333,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     /*
     forge test -vv --mt test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts
     */
-    function test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts() public pure {
+    function test_PartialLiquidationLib_calculateCollateralToLiquidate_not_reverts() public view {
         uint256 debtValueToCover = 2e18;
         uint256 totalBorrowerCollateralValue = 20e18; // price is 2 per asset
         uint256 totalBorrowerCollateralAssets = 10e18;
