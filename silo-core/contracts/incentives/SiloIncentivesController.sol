@@ -150,4 +150,8 @@ contract SiloIncentivesController is BaseIncentivesController {
     function _shareToken() internal view override returns (IERC20 shareToken) {
         shareToken = IERC20(SHARE_TOKEN);
     }
+
+    function share_token() external view virtual returns (address shareToken) {
+        shareToken = SHARE_TOKEN;
+    }
 }

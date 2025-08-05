@@ -11,6 +11,8 @@ import {DistributionTypes} from "silo-core/contracts/incentives/lib/Distribution
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
+import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 
@@ -110,6 +112,34 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         hook.setup(_controller, MintableToken(address(silo0)));
 
         silo0.updateHooks();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentivesController_backwardsCompatibleShareToken -vvv
+    */
+    function test_incentivesController_backwardsCompatibleShareToken() public {
+        vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 41707056);
+        IShareToken shareToken = IShareToken(0x0Cc5bD24b04FE8Ef3e5de500CE2cC77b421406F7);
+
+        IGaugeHookReceiver hookAfterVeSiloRemoval =
+            IGaugeHookReceiver(0xfc8a8138221a978C98f01A71c6f7300a4cd3Cdbe);
+
+
+        _controller = new SiloIncentivesController({
+            _owner: address(this),
+            _notifier: address(hookAfterVeSiloRemoval),
+            _shareToken: address(shareToken)
+        });
+
+        assertEq(_controller.share_token(), address(shareToken), "required method for .setGauge works");
+        vm.prank(Ownable(address(hookAfterVeSiloRemoval)).owner());
+
+        hookAfterVeSiloRemoval.setGauge({
+            _gauge: ISiloIncentivesController(_controller),
+            _shareToken: shareToken
+        });
+
+        assertEq(address(hookAfterVeSiloRemoval.configuredGauges(shareToken)), address(_controller));
     }
 
     /*
