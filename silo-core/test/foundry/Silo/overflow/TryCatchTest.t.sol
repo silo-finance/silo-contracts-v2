@@ -3,26 +3,26 @@ pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
-contract Oveflows {
+contract Overflows {
     error SomeError();
 
-    function zeroDiv() external pure returns (uint256) {
+    function zeroDiv() public pure returns (uint256) {
         return uint256(1) / uint256(0);
     }
 
-    function underflow() external pure  returns (uint256) {
+    function underflow() public pure  returns (uint256) {
         return uint256(0) - uint256(1);
     }
 
-    function overflow() external pure  returns (uint256) {
+    function overflow() public pure  returns (uint256) {
         return type(uint256).max + uint256(1);
     }
 
-    function customError() external pure {
+    function customError() public pure {
         revert SomeError();
     }
 
-    function standardRevert() external pure {
+    function standardRevert() public pure {
         revert("oops");
     }
 }
@@ -31,14 +31,14 @@ contract Oveflows {
     forge test -vv --ffi --mc TryCatchTest
 */
 contract TryCatchTest is Test {
-    Oveflows oveflows;
+    Overflows overflows;
 
     constructor() {
-        oveflows = new Oveflows();
+        overflows = new Overflows();
     }
 
     function test_catch_divByZero() public view {
-        try oveflows.zeroDiv() {
+        try overflows.zeroDiv() {
             assert(false);
         } catch {
             return;
@@ -49,7 +49,7 @@ contract TryCatchTest is Test {
     }
 
     function test_catch_underflow() public view {
-        try oveflows.underflow() {
+        try overflows.underflow() {
             assert(false);
         } catch {
             return;
@@ -60,7 +60,7 @@ contract TryCatchTest is Test {
     }
 
     function test_catch_overflow() public view {
-        try oveflows.overflow() {
+        try overflows.overflow() {
             assert(false);
         } catch {
             return;
@@ -71,7 +71,7 @@ contract TryCatchTest is Test {
     }
 
     function test_catch_customError() public view {
-        try oveflows.customError() {
+        try overflows.customError() {
             assert(false);
         } catch {
             return;
@@ -82,7 +82,7 @@ contract TryCatchTest is Test {
     }
 
     function test_catch_standardRevert() public view {
-        try oveflows.standardRevert() {
+        try overflows.standardRevert() {
             assert(false);
         } catch {
             return;
