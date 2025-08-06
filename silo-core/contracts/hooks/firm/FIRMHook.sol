@@ -171,12 +171,12 @@ contract FIRMHook is
     /// @param _maturityDate maturity date of the FIRM
     /// @param _firmVault vault address of the firm
     function __FIRMHook_init(uint256 _maturityDate, address _firmVault) internal {
-        require(_maturityDate > block.timestamp, InvalidMaturityDate());
+        require(_maturityDate > block.timestamp && _maturityDate < type(uint64).max, InvalidMaturityDate());
         require(_firmVault != address(0), EmptyFirmVault());
 
         FIRMHookStorage.FIRMHookStorageData storage $ = FIRMHookStorage.get();
 
-        $.maturityDate = _maturityDate;
+        $.maturityDate = uint64(_maturityDate);
         $.firmVault = _firmVault;
 
         (address silo0, address silo1) = siloConfig.getSilos();

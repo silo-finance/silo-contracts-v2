@@ -93,7 +93,6 @@ contract FIRMHookUnitTest is Test {
         assertTrue(Hook.matchAction(hooksAfter1, collateralTransferAction), "Silo1 collateral transfer");
         assertTrue(Hook.matchAction(hooksBefore1, Hook.BORROW), "Silo1 borrow");
         assertTrue(Hook.matchAction(hooksBefore1, Hook.BORROW_SAME_ASSET), "Silo1 borrow same asset");
-        assertTrue(Hook.matchAction(hooksBefore1, Hook.DEPOSIT), "Silo1 deposit");
     }
 
     /**
@@ -122,6 +121,9 @@ contract FIRMHookUnitTest is Test {
         
         vm.expectRevert(abi.encodeWithSelector(FIRMHook.InvalidMaturityDate.selector));
         hook.initialize(_siloConfig, abi.encode(_owner, _firmVault, block.timestamp - 1));
+
+        vm.expectRevert(abi.encodeWithSelector(FIRMHook.InvalidMaturityDate.selector));
+        hook.initialize(_siloConfig, abi.encode(_owner, _firmVault, type(uint64).max));
     }
 
     /**

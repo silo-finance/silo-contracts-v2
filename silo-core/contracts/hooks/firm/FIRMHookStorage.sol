@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 library FIRMHookStorage {
     struct FIRMHookStorageData {
-        uint256 maturityDate;
+        uint64 maturityDate;
         address firm;
         address firmVault;
     }
