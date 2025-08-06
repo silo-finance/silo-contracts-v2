@@ -11,6 +11,7 @@ import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
+import {FIRMHookStorage} from "silo-core/contracts/hooks/firm/FIRMHookStorage.sol";
 import {
     Silo0ProtectedSilo1CollateralOnly
 } from "silo-core/contracts/hooks/_common/Silo0ProtectedSilo1CollateralOnly.sol";
@@ -27,32 +28,10 @@ contract FIRMHook is
 {
     using Hook for uint256;
 
-    uint256 public maturityDate;
-    address public firm;
-    address public firmVault;
-
     error BorrowSameAssetNotAllowed();
     error OnlyFIRMVaultOrFirmCanReceiveCollateral();
     error InvalidMaturityDate();
     error EmptyFirmVault();
-
-    /// @inheritdoc IHookReceiver
-    function initialize(ISiloConfig _config, bytes calldata _data)
-        public
-        initializer
-        virtual
-    {
-        address owner;
-        address siloFirmVault;
-        uint256 siloMaturityDate;
-
-        (owner, siloFirmVault, siloMaturityDate) = abi.decode(_data, (address, address, uint256));
-
-        BaseHookReceiver.__BaseHookReceiver_init(_config);
-        GaugeHookReceiver.__GaugeHookReceiver_init(owner);
-        FIRMHook.__FIRMHook_init(siloMaturityDate, siloFirmVault);
-        Silo0ProtectedSilo1CollateralOnly.__Silo0ProtectedSilo1CollateralOnly_init();
-    }
 
     /// @dev Mint shares and update Silo state
     /// This function is designed to be called by the hook from the silo via delegatecall.
@@ -88,6 +67,42 @@ contract FIRMHook is
         IShareToken(collateral).mint(_firm, _firm, _collateralShares);
     }
 
+    /// @notice Get the maturity date
+    /// @return maturityDate maturity date of the FIRM
+    function maturityDate() external view returns (uint256) {
+        return FIRMHookStorage.get().maturityDate;
+    }
+
+    /// @notice Get the firm
+    /// @return firm address of the firm
+    function firm() external view returns (address) {
+        return FIRMHookStorage.get().firm;
+    }
+
+    /// @notice Get the firm vault
+    /// @return firmVault address of the firm vault
+    function firmVault() external view returns (address) {
+        return FIRMHookStorage.get().firmVault;
+    }
+
+    /// @inheritdoc IHookReceiver
+    function initialize(ISiloConfig _config, bytes calldata _data)
+        public
+        initializer
+        virtual
+    {
+        address owner;
+        address siloFirmVault;
+        uint256 siloMaturityDate;
+
+        (owner, siloFirmVault, siloMaturityDate) = abi.decode(_data, (address, address, uint256));
+
+        BaseHookReceiver.__BaseHookReceiver_init(_config);
+        GaugeHookReceiver.__GaugeHookReceiver_init(owner);
+        FIRMHook.__FIRMHook_init(siloMaturityDate, siloFirmVault);
+        Silo0ProtectedSilo1CollateralOnly.__Silo0ProtectedSilo1CollateralOnly_init();
+    }
+
     /// @inheritdoc IHookReceiver
     function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
         public
@@ -102,11 +117,13 @@ contract FIRMHook is
 
         if (_action != Hook.BORROW) return;
 
+        address firm = FIRMHookStorage.get().firm;
+
         IFIRM(firm).accrueInterest();
 
         Hook.BeforeBorrowInput memory borrowInput = Hook.beforeBorrowDecode(_inputAndOutput);
 
-        uint256 interestTimeDelta = maturityDate - block.timestamp;
+        uint256 interestTimeDelta = FIRMHookStorage.get().maturityDate - block.timestamp;
         uint256 effectiveInterestRate = IFIRM(firm).getCurrentInterestRate() * interestTimeDelta / 365 days;
 
         uint256 interestPayment = borrowInput.assets * effectiveInterestRate / 1e18;
@@ -117,13 +134,11 @@ contract FIRMHook is
 
         uint192 daoAndDeployerRevenue = _getDaoAndDeployerRevenue(silo1, interestPayment);
         uint256 interestToDistribute = interestPayment - daoAndDeployerRevenue;
-        uint256 collateralShares = ISilo(silo1).convertToShares(interestToDistribute, ISilo.AssetType.Collateral);
-        uint256 debtShares = ISilo(silo1).convertToShares(interestPayment, ISilo.AssetType.Debt);
 
         bytes memory input = abi.encodeWithSelector(
             this.mintSharesAndUpdateSiloState.selector,
-            debtShares,
-            collateralShares,
+            ISilo(silo1).convertToShares(interestPayment, ISilo.AssetType.Debt),
+            ISilo(silo1).convertToShares(interestToDistribute, ISilo.AssetType.Collateral),
             borrowInput.borrower,
             interestToDistribute,
             interestPayment,
@@ -157,6 +172,10 @@ contract FIRMHook is
 
         if (_silo == silo1 && _action.matchAction(collateralTokenTransferAction)) {
             Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
+
+            address firmVault = FIRMHookStorage.get().firmVault;
+            address firm = FIRMHookStorage.get().firm;
+
             require(input.recipient == firmVault || input.recipient == firm, OnlyFIRMVaultOrFirmCanReceiveCollateral());
         }
     }
@@ -184,13 +203,15 @@ contract FIRMHook is
         require(_maturityDate > block.timestamp, InvalidMaturityDate());
         require(_firmVault != address(0), EmptyFirmVault());
 
-        maturityDate = _maturityDate;
-        firmVault = _firmVault;
+        FIRMHookStorage.FIRMHookStorageData storage $ = FIRMHookStorage.get();
+
+        $.maturityDate = _maturityDate;
+        $.firmVault = _firmVault;
 
         (address silo0, address silo1) = siloConfig.getSilos();
 
         ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(silo1);
-        firm = silo1Config.interestRateModel;
+        $.firm = silo1Config.interestRateModel;
 
         _configureHooks(silo0, silo1);
     }

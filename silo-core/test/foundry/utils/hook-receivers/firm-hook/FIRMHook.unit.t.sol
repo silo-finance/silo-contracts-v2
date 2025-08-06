@@ -14,7 +14,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {SiloConfig} from "silo-core/contracts/SiloConfig.sol";
-import {FIRMHook} from "silo-core/contracts/hooks/FIRMHook.sol";
+import {FIRMHook} from "silo-core/contracts/hooks/firm/FIRMHook.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {
     Silo0ProtectedSilo1CollateralOnly
@@ -299,7 +299,7 @@ contract FIRMHookUnitTest is Test {
         _hook.beforeAction(address(_silo1), Hook.BORROW_SAME_ASSET, abi.encode(0));
     }
 
-    
+
 
     function _silo1Config() internal returns (ISiloConfig.ConfigData memory) {
         return ISiloConfig.ConfigData({
