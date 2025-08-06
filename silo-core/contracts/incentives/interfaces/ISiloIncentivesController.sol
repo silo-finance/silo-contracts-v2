@@ -165,4 +165,9 @@ interface ISiloIncentivesController is IDistributionManager {
     /// @notice Returns the Silo share token address
     /// @return shareToken Address of the Silo share token
     function SHARE_TOKEN() external view returns (address);
+
+    /// @notice Returns the Silo share token address. This function is required for compatibility with deprecated
+    /// GaugeHookReceiver instances.
+    /// @return shareToken Address of the Silo share token
+    function share_token() external view returns (address);
 }
