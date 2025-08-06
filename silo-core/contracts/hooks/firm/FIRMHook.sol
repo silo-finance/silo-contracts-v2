@@ -12,15 +12,16 @@ import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {FIRMHookStorage} from "silo-core/contracts/hooks/firm/FIRMHookStorage.sol";
+
 import {
     Silo0ProtectedSilo1CollateralOnly
 } from "silo-core/contracts/hooks/_common/Silo0ProtectedSilo1CollateralOnly.sol";
 
-interface IFIRM {
-    function accrueInterest() external;
-    function getCurrentInterestRate() external view returns (uint256);
-}
+import {
+    IFixedInterestRateModel
+} from "silo-core/contracts/interestRateModel/fixedInterestRateModel/interfaces/IFixedInterestRateModel.sol";
 
+/// @title Fixed Interest Rate Model Hook
 contract FIRMHook is
     GaugeHookReceiver,
     PartialLiquidation,
@@ -117,15 +118,15 @@ contract FIRMHook is
 
         if (_action != Hook.BORROW) return;
 
-        address firm = FIRMHookStorage.get().firm;
+        IFixedInterestRateModel fixedIRM = IFixedInterestRateModel(FIRMHookStorage.get().firm);
 
-        IFIRM(firm).accrueInterest();
+        fixedIRM.accrueInterest();
 
         Hook.BeforeBorrowInput memory borrowInput = Hook.beforeBorrowDecode(_inputAndOutput);
 
         uint256 interestTimeDelta = FIRMHookStorage.get().maturityDate - block.timestamp;
-        uint256 effectiveInterestRate = IFIRM(firm).getCurrentInterestRate() * interestTimeDelta / 365 days;
-
+        uint256 rcur = fixedIRM.getCurrentInterestRate(silo1, block.timestamp);
+        uint256 effectiveInterestRate = rcur * interestTimeDelta / 365 days;
         uint256 interestPayment = borrowInput.assets * effectiveInterestRate / 1e18;
 
         // minimal interest is 10 wei to make sure
@@ -143,7 +144,7 @@ contract FIRMHook is
             interestToDistribute,
             interestPayment,
             daoAndDeployerRevenue,
-            firm
+            fixedIRM
         );
 
         ISilo(silo1).callOnBehalfOfSilo({
@@ -173,10 +174,13 @@ contract FIRMHook is
         if (_silo == silo1 && _action.matchAction(collateralTokenTransferAction)) {
             Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 
-            address firmVault = FIRMHookStorage.get().firmVault;
-            address firm = FIRMHookStorage.get().firm;
+            address firmVaultAddr = FIRMHookStorage.get().firmVault;
+            address firmAddr = FIRMHookStorage.get().firm;
 
-            require(input.recipient == firmVault || input.recipient == firm, OnlyFIRMVaultOrFirmCanReceiveCollateral());
+            require(
+                input.recipient == firmVaultAddr || input.recipient == firmAddr,
+                OnlyFIRMVaultOrFirmCanReceiveCollateral()
+            );
         }
     }
 
