@@ -29,6 +29,17 @@
         "normalizationDivider": 1e8,
         "normalizationMultiplier": 0
     },
+    "REDSTONE_ETH+_WETH": {
+        "baseToken": "ETH+",
+        "quoteToken": "WETH",
+        "primaryAggregator": "REDSTONE_ETH+_WETH_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "CHAINLINK_WBTC_USD": {
         "baseToken": "WBTC",
         "quoteToken": "SILO_VIRTUAL_USD_8",
@@ -187,6 +198,17 @@
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
         "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "EORACLE_CHAINLINK_PT-tUSDe-25SEP2025_USD": {
+        "baseToken": "PT-tUSDe-25SEP2025",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "EORACLE_PT-tUSDe-25SEP2025_USDe_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_USDe_USD_aggregator",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e26,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
