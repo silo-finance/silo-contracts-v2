@@ -84,16 +84,22 @@ contract FIRMHookUnitTest is Test {
 
         uint256 protectedTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
         uint256 collateralTransferAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
+        uint256 depositActionProtected = Hook.depositAction(ISilo.CollateralType.Protected);
+        uint256 depositActionCollateral = Hook.depositAction(ISilo.CollateralType.Collateral);
 
-        (, uint24 hooksAfter0) = _hook.hookReceiverConfig(address(_silo0));
+        (uint24 hooksBefore0, uint24 hooksAfter0) = _hook.hookReceiverConfig(address(_silo0));
         assertTrue(Hook.matchAction(hooksAfter0, protectedTransferAction), "Silo0 protected transfer");
         assertTrue(Hook.matchAction(hooksAfter0, collateralTransferAction), "Silo0 collateral transfer");
+        assertTrue(Hook.matchAction(hooksBefore0, Hook.DEPOSIT), "Silo0 deposit");
+        assertTrue(Hook.matchAction(hooksBefore0, depositActionProtected), "Silo0 protected deposit");
 
         (uint24 hooksBefore1, uint24 hooksAfter1) = _hook.hookReceiverConfig(address(_silo1));
         assertTrue(Hook.matchAction(hooksAfter1, protectedTransferAction), "Silo1 protected transfer");
         assertTrue(Hook.matchAction(hooksAfter1, collateralTransferAction), "Silo1 collateral transfer");
         assertTrue(Hook.matchAction(hooksBefore1, Hook.BORROW), "Silo1 borrow");
         assertTrue(Hook.matchAction(hooksBefore1, Hook.BORROW_SAME_ASSET), "Silo1 borrow same asset");
+        assertTrue(Hook.matchAction(hooksBefore1, Hook.DEPOSIT), "Silo1 deposit");
+        assertTrue(Hook.matchAction(hooksBefore1, depositActionCollateral), "Silo1 collateral deposit");
     }
 
     /**
@@ -311,14 +317,33 @@ contract FIRMHookUnitTest is Test {
     }
 
     /**
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_beforeAction_silo1_MaturityDateReached -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_beforeBorrowAction_silo1_MaturityDateReached -vv
      */
-    function test_firmHook_beforeAction_silo1_MaturityDateReached() public {
+    function test_firmHook_beforeBorrowAction_silo1_MaturityDateReached() public {
         vm.warp(block.timestamp + _maturityDate);
 
         vm.prank(address(_silo1));
         vm.expectRevert(abi.encodeWithSelector(IFIRMHook.MaturityDateReached.selector));
         _hook.beforeAction(address(_silo1), Hook.BORROW, abi.encode(0));
+    }
+
+    /**
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_beforeDepositAction_MaturityDateReached -vv
+     */
+    function test_firmHook_beforeDepositAction_MaturityDateReached() public {
+        vm.warp(block.timestamp + _maturityDate);
+
+        uint256 depositActionProtected = Hook.depositAction(ISilo.CollateralType.Protected);
+
+        vm.prank(address(_silo0));
+        vm.expectRevert(abi.encodeWithSelector(IFIRMHook.MaturityDateReached.selector));
+        _hook.beforeAction(address(_silo0), depositActionProtected, abi.encode(0));
+
+        uint256 depositActionCollateral = Hook.depositAction(ISilo.CollateralType.Collateral);
+
+        vm.prank(address(_silo1));
+        vm.expectRevert(abi.encodeWithSelector(IFIRMHook.MaturityDateReached.selector));
+        _hook.beforeAction(address(_silo1), depositActionCollateral, abi.encode(0));
     }
 
     /**

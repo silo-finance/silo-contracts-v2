@@ -97,12 +97,16 @@ contract FIRMHook is
         onlySilo()
         override
     {
+        if (_action.matchAction(Hook.DEPOSIT)) {
+            require(FIRMHookStorage.get().maturityDate >= block.timestamp, MaturityDateReached());
+        }
+
         (, address silo1) = siloConfig.getSilos();
         if (_silo != silo1) return;
 
-        require(_action != Hook.BORROW_SAME_ASSET, BorrowSameAssetNotAllowed());
+        require(!_action.matchAction(Hook.BORROW_SAME_ASSET), BorrowSameAssetNotAllowed());
 
-        if (_action == Hook.BORROW) {
+        if (_action.matchAction(Hook.BORROW)) {
             _beforeBorrowAction(ISilo(silo1), _inputAndOutput);
         }
     }
@@ -173,8 +177,8 @@ contract FIRMHook is
     }
 
     /// @notice Configure the hooks for the FIRM hook
-    /// silo0: after token transfer
-    /// silo1: after token transfer, before borrow, before borrow same asset
+    /// silo0: after token transfer, before protected deposit
+    /// silo1: after token transfer, before borrow, before borrow same asset, before deposit
     /// @param _silo0 address of the silo0
     /// @param _silo1 address of the silo1
     function _configureHooks(address _silo0, address _silo1) internal {
@@ -187,6 +191,9 @@ contract FIRMHook is
 
         uint256 hooksBefore0 = _getHooksBefore(_silo0);
 
+        uint256 depositActionProtected = Hook.depositAction(ISilo.CollateralType.Protected);
+        hooksBefore0 = hooksBefore0.addAction(depositActionProtected);
+
         _setHookConfig(_silo0, uint24(hooksBefore0), uint24(hooksAfter0));
 
         uint256 hooksAfter1 = _getHooksAfter(_silo1);
@@ -196,6 +203,9 @@ contract FIRMHook is
         uint256 hooksBefore1 = _getHooksBefore(_silo1);
         hooksBefore1 = hooksBefore1.addAction(Hook.BORROW);
         hooksBefore1 = hooksBefore1.addAction(Hook.BORROW_SAME_ASSET);
+
+        uint256 depositActionCollateral = Hook.depositAction(ISilo.CollateralType.Collateral);
+        hooksBefore1 = hooksBefore1.addAction(depositActionCollateral);
 
         _setHookConfig(_silo1, uint24(hooksBefore1), uint24(hooksAfter1));
     }
