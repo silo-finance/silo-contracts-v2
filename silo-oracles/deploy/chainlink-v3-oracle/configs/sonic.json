@@ -455,5 +455,16 @@
         "normalizationDivider": 1e18,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "PYTH_wstkscUSD_dUSD": {
+        "baseToken": "wstkscUSD",
+        "quoteToken": "dUSD",
+        "primaryAggregator": "PYTH_wstkscUSD_scUSD_aggregator",
+        "primaryHeartbeat": 7200,
+        "secondaryAggregator": "CHAINLINK_scUSD_USD_aggregator",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
+        "invertSecondPrice": false
     }
 }
