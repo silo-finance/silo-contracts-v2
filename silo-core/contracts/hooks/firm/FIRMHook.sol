@@ -58,18 +58,18 @@ contract FIRMHook is
     }
 
     /// @inheritdoc IFIRMHook
-    function maturityDate() external view returns (uint256) {
-        return FIRMHookStorage.get().maturityDate;
+    function maturityDate() external view returns (uint256 maturity) {
+        maturity = FIRMHookStorage.get().maturityDate;
     }
 
     /// @inheritdoc IFIRMHook
-    function firm() external view returns (address) {
-        return FIRMHookStorage.get().firm;
+    function firm() external view returns (address firmAddress) {
+        firmAddress = FIRMHookStorage.get().firm;
     }
 
     /// @inheritdoc IFIRMHook
-    function firmVault() external view returns (address) {
-        return FIRMHookStorage.get().firmVault;
+    function firmVault() external view returns (address firmVaultAddress) {
+        firmVaultAddress = FIRMHookStorage.get().firmVault;
     }
 
     /// @inheritdoc IHookReceiver
