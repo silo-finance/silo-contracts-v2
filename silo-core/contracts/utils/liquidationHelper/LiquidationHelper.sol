@@ -118,11 +118,8 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
         });
 
         if (is999Case) {
-            uint256 balance = IERC20(protectedShareToken).balanceOf(address(this));
-            if (balance != 0) {
-                collateralSilo.transitionCollateral(balance, address(this), ISilo.CollateralType.Protected);
-                collateralSilo.redeem(collateralSilo.balanceOf(address(this)), address(this), address(this), ISilo.CollateralType.Protected);
-            }
+            uint256 balance = IERC20(collateralSilo).balanceOf(address(this));
+            collateralSilo.redeem(balance, address(this), address(this));
         }
 
         IERC20(_debtAsset).forceApprove(address(_liquidation.hook), 0);
@@ -165,10 +162,11 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             ISiloConfig.ConfigData memory collateralConfig,
         ) = BaseHookReceiver(address(_hook)).siloConfig().getConfigsForSolvency(_user);
 
+        uint256 balance = IERC20(collateralConfig.protectedShareToken).balanceOf(_user);
         // we can round down twice on withdrawing, so we can loose up to 2 wei, that's why copare value is 1001, 
         // for 1002 case 999 does not exist
-        uint256 balance = IERC20(collateralConfig.protectedShareToken).balanceOf(_user);
         case999 = balance != 0 && balance <= 1001;
+
         collateralSilo = ISilo(collateralConfig.silo);
         protectedShareToken = collateralConfig.protectedShareToken;
     }

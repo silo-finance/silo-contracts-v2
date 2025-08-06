@@ -107,7 +107,7 @@ Collateral:
     }
 
     /*
-        FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_08_04 --mt test_skip_manual_liquidation_fix --ffi -vvv
+        FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_08_04 --mt test_liquidation_with_sToken_fix --ffi -vvv
 
     {
         "_flashLoanFrom": "0xA1627a0E1d0ebcA9326D2219B84Df0c600bed4b1",
@@ -127,7 +127,7 @@ Collateral:
         ]
 }
     */
-    function test_skip_manual_liquidation_fix() public {
+    function test_liquidation_with_sToken_fix() public {
         vm.createSelectFork(
             vm.envString("RPC_SONIC"),
             41759140
