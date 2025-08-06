@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
-import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -16,9 +16,16 @@ import {Silo} from "silo-core/contracts/Silo.sol";
 import {SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {FIRMHook} from "silo-core/contracts/hooks/firm/FIRMHook.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
+import {SiloShareTokenMock} from "silo-core/test/foundry/_mocks/SiloShareTokenMock.sol";
+
 import {
     Silo0ProtectedSilo1CollateralOnly
 } from "silo-core/contracts/hooks/_common/Silo0ProtectedSilo1CollateralOnly.sol";
+
+import {
+    IFixedInterestRateModel,
+    IInterestRateModel
+} from "silo-core/contracts/interestRateModel/fixedInterestRateModel/interfaces/IFixedInterestRateModel.sol";
 
 /**
 FOUNDRY_PROFILE=core_test forge test --ffi --mc FIRMHookUnitTest -vv
@@ -299,7 +306,67 @@ contract FIRMHookUnitTest is Test {
         _hook.beforeAction(address(_silo1), Hook.BORROW_SAME_ASSET, abi.encode(0));
     }
 
+    /**
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_borrow_beforeAction -vv
+     */
+    function test_firmHook_borrow_beforeAction() public {
+        _mockFixedIRMCalls();
 
+        address borrower = makeAddr("borrower");
+
+        bytes memory input = abi.encode(
+            uint256(1e18),
+            uint256(1e18),
+            borrower,
+            borrower,
+            borrower
+        );
+
+        (,address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(_silo1));
+
+        assertEq(IERC20(collateralShareToken).balanceOf(_firm), 0, "FIRM has no collateral shares");
+        assertEq(IERC20(debtShareToken).balanceOf(borrower), 0, "borrower has no debt shares");
+
+        uint256 collateralTotalBefore = _silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral);
+        uint256 debtTotalBefore = _silo1.getTotalAssetsStorage(ISilo.AssetType.Debt);
+
+        assertEq(collateralTotalBefore, 0, "collateralTotalBefore");
+        assertEq(debtTotalBefore, 0, "debtTotalBefore");
+
+        vm.prank(address(_silo1));
+        _hook.beforeAction(address(_silo1), Hook.BORROW, input);
+
+        uint256 collateralTotalAfter = _silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral);
+        uint256 debtTotalAfter = _silo1.getTotalAssetsStorage(ISilo.AssetType.Debt);
+
+        assertGt(collateralTotalAfter, 0, "Should have collateral assets");
+        assertGt(debtTotalAfter, 0, "Should have debt assets");
+    }
+
+    function _mockFixedIRMCalls() internal {
+        bytes memory inputAccrueInterest = abi.encodeWithSelector(IFixedInterestRateModel.accrueInterest.selector);
+
+        vm.mockCall(address(_firm), inputAccrueInterest, abi.encode(true));
+        vm.expectCall(address(_firm), inputAccrueInterest);
+
+        bytes memory inputGetCurrentInterestRate = abi.encodeWithSelector(
+            IInterestRateModel.getCurrentInterestRate.selector,
+            address(_silo1),
+            block.timestamp
+        );
+
+        vm.mockCall(address(_firm), inputGetCurrentInterestRate, abi.encode(1e18));
+        vm.expectCall(address(_firm), inputGetCurrentInterestRate);
+
+        bytes memory inputGetCompoundInterestRate = abi.encodeWithSelector(
+            IInterestRateModel.getCompoundInterestRate.selector,
+            address(_silo1),
+            block.timestamp
+        );
+
+        vm.mockCall(address(_firm), inputGetCompoundInterestRate, abi.encode(0));
+        vm.expectCall(address(_firm), inputGetCompoundInterestRate);
+    }
 
     function _silo1Config() internal returns (ISiloConfig.ConfigData memory) {
         return ISiloConfig.ConfigData({
@@ -308,8 +375,8 @@ contract FIRMHookUnitTest is Test {
             silo: address(_silo1),
             token: _token1,
             protectedShareToken: _firm,
-            collateralShareToken: address(new ERC20Mock()),
-            debtShareToken: address(new ERC20Mock()),
+            collateralShareToken: address(new SiloShareTokenMock()),
+            debtShareToken: address(new SiloShareTokenMock()),
             solvencyOracle: address(0),
             maxLtvOracle: address(0),
             interestRateModel: _firm,
@@ -330,8 +397,8 @@ contract FIRMHookUnitTest is Test {
             silo: address(_silo0),
             token: _token0,
             protectedShareToken: _firm,
-            collateralShareToken: address(new ERC20Mock()),
-            debtShareToken: address(new ERC20Mock()),
+            collateralShareToken: address(new SiloShareTokenMock()),
+            debtShareToken: address(new SiloShareTokenMock()),
             solvencyOracle: address(0),
             maxLtvOracle: address(0),
             interestRateModel: _firm,
