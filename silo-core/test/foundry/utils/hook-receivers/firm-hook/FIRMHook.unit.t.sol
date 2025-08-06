@@ -93,6 +93,7 @@ contract FIRMHookUnitTest is Test {
         assertTrue(Hook.matchAction(hooksAfter1, collateralTransferAction), "Silo1 collateral transfer");
         assertTrue(Hook.matchAction(hooksBefore1, Hook.BORROW), "Silo1 borrow");
         assertTrue(Hook.matchAction(hooksBefore1, Hook.BORROW_SAME_ASSET), "Silo1 borrow same asset");
+        assertTrue(Hook.matchAction(hooksBefore1, Hook.DEPOSIT), "Silo1 deposit");
     }
 
     /**

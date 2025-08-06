@@ -30,6 +30,7 @@ contract FIRMHook is
     using Hook for uint256;
 
     error BorrowSameAssetNotAllowed();
+    error OnlyFirmVaultCanDeposit();
     error OnlyFIRMVaultOrFirmCanReceiveCollateral();
     error InvalidMaturityDate();
     error EmptyFirmVault();
@@ -116,43 +117,9 @@ contract FIRMHook is
 
         require(_action != Hook.BORROW_SAME_ASSET, BorrowSameAssetNotAllowed());
 
-        if (_action != Hook.BORROW) return;
-
-        IFixedInterestRateModel fixedIRM = IFixedInterestRateModel(FIRMHookStorage.get().firm);
-
-        fixedIRM.accrueInterest();
-
-        Hook.BeforeBorrowInput memory borrowInput = Hook.beforeBorrowDecode(_inputAndOutput);
-
-        uint256 interestTimeDelta = FIRMHookStorage.get().maturityDate - block.timestamp;
-        uint256 rcur = fixedIRM.getCurrentInterestRate(silo1, block.timestamp);
-        uint256 effectiveInterestRate = rcur * interestTimeDelta / 365 days;
-        uint256 interestPayment = borrowInput.assets * effectiveInterestRate / 1e18;
-
-        // minimal interest is 10 wei to make sure
-        // an attacker can not round down interest to 0.
-        if (interestPayment < 10) interestPayment = 10;
-
-        uint192 daoAndDeployerRevenue = _getDaoAndDeployerRevenue(silo1, interestPayment);
-        uint256 interestToDistribute = interestPayment - daoAndDeployerRevenue;
-
-        bytes memory input = abi.encodeWithSelector(
-            this.mintSharesAndUpdateSiloState.selector,
-            ISilo(silo1).convertToShares(interestPayment, ISilo.AssetType.Debt),
-            ISilo(silo1).convertToShares(interestToDistribute, ISilo.AssetType.Collateral),
-            borrowInput.borrower,
-            interestToDistribute,
-            interestPayment,
-            daoAndDeployerRevenue,
-            fixedIRM
-        );
-
-        ISilo(silo1).callOnBehalfOfSilo({
-            _target: address(this),
-            _value: 0,
-            _callType: ISilo.CallType.Delegatecall,
-            _input: input
-        });
+        if (_action == Hook.BORROW) {
+            _beforeBorrowAction(ISilo(silo1), _inputAndOutput);
+        }
     }
 
     /// @inheritdoc IHookReceiver
@@ -246,5 +213,46 @@ contract FIRMHook is
         hooksBefore1 = hooksBefore1.addAction(Hook.BORROW_SAME_ASSET);
 
         _setHookConfig(_silo1, uint24(hooksBefore1), uint24(hooksAfter1));
+    }
+
+    /// @notice Borrow before action
+    /// @param _silo address of the silo
+    /// @param _inputAndOutput input and output of the borrow action
+    function _beforeBorrowAction(ISilo _silo, bytes calldata _inputAndOutput) internal {
+        IFixedInterestRateModel fixedIRM = IFixedInterestRateModel(FIRMHookStorage.get().firm);
+
+        fixedIRM.accrueInterest();
+
+        Hook.BeforeBorrowInput memory borrowInput = Hook.beforeBorrowDecode(_inputAndOutput);
+
+        uint256 interestTimeDelta = FIRMHookStorage.get().maturityDate - block.timestamp;
+        uint256 rcur = fixedIRM.getCurrentInterestRate(address(_silo), block.timestamp);
+        uint256 effectiveInterestRate = rcur * interestTimeDelta / 365 days;
+        uint256 interestPayment = borrowInput.assets * effectiveInterestRate / 1e18;
+
+        // minimal interest is 10 wei to make sure
+        // an attacker can not round down interest to 0.
+        if (interestPayment < 10) interestPayment = 10;
+
+        uint192 daoAndDeployerRevenue = _getDaoAndDeployerRevenue(address(_silo), interestPayment);
+        uint256 interestToDistribute = interestPayment - daoAndDeployerRevenue;
+
+        bytes memory input = abi.encodeWithSelector(
+            this.mintSharesAndUpdateSiloState.selector,
+            _silo.convertToShares(interestPayment, ISilo.AssetType.Debt),
+            _silo.convertToShares(interestToDistribute, ISilo.AssetType.Collateral),
+            borrowInput.borrower,
+            interestToDistribute,
+            interestPayment,
+            daoAndDeployerRevenue,
+            fixedIRM
+        );
+
+        _silo.callOnBehalfOfSilo({
+            _target: address(this),
+            _value: 0,
+            _callType: ISilo.CallType.Delegatecall,
+            _input: input
+        });
     }
 }
