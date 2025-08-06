@@ -201,6 +201,17 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
+    "EORACLE_CHAINLINK_PT-tUSDe-25SEP2025_USD": {
+        "baseToken": "PT-tUSDe-25SEP2025",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "EORACLE_PT-tUSDe-25SEP2025_USDe_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_USDe_USD_aggregator",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e26,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "EORACLE_PT-USDe_25SEP25_USDC": {
         "baseToken": "PT-USDe_25SEP25",
         "quoteToken": "USDC",
