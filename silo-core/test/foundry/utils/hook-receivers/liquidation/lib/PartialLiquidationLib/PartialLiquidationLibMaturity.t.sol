@@ -16,9 +16,10 @@ import {EstimateMaxRepayValueTestData} from "../../../../../data-readers/Estimat
 import {MaxRepayRawMath} from "./MaxRepayRawMath.sol";
 
 import {PartialLiquidationLibTest} from "./PartialLiquidationLib.t.sol";
-
-// forge test -vv --mc PartialLiquidationLibMaturityTest
+ 
 /*
+FOUNDRY_PROFILE=core_test forge test -vv --mc PartialLiquidationLibMaturityTest
+
 incluse all raw tests from PartialLiquidationLib.t.sol but here we have maturityDate() endpoint
 */
 contract PartialLiquidationLibMaturityTest is PartialLiquidationLibTest {
@@ -26,6 +27,7 @@ contract PartialLiquidationLibMaturityTest is PartialLiquidationLibTest {
 
     function setUp() public virtual {
         vm.warp(1728192000);
+        maturityDate = block.timestamp + 1;
     }
 
     modifier beforeMaturity() {
