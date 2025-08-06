@@ -33,6 +33,8 @@ contract FIRMHook is
 
     error BorrowSameAssetNotAllowed();
     error OnlyFIRMVaultCanReceiveCollateral();
+    error InvalidMaturityDate();
+    error EmptyFirmVault();
 
     /// @inheritdoc IHookReceiver
     function initialize(ISiloConfig _config, bytes calldata _data)
@@ -159,6 +161,10 @@ contract FIRMHook is
         }
     }
 
+    /// @notice Get the dao and deployer revenue
+    /// @param _silo address of the silo
+    /// @param _interestPayment amount of interest payment
+    /// @return daoAndDeployerRevenue amount of dao and deployer revenue
     function _getDaoAndDeployerRevenue(address _silo, uint256 _interestPayment)
         internal
         view
@@ -171,14 +177,49 @@ contract FIRMHook is
         if (daoAndDeployerRevenue == 0) daoAndDeployerRevenue = 1;
     }
 
+    /// @notice Initialize the FIRM hook
+    /// @param _maturityDate maturity date of the FIRM
+    /// @param _firmVault vault address of the firm
     function __FIRMHook_init(uint256 _maturityDate, address _firmVault) internal {
+        require(_maturityDate > block.timestamp, InvalidMaturityDate());
+        require(_firmVault != address(0), EmptyFirmVault());
+
         maturityDate = _maturityDate;
         firmVault = _firmVault;
 
-        (, address silo1) = siloConfig.getSilos();
+        (address silo0, address silo1) = siloConfig.getSilos();
 
         ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(silo1);
-
         firm = silo1Config.interestRateModel;
+
+        _configureHooks(silo0, silo1);
+    }
+
+    /// @notice Configure the hooks for the FIRM hook
+    /// silo0: after token transfer
+    /// silo1: after token transfer, before borrow, before borrow same asset
+    /// @param _silo0 address of the silo0
+    /// @param _silo1 address of the silo1
+    function _configureHooks(address _silo0, address _silo1) internal {
+        uint256 protectedTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
+        uint256 collateralTransferAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
+
+        uint256 hooksAfter0 = _getHooksAfter(_silo0);
+        hooksAfter0 = hooksAfter0.addAction(protectedTransferAction);
+        hooksAfter0 = hooksAfter0.addAction(collateralTransferAction);
+
+        uint256 hooksBefore0 = _getHooksBefore(_silo0);
+
+        _setHookConfig(_silo0, uint24(hooksBefore0), uint24(hooksAfter0));
+
+        uint256 hooksAfter1 = _getHooksAfter(_silo1);
+        hooksAfter1 = hooksAfter1.addAction(protectedTransferAction);
+        hooksAfter1 = hooksAfter1.addAction(collateralTransferAction);
+
+        uint256 hooksBefore1 = _getHooksBefore(_silo1);
+        hooksBefore1 = hooksBefore1.addAction(Hook.BORROW);
+        hooksBefore1 = hooksBefore1.addAction(Hook.BORROW_SAME_ASSET);
+
+        _setHookConfig(_silo1, uint24(hooksBefore1), uint24(hooksAfter1));
     }
 }
