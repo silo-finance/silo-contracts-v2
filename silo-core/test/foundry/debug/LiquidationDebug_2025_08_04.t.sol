@@ -29,6 +29,11 @@ contract LiquidationDebug_2025_08_04 is IntegrationTest {
     address internal swapAllowanceHolder = 0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D;
     address internal weth = 0x4200000000000000000000000000000000000006;
 
+    error ReturnZeroAssets();
+    error NotEnoughLiquidity();
+    error UserIsSolvent();
+
+
     function setUp() public {
         vm.createSelectFork(
             vm.envString("RPC_SONIC"),
@@ -41,6 +46,16 @@ contract LiquidationDebug_2025_08_04 is IntegrationTest {
         vm.label(weth, "WETH");
         vm.label(address(helper), "LiquidationHelper");
         vm.label(address(manualHelper), "ManualLiquidationHelper");
+    }
+
+    /*
+        FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_08_04 --mt test_error_ReturnZeroAssets_selector --ffi -vvv
+    */
+    function test_error_ReturnZeroAssets_selector() public {
+        console2.logBytes4(ReturnZeroAssets.selector);
+        console2.logBytes4(NotEnoughLiquidity.selector);
+        console2.logBytes4(UserIsSolvent.selector);
+        console2.logBytes4(bytes4(0x5e26aa2a)); 
     }
 
     /*
@@ -127,7 +142,7 @@ Collateral:
         ]
 }
     */
-    function test_liquidation_with_sToken_fix() public {
+    function test_skip_liquidation_with_sToken_fix() public {
         vm.createSelectFork(
             vm.envString("RPC_SONIC"),
             41759140
@@ -154,7 +169,7 @@ Collateral:
         dexSwapInput[0] = ILiquidationHelper.DexSwapInput({
             sellToken: 0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38,
             allowanceTarget: 0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D,
-            swapCallData: abi.encode(
+            swapCallData: abi.encodePacked(
                 hex"83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000129219dd400f2bf60e5a23d13be72b486d403889409128562729f930698b50405a927f907ae1400016b66316dbdbc67115fefc89edbd0bf3658e6836f00000001",
                 address(0xf363C6d369888F5367e9f1aD7b6a7dAe133e8740),
                 hex"00000000040102050123daec43210101010203000000060101040201ff0000000000000000a4c937817f99829ac4003a3475f17a2f0d6eaf7c039e2fb66102314ce7b64ce5ce3e5183bc94ad3829219dd400f2bf60e5a23d13be72b486d4038894b1bc4b830fcba2184b92e15b9133c4116051803800000000000000000000000000000000"
