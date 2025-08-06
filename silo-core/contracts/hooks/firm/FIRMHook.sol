@@ -34,6 +34,7 @@ contract FIRMHook is
     error OnlyFIRMVaultOrFirmCanReceiveCollateral();
     error InvalidMaturityDate();
     error EmptyFirmVault();
+    error MaturityDateReached();
 
     /// @dev Mint shares and update Silo state
     /// This function is designed to be called by the hook from the silo via delegatecall.
@@ -219,13 +220,16 @@ contract FIRMHook is
     /// @param _silo address of the silo
     /// @param _inputAndOutput input and output of the borrow action
     function _beforeBorrowAction(ISilo _silo, bytes calldata _inputAndOutput) internal {
+        uint64 maturity = FIRMHookStorage.get().maturityDate;
+        require(maturity >= block.timestamp, MaturityDateReached());
+
         IFixedInterestRateModel fixedIRM = IFixedInterestRateModel(FIRMHookStorage.get().firm);
 
         fixedIRM.accrueInterest();
 
         Hook.BeforeBorrowInput memory borrowInput = Hook.beforeBorrowDecode(_inputAndOutput);
 
-        uint256 interestTimeDelta = FIRMHookStorage.get().maturityDate - block.timestamp;
+        uint256 interestTimeDelta = maturity - block.timestamp;
         uint256 rcur = fixedIRM.getCurrentInterestRate(address(_silo), block.timestamp);
         uint256 effectiveInterestRate = rcur * interestTimeDelta / 365 days;
         uint256 interestPayment = borrowInput.assets * effectiveInterestRate / 1e18;

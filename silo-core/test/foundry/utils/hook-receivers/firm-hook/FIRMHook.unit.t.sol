@@ -310,6 +310,17 @@ contract FIRMHookUnitTest is Test {
     }
 
     /**
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_beforeAction_silo1_MaturityDateReached -vv
+     */
+    function test_firmHook_beforeAction_silo1_MaturityDateReached() public {
+        vm.warp(block.timestamp + _maturityDate);
+
+        vm.prank(address(_silo1));
+        vm.expectRevert(abi.encodeWithSelector(FIRMHook.MaturityDateReached.selector));
+        _hook.beforeAction(address(_silo1), Hook.BORROW, abi.encode(0));
+    }
+
+    /**
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_borrow_beforeAction -vv
      */
     function test_firmHook_borrow_beforeAction() public {
