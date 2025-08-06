@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
-import {Silo0ProtectedCollateralOnly} from "silo-core/contracts/hooks/_common/Silo0ProtectedCollateralOnly.sol";
-import {Silo1CollateralOnlyAndDebt} from "silo-core/contracts/hooks/_common/Silo1CollateralOnlyAndDebt.sol";
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
@@ -13,17 +11,19 @@ import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
+import {
+    Silo0ProtectedSilo1CollateralOnly
+} from "silo-core/contracts/hooks/_common/Silo0ProtectedSilo1CollateralOnly.sol";
 
 interface IFIRM {
-    function increaseTotalInterest(uint256 _amount) external;
+    function accrueInterest() external;
     function getCurrentInterestRate() external view returns (uint256);
 }
 
 contract FIRMHook is
     GaugeHookReceiver,
     PartialLiquidation,
-    Silo0ProtectedCollateralOnly,
-    Silo1CollateralOnlyAndDebt
+    Silo0ProtectedSilo1CollateralOnly
 {
     using Hook for uint256;
 
@@ -49,8 +49,7 @@ contract FIRMHook is
         BaseHookReceiver.__BaseHookReceiver_init(_config);
         GaugeHookReceiver.__GaugeHookReceiver_init(owner);
         FIRMHook.__FIRMHook_init(siloMaturityDate, siloFirmVault);
-        Silo0ProtectedCollateralOnly.__Silo0ProtectedCollateralOnly_init();
-        Silo1CollateralOnlyAndDebt.__Silo1CollateralOnlyAndDebt_init();
+        Silo0ProtectedSilo1CollateralOnly.__Silo0ProtectedSilo1CollateralOnly_init();
     }
 
     /// @dev Mint shares and update Silo state
@@ -101,6 +100,8 @@ contract FIRMHook is
 
         if (_action != Hook.BORROW) return;
 
+        IFIRM(firm).accrueInterest();
+
         Hook.BeforeBorrowInput memory borrowInput = Hook.beforeBorrowDecode(_inputAndOutput);
 
         uint256 interestTimeDelta = maturityDate - block.timestamp;
@@ -134,8 +135,6 @@ contract FIRMHook is
             _callType: ISilo.CallType.Delegatecall,
             _input: input
         });
-
-        IFIRM(firm).increaseTotalInterest(collateralShares);
     }
 
     /// @inheritdoc IHookReceiver
@@ -145,13 +144,11 @@ contract FIRMHook is
         onlySiloOrShareToken()
         override(
             GaugeHookReceiver,
-            Silo0ProtectedCollateralOnly,
-            Silo1CollateralOnlyAndDebt,
+            Silo0ProtectedSilo1CollateralOnly,
             IHookReceiver
         )
     {
-        Silo0ProtectedCollateralOnly.afterAction(_silo, _action, _inputAndOutput);
-        Silo1CollateralOnlyAndDebt.afterAction(_silo, _action, _inputAndOutput);
+        Silo0ProtectedSilo1CollateralOnly.afterAction(_silo, _action, _inputAndOutput);
 
         (address silo1,) = siloConfig.getSilos();
         uint256 collateralTokenTransferAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
