@@ -32,7 +32,7 @@ contract FIRMHook is
     address public firmVault;
 
     error BorrowSameAssetNotAllowed();
-    error OnlyFIRMVaultCanReceiveCollateral();
+    error OnlyFIRMVaultOrFirmCanReceiveCollateral();
     error InvalidMaturityDate();
     error EmptyFirmVault();
 
@@ -152,12 +152,12 @@ contract FIRMHook is
     {
         Silo0ProtectedSilo1CollateralOnly.afterAction(_silo, _action, _inputAndOutput);
 
-        (address silo1,) = siloConfig.getSilos();
+        (,address silo1) = siloConfig.getSilos();
         uint256 collateralTokenTransferAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
 
         if (_silo == silo1 && _action.matchAction(collateralTokenTransferAction)) {
             Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
-            require(input.recipient == firmVault, OnlyFIRMVaultCanReceiveCollateral());
+            require(input.recipient == firmVault || input.recipient == firm, OnlyFIRMVaultOrFirmCanReceiveCollateral());
         }
     }
 
