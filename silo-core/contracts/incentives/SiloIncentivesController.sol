@@ -123,6 +123,10 @@ contract SiloIncentivesController is BaseIncentivesController {
         IERC20(_rewardToken).safeTransfer(msg.sender, IERC20(_rewardToken).balanceOf(address(this)));
     }
 
+    function share_token() external view virtual returns (address shareToken) {
+        shareToken = SHARE_TOKEN;
+    }
+
     /// @dev Creates a new immediate distribution program if it does not exist.
     /// @param _tokenToDistribute The address of the token to distribute.
     /// @return programId The ID of the created or existing program.
