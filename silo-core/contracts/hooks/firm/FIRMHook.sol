@@ -7,6 +7,7 @@ import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiv
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IFIRMHook} from "silo-core/contracts/interfaces/IFIRMHook.sol";
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {ShareTokenLib} from "silo-core/contracts/lib/ShareTokenLib.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -23,28 +24,14 @@ import {
 
 /// @title Fixed Interest Rate Model Hook
 contract FIRMHook is
+    IFIRMHook,
     GaugeHookReceiver,
     PartialLiquidation,
     Silo0ProtectedSilo1CollateralOnly
 {
     using Hook for uint256;
 
-    error BorrowSameAssetNotAllowed();
-    error OnlyFirmVaultCanDeposit();
-    error OnlyFIRMVaultOrFirmCanReceiveCollateral();
-    error InvalidMaturityDate();
-    error EmptyFirmVault();
-    error MaturityDateReached();
-
-    /// @dev Mint shares and update Silo state
-    /// This function is designed to be called by the hook from the silo via delegatecall.
-    /// @param _debtShares amount of debt shares to mint
-    /// @param _collateralShares amount of collateral shares to mint
-    /// @param _borrower address of the borrower
-    /// @param _interestToDistribute amount of interest to distribute
-    /// @param _interestPayment amount of interest payment
-    /// @param _daoAndDeployerRevenue amount of dao and deployer revenue
-    /// @param _firm address of the firm
+    /// @inheritdoc IFIRMHook
     function mintSharesAndUpdateSiloState(
         uint256 _debtShares,
         uint256 _collateralShares,
@@ -70,20 +57,17 @@ contract FIRMHook is
         IShareToken(collateral).mint(_firm, _firm, _collateralShares);
     }
 
-    /// @notice Get the maturity date
-    /// @return maturityDate maturity date of the FIRM
+    /// @inheritdoc IFIRMHook
     function maturityDate() external view returns (uint256) {
         return FIRMHookStorage.get().maturityDate;
     }
 
-    /// @notice Get the firm
-    /// @return firm address of the firm
+    /// @inheritdoc IFIRMHook
     function firm() external view returns (address) {
         return FIRMHookStorage.get().firm;
     }
 
-    /// @notice Get the firm vault
-    /// @return firmVault address of the firm vault
+    /// @inheritdoc IFIRMHook
     function firmVault() external view returns (address) {
         return FIRMHookStorage.get().firmVault;
     }

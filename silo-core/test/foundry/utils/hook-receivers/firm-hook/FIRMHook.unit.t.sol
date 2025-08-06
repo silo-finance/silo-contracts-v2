@@ -10,6 +10,7 @@ import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
+import {IFIRMHook} from "silo-core/contracts/interfaces/IFIRMHook.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
@@ -109,7 +110,7 @@ contract FIRMHookUnitTest is Test {
     function test_firmHook_initialize_EmptyFirmVault() public {
         FIRMHook hook = FIRMHook(Clones.clone(address(new FIRMHook())));
 
-        vm.expectRevert(abi.encodeWithSelector(FIRMHook.EmptyFirmVault.selector));
+        vm.expectRevert(abi.encodeWithSelector(IFIRMHook.EmptyFirmVault.selector));
         hook.initialize(_siloConfig, abi.encode(_owner, address(0), _maturityDate));
     }
 
@@ -119,10 +120,10 @@ contract FIRMHookUnitTest is Test {
     function test_firmHook_initialize_InvalidMaturityDate() public {
         FIRMHook hook = FIRMHook(Clones.clone(address(new FIRMHook())));
         
-        vm.expectRevert(abi.encodeWithSelector(FIRMHook.InvalidMaturityDate.selector));
+        vm.expectRevert(abi.encodeWithSelector(IFIRMHook.InvalidMaturityDate.selector));
         hook.initialize(_siloConfig, abi.encode(_owner, _firmVault, block.timestamp - 1));
 
-        vm.expectRevert(abi.encodeWithSelector(FIRMHook.InvalidMaturityDate.selector));
+        vm.expectRevert(abi.encodeWithSelector(IFIRMHook.InvalidMaturityDate.selector));
         hook.initialize(_siloConfig, abi.encode(_owner, _firmVault, type(uint64).max));
     }
 
@@ -208,7 +209,7 @@ contract FIRMHookUnitTest is Test {
         bytes memory input = _getAfterTokenTransferInput(makeAddr("otherRecipient"));
 
         vm.prank(address(_silo1));
-        vm.expectRevert(abi.encodeWithSelector(FIRMHook.OnlyFIRMVaultOrFirmCanReceiveCollateral.selector));
+        vm.expectRevert(abi.encodeWithSelector(IFIRMHook.OnlyFIRMVaultOrFirmCanReceiveCollateral.selector));
         _hook.afterAction(address(_silo1), collateralTokenTransferAction, input);
     }
 
@@ -305,7 +306,7 @@ contract FIRMHookUnitTest is Test {
      */
     function test_firmHook_beforeAction_silo1_BorrowSameAssetNotAllowed() public {
         vm.prank(address(_silo1));
-        vm.expectRevert(abi.encodeWithSelector(FIRMHook.BorrowSameAssetNotAllowed.selector));
+        vm.expectRevert(abi.encodeWithSelector(IFIRMHook.BorrowSameAssetNotAllowed.selector));
         _hook.beforeAction(address(_silo1), Hook.BORROW_SAME_ASSET, abi.encode(0));
     }
 
@@ -316,7 +317,7 @@ contract FIRMHookUnitTest is Test {
         vm.warp(block.timestamp + _maturityDate);
 
         vm.prank(address(_silo1));
-        vm.expectRevert(abi.encodeWithSelector(FIRMHook.MaturityDateReached.selector));
+        vm.expectRevert(abi.encodeWithSelector(IFIRMHook.MaturityDateReached.selector));
         _hook.beforeAction(address(_silo1), Hook.BORROW, abi.encode(0));
     }
 
