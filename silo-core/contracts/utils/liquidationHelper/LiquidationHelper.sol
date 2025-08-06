@@ -5,6 +5,8 @@ import {Address} from "openzeppelin5/utils/Address.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
+import {BaseHookReceiver} from "../../hooks/_common/BaseHookReceiver.sol";
+
 import {IERC3156FlashBorrower} from "../../interfaces/IERC3156FlashBorrower.sol";
 import {IPartialLiquidation} from "../../interfaces/IPartialLiquidation.sol";
 import {ILiquidationHelper} from "../../interfaces/ILiquidationHelper.sol";
@@ -99,6 +101,10 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             DexSwapInput[] memory _swapInputs
         ) = abi.decode(_data, (LiquidationData, DexSwapInput[]));
 
+        (
+            bool is999Case, ISilo collateralSilo, address protectedShareToken
+        ) = _is999Case(_liquidation.hook, _liquidation.user);
+
         IERC20(_debtAsset).forceApprove(address(_liquidation.hook), _maxDebtToCover);
 
         (
@@ -108,8 +114,16 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
             _debtAsset: _debtAsset,
             _user: _liquidation.user,
             _maxDebtToCover: _maxDebtToCover,
-            _receiveSToken: false
+            _receiveSToken: is999Case ? true : false
         });
+
+        if (is999Case) {
+            uint256 balance = IERC20(protectedShareToken).balanceOf(address(this));
+            if (balance != 0) {
+                collateralSilo.transitionCollateral(balance, address(this), ISilo.CollateralType.Protected);
+                collateralSilo.redeem(collateralSilo.balanceOf(address(this)), address(this), address(this), ISilo.CollateralType.Protected);
+            }
+        }
 
         IERC20(_debtAsset).forceApprove(address(_liquidation.hook), 0);
         uint256 flashLoanWithFee = _maxDebtToCover + _fee;
@@ -140,6 +154,23 @@ contract LiquidationHelper is ILiquidationHelper, IERC3156FlashBorrower, DexSwap
 
         IERC20(_debtAsset).forceApprove(msg.sender, flashLoanWithFee);
         return _FLASHLOAN_CALLBACK;
+    }
+
+    function _is999Case(IPartialLiquidation _hook, address _user) 
+        internal 
+        view 
+        returns (bool case999, ISilo collateralSilo, address protectedShareToken) 
+    {
+        (
+            ISiloConfig.ConfigData memory collateralConfig,
+        ) = BaseHookReceiver(address(_hook)).siloConfig().getConfigsForSolvency(_user);
+
+        // we can round down twice on withdrawing, so we can loose up to 2 wei, that's why copare value is 1001, 
+        // for 1002 case 999 does not exist
+        uint256 balance = IERC20(collateralConfig.protectedShareToken).balanceOf(_user);
+        case999 = balance != 0 && balance <= 1001;
+        collateralSilo = ISilo(collateralConfig.silo);
+        protectedShareToken = collateralConfig.protectedShareToken;
     }
 
     function _executeSwap(DexSwapInput[] memory _swapInputs) internal virtual {

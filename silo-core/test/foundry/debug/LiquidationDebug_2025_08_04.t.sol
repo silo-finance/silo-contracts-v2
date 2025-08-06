@@ -14,6 +14,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {ManualLiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/ManualLiquidationHelper.sol";
+import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
 
 /*
 FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_08_04 --ffi -vvv
@@ -103,6 +104,85 @@ Collateral:
         manualHelper.executeLiquidation(silo, user, type(uint256).max, true);
 
         _print(silo, user);
+    }
+
+    /*
+        FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_08_04 --mt test_skip_manual_liquidation_fix --ffi -vvv
+
+    {
+        "_flashLoanFrom": "0xA1627a0E1d0ebcA9326D2219B84Df0c600bed4b1",
+        "_debtAsset": "0x29219dd400f2Bf60E5a23d13Be72B486D4038894",
+        "_maxDebtToCover": "89303938",
+        "_liquidation": {
+            "collateralAsset": "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38",
+            "hook": "0x6AAFD9Dd424541885fd79C06FDA96929CFD512f9",
+            "user": "0xE643C33AE1f8F6B0EC5219E84A818d79ECCfC5aF"
+        },
+        "_swapsInputs0x": [
+            {
+            "allowanceTarget": "0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D",
+            "sellToken": "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38",
+            "swapCallData": "0x83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000129219dd400f2bf60e5a23d13be72b486d403889409128562729f930698b50405a927f907ae1400016b66316dbdbc67115fefc89edbd0bf3658e6836f00000001f363c6d369888f5367e9f1ad7b6a7dae133e874000000000040102050123daec43210101010203000000060101040201ff0000000000000000a4c937817f99829ac4003a3475f17a2f0d6eaf7c039e2fb66102314ce7b64ce5ce3e5183bc94ad3829219dd400f2bf60e5a23d13be72b486d4038894b1bc4b830fcba2184b92e15b9133c4116051803800000000000000000000000000000000"
+            }
+        ]
+}
+    */
+    function test_skip_manual_liquidation_fix() public {
+        vm.createSelectFork(
+            vm.envString("RPC_SONIC"),
+            41759140
+        );
+
+        address user = 0xE643C33AE1f8F6B0EC5219E84A818d79ECCfC5aF;
+        ISilo flashLoanFrom = ISilo(0xA1627a0E1d0ebcA9326D2219B84Df0c600bed4b1);
+        vm.label(address(flashLoanFrom), "flashLoanFrom");
+
+        address _nativeToken = 0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38;
+        address _exchangeProxy = 0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D;
+        address payable _tokensReceiver;
+
+        ILiquidationHelper fixedHelper = new LiquidationHelper(_nativeToken, _exchangeProxy, payable(address(this)));
+
+        ILiquidationHelper.LiquidationData memory liquidation = ILiquidationHelper.LiquidationData({
+            hook: IPartialLiquidation(0x6AAFD9Dd424541885fd79C06FDA96929CFD512f9),
+            collateralAsset: 0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38,
+            user: user
+        });
+
+        ILiquidationHelper.DexSwapInput[] memory dexSwapInput = new ILiquidationHelper.DexSwapInput[](1);
+
+        dexSwapInput[0] = ILiquidationHelper.DexSwapInput({
+            sellToken: 0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38,
+            allowanceTarget: 0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D,
+            swapCallData: abi.encode(
+                hex"83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000129219dd400f2bf60e5a23d13be72b486d403889409128562729f930698b50405a927f907ae1400016b66316dbdbc67115fefc89edbd0bf3658e6836f00000001",
+                address(0xf363C6d369888F5367e9f1aD7b6a7dAe133e8740),
+                hex"00000000040102050123daec43210101010203000000060101040201ff0000000000000000a4c937817f99829ac4003a3475f17a2f0d6eaf7c039e2fb66102314ce7b64ce5ce3e5183bc94ad3829219dd400f2bf60e5a23d13be72b486d4038894b1bc4b830fcba2184b92e15b9133c4116051803800000000000000000000000000000000"
+            )
+        });
+
+        console2.log("block number: ", block.number);
+        console2.log("user: ", user);
+
+        ISiloConfig config = ISiloConfig(BaseHookReceiver(address(liquidation.hook)).siloConfig());
+        
+        (
+            ISiloConfig.ConfigData memory collateralCfg, ISiloConfig.ConfigData memory debtCfg
+        ) = config.getConfigsForSolvency(user);
+
+        console2.log("collateral silo: ", collateralCfg.silo);
+        console2.log("debt silo: ", debtCfg.silo);
+        console2.log("collateral Liquidation Threshold: ", collateralCfg.lt);
+        console2.log(".     debt Liquidation Threshold: ", debtCfg.lt);
+        console2.log("                        user LTV: ", lens.getUserLTV(ISilo(collateralCfg.silo), user));
+
+        fixedHelper.executeLiquidation({
+            _flashLoanFrom: flashLoanFrom,
+            _debtAsset: 0x29219dd400f2Bf60E5a23d13Be72B486D4038894,
+            _maxDebtToCover: 89303938,
+            _liquidation: liquidation,
+            _dexSwapInput: dexSwapInput
+        });
     }
 
     function _print(ISilo _silo, address _user) internal {
