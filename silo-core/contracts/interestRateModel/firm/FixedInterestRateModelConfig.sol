@@ -3,11 +3,11 @@ pragma solidity 0.8.28;
 
 import {
     IFixedInterestRateModel
-} from "silo-core/contracts/interestRateModel/fixedInterestRateModel/interfaces/IFixedInterestRateModel.sol";
+} from "silo-core/contracts/interestRateModel/firm/interfaces/IFixedInterestRateModel.sol";
 
 import {
     IFixedInterestRateModelConfig
-} from "silo-core/contracts/interestRateModel/fixedInterestRateModel/interfaces/IFixedInterestRateModelConfig.sol";
+} from "silo-core/contracts/interestRateModel/firm/interfaces/IFixedInterestRateModelConfig.sol";
 
 contract FixedInterestRateModelConfig is IFixedInterestRateModelConfig {
     uint256 internal immutable _APR; // solhint-disable-line var-name-mixedcase

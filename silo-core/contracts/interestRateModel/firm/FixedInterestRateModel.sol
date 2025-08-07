@@ -8,11 +8,11 @@ import {IERC20} from "openzeppelin5/interfaces/IERC20.sol";
 
 import {
     IFixedInterestRateModel
-} from "silo-core/contracts/interestRateModel/fixedInterestRateModel/interfaces/IFixedInterestRateModel.sol";
+} from "silo-core/contracts/interestRateModel/firm/interfaces/IFixedInterestRateModel.sol";
 
 import {
     IFixedInterestRateModelConfig
-} from "silo-core/contracts/interestRateModel/fixedInterestRateModel/interfaces/IFixedInterestRateModelConfig.sol";
+} from "silo-core/contracts/interestRateModel/firm/interfaces/IFixedInterestRateModelConfig.sol";
 
 /// @title FixedInterestRateModel
 /// @notice This model is used in FIRM markets. Interest rate is constant and set on deployment. FixedInterestRateModel
@@ -24,7 +24,7 @@ contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
 
     uint256 public constant decimals = 18;
     uint256 public constant DP = 10 ** decimals;
-    uint256 public constant RCUR_LIMIT = 2_500 * DP / 100; // 2,500% / year
+    uint256 public constant RCUR_LIMIT = 2_500 * DP / 100; // 2,500% per year
     IFixedInterestRateModelConfig public irmConfig;
     uint256 public lastUpdateTimestamp;
 
@@ -47,11 +47,43 @@ contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
         return 0;
     }
 
+    function getCompoundInterestRate(address _silo, uint256) external view virtual returns (uint256 rcomp) {
+        IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
+        require(_silo == config.silo, InvalidSilo());
+        return 0;
+    }
+
+    function getCurrentInterestRateDepositor(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        virtual
+        returns (uint256 rcur)
+    {
+        IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
+        require(_silo == config.silo, InvalidSilo());
+        uint256 vaultBalance = IERC20(config.shareToken).balanceOf(config.firmVault);
+        uint256 interestTimeDelta = Math.max(_blockTimestamp, config.maturityTimestamp) - lastUpdateTimestamp;
+
+        rcur = IERC20(config.shareToken).balanceOf(address(this)) * DP * 365 days / (interestTimeDelta * vaultBalance);
+        rcur = Math.min(rcur, RCUR_LIMIT);
+    }
+
+    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        virtual
+        returns (uint256 rcur)
+    {
+        IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
+        require(_silo == config.silo, InvalidSilo());
+        return _blockTimestamp < config.maturityTimestamp ? config.apr : 0;
+    }
+
     function accrueInterest() public virtual returns (uint256 interest) {
         interest = accrueInterestView(block.timestamp);
         lastUpdateTimestamp = block.timestamp;
         IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
-        if (interest != 0) IERC20(config.shareToken).safeTransfer(config.firmVault, interest);
+        if (interest > 0) IERC20(config.shareToken).safeTransfer(config.firmVault, interest);
     }
 
     function accrueInterestView(uint256 _blockTimestamp) public view virtual returns (uint256 interest) {
@@ -77,32 +109,5 @@ contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
         uint256 accruedInterestTimeDelta = _blockTimestamp - lastUpdateTimestamp;
         uint256 maxInterest = RCUR_LIMIT * vaultBalance * accruedInterestTimeDelta / (365 days * DP);
         cappedInterest = Math.min(_interest, maxInterest);
-    }
-
-    function getCompoundInterestRate(address _silo, uint256) external view virtual returns (uint256 rcomp) {
-        IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
-        require(_silo == config.silo, InvalidSilo());
-        return 0;
-    }
-
-    function getCurrentInterestRateDepositor(address _silo, uint256 _blockTimestamp)
-        external
-        view
-        virtual
-        returns (uint256 rcur)
-    {
-        IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
-        require(_silo == config.silo, InvalidSilo());
-        uint256 vaultBalance = IERC20(config.shareToken).balanceOf(config.firmVault);
-        uint256 interestTimeDelta = Math.max(_blockTimestamp, config.maturityTimestamp) - lastUpdateTimestamp;
-
-        rcur = IERC20(config.shareToken).balanceOf(address(this)) * DP * 365 days / (interestTimeDelta * vaultBalance);
-        rcur = Math.min(rcur, RCUR_LIMIT);
-    }
-
-    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp) external view virtual returns (uint256 rcur) {
-        IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
-        require(_silo == config.silo, InvalidSilo());
-        return _blockTimestamp < config.maturityTimestamp ? config.apr : 0;
     }
 }
