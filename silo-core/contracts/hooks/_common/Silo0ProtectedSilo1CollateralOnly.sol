@@ -6,7 +6,7 @@ import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
-/// @notice Hook receiver that only allows collateral token transfers for silo0 and protected token transfers for silo1
+/// @notice Hook receiver that only allows protected token transfers for silo0 and collateral token transfers for silo1
 abstract contract Silo0ProtectedSilo1CollateralOnly is BaseHookReceiver {
     using Hook for uint256;
 
@@ -24,10 +24,10 @@ abstract contract Silo0ProtectedSilo1CollateralOnly is BaseHookReceiver {
     {
         (address silo0, address silo1) = siloConfig.getSilos();
 
-        if (_silo == silo0) {
+        if (_silo == silo0) { // Silo0: protected token transfers are allowed
             uint256 collateralTokenTransferAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
             require(!_action.matchAction(collateralTokenTransferAction), CollateralTransferNotAllowed());
-        } else if (_silo == silo1) {
+        } else if (_silo == silo1) { // Silo1: collateral token transfers are allowed
             uint256 protectedTokenTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
             require(!_action.matchAction(protectedTokenTransferAction), ProtectedTransferNotAllowed());
         } else {
@@ -35,6 +35,8 @@ abstract contract Silo0ProtectedSilo1CollateralOnly is BaseHookReceiver {
         }
     }
 
+    /// @notice Initialize the Silo0ProtectedSilo1CollateralOnly hook
+    /// @dev Requires silo0 to have a non-zero LTV and silo1 to have a zero LTV
     function __Silo0ProtectedSilo1CollateralOnly_init() internal view {
         (address silo0, address silo1) = siloConfig.getSilos();
 

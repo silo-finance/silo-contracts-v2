@@ -23,6 +23,15 @@ import {
 } from "silo-core/contracts/interestRateModel/fixedInterestRateModel/interfaces/IFixedInterestRateModel.sol";
 
 /// @title Fixed Interest Rate Model Hook
+/// @dev We assume that `Silo0` is always a collateral silo, and `Silo1` is always the silo from which users borrow.
+/// And this is guaranteed by `Silo0ProtectedSilo1CollateralOnly` hook.
+/// `FIRMHook` supports the following actions:
+/// - before deposit for `Silo0` and `Silo1` (verifies maturity date)
+/// - before borrow same asset for `Silo1` (not allowed)
+/// - before borrow for `Silo1` (executes FIRM logic see `_beforeBorrowAction`)
+/// - after token transfer for `Silo0` and `Silo1` (verifies recipient)
+/// - after token transfer for `Silo0` (allows only protected token deposits/transfers)
+/// - after token transfer for `Silo1` (allows only collateral token deposits/transfers)
 contract FIRMHook is
     IFIRMHook,
     GaugeHookReceiver,
@@ -140,37 +149,20 @@ contract FIRMHook is
         }
     }
 
-    /// @notice Get the dao and deployer revenue
-    /// @param _silo address of the silo
-    /// @param _interestPayment amount of interest payment
-    /// @return daoAndDeployerRevenue amount of dao and deployer revenue
-    function _getDaoAndDeployerRevenue(address _silo, uint256 _interestPayment)
-        internal
-        view
-        returns (uint192 daoAndDeployerRevenue)
-    {
-        (uint256 daoFee, uint256 deployerFee,,) = siloConfig.getFeesWithAsset(_silo);
-        uint256 fees = daoFee + deployerFee;
-
-        daoAndDeployerRevenue = uint192(_interestPayment * fees / 1e18);
-        if (daoAndDeployerRevenue == 0) daoAndDeployerRevenue = 1;
-    }
-
     /// @notice Initialize the FIRM hook
     /// @param _maturityDate maturity date of the FIRM
-    /// @param _firmVault vault address of the firm
+    /// @param _firmVault vault address for the firm market
     function __FIRMHook_init(uint256 _maturityDate, address _firmVault) internal {
         require(_maturityDate > block.timestamp && _maturityDate < type(uint64).max, InvalidMaturityDate());
         require(_firmVault != address(0), EmptyFirmVault());
+
+        (address silo0, address silo1) = siloConfig.getSilos();
+        ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(silo1);
 
         FIRMHookStorage.FIRMHookStorageData storage $ = FIRMHookStorage.get();
 
         $.maturityDate = uint64(_maturityDate);
         $.firmVault = _firmVault;
-
-        (address silo0, address silo1) = siloConfig.getSilos();
-
-        ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(silo1);
         $.firm = silo1Config.interestRateModel;
 
         _configureHooks(silo0, silo1);
@@ -178,13 +170,12 @@ contract FIRMHook is
 
     /// @notice Configure the hooks for the FIRM hook
     /// silo0: after token transfer, before protected deposit
-    /// silo1: after token transfer, before borrow, before borrow same asset, before deposit
-    /// @param _silo0 address of the silo0
-    /// @param _silo1 address of the silo1
+    /// silo1: after token transfer, before borrow, before borrow same asset, before collateral deposit
     function _configureHooks(address _silo0, address _silo1) internal {
         uint256 protectedTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
         uint256 collateralTransferAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
 
+        // Silo0 hooks configuration
         uint256 hooksAfter0 = _getHooksAfter(_silo0);
         hooksAfter0 = hooksAfter0.addAction(protectedTransferAction);
         hooksAfter0 = hooksAfter0.addAction(collateralTransferAction);
@@ -196,6 +187,7 @@ contract FIRMHook is
 
         _setHookConfig(_silo0, uint24(hooksBefore0), uint24(hooksAfter0));
 
+        // Silo1 hooks configuration
         uint256 hooksAfter1 = _getHooksAfter(_silo1);
         hooksAfter1 = hooksAfter1.addAction(protectedTransferAction);
         hooksAfter1 = hooksAfter1.addAction(collateralTransferAction);
@@ -210,10 +202,9 @@ contract FIRMHook is
         _setHookConfig(_silo1, uint24(hooksBefore1), uint24(hooksAfter1));
     }
 
-    /// @notice Borrow before action
-    /// @param _silo address of the silo
-    /// @param _inputAndOutput input and output of the borrow action
-    function _beforeBorrowAction(ISilo _silo, bytes calldata _inputAndOutput) internal {
+    /// @notice Before borrow action for `Silo1`
+    /// @param _inputAndOutput input of the borrow action (see `Hook.BeforeBorrowInput`)
+    function _beforeBorrowAction(ISilo _silo1, bytes calldata _inputAndOutput) internal {
         uint64 maturity = FIRMHookStorage.get().maturityDate;
         require(maturity >= block.timestamp, MaturityDateReached());
 
@@ -224,7 +215,7 @@ contract FIRMHook is
         Hook.BeforeBorrowInput memory borrowInput = Hook.beforeBorrowDecode(_inputAndOutput);
 
         uint256 interestTimeDelta = maturity - block.timestamp;
-        uint256 rcur = fixedIRM.getCurrentInterestRate(address(_silo), block.timestamp);
+        uint256 rcur = fixedIRM.getCurrentInterestRate(address(_silo1), block.timestamp);
         uint256 effectiveInterestRate = rcur * interestTimeDelta / 365 days;
         uint256 interestPayment = borrowInput.assets * effectiveInterestRate / 1e18;
 
@@ -232,13 +223,13 @@ contract FIRMHook is
         // an attacker can not round down interest to 0.
         if (interestPayment < 10) interestPayment = 10;
 
-        uint192 daoAndDeployerRevenue = _getDaoAndDeployerRevenue(address(_silo), interestPayment);
+        uint192 daoAndDeployerRevenue = _getDaoAndDeployerRevenue(address(_silo1), interestPayment);
         uint256 interestToDistribute = interestPayment - daoAndDeployerRevenue;
 
         bytes memory input = abi.encodeWithSelector(
             this.mintSharesAndUpdateSiloState.selector,
-            _silo.convertToShares(interestPayment, ISilo.AssetType.Debt),
-            _silo.convertToShares(interestToDistribute, ISilo.AssetType.Collateral),
+            _silo1.convertToShares(interestPayment, ISilo.AssetType.Debt),
+            _silo1.convertToShares(interestToDistribute, ISilo.AssetType.Collateral),
             borrowInput.borrower,
             interestToDistribute,
             interestPayment,
@@ -246,11 +237,27 @@ contract FIRMHook is
             fixedIRM
         );
 
-        _silo.callOnBehalfOfSilo({
+        _silo1.callOnBehalfOfSilo({
             _target: address(this),
             _value: 0,
             _callType: ISilo.CallType.Delegatecall,
             _input: input
         });
+    }
+
+        /// @notice Get the dao and deployer revenue
+    /// @param _silo address of the silo
+    /// @param _interestPayment amount of interest payment
+    /// @return daoAndDeployerRevenue amount of dao and deployer revenue
+    function _getDaoAndDeployerRevenue(address _silo, uint256 _interestPayment)
+        internal
+        view
+        returns (uint192 daoAndDeployerRevenue)
+    {
+        (uint256 daoFee, uint256 deployerFee,,) = siloConfig.getFeesWithAsset(_silo);
+        uint256 fees = daoFee + deployerFee;
+
+        daoAndDeployerRevenue = uint192(_interestPayment * fees / 1e18);
+        if (daoAndDeployerRevenue == 0) daoAndDeployerRevenue = 1;
     }
 }
