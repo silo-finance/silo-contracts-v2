@@ -51,7 +51,7 @@ contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
         interest = accrueInterestView(block.timestamp);
         lastUpdateTimestamp = block.timestamp;
         IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
-        IERC20(config.shareToken).safeTransfer(config.firmVault, interest);
+        if (interest != 0) IERC20(config.shareToken).safeTransfer(config.firmVault, interest);
     }
 
     function accrueInterestView(uint256 _blockTimestamp) public view virtual returns (uint256 interest) {
