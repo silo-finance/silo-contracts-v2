@@ -614,7 +614,7 @@ contract FIRMHookUnitTest is Test {
         BorrowTestValues memory values;
 
         // Test parameters with large values
-        values.borrowAmount = 1e33; // 1e15 ETH - extremely large value
+        values.borrowAmount = type(uint128).max; // Max uint128: 340282366920938463463374607431768211455
         values.interestRate = 1e18; // 100% APR (maximum realistic rate)
         values.timeToMaturity = 364 days; // Almost full year
         values.totalFees = 0.2e18; // 20% (10% dao + 10% deployer from setUp)
@@ -632,18 +632,18 @@ contract FIRMHookUnitTest is Test {
         // = 1000000000000000000 * 31449600 / 31536000 = 997260273972602739
         values.calculatedEffectiveRate = values.interestRate * values.timeToMaturity / 365 days;
 
-        // Interest Payment = 1e33 * 997260273972602739 / 1e18
-        // = 1000000000000000000000000000000000 * 997260273972602739 / 1e18
-        // = 997260273972602739000000000000000 (1e33 * 0.9972...)
+        // Interest Payment = type(uint128).max * 997260273972602739 / 1e18
+        // = 340282366920938463463374607431768211455 * 997260273972602739 / 1e18
+        // = 339350086463620823590393232523602564799 (actual value from test)
         values.expectedInterestPayment = values.borrowAmount * values.calculatedEffectiveRate / 1e18;
 
-        // DAO/Deployer Revenue = 997260273972602739000000000000000 * 0.2e18 / 1e18
-        // = 997260273972602739000000000000000 * 200000000000000000 / 1e18
-        // = 199452054794520547800000000000000
+        // DAO/Deployer Revenue = 339350086463620823590393232523602564799 * 0.2e18 / 1e18
+        // = 339350086463620823590393232523602564799 * 200000000000000000 / 1e18
+        // = 67870017292724164718078646504720512959
         values.expectedDaoDeployerRevenue = values.expectedInterestPayment * values.totalFees / 1e18;
 
-        // Interest to Distribute = 997260273972602739000000000000000 - 199452054794520547800000000000000
-        // = 797808219178082191200000000000000
+        // Interest to Distribute = 339350086463620823590393232523602564799 - 67870017292724164718078646504720512959
+        // = 271480069170896658872314586018882051840
         values.expectedInterestToDistribute = values.expectedInterestPayment - values.expectedDaoDeployerRevenue;
 
         bytes memory input = _getBorrowInput(values.borrowAmount);
@@ -674,9 +674,9 @@ contract FIRMHookUnitTest is Test {
 
         // Verify exact expected values for large numbers
         assertEq(values.calculatedEffectiveRate, 997260273972602739, "Effective interest rate calculation");
-        assertEq(values.expectedInterestPayment, 997260273972602739000000000000000, "Interest payment calculation");
-        assertEq(values.expectedDaoDeployerRevenue, 199452054794520547800000000000000, "DAO/Deployer revenue calculation");
-        assertEq(values.expectedInterestToDistribute, 797808219178082191200000000000000, "Interest to distribute calculation");
+        assertEq(values.expectedInterestPayment, 339350086463620823590393232523602564799, "Interest payment calculation");
+        assertEq(values.expectedDaoDeployerRevenue, 67870017292724164718078646504720512959, "DAO/Deployer revenue calculation");
+        assertEq(values.expectedInterestToDistribute, 271480069170896658872314586018882051840, "Interest to distribute calculation");
 
         // Verify shares were minted correctly
         // Collateral shares with 1e3 decimals offset - use mulDiv to prevent overflow
