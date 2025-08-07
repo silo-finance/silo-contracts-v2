@@ -32,6 +32,18 @@ import {
 FOUNDRY_PROFILE=core_test forge test --ffi --mc FIRMHookUnitTest -vv
  */
 contract FIRMHookUnitTest is Test {
+    struct BorrowTestValues {
+        uint256 borrowAmount;
+        uint256 interestRate;
+        uint256 timeToMaturity;
+        uint256 totalFees;
+        uint256 calculatedEffectiveRate;
+        uint256 calculatedInterestPayment;
+        uint256 expectedInterestPayment;
+        uint256 expectedDaoDeployerRevenue;
+        uint256 expectedInterestToDistribute;
+    }
+
     FIRMHook internal _hook;
     
     Silo internal _silo0;
@@ -44,33 +56,18 @@ contract FIRMHookUnitTest is Test {
     address internal _firm = makeAddr("Firm");
     address internal _firmVault = makeAddr("FirmVault");
     address internal _owner = makeAddr("Owner");
+    address internal _borrower = makeAddr("borrower");
     uint256 internal _maturityDate = block.timestamp + 180 days;
 
     SiloConfig internal _siloConfig;
 
     function setUp() public {
-        _hook = FIRMHook(Clones.clone(address(new FIRMHook())));
-
-        _silo0 = Silo(payable(Clones.clone(address(new Silo(ISiloFactory(_siloFactory))))));
-        _silo1 = Silo(payable(Clones.clone(address(new Silo(ISiloFactory(_siloFactory))))));
-
         ISiloConfig.ConfigData memory silo1Config = _silo1Config();
         ISiloConfig.ConfigData memory silo0Config = _silo0Config();
 
-        _mockSynchronizeHooks(silo0Config.debtShareToken);
-        _mockSynchronizeHooks(silo0Config.protectedShareToken);
-        _mockSynchronizeHooks(silo1Config.debtShareToken);
-        _mockSynchronizeHooks(silo1Config.protectedShareToken);
+        _systemSetupWithConfigs(silo0Config, silo1Config);
 
-        silo1Config.hookReceiver = address(_hook);
-        silo0Config.hookReceiver = address(_hook);
-
-        _siloConfig = new SiloConfig(1, silo0Config, silo1Config);
-
-        _silo0.initialize(_siloConfig);
-        _silo1.initialize(_siloConfig);
-
-        _hook.initialize(_siloConfig, abi.encode(_owner, _firmVault, _maturityDate));
+        vm.label(_borrower, "borrower");
     }
 
     /**
@@ -359,43 +356,255 @@ contract FIRMHookUnitTest is Test {
     }
 
     /**
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_borrow_beforeAction -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_borrow_beforeAction_minimumInterest -vvv
      */
-    function test_firmHook_borrow_beforeAction() public {
-        _mockFixedIRMCalls();
+    function test_firmHook_borrow_beforeAction_minimumInterest() public {
+        // Test that minimum interest payment of 10 wei is enforced
+        // when calculated interest would be less than 10 wei
 
-        address borrower = makeAddr("borrower");
+        BorrowTestValues memory values;
 
-        bytes memory input = abi.encode(
-            uint256(1e18),
-            uint256(1e18),
-            borrower,
-            borrower,
-            borrower
-        );
+        // Test parameters - very small borrow amount and very short time
+        values.borrowAmount = 1 wei; // Minimal borrow
+        values.interestRate = 0.1e18; // 10% APR
+        values.timeToMaturity = 1 seconds; // Very short time
+        values.totalFees = 0.2e18; // 20% (10% dao + 10% deployer)
+
+        vm.warp(_maturityDate - values.timeToMaturity);
+
+        // Mock IRM with 10% APR
+        _mockFixedIRMCalls(values.interestRate);
+
+        // Calculate what the interest would be without minimum
+        // Effective Interest Rate = 0.1e18 * 1 second / 365 days
+        // = 0.1e18 * 1 / 31536000
+        // = 100000000000000000 / 31536000 = 3170979 (about 0.000003171)
+        values.calculatedEffectiveRate = values.interestRate * values.timeToMaturity / 365 days;
+        
+        // Interest Payment = 1 wei * 3170979 / 1e18 = 0 (rounds down to 0)
+        values.calculatedInterestPayment = values.borrowAmount * values.calculatedEffectiveRate / 1e18;
+
+        // The contract should enforce minimum of 10 wei
+        values.expectedInterestPayment = 10; // Minimum enforced
+
+        // DAO/Deployer Revenue with minimum interest
+        // Revenue = 10 * 0.2e18 / 1e18 = 2
+        values.expectedDaoDeployerRevenue = values.expectedInterestPayment * values.totalFees / 1e18;
+        // = 10 * 200000000000000000 / 1e18 = 2
+
+        // Interest to Distribute = 10 - 2 = 8
+        values.expectedInterestToDistribute = values.expectedInterestPayment - values.expectedDaoDeployerRevenue;
+
+        bytes memory input = _getBorrowInput(values.borrowAmount);
 
         (,address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(_silo1));
 
-        assertEq(IERC20(collateralShareToken).balanceOf(_firm), 0, "FIRM has no collateral shares");
-        assertEq(IERC20(debtShareToken).balanceOf(borrower), 0, "borrower has no debt shares");
+        // Verify initial state
+        assertEq(IERC20(collateralShareToken).balanceOf(_firm), 0, "FIRM should have no collateral shares initially");
+        assertEq(IERC20(debtShareToken).balanceOf(_borrower), 0, "Borrower should have no debt shares initially");
 
-        uint256 collateralTotalBefore = _silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral);
-        uint256 debtTotalBefore = _silo1.getTotalAssetsStorage(ISilo.AssetType.Debt);
+        (uint192 revenueBefore,,, uint256 collateralAssetsBefore, uint256 debtAssetsBefore) = _silo1.getSiloStorage();
 
-        assertEq(collateralTotalBefore, 0, "collateralTotalBefore");
-        assertEq(debtTotalBefore, 0, "debtTotalBefore");
+        assertEq(collateralAssetsBefore, 0, "No collateral assets initially");
+        assertEq(debtAssetsBefore, 0, "No debt assets initially");
+        assertEq(revenueBefore, 0, "No revenue initially");
 
+        // Execute borrow action
         vm.prank(address(_silo1));
         _hook.beforeAction(address(_silo1), Hook.BORROW, input);
 
-        uint256 collateralTotalAfter = _silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral);
-        uint256 debtTotalAfter = _silo1.getTotalAssetsStorage(ISilo.AssetType.Debt);
+        // Verify final state
+        (uint192 revenueAfter,,, uint256 collateralAssetsAfter, uint256 debtAssetsAfter) = _silo1.getSiloStorage();
 
-        assertGt(collateralTotalAfter, 0, "Should have collateral assets");
-        assertGt(debtTotalAfter, 0, "Should have debt assets");
+        // Assert that minimum interest was enforced
+        assertEq(values.calculatedInterestPayment, 0, "Calculated interest should round to 0");
+        assertEq(debtAssetsAfter, values.expectedInterestPayment, "Debt should equal minimum interest payment of 10 wei");
+        assertEq(collateralAssetsAfter, values.expectedInterestToDistribute, "Collateral should equal interest minus fees");
+        assertEq(revenueAfter, values.expectedDaoDeployerRevenue, "Revenue should be calculated from minimum interest");
+
+        // Verify exact expected values
+        assertEq(values.expectedInterestPayment, 10, "Minimum interest should be 10 wei");
+        assertEq(values.expectedDaoDeployerRevenue, 2, "Revenue should be 2 wei (20% of 10)");
+        assertEq(values.expectedInterestToDistribute, 8, "Interest to distribute should be 8 wei");
+
+        // Verify shares were minted correctly
+        // Collateral shares: 8 * 1e3 = 8000 (with decimals offset)
+        assertEq(IERC20(collateralShareToken).balanceOf(_firm), values.expectedInterestToDistribute * 1e3, "FIRM collateral shares");
+        // Debt shares: 10 (no offset for debt)
+        assertEq(IERC20(debtShareToken).balanceOf(_borrower), values.expectedInterestPayment, "Borrower debt shares");
+    }
+
+    /**
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_borrow_beforeAction_minimumRevenue -vvv
+     */
+    function test_firmHook_borrow_beforeAction_minimumRevenue() public {
+        // Test that minimum DAO/deployer revenue of 1 wei is enforced
+        // when calculated revenue would be less than 1 wei
+        _hook = FIRMHook(Clones.clone(address(new FIRMHook())));
+        
+        // Need to create a custom config with very low fees
+        ISiloConfig.ConfigData memory silo0Config = _silo0Config();
+        ISiloConfig.ConfigData memory silo1Config = _silo1Config();
+        
+        // Set very low fees that would result in revenue < 1 wei
+        silo0Config.daoFee = 0.0001e18; // 0.01%
+        silo0Config.deployerFee = 0.0001e18; // 0.01%
+        silo1Config.daoFee = 0.0001e18; // 0.01%
+        silo1Config.deployerFee = 0.0001e18; // 0.01%
+
+        _systemSetupWithConfigs(silo0Config, silo1Config);
+
+        BorrowTestValues memory values;
+
+        // Test parameters - small borrow amount with very low fees
+        values.borrowAmount = 100 wei; // Small borrow
+        values.interestRate = 0.1e18; // 10% APR  
+        values.timeToMaturity = 10 seconds; // Short time
+        values.totalFees = 0.0002e18; // 0.02% (0.01% dao + 0.01% deployer)
+        
+        vm.warp(_maturityDate - values.timeToMaturity);
+        
+        // Mock IRM with 10% APR
+        _mockFixedIRMCalls(values.interestRate);
+        
+        // Calculate interest and revenue
+        // Effective Interest Rate = 0.1e18 * 10 seconds / 365 days
+        // = 0.1e18 * 10 / 31536000
+        // = 100000000000000000 * 10 / 31536000 = 31709791983 (about 0.0000317098)
+        values.calculatedEffectiveRate = values.interestRate * values.timeToMaturity / 365 days;
+        
+        // Interest Payment = 100 wei * 31709791983 / 1e18 = 0 (rounds down)
+        // But minimum interest of 10 wei will be enforced
+        values.calculatedInterestPayment = values.borrowAmount * values.calculatedEffectiveRate / 1e18;
+        values.expectedInterestPayment = 10; // Minimum interest enforced
+        
+        // DAO/Deployer Revenue calculation
+        // Revenue = 10 * 0.0002e18 / 1e18 = 0.002 = 0 (rounds down)
+        // But minimum revenue of 1 wei will be enforced
+        uint256 calculatedRevenue = values.expectedInterestPayment * values.totalFees / 1e18;
+        values.expectedDaoDeployerRevenue = 1; // Minimum revenue enforced
+        
+        // Interest to Distribute = 10 - 1 = 9
+        values.expectedInterestToDistribute = values.expectedInterestPayment - values.expectedDaoDeployerRevenue;
+        
+        bytes memory input = _getBorrowInput(values.borrowAmount);
+        
+        (,address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(_silo1));
+        
+        // Verify initial state
+        assertEq(IERC20(collateralShareToken).balanceOf(_firm), 0, "FIRM should have no collateral shares initially");
+        assertEq(IERC20(debtShareToken).balanceOf(_borrower), 0, "Borrower should have no debt shares initially");
+        
+        (uint192 revenueBefore,,, uint256 collateralAssetsBefore, uint256 debtAssetsBefore) = _silo1.getSiloStorage();
+        
+        assertEq(collateralAssetsBefore, 0, "No collateral assets initially");
+        assertEq(debtAssetsBefore, 0, "No debt assets initially");
+        assertEq(revenueBefore, 0, "No revenue initially");
+        
+        // Execute borrow action
+        vm.prank(address(_silo1));
+        _hook.beforeAction(address(_silo1), Hook.BORROW, input);
+        
+        // Verify final state
+        (uint192 revenueAfter,,, uint256 collateralAssetsAfter, uint256 debtAssetsAfter) = _silo1.getSiloStorage();
+        
+        // Assert that minimum revenue was enforced
+        assertEq(calculatedRevenue, 0, "Calculated revenue should round to 0");
+        assertEq(revenueAfter, values.expectedDaoDeployerRevenue, "Revenue should be minimum 1 wei");
+        assertEq(debtAssetsAfter, values.expectedInterestPayment, "Debt should equal minimum interest payment");
+        assertEq(collateralAssetsAfter, values.expectedInterestToDistribute, "Collateral should equal interest minus minimum revenue");
+        
+        // Verify exact expected values
+        assertEq(values.expectedInterestPayment, 10, "Minimum interest should be 10 wei");
+        assertEq(values.expectedDaoDeployerRevenue, 1, "Minimum revenue should be 1 wei");
+        assertEq(values.expectedInterestToDistribute, 9, "Interest to distribute should be 9 wei");
+        
+        // Verify shares were minted correctly
+        // Collateral shares: 9 * 1e3 = 9000 (with decimals offset)
+        assertEq(IERC20(collateralShareToken).balanceOf(_firm), values.expectedInterestToDistribute * 1e3, "FIRM collateral shares");
+        // Debt shares: 10 (no offset for debt)
+        assertEq(IERC20(debtShareToken).balanceOf(_borrower), values.expectedInterestPayment, "Borrower debt shares");
+    }
+
+    /**
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_borrow_beforeAction_standardCase -vvv
+     */
+    function test_firmHook_borrow_beforeAction_standardCase() public {
+        // Test parameters
+        uint256 borrowAmount = 100e18; // 100 ETH
+        uint256 interestRate = 0.1e18; // 10% APR
+        uint256 timeToMaturity = 180 days;
+
+        // Mock IRM with 10% APR
+        _mockFixedIRMCalls(interestRate);
+
+        // Calculate expected values
+        // Effective Interest Rate = rcur * interestTimeDelta / 365 days
+        // = 0.1e18 * 180 days / 365 days
+        // = 0.1e18 * 15552000 / 31536000
+        // = 0.1e18 * 0.493150684931506849315...
+        uint256 expectedEffectiveInterestRate = interestRate * timeToMaturity / 365 days;
+        // = 100000000000000000 * 15552000 / 31536000 = 49315068493150684
+
+        // Interest Payment = borrowAmount * effectiveInterestRate / 1e18
+        // = 100e18 * 49315068493150684 / 1e18
+        uint256 expectedInterestPayment = borrowAmount * expectedEffectiveInterestRate / 1e18;
+        // = 100000000000000000000 * 49315068493150684 / 1e18 = 4931506849315068400
+
+        // DAO and Deployer fees are each 10%, total 20%
+        // DAO/Deployer Revenue = interestPayment * 0.2e18 / 1e18
+        uint256 totalFees = 0.2e18; // 20% (10% dao + 10% deployer from setUp)
+        uint256 expectedDaoDeployerRevenue = expectedInterestPayment * totalFees / 1e18;
+        // = 4931506849315068400 * 200000000000000000 / 1e18 = 986301369863013680
+
+        // Interest to Distribute = interestPayment - daoDeployerRevenue
+        uint256 expectedInterestToDistribute = expectedInterestPayment - expectedDaoDeployerRevenue;
+        // = 4931506849315068400 - 986301369863013680 = 3945205479452054720
+
+        bytes memory input = _getBorrowInput(borrowAmount);
+
+        (,address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(_silo1));
+
+        // Verify initial state
+        assertEq(IERC20(collateralShareToken).balanceOf(_firm), 0, "FIRM should have no collateral shares initially");
+        assertEq(IERC20(debtShareToken).balanceOf(_borrower), 0, "Borrower should have no debt shares initially");
+
+        (uint192 revenueBefore,,, uint256 collateralAssetsBefore, uint256 debtAssetsBefore) = _silo1.getSiloStorage();
+
+        assertEq(collateralAssetsBefore, 0, "No collateral assets initially");
+        assertEq(debtAssetsBefore, 0, "No debt assets initially");
+        assertEq(revenueBefore, 0, "No revenue initially");
+
+        // Execute borrow action
+        vm.prank(address(_silo1));
+        _hook.beforeAction(address(_silo1), Hook.BORROW, input);
+
+        // Verify final state
+        (uint192 revenueAfter,,, uint256 collateralAssetsAfter, uint256 debtAssetsAfter) = _silo1.getSiloStorage();
+
+        // Assert exact values
+        assertEq(collateralAssetsAfter, expectedInterestToDistribute, "Collateral total should equal interest to distribute");
+        assertEq(debtAssetsAfter, expectedInterestPayment, "Debt total should equal interest payment");
+        assertEq(revenueAfter, expectedDaoDeployerRevenue, "Revenue should equal DAO/deployer revenue");
+
+        // Verify exact calculated values
+        assertEq(expectedEffectiveInterestRate, 49315068493150684, "Effective interest rate calculation");
+        assertEq(expectedInterestPayment, 4931506849315068400, "Interest payment calculation");
+        assertEq(expectedDaoDeployerRevenue, 986301369863013680, "DAO/Deployer revenue calculation");
+        assertEq(expectedInterestToDistribute, 3945205479452054720, "Interest to distribute calculation");
+
+        // Verify shares were minted correctly.
+        // Since it's the first borrow, shares should be 1:1 with assets.
+        // We multiply by 1e3 to account for decimals offset in the silo.
+        assertEq(IERC20(collateralShareToken).balanceOf(_firm), expectedInterestToDistribute * 1e3, "FIRM should receive collateral shares");
+        assertEq(IERC20(debtShareToken).balanceOf(_borrower), expectedInterestPayment, "Borrower should receive debt shares");
     }
 
     function _mockFixedIRMCalls() internal {
+        _mockFixedIRMCalls(1e18); // Default to 100% APR for backward compatibility
+    }
+
+    function _mockFixedIRMCalls(uint256 _interestRate) internal {
         bytes memory inputAccrueInterest = abi.encodeWithSelector(IFixedInterestRateModel.accrueInterest.selector);
 
         vm.mockCall(address(_firm), inputAccrueInterest, abi.encode(true));
@@ -407,7 +616,7 @@ contract FIRMHookUnitTest is Test {
             block.timestamp
         );
 
-        vm.mockCall(address(_firm), inputGetCurrentInterestRate, abi.encode(1e18));
+        vm.mockCall(address(_firm), inputGetCurrentInterestRate, abi.encode(_interestRate));
         vm.expectCall(address(_firm), inputGetCurrentInterestRate);
 
         bytes memory inputGetCompoundInterestRate = abi.encodeWithSelector(
@@ -421,14 +630,20 @@ contract FIRMHookUnitTest is Test {
     }
 
     function _silo1Config() internal returns (ISiloConfig.ConfigData memory) {
+        address collateralShareToken = address(new SiloShareTokenMock());
+        address debtShareToken = address(new SiloShareTokenMock());
+
+        vm.label(collateralShareToken, "collateralShareToken");
+        vm.label(debtShareToken, "debtShareToken");
+
         return ISiloConfig.ConfigData({
             daoFee: 0.1e18,
             deployerFee: 0.1e18,
             silo: address(_silo1),
             token: _token1,
             protectedShareToken: _firm,
-            collateralShareToken: address(new SiloShareTokenMock()),
-            debtShareToken: address(new SiloShareTokenMock()),
+            collateralShareToken: collateralShareToken,
+            debtShareToken: debtShareToken,
             solvencyOracle: address(0),
             maxLtvOracle: address(0),
             interestRateModel: _firm,
@@ -443,14 +658,20 @@ contract FIRMHookUnitTest is Test {
     }
 
     function _silo0Config() internal returns (ISiloConfig.ConfigData memory) {
+        address collateralShareToken = address(new SiloShareTokenMock());
+        address debtShareToken = address(new SiloShareTokenMock());
+
+        vm.label(collateralShareToken, "collateralShareToken");
+        vm.label(debtShareToken, "debtShareToken");
+
         return ISiloConfig.ConfigData({
             daoFee: 0.1e18,
             deployerFee: 0.1e18,
             silo: address(_silo0),
             token: _token0,
             protectedShareToken: _firm,
-            collateralShareToken: address(new SiloShareTokenMock()),
-            debtShareToken: address(new SiloShareTokenMock()),
+            collateralShareToken: collateralShareToken,
+            debtShareToken: debtShareToken,
             solvencyOracle: address(0),
             maxLtvOracle: address(0),
             interestRateModel: _firm,
@@ -464,6 +685,51 @@ contract FIRMHookUnitTest is Test {
         });
     }
 
+    function _systemSetupWithConfigs(
+        ISiloConfig.ConfigData memory _silo0ConfigData,
+        ISiloConfig.ConfigData memory _silo1ConfigData
+    ) internal {
+        _hook = FIRMHook(Clones.clone(address(new FIRMHook())));
+
+        _silo0 = Silo(payable(Clones.clone(address(new Silo(ISiloFactory(_siloFactory))))));
+        _silo1 = Silo(payable(Clones.clone(address(new Silo(ISiloFactory(_siloFactory))))));
+
+        _silo0ConfigData.silo = address(_silo0);
+        _silo1ConfigData.silo = address(_silo1);
+
+        _mockSynchronizeHooks(_silo0ConfigData.debtShareToken);
+        _mockSynchronizeHooks(_silo0ConfigData.protectedShareToken);
+        _mockSynchronizeHooks(_silo1ConfigData.debtShareToken);
+        _mockSynchronizeHooks(_silo1ConfigData.protectedShareToken);
+
+        _silo0ConfigData.hookReceiver = address(_hook);
+        _silo1ConfigData.hookReceiver = address(_hook);
+
+        _siloConfig = new SiloConfig(1, _silo0ConfigData, _silo1ConfigData);
+
+        _silo0.initialize(_siloConfig);
+        _silo1.initialize(_siloConfig);
+
+        _hook.initialize(_siloConfig, abi.encode(_owner, _firmVault, _maturityDate));
+    }
+
+    function _mockSynchronizeHooks(address _shareToken) internal {
+        bytes memory input = abi.encodeWithSelector(IShareToken.synchronizeHooks.selector);
+
+        vm.mockCall(address(_shareToken), input, abi.encode(true));
+        vm.expectCall(address(_shareToken), input);
+    }
+
+    function _getBorrowInput(uint256 _borrowAmount) internal view returns (bytes memory input) {
+        input = abi.encodePacked(
+            _borrowAmount,
+            _borrowAmount, // shares (1:1 initially)
+            _borrower,
+            _borrower,
+            _borrower
+        );
+    }
+
     function _getAfterTokenTransferInput(address _recipient) internal pure returns (bytes memory input) {
         input = abi.encodePacked(
             address(0),
@@ -473,12 +739,5 @@ contract FIRMHookUnitTest is Test {
             uint256(1e18),
             uint256(1e18)
         );
-    }
-
-    function _mockSynchronizeHooks(address _shareToken) internal {
-        bytes memory input = abi.encodeWithSelector(IShareToken.synchronizeHooks.selector);
-
-        vm.mockCall(address(_shareToken), input, abi.encode(true));
-        vm.expectCall(address(_shareToken), input);
     }
 }
