@@ -1,18 +1,18 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {ERC4626Upgradeable, IERC4626, ERC20Upgradeable, IERC20} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
-import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
-import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {Whitelist} from "./modules/Whitelist.sol";
 
-import {XSiloManagement, INotificationReceiver} from "./modules/XSiloManagement.sol";
-import {XRedeemPolicy} from "./modules/XRedeemPolicy.sol";
-import {Stream, IStream} from "./modules/Stream.sol";
+import {ISilo} from "../interfaces/ISilo.sol";
+import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 
 interface IRM {
     function pendingAccrueInterest(uint256 _blockTimestamp) external view returns (uint256 interest);
+    function accrueInterest() external;
 }
 
 /*
@@ -30,7 +30,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
     using SafeERC20 for IERC20;
 
     ISilo firmSilo;
-    IInterestRateModel interestRateModel;
+    IRM interestRateModel;
 
     error ZeroShares();
     error ZeroAssets();
@@ -53,7 +53,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         _;
     }
 
-    constructor() Whitelist(address0xdead) {
+    constructor() Whitelist(address(0xdead)) {
         // lock ownership for implementation
         _transferOwnership(address(0));
         firmSilo = ISilo(address(0xdead));
@@ -65,11 +65,11 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         require(_initialOwner != address(0), OwnerZero()); // TODO allow for immutable?
 
         firmSilo = _firmSilo;
-        interestRateModel = _firmSilo.config().getConfig(_firmSilo).interestRateModel;
+        interestRateModel = IRM(_firmSilo.config().getConfig(address(_firmSilo)).interestRateModel);
 
         _transferOwnership(_initialOwner);
 
-        __ERC4626_init(firmSilo.asset());
+        __ERC4626_init(IERC20(firmSilo.asset()));
 
         string memory siloId = Strings.toString(firmSilo.config().SILO_ID());
 
@@ -121,11 +121,11 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         assets = super.redeem(_shares, _receiver, _owner);
     }
 
-    /// @inheritdoc ERC20
+    /// @inheritdoc ERC20Upgradeable
     function transfer(address _to, uint256 _value) 
         public 
         virtual 
-        override(ERC20, IERC20) 
+        override(ERC20Upgradeable, IERC20) 
         accrueInterest // TODO do we have to accrue on transfer?
         onlyWhitelisted(_to)
         returns (bool) 
@@ -133,11 +133,11 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         return super.transfer(_to, _value);
     }
 
-    /// @inheritdoc ERC20
+    /// @inheritdoc ERC20Upgradeable
     function transferFrom(address _from, address _to, uint256 _value)
         public
         virtual
-        override(ERC20, IERC20)
+        override(ERC20Upgradeable, IERC20)
         accrueInterest 
         onlyWhitelisted(_to)
         returns (bool)
@@ -167,7 +167,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
 
         super._deposit(_caller, _receiver, _assets, _shares);
 
-        asset().forceApprove(address(firmSilo), _assets);
+        IERC20(asset()).forceApprove(address(firmSilo), _assets);
         firmSilo.deposit(_assets, address(this));
     }
 
@@ -184,7 +184,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         require(_sharesToBurn != 0, ZeroShares());
         require(_assetsToTransfer != 0, ZeroAssets());
 
-        firmSilo.withdraw(_assetsToTransfer, address(this));
+        firmSilo.withdraw(_assetsToTransfer, address(this), address(this));
         super._withdraw(_caller, _receiver, _owner, _assetsToTransfer, _sharesToBurn);
     }
 

@@ -1,9 +1,11 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Ownable1and2Step} from "common/utils/Ownable1and2Step.sol";
+import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 
-contract Whitelist is Ownable1and2Step {
+// TODO we could also use roles instead of whitelist, but we still need `whitelistEnabled` logic,
+// so idk if it would be beneficial
+abstract contract Whitelist is Ownable1and2Steps {
     bool public whitelistEnabled;
 
     mapping(address account => bool isWhitelisted) public isWhitelisted;
@@ -17,13 +19,13 @@ contract Whitelist is Ownable1and2Step {
 
     modifier onlyWhitelisted(address _account) {
         if (whitelistEnabled) {
-            require(isWhitelisted(_account), NotWhitelisted());
+            require(isWhitelisted[_account], NotWhitelisted());
         }
 
         _;
     }
 
-    constructor(address _initialOwner) Ownable1and2Step(_initialOwner) {}
+    constructor(address _initialOwner) Ownable1and2Steps(_initialOwner) {}
 
     function setWhitelisted(address _account, bool _isWhitelisted) external onlyOwner {
         require(isWhitelisted[_account] != _isWhitelisted, WhitelistDidNotChanged());
