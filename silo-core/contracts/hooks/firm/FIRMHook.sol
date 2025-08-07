@@ -68,12 +68,12 @@ contract FIRMHook is
 
     /// @inheritdoc IFIRMHook
     function maturityDate() external view returns (uint256 maturity) {
-        maturity = FIRMHookStorage.get().maturityDate;
+        maturity = FIRMHookStorage.maturityDate();
     }
 
     /// @inheritdoc IFIRMHook
     function firm() external view returns (address firmAddress) {
-        firmAddress = FIRMHookStorage.get().firm;
+        firmAddress = FIRMHookStorage.firm();
     }
 
     /// @inheritdoc IFIRMHook
@@ -107,7 +107,7 @@ contract FIRMHook is
         override
     {
         if (_action.matchAction(Hook.DEPOSIT)) {
-            require(FIRMHookStorage.get().maturityDate >= block.timestamp, MaturityDateReached());
+            require(FIRMHookStorage.maturityDate() >= block.timestamp, MaturityDateReached());
         }
 
         (, address silo1) = siloConfig.getSilos();
@@ -139,8 +139,8 @@ contract FIRMHook is
         if (_silo == silo1 && _action.matchAction(collateralTokenTransferAction)) {
             Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 
-            address firmVaultAddr = FIRMHookStorage.get().firmVault;
-            address firmAddr = FIRMHookStorage.get().firm;
+            address firmVaultAddr = FIRMHookStorage.firmVault();
+            address firmAddr = FIRMHookStorage.firm();
 
             require(
                 input.recipient == firmVaultAddr || input.recipient == firmAddr,
@@ -205,10 +205,10 @@ contract FIRMHook is
     /// @notice Before borrow action for `Silo1`
     /// @param _inputAndOutput input of the borrow action (see `Hook.BeforeBorrowInput`)
     function _beforeBorrowAction(ISilo _silo1, bytes calldata _inputAndOutput) internal {
-        uint64 maturity = FIRMHookStorage.get().maturityDate;
+        uint64 maturity = FIRMHookStorage.maturityDate();
         require(maturity >= block.timestamp, MaturityDateReached());
 
-        IFixedInterestRateModel fixedIRM = IFixedInterestRateModel(FIRMHookStorage.get().firm);
+        IFixedInterestRateModel fixedIRM = IFixedInterestRateModel(FIRMHookStorage.firm());
 
         fixedIRM.accrueInterest();
 
