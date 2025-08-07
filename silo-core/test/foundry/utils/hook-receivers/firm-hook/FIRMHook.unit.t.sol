@@ -220,6 +220,18 @@ contract FIRMHookUnitTest is Test {
     }
 
     /**
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_afterTokenTransfer_recipientZero_doesNotRevert -vv
+     */
+    function test_firmHook_afterTokenTransfer_recipientZero_doesNotRevert() public {
+        uint256 collateralTokenTransferAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
+
+        bytes memory input = _getAfterTokenTransferInput(address(0));
+
+        vm.prank(address(_silo1));
+        _hook.afterAction(address(_silo1), collateralTokenTransferAction, input);
+    }
+
+    /**
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_afterAction_firmVault_recipient_doesNotRevert -vv
      */
     function test_firmHook_afterAction_firmVault_recipient_doesNotRevert() public {

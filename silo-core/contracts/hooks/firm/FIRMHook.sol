@@ -78,7 +78,7 @@ contract FIRMHook is
 
     /// @inheritdoc IFIRMHook
     function firmVault() external view returns (address firmVaultAddress) {
-        firmVaultAddress = FIRMHookStorage.get().firmVault;
+        firmVaultAddress = FIRMHookStorage.firmVault();
     }
 
     /// @inheritdoc IHookReceiver
@@ -139,11 +139,10 @@ contract FIRMHook is
         if (_silo == silo1 && _action.matchAction(collateralTokenTransferAction)) {
             Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 
-            address firmVaultAddr = FIRMHookStorage.firmVault();
-            address firmAddr = FIRMHookStorage.firm();
-
             require(
-                input.recipient == firmVaultAddr || input.recipient == firmAddr,
+                input.recipient == address(0) || // allow to burn collateral shares
+                input.recipient == FIRMHookStorage.firmVault() ||
+                input.recipient == FIRMHookStorage.firm(),
                 OnlyFIRMVaultOrFirmCanReceiveCollateral()
             );
         }
@@ -245,7 +244,7 @@ contract FIRMHook is
         });
     }
 
-        /// @notice Get the dao and deployer revenue
+    /// @notice Get the dao and deployer revenue
     /// @param _silo address of the silo
     /// @param _interestPayment amount of interest payment
     /// @return daoAndDeployerRevenue amount of dao and deployer revenue
