@@ -32,6 +32,8 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
     ISilo firmSilo;
     IRM interestRateModel;
 
+    event Initialized(address indexed _initialOwner, ISilo indexed _firmSilo);
+
     error ZeroShares();
     error ZeroAssets();
     error SelfTransferNotAllowed();
@@ -65,6 +67,8 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
 
         firmSilo = _firmSilo;
         interestRateModel = IRM(_firmSilo.config().getConfig(address(_firmSilo)).interestRateModel);
+
+        emit Initialized(_initialOwner, _firmSilo);
 
         __Whitelist_init(_initialOwner);
 
