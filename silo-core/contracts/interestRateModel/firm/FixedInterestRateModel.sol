@@ -31,6 +31,7 @@ contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
     function initialize(address _irmConfig) external initializer virtual {
         require(_irmConfig != address(0), ZeroConfig());
         irmConfig = IFixedInterestRateModelConfig(_irmConfig);
+        lastUpdateTimestamp = block.timestamp;
         emit Initialized(_irmConfig);
     }
 
@@ -43,6 +44,8 @@ contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
         virtual
         returns (uint256 rcomp)
     {
+        IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
+        require(config.silo == msg.sender, OnlySilo());
         accrueInterest();
         return 0;
     }

@@ -18,6 +18,7 @@ interface IFixedInterestRateModel is IInterestRateModel {
     error ZeroConfig();
     /// @dev Reverts when functions are called for invalid silo address.
     error InvalidSilo();
+    error OnlySilo();
 
     function accrueInterest() external returns (uint256 interest);
     function accrueInterestView(uint256 _blockTimestamp) external view returns (uint256 interest);
