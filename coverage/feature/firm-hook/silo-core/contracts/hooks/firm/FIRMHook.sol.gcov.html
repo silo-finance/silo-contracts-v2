@@ -1,0 +1,338 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - contracts/hooks/firm/FIRMHook.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory contracts/hooks/firm">contracts/hooks/firm</a> - FIRMHook.sol<span style="font-size: 80%;"> (source / <a href="FIRMHook.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">88</td>
+            <td class="headerCovTableEntry">88</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-08-07 09:37:32</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">11</td>
+          </tr>
+                  <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: GPL-2.0-or-later</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity 0.8.28;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {GaugeHookReceiver} from &quot;silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {PartialLiquidation} from &quot;silo-core/contracts/hooks/liquidation/PartialLiquidation.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {BaseHookReceiver} from &quot;silo-core/contracts/hooks/_common/BaseHookReceiver.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : import {IHookReceiver} from &quot;silo-core/contracts/interfaces/IHookReceiver.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : import {ISiloConfig} from &quot;silo-core/contracts/interfaces/ISiloConfig.sol&quot;;</span>
+<span id="L9"><span class="lineNum">       9</span>              : import {ISilo} from &quot;silo-core/contracts/interfaces/ISilo.sol&quot;;</span>
+<span id="L10"><span class="lineNum">      10</span>              : import {IFIRMHook} from &quot;silo-core/contracts/interfaces/IFIRMHook.sol&quot;;</span>
+<span id="L11"><span class="lineNum">      11</span>              : import {SiloStorageLib} from &quot;silo-core/contracts/lib/SiloStorageLib.sol&quot;;</span>
+<span id="L12"><span class="lineNum">      12</span>              : import {ShareTokenLib} from &quot;silo-core/contracts/lib/ShareTokenLib.sol&quot;;</span>
+<span id="L13"><span class="lineNum">      13</span>              : import {IShareToken} from &quot;silo-core/contracts/interfaces/IShareToken.sol&quot;;</span>
+<span id="L14"><span class="lineNum">      14</span>              : import {Hook} from &quot;silo-core/contracts/lib/Hook.sol&quot;;</span>
+<span id="L15"><span class="lineNum">      15</span>              : import {FIRMHookStorage} from &quot;silo-core/contracts/hooks/firm/FIRMHookStorage.sol&quot;;</span>
+<span id="L16"><span class="lineNum">      16</span>              : </span>
+<span id="L17"><span class="lineNum">      17</span>              : import {</span>
+<span id="L18"><span class="lineNum">      18</span>              :     Silo0ProtectedSilo1CollateralOnly</span>
+<span id="L19"><span class="lineNum">      19</span>              : } from &quot;silo-core/contracts/hooks/_common/Silo0ProtectedSilo1CollateralOnly.sol&quot;;</span>
+<span id="L20"><span class="lineNum">      20</span>              : </span>
+<span id="L21"><span class="lineNum">      21</span>              : import {</span>
+<span id="L22"><span class="lineNum">      22</span>              :     IFixedInterestRateModel</span>
+<span id="L23"><span class="lineNum">      23</span>              : } from &quot;silo-core/contracts/interestRateModel/fixedInterestRateModel/interfaces/IFixedInterestRateModel.sol&quot;;</span>
+<span id="L24"><span class="lineNum">      24</span>              : </span>
+<span id="L25"><span class="lineNum">      25</span>              : /// @title Fixed Interest Rate Model Hook</span>
+<span id="L26"><span class="lineNum">      26</span>              : /// @dev We assume that `Silo0` is always a collateral silo, and `Silo1` is always the silo from which users borrow.</span>
+<span id="L27"><span class="lineNum">      27</span>              : /// And this is guaranteed by `Silo0ProtectedSilo1CollateralOnly` hook.</span>
+<span id="L28"><span class="lineNum">      28</span>              : /// `FIRMHook` supports the following actions:</span>
+<span id="L29"><span class="lineNum">      29</span>              : /// - before deposit for `Silo0` and `Silo1` (verifies maturity date)</span>
+<span id="L30"><span class="lineNum">      30</span>              : /// - before borrow same asset for `Silo1` (not allowed)</span>
+<span id="L31"><span class="lineNum">      31</span>              : /// - before borrow for `Silo1` (executes FIRM logic see `_beforeBorrowAction`)</span>
+<span id="L32"><span class="lineNum">      32</span>              : /// - after token transfer for `Silo0` and `Silo1` (verifies recipient)</span>
+<span id="L33"><span class="lineNum">      33</span>              : /// - after token transfer for `Silo0` (allows only protected token deposits/transfers)</span>
+<span id="L34"><span class="lineNum">      34</span>              : /// - after token transfer for `Silo1` (allows only collateral token deposits/transfers)</span>
+<span id="L35"><span class="lineNum">      35</span>              : contract FIRMHook is</span>
+<span id="L36"><span class="lineNum">      36</span>              :     IFIRMHook,</span>
+<span id="L37"><span class="lineNum">      37</span>              :     GaugeHookReceiver,</span>
+<span id="L38"><span class="lineNum">      38</span>              :     PartialLiquidation,</span>
+<span id="L39"><span class="lineNum">      39</span>              :     Silo0ProtectedSilo1CollateralOnly</span>
+<span id="L40"><span class="lineNum">      40</span>              : {</span>
+<span id="L41"><span class="lineNum">      41</span>              :     using Hook for uint256;</span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span>              :     /// @inheritdoc IFIRMHook</span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC tlaBgGNC">           6 :     function mintSharesAndUpdateSiloState(</span></span>
+<span id="L45"><span class="lineNum">      45</span>              :         uint256 _debtShares,</span>
+<span id="L46"><span class="lineNum">      46</span>              :         uint256 _collateralShares,</span>
+<span id="L47"><span class="lineNum">      47</span>              :         address _borrower,</span>
+<span id="L48"><span class="lineNum">      48</span>              :         uint256 _interestToDistribute,</span>
+<span id="L49"><span class="lineNum">      49</span>              :         uint256 _interestPayment,</span>
+<span id="L50"><span class="lineNum">      50</span>              :         uint192 _daoAndDeployerRevenue,</span>
+<span id="L51"><span class="lineNum">      51</span>              :         address _firm</span>
+<span id="L52"><span class="lineNum">      52</span>              :     ) external {</span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">           6 :         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();</span></span>
+<span id="L54"><span class="lineNum">      54</span>              : </span>
+<span id="L55"><span class="lineNum">      55</span>              :         // Update Silo state</span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">           6 :         $.totalAssets[ISilo.AssetType.Collateral] += _interestToDistribute;</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">           6 :         $.totalAssets[ISilo.AssetType.Debt] += _interestPayment;</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">           6 :         $.daoAndDeployerRevenue += _daoAndDeployerRevenue;</span></span>
+<span id="L59"><span class="lineNum">      59</span>              : </span>
+<span id="L60"><span class="lineNum">      60</span>              :         // Mint shares</span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC">           6 :         ISiloConfig config = ShareTokenLib.getShareTokenStorage().siloConfig;</span></span>
+<span id="L62"><span class="lineNum">      62</span>              : </span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">           6 :         (, address collateral, address debt) = config.getShareTokens(address(this));</span></span>
+<span id="L64"><span class="lineNum">      64</span>              : </span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">           5 :         IShareToken(debt).mint(_borrower, _borrower, _debtShares);</span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">           5 :         IShareToken(collateral).mint(_firm, _firm, _collateralShares);</span></span>
+<span id="L67"><span class="lineNum">      67</span>              :     }</span>
+<span id="L68"><span class="lineNum">      68</span>              : </span>
+<span id="L69"><span class="lineNum">      69</span>              :     /// @inheritdoc IFIRMHook</span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">           1 :     function maturityDate() external view returns (uint256 maturity) {</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">           1 :         maturity = FIRMHookStorage.maturityDate();</span></span>
+<span id="L72"><span class="lineNum">      72</span>              :     }</span>
+<span id="L73"><span class="lineNum">      73</span>              : </span>
+<span id="L74"><span class="lineNum">      74</span>              :     /// @inheritdoc IFIRMHook</span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">           1 :     function firm() external view returns (address firmAddress) {</span></span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">           1 :         firmAddress = FIRMHookStorage.firm();</span></span>
+<span id="L77"><span class="lineNum">      77</span>              :     }</span>
+<span id="L78"><span class="lineNum">      78</span>              : </span>
+<span id="L79"><span class="lineNum">      79</span>              :     /// @inheritdoc IFIRMHook</span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">           1 :     function firmVault() external view returns (address firmVaultAddress) {</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">           1 :         firmVaultAddress = FIRMHookStorage.firmVault();</span></span>
+<span id="L82"><span class="lineNum">      82</span>              :     }</span>
+<span id="L83"><span class="lineNum">      83</span>              : </span>
+<span id="L84"><span class="lineNum">      84</span>              :     /// @inheritdoc IHookReceiver</span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">          33 :     function initialize(ISiloConfig _config, bytes calldata _data)</span></span>
+<span id="L86"><span class="lineNum">      86</span>              :         public</span>
+<span id="L87"><span class="lineNum">      87</span>              :         initializer</span>
+<span id="L88"><span class="lineNum">      88</span>              :         virtual</span>
+<span id="L89"><span class="lineNum">      89</span>              :     {</span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">          32 :         address owner;</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">          32 :         address siloFirmVault;</span></span>
+<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC">          32 :         uint256 siloMaturityDate;</span></span>
+<span id="L93"><span class="lineNum">      93</span>              : </span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">          32 :         (owner, siloFirmVault, siloMaturityDate) = abi.decode(_data, (address, address, uint256));</span></span>
+<span id="L95"><span class="lineNum">      95</span>              : </span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaGNC">          32 :         BaseHookReceiver.__BaseHookReceiver_init(_config);</span></span>
+<span id="L97"><span class="lineNum">      97</span> <span class="tlaGNC">          32 :         GaugeHookReceiver.__GaugeHookReceiver_init(owner);</span></span>
+<span id="L98"><span class="lineNum">      98</span> <span class="tlaGNC">          32 :         FIRMHook.__FIRMHook_init(siloMaturityDate, siloFirmVault);</span></span>
+<span id="L99"><span class="lineNum">      99</span> <span class="tlaGNC">          29 :         Silo0ProtectedSilo1CollateralOnly.__Silo0ProtectedSilo1CollateralOnly_init();</span></span>
+<span id="L100"><span class="lineNum">     100</span>              :     }</span>
+<span id="L101"><span class="lineNum">     101</span>              : </span>
+<span id="L102"><span class="lineNum">     102</span>              :     /// @inheritdoc IHookReceiver</span>
+<span id="L103"><span class="lineNum">     103</span> <span class="tlaGNC">          12 :     function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)</span></span>
+<span id="L104"><span class="lineNum">     104</span>              :         public</span>
+<span id="L105"><span class="lineNum">     105</span>              :         virtual</span>
+<span id="L106"><span class="lineNum">     106</span>              :         onlySilo()</span>
+<span id="L107"><span class="lineNum">     107</span>              :         override</span>
+<span id="L108"><span class="lineNum">     108</span>              :     {</span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">          12 :         if (_action.matchAction(Hook.DEPOSIT)) {</span></span>
+<span id="L110"><span class="lineNum">     110</span> <span class="tlaGNC">           3 :             require(FIRMHookStorage.maturityDate() &gt;= block.timestamp, MaturityDateReached());</span></span>
+<span id="L111"><span class="lineNum">     111</span>              :         }</span>
+<span id="L112"><span class="lineNum">     112</span>              : </span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">          10 :         (, address silo1) = siloConfig.getSilos();</span></span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">          10 :         if (_silo != silo1) return;</span></span>
+<span id="L115"><span class="lineNum">     115</span>              : </span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">           7 :         require(!_action.matchAction(Hook.BORROW_SAME_ASSET), BorrowSameAssetNotAllowed());</span></span>
+<span id="L117"><span class="lineNum">     117</span>              : </span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">           6 :         if (_action.matchAction(Hook.BORROW)) {</span></span>
+<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">           6 :             _beforeBorrowAction(ISilo(silo1), _inputAndOutput);</span></span>
+<span id="L120"><span class="lineNum">     120</span>              :         }</span>
+<span id="L121"><span class="lineNum">     121</span>              :     }</span>
+<span id="L122"><span class="lineNum">     122</span>              : </span>
+<span id="L123"><span class="lineNum">     123</span>              :     /// @inheritdoc IHookReceiver</span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">         269 :     function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)</span></span>
+<span id="L125"><span class="lineNum">     125</span>              :         public</span>
+<span id="L126"><span class="lineNum">     126</span>              :         virtual</span>
+<span id="L127"><span class="lineNum">     127</span>              :         onlySiloOrShareToken()</span>
+<span id="L128"><span class="lineNum">     128</span>              :         override(</span>
+<span id="L129"><span class="lineNum">     129</span>              :             GaugeHookReceiver,</span>
+<span id="L130"><span class="lineNum">     130</span>              :             Silo0ProtectedSilo1CollateralOnly,</span>
+<span id="L131"><span class="lineNum">     131</span>              :             IHookReceiver</span>
+<span id="L132"><span class="lineNum">     132</span>              :         )</span>
+<span id="L133"><span class="lineNum">     133</span>              :     {</span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">         268 :         Silo0ProtectedSilo1CollateralOnly.afterAction(_silo, _action, _inputAndOutput);</span></span>
+<span id="L135"><span class="lineNum">     135</span>              : </span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">         265 :         (,address silo1) = siloConfig.getSilos();</span></span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">         265 :         uint256 collateralTokenTransferAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);</span></span>
+<span id="L138"><span class="lineNum">     138</span>              : </span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaGNC">         265 :         if (_silo == silo1 &amp;&amp; _action.matchAction(collateralTokenTransferAction)) {</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">           9 :             Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);</span></span>
+<span id="L141"><span class="lineNum">     141</span>              : </span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">           9 :             require(</span></span>
+<span id="L143"><span class="lineNum">     143</span>              :                 input.recipient == address(0) || // allow to burn collateral shares</span>
+<span id="L144"><span class="lineNum">     144</span>              :                 input.recipient == FIRMHookStorage.firmVault() ||</span>
+<span id="L145"><span class="lineNum">     145</span>              :                 input.recipient == FIRMHookStorage.firm(),</span>
+<span id="L146"><span class="lineNum">     146</span>              :                 OnlyFIRMVaultOrFirmCanReceiveCollateral()</span>
+<span id="L147"><span class="lineNum">     147</span>              :             );</span>
+<span id="L148"><span class="lineNum">     148</span>              :         }</span>
+<span id="L149"><span class="lineNum">     149</span>              :     }</span>
+<span id="L150"><span class="lineNum">     150</span>              : </span>
+<span id="L151"><span class="lineNum">     151</span>              :     /// @notice Initialize the FIRM hook</span>
+<span id="L152"><span class="lineNum">     152</span>              :     /// @param _maturityDate maturity date of the FIRM</span>
+<span id="L153"><span class="lineNum">     153</span>              :     /// @param _firmVault vault address for the firm market</span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">          32 :     function __FIRMHook_init(uint256 _maturityDate, address _firmVault) internal {</span></span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">          32 :         require(_maturityDate &gt; block.timestamp &amp;&amp; _maturityDate &lt; type(uint64).max, InvalidMaturityDate());</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC">          30 :         require(_firmVault != address(0), EmptyFirmVault());</span></span>
+<span id="L157"><span class="lineNum">     157</span>              : </span>
+<span id="L158"><span class="lineNum">     158</span> <span class="tlaGNC">          29 :         (address silo0, address silo1) = siloConfig.getSilos();</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">          29 :         ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(silo1);</span></span>
+<span id="L160"><span class="lineNum">     160</span>              : </span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">          29 :         FIRMHookStorage.FIRMHookStorageData storage $ = FIRMHookStorage.get();</span></span>
+<span id="L162"><span class="lineNum">     162</span>              : </span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">          29 :         $.maturityDate = uint64(_maturityDate);</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">          29 :         $.firmVault = _firmVault;</span></span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaGNC">          29 :         $.firm = silo1Config.interestRateModel;</span></span>
+<span id="L166"><span class="lineNum">     166</span>              : </span>
+<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">          29 :         _configureHooks(silo0, silo1);</span></span>
+<span id="L168"><span class="lineNum">     168</span>              :     }</span>
+<span id="L169"><span class="lineNum">     169</span>              : </span>
+<span id="L170"><span class="lineNum">     170</span>              :     /// @notice Configure the hooks for the FIRM hook</span>
+<span id="L171"><span class="lineNum">     171</span>              :     /// silo0: after token transfer, before protected deposit</span>
+<span id="L172"><span class="lineNum">     172</span>              :     /// silo1: after token transfer, before borrow, before borrow same asset, before collateral deposit</span>
+<span id="L173"><span class="lineNum">     173</span> <span class="tlaGNC">          29 :     function _configureHooks(address _silo0, address _silo1) internal {</span></span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">          29 :         uint256 protectedTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);</span></span>
+<span id="L175"><span class="lineNum">     175</span> <span class="tlaGNC">          29 :         uint256 collateralTransferAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);</span></span>
+<span id="L176"><span class="lineNum">     176</span>              : </span>
+<span id="L177"><span class="lineNum">     177</span>              :         // Silo0 hooks configuration</span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">          29 :         uint256 hooksAfter0 = _getHooksAfter(_silo0);</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaGNC">          29 :         hooksAfter0 = hooksAfter0.addAction(protectedTransferAction);</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">          29 :         hooksAfter0 = hooksAfter0.addAction(collateralTransferAction);</span></span>
+<span id="L181"><span class="lineNum">     181</span>              : </span>
+<span id="L182"><span class="lineNum">     182</span> <span class="tlaGNC">          29 :         uint256 hooksBefore0 = _getHooksBefore(_silo0);</span></span>
+<span id="L183"><span class="lineNum">     183</span>              : </span>
+<span id="L184"><span class="lineNum">     184</span> <span class="tlaGNC">          29 :         uint256 depositActionProtected = Hook.depositAction(ISilo.CollateralType.Protected);</span></span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaGNC">          29 :         hooksBefore0 = hooksBefore0.addAction(depositActionProtected);</span></span>
+<span id="L186"><span class="lineNum">     186</span>              : </span>
+<span id="L187"><span class="lineNum">     187</span> <span class="tlaGNC">          29 :         _setHookConfig(_silo0, uint24(hooksBefore0), uint24(hooksAfter0));</span></span>
+<span id="L188"><span class="lineNum">     188</span>              : </span>
+<span id="L189"><span class="lineNum">     189</span>              :         // Silo1 hooks configuration</span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaGNC">          29 :         uint256 hooksAfter1 = _getHooksAfter(_silo1);</span></span>
+<span id="L191"><span class="lineNum">     191</span> <span class="tlaGNC">          29 :         hooksAfter1 = hooksAfter1.addAction(protectedTransferAction);</span></span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaGNC">          29 :         hooksAfter1 = hooksAfter1.addAction(collateralTransferAction);</span></span>
+<span id="L193"><span class="lineNum">     193</span>              : </span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">          29 :         uint256 hooksBefore1 = _getHooksBefore(_silo1);</span></span>
+<span id="L195"><span class="lineNum">     195</span> <span class="tlaGNC">          29 :         hooksBefore1 = hooksBefore1.addAction(Hook.BORROW);</span></span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaGNC">          29 :         hooksBefore1 = hooksBefore1.addAction(Hook.BORROW_SAME_ASSET);</span></span>
+<span id="L197"><span class="lineNum">     197</span>              : </span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">          29 :         uint256 depositActionCollateral = Hook.depositAction(ISilo.CollateralType.Collateral);</span></span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaGNC">          29 :         hooksBefore1 = hooksBefore1.addAction(depositActionCollateral);</span></span>
+<span id="L200"><span class="lineNum">     200</span>              : </span>
+<span id="L201"><span class="lineNum">     201</span> <span class="tlaGNC">          29 :         _setHookConfig(_silo1, uint24(hooksBefore1), uint24(hooksAfter1));</span></span>
+<span id="L202"><span class="lineNum">     202</span>              :     }</span>
+<span id="L203"><span class="lineNum">     203</span>              : </span>
+<span id="L204"><span class="lineNum">     204</span>              :     /// @notice Before borrow action for `Silo1`</span>
+<span id="L205"><span class="lineNum">     205</span>              :     /// @param _inputAndOutput input of the borrow action (see `Hook.BeforeBorrowInput`)</span>
+<span id="L206"><span class="lineNum">     206</span> <span class="tlaGNC">           6 :     function _beforeBorrowAction(ISilo _silo1, bytes calldata _inputAndOutput) internal {</span></span>
+<span id="L207"><span class="lineNum">     207</span> <span class="tlaGNC">           6 :         uint64 maturity = FIRMHookStorage.maturityDate();</span></span>
+<span id="L208"><span class="lineNum">     208</span> <span class="tlaGNC">           6 :         require(maturity &gt;= block.timestamp, MaturityDateReached());</span></span>
+<span id="L209"><span class="lineNum">     209</span>              : </span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaGNC">           5 :         IFixedInterestRateModel fixedIRM = IFixedInterestRateModel(FIRMHookStorage.firm());</span></span>
+<span id="L211"><span class="lineNum">     211</span>              : </span>
+<span id="L212"><span class="lineNum">     212</span> <span class="tlaGNC">           5 :         fixedIRM.accrueInterest();</span></span>
+<span id="L213"><span class="lineNum">     213</span>              : </span>
+<span id="L214"><span class="lineNum">     214</span> <span class="tlaGNC">           5 :         Hook.BeforeBorrowInput memory borrowInput = Hook.beforeBorrowDecode(_inputAndOutput);</span></span>
+<span id="L215"><span class="lineNum">     215</span>              : </span>
+<span id="L216"><span class="lineNum">     216</span> <span class="tlaGNC">           5 :         uint256 interestTimeDelta = maturity - block.timestamp;</span></span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaGNC">           5 :         uint256 rcur = fixedIRM.getCurrentInterestRate(address(_silo1), block.timestamp);</span></span>
+<span id="L218"><span class="lineNum">     218</span> <span class="tlaGNC">           5 :         uint256 effectiveInterestRate = rcur * interestTimeDelta / 365 days;</span></span>
+<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC">           5 :         uint256 interestPayment = borrowInput.assets * effectiveInterestRate / 1e18;</span></span>
+<span id="L220"><span class="lineNum">     220</span>              : </span>
+<span id="L221"><span class="lineNum">     221</span>              :         // Minimal interest is 10 wei to ensure an attacker can not round down interest to 0.</span>
+<span id="L222"><span class="lineNum">     222</span> <span class="tlaGNC">           5 :         if (interestPayment &lt; 10) interestPayment = 10;</span></span>
+<span id="L223"><span class="lineNum">     223</span>              : </span>
+<span id="L224"><span class="lineNum">     224</span> <span class="tlaGNC">           5 :         uint192 daoAndDeployerRevenue = _getDaoAndDeployerRevenue(address(_silo1), interestPayment);</span></span>
+<span id="L225"><span class="lineNum">     225</span> <span class="tlaGNC">           5 :         uint256 interestToDistribute = interestPayment - daoAndDeployerRevenue;</span></span>
+<span id="L226"><span class="lineNum">     226</span>              : </span>
+<span id="L227"><span class="lineNum">     227</span>              :         // Call `mintSharesAndUpdateSiloState` to mint shares and update silo state</span>
+<span id="L228"><span class="lineNum">     228</span> <span class="tlaGNC">           5 :         bytes memory input = abi.encodeWithSelector(</span></span>
+<span id="L229"><span class="lineNum">     229</span>              :             this.mintSharesAndUpdateSiloState.selector,</span>
+<span id="L230"><span class="lineNum">     230</span>              :             _silo1.convertToShares(interestPayment, ISilo.AssetType.Debt),</span>
+<span id="L231"><span class="lineNum">     231</span>              :             _silo1.convertToShares(interestToDistribute, ISilo.AssetType.Collateral),</span>
+<span id="L232"><span class="lineNum">     232</span>              :             borrowInput.borrower,</span>
+<span id="L233"><span class="lineNum">     233</span>              :             interestToDistribute,</span>
+<span id="L234"><span class="lineNum">     234</span>              :             interestPayment,</span>
+<span id="L235"><span class="lineNum">     235</span>              :             daoAndDeployerRevenue,</span>
+<span id="L236"><span class="lineNum">     236</span>              :             fixedIRM</span>
+<span id="L237"><span class="lineNum">     237</span>              :         );</span>
+<span id="L238"><span class="lineNum">     238</span>              : </span>
+<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">           5 :         _silo1.callOnBehalfOfSilo({</span></span>
+<span id="L240"><span class="lineNum">     240</span>              :             _target: address(this),</span>
+<span id="L241"><span class="lineNum">     241</span>              :             _value: 0,</span>
+<span id="L242"><span class="lineNum">     242</span>              :             _callType: ISilo.CallType.Delegatecall,</span>
+<span id="L243"><span class="lineNum">     243</span>              :             _input: input</span>
+<span id="L244"><span class="lineNum">     244</span>              :         });</span>
+<span id="L245"><span class="lineNum">     245</span>              :     }</span>
+<span id="L246"><span class="lineNum">     246</span>              : </span>
+<span id="L247"><span class="lineNum">     247</span>              :     /// @notice Get the dao and deployer revenue</span>
+<span id="L248"><span class="lineNum">     248</span>              :     /// @param _silo address of the silo</span>
+<span id="L249"><span class="lineNum">     249</span>              :     /// @param _interestPayment amount of interest payment</span>
+<span id="L250"><span class="lineNum">     250</span>              :     /// @return daoAndDeployerRevenue amount of dao and deployer revenue</span>
+<span id="L251"><span class="lineNum">     251</span> <span class="tlaGNC">           5 :     function _getDaoAndDeployerRevenue(address _silo, uint256 _interestPayment)</span></span>
+<span id="L252"><span class="lineNum">     252</span>              :         internal</span>
+<span id="L253"><span class="lineNum">     253</span>              :         view</span>
+<span id="L254"><span class="lineNum">     254</span>              :         returns (uint192 daoAndDeployerRevenue)</span>
+<span id="L255"><span class="lineNum">     255</span>              :     {</span>
+<span id="L256"><span class="lineNum">     256</span> <span class="tlaGNC">           5 :         (uint256 daoFee, uint256 deployerFee,,) = siloConfig.getFeesWithAsset(_silo);</span></span>
+<span id="L257"><span class="lineNum">     257</span> <span class="tlaGNC">           5 :         uint256 fees = daoFee + deployerFee;</span></span>
+<span id="L258"><span class="lineNum">     258</span>              : </span>
+<span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">           5 :         daoAndDeployerRevenue = uint192(_interestPayment * fees / 1e18);</span></span>
+<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">           5 :         if (daoAndDeployerRevenue == 0) daoAndDeployerRevenue = 1;</span></span>
+<span id="L261"><span class="lineNum">     261</span>              :     }</span>
+<span id="L262"><span class="lineNum">     262</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
