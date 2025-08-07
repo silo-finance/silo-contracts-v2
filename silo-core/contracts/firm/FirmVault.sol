@@ -36,15 +36,19 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
     error ZeroAssets();
     error SelfTransferNotAllowed();
     error ZeroTransfer();
+    error OwnerZero();
     error AddressZero();
     error AlreadyInitialized();
 
-    /// @dev This is a transient variable to avoid double accrual of interest.
-    bool public transient txAccrued;
 
     modifier accrueInterest() {
-        uint256 interest = txAccrued ? 0 : interestRateModel.accrueInterest();
-        txAccrued = true;
+        /*
+        without depositors there is no need to accrue interest, 
+        it is also expected, that for this period interest will be cumulating
+        */
+        if (totalSupply() != 0) {
+            interestRateModel.accrueInterest();
+        }
 
         _;
     }
@@ -55,12 +59,15 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         firmSilo = ISilo(address(0xdead));
     }
 
-    function initialize(ISilo _firmSilo) external {
+    function initialize(address _initialOwner, ISilo _firmSilo) external {
         require(address(firmSilo) == address(0), AlreadyInitialized());
         require(address(_firmSilo) != address(0), AddressZero());
+        require(_initialOwner != address(0), OwnerZero()); // TODO allow for immutable?
 
         firmSilo = _firmSilo;
         interestRateModel = _firmSilo.config().getConfig(_firmSilo).interestRateModel;
+
+        _transferOwnership(_initialOwner);
 
         __ERC4626_init(firmSilo.asset());
 
@@ -146,7 +153,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
             return 0;
         }
 
-        uint256 pendingInterest = txAccrued ? 0 : interestRateModel.pendingAccrueInterest(block.timestamp);
+        uint256 pendingInterest = interestRateModel.pendingAccrueInterest(block.timestamp);
 
         total = firmSilo.maxWithdraw(address(this)) + pendingInterest;
     }
