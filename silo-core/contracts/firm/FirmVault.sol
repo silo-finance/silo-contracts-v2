@@ -60,7 +60,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         firmSilo = ISilo(address(0xdead));
     }
 
-    function initialize(address _initialOwner, ISilo _firmSilo) external {
+    function initialize(address _initialOwner, ISilo _firmSilo) external initializer {
         require(address(firmSilo) == address(0), AlreadyInitialized());
         require(address(_firmSilo) != address(0), AddressZero());
         require(_initialOwner != address(0), OwnerZero()); // TODO allow for immutable?
