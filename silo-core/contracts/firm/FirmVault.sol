@@ -49,7 +49,8 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         it is also expected, that for this period interest will be cumulating
         */
         if (totalSupply() != 0) {
-            interestRateModel.accrueInterest();
+            // TODO should we try-catch for accrueInterest?
+            // TODO until rebased, turn off, interestRateModel.accrueInterest();
         }
 
         _;
@@ -156,7 +157,9 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
             return 0;
         }
 
-        uint256 pendingInterest = interestRateModel.pendingAccrueInterest(block.timestamp);
+        // TODO should we try-catch for pendingAccrueInterest?
+
+        uint256 pendingInterest = 0; // TODO until IRM will be ready interestRateModel.pendingAccrueInterest(block.timestamp);
 
         total = firmSilo.maxWithdraw(address(this)) + pendingInterest;
     }

@@ -2,13 +2,14 @@
 pragma solidity ^0.8.28;
 
 import {ERC4626Test} from "a16z-erc4626-tests/ERC4626.test.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {FirmVaultFactory} from "silo-core/contracts/firm/FirmVaultFactory.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
- FOUNDRY_PROFILE=core_test forge test --ffi --mc FirmVaultERC4626ComplianceTest -vvv
+ FOUNDRY_PROFILE=core_test forge test --ffi --mc FirmVaultERC4626ComplianceTest --mt test_mint -vvv 
 */
 contract FirmVaultERC4626ComplianceTest is SiloLittleHelper, ERC4626Test {
     function setUp() public override {
