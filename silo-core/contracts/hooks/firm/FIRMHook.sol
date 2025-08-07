@@ -218,13 +218,13 @@ contract FIRMHook is
         uint256 effectiveInterestRate = rcur * interestTimeDelta / 365 days;
         uint256 interestPayment = borrowInput.assets * effectiveInterestRate / 1e18;
 
-        // minimal interest is 10 wei to make sure
-        // an attacker can not round down interest to 0.
+        // Minimal interest is 10 wei to ensure an attacker can not round down interest to 0.
         if (interestPayment < 10) interestPayment = 10;
 
         uint192 daoAndDeployerRevenue = _getDaoAndDeployerRevenue(address(_silo1), interestPayment);
         uint256 interestToDistribute = interestPayment - daoAndDeployerRevenue;
 
+        // Call `mintSharesAndUpdateSiloState` to mint shares and update silo state
         bytes memory input = abi.encodeWithSelector(
             this.mintSharesAndUpdateSiloState.selector,
             _silo1.convertToShares(interestPayment, ISilo.AssetType.Debt),
