@@ -53,9 +53,8 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         _;
     }
 
-    constructor() Whitelist(address(0xdead)) {
+    constructor() {
         // lock ownership for implementation
-        _transferOwnership(address(0));
         firmSilo = ISilo(address(0xdead));
     }
 
@@ -67,7 +66,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         firmSilo = _firmSilo;
         interestRateModel = IRM(_firmSilo.config().getConfig(address(_firmSilo)).interestRateModel);
 
-        _transferOwnership(_initialOwner);
+        __Whitelist_init(_initialOwner);
 
         __ERC4626_init(IERC20(firmSilo.asset()));
 

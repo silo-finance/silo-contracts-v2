@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
+import {AccessControlEnumerable} from "openzeppelin5/access/extensions/AccessControlEnumerable.sol";
+
+import {Ownable1and2StepsUpgradable} from "common/access/Ownable1and2StepsUpgradable.sol";
 
 // TODO we could also use roles instead of whitelist, but we still need `whitelistEnabled` logic,
 // so idk if it would be beneficial
-abstract contract Whitelist is Ownable1and2Steps {
+abstract contract Whitelist is Ownable1and2StepsUpgradable {
     bool public whitelistEnabled;
 
     mapping(address account => bool isWhitelisted) public isWhitelisted;
@@ -25,7 +27,9 @@ abstract contract Whitelist is Ownable1and2Steps {
         _;
     }
 
-    constructor(address _initialOwner) Ownable1and2Steps(_initialOwner) {}
+    constructor() {
+        _disableInitializers();
+    }
 
     function setWhitelisted(address _account, bool _isWhitelisted) external onlyOwner {
         require(isWhitelisted[_account] != _isWhitelisted, WhitelistDidNotChanged());
@@ -39,5 +43,10 @@ abstract contract Whitelist is Ownable1and2Steps {
 
         whitelistEnabled = _whitelistEnabled;
         emit WhitelistEnabled(_whitelistEnabled);
+    }
+
+    function __Whitelist_init(address _initialOwner) internal onlyInitializing {
+        __Ownable2Step_init();
+        _transferOwnership(_initialOwner);
     }
 }
