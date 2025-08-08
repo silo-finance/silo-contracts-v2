@@ -18,4 +18,12 @@ contract Create2Factory is Nonces {
             _externalSalt
         ));
     }
+
+    function _predictSalt(address _creator, bytes32 _externalSalt) internal view returns (bytes32 salt) {
+        salt = keccak256(abi.encodePacked(
+            _creator,
+            nonces(_creator),
+            _externalSalt
+        ));
+    }
 }
