@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/interfaces/IERC20.sol";
@@ -15,7 +14,7 @@ import {
 /// receives collateral share tokens from hook and transfers these tokens to FIRM vault on interest accrual.
 /// More details TODO link for repository docs.
 // TODO Natspec
-contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
+contract FixedInterestRateModel is IFixedInterestRateModel {
     using SafeERC20 for IERC20;
 
     uint256 public constant decimals = 18;
