@@ -17,7 +17,7 @@ import {
 contract FixedInterestRateModel is IFixedInterestRateModel {
     using SafeERC20 for IERC20;
 
-    uint256 public constant decimals = 18;
+    uint256 public constant decimals = 18; // solhint-disable-line const-name-snakecase
     uint256 public constant DP = 10 ** decimals;
     uint256 public constant RCUR_LIMIT = 2_500 * DP / 100; // 2,500% per year
 

@@ -27,5 +27,9 @@ interface IFixedInterestRateModel is IInterestRateModel {
     function getConfig() external view returns (InitConfig memory config);
     function pendingAccrueInterest(uint256 _blockTimestamp) external view returns (uint256 interest);
     function capInterest(uint256 _interest, uint256 _blockTimestamp) external view returns (uint256 cappedInterest);
-    function getCurrentInterestRateDepositor(address _silo, uint256 _blockTimestamp) external view returns (uint256 rcur);
+
+    function getCurrentInterestRateDepositor(
+        address _silo,
+        uint256 _blockTimestamp
+    ) external view returns (uint256 rcur);
 }
