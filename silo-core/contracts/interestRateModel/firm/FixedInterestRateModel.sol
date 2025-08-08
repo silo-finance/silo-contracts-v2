@@ -4,6 +4,11 @@ pragma solidity 0.8.28;
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/interfaces/IERC20.sol";
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
+
+import {
+    IFixedInterestRateModelConfig
+} from "silo-core/contracts/interestRateModel/firm/interfaces/IFixedInterestRateModelConfig.sol";
 
 import {
     IFixedInterestRateModel
@@ -14,34 +19,21 @@ import {
 /// receives collateral share tokens from hook and transfers these tokens to FIRM vault on interest accrual.
 /// More details TODO link for repository docs.
 // TODO Natspec
-contract FixedInterestRateModel is IFixedInterestRateModel {
+contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
     using SafeERC20 for IERC20;
 
     uint256 public constant decimals = 18; // solhint-disable-line const-name-snakecase
     uint256 public constant DP = 10 ** decimals;
 
-    // solhint-disable var-name-mixedcase
-    uint256 public immutable APR;
-    uint256 public immutable MATURITY_TIMESTAMP;
-    address public immutable FIRM_VAULT;
-    IERC20 public immutable SHARE_TOKEN;
-    address public immutable SILO;
-    // solhint-enable var-name-mixedcase
-
+    IFixedInterestRateModelConfig public irmConfig;
     uint256 public lastUpdateTimestamp;
 
-    constructor(InitConfig memory _config) {
-        APR = _config.apr;
-        MATURITY_TIMESTAMP = _config.maturityTimestamp;
-        FIRM_VAULT = _config.firmVault;
-        SHARE_TOKEN = _config.shareToken;
-        SILO = _config.silo;
-
+    function initialize(address _irmConfig) external initializer virtual {
+        require(_irmConfig != address(0), ZeroConfig());
+        irmConfig = IFixedInterestRateModelConfig(_irmConfig);
         lastUpdateTimestamp = block.timestamp;
+        emit Initialized(_irmConfig);
     }
-
-    /// @dev for compatibility with IInterestRateModel interface.
-    function initialize(address) external virtual {}
 
     function getCompoundInterestRateAndUpdate(
         uint256,
@@ -52,13 +44,13 @@ contract FixedInterestRateModel is IFixedInterestRateModel {
         virtual
         returns (uint256 rcomp)
     {
-        require(msg.sender == SILO, OnlySilo());
         accrueInterest();
         return 0;
     }
 
     function getCompoundInterestRate(address _silo, uint256) external view virtual returns (uint256 rcomp) {
-        require(_silo == SILO, InvalidSilo());
+        IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
+        require(_silo == config.silo, InvalidSilo());
         return 0;
     }
 
@@ -68,16 +60,17 @@ contract FixedInterestRateModel is IFixedInterestRateModel {
         virtual
         returns (uint256 rcur)
     {
-        require(_silo == SILO, InvalidSilo());
+        IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
+        require(_silo == config.silo, InvalidSilo());
 
-        uint256 distributeToTimestamp = Math.max(_blockTimestamp, MATURITY_TIMESTAMP);
+        uint256 distributeToTimestamp = Math.max(_blockTimestamp, config.maturityTimestamp);
         if (distributeToTimestamp <= lastUpdateTimestamp) return 0;
         uint256 interestTimeDelta = distributeToTimestamp - lastUpdateTimestamp;
 
-        uint256 vaultBalance = SHARE_TOKEN.balanceOf(FIRM_VAULT);
+        uint256 vaultBalance = config.shareToken.balanceOf(config.firmVault);
         if (vaultBalance == 0) return 0;
 
-        rcur = SHARE_TOKEN.balanceOf(address(this)) * DP * 365 days / (interestTimeDelta * vaultBalance);
+        rcur = config.shareToken.balanceOf(address(this)) * DP * 365 days / (interestTimeDelta * vaultBalance);
     }
 
     function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
@@ -86,37 +79,36 @@ contract FixedInterestRateModel is IFixedInterestRateModel {
         virtual
         returns (uint256 rcur)
     {
-        require(_silo == SILO, InvalidSilo());
-        return _blockTimestamp < MATURITY_TIMESTAMP ? APR : 0;
-    }
-
-    function getConfig() external view virtual returns (InitConfig memory config) {
-        config = InitConfig({
-            apr: APR,
-            maturityTimestamp: MATURITY_TIMESTAMP,
-            firmVault: FIRM_VAULT,
-            shareToken: SHARE_TOKEN,
-            silo: SILO
-        });
+        IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
+        require(_silo == config.silo, InvalidSilo());
+        return _blockTimestamp < config.maturityTimestamp ? config.apr : 0;
     }
 
     function accrueInterest() public virtual returns (uint256 interest) {
-        interest = pendingAccrueInterest(block.timestamp);
+        IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
+        interest = _pendingAccrueInterest(config, block.timestamp);
         lastUpdateTimestamp = block.timestamp;
-        if (interest > 0) SHARE_TOKEN.safeTransfer(FIRM_VAULT, interest);
+        if (interest > 0) config.shareToken.safeTransfer(config.firmVault, interest);
     }
 
     function pendingAccrueInterest(uint256 _blockTimestamp) public view virtual returns (uint256 interest) {
+        return _pendingAccrueInterest(irmConfig.getConfig(), _blockTimestamp);
+    }
+
+    function _pendingAccrueInterest(
+        IFixedInterestRateModel.Config memory _config,
+        uint256 _blockTimestamp
+    ) internal view virtual returns (uint256 interest) {
         if (_blockTimestamp <= lastUpdateTimestamp) return 0;
 
-        uint256 totalInterestToDistribute = SHARE_TOKEN.balanceOf(address(this));
+        uint256 totalInterestToDistribute = _config.shareToken.balanceOf(address(this));
         if (totalInterestToDistribute == 0) return 0;
 
-        if (_blockTimestamp >= MATURITY_TIMESTAMP) {
+        if (_blockTimestamp >= _config.maturityTimestamp) {
             interest = totalInterestToDistribute;
         } else {
             uint256 accruedInterestTimeDelta = _blockTimestamp - lastUpdateTimestamp;
-            uint256 interestTimeDelta = MATURITY_TIMESTAMP - lastUpdateTimestamp;
+            uint256 interestTimeDelta = _config.maturityTimestamp - lastUpdateTimestamp;
             interest = totalInterestToDistribute * accruedInterestTimeDelta / interestTimeDelta;
         }
     }

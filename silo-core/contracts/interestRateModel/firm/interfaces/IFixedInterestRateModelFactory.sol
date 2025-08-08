@@ -9,7 +9,7 @@ interface IFixedInterestRateModelFactory {
     event NewFixedInterestRateModel(IFixedInterestRateModel indexed irm);
 
     function create(
-        IFixedInterestRateModel.InitConfig calldata _config,
+        IFixedInterestRateModel.Config calldata _config,
         bytes32 _externalSalt
     ) external returns (IFixedInterestRateModel irm);
 
