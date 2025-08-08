@@ -43,19 +43,6 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
     error AlreadyInitialized();
 
 
-    modifier accrueInterest() {
-        /*
-        without depositors there is no need to accrue interest, 
-        it is also expected, that for this period interest will be cumulating
-        */
-        if (totalSupply() != 0) {
-            // TODO should we try-catch for accrueInterest?
-            // TODO until rebased, turn off, interestRateModel.accrueInterest();
-        }
-
-        _;
-    }
-
     constructor() {
         // lock ownership for implementation
         firmSilo = ISilo(address(0xdead));
@@ -83,7 +70,6 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         public 
         virtual 
         override 
-        accrueInterest 
         onlyWhitelisted(_receiver) 
         returns (uint256 shares) 
     {
@@ -94,41 +80,18 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
     function mint(uint256 _shares, address _receiver) public 
         virtual 
         override 
-        accrueInterest 
         onlyWhitelisted(_receiver) 
         returns (uint256 assets) 
     {
         assets = super.mint(_shares, _receiver);
     }
 
-    /// @inheritdoc IERC4626
-    function withdraw(uint256 _assets, address _receiver, address _owner)
-        public
-        virtual
-        override
-        accrueInterest
-        returns (uint256 shares)
-    {
-        shares = super.withdraw(_assets, _receiver, _owner);
-    }
-
-    /// @inheritdoc IERC4626
-    function redeem(uint256 _shares, address _receiver, address _owner)
-        public
-        virtual
-        override
-        accrueInterest
-        returns (uint256 assets)
-    {
-        assets = super.redeem(_shares, _receiver, _owner);
-    }
 
     /// @inheritdoc ERC20Upgradeable
     function transfer(address _to, uint256 _value) 
         public 
         virtual 
         override(ERC20Upgradeable, IERC20) 
-        accrueInterest // TODO do we have to accrue on transfer?
         onlyWhitelisted(_to)
         returns (bool) 
     {
@@ -140,7 +103,6 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         public
         virtual
         override(ERC20Upgradeable, IERC20)
-        accrueInterest 
         onlyWhitelisted(_to)
         returns (bool)
     {
