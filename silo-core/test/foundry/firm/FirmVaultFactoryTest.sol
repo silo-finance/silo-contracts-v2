@@ -23,10 +23,12 @@ contract FirmVaultFactoryTest is SiloLittleHelper, Test {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmFactory_predictAddress_fuzz -vvv 
     */
-    function test_firmFactory_predictAddress_fuzz(bytes32 _salt, address _deployer) public {
+    function test_firmFactory_predictAddress_fuzz(bytes32 _salt, address _deployer, bool _whichSilo) public {
 
         address predicted = factory.predictAddress(_salt, _deployer);
-        address actual = address(factory.create(_deployer, silo1, _salt));
+
+        vm.prank(_deployer);
+        address actual = address(factory.create(_deployer, _whichSilo ? silo1 : silo0, _salt));
 
         assertEq(predicted, actual, "expect predictAddress and create return the same address");
     }

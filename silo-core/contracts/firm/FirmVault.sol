@@ -10,20 +10,9 @@ import {Whitelist} from "./modules/Whitelist.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 
-interface IRM {
+interface IRM { // TODO replace with correct interface 
     function pendingAccrueInterest(uint256 _blockTimestamp) external view returns (uint256 interest);
 }
-
-/*
-FIRMVault (ERC-4626):
-
-Before deposit check if depositors whitelist is configured if so verify if the depositor is whitelisted.
-
-Claim rewards before any action.
-
-Handle the case when we have no shares and we have to claim rewards 
-(If we have an interest to distribute and total shares is 0 add interest to the deposit amount).
-*/
 
 contract FirmVault is ERC4626Upgradeable, Whitelist {
     using SafeERC20 for IERC20;
@@ -40,7 +29,6 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
     error OwnerZero();
     error AddressZero();
     error AlreadyInitialized();
-
 
     constructor() {
         // lock ownership for implementation
@@ -85,7 +73,6 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         assets = super.mint(_shares, _receiver);
     }
 
-
     /// @inheritdoc ERC20Upgradeable
     function transfer(address _to, uint256 _value) 
         public 
@@ -110,6 +97,8 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
 
     /// @inheritdoc IERC4626
     function totalAssets() public view virtual override returns (uint256 total) {
+        // TODO - change this to add deposit to first depostor 
+
         if (totalSupply() == 0) {
             // when vault is empty and everyone withdrew but there are still assets left, 
             // then reset totalAssets to 0 so the assets that remains goes to first depositor
