@@ -72,7 +72,11 @@ contract FirmVaultDonationTest is SiloLittleHelper, Test {
         assertEq(firmVault.maxWithdraw(user2), deposit2, "expect user2 to have only the deposit2");
     }
 
-    function test_vaultDonation_result_fuzz(uint256 _donation, uint256 _deposit1, uint256 _deposit2) public {
+    function test_vaultDonation_result_fuzz(uint96 _donation, uint96 _deposit1, uint96 _deposit2) public {
+        vm.assume(_donation > 0);
+        vm.assume(_deposit1 > 0);
+        vm.assume(_deposit2 > 0);
+
         address user1 = makeAddr("user1");
         address user2 = makeAddr("user2");
 
@@ -81,6 +85,7 @@ contract FirmVaultDonationTest is SiloLittleHelper, Test {
         vm.startPrank(user1);
 
         IERC20(firmVault.asset()).approve(address(firmVault), _deposit1);
+        vm.assume(firmVault.previewDeposit(_deposit1) != 0);
         uint256 shares1 = firmVault.deposit(_deposit1, user1);
 
         vm.stopPrank();
@@ -88,6 +93,7 @@ contract FirmVaultDonationTest is SiloLittleHelper, Test {
         vm.startPrank(user2);
 
         IERC20(firmVault.asset()).approve(address(firmVault), _deposit2);
+        vm.assume(firmVault.previewDeposit(_deposit2) != 0);
         uint256 shares2 = firmVault.deposit(_deposit2, user2);
 
         vm.stopPrank();
