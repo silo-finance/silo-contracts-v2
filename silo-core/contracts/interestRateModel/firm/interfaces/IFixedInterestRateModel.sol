@@ -17,16 +17,11 @@ interface IFixedInterestRateModel is IInterestRateModel {
     error ZeroConfig();
     /// @dev Reverts when functions are called for invalid silo address.
     error InvalidSilo();
-    /// @dev Reverts when deployed with APR higher than limit.
-    error InvalidAPR();
-    /// @dev Reverts when deployed with maturity timestamp in the past.
-    error InvalidMaturityTimestamp();
     error OnlySilo();
 
     function accrueInterest() external returns (uint256 interest);
     function getConfig() external view returns (InitConfig memory config);
     function pendingAccrueInterest(uint256 _blockTimestamp) external view returns (uint256 interest);
-    function capInterest(uint256 _interest, uint256 _blockTimestamp) external view returns (uint256 cappedInterest);
 
     function getCurrentInterestRateDepositor(
         address _silo,

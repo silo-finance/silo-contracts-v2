@@ -19,7 +19,6 @@ contract FixedInterestRateModel is IFixedInterestRateModel {
 
     uint256 public constant decimals = 18; // solhint-disable-line const-name-snakecase
     uint256 public constant DP = 10 ** decimals;
-    uint256 public constant RCUR_LIMIT = 2_500 * DP / 100; // 2,500% per year
 
     // solhint-disable var-name-mixedcase
     uint256 public immutable APR;
@@ -32,8 +31,6 @@ contract FixedInterestRateModel is IFixedInterestRateModel {
     uint256 public lastUpdateTimestamp;
 
     constructor(InitConfig memory _config) {
-        require(_config.apr < RCUR_LIMIT, InvalidAPR());
-        require(_config.maturityTimestamp > block.timestamp, InvalidMaturityTimestamp());
         APR = _config.apr;
         MATURITY_TIMESTAMP = _config.maturityTimestamp;
         FIRM_VAULT = _config.firmVault;
@@ -72,11 +69,15 @@ contract FixedInterestRateModel is IFixedInterestRateModel {
         returns (uint256 rcur)
     {
         require(_silo == SILO, InvalidSilo());
+
+        uint256 distributeToTimestamp = Math.max(_blockTimestamp, MATURITY_TIMESTAMP);
+        if (distributeToTimestamp <= lastUpdateTimestamp) return 0;
+        uint256 interestTimeDelta = distributeToTimestamp - lastUpdateTimestamp;
+
         uint256 vaultBalance = SHARE_TOKEN.balanceOf(FIRM_VAULT);
-        uint256 interestTimeDelta = Math.max(_blockTimestamp, MATURITY_TIMESTAMP) - lastUpdateTimestamp;
+        if (vaultBalance == 0) return 0;
 
         rcur = SHARE_TOKEN.balanceOf(address(this)) * DP * 365 days / (interestTimeDelta * vaultBalance);
-        rcur = Math.min(rcur, RCUR_LIMIT);
     }
 
     function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
@@ -101,13 +102,13 @@ contract FixedInterestRateModel is IFixedInterestRateModel {
 
     function accrueInterest() public virtual returns (uint256 interest) {
         interest = pendingAccrueInterest(block.timestamp);
-        // TODO 0 deposits in FIRM vault case
         lastUpdateTimestamp = block.timestamp;
         if (interest > 0) SHARE_TOKEN.safeTransfer(FIRM_VAULT, interest);
     }
 
     function pendingAccrueInterest(uint256 _blockTimestamp) public view virtual returns (uint256 interest) {
-        if (_blockTimestamp == lastUpdateTimestamp) return 0;
+        if (_blockTimestamp <= lastUpdateTimestamp) return 0;
+
         uint256 totalInterestToDistribute = SHARE_TOKEN.balanceOf(address(this));
         if (totalInterestToDistribute == 0) return 0;
 
@@ -118,14 +119,5 @@ contract FixedInterestRateModel is IFixedInterestRateModel {
             uint256 interestTimeDelta = MATURITY_TIMESTAMP - lastUpdateTimestamp;
             interest = totalInterestToDistribute * accruedInterestTimeDelta / interestTimeDelta;
         }
-
-        interest = capInterest(interest, _blockTimestamp);
-    }
-
-    function capInterest(uint256 _interest, uint256 _blockTimestamp) public view returns (uint256 cappedInterest) {
-        uint256 vaultBalance = SHARE_TOKEN.balanceOf(FIRM_VAULT);
-        uint256 accruedInterestTimeDelta = _blockTimestamp - lastUpdateTimestamp;
-        uint256 maxInterest = RCUR_LIMIT * vaultBalance * accruedInterestTimeDelta / (365 days * DP);
-        cappedInterest = Math.min(_interest, maxInterest);
     }
 }
