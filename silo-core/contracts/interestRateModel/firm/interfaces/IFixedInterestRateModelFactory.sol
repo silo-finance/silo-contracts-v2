@@ -7,6 +7,11 @@ import {
 
 interface IFixedInterestRateModelFactory {
     event NewFixedInterestRateModel(IFixedInterestRateModel indexed irm);
-    function create(IFixedInterestRateModel.Config calldata _config) external view returns (IInterestRateModel irm);
-    function verifyConfig(IFixedInterestRateModel.Config calldata _config) external view;
+
+    function create(
+        IFixedInterestRateModel.InitConfig calldata _config,
+        bytes32 _externalSalt
+    ) external returns (IFixedInterestRateModel irm);
+
+    function createdInFactory(address _irm) external view returns (bool);
 }
