@@ -18,14 +18,6 @@ contract FirmVaultFactory is Create2Factory, IFirmVaultFactory {
         IMPLEMENTATION = address(new FirmVault());
     }
 
-    function predictAddress(bytes32 _externalSalt, address _deployer)
-        external
-        view
-        returns (address firmVault)
-    {
-        firmVault = Clones.predictDeterministicAddress(IMPLEMENTATION, _predictSalt(_externalSalt), _deployer);
-    }
-
     /// @inheritdoc IFirmVaultFactory
     function create(address _initialOwner, ISilo _firmSilo, bytes32 _externalSalt)
         external
@@ -38,5 +30,13 @@ contract FirmVaultFactory is Create2Factory, IFirmVaultFactory {
         IFirmVault(address(firmVault)).initialize(_initialOwner, _firmSilo);
 
         emit NewFirmVault(firmVault);
+    }
+
+    function predictAddress(bytes32 _externalSalt, address _deployer)
+        external
+        view
+        returns (address firmVault)
+    {
+        firmVault = Clones.predictDeterministicAddress(IMPLEMENTATION, _predictSalt(_externalSalt), _deployer);
     }
 }

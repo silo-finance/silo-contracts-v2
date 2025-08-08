@@ -12,7 +12,6 @@ import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 
 interface IRM {
     function pendingAccrueInterest(uint256 _blockTimestamp) external view returns (uint256 interest);
-    function accrueInterest() external;
 }
 
 /*
@@ -29,8 +28,8 @@ Handle the case when we have no shares and we have to claim rewards
 contract FirmVault is ERC4626Upgradeable, Whitelist {
     using SafeERC20 for IERC20;
 
-    ISilo firmSilo;
-    IRM interestRateModel;
+    ISilo public firmSilo;
+    IRM public interestRateModel;
 
     event Initialized(address indexed _initialOwner, ISilo indexed _firmSilo);
 
@@ -119,7 +118,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
 
         // TODO should we try-catch for pendingAccrueInterest?
 
-        uint256 pendingInterest = 0; // TODO until IRM will be ready interestRateModel.pendingAccrueInterest(block.timestamp);
+        uint256 pendingInterest = interestRateModel.pendingAccrueInterest(block.timestamp);
 
         total = firmSilo.maxWithdraw(address(this)) + pendingInterest;
     }

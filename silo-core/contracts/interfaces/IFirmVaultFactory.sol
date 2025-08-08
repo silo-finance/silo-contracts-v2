@@ -7,11 +7,13 @@ import {ISilo} from "./ISilo.sol";
 
 interface IFirmVaultFactory {
     event NewFirmVault(IERC4626 firmVault);
-    
+
     /// @dev Creates a new firm vault
     /// @param _initialOwner The initial owner of the firm vault
     /// @param _firmSilo The firm silo to use for the firm vault
     /// @param _externalSalt A salt to use for the firm vault
     /// @return firmVault The new firm vault
-    function create(address _initialOwner, ISilo _firmSilo, bytes32 _externalSalt) external returns (IERC4626 firmVault);
+    function create(address _initialOwner, ISilo _firmSilo, bytes32 _externalSalt) 
+        external 
+        returns (IERC4626 firmVault);
 }

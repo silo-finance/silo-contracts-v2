@@ -45,6 +45,7 @@ abstract contract Whitelist is Ownable1and2StepsUpgradable {
         emit WhitelistEnabled(_whitelistEnabled);
     }
 
+    // solhint-disable-next-line func-name-mixedcase
     function __Whitelist_init(address _initialOwner) internal onlyInitializing {
         __Ownable2Step_init();
         _transferOwnership(_initialOwner);
