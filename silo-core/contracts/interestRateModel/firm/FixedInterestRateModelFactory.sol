@@ -36,6 +36,8 @@ contract FixedInterestRateModelFactory is Create2Factory, IFixedInterestRateMode
         virtual
         returns (IFixedInterestRateModel irm)
     {
+        require(_config.maturityTimestamp > block.timestamp, InvalidMaturityTimestamp());
+
         bytes32 salt = _salt(_externalSalt);
         address configContract = address(new FixedInterestRateModelConfig{salt: salt}(_config));
         irm = IFixedInterestRateModel(Clones.cloneDeterministic(address(IRM_IMPLEMENTATION), salt));
@@ -43,5 +45,23 @@ contract FixedInterestRateModelFactory is Create2Factory, IFixedInterestRateMode
         createdInFactory[address(irm)] = true;
 
         emit NewFixedInterestRateModel(irm);
+    }
+
+    function predictFixedInterestRateModelAddress(address _creator, bytes32 _externalSalt)
+        external
+        view
+        returns (address addr) 
+    {
+        bytes32 salt = keccak256(abi.encodePacked(
+            _creator,
+            nonces(_creator) + 1,
+            _externalSalt
+        ));
+
+        return Clones.predictDeterministicAddress({
+            implementation: address(IRM_IMPLEMENTATION),
+            salt: salt,
+            deployer: address(this)
+        });
     }
 }
