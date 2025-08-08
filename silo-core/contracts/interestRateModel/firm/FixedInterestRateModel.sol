@@ -45,13 +45,13 @@ contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
         returns (uint256 rcomp)
     {
         accrueInterest();
-        return 0;
+        rcomp = 0;
     }
 
     function getCompoundInterestRate(address _silo, uint256) external view virtual returns (uint256 rcomp) {
         IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
         require(_silo == config.silo, InvalidSilo());
-        return 0;
+        rcomp = 0;
     }
 
     function getCurrentInterestRateDepositor(address _silo, uint256 _blockTimestamp)
@@ -88,6 +88,10 @@ contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
         return DECIMALS;
     }
 
+    function getConfig() external view virtual returns (IFixedInterestRateModel.Config memory config) {
+        config = irmConfig.getConfig();
+    }
+
     function accrueInterest() public virtual returns (uint256 interest) {
         IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
         interest = _pendingAccrueInterest(config, block.timestamp);
@@ -96,7 +100,7 @@ contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
     }
 
     function pendingAccrueInterest(uint256 _blockTimestamp) public view virtual returns (uint256 interest) {
-        return _pendingAccrueInterest(irmConfig.getConfig(), _blockTimestamp);
+        interest = _pendingAccrueInterest(irmConfig.getConfig(), _blockTimestamp);
     }
 
     function _pendingAccrueInterest(
