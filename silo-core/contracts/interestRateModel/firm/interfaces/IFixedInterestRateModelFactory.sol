@@ -18,9 +18,8 @@ interface IFixedInterestRateModelFactory {
 
     /// @notice Predicts the address of the FixedInterestRateModel.
     /// @param _creator The creator address.
-    /// @param _nonce Nonce used for deployment.
     /// @param _externalSalt External salt.
-    function predictFixedInterestRateModelAddress(address _creator, uint256 _nonce, bytes32 _externalSalt)
+    function predictFixedInterestRateModelAddress(address _creator, bytes32 _externalSalt)
         external
         view
         returns (address addr);

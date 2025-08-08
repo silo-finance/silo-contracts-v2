@@ -46,14 +46,14 @@ contract FixedInterestRateModelFactory is Create2Factory, IFixedInterestRateMode
         emit NewFixedInterestRateModel(irm);
     }
 
-    function predictFixedInterestRateModelAddress(address _creator, uint256 _nonce, bytes32 _externalSalt)
+    function predictFixedInterestRateModelAddress(address _creator, bytes32 _externalSalt)
         external
         view
         returns (address addr) 
     {
         bytes32 salt = keccak256(abi.encodePacked(
             _creator,
-            _nonce,
+            nonces(_creator),
             _externalSalt
         ));
 

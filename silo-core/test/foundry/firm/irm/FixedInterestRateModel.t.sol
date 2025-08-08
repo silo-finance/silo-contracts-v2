@@ -37,8 +37,7 @@ contract FixedInterestRateModelTest is Test {
     }
 
     function test_FixedInterestRateModel_predictAddress() public {
-        address predicted =
-            factory.predictFixedInterestRateModelAddress(address(this), factory.nonces(address(this)), bytes32(0));
+        address predicted = factory.predictFixedInterestRateModelAddress(address(this), bytes32(0));
 
         irm = factory.create(
             config,
