@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {ERC4626Upgradeable, IERC4626, ERC20Upgradeable, IERC20} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
+import {
+    ERC4626Upgradeable,
+    IERC4626,
+    ERC20Upgradeable,
+    IERC20
+} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
@@ -12,7 +17,7 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IFirmVault} from "../interfaces/IFirmVault.sol";
 
-interface IRM { // TODO replace with correct interface 
+interface IRM { // TODO replace with correct interface
     function pendingAccrueInterest(uint256 _blockTimestamp) external view returns (uint256 interest);
 }
 
@@ -45,12 +50,12 @@ contract FirmVault is ERC4626Upgradeable, Whitelist, IFirmVault {
     }
 
     /// @inheritdoc IERC4626
-    function deposit(uint256 _assets, address _receiver) 
-        public 
-        virtual 
-        override 
-        onlyWhitelisted(_receiver) 
-        returns (uint256 shares) 
+    function deposit(uint256 _assets, address _receiver)
+        public
+        virtual
+        override
+        onlyWhitelisted(_receiver)
+        returns (uint256 shares)
     {
         _claimFreeShares(_receiver);
 
@@ -58,11 +63,12 @@ contract FirmVault is ERC4626Upgradeable, Whitelist, IFirmVault {
     }
 
     /// @inheritdoc IERC4626
-    function mint(uint256 _shares, address _receiver) public 
-        virtual 
-        override 
-        onlyWhitelisted(_receiver) 
-        returns (uint256 assets) 
+    function mint(uint256 _shares, address _receiver)
+        public
+        virtual
+        override
+        onlyWhitelisted(_receiver)
+        returns (uint256 assets)
     {
         _claimFreeShares(_receiver);
 
@@ -70,12 +76,12 @@ contract FirmVault is ERC4626Upgradeable, Whitelist, IFirmVault {
     }
 
     /// @inheritdoc ERC20Upgradeable
-    function transfer(address _to, uint256 _value) 
-        public 
-        virtual 
-        override(ERC20Upgradeable, IERC20) 
+    function transfer(address _to, uint256 _value)
+        public
+        virtual
+        override(ERC20Upgradeable, IERC20)
         onlyWhitelisted(_to)
-        returns (bool) 
+        returns (bool)
     {
         return super.transfer(_to, _value);
     }
@@ -93,10 +99,10 @@ contract FirmVault is ERC4626Upgradeable, Whitelist, IFirmVault {
 
     /// @inheritdoc IERC4626
     function totalAssets() public view virtual override returns (uint256 total) {
-        // TODO - change this to add deposit to first depostor 
+        // TODO - change this to add deposit to first depostor
 
         if (totalSupply() == 0) {
-            // when vault is empty and everyone withdrew but there are still assets left, 
+            // when vault is empty and everyone withdrew but there are still assets left,
             // then reset totalAssets to 0 so the assets that remains goes to first depositor
             return 0;
         }
@@ -124,7 +130,11 @@ contract FirmVault is ERC4626Upgradeable, Whitelist, IFirmVault {
     /**
      * @dev Deposit/mint common workflow.
      */
-    function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares) internal virtual override {
+    function _deposit(address _caller, address _receiver, uint256 _assets, uint256 _shares)
+        internal
+        virtual
+        override
+    {
         require(_shares != 0, ZeroShares());
         require(_assets != 0, ZeroAssets());
 
