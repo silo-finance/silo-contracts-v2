@@ -38,9 +38,8 @@ contract FixedInterestRateModelFactory is Create2Factory, IFixedInterestRateMode
     {
         require(_config.maturityTimestamp > block.timestamp, InvalidMaturityTimestamp());
 
-        bytes32 salt = _salt(_externalSalt);
-        address configContract = address(new FixedInterestRateModelConfig{salt: salt}(_config));
-        irm = IFixedInterestRateModel(Clones.cloneDeterministic(address(IRM_IMPLEMENTATION), salt));
+        irm = IFixedInterestRateModel(Clones.cloneDeterministic(address(IRM_IMPLEMENTATION), _salt(_externalSalt)));
+        address configContract = address(new FixedInterestRateModelConfig(_config));
         irm.initialize(configContract);
         createdInFactory[address(irm)] = true;
 
