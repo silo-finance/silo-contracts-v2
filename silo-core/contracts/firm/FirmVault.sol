@@ -10,27 +10,17 @@ import {Whitelist} from "./modules/Whitelist.sol";
 
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
+import {IFirmVault} from "../interfaces/IFirmVault.sol";
 
 interface IRM { // TODO replace with correct interface 
     function pendingAccrueInterest(uint256 _blockTimestamp) external view returns (uint256 interest);
 }
 
-contract FirmVault is ERC4626Upgradeable, Whitelist {
+contract FirmVault is ERC4626Upgradeable, Whitelist, IFirmVault {
     using SafeERC20 for IERC20;
 
     ISilo public firmSilo;
     IRM public interestRateModel;
-
-    event Initialized(address indexed _initialOwner, ISilo indexed _firmSilo);
-    event FreeShares(address indexed _receiver, uint256 _shares);
-
-    error ZeroShares();
-    error ZeroAssets();
-    error SelfTransferNotAllowed();
-    error ZeroTransfer();
-    error OwnerZero();
-    error AddressZero();
-    error AlreadyInitialized();
 
     constructor() {
         // lock ownership for implementation
@@ -118,7 +108,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         total = firmSilo.maxWithdraw(address(this)) + pendingInterest;
     }
 
-    function _claimFreeShares(address _receiver) internal virtual{
+    function _claimFreeShares(address _receiver) internal virtual {
         if (totalSupply() != 0) return;
 
         uint256 freeFirmAssets = firmSilo.maxWithdraw(address(this));

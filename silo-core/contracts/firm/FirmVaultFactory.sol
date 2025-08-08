@@ -35,6 +35,8 @@ contract FirmVaultFactory is Create2Factory, IFirmVaultFactory {
         view
         returns (address firmVault)
     {
-        firmVault = Clones.predictDeterministicAddress(IMPLEMENTATION, _createSalt(_externalSalt, _deployer), address(this));
+        require(_deployer != address(0), DeployerCannotBeZero());
+
+        firmVault = Clones.predictDeterministicAddress(IMPLEMENTATION, _createSalt(_externalSalt, _deployer));
     }
 }
