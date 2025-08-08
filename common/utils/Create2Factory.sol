@@ -4,6 +4,14 @@ pragma solidity 0.8.28;
 import {Nonces} from "openzeppelin5/utils/Nonces.sol";
 
 contract Create2Factory is Nonces {
+    function _predictSalt(bytes32 _externalSalt) internal view returns (bytes32 salt) {
+        salt = keccak256(abi.encodePacked(
+            msg.sender,
+            nonces(msg.sender),
+            _externalSalt
+        ));
+    }
+    
     function _salt() internal returns (bytes32 salt) {
         salt = keccak256(abi.encodePacked(
             msg.sender,

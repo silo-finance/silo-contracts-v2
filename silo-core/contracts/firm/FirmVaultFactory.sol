@@ -23,7 +23,7 @@ contract FirmVaultFactory is Create2Factory, IFirmVaultFactory {
         view
         returns (address firmVault)
     {
-        firmVault = Clones.predictDeterministicAddress(IMPLEMENTATION, _salt(_externalSalt), _deployer);
+        firmVault = Clones.predictDeterministicAddress(IMPLEMENTATION, _predictSalt(_externalSalt), _deployer);
     }
 
     /// @inheritdoc IFirmVaultFactory
