@@ -9,6 +9,10 @@ import {ISilo} from "../interfaces/ISilo.sol";
 import {ISiloRouterV2Implementation} from "../interfaces/ISiloRouterV2Implementation.sol";
 import {IWrappedNativeToken} from "../interfaces/IWrappedNativeToken.sol";
 import {IPendleWrapperLike} from "../interfaces/IPendleWrapperLike.sol";
+import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
+import {IPublicAllocatorBase} from "silo-vaults/contracts/interfaces/IPublicAllocator.sol";
+import {Withdrawal} from "silo-vaults/contracts/interfaces/IPublicAllocator.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 // solhint-disable ordering
 
@@ -248,5 +252,15 @@ contract SiloRouterV2Implementation is ISiloRouterV2Implementation {
         approve(IERC20(address(_native)), address(_silo), repayAmount);
 
         shares = repay(_silo, repayAmount);
+    }
+
+    /// @inheritdoc ISiloRouterV2Implementation
+    function reallocateTo(
+        IPublicAllocatorBase _publicAllocator,
+        ISiloVault _vault,
+        Withdrawal[] calldata _withdrawals,
+        IERC4626 _supplyMarket
+    ) external payable virtual {
+        _publicAllocator.reallocateTo(_vault, _withdrawals, _supplyMarket);
     }
 }

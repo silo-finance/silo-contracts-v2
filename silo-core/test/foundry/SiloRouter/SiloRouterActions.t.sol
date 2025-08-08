@@ -20,6 +20,10 @@ import {ISiloRouterV2Implementation} from "silo-core/contracts/interfaces/ISiloR
 import {IUserSiloRouter} from "silo-core/contracts/interfaces/IUserSiloRouter.sol";
 import {UserSiloRouterV2} from "silo-core/contracts/silo-router/UserSiloRouterV2.sol";
 import {ShareTokenDecimalsPowLib} from "../_common/ShareTokenDecimalsPowLib.sol";
+import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
+import {IPublicAllocatorBase} from "silo-vaults/contracts/interfaces/IPublicAllocator.sol";
+import {Withdrawal} from "silo-vaults/contracts/interfaces/IPublicAllocator.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 // solhint-disable function-max-lines
 
@@ -707,6 +711,33 @@ contract SiloRouterV2ActionsTest is IntegrationTest {
 
         assertEq(IERC20(token0).balanceOf(someAddress), _TOKEN0_AMOUNT, "Some address should have tokens");
         assertEq(IERC20(token0).balanceOf(userRouter), 0, "User router should not have tokens");
+    }
+
+    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_siloRouterV2_reallocateTo
+    function test_siloRouterV2_reallocateTo() public {
+        address publicAllocator = makeAddr("PublicAllocator");
+        address vault = makeAddr("Vault");
+        address supplyMarket = makeAddr("SupplyMarket");
+
+        bytes[] memory data = new bytes[](1);
+        data[0] = abi.encodeCall(SiloRouterV2Implementation.reallocateTo, (
+            IPublicAllocatorBase(publicAllocator),
+            ISiloVault(vault),
+            Withdrawal[](new Withdrawal[](0)),
+            IERC4626(supplyMarket))
+        );
+
+        bytes memory input = abi.encodeCall(IPublicAllocatorBase.reallocateTo, (
+            ISiloVault(vault),
+            Withdrawal[](new Withdrawal[](0)),
+            IERC4626(supplyMarket)
+        ));
+
+        vm.mockCall(address(publicAllocator), input, abi.encode(true));
+        vm.expectCall(address(publicAllocator), input);
+
+        vm.prank(depositor);
+        router.multicall(data);
     }
 
     /// @dev only to test reentrancy

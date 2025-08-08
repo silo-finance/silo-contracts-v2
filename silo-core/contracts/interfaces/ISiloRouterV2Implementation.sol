@@ -6,6 +6,10 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {ISilo} from "./ISilo.sol";
 import {IWrappedNativeToken} from "./IWrappedNativeToken.sol";
 import {IPendleWrapperLike} from "./IPendleWrapperLike.sol";
+import {ISiloVault} from "silo-vaults/contracts/interfaces/ISiloVault.sol";
+import {IPublicAllocatorBase} from "silo-vaults/contracts/interfaces/IPublicAllocator.sol";
+import {Withdrawal} from "silo-vaults/contracts/interfaces/IPublicAllocator.sol";
+import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 interface ISiloRouterV2Implementation {
     error OnlySiloRouter();
@@ -159,4 +163,16 @@ interface ISiloRouterV2Implementation {
     /// @param _native The address of the native token
     /// @param _silo The address of the silo
     function repayAllNative(IWrappedNativeToken _native, ISilo _silo) external payable returns (uint256 shares);
+
+    /// @notice Silo vault reallocate fn
+    /// @param _publicAllocator The address of the public allocator
+    /// @param _vault The address of the vault
+    /// @param _withdrawals The withdrawals
+    /// @param _supplyMarket The address of the supply market
+    function reallocateTo(
+        IPublicAllocatorBase _publicAllocator,
+        ISiloVault _vault,
+        Withdrawal[] calldata _withdrawals,
+        IERC4626 _supplyMarket
+    ) external payable;
 }
