@@ -9,6 +9,8 @@ import {FirmVaultFactory} from "silo-core/contracts/firm/FirmVaultFactory.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
+import {IRM} from "silo-core/contracts/firm/FirmVault.sol";
+
 /*
  FOUNDRY_PROFILE=core_test forge test --ffi --mc FirmVaultTest -vvv 
 */
@@ -25,12 +27,19 @@ contract FirmVaultTest is SiloLittleHelper, Test {
         firmVault = factory.create(address(this), silo1, bytes32(0));
 
         vm.label(address(firmVault), "firmVault");
+
+        // TODO remove this when we have real IRM 
+        vm.mockCall(
+            address(silo1.config().getConfig(address(silo1)).interestRateModel),
+            abi.encodeWithSelector(IRM.pendingAccrueInterest.selector, block.timestamp),
+            abi.encode(0)
+        );
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firm_happyPath -vvv 
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmVault_happyPath -vvv 
     */
-    function test_firm_happyPath() public {
+    function test_firmVault_happyPath() public {
         address user = makeAddr("user");
 
         firmVault.mint(100e18, user);
