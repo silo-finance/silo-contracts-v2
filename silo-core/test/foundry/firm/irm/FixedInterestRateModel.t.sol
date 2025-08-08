@@ -20,6 +20,8 @@ contract FixedInterestRateModelTest is Test {
     IFixedInterestRateModel irm;
     IFixedInterestRateModel.Config config;
 
+    event NewFixedInterestRateModel(IFixedInterestRateModel indexed irm);
+
     function setUp() public {
         factory = new FixedInterestRateModelFactory();
 
@@ -52,6 +54,16 @@ contract FixedInterestRateModelTest is Test {
     function test_FixedInterestRateModelFactory_createdInFactory() public view {
         assertTrue(factory.createdInFactory(address(irm)));
         assertTrue(!factory.createdInFactory(address(SHARE_TOKEN)));
+    }
+
+    function test_FixedInterestRateModelFactory_create_emitsEventWithPredictedAddress() public {
+        vm.expectEmit(true, true, true, true);
+
+        emit NewFixedInterestRateModel(
+            IFixedInterestRateModel(factory.predictFixedInterestRateModelAddress(address(this), bytes32(0)))
+        );
+
+        factory.create(config, bytes32(0));
     }
 
     function test_FixedInterestRateModelFactory_create_invalidMaturityTimestamp() public {
