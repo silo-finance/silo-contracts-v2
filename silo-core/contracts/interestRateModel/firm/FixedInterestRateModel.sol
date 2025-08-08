@@ -101,6 +101,7 @@ contract FixedInterestRateModel is IFixedInterestRateModel {
 
     function accrueInterest() public virtual returns (uint256 interest) {
         interest = pendingAccrueInterest(block.timestamp);
+        // TODO 0 deposits in FIRM vault case
         lastUpdateTimestamp = block.timestamp;
         if (interest > 0) SHARE_TOKEN.safeTransfer(FIRM_VAULT, interest);
     }
