@@ -75,9 +75,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
 
         __ERC4626_init(IERC20(firmSilo.asset()));
 
-        string memory siloId = Strings.toString(firmSilo.config().SILO_ID());
-
-        __ERC20_init(string.concat("FIRM Vault for Silo-", siloId), string.concat("FV4S-", siloId));
+        __ERC20_init("FIRM Vault for FirmSilo", "FIRMVault");
     }
 
     /// @inheritdoc IERC4626
