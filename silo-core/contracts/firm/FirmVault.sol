@@ -30,6 +30,8 @@ contract FirmVault is ERC4626Upgradeable, Whitelist, IFirmVault {
     constructor() {
         // lock ownership for implementation
         firmSilo = ISilo(address(0xdead));
+
+        _disableInitializers();
     }
 
     function initialize(address _initialOwner, ISilo _firmSilo) external initializer {
@@ -57,7 +59,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist, IFirmVault {
         onlyWhitelisted(_receiver)
         returns (uint256 shares)
     {
-        _claimFreeShares(_receiver);
+        _donateFreeShares(_receiver);
 
         shares = super.deposit(_assets, _receiver);
     }
@@ -70,7 +72,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist, IFirmVault {
         onlyWhitelisted(_receiver)
         returns (uint256 assets)
     {
-        _claimFreeShares(_receiver);
+        _donateFreeShares(_receiver);
 
         assets = super.mint(_shares, _receiver);
     }
@@ -99,11 +101,9 @@ contract FirmVault is ERC4626Upgradeable, Whitelist, IFirmVault {
 
     /// @inheritdoc IERC4626
     function totalAssets() public view virtual override returns (uint256 total) {
-        // TODO - change this to add deposit to first depostor
-
         if (totalSupply() == 0) {
             // when vault is empty and everyone withdrew but there are still assets left,
-            // then reset totalAssets to 0 so the assets that remains goes to first depositor
+            // then reset totalAssets to 0, this assets will be donated to first depositor
             return 0;
         }
 
@@ -114,7 +114,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist, IFirmVault {
         total = firmSilo.maxWithdraw(address(this)) + pendingInterest;
     }
 
-    function _claimFreeShares(address _receiver) internal virtual {
+    function _donateFreeShares(address _receiver) internal virtual {
         if (totalSupply() != 0) return;
 
         uint256 freeFirmAssets = firmSilo.maxWithdraw(address(this));

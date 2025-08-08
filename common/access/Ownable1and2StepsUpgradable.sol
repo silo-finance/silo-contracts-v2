@@ -8,9 +8,7 @@ abstract contract Ownable1and2StepsUpgradable is Ownable2StepUpgradeable {
     /// @notice Transfer ownership to a new address. Pending ownership transfer will be canceled.
     /// @param newOwner The new owner of the contract
     function transferOwnership1Step(address newOwner) public virtual onlyOwner {
-        if (newOwner == address(0)) {
-            revert OwnableInvalidOwner(address(0));
-        }
+        require(newOwner != address(0), OwnableInvalidOwner(address(0)));
 
         Ownable2StepUpgradeable._transferOwnership(newOwner);
     }
