@@ -100,12 +100,12 @@ contract FixedInterestRateModel is IFixedInterestRateModel {
     }
 
     function accrueInterest() public virtual returns (uint256 interest) {
-        interest = accrueInterestView(block.timestamp);
+        interest = pendingAccrueInterest(block.timestamp);
         lastUpdateTimestamp = block.timestamp;
         if (interest > 0) SHARE_TOKEN.safeTransfer(FIRM_VAULT, interest);
     }
 
-    function accrueInterestView(uint256 _blockTimestamp) public view virtual returns (uint256 interest) {
+    function pendingAccrueInterest(uint256 _blockTimestamp) public view virtual returns (uint256 interest) {
         if (_blockTimestamp == lastUpdateTimestamp) return 0;
         uint256 totalInterestToDistribute = SHARE_TOKEN.balanceOf(address(this));
         if (totalInterestToDistribute == 0) return 0;
