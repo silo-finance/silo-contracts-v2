@@ -22,8 +22,8 @@ import {
 contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
     using SafeERC20 for IERC20;
 
-    uint256 public constant decimals = 18; // solhint-disable-line const-name-snakecase
-    uint256 public constant DP = 10 ** decimals;
+    uint256 public constant DECIMALS = 18;
+    uint256 public constant DP = 10 ** DECIMALS;
 
     IFixedInterestRateModelConfig public irmConfig;
     uint256 public lastUpdateTimestamp;
@@ -82,6 +82,10 @@ contract FixedInterestRateModel is Initializable, IFixedInterestRateModel {
         IFixedInterestRateModel.Config memory config = irmConfig.getConfig();
         require(_silo == config.silo, InvalidSilo());
         return _blockTimestamp < config.maturityTimestamp ? config.apr : 0;
+    }
+
+    function decimals() external view virtual returns (uint256) {
+        return DECIMALS;
     }
 
     function accrueInterest() public virtual returns (uint256 interest) {
