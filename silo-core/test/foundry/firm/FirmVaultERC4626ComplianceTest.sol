@@ -2,11 +2,11 @@
 pragma solidity ^0.8.28;
 
 import {ERC4626Test} from "a16z-erc4626-tests/ERC4626.test.sol";
-import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {FirmVaultFactory} from "silo-core/contracts/firm/FirmVaultFactory.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
+import {IRM} from "silo-core/contracts/firm/FirmVault.sol";
 
 /*
  FOUNDRY_PROFILE=core_test forge test --ffi --mc FirmVaultERC4626ComplianceTest --mt test_mint -vvv 
@@ -25,5 +25,12 @@ contract FirmVaultERC4626ComplianceTest is SiloLittleHelper, ERC4626Test {
         _delta_ = 0;
         _vaultMayBeEmpty = true;
         _unlimitedAmount = true;
+
+        // TODO remove this when we have real IRM 
+        vm.mockCall(
+            address(silo1.config().getConfig(address(silo1)).interestRateModel),
+            abi.encodeWithSelector(IRM.pendingAccrueInterest.selector, block.timestamp),
+            abi.encode(0)
+        );
     }
 }
