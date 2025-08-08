@@ -24,9 +24,7 @@ contract FirmVaultFactory is Create2Factory, IFirmVaultFactory {
         virtual
         returns (IERC4626 firmVault)
     {
-        bytes32 salt = _salt(_externalSalt);
-
-        firmVault = IERC4626(Clones.cloneDeterministic(IMPLEMENTATION, salt));
+        firmVault = IERC4626(Clones.cloneDeterministic(IMPLEMENTATION, _salt(_externalSalt)));
         IFirmVault(address(firmVault)).initialize(_initialOwner, _firmSilo);
 
         emit NewFirmVault(firmVault);
@@ -37,6 +35,6 @@ contract FirmVaultFactory is Create2Factory, IFirmVaultFactory {
         view
         returns (address firmVault)
     {
-        firmVault = Clones.predictDeterministicAddress(IMPLEMENTATION, _predictSalt(_externalSalt), _deployer);
+        firmVault = Clones.predictDeterministicAddress(IMPLEMENTATION, _createSalt(_externalSalt, _deployer), address(this));
     }
 }
