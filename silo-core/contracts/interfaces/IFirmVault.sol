@@ -6,7 +6,8 @@ import {ISilo} from "./ISilo.sol";
 interface IFirmVault {
     event Initialized(address indexed _initialOwner, ISilo indexed _firmSilo);
 
-    /// @dev Emitted when free shares are claimed. It can happen when the vault is empty and there are still assets left.
+    /// @dev Emitted when free shares are claimed. 
+    /// It can happen when the vault is empty and there are still assets left.
     /// First depositor will be the one who recieve free shares.
     /// @param _receiver The receiver of the free shares
     /// @param _shares The number of free shares claimed
