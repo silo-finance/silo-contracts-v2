@@ -51,11 +51,9 @@ contract FixedInterestRateModelFactory is Create2Factory, IFixedInterestRateMode
         view
         returns (address addr) 
     {
-        bytes32 salt = _predictSalt(_creator, _externalSalt);
-
-        return Clones.predictDeterministicAddress({
+        addr = Clones.predictDeterministicAddress({
             implementation: address(IRM_IMPLEMENTATION),
-            salt: salt,
+            salt: _predictSalt(_creator, _externalSalt),
             deployer: address(this)
         });
     }
