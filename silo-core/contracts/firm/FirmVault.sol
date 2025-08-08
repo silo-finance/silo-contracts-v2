@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {ERC4626Upgradeable, IERC4626, ERC20Upgradeable, IERC20} from "openzeppelin5-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {Whitelist} from "./modules/Whitelist.sol";
 
@@ -21,6 +22,7 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
     IRM public interestRateModel;
 
     event Initialized(address indexed _initialOwner, ISilo indexed _firmSilo);
+    event FreeShares(address indexed _receiver, uint256 _shares);
 
     error ZeroShares();
     error ZeroAssets();
@@ -60,6 +62,8 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         onlyWhitelisted(_receiver) 
         returns (uint256 shares) 
     {
+        _claimFreeShares(_receiver);
+
         shares = super.deposit(_assets, _receiver);
     }
 
@@ -70,6 +74,8 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         onlyWhitelisted(_receiver) 
         returns (uint256 assets) 
     {
+        _claimFreeShares(_receiver);
+
         assets = super.mint(_shares, _receiver);
     }
 
@@ -110,6 +116,19 @@ contract FirmVault is ERC4626Upgradeable, Whitelist {
         uint256 pendingInterest = interestRateModel.pendingAccrueInterest(block.timestamp);
 
         total = firmSilo.maxWithdraw(address(this)) + pendingInterest;
+    }
+
+    function _claimFreeShares(address _receiver) internal virtual{
+        if (totalSupply() != 0) return;
+
+        uint256 freeFirmAssets = firmSilo.maxWithdraw(address(this));
+        if (freeFirmAssets == 0) return;
+
+        uint256 freeShares = _convertToShares(freeFirmAssets, Math.Rounding.Floor); // TODO check if this is correct
+        if (freeShares == 0) return;
+
+        _mint(_receiver, freeShares);
+        emit FreeShares(_receiver, freeShares);
     }
 
     /**
