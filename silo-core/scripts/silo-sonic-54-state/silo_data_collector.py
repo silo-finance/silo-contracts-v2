@@ -176,7 +176,6 @@ def call_contract_methods(silo0_contract: Any, silo1_contract: Any, silo_lens_co
         'user_address': user_address,
         'total_underlying_collateral': 0,
         'maxWithdraw_collateral': 0,
-        'missing_collateral': 0,
         'maxRepay': 0,
         'silo1_total_collateral': 0,
         'silo1_max_withdraw': 0,
@@ -208,8 +207,7 @@ def call_contract_methods(silo0_contract: Any, silo1_contract: Any, silo_lens_co
         except Exception as e:
             logger.warning(f"maxWithdraw (Collateral) error for {user_address}: {e}")
         
-        # Calculate missing collateral (total collateral - maxWithdraw_collateral)
-        results['missing_collateral'] = results['total_underlying_collateral'] - results['maxWithdraw_collateral']
+
         
         # Call getUserLTV (silo1)
         try:
@@ -250,6 +248,15 @@ def call_contract_methods(silo0_contract: Any, silo1_contract: Any, silo_lens_co
         except Exception as e:
             logger.warning(f"silo1 maxWithdraw error for {user_address}: {e}")
         
+        # Call maxRepay (silo0)
+        try:
+            silo0_max_repay = silo0_contract.functions.maxRepay(user_address).call(block_identifier=BLOCK_NUMBER)
+            results['silo0_maxRepay'] = handle_uint256(silo0_max_repay)
+        except ContractLogicError as e:
+            logger.warning(f"silo0 maxRepay failed for {user_address}: {e}")
+        except Exception as e:
+            logger.warning(f"silo0 maxRepay error for {user_address}: {e}")
+        
         logger.info(f"Processed user: {user_address}")
         return results
     
@@ -261,7 +268,7 @@ def save_to_csv(results: List[Dict[str, Any]], output_file: str, silo0_liquidity
     """Save results to CSV file."""
     try:
         with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
-            fieldnames = ['user_address', 'total_underlying_collateral', 'maxWithdraw_collateral', 'missing_collateral', 'maxRepay', 'silo1_total_collateral', 'silo1_max_withdraw', 'user_ltv']
+            fieldnames = ['user_address', 'total_underlying_collateral', 'maxWithdraw_collateral', 'maxRepay', 'silo1_total_collateral', 'silo1_max_withdraw', 'silo0_maxRepay', 'user_ltv']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             
             writer.writeheader()
@@ -271,10 +278,10 @@ def save_to_csv(results: List[Dict[str, Any]], output_file: str, silo0_liquidity
                 'user_address': f'silo0_liquidity:{silo0_liquidity},silo1_liquidity:{silo1_liquidity}',
                 'total_underlying_collateral': '',
                 'maxWithdraw_collateral': '',
-                'missing_collateral': '',
                 'maxRepay': '',
                 'silo1_total_collateral': '',
                 'silo1_max_withdraw': '',
+                'silo0_maxRepay': '',
                 'user_ltv': ''
             }
             writer.writerow(liquidity_row)
