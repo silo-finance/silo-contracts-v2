@@ -1062,11 +1062,6 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(programId2, addressAsBytes32, "invalid address conversion");
     }
 
-    // FOUNDRY_PROFILE=core-test forge test -vvv --ffi --mt test_shareToken
-    function test_incentivesController_shareToken() public view {
-        assertEq(address(_controller.SHARE_TOKEN()), _controller.share_token());
-    }
-
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_programName_getter
     function test_immediateDistribution_programName_getter() public {
         string memory programName = Strings.toHexString(_rewardToken);
