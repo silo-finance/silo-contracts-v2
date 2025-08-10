@@ -11,6 +11,7 @@ Environment variables required:
 Usage:
     python3 silo_data_collector.py <silo_address>
     python3 silo_data_collector.py 0xbE0D3c8801206CC9f35A6626f90ef9F4f2983A3D
+    python3 silo_data_collector.py 0x04f124bf435545a3c79a8ee3ffb6c51213cf5175
 
 """
 
@@ -34,7 +35,7 @@ COLLATERAL_TYPE = {
 }
 
 # Hardcoded block number
-BLOCK_NUMBER = 12345678  # Replace with actual block number
+BLOCK_NUMBER = 42282562  # Replace with actual block number
 
 
 
