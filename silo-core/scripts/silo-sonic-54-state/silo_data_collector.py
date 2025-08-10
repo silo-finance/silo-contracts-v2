@@ -9,9 +9,7 @@ Environment variables required:
 - RPC_SONIC: RPC endpoint URL
 
 Usage:
-    python3 silo_data_collector.py <silo_address>
-    python3 silo_data_collector.py 0xbE0D3c8801206CC9f35A6626f90ef9F4f2983A3D
-    python3 silo_data_collector.py 0x04f124bf435545a3c79a8ee3ffb6c51213cf5175
+    python3 silo_data_collector.py
 
 """
 
@@ -40,6 +38,10 @@ BLOCK_NUMBER = 42282562  # Replace with actual block number
 # Hardcoded SiloLens address
 SILO_LENS_ADDRESS = "0xB95AD415b0fcE49f84FbD5B26b14ec7cf4822c69"
 
+# Hardcoded Silo addresses
+SILO0_ADDRESS = "0x04f124bF435545a3c79A8EE3Ffb6C51213CF5175"
+SILO1_ADDRESS = "0xbE0D3c8801206CC9f35A6626f90ef9F4f2983A3D"
+
 
 
 def load_abi_from_file(abi_file_path: str) -> List[Dict]:
@@ -63,13 +65,10 @@ def load_abi_from_file(abi_file_path: str) -> List[Dict]:
         logger.error(f"Error loading ABI: {e}")
         sys.exit(1)
 
-def get_file_names(silo_address: str) -> tuple[str, str]:
-    """Generate input and output file names based on silo address."""
-    # Remove '0x' prefix and create file names
-    silo_short = silo_address[2:] if silo_address.startswith('0x') else silo_address
-    
-    input_file = f"silo_0x{silo_short}_users.json"
-    output_file = f"silo_0x{silo_short}_results.csv"
+def get_file_names() -> tuple[str, str]:
+    """Generate input and output file names."""
+    input_file = "users-54.json"
+    output_file = "silo-54-results.csv"
     
     return input_file, output_file
 
@@ -144,21 +143,35 @@ def get_silo_lens_contract(w3: Web3, silo_lens_abi: List[Dict]) -> Any:
         logger.error(f"Error initializing SiloLens contract: {e}")
         sys.exit(1)
 
-def call_contract_methods(contract: Any, silo_lens_contract: Any, user_address: str, w3: Web3) -> Dict[str, Any]:
-    """Call maxWithdraw, maxRepay, and collateralBalanceOfUnderlying methods for a user address."""
+def get_silo_liquidity(contract: Any, silo_name: str) -> int:
+    """Get liquidity from Silo contract."""
+    try:
+        liquidity = contract.functions.getLiquidity().call(block_identifier=BLOCK_NUMBER)
+        logger.info(f"{silo_name} liquidity: {liquidity}")
+        return liquidity
+    except ContractLogicError as e:
+        logger.warning(f"getLiquidity failed for {silo_name}: {e}")
+        return 0
+    except Exception as e:
+        logger.warning(f"getLiquidity error for {silo_name}: {e}")
+        return 0
+
+def call_contract_methods(silo0_contract: Any, silo1_contract: Any, silo_lens_contract: Any, user_address: str, w3: Web3) -> Dict[str, Any]:
+    """Call methods for a user address using silo0 for collateral and silo1 for maxRepay."""
     results = {
-        'silo_address': contract.address,
         'user_address': user_address,
         'total_underlying_collateral': 0,
         'maxWithdraw_protected': 0,
         'maxWithdraw_collateral': 0,
-        'maxRepay': 0
+        'user_ltv': 0,
+        'maxRepay': 0,
+        'debt_5percent': 0
     }
     
     try:
-        # Call maxWithdraw for Protected collateral type
+        # Call maxWithdraw for Protected collateral type (silo0)
         try:
-            max_withdraw_protected = contract.functions.maxWithdraw(
+            max_withdraw_protected = silo0_contract.functions.maxWithdraw(
                 user_address, 
                 COLLATERAL_TYPE["Protected"]
             ).call(block_identifier=BLOCK_NUMBER)
@@ -168,9 +181,9 @@ def call_contract_methods(contract: Any, silo_lens_contract: Any, user_address: 
         except Exception as e:
             logger.warning(f"maxWithdraw (Protected) error for {user_address}: {e}")
         
-        # Call maxWithdraw for Collateral type
+        # Call maxWithdraw for Collateral type (silo0)
         try:
-            max_withdraw_collateral = contract.functions.maxWithdraw(
+            max_withdraw_collateral = silo0_contract.functions.maxWithdraw(
                 user_address, 
                 COLLATERAL_TYPE["Collateral"]
             ).call(block_identifier=BLOCK_NUMBER)
@@ -180,19 +193,30 @@ def call_contract_methods(contract: Any, silo_lens_contract: Any, user_address: 
         except Exception as e:
             logger.warning(f"maxWithdraw (Collateral) error for {user_address}: {e}")
         
-        # Call maxRepay
+        # Call getUserLTV (silo1)
         try:
-            max_repay = contract.functions.maxRepay(user_address).call(block_identifier=BLOCK_NUMBER)
+            user_ltv = silo_lens_contract.functions.getUserLTV(silo1_contract.address, user_address).call(block_identifier=BLOCK_NUMBER)
+            results['user_ltv'] = user_ltv
+        except ContractLogicError as e:
+            logger.warning(f"getUserLTV failed for {user_address}: {e}")
+        except Exception as e:
+            logger.warning(f"getUserLTV error for {user_address}: {e}")
+        
+        # Call maxRepay (silo1)
+        try:
+            max_repay = silo1_contract.functions.maxRepay(user_address).call(block_identifier=BLOCK_NUMBER)
             results['maxRepay'] = max_repay
+            # Calculate 5% of maxRepay
+            results['debt_5percent'] = max_repay * 5 // 100
         except ContractLogicError as e:
             logger.warning(f"maxRepay failed for {user_address}: {e}")
         except Exception as e:
             logger.warning(f"maxRepay error for {user_address}: {e}")
         
-        # Call SiloLens collateralBalanceOfUnderlying
+        # Call SiloLens collateralBalanceOfUnderlying (silo0)
         try:
             total_collateral = silo_lens_contract.functions.collateralBalanceOfUnderlying(
-                contract.address, 
+                silo0_contract.address, 
                 user_address
             ).call(block_identifier=BLOCK_NUMBER)
             results['total_underlying_collateral'] = total_collateral
@@ -208,14 +232,27 @@ def call_contract_methods(contract: Any, silo_lens_contract: Any, user_address: 
         logger.error(f"Error processing user {user_address}: {e}")
         return results
 
-def save_to_csv(results: List[Dict[str, Any]], output_file: str):
+def save_to_csv(results: List[Dict[str, Any]], output_file: str, silo0_liquidity: int, silo1_liquidity: int):
     """Save results to CSV file."""
     try:
         with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
-            fieldnames = ['silo_address', 'user_address', 'total_underlying_collateral', 'maxWithdraw_protected', 'maxWithdraw_collateral', 'maxRepay']
+            fieldnames = ['user_address', 'total_underlying_collateral', 'maxWithdraw_protected', 'maxWithdraw_collateral', 'user_ltv', 'maxRepay', 'debt_5percent']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             
             writer.writeheader()
+            
+            # Write liquidity info as first row
+            liquidity_row = {
+                'user_address': f'silo0_liquidity:{silo0_liquidity},silo1_liquidity:{silo1_liquidity}',
+                'total_underlying_collateral': '',
+                'maxWithdraw_protected': '',
+                'maxWithdraw_collateral': '',
+                'user_ltv': '',
+                'maxRepay': '',
+                'debt_5percent': ''
+            }
+            writer.writerow(liquidity_row)
+            
             for result in results:
                 writer.writerow(result)
         
@@ -226,33 +263,24 @@ def save_to_csv(results: List[Dict[str, Any]], output_file: str):
 
 def main():
     """Main function."""
-    # Parse command line arguments
-    if len(sys.argv) != 2:
-        print("Usage: python silo_data_colector.py <silo_address>")
-        print("Example: python silo_data_colector.py 0x1234...")
-        print("Make sure to set RPC_SONIC environment variable")
-        sys.exit(1)
-    
-    silo_address = sys.argv[1]
-
-    print(f"Silo address: {silo_address}")
-    
-    # Generate file names based on silo address
-    input_file, output_file = get_file_names(silo_address)
-    
     logger.info("Starting Silo Data Collection")
-    logger.info(f"Silo address: {silo_address}")
+    logger.info(f"Silo0 address: {SILO0_ADDRESS}")
+    logger.info(f"Silo1 address: {SILO1_ADDRESS}")
+    
+    # Generate file names
+    input_file, output_file = get_file_names()
+    
     logger.info(f"Input file: {input_file}")
     logger.info(f"Output file: {output_file}")
     logger.info(f"Block number: {BLOCK_NUMBER}")
     
     # Load ABI from file
-    abi_file_path = "../../contracts/interfaces/ISilo.json"
+    abi_file_path = "../../deployments/sonic/Silo.sol.json"
     abi = load_abi_from_file(abi_file_path)
     logger.info(f"Loaded ABI from: {abi_file_path}")
     
     # Load SiloLens ABI from file
-    silo_lens_abi_file_path = "../../contracts/interfaces/ISiloLens.json"
+    silo_lens_abi_file_path = "../../deployments/sonic/SiloLens.sol.json"
     silo_lens_abi = load_abi_from_file(silo_lens_abi_file_path)
     logger.info(f"Loaded SiloLens ABI from: {silo_lens_abi_file_path}")
     
@@ -264,18 +292,23 @@ def main():
     
     # Setup Web3 and contracts
     w3 = setup_web3()
-    contract = get_silo_contract(w3, silo_address, abi)
+    silo0_contract = get_silo_contract(w3, SILO0_ADDRESS, abi)
+    silo1_contract = get_silo_contract(w3, SILO1_ADDRESS, abi)
     silo_lens_contract = get_silo_lens_contract(w3, silo_lens_abi)
+    
+    # Get liquidity from both Silo contracts
+    silo0_liquidity = get_silo_liquidity(silo0_contract, "Silo0")
+    silo1_liquidity = get_silo_liquidity(silo1_contract, "Silo1")
     
     # Process each address
     results = []
     for i, address in enumerate(addresses, 1):
         logger.info(f"Processing {i}/{len(addresses)}: {address}")
-        result = call_contract_methods(contract, silo_lens_contract, address, w3)
+        result = call_contract_methods(silo0_contract, silo1_contract, silo_lens_contract, address, w3)
         results.append(result)
     
     # Save results
-    save_to_csv(results, output_file)
+    save_to_csv(results, output_file, silo0_liquidity, silo1_liquidity)
     
     logger.info("Data collection completed successfully!")
 
