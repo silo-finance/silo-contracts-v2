@@ -177,9 +177,11 @@ def call_contract_methods(silo0_contract: Any, silo1_contract: Any, silo_lens_co
         'total_underlying_collateral': 0,
         'maxWithdraw_collateral': 0,
         'missing_collateral': 0,
-        'user_ltv': 0,
         'maxRepay': 0,
-        'debt_5percent': 0
+        'silo1_total_collateral': 0,
+        'silo1_max_withdraw': 0,
+        'silo0_maxRepay': 0,
+        'user_ltv': 0
     }
     
     try:
@@ -222,12 +224,31 @@ def call_contract_methods(silo0_contract: Any, silo1_contract: Any, silo_lens_co
         try:
             max_repay = silo1_contract.functions.maxRepay(user_address).call(block_identifier=BLOCK_NUMBER)
             results['maxRepay'] = handle_uint256(max_repay)
-            # Calculate 5% of maxRepay
-            results['debt_5percent'] = results['maxRepay'] * 5 // 100
         except ContractLogicError as e:
             logger.warning(f"maxRepay failed for {user_address}: {e}")
         except Exception as e:
             logger.warning(f"maxRepay error for {user_address}: {e}")
+        
+        # Call SiloLens collateralBalanceOfUnderlying (silo1)
+        try:
+            silo1_total_collateral = silo_lens_contract.functions.collateralBalanceOfUnderlying(
+                silo1_contract.address, 
+                user_address
+            ).call(block_identifier=BLOCK_NUMBER)
+            results['silo1_total_collateral'] = handle_uint256(silo1_total_collateral)
+        except ContractLogicError as e:
+            logger.warning(f"silo1 collateralBalanceOfUnderlying failed for {user_address}: {e}")
+        except Exception as e:
+            logger.warning(f"silo1 collateralBalanceOfUnderlying error for {user_address}: {e}")
+        
+        # Call maxWithdraw for Collateral type (silo1)
+        try:
+            silo1_max_withdraw = silo1_contract.functions.maxWithdraw(user_address).call(block_identifier=BLOCK_NUMBER)
+            results['silo1_max_withdraw'] = handle_uint256(silo1_max_withdraw)
+        except ContractLogicError as e:
+            logger.warning(f"silo1 maxWithdraw failed for {user_address}: {e}")
+        except Exception as e:
+            logger.warning(f"silo1 maxWithdraw error for {user_address}: {e}")
         
         logger.info(f"Processed user: {user_address}")
         return results
@@ -240,7 +261,7 @@ def save_to_csv(results: List[Dict[str, Any]], output_file: str, silo0_liquidity
     """Save results to CSV file."""
     try:
         with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
-            fieldnames = ['user_address', 'total_underlying_collateral', 'maxWithdraw_collateral', 'missing_collateral', 'user_ltv', 'maxRepay', 'debt_5percent']
+            fieldnames = ['user_address', 'total_underlying_collateral', 'maxWithdraw_collateral', 'missing_collateral', 'maxRepay', 'silo1_total_collateral', 'silo1_max_withdraw', 'user_ltv']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             
             writer.writeheader()
@@ -251,9 +272,10 @@ def save_to_csv(results: List[Dict[str, Any]], output_file: str, silo0_liquidity
                 'total_underlying_collateral': '',
                 'maxWithdraw_collateral': '',
                 'missing_collateral': '',
-                'user_ltv': '',
                 'maxRepay': '',
-                'debt_5percent': ''
+                'silo1_total_collateral': '',
+                'silo1_max_withdraw': '',
+                'user_ltv': ''
             }
             writer.writerow(liquidity_row)
             
