@@ -37,6 +37,9 @@ COLLATERAL_TYPE = {
 # Hardcoded block number
 BLOCK_NUMBER = 42282562  # Replace with actual block number
 
+# Hardcoded SiloLens address
+SILO_LENS_ADDRESS = "0xB95AD415b0fcE49f84FbD5B26b14ec7cf4822c69"
+
 
 
 def load_abi_from_file(abi_file_path: str) -> List[Dict]:
@@ -71,26 +74,13 @@ def get_file_names(silo_address: str) -> tuple[str, str]:
     return input_file, output_file
 
 def load_addresses_from_json(file_path: str) -> List[str]:
-    """Load addresses from JSON file."""
+    """Load addresses from JSON file (array of strings)."""
     try:
         with open(file_path, 'r') as f:
-            data = json.load(f)
+            addresses = json.load(f)
         
-        # Handle different JSON structures
-        if isinstance(data, list):
-            # If it's a list of strings (addresses)
-            addresses = data
-        elif isinstance(data, dict):
-            # If it's a dict with addresses as keys or in a specific field
-            if 'addresses' in data:
-                addresses = data['addresses']
-            elif 'users' in data:
-                addresses = data['users']
-            else:
-                # Assume all values are addresses
-                addresses = list(data.values())
-        else:
-            raise ValueError("Unsupported JSON format")
+        if not isinstance(addresses, list):
+            raise ValueError("JSON file must contain an array of addresses")
         
         # Validate addresses
         valid_addresses = []
@@ -143,11 +133,23 @@ def get_silo_contract(w3: Web3, silo_address: str, abi: List[Dict]) -> Any:
         logger.error(f"Error initializing Silo contract: {e}")
         sys.exit(1)
 
-def call_contract_methods(contract: Any, user_address: str, w3: Web3) -> Dict[str, Any]:
-    """Call maxWithdraw and maxRepay methods for a user address."""
+def get_silo_lens_contract(w3: Web3, silo_lens_abi: List[Dict]) -> Any:
+    """Get SiloLens contract instance."""
+    try:
+        silo_lens_address = Web3.to_checksum_address(SILO_LENS_ADDRESS)
+        contract = w3.eth.contract(address=silo_lens_address, abi=silo_lens_abi)
+        logger.info(f"SiloLens contract initialized at: {silo_lens_address}")
+        return contract
+    except Exception as e:
+        logger.error(f"Error initializing SiloLens contract: {e}")
+        sys.exit(1)
+
+def call_contract_methods(contract: Any, silo_lens_contract: Any, user_address: str, w3: Web3) -> Dict[str, Any]:
+    """Call maxWithdraw, maxRepay, and collateralBalanceOfUnderlying methods for a user address."""
     results = {
         'silo_address': contract.address,
         'user_address': user_address,
+        'total_underlying_collateral': 0,
         'maxWithdraw_protected': 0,
         'maxWithdraw_collateral': 0,
         'maxRepay': 0
@@ -187,6 +189,18 @@ def call_contract_methods(contract: Any, user_address: str, w3: Web3) -> Dict[st
         except Exception as e:
             logger.warning(f"maxRepay error for {user_address}: {e}")
         
+        # Call SiloLens collateralBalanceOfUnderlying
+        try:
+            total_collateral = silo_lens_contract.functions.collateralBalanceOfUnderlying(
+                contract.address, 
+                user_address
+            ).call(block_identifier=BLOCK_NUMBER)
+            results['total_underlying_collateral'] = total_collateral
+        except ContractLogicError as e:
+            logger.warning(f"collateralBalanceOfUnderlying failed for {user_address}: {e}")
+        except Exception as e:
+            logger.warning(f"collateralBalanceOfUnderlying error for {user_address}: {e}")
+        
         logger.info(f"Processed user: {user_address}")
         return results
     
@@ -198,7 +212,7 @@ def save_to_csv(results: List[Dict[str, Any]], output_file: str):
     """Save results to CSV file."""
     try:
         with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
-            fieldnames = ['silo_address', 'user_address', 'maxWithdraw_protected', 'maxWithdraw_collateral', 'maxRepay']
+            fieldnames = ['silo_address', 'user_address', 'total_underlying_collateral', 'maxWithdraw_protected', 'maxWithdraw_collateral', 'maxRepay']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             
             writer.writeheader()
@@ -237,21 +251,27 @@ def main():
     abi = load_abi_from_file(abi_file_path)
     logger.info(f"Loaded ABI from: {abi_file_path}")
     
+    # Load SiloLens ABI from file
+    silo_lens_abi_file_path = "../../contracts/interfaces/ISiloLens.json"
+    silo_lens_abi = load_abi_from_file(silo_lens_abi_file_path)
+    logger.info(f"Loaded SiloLens ABI from: {silo_lens_abi_file_path}")
+    
     # Load addresses
     addresses = load_addresses_from_json(input_file)
     if not addresses:
         logger.error("No valid addresses found")
         sys.exit(1)
     
-    # Setup Web3 and contract
+    # Setup Web3 and contracts
     w3 = setup_web3()
     contract = get_silo_contract(w3, silo_address, abi)
+    silo_lens_contract = get_silo_lens_contract(w3, silo_lens_abi)
     
     # Process each address
     results = []
     for i, address in enumerate(addresses, 1):
         logger.info(f"Processing {i}/{len(addresses)}: {address}")
-        result = call_contract_methods(contract, address, w3)
+        result = call_contract_methods(contract, silo_lens_contract, address, w3)
         results.append(result)
     
     # Save results
