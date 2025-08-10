@@ -5,9 +5,12 @@ Silo Data Collector Script
 This script reads blockchain addresses from a JSON file, calls ISilo contract methods
 for each address, and saves the results to a CSV file.
 
+Environment variables required:
+- RPC_SONIC: RPC endpoint URL
+
 Usage:
-    python silo_data_colector.py <rpc_url> <silo_address>
-    python silo_data_colector.py <rpc_url> 0xbE0D3c8801206CC9f35A6626f90ef9F4f2983A3D
+    python3 silo_data_collector.py <silo_address>
+    python3 silo_data_collector.py 0xbE0D3c8801206CC9f35A6626f90ef9F4f2983A3D
 
 """
 
@@ -32,6 +35,8 @@ COLLATERAL_TYPE = {
 
 # Hardcoded block number
 BLOCK_NUMBER = 12345678  # Replace with actual block number
+
+
 
 def load_abi_from_file(abi_file_path: str) -> List[Dict]:
     """Load ABI from JSON file."""
@@ -107,8 +112,13 @@ def load_addresses_from_json(file_path: str) -> List[str]:
         logger.error(f"Error loading addresses: {e}")
         sys.exit(1)
 
-def setup_web3(rpc_url: str) -> Web3:
+def setup_web3() -> Web3:
     """Setup Web3 connection."""
+    rpc_url = os.getenv('RPC_SONIC')
+    if not rpc_url:
+        logger.error("RPC_SONIC environment variable not set")
+        sys.exit(1)
+    
     try:
         w3 = Web3(Web3.HTTPProvider(rpc_url))
         if not w3.is_connected():
@@ -202,26 +212,27 @@ def save_to_csv(results: List[Dict[str, Any]], output_file: str):
 def main():
     """Main function."""
     # Parse command line arguments
-    if len(sys.argv) != 3:
-        print("Usage: python silo_data_colector.py <rpc_url> <silo_address>")
-        print("Example: python silo_data_colector.py https://rpc.example.com 0x1234...")
+    if len(sys.argv) != 2:
+        print("Usage: python silo_data_colector.py <silo_address>")
+        print("Example: python silo_data_colector.py 0x1234...")
+        print("Make sure to set RPC_SONIC environment variable")
         sys.exit(1)
     
-    rpc_url = sys.argv[1]
-    silo_address = sys.argv[2]
+    silo_address = sys.argv[1]
+
+    print(f"Silo address: {silo_address}")
     
     # Generate file names based on silo address
     input_file, output_file = get_file_names(silo_address)
     
     logger.info("Starting Silo Data Collection")
-    logger.info(f"RPC URL: {rpc_url}")
     logger.info(f"Silo address: {silo_address}")
     logger.info(f"Input file: {input_file}")
     logger.info(f"Output file: {output_file}")
     logger.info(f"Block number: {BLOCK_NUMBER}")
     
     # Load ABI from file
-    abi_file_path = "../../deployments/sonic/Silo.sol.json"
+    abi_file_path = "../../contracts/interfaces/ISilo.json"
     abi = load_abi_from_file(abi_file_path)
     logger.info(f"Loaded ABI from: {abi_file_path}")
     
@@ -232,7 +243,7 @@ def main():
         sys.exit(1)
     
     # Setup Web3 and contract
-    w3 = setup_web3(rpc_url)
+    w3 = setup_web3()
     contract = get_silo_contract(w3, silo_address, abi)
     
     # Process each address
