@@ -27,11 +27,7 @@ from decimal import Decimal
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# CollateralType enum values
-COLLATERAL_TYPE = {
-    "Protected": 0,
-    "Collateral": 1
-}
+
 
 # Hardcoded block number
 BLOCK_NUMBER = 42282562  # Replace with actual block number
@@ -179,7 +175,6 @@ def call_contract_methods(silo0_contract: Any, silo1_contract: Any, silo_lens_co
     results = {
         'user_address': user_address,
         'total_underlying_collateral': 0,
-        'maxWithdraw_protected': 0,
         'maxWithdraw_collateral': 0,
         'missing_collateral': 0,
         'user_ltv': 0,
@@ -200,23 +195,10 @@ def call_contract_methods(silo0_contract: Any, silo1_contract: Any, silo_lens_co
         except Exception as e:
             logger.warning(f"collateralBalanceOfUnderlying error for {user_address}: {e}")
         
-        # Call maxWithdraw for Protected collateral type (silo0)
-        try:
-            max_withdraw_protected = silo0_contract.functions.maxWithdraw(
-                user_address, 
-                COLLATERAL_TYPE["Protected"]
-            ).call(block_identifier=BLOCK_NUMBER)
-            results['maxWithdraw_protected'] = handle_uint256(max_withdraw_protected)
-        except ContractLogicError as e:
-            logger.warning(f"maxWithdraw (Protected) failed for {user_address}: {e}")
-        except Exception as e:
-            logger.warning(f"maxWithdraw (Protected) error for {user_address}: {e}")
-        
         # Call maxWithdraw for Collateral type (silo0)
         try:
             max_withdraw_collateral = silo0_contract.functions.maxWithdraw(
-                user_address, 
-                COLLATERAL_TYPE["Collateral"]
+                user_address
             ).call(block_identifier=BLOCK_NUMBER)
             results['maxWithdraw_collateral'] = handle_uint256(max_withdraw_collateral)
         except ContractLogicError as e:
@@ -258,7 +240,7 @@ def save_to_csv(results: List[Dict[str, Any]], output_file: str, silo0_liquidity
     """Save results to CSV file."""
     try:
         with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
-            fieldnames = ['user_address', 'total_underlying_collateral', 'maxWithdraw_protected', 'maxWithdraw_collateral', 'missing_collateral', 'user_ltv', 'maxRepay', 'debt_5percent']
+            fieldnames = ['user_address', 'total_underlying_collateral', 'maxWithdraw_collateral', 'missing_collateral', 'user_ltv', 'maxRepay', 'debt_5percent']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             
             writer.writeheader()
@@ -267,7 +249,6 @@ def save_to_csv(results: List[Dict[str, Any]], output_file: str, silo0_liquidity
             liquidity_row = {
                 'user_address': f'silo0_liquidity:{silo0_liquidity},silo1_liquidity:{silo1_liquidity}',
                 'total_underlying_collateral': '',
-                'maxWithdraw_protected': '',
                 'maxWithdraw_collateral': '',
                 'missing_collateral': '',
                 'user_ltv': '',
