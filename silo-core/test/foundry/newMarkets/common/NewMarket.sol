@@ -7,8 +7,16 @@ import {SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {ISilo, IERC4626} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {SiloLens, ISiloLens} from "silo-core/contracts/SiloLens.sol";
+import {console2} from "forge-std/console2.sol";
+import {Test} from "forge-std/Test.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 contract NewMarketTest is Forking {
+    string public constant SUCCESS_SYMBOL = unicode"✅";
+    string public constant SKIPPED_SYMBOL = unicode"⏩";
+    string public constant DELIMITER = "------------------------------";
+
     SiloConfig public immutable SILO_CONFIG; // solhint-disable-line var-name-mixedcase
     uint256 public immutable EXTERNAL_PRICE0; // solhint-disable-line var-name-mixedcase
     uint256 public immutable EXTERNAL_PRICE1; // solhint-disable-line var-name-mixedcase
@@ -23,11 +31,12 @@ contract NewMarketTest is Forking {
     uint256 public immutable MAX_LTV1; // solhint-disable-line var-name-mixedcase
 
     constructor(
+        BlockChain _chain,
         uint256 _blockToFork,
         address _siloConfig,
         uint256 _externalPrice0,
         uint256 _externalPrice1
-    ) Forking(BlockChain.SONIC) {
+    ) Forking(_chain) {
         initFork(_blockToFork);
 
         SILO_CONFIG = SiloConfig(_siloConfig);
@@ -47,7 +56,7 @@ contract NewMarketTest is Forking {
     }
 
     function test_newMarketTest_borrowSilo0ToSilo1() public {
-        _borrowTest({
+        _borrowScenario({
             _collateralSilo: SILO0,
             _collateralToken: TOKEN0,
             _debtSilo: SILO1,
@@ -59,7 +68,7 @@ contract NewMarketTest is Forking {
     }
 
     function test_newMarketTest_borrowSilo1ToSilo0() public {
-        _borrowTest({
+        _borrowScenario({
             _collateralSilo: SILO1,
             _collateralToken: TOKEN1,
             _debtSilo: SILO0,
@@ -70,7 +79,7 @@ contract NewMarketTest is Forking {
         });
     }
 
-    function _borrowTest(
+    function _borrowScenario(
         ISilo _collateralSilo,
         IERC20Metadata _collateralToken,
         ISilo _debtSilo,
@@ -86,6 +95,7 @@ contract NewMarketTest is Forking {
         deal(address(_collateralToken), address(this), collateralAmount);
         _collateralToken.approve(address(_collateralSilo), collateralAmount);
 
+        // 1. Deposit
         _collateralSilo.deposit(collateralAmount, address(this));
         _someoneDeposited(_debtToken, _debtSilo, 1e40);
 
@@ -116,10 +126,76 @@ contract NewMarketTest is Forking {
             0.01e18 // 1% deviation max
         );
 
-        if (_ltv != 0) {
-            _debtSilo.borrow(maxBorrow, address(this), address(this));
-            assertTrue(_debtToken.balanceOf(address(this)) >= maxBorrow);
+        if (_ltv == 0) {
+            _logBorrowScenarioSkipped({
+                _collateralSilo: _collateralSilo,
+                _debtSilo: _debtSilo
+            });
+
+            return;
         }
+
+        // 2. Borrow
+        _debtSilo.borrow(maxBorrow, address(this), address(this));
+        uint256 borrowed = _debtToken.balanceOf(address(this));
+        assertTrue(borrowed >= maxBorrow, "Borrowed more or equal to calculated maxBorrow based on prices");
+
+        // 3. Repay
+        _repayAndCheck({
+            _debtSilo: _debtSilo,
+            _debtToken: _debtToken
+        });
+
+        _logBorrowScenarioSuccess({
+            _collateralSilo: _collateralSilo,
+            _collateralToken: _collateralToken,
+            _debtSilo: _debtSilo,
+            _debtToken: _debtToken,
+            _deposited: collateralAmount,
+            _borrowed: borrowed
+        });
+
+        // 4. Withdraw
+        _withdrawAndCheck({
+            _collateralSilo: _collateralSilo,
+            _collateralToken: _collateralToken,
+            _initiallyDeposited: collateralAmount
+        });
+    }
+
+    function _withdrawAndCheck(
+        ISilo _collateralSilo,
+        IERC20Metadata _collateralToken,
+        uint256 _initiallyDeposited
+    ) internal {
+        assertEq(_collateralToken.balanceOf(address(this)), 0, "no collateralToken yet");
+        _collateralSilo.redeem(_collateralSilo.balanceOf(address(this)), address(this), address(this));
+
+        assertApproxEqRel(
+            _collateralToken.balanceOf(address(this)),
+            _initiallyDeposited - 1, // lost one wei due to rounding
+            uint256(1e18 / 1e6) // should be equal to initial deposit with 10^-4% deviation max due to rounding
+        );
+    }
+
+    // solve stack too deep
+    function _repayAndCheck(
+        ISilo _debtSilo,
+        IERC20Metadata _debtToken
+    ) internal {
+        uint256 sharesToRepay = _debtSilo.maxRepayShares(address(this));
+        uint256 maxRepay = _debtSilo.previewRepayShares(sharesToRepay);
+        _debtToken.approve(address(_debtSilo), maxRepay);
+
+        deal(
+            address(_debtToken),
+            address(this),
+            maxRepay
+        );
+
+        assertEq(_debtToken.balanceOf(address(this)), maxRepay);
+        _debtSilo.repayShares(sharesToRepay, address(this));
+        assertEq((new SiloLens()).getLtv(_debtSilo, address(this)), 0, "Repay is successful, LTV==0");
     }
 
     function _someoneDeposited(IERC20Metadata _token, ISilo _silo, uint256 _amount) internal {
@@ -131,5 +207,57 @@ contract NewMarketTest is Forking {
 
         vm.prank(stranger);
         _silo.deposit(_amount, stranger);
+    }
+
+    function _logBorrowScenarioSkipped(
+        ISilo _collateralSilo,
+        ISilo _debtSilo
+    ) internal view {
+        console2.log(
+            string.concat(
+                SKIPPED_SYMBOL,
+                " Borrow scenario is skipped because asset is not borrowable for ",
+                _collateralSilo.symbol(),
+                " -> ",
+                _debtSilo.symbol()
+            )
+        );
+    }
+
+    function _logBorrowScenarioSuccess(
+        ISilo _collateralSilo,
+        IERC20Metadata _collateralToken,
+        ISilo _debtSilo,
+        IERC20Metadata _debtToken,
+        uint256 _deposited,
+        uint256 _borrowed
+    ) internal view {
+        console2.log(DELIMITER);
+
+        console2.log(
+            string.concat(
+                SUCCESS_SYMBOL,
+                " Borrow scenario success for direction ",
+                _collateralSilo.symbol(),
+                " -> ",
+                _debtSilo.symbol()
+            )
+        );
+
+        console2.log(
+            "1. Deposited (in own decimals)",
+            _deposited / (10 ** _collateralToken.decimals()),
+            _collateralToken.symbol()
+        );
+
+        console2.log(
+            "2. Borrowed up to maxBorrow (in own decimals)",
+            _borrowed / (10 ** _debtToken.decimals()),
+            _debtToken.symbol(),
+            "with less than 1% deviation from expected amount to maxBorrow() based on LTV and external prices"
+        );
+
+        console2.log("3. Repaid everything");
+        console2.log("4. Withdrawn all collateral");
     }
 }
