@@ -23,6 +23,74 @@ from web3.exceptions import ContractLogicError
 import logging
 from decimal import Decimal
 
+# Minimal ABI for ISiloOracle
+ISILO_ORACLE_ABI = [
+    {
+        "inputs": [
+            {"internalType": "address", "name": "_baseToken", "type": "address"}
+        ],
+        "name": "beforeQuote",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {"internalType": "uint256", "name": "_baseAmount", "type": "uint256"},
+            {"internalType": "address", "name": "_baseToken", "type": "address"}
+        ],
+        "name": "quote",
+        "outputs": [{"internalType": "uint256", "name": "quoteAmount", "type": "uint256"}],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "quoteToken",
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]
+
+# Minimal ABI for ISiloConfig
+ISILO_CONFIG_ABI = [
+    {
+        "inputs": [
+            {"internalType": "address", "name": "_silo", "type": "address"}
+        ],
+        "name": "getConfig",
+        "outputs": [
+            {
+                "components": [
+                    {"internalType": "uint256", "name": "daoFee", "type": "uint256"},
+                    {"internalType": "uint256", "name": "deployerFee", "type": "uint256"},
+                    {"internalType": "address", "name": "silo", "type": "address"},
+                    {"internalType": "address", "name": "token", "type": "address"},
+                    {"internalType": "address", "name": "protectedShareToken", "type": "address"},
+                    {"internalType": "address", "name": "collateralShareToken", "type": "address"},
+                    {"internalType": "address", "name": "debtShareToken", "type": "address"},
+                    {"internalType": "address", "name": "solvencyOracle", "type": "address"},
+                    {"internalType": "address", "name": "maxLtvOracle", "type": "address"},
+                    {"internalType": "address", "name": "interestRateModel", "type": "address"},
+                    {"internalType": "uint256", "name": "maxLtv", "type": "uint256"},
+                    {"internalType": "uint256", "name": "lt", "type": "uint256"},
+                    {"internalType": "uint256", "name": "liquidationTargetLtv", "type": "uint256"},
+                    {"internalType": "uint256", "name": "liquidationFee", "type": "uint256"},
+                    {"internalType": "uint256", "name": "flashloanFee", "type": "uint256"},
+                    {"internalType": "address", "name": "hookReceiver", "type": "address"},
+                    {"internalType": "bool", "name": "callBeforeQuote", "type": "bool"}
+                ],
+                "internalType": "struct ISiloConfig.ConfigData",
+                "name": "config",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -169,6 +237,130 @@ def get_silo_liquidity(contract: Any, silo_name: str) -> int:
     except Exception as e:
         logger.warning(f"getLiquidity error for {silo_name}: {e}")
         return 0
+
+def get_silo_asset(contract: Any, silo_name: str) -> str:
+    """Get asset address from a Silo contract."""
+    try:
+        asset = contract.functions.asset().call(block_identifier=BLOCK_NUMBER)
+        logger.info(f"{silo_name} asset: {asset}")
+        return asset
+    except ContractLogicError as e:
+        logger.warning(f"asset() failed for {silo_name}: {e}")
+        return ""
+    except Exception as e:
+        logger.warning(f"asset() error for {silo_name}: {e}")
+        return ""
+
+def get_silo_config(contract: Any, silo_name: str) -> str:
+    """Get config address from a Silo contract."""
+    try:
+        config = contract.functions.config().call(block_identifier=BLOCK_NUMBER)
+        logger.info(f"{silo_name} config: {config}")
+        return config
+    except ContractLogicError as e:
+        logger.warning(f"config() failed for {silo_name}: {e}")
+        return ""
+    except Exception as e:
+        logger.warning(f"config() error for {silo_name}: {e}")
+        return ""
+
+def get_silo_config_data(w3: Web3, config_address: str, silo_address: str) -> Dict[str, Any]:
+    """Get config data from SiloConfig contract."""
+    try:
+        config_contract = w3.eth.contract(address=config_address, abi=ISILO_CONFIG_ABI)
+        
+        config_data_tuple = config_contract.functions.getConfig(silo_address).call(block_identifier=BLOCK_NUMBER)
+        logger.info(f"Config data for {silo_address}: {config_data_tuple}")
+        
+        # Convert tuple to dictionary using the ConfigData struct field names
+        config_data = {
+            'daoFee': config_data_tuple[0],
+            'deployerFee': config_data_tuple[1],
+            'silo': config_data_tuple[2],
+            'token': config_data_tuple[3],
+            'protectedShareToken': config_data_tuple[4],
+            'collateralShareToken': config_data_tuple[5],
+            'debtShareToken': config_data_tuple[6],
+            'solvencyOracle': config_data_tuple[7],
+            'maxLtvOracle': config_data_tuple[8],
+            'interestRateModel': config_data_tuple[9],
+            'maxLtv': config_data_tuple[10],
+            'lt': config_data_tuple[11],
+            'liquidationTargetLtv': config_data_tuple[12],
+            'liquidationFee': config_data_tuple[13],
+            'flashloanFee': config_data_tuple[14],
+            'hookReceiver': config_data_tuple[15],
+            'callBeforeQuote': config_data_tuple[16]
+        }
+        
+        return config_data
+    except Exception as e:
+        logger.warning(f"getConfig failed for {silo_address}: {e}")
+        return {}
+
+def get_oracle_price(w3: Web3, oracle_address: str, asset_address: str) -> int:
+    """Get price from oracle for 1e18 of asset."""
+    if not oracle_address or oracle_address == "0x0000000000000000000000000000000000000000":
+        logger.info(f"No oracle configured for asset {asset_address}, assuming price of 1e18")
+        return 10**18
+    
+    try:
+        oracle_contract = w3.eth.contract(address=oracle_address, abi=ISILO_ORACLE_ABI)
+        
+        # Get price for 1e18 of asset
+        price = oracle_contract.functions.quote(10**18, asset_address).call(block_identifier=BLOCK_NUMBER)
+        logger.info(f"Oracle price for {asset_address}: {price}")
+        return handle_uint256(price)
+    except ContractLogicError as e:
+        logger.warning(f"Oracle quote failed for {asset_address}: {e}")
+        return 10**18  # Default to 1e18
+    except Exception as e:
+        logger.warning(f"Oracle quote error for {asset_address}: {e}")
+        return 10**18  # Default to 1e18
+
+def fetch_silo_price(w3: Web3, silo_contract: Any, silo_name: str, silo_address: str) -> tuple[str, int]:
+    """Fetch and print price for a single silo."""
+    logger.info(f"=== Fetching {silo_name} Price ===")
+    
+    # Get asset
+    asset = get_silo_asset(silo_contract, silo_name)
+    if not asset:
+        logger.error(f"Failed to get asset address for {silo_name}")
+        return "", 0
+    
+    # Get config
+    config = get_silo_config(silo_contract, silo_name)
+    if not config:
+        logger.error(f"Failed to get config address for {silo_name}")
+        return "", 0
+    
+    # Get config data
+    config_data = get_silo_config_data(w3, config, silo_address)
+    if not config_data:
+        logger.error(f"Failed to get config data for {silo_name}")
+        return "", 0
+    
+    # Get solvency oracle address
+    solvency_oracle = config_data.get('solvencyOracle', '')
+    
+    # Get price
+    price = get_oracle_price(w3, solvency_oracle, asset)
+    
+    # Print result
+    print(f"{silo_name} Asset: {asset}")
+    print(f"{silo_name} Price (1e18): {price}")
+    
+    return asset, price
+
+def fetch_silo_prices(w3: Web3, silo0_contract: Any, silo1_contract: Any):
+    """Fetch and print prices for both silos."""
+    logger.info("=== Fetching Silo Prices ===")
+    
+    # Fetch prices for both silos
+    silo0_asset, silo0_price = fetch_silo_price(w3, silo0_contract, "Silo0", SILO0_ADDRESS)
+    silo1_asset, silo1_price = fetch_silo_price(w3, silo1_contract, "Silo1", SILO1_ADDRESS)
+    
+    print(f"==================\n")
 
 def call_contract_methods(silo0_contract: Any, silo1_contract: Any, silo_lens_contract: Any, user_address: str, w3: Web3) -> Dict[str, Any]:
     """Call methods for a user address using silo0 for collateral and silo1 for maxRepay."""
@@ -332,6 +524,9 @@ def main():
     # Get liquidity from both Silo contracts
     silo0_liquidity = get_silo_liquidity(silo0_contract, "Silo0")
     silo1_liquidity = get_silo_liquidity(silo1_contract, "Silo1")
+    
+    # Fetch and print prices for both silos
+    fetch_silo_prices(w3, silo0_contract, silo1_contract)
     
     # Process each address
     results = []
