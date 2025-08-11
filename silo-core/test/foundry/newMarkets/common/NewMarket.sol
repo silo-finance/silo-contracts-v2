@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.28;
 
+import {Forking} from "silo-oracles/test/foundry/_common/Forking.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {ISilo, IERC4626} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -11,12 +12,11 @@ import {console2} from "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
-contract NewMarketTest is Test {
+contract NewMarketTest is Forking {
     string public constant SUCCESS_SYMBOL = unicode"✅";
     string public constant SKIPPED_SYMBOL = unicode"⏩";
     string public constant DELIMITER = "------------------------------";
 
-    uint256 public immutable BLOCK_TO_FORK; // solhint-disable-line var-name-mixedcase
     SiloConfig public immutable SILO_CONFIG; // solhint-disable-line var-name-mixedcase
     uint256 public immutable EXTERNAL_PRICE0; // solhint-disable-line var-name-mixedcase
     uint256 public immutable EXTERNAL_PRICE1; // solhint-disable-line var-name-mixedcase
@@ -31,13 +31,13 @@ contract NewMarketTest is Test {
     uint256 public immutable MAX_LTV1; // solhint-disable-line var-name-mixedcase
 
     constructor(
+        BlockChain _chain,
         uint256 _blockToFork,
         address _siloConfig,
         uint256 _externalPrice0,
         uint256 _externalPrice1
-    ) {
-        BLOCK_TO_FORK = _blockToFork;
-        _initFork(_blockToFork);
+    ) Forking(_chain) {
+        initFork(_blockToFork);
 
         SILO_CONFIG = SiloConfig(_siloConfig);
         EXTERNAL_PRICE0 = _externalPrice0;
@@ -55,7 +55,7 @@ contract NewMarketTest is Test {
         MAX_LTV1 = SILO_CONFIG.getConfig(silo1).maxLtv;
     }
 
-    function testBorrowSilo0ToSilo1() public {
+    function test_newMarketTest_borrowSilo0ToSilo1() public {
         _borrowScenario({
             _collateralSilo: SILO0,
             _collateralToken: TOKEN0,
@@ -67,7 +67,7 @@ contract NewMarketTest is Test {
         });
     }
 
-    function testBorrowSilo1ToSilo0() public {
+    function test_newMarketTest_borrowSilo1ToSilo0() public {
         _borrowScenario({
             _collateralSilo: SILO1,
             _collateralToken: TOKEN1,
@@ -88,8 +88,6 @@ contract NewMarketTest is Test {
         uint256 _debtPrice,
         uint256 _ltv
     ) internal {
-        _initFork(BLOCK_TO_FORK);
-
         uint256 tokensToDeposit = 100_000_000; // without decimals
         uint256 collateralAmount = 
             tokensToDeposit * 10 ** uint256(TokenHelper.assertAndGetDecimals(address(_collateralToken)));
@@ -209,10 +207,6 @@ contract NewMarketTest is Test {
 
         vm.prank(stranger);
         _silo.deposit(_amount, stranger);
-    }
-
-    function _initFork(uint256 _blockToFork) internal {
-        vm.createSelectFork(vm.rpcUrl(ChainsLib.chainAlias()), _blockToFork);
     }
 
     function _logBorrowScenarioSkipped(
