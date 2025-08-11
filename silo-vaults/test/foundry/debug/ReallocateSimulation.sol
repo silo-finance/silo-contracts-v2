@@ -19,7 +19,7 @@ contract ReallocateSimulationTest is Test {
      FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_20250811_reallocate_simulation -vvv
     */
     function test_20250811_reallocate_simulation() public {
-        vm.createSelectFork(vm.envString("RPC_SONIC"), 42551580);
+        vm.createSelectFork(vm.envString("RPC_SONIC"), 42552900);
 
         ISiloVault vault = ISiloVault(0xDED4aC8645619334186f28B8798e07ca354CFa0e);
 
@@ -43,15 +43,15 @@ contract ReallocateSimulationTest is Test {
 
         console2.log("vault assets", vaultAssets / 1e18);
 
-        uint256 amountToCoverDebt = vaultAssets;
+        uint256 amountToCoverDebt = 406629682203253781797819; //vaultAssets;
 
         // DEBUG:
         // amountToCoverDebt = 500e18;
 
         // INative(address(wS)).deposit{value: amountToCoverDebt}();
 
-        vm.prank(multisig);
-        wS.approve(address(fromSilo), amountToCoverDebt);
+        // vm.prank(multisig);
+        // wS.approve(address(fromSilo), amountToCoverDebt);
         vm.prank(multisig);
         fromSilo.deposit(amountToCoverDebt, multisig);
 
@@ -69,7 +69,7 @@ contract ReallocateSimulationTest is Test {
         console2.log("liquidity", liquidity / 1e18);
 
         allocations[0].market = fromSilo;
-        allocations[0].assets =  vaultAssets - liquidity + 1e18; // +1 to minimise risk of failing tx
+        allocations[0].assets =  vaultAssets - liquidity + 20e18; // +1 to minimise risk of failing tx
 
         allocations[1].market = toSilo;
         allocations[1].assets = type(uint256).max; // deposit all
