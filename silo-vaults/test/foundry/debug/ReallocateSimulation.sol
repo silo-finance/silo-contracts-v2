@@ -100,7 +100,7 @@ contract ReallocateSimulationTest is Test {
         console2.log("vault assets", vaultAssets / 1e18);
     }
 
-    function _printAllocation(MarketAllocation[] memory _allocation) internal view {
+    function _printAllocation(MarketAllocation[] memory _allocation) internal pure {
         // print in a way that can be copy pasted to the Safe multisig
         string memory allocations = "[";
 
