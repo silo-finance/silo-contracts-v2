@@ -148,7 +148,7 @@ def load_abi_from_file(abi_file_path: str) -> List[Dict]:
 
 def get_file_names() -> tuple[str, str]:
     """Generate input and output file names."""
-    input_file = "users-54.json"
+    input_file = "users-54-unique.json"
     output_file = "silo-54-results.csv"
     
     return input_file, output_file
