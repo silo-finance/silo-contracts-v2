@@ -19,7 +19,7 @@ contract ReallocateSimulationTest is Test {
      FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_20250811_reallocate_simulation -vvv
     */
     function test_20250811_reallocate_simulation() public {
-        vm.createSelectFork(vm.envString("RPC_SONIC"), 42545060);
+        vm.createSelectFork(vm.envString("RPC_SONIC"), 42551580);
 
         ISiloVault vault = ISiloVault(0xDED4aC8645619334186f28B8798e07ca354CFa0e);
 
@@ -46,7 +46,7 @@ contract ReallocateSimulationTest is Test {
         uint256 amountToCoverDebt = vaultAssets;
 
         // DEBUG:
-        amountToCoverDebt = 500e18;
+        // amountToCoverDebt = 500e18;
 
         // INative(address(wS)).deposit{value: amountToCoverDebt}();
 
@@ -65,9 +65,7 @@ contract ReallocateSimulationTest is Test {
         uint256 debtToRepay = 45e18; // amountToCoverDebt - maxWithdraw + 10e18;
         console2.log("debt to repay", debtToRepay / 1e18);
 
-        uint256 sharesToRepay = fromSilo.convertToShares(debtToRepay);
         uint256 liquidity = ISilo(address(fromSilo)).getLiquidity();
-        console2.log("shares to repay", sharesToRepay);
         console2.log("liquidity", liquidity / 1e18);
 
         allocations[0].market = fromSilo;
