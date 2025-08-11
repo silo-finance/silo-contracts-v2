@@ -68,35 +68,33 @@
     {
       "to": "0xDED4aC8645619334186f28B8798e07ca354CFa0e",
       "value": "0",
+      "data": null,
       "contractMethod": {
         "inputs": [
-        {
-          "components": [
-            {
-              "internalType": "contract IERC4626",
-              "name": "market",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "assets",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct MarketAllocation[]",
-          "name": "allocations",
-          "type": "tuple[]"
-        }
-      ],
+          {
+            "components": [
+              {
+                "internalType": "contract IERC4626",
+                "name": "market",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "assets",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct MarketAllocation[]",
+            "name": "_allocations",
+            "type": "tuple[]"
+          }
+        ],
         "name": "reallocate",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        "payable": false
       },
       "contractInputsValues": {
-        "allocations": "[[\"0x8c98b43bf61f2b07c4d26f85732217948fca2a90\", 406157991296116634749984],[\"0x47d8490be37adc7af053322d6d779153689e13c1\", 115792089237316195423570985008687907853269984665640564039457584007913129639935]]"
-      },
-      "data": null
+        "_allocations": "[[\"0x8c98b43bf61f2b07c4d26f85732217948fca2a90\",\"406157991296116634749984\"],[\"0x47d8490be37adc7af053322d6d779153689e13c1\",\"115792089237316195423570985008687907853269984665640564039457584007913129639935\"]]"
+      }
     }
   ]
 }
