@@ -338,8 +338,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         newCfg = _deployConfig(_config);
 
         modelState.k = _config.kmin;
-
-        emit ConfigUpdated(newCfg);
     }
 
     function _deployConfig(IDynamicKinkModel.Config memory _config)

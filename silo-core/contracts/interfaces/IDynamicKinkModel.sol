@@ -106,8 +106,6 @@ interface IDynamicKinkModel {
 
     event NewConfig(IDynamicKinkModelConfig indexed config);
 
-    event ConfigUpdated(IDynamicKinkModelConfig indexed config);
-
     event ConfigRestored(IDynamicKinkModelConfig indexed config);
 
     error OnlySilo();
