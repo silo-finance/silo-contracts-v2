@@ -74,7 +74,9 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         external
         virtual
     {
+        require(_silo != address(0), EmptySilo());
         require(modelState.silo == address(0), AlreadyInitialized());
+
         modelState.silo = _silo;
 
         _updateConfiguration(_config);

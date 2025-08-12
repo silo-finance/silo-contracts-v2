@@ -138,6 +138,7 @@ interface IDynamicKinkModel {
     error InvalidTMinus();
     error InvalidTPlus();
     error XOverflow();
+    error EmptySilo();
 
     function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo) external;
 
