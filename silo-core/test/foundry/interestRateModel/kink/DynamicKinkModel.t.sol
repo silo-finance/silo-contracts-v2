@@ -17,12 +17,36 @@ import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 FOUNDRY_PROFILE=core_test forge test -vv --mc DynamicKinkModelTest
 */
 contract DynamicKinkModelTest is Test {
+    struct RandomKinkConfig {
+        uint64 ulow;
+        uint64 u1;
+        uint64 u2;
+        uint64 ucrit;
+        uint64 rmin;
+        uint96 kmin;
+        uint96 kmax;
+        uint96 alpha;
+        uint96 cminus;
+        uint96 cplus;
+        uint96 c1;
+        uint96 c2;
+        uint96 dmax;
+    }
+
     DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory();
     DynamicKinkModel irm;
 
     int256 constant _DP = 10 ** 18;
+    int256 public constant UNIVERSAL_LIMIT = 1e9 * _DP;
 
     ISilo.UtilizationData public utilizationData;
+
+    modifier whenValidConfig(RandomKinkConfig memory _config) {
+        bool valid = _isValidConfig(_config);
+        vm.assume(valid);
+
+        _;
+    }
 
     function setUp() public {
         IDynamicKinkModel.Config memory emptyConfig; 
@@ -48,7 +72,58 @@ contract DynamicKinkModelTest is Test {
     /* 
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_emptyConfigPass
     */
-    function test_kink_emptyConfigPass() public view {
+    function test_kink_emptyConfigPass(IDynamicKinkModel.Config calldata _config) public view {
         // pass
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_init_neverRevert_whenValidConfig
+    */
+    function test_init_neverRevert_whenValidConfig(
+        RandomKinkConfig memory _config, 
+        address _initialOwner,
+        address _silo
+    ) 
+        public 
+        whenValidConfig(_config) 
+    {
+        vm.assume(_silo != address(0));
+
+        IDynamicKinkModel.Config memory config = _toConfig(_config);
+
+        DynamicKinkModel newModel = new DynamicKinkModel();
+        newModel.initialize(config, _initialOwner, _silo);
+    }
+
+    function _isValidConfig(RandomKinkConfig memory _config) 
+        internal 
+        view 
+        returns (bool valid) 
+    {
+        try irm.verifyConfig(_toConfig(_config)) {
+            valid = true;
+        } catch {
+            valid = false;
+        }
+    }
+
+    function _toConfig(RandomKinkConfig memory _config) internal pure returns (IDynamicKinkModel.Config memory) {
+        return IDynamicKinkModel.Config({
+            ulow: SafeCast.toInt256(uint256(_config.ulow)),
+            u1: SafeCast.toInt256(uint256(_config.u1)),
+            u2: SafeCast.toInt256(uint256(_config.u2)),
+            ucrit: SafeCast.toInt256(uint256(_config.ucrit)),
+            rmin: SafeCast.toInt256(uint256(_config.rmin)),
+            // we need to modulo, because on both sides we have 96 bits,
+            // in order not to use vm.assume or require, we bound random value
+            kmin: int96(_config.kmin % uint96(type(int96).max)),
+            kmax: int96(_config.kmax % uint96(type(int96).max)),
+            alpha: SafeCast.toInt256(uint256(_config.alpha)),
+            cminus: SafeCast.toInt256(uint256(_config.cminus)),
+            cplus: SafeCast.toInt256(uint256(_config.cplus)),
+            c1: SafeCast.toInt256(uint256(_config.c1)),
+            c2: SafeCast.toInt256(uint256(_config.c2)),
+            dmax: SafeCast.toInt256(uint256(_config.dmax))
+        });
     }
 }
