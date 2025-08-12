@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
+import {SignedMath} from "openzeppelin5/utils/math/SignedMath.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
@@ -14,7 +15,7 @@ import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/k
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 
 /* 
-FOUNDRY_PROFILE=core_test forge test -vv --mc DynamicKinkModelTest
+FOUNDRY_PROFILE=core_test forge test --mc DynamicKinkModelTest -vv
 */
 contract DynamicKinkModelTest is Test {
     struct RandomKinkConfig {
@@ -55,7 +56,7 @@ contract DynamicKinkModelTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_initRevert_whenSiloZero
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_initRevert_whenSiloZero -vv
     */
     function test_kink_initRevert_whenSiloZero() public {
         DynamicKinkModel newModel = new DynamicKinkModel();
@@ -66,7 +67,7 @@ contract DynamicKinkModelTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_initRevert_whenAlreadyInitialized
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_initRevert_whenAlreadyInitialized -vv
     */
     function test_kink_initRevert_whenAlreadyInitialized() public {
         IDynamicKinkModel.Config memory config;
@@ -76,9 +77,9 @@ contract DynamicKinkModelTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --mt test_init_neverRevert_whenValidConfig
+    FOUNDRY_PROFILE=core_test forge test --mt test_init_neverRevert_whenValidConfig -vv
     */
-    function test_init_neverRevert_whenValidConfig(
+    function test_init_neverRevert_whenValidConfig_fuzz(
         RandomKinkConfig memory _config, 
         address _initialOwner,
         address _silo
@@ -104,7 +105,7 @@ contract DynamicKinkModelTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_updateConfigRevert_whenNotOwner
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfigRevert_whenNotOwner -vv
     */
     function test_kink_updateConfigRevert_whenNotOwner() public {
         IDynamicKinkModel.Config memory config;
@@ -120,9 +121,11 @@ contract DynamicKinkModelTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_updateConfig_fail_whenInvalidConfig
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfig_fail_whenInvalidConfig -vv
     */
-    function test_kink_updateConfig_fail_whenInvalidConfig(IDynamicKinkModel.Config calldata _config) public {
+    function test_kink_updateConfig_fail_whenInvalidConfig_fuzz(
+        IDynamicKinkModel.Config calldata _config
+    ) public {
         vm.assume(!_isValidConfig(_config));
 
         vm.expectRevert();
@@ -130,22 +133,52 @@ contract DynamicKinkModelTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_updateConfig_pass
+        FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfig_multipleTimes -vv
     */
-    function test_kink_updateConfig_pass(RandomKinkConfig memory _config) public whenValidConfig(_config) {
+    function test_kink_updateConfig_multipleTimes_fuzz(
+        RandomKinkConfig memory _config
+    ) 
+        public
+        whenValidConfig(_config) 
+    {
         _kink_updateConfig_pass(_toConfig(_config));
+        _kink_updateConfig_pass(_toConfig(_config));
+        _kink_updateConfig_pass(_toConfig(_config));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfig_randomMultipleTimes -vv
+
+    with RandomKinkConfig[] fuzzing fails because it is to hard to find valid configs
+    */
+    function test_kink_updateConfig_randomMultipleTimes_fuzz(
+        RandomKinkConfig memory _config, 
+        uint64[10] memory _randomizers
+    ) public whenValidConfig(_config) {
+        _kink_updateConfig_pass(_toConfig(_config));
+
+        for (uint256 i = 0; i < _randomizers.length; i++) {
+            console2.log("randomizer %s of %s", i, _randomizers.length);
+            IDynamicKinkModel.Config memory randomConfig = _randomizeConfig(_config, _randomizers[i]);
+            _makeConfigValid(randomConfig);
+            
+            _kink_updateConfig_pass(randomConfig);
+        }
     }
 
     function _kink_updateConfig_pass(IDynamicKinkModel.Config memory _config) internal {
         IDynamicKinkModelConfig prevConfig = irm.irmConfig();
 
-        address newConfigAddress = vm.computeCreateAddress(address(irm), vm.getNonce(address(irm)));
+        uint256 nonce = vm.getNonce(address(irm));
+        address newConfigAddress = vm.computeCreateAddress(address(irm), nonce);
+        console2.log("newConfigAddress %s for nonce %s", newConfigAddress, nonce);
 
         vm.expectEmit(true, true, true, true);
         emit IDynamicKinkModel.NewConfig(IDynamicKinkModelConfig(newConfigAddress));
 
         irm.updateConfig(_config);
         _assertConfigEq(_config, irm.irmConfig().getConfig(), "updateConfig_pass");
+        console2.log("config addr %s", address(irm.irmConfig()));
 
         assertEq(address(irm.configsHistory(irm.irmConfig())), address(prevConfig), "history is wrong");
     }
@@ -192,6 +225,57 @@ contract DynamicKinkModelTest is Test {
             c2: SafeCast.toInt256(uint256(_config.c2)),
             dmax: SafeCast.toInt256(uint256(_config.dmax))
         });
+    }
+
+    function _randomizeConfig(
+        RandomKinkConfig memory _config, 
+        uint128 _randomizer
+    ) internal pure returns (IDynamicKinkModel.Config memory cfg) {
+        cfg = _toConfig(RandomKinkConfig({
+            ulow: _generateRandomNumber64(_config.ulow, _randomizer),
+            u1: _generateRandomNumber64(_config.u1, _randomizer),
+            u2: _generateRandomNumber64(_config.u2, _randomizer),
+            ucrit: _generateRandomNumber64(_config.ucrit, _randomizer),
+            rmin: _generateRandomNumber64(_config.rmin, _randomizer),
+            kmin: _generateRandomNumber96(_config.kmin, _randomizer),
+            kmax: _generateRandomNumber96(_config.kmax, _randomizer),
+            alpha: _generateRandomNumber96(_config.alpha, _randomizer),
+            cminus: _generateRandomNumber96(_config.cminus, _randomizer),
+            cplus: _generateRandomNumber96(_config.cplus, _randomizer),
+            c1: _generateRandomNumber96(_config.c1, _randomizer),
+            c2: _generateRandomNumber96(_config.c2, _randomizer),
+            dmax: _generateRandomNumber96(_config.dmax, _randomizer)
+        }));
+    }
+
+    function _makeConfigValid(IDynamicKinkModel.Config memory _config) internal pure {
+        _config.ulow = _getBetween(_config.ulow, 0, _config.u1);
+        _config.u1 = _getBetween(_config.u1, 0, _DP);
+        _config.u2 = _getBetween(_config.u2, _config.u1, _DP);
+        _config.ucrit = _getBetween(_config.ucrit, _config.u2, _DP);
+        _config.rmin = _getBetween(_config.rmin, 0, _DP);
+        _config.kmin = int96(_getBetween(_config.kmin, 0, UNIVERSAL_LIMIT));
+        _config.kmax = int96(_getBetween(_config.kmax, _config.kmin, UNIVERSAL_LIMIT));
+        _config.alpha = _getBetween(_config.alpha, 0, UNIVERSAL_LIMIT);
+        _config.cminus = _getBetween(_config.cminus, 0, UNIVERSAL_LIMIT);
+        _config.cplus = _getBetween(_config.cplus, 0, UNIVERSAL_LIMIT);
+        _config.c1 = _getBetween(_config.c1, 0, UNIVERSAL_LIMIT);
+        _config.c2 = _getBetween(_config.c2, 0, UNIVERSAL_LIMIT);
+        _config.dmax = _getBetween(_config.dmax, _config.c2, UNIVERSAL_LIMIT);
+    }
+
+    function _getBetween(int256 _n, int256 _min, int256 _max) internal pure returns (int256) {
+        return SignedMath.max(SignedMath.min(_n, _max), _min);
+    }
+
+    function _generateRandomNumber64(uint64 _n, uint128 _modulo) internal pure returns (uint64) {
+        if (_modulo == 0) return _n;
+        return uint64((uint128(_n) % _modulo) % uint64(type(uint64).max));
+    }
+
+    function _generateRandomNumber96(uint96 _n, uint128 _modulo) internal pure returns (uint96) {
+        if (_modulo == 0) return _n;
+        return uint96((uint128(_n) % _modulo) % uint96(type(uint96).max));
     }
 
     function _assertConfigEq(
