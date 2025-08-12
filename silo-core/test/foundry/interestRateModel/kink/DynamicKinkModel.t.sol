@@ -93,6 +93,8 @@ contract DynamicKinkModelTest is Test {
 
         DynamicKinkModel newModel = new DynamicKinkModel();
         newModel.initialize(config, _initialOwner, _silo);
+
+        _assertConfigEq(config, newModel.irmConfig().getConfig(), "init never revert");
     }
 
     function _isValidConfig(RandomKinkConfig memory _config) 
@@ -125,5 +127,25 @@ contract DynamicKinkModelTest is Test {
             c2: SafeCast.toInt256(uint256(_config.c2)),
             dmax: SafeCast.toInt256(uint256(_config.dmax))
         });
+    }
+
+    function _assertConfigEq(
+        IDynamicKinkModel.Config memory _config1, 
+        IDynamicKinkModel.Config memory _config2,
+        string memory _name
+    ) internal pure returns (bool) {
+        assertEq(_config1.ulow, _config2.ulow, string.concat("[", _name, "] ulow does not match"));
+        assertEq(_config1.u1, _config2.u1, string.concat("[", _name, "] u1 does not match"));
+        assertEq(_config1.u2, _config2.u2, string.concat("[", _name, "] u2 does not match"));
+        assertEq(_config1.ucrit, _config2.ucrit, string.concat("[", _name, "] ucrit does not match"));
+        assertEq(_config1.rmin, _config2.rmin, string.concat("[", _name, "] rmin does not match"));
+        assertEq(_config1.kmin, _config2.kmin, string.concat("[", _name, "] kmin does not match"));
+        assertEq(_config1.kmax, _config2.kmax, string.concat("[", _name, "] kmax does not match"));
+        assertEq(_config1.alpha, _config2.alpha, string.concat("[", _name, "] alpha does not match"));
+        assertEq(_config1.cminus, _config2.cminus, string.concat("[", _name, "] cminus does not match"));
+        assertEq(_config1.cplus, _config2.cplus, string.concat("[", _name, "] cplus does not match"));
+        assertEq(_config1.c1, _config2.c1, string.concat("[", _name, "] c1 does not match"));
+        assertEq(_config1.c2, _config2.c2, string.concat("[", _name, "] c2 does not match"));
+        assertEq(_config1.dmax, _config2.dmax, string.concat("[", _name, "] dmax does not match"));
     }
 }
