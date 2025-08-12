@@ -37,6 +37,8 @@ contract DynamicKinkModelTest is Test {
     DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory();
     DynamicKinkModel irm;
 
+    mapping (bytes32 => bool) private seen;
+
     int256 constant _DP = 10 ** 18;
     int256 public constant UNIVERSAL_LIMIT = 1e9 * _DP;
 
@@ -147,11 +149,11 @@ contract DynamicKinkModelTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfig_randomMultipleTimes -vv
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfig_randomMultipleTimes1 -vv
 
     with RandomKinkConfig[] fuzzing fails because it is to hard to find valid configs
     */
-    function test_kink_updateConfig_randomMultipleTimes_fuzz(
+    function test_kink_updateConfig_randomMultipleTimes1_fuzz(
         RandomKinkConfig memory _config, 
         uint64[10] memory _randomizers
     ) public whenValidConfig(_config) {
@@ -164,6 +166,87 @@ contract DynamicKinkModelTest is Test {
             
             _kink_updateConfig_pass(randomConfig);
         }
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfig_randomMultipleTimes2_fuzz -vv
+    */
+    function test_kink_updateConfig_randomMultipleTimes2_fuzz(
+        RandomKinkConfig[10] memory _config
+    ) public {
+        
+        for (uint256 i = 0; i < _config.length; i++) {
+            IDynamicKinkModel.Config memory randomConfig = _toConfig(_config[i]);
+            _makeConfigValid(randomConfig);
+
+            bytes32 hash = _hashConfig(randomConfig);
+            vm.assume(!seen[hash]);
+            seen[hash] = true;
+            
+            _kink_updateConfig_pass(randomConfig);
+        }
+    }
+
+/*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_restoreLastConfig_revertWhenNoHistory -vv
+    */
+    function test_kink_restoreLastConfig_revertWhenNoHistory() public {
+        vm.expectRevert(IDynamicKinkModel.AddressZero.selector);
+        irm.restoreLastConfig();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_restoreLastConfig_revertWhenNotOwner -vv
+    */
+    function test_kink_restoreLastConfig_revertWhenNotOwner() public {
+        address randomUser = makeAddr("RandomUser");
+
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            randomUser
+        ));
+        vm.prank(randomUser);
+        irm.restoreLastConfig();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_restoreLastConfig_fuzz -vv
+    */
+    function test_kink_restoreLastConfig_fuzz(RandomKinkConfig[10] memory _config) public {
+        bytes32[] memory history = new bytes32[](_config.length);
+        IDynamicKinkModelConfig[] memory historyAddrs = new IDynamicKinkModelConfig[](_config.length);
+        
+        IDynamicKinkModelConfig originalIrmConfig = irm.irmConfig();
+
+        for (uint256 i = 0; i < _config.length; i++) {
+            history[i] = _hashConfig(irm.irmConfig().getConfig());
+            historyAddrs[i] = irm.irmConfig();
+
+            IDynamicKinkModel.Config memory cfg = _toConfig(_config[i]);
+            _makeConfigValid(cfg);
+            
+            _kink_updateConfig_pass(cfg);
+        }
+
+        for (uint256 k = 0; k < _config.length; k++) {
+            uint256 i = _config.length - k - 1;
+            vm.expectEmit(true, true, true, true);
+            emit IDynamicKinkModel.ConfigRestored(historyAddrs[i]);
+
+            console2.log("[%s] expected irm addr %s", i, address(historyAddrs[i]));
+        
+            irm.restoreLastConfig();
+            console2.log("restored %s", i);
+
+            assertEq(history[i], _hashConfig(irm.irmConfig().getConfig()), "config was not restored");
+            assertEq(address(irm.irmConfig()), address(historyAddrs[i]), "irm config addr was not restored");
+        }
+
+        assertEq(address(irm.irmConfig()), address(originalIrmConfig), "irm config addr was not restored to the original");
+
+        // at the end there is nothing more to restore
+        vm.expectRevert(IDynamicKinkModel.AddressZero.selector);
+        irm.restoreLastConfig();
     }
 
     /*  
@@ -310,7 +393,7 @@ contract DynamicKinkModelTest is Test {
         assertEq(_config1.dmax, _config2.dmax, string.concat("[", _name, "] dmax does not match"));
     }
 
-    function _printConfig(IDynamicKinkModel.Config memory _config) internal view {
+    function _printConfig(IDynamicKinkModel.Config memory _config) internal pure {
         console2.log("-------------------------------- start --------------------------------");
         console2.log("ulow %s", _config.ulow);
         console2.log("u1 %s", _config.u1);
@@ -326,5 +409,9 @@ contract DynamicKinkModelTest is Test {
         console2.log("c2 %s", _config.c2);
         console2.log("dmax %s", _config.dmax);
         console2.log("-------------------------------- end --------------------------------");
+    }
+
+    function _hashConfig(IDynamicKinkModel.Config memory _config) internal pure returns (bytes32) {
+        return keccak256(abi.encode(_config));
     }
 }

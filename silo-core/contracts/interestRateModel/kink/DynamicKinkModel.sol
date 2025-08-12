@@ -26,7 +26,7 @@ QA rules:
 - hard rule: utilization (setup.u) in the model should never be above 100%.
 - no debt no intrest
 - AlreadyInitialized: only one init
-
+- irmConfig should be never zero
 */
 
 /// @title DynamicKinkModel
