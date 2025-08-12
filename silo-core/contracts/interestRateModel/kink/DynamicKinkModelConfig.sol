@@ -12,8 +12,8 @@ contract DynamicKinkModelConfig is IDynamicKinkModelConfig {
     int256 internal immutable _U2;
     int256 internal immutable _UCRIT;
     int256 internal immutable _RMIN;
-    int256 internal immutable _KMIN;
-    int256 internal immutable _KMAX;
+    int96 internal immutable _KMIN;
+    int96 internal immutable _KMAX;
     int256 internal immutable _ALPHA;
     int256 internal immutable _CMINUS;
     int256 internal immutable _CPLUS;

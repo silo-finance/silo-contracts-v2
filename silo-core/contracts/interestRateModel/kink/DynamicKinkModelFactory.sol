@@ -78,8 +78,8 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         require(defaultInt.t1.isBetween(defaultInt.tMinus, 100 * s), IDynamicKinkModel.InvalidT1());
 
         config.rmin = defaultInt.rmin / s;
-        config.kmin = (defaultInt.rcritMin - defaultInt.rmin) / (defaultInt.ucrit - defaultInt.ulow) / s;
-        config.kmax = (defaultInt.rcritMax - defaultInt.rmin) / (defaultInt.ucrit - defaultInt.ulow) / s;
+        config.kmin = SafeCast.toInt96((defaultInt.rcritMin - defaultInt.rmin) / (defaultInt.ucrit - defaultInt.ulow) / s);
+        config.kmax = SafeCast.toInt96((defaultInt.rcritMax - defaultInt.rmin) / (defaultInt.ucrit - defaultInt.ulow) / s);
 
         config.alpha = (defaultInt.r100 - defaultInt.rmin - s * config.kmax * (DP - defaultInt.ulow))
             / (s * config.kmax * (DP - defaultInt.ucrit));

@@ -35,6 +35,7 @@ QA rules:
 /// @custom:security-contact security@silo.finance
 contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     using KinkMath for int256;
+    using KinkMath for int96;
 
     /// @dev DP in 18 decimal points used for integer calculations
     int256 internal constant _DP = int256(1e18);
@@ -117,7 +118,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _tba: SafeCast.toInt256(_debtAssets)
         }) returns (int256 rcompInt, int256 k) {
             rcomp = SafeCast.toUint256(rcompInt);
-            modelState.k = k;
+            modelState.k = _capK(k, cfg.kmin, cfg.kmax);
         } catch {
             rcomp = 0;
         }
@@ -225,7 +226,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
         int256 T = _t1 - _t0;
 
-        int256 k = SignedMath.max(_cfg.kmin, SignedMath.min(_cfg.kmax, _state.k));
+        // k is stored capped, so we can use it as is
+        int256 k = _state.k;
 
         if (_u < _cfg.u1) {
             k = SignedMath.max(
@@ -269,7 +271,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         pure
         returns (int256 rcomp, int256 k)
     {
-        if (_tba == 0) return (0, _state.k); // no debt, no interest
+        // no debt, no interest, overriding min APR
+        if (_tba == 0) return (0, _state.k); 
 
         LocalVarsRCOMP memory _l;
 
@@ -285,7 +288,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             );
         }
 
-        k = SignedMath.max(_cfg.kmin, SignedMath.min(_cfg.kmax, _state.k));
+        k = _state.k;
+
         // slope of the kink at t1 ignoring lower and upper bounds
         _l.k1 = k + _l.roc * _l.T;
 
@@ -357,5 +361,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         if (_collateralAssets == 0 || _debtAssets >= _collateralAssets) return _DP;
 
         return int256(Math.mulDiv(_debtAssets, uint256(_DP), _collateralAssets, Math.Rounding.Floor));
+    }
+
+    function _capK(int256 _k, int256 _kmin, int256 _kmax) internal pure returns(int96 cappedK) {
+        // safe to cast to int96 because we know that _kmin and _kmax are in the range of int96
+        cappedK = int96(SignedMath.max(_kmin, SignedMath.min(_kmax, _k)));
     }
 }
