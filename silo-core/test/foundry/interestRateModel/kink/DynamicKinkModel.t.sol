@@ -8,7 +8,7 @@ import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
-import {DynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
+import {DynamicKinkModelConfig, IDynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
 import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
@@ -50,30 +50,8 @@ contract DynamicKinkModelTest is Test {
 
     function setUp() public {
         IDynamicKinkModel.Config memory emptyConfig; 
-        // IDynamicKinkModel.Config({
-        //     ulow: 0,
-        //     u1: 0,
-        //     u2: 0,
-        //     ucrit: 0,
-        //     rmin: 0,
-        //     kmin: 0,
-        //     kmax: 0,
-        //     alpha: 0,
-        //     cminus: 0,
-        //     cplus: 0,
-        //     c1: 0,
-        //     c2: 0,
-        //     dmax: 0
-        // });
 
         irm = DynamicKinkModel(address(FACTORY.create(emptyConfig, address(this), address(this))));
-    }
-
-    /* 
-    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_emptyConfigPass
-    */
-    function test_kink_emptyConfigPass(IDynamicKinkModel.Config calldata _config) public view {
-        // pass
     }
 
     /*
@@ -111,12 +89,16 @@ contract DynamicKinkModelTest is Test {
         vm.assume(_silo != address(0));
 
         IDynamicKinkModel.Config memory config = _toConfig(_config);
-
         DynamicKinkModel newModel = new DynamicKinkModel();
+
+        vm.expectEmit(true, true, true, true);
+        emit IDynamicKinkModel.Initialized(_initialOwner, _silo);
+
         newModel.initialize(config, _initialOwner, _silo);
 
         _assertConfigEq(config, newModel.irmConfig().getConfig(), "init never revert");
 
+        // re-init should revert
         vm.expectRevert(IDynamicKinkModel.AlreadyInitialized.selector);
         newModel.initialize(config, _initialOwner, _silo);
     }
@@ -151,10 +133,21 @@ contract DynamicKinkModelTest is Test {
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_updateConfig_pass
     */
     function test_kink_updateConfig_pass(RandomKinkConfig memory _config) public whenValidConfig(_config) {
-        IDynamicKinkModel.Config memory config = _toConfig(_config);
+        _kink_updateConfig_pass(_toConfig(_config));
+    }
 
-        irm.updateConfig(config);
-        _assertConfigEq(config, irm.irmConfig().getConfig(), "updateConfig_pass");
+    function _kink_updateConfig_pass(IDynamicKinkModel.Config memory _config) internal {
+        IDynamicKinkModelConfig prevConfig = irm.irmConfig();
+
+        address newConfigAddress = vm.computeCreateAddress(address(irm), vm.getNonce(address(irm)));
+
+        vm.expectEmit(true, true, true, true);
+        emit IDynamicKinkModel.NewConfig(IDynamicKinkModelConfig(newConfigAddress));
+
+        irm.updateConfig(_config);
+        _assertConfigEq(_config, irm.irmConfig().getConfig(), "updateConfig_pass");
+
+        assertEq(address(irm.configsHistory(irm.irmConfig())), address(prevConfig), "history is wrong");
     }
 
     function _isValidConfig(RandomKinkConfig memory _config) 
