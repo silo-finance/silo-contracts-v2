@@ -158,12 +158,23 @@ contract DynamicKinkModelTest is Test {
         _kink_updateConfig_pass(_toConfig(_config));
 
         for (uint256 i = 0; i < _randomizers.length; i++) {
-            console2.log("randomizer %s of %s", i, _randomizers.length);
             IDynamicKinkModel.Config memory randomConfig = _randomizeConfig(_config, _randomizers[i]);
             _makeConfigValid(randomConfig);
+            _printConfig(randomConfig);
             
             _kink_updateConfig_pass(randomConfig);
         }
+    }
+
+    /*  
+    FOUNDRY_PROFILE=core_test forge test --mt test_self_makeConfigValid -vv
+    */
+    function test_self_makeConfigValid(IDynamicKinkModel.Config memory _config) public view {
+        _printConfig(_config);
+        _makeConfigValid(_config);
+        _printConfig(_config);
+
+        assertTrue(_isValidConfig(_config), "_makeConfigValid does not work");
     }
 
     function _kink_updateConfig_pass(IDynamicKinkModel.Config memory _config) internal {
@@ -195,7 +206,7 @@ contract DynamicKinkModelTest is Test {
         }
     }
 
-    function _isValidConfig(IDynamicKinkModel.Config calldata _config) 
+    function _isValidConfig(IDynamicKinkModel.Config memory _config) 
         internal 
         view 
         returns (bool valid) 
@@ -249,9 +260,10 @@ contract DynamicKinkModelTest is Test {
     }
 
     function _makeConfigValid(IDynamicKinkModel.Config memory _config) internal pure {
-        _config.ulow = _getBetween(_config.ulow, 0, _config.u1);
-        _config.u1 = _getBetween(_config.u1, 0, _DP);
+         _config.u1 = _getBetween(_config.u1, 0, _DP);
         _config.u2 = _getBetween(_config.u2, _config.u1, _DP);
+        _config.ulow = _getBetween(_config.ulow, 0, _config.u1);
+    
         _config.ucrit = _getBetween(_config.ucrit, _config.u2, _DP);
         _config.rmin = _getBetween(_config.rmin, 0, _DP);
         _config.kmin = int96(_getBetween(_config.kmin, 0, UNIVERSAL_LIMIT));
@@ -296,5 +308,23 @@ contract DynamicKinkModelTest is Test {
         assertEq(_config1.c1, _config2.c1, string.concat("[", _name, "] c1 does not match"));
         assertEq(_config1.c2, _config2.c2, string.concat("[", _name, "] c2 does not match"));
         assertEq(_config1.dmax, _config2.dmax, string.concat("[", _name, "] dmax does not match"));
+    }
+
+    function _printConfig(IDynamicKinkModel.Config memory _config) internal view {
+        console2.log("-------------------------------- start --------------------------------");
+        console2.log("ulow %s", _config.ulow);
+        console2.log("u1 %s", _config.u1);
+        console2.log("u2 %s", _config.u2);
+        console2.log("ucrit %s", _config.ucrit);
+        console2.log("rmin %s", _config.rmin);
+        console2.log("kmin %s", _config.kmin);
+        console2.log("kmax %s", _config.kmax);
+        console2.log("alpha %s", _config.alpha);
+        console2.log("cminus %s", _config.cminus);
+        console2.log("cplus %s", _config.cplus);
+        console2.log("c1 %s", _config.c1);
+        console2.log("c2 %s", _config.c2);
+        console2.log("dmax %s", _config.dmax);
+        console2.log("-------------------------------- end --------------------------------");
     }
 }
