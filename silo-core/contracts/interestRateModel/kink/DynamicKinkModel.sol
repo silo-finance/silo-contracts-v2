@@ -16,8 +16,6 @@ import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.
 import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
 import {KinkMath} from "../../lib/KinkMath.sol";
 
-// solhint-disable var-name-mixedcase
-
 /*
 TODO 
 QA rules:
@@ -95,6 +93,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
         irmConfig = lastOne;
         modelState.k = lastOne.getConfig().kmin;
+        emit ConfigRestored(lastOne);
     }
 
     function getCompoundInterestRateAndUpdate(
@@ -106,7 +105,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         virtual
         returns (uint256 rcomp) 
     {
-        (ModelState memory state, Config memory cfg) = getModelState();
+        (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
         require(msg.sender == state.silo, OnlySilo());
 
         try this.compoundInterestRate({
@@ -131,7 +130,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         returns (uint256 rcomp)
     {
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
-        (ModelState memory currentSetup, Config memory cfg) = getModelState();
+        (ModelState memory currentSetup, Config memory cfg) = getModelStateAndConfig();
 
         try this.compoundInterestRate({
             _cfg: cfg,
@@ -149,7 +148,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
     /// @notice it reverts for invalid silo
     function getCurrentInterestRate(address _silo, uint256 _blockTimestamp) external view returns (uint256 rcur) {
-        (ModelState memory state, Config memory cfg) = getModelState();
+        (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
         ISilo.UtilizationData memory data = ISilo(state.silo).utilizationData();
 
         require(_silo == state.silo, InvalidSilo());
@@ -168,7 +167,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         }
     }
 
-    function getModelState() public view returns (ModelState memory s, Config memory c) {
+    function getModelStateAndConfig() public view returns (ModelState memory s, Config memory c) {
         s = modelState;
         c = irmConfig.getConfig();
     }
@@ -360,4 +359,3 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         return int256(Math.mulDiv(_debtAssets, uint256(_DP), _collateralAssets, Math.Rounding.Floor));
     }
 }
-// solhint-enable var-name-mixedcase

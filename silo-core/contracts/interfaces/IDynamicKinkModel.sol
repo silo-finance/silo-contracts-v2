@@ -108,6 +108,8 @@ interface IDynamicKinkModel {
 
     event ConfigUpdated(IDynamicKinkModelConfig indexed config);
 
+    event ConfigRestored(IDynamicKinkModelConfig indexed config);
+
     error OnlySilo();
     error InvalidSilo();
     error InvalidDefaultConfig();
