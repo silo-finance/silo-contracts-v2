@@ -18,7 +18,7 @@ contract ReallocateSimulationTest is Test {
     /*
      FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_20250811_reallocate_simulation -vvv
     */
-    function test_20250811_reallocate_simulation() public {
+    function test_skip_20250811_reallocate_simulation() public {
         vm.createSelectFork(vm.envString("RPC_SONIC"), 42552900);
 
         ISiloVault vault = ISiloVault(0xDED4aC8645619334186f28B8798e07ca354CFa0e);
