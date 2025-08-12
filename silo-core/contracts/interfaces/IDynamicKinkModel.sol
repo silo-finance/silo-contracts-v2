@@ -112,7 +112,6 @@ interface IDynamicKinkModel {
     error InvalidSilo();
     error InvalidDefaultConfig();
     error AddressZero();
-    error NotInitialized();
     error AlreadyInitialized();
     error InvalidUlow();
     error InvalidU1();
@@ -121,7 +120,6 @@ interface IDynamicKinkModel {
     error InvalidRmin();
     error InvalidRcritMin();
     error InvalidRcritMax();
-    error InvalidK();
     error InvalidKmin();
     error InvalidKmax();
     error InvalidAlpha();
