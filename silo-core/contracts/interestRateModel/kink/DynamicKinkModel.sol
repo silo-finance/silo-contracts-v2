@@ -175,10 +175,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
     /// @inheritdoc IDynamicKinkModel
     function verifyConfig(IDynamicKinkModel.Config memory _config) public view virtual {
-        // 0 <= ulow <= u1 <= u2 <= ucrit <= DP
         require(_config.ulow.isBetween(0, _config.u1), InvalidUlow());
-        require(_config.u1.isBetween(_config.ulow, _config.u2), InvalidU1());
-        require(_config.u2.isBetween(_config.u1, _config.ucrit), InvalidU2());
+        require(_config.u1.isBetween(0, _DP), InvalidU1());
+        require(_config.u2.isBetween(_config.u1, _DP), InvalidU2());
+
         require(_config.ucrit.isBetween(_config.u2, _DP), InvalidUcrit());
 
         require(_config.rmin.isBetween(0, _DP), InvalidRmin());
