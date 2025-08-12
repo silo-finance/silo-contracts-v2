@@ -5,13 +5,13 @@ import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {DynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
 import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
-
 
 /* 
 FOUNDRY_PROFILE=core_test forge test -vv --mc DynamicKinkModelTest
@@ -77,6 +77,27 @@ contract DynamicKinkModelTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_initRevert_whenSiloZero
+    */
+    function test_kink_initRevert_whenSiloZero() public {
+        DynamicKinkModel newModel = new DynamicKinkModel();
+        IDynamicKinkModel.Config memory config;
+
+        vm.expectRevert(IDynamicKinkModel.EmptySilo.selector);
+        newModel.initialize(config, address(this), address(0));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_initRevert_whenAlreadyInitialized
+    */
+    function test_kink_initRevert_whenAlreadyInitialized() public {
+        IDynamicKinkModel.Config memory config;
+
+        vm.expectRevert(IDynamicKinkModel.AlreadyInitialized.selector);
+        irm.initialize(config, address(this), address(this));
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_init_neverRevert_whenValidConfig
     */
     function test_init_neverRevert_whenValidConfig(
@@ -95,6 +116,45 @@ contract DynamicKinkModelTest is Test {
         newModel.initialize(config, _initialOwner, _silo);
 
         _assertConfigEq(config, newModel.irmConfig().getConfig(), "init never revert");
+
+        vm.expectRevert(IDynamicKinkModel.AlreadyInitialized.selector);
+        newModel.initialize(config, _initialOwner, _silo);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_updateConfigRevert_whenNotOwner
+    */
+    function test_kink_updateConfigRevert_whenNotOwner() public {
+        IDynamicKinkModel.Config memory config;
+        address randomUser = makeAddr("RandomUser");
+
+        vm.expectRevert(abi.encodeWithSelector(
+            Ownable.OwnableUnauthorizedAccount.selector,
+            randomUser
+        ));
+
+        vm.prank(randomUser);
+        irm.updateConfig(config);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_updateConfig_fail_whenInvalidConfig
+    */
+    function test_kink_updateConfig_fail_whenInvalidConfig(IDynamicKinkModel.Config calldata _config) public {
+        vm.assume(!_isValidConfig(_config));
+
+        vm.expectRevert();
+        irm.updateConfig(_config);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_updateConfig_pass
+    */
+    function test_kink_updateConfig_pass(RandomKinkConfig memory _config) public whenValidConfig(_config) {
+        IDynamicKinkModel.Config memory config = _toConfig(_config);
+
+        irm.updateConfig(config);
+        _assertConfigEq(config, irm.irmConfig().getConfig(), "updateConfig_pass");
     }
 
     function _isValidConfig(RandomKinkConfig memory _config) 
@@ -103,6 +163,18 @@ contract DynamicKinkModelTest is Test {
         returns (bool valid) 
     {
         try irm.verifyConfig(_toConfig(_config)) {
+            valid = true;
+        } catch {
+            valid = false;
+        }
+    }
+
+    function _isValidConfig(IDynamicKinkModel.Config calldata _config) 
+        internal 
+        view 
+        returns (bool valid) 
+    {
+        try irm.verifyConfig(_config) {
             valid = true;
         } catch {
             valid = false;
@@ -133,7 +205,7 @@ contract DynamicKinkModelTest is Test {
         IDynamicKinkModel.Config memory _config1, 
         IDynamicKinkModel.Config memory _config2,
         string memory _name
-    ) internal pure returns (bool) {
+    ) internal pure {
         assertEq(_config1.ulow, _config2.ulow, string.concat("[", _name, "] ulow does not match"));
         assertEq(_config1.u1, _config2.u1, string.concat("[", _name, "] u1 does not match"));
         assertEq(_config1.u2, _config2.u2, string.concat("[", _name, "] u2 does not match"));
