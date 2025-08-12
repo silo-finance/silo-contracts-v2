@@ -110,7 +110,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
         try this.compoundInterestRate({
             _cfg: cfg,
-            _setup: state,
+            _state: state,
             _t0: SafeCast.toInt256(_interestRateTimestamp),
             _t1: SafeCast.toInt256(block.timestamp),
             _u: _calculateUtiliation(_collateralAssets, _debtAssets),
@@ -130,11 +130,11 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         returns (uint256 rcomp)
     {
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
-        (ModelState memory currentSetup, Config memory cfg) = getModelStateAndConfig();
+        (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
 
         try this.compoundInterestRate({
             _cfg: cfg,
-            _setup: currentSetup,
+            _state: state,
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
             _t1: SafeCast.toInt256(_blockTimestamp),
             _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
@@ -155,7 +155,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
         try this.currentInterestRate({
             _cfg: cfg,
-            _setup: state,
+            _state: state,
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
             _t1: SafeCast.toInt256(_blockTimestamp),
             _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
@@ -200,7 +200,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     /// @inheritdoc IDynamicKinkModel
     function currentInterestRate( // solhint-disable-line function-max-lines, code-complexity
         Config memory _cfg,
-        ModelState memory _setup, 
+        ModelState memory _state, 
         int256 _t0, 
         int256 _t1,
         int256 _u,
@@ -216,7 +216,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         // TODO remove it but add rule to echidna that: compoundInterestRate = 0 => currentInterestRate = 0;
         // compoundInterestRate({
         //     _cfg: _cfg,
-        //     _setup: _setup,
+        //     _state: _state,
         //     _t0: _t0,
         //     _t1: _t1,
         //     _u: _u,
@@ -225,7 +225,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
         int256 T = _t1 - _t0;
 
-        int256 k = SignedMath.max(_cfg.kmin, SignedMath.min(_cfg.kmax, _setup.k));
+        int256 k = SignedMath.max(_cfg.kmin, SignedMath.min(_cfg.kmax, _state.k));
 
         if (_u < _cfg.u1) {
             k = SignedMath.max(
@@ -259,7 +259,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     /// @inheritdoc IDynamicKinkModel
     function compoundInterestRate( // solhint-disable-line code-complexity, function-max-lines
         Config memory _cfg,
-        ModelState memory _setup, 
+        ModelState memory _state, 
         int256 _t0,
         int256 _t1, 
         int256 _u,
@@ -269,7 +269,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         pure
         returns (int256 rcomp, int256 k)
     {
-        if (_tba == 0) return (0, _setup.k); // no debt, no interest
+        if (_tba == 0) return (0, _state.k); // no debt, no interest
 
         LocalVarsRCOMP memory _l;
 
@@ -285,7 +285,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             );
         }
 
-        k = SignedMath.max(_cfg.kmin, SignedMath.min(_cfg.kmax, _setup.k));
+        k = SignedMath.max(_cfg.kmin, SignedMath.min(_cfg.kmax, _state.k));
         // slope of the kink at t1 ignoring lower and upper bounds
         _l.k1 = k + _l.roc * _l.T;
 
@@ -294,7 +294,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _l.x = _cfg.kmax * _l.T - (_cfg.kmax - k) ** 2 / (2 * _l.roc);
             k = _cfg.kmax;
         } else if (_l.k1 < _cfg.kmin) {
-            _l.x = _cfg.kmin * _l.T - (_setup.k - _cfg.kmin) ** 2 / (2 * _l.roc);
+            _l.x = _cfg.kmin * _l.T - (_state.k - _cfg.kmin) ** 2 / (2 * _l.roc);
             k = _cfg.kmin;
         } else {
             _l.x = (k + _l.k1) * _l.T / 2;
