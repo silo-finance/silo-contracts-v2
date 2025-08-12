@@ -25,6 +25,8 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     /// @dev IRM contract implementation address to clone
     DynamicKinkModel public immutable IRM;
 
+    mapping(address irm => bool) public createdByFactory;
+
     constructor() {
         IRM = new DynamicKinkModel();
     }
@@ -46,7 +48,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         virtual
         returns (IDynamicKinkModel.Config memory config)
     {
-        IDynamicKinkModel.UserFriendlyConfigInt memory defaultInt = _copyDefaultConfig(_default);
+        IDynamicKinkModel.UserFriendlyConfigInt memory defaultInt = _castConfig(_default);
 
         // 0 <= ulow <= u1 <= u2 <= ucrit <= DP
         require(defaultInt.ulow.isBetween(0, defaultInt.u1), IDynamicKinkModel.InvalidUlow());
@@ -118,10 +120,11 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         irm = IInterestRateModel(Clones.cloneDeterministic(address(IRM), salt));
         IDynamicKinkModel(address(irm)).initialize(_config, _initialOwner, _silo);
 
+        createdByFactory[address(irm)] = true;
         emit NewDynamicKinkModel(IDynamicKinkModel(address(irm)));
     }
 
-    function _copyDefaultConfig(IDynamicKinkModel.UserFriendlyConfig calldata _default)
+    function _castConfig(IDynamicKinkModel.UserFriendlyConfig calldata _default)
         internal
         pure
         returns (IDynamicKinkModel.UserFriendlyConfigInt memory config)
