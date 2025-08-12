@@ -18,6 +18,8 @@ import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 FOUNDRY_PROFILE=core_test forge test --mc DynamicKinkModelTest -vv
 */
 contract DynamicKinkModelTest is Test {
+    using KinkMath for int256;
+
     struct RandomKinkConfig {
         uint64 ulow;
         uint64 u1;
@@ -258,6 +260,24 @@ contract DynamicKinkModelTest is Test {
         _printConfig(_config);
 
         assertTrue(_isValidConfig(_config), "_makeConfigValid does not work");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRateAndUpdate_neverRevert -vv
+    */
+    function test_kink_getCompoundInterestRateAndUpdate_neverRevert_fuzz(
+        RandomKinkConfig memory _config,
+        uint256 _collateralAssets,
+        uint256 _debtAssets,
+        uint64 _interestRateTimestamp
+    ) public {
+        IDynamicKinkModel.Config memory cfg = _toConfig(_config);
+        _makeConfigValid(cfg);
+
+        irm.updateConfig(cfg);
+
+        uint256 rcomp = irm.getCompoundInterestRateAndUpdate(_collateralAssets, _debtAssets, _interestRateTimestamp);
+        assertTrue(rcomp >= 0 && rcomp <= uint256(irm.RCOMP_CAP()), "rcomp out of range");
     }
 
     function _kink_updateConfig_pass(IDynamicKinkModel.Config memory _config) internal {
