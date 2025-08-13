@@ -140,14 +140,13 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
         (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
 
-        if (data.interestRateTimestamp.willOverflowOnCastToInt256()) return 0;
         if (_blockTimestamp.willOverflowOnCastToInt256()) return 0;
         if (data.debtAssets.willOverflowOnCastToInt256()) return 0;
 
         try this.compoundInterestRate({
             _cfg: cfg,
             _state: state,
-            _t0: int256(data.interestRateTimestamp),
+            _t0: int256(uint256(data.interestRateTimestamp)),
             _t1: int256(_blockTimestamp),
             _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
             _tba: int256(data.debtAssets)

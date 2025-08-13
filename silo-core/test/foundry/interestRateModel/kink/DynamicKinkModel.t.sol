@@ -34,6 +34,11 @@ contract DynamicKinkModelTest is KinkCommon {
 
         assertEq(dp, _DP, "invalid local DP");
 
+        console2.log("UNIVERSAL_LIMIT %s", irm.UNIVERSAL_LIMIT());
+        console2.log("RCUR_CAP %s", irm.RCUR_CAP());
+        console2.log("RCOMP_CAP %s", irm.RCOMP_CAP());
+        console2.log("X_MAX %s", irm.X_MAX());
+
         assertEq(irm.UNIVERSAL_LIMIT(), 1e9 * dp, "invalid UNIVERSAL_LIMIT");
         assertEq(irm.RCUR_CAP(), 25 * dp, "invalid RCUR_CAP");
         assertEq(irm.RCOMP_CAP(), irm.RCUR_CAP() / 365 days, "invalid RCOMP_CAP");
@@ -236,6 +241,7 @@ contract DynamicKinkModelTest is KinkCommon {
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRateAndUpdate_neverRevert -vv
     */
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_kink_getCompoundInterestRateAndUpdate_neverRevert_fuzz(
         RandomKinkConfig memory _config,
         uint256 _collateralAssets,
@@ -248,8 +254,45 @@ contract DynamicKinkModelTest is KinkCommon {
         irm.updateConfig(cfg);
 
         uint256 rcomp = irm.getCompoundInterestRateAndUpdate(_collateralAssets, _debtAssets, _interestRateTimestamp);
-        
-        assertTrue(rcomp >= 0 && rcomp <= uint256(irm.RCOMP_CAP()), "rcomp out of range");
+
+        assertTrue(
+            rcomp >= 0 && rcomp <= uint256(irm.RCOMP_CAP()), 
+            "[getCompoundInterestRateAndUpdate] rcomp out of range"
+        );
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRate_neverRevert -vv
+    */
+    /// forge-config: core_test.fuzz.runs = 1000
+    function test_kink_getCompoundInterestRate_neverRevert_fuzz(
+        RandomKinkConfig memory _config,
+        ISilo.UtilizationData memory _utilizationData,
+        uint256 _blockTimestamp
+    ) public {
+        vm.assume(_blockTimestamp >= _utilizationData.interestRateTimestamp);
+
+        _setUtilizationData(_utilizationData);
+
+        IDynamicKinkModel.Config memory cfg = _toConfig(_config);
+        _makeConfigValid(cfg);
+
+        irm.updateConfig(cfg);
+
+        uint256 rcomp = irm.getCompoundInterestRate(address(this), _blockTimestamp);
+        uint256 dT = _blockTimestamp - _utilizationData.interestRateTimestamp;
+
+        console2.log("rcomp %s", rcomp);
+        console2.log("dT %s", dT);
+
+        if (dT == 0) {
+            assertEq(rcomp, 0, "[getCompoundInterestRate] rcomp is not 0 when dT == 0");
+        } else {
+            assertTrue(
+                rcomp >= 0 && rcomp / dT <= uint256(irm.RCOMP_CAP()), 
+                "[getCompoundInterestRate] rcomp out of range"
+            );
+        }
     }
 
     function _kink_updateConfig_pass(IDynamicKinkModel.Config memory _config) internal {

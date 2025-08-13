@@ -11,6 +11,8 @@ import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {DynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
 
+import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
+
 abstract contract KinkCommon is Test {
     struct RandomKinkConfig {
         uint64 ulow;
@@ -32,12 +34,17 @@ abstract contract KinkCommon is Test {
     int256 public constant UNIVERSAL_LIMIT = 1e9 * _DP;
 
     DynamicKinkModel irm;
+    ISilo.UtilizationData internal _utilizationData;
 
     modifier whenValidConfig(RandomKinkConfig memory _config) {
         bool valid = _isValidConfig(_config);
         vm.assume(valid);
 
         _;
+    }
+
+    function utilizationData() external view returns (ISilo.UtilizationData memory) {
+        return _utilizationData;
     }
 
     /*  
@@ -49,6 +56,10 @@ abstract contract KinkCommon is Test {
         _printConfig(_config);
 
         assertTrue(_isValidConfig(_config), "_makeConfigValid does not work");
+    }
+
+    function _setUtilizationData(ISilo.UtilizationData memory _data) internal {
+        _utilizationData = _data;
     }
 
     function _isValidConfig(RandomKinkConfig memory _config) 
