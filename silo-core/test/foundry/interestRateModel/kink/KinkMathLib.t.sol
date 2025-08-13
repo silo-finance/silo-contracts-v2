@@ -13,13 +13,12 @@ contract KinkMathLibTest is Test {
     /*
         FOUNDRY_PROFILE=core_test forge test --mt test_kinkMath_isBetween_fuzz -vv
     */
-    function test_kinkMath_isBetween_fuzz(int256 _var, int256 _low, int256 _hi) public {
+    function test_kinkMath_isBetween_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
         vm.assume(_low <= _hi);
 
         bool result = _var.isBetween(_low, _hi);
 
-        if (_var < _low) assertFalse(result, "var < low");
-        else if (_var > _hi) assertFalse(result, "var > hi");
+        if (_var < _low || _var > _hi) assertFalse(result, "var is not between");
         else assertTrue(result, "var is between");
     }
 }
