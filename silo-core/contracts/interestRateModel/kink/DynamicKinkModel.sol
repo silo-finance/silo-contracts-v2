@@ -137,8 +137,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         virtual
         returns (uint256 rcomp)
     {
-        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
         (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
+        require(_silo == state.silo, InvalidSilo());
+
+        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
         if (_blockTimestamp.willOverflowOnCastToInt256()) return 0;
         if (data.debtAssets.willOverflowOnCastToInt256()) return 0;
@@ -160,17 +162,20 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     /// @notice it reverts for invalid silo
     function getCurrentInterestRate(address _silo, uint256 _blockTimestamp) external view returns (uint256 rcur) {
         (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
-        ISilo.UtilizationData memory data = ISilo(state.silo).utilizationData();
-
         require(_silo == state.silo, InvalidSilo());
+
+        ISilo.UtilizationData memory data = ISilo(state.silo).utilizationData();
+        
+        if (data.debtAssets.willOverflowOnCastToInt256()) return 0;
+        if (_blockTimestamp.willOverflowOnCastToInt256()) return 0;
 
         try this.currentInterestRate({
             _cfg: cfg,
             _state: state,
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
-            _t1: SafeCast.toInt256(_blockTimestamp),
+            _t1: int256(_blockTimestamp),
             _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
-            _tba: SafeCast.toInt256(data.debtAssets)
+            _tba: int256(data.debtAssets)
         }) returns (int256 rcurInt) {
             rcur = SafeCast.toUint256(rcurInt);
         } catch {
