@@ -7,6 +7,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {IInterestRateModelV2Factory} from "silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol";
+import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
@@ -71,6 +72,7 @@ contract SiloDeployerDeploy is CommonDeploy {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         ISiloFactory siloFactory = ISiloFactory(SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias));
+        address irmZero = SiloCoreDeployments.get(SiloCoreContracts.IRM_ZERO, chainAlias);
 
         address irmConfigFactory = SiloCoreDeployments.get(
             SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY,
@@ -85,6 +87,7 @@ contract SiloDeployerDeploy is CommonDeploy {
 
         siloDeployer = ISiloDeployer(address(new SiloDeployer(
             IInterestRateModelV2Factory(irmConfigFactory),
+            IInterestRateModel(irmZero),
             siloFactory,
             siloImpl,
             shareProtectedCollateralTokenImpl,

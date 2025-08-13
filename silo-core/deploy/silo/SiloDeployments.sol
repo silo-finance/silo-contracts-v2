@@ -13,6 +13,8 @@ library SiloConfigsNames {
     string public constant SILO_LOCAL_HOOKS_MISCONFIGURATION = "Silo_Local_HookMisconfiguration";
     string public constant SILO_LOCAL_GAUGE_HOOK_RECEIVER = "Silo_Local_gauge_hook_receiver";
     string public constant SILO_LOCAL_INVALID_CONTRACTS = "Silo_Local_invalidContracts";
+    string public constant SILO_LOCAL_WITH_IRM_MOCK = "Silo_Local_withIRMMock";
+    string public constant SILO_LOCAL_ZERO_IRM = "Silo_Local_zeroIRM";
 
     string public constant SILO_FULL_CONFIG_TEST = "Silo_FULL_CONFIG_TEST";
     string public constant SILO_ETH_USDC_UNI_V3 = "Silo_ETH-USDC_UniswapV3";

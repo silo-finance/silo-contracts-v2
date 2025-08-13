@@ -42,6 +42,8 @@ abstract contract SiloDeploy is CommonDeploy {
 
     string[] public verificationIssues;
 
+    error UnknownInterestRateModel();
+
     function useConfig(string memory _config) external returns (SiloDeploy) {
         configName = _config;
         return this;
@@ -70,10 +72,10 @@ abstract contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] Config prepared");
 
-        InterestRateModelConfigData modelData = new InterestRateModelConfigData();
+        IInterestRateModelV2.Config memory irmConfigData0;
+        IInterestRateModelV2.Config memory irmConfigData1;
 
-        IInterestRateModelV2.Config memory irmConfigData0 = modelData.getConfigData(config.interestRateModelConfig0);
-        IInterestRateModelV2.Config memory irmConfigData1 = modelData.getConfigData(config.interestRateModelConfig1);
+        (irmConfigData0, irmConfigData1) = _getIRMConfigData(config, siloInitData);
 
         console2.log("[SiloCommonDeploy] IRM configs prepared");
         
@@ -294,6 +296,35 @@ abstract contract SiloDeploy is CommonDeploy {
     function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {
         contractAddress = SiloCoreDeployments.get(_name, ChainsLib.chainAlias());
         console2.log(string.concat("[SiloCommonDeploy] ", _name, " @ %s resolved "), contractAddress);
+    }
+
+    function _getIRMConfigData(SiloConfigData.ConfigData memory _config, ISiloConfig.InitData memory _siloInitData)
+        internal
+        returns (
+            IInterestRateModelV2.Config memory irmConfigData0,
+            IInterestRateModelV2.Config memory irmConfigData1
+        )
+    {
+        InterestRateModelConfigData irmModelData = new InterestRateModelConfigData();
+
+        address irmFactory = _resolveDeployedContract(SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY);
+        address irmZero = _resolveDeployedContract(SiloCoreContracts.IRM_ZERO);
+
+        if (_siloInitData.interestRateModel0 == irmFactory) {
+            irmConfigData0 = irmModelData.getConfigData(_config.interestRateModelConfig0);
+        } else if (_siloInitData.interestRateModel0 == irmZero) {
+            // no config data required for irmZero
+        } else {
+            revert UnknownInterestRateModel();
+        }
+
+        if (_siloInitData.interestRateModel1 == irmFactory) {
+            irmConfigData1 = irmModelData.getConfigData(_config.interestRateModelConfig1);
+        } else if (_siloInitData.interestRateModel1 == irmZero) {
+            // no config data required for irmZero
+        } else {
+            revert UnknownInterestRateModel();
+        }
     }
 
     function _isUniswapOracle(string memory _oracleConfigName) internal returns (bool isUniswapOracle) {

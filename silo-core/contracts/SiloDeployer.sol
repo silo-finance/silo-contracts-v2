@@ -9,6 +9,7 @@ import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRate
 import {IInterestRateModelV2Factory} from "silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
+import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
@@ -18,6 +19,7 @@ import {Create2Factory} from "common/utils/Create2Factory.sol";
 contract SiloDeployer is Create2Factory, ISiloDeployer {
     // solhint-disable var-name-mixedcase
     IInterestRateModelV2Factory public immutable IRM_CONFIG_FACTORY;
+    IInterestRateModel public immutable IRM_ZERO;
     ISiloFactory public immutable SILO_FACTORY;
     address public immutable SILO_IMPL;
     address public immutable SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL;
@@ -26,12 +28,14 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
 
     constructor(
         IInterestRateModelV2Factory _irmConfigFactory,
+        IInterestRateModel _irmZero,
         ISiloFactory _siloFactory,
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl
     ) {
         IRM_CONFIG_FACTORY = _irmConfigFactory;
+        IRM_ZERO = _irmZero;
         SILO_FACTORY = _siloFactory;
         SILO_IMPL = _siloImpl;
         SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL = _shareProtectedCollateralTokenImpl;
@@ -150,11 +154,15 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
     ) internal {
         bytes32 irmFactorySalt = _salt();
 
-        (, IInterestRateModelV2 interestRateModel0) = IRM_CONFIG_FACTORY.create(_irmConfigData0, irmFactorySalt);
-        (, IInterestRateModelV2 interestRateModel1) = IRM_CONFIG_FACTORY.create(_irmConfigData1, irmFactorySalt);
+        if (_siloInitData.interestRateModel0 != address(IRM_ZERO)) {
+            (, IInterestRateModelV2 interestRateModel0) = IRM_CONFIG_FACTORY.create(_irmConfigData0, irmFactorySalt);
+            _siloInitData.interestRateModel0 = address(interestRateModel0);
+        }
 
-        _siloInitData.interestRateModel0 = address(interestRateModel0);
-        _siloInitData.interestRateModel1 = address(interestRateModel1);
+        if (_siloInitData.interestRateModel1 != address(IRM_ZERO)) {
+            (, IInterestRateModelV2 interestRateModel1) = IRM_CONFIG_FACTORY.create(_irmConfigData1, irmFactorySalt);
+            _siloInitData.interestRateModel1 = address(interestRateModel1);
+        }
     }
 
     /// @notice Create an oracle if it is not specified in the `_siloInitData` and has tx details for the creation

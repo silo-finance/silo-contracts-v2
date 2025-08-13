@@ -18,6 +18,8 @@ import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";
 import {SiloInternal} from "../internal_testing/SiloInternal.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
+import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
+import {IRMZero} from "silo-core/contracts/interestRateModel/IRMZero.sol";
 import {IInterestRateModelV2Factory, InterestRateModelV2Factory} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config, InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
@@ -37,6 +39,7 @@ contract Deployers is VyperDeployer, Data {
     ISiloFactory siloFactory;
     IInterestRateModelV2Factory interestRateModelV2ConfigFactory;
     IInterestRateModelV2 interestRateModelV2;
+    IInterestRateModel irmZero;
     IGaugeHookReceiver hookReceiver;
     ISiloDeployer siloDeployer;
     PartialLiquidation liquidationModule;
@@ -146,9 +149,11 @@ contract Deployers is VyperDeployer, Data {
         address siloImpl = address(new Silo(siloFactory));
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
+        irmZero = IInterestRateModel(address(new IRMZero()));
 
         siloDeployer = ISiloDeployer(address(new SiloDeployer(
             interestRateModelV2ConfigFactory,
+            irmZero,
             siloFactory,
             siloImpl,
             shareProtectedCollateralTokenImpl,

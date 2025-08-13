@@ -28,7 +28,7 @@ import {
     IInterestRateModelV2Factory,
     InterestRateModelV2Factory
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
-
+import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {
     IInterestRateModelV2, InterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
@@ -92,6 +92,7 @@ abstract contract BaseStorage {
 
     /// @notice The interest rate model for the market
     IInterestRateModelV2 interestRateModelV2;
+    IInterestRateModel irmZero;
 
     /// @notice Secondary contracts
     ISiloDeployer siloDeployer;

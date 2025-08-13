@@ -38,6 +38,8 @@ import {
     InterestRateModelV2Config
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {ISilo} from "silo-core/contracts/Silo.sol";
+import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
+import {IRMZero} from "silo-core/contracts/interestRateModel/IRMZero.sol";
 
 import "forge-std/console.sol";
 
@@ -179,11 +181,13 @@ contract Setup is BaseTest {
         siloImpl = address(new Silo(siloFactory));
         shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         shareDebtTokenImpl = address(new ShareDebtToken());
+        irmZero = IInterestRateModel(address(new IRMZero()));
 
         siloDeployer = ISiloDeployer(
             address(
                 new SiloDeployer(
                     interestRateModelV2ConfigFactory,
+                    irmZero,
                     siloFactory,
                     siloImpl,
                     shareProtectedCollateralTokenImpl,
