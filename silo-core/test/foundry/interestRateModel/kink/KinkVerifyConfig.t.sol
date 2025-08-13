@@ -191,4 +191,10 @@ contract KinkVerifyConfigTest is KinkCommon {
         config.dmax = config.c2 + 1; // valid value
         irm.verifyConfig(config);
     }
+
+    function func_kink_verifyConfig_maxValues() public {
+        IDynamicKinkModel.Config memory config;
+
+        config.ulow = 0;
+    }
 }
