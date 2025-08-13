@@ -98,7 +98,7 @@ logger = logging.getLogger(__name__)
 
 
 # Hardcoded block number
-BLOCK_NUMBER = 42282562  # Replace with actual block number
+BLOCK_NUMBER = 42802010  # Replace with actual block number
 
 # Hardcoded SiloLens address
 SILO_LENS_ADDRESS = "0xB95AD415b0fcE49f84FbD5B26b14ec7cf4822c69"
