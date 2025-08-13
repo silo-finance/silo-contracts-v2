@@ -255,6 +255,8 @@ contract DynamicKinkModelTest is KinkCommon {
 
         uint256 rcomp = irm.getCompoundInterestRateAndUpdate(_collateralAssets, _debtAssets, _interestRateTimestamp);
 
+        if (_debtAssets == 0) assertEq(rcomp, 0, "[getCompoundInterestRateAndUpdate] rcomp is not 0 when no debt");
+
         assertTrue(
             rcomp >= 0 && rcomp <= uint256(irm.RCOMP_CAP()), 
             "[getCompoundInterestRateAndUpdate] rcomp out of range"
@@ -285,14 +287,56 @@ contract DynamicKinkModelTest is KinkCommon {
         console2.log("rcomp %s", rcomp);
         console2.log("dT %s", dT);
 
-        if (dT == 0) {
-            assertEq(rcomp, 0, "[getCompoundInterestRate] rcomp is not 0 when dT == 0");
+        if (dT == 0 || _utilizationData.debtAssets == 0) {
+            assertEq(rcomp, 0, "[getCompoundInterestRate] rcomp is not 0 when dT == 0 OR no debt");
         } else {
             assertTrue(
                 rcomp >= 0 && rcomp / dT <= uint256(irm.RCOMP_CAP()), 
                 "[getCompoundInterestRate] rcomp out of range"
             );
         }
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRate_revert_whenInvalidSilo -vv
+    */
+    function test_kink_getCompoundInterestRate_revert_whenInvalidSilo() public {
+        vm.expectRevert(IDynamicKinkModel.InvalidSilo.selector);
+        irm.getCompoundInterestRate(address(1), block.timestamp);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCurrentInterestRate_revert_whenInvalidSilo -vv
+    */
+    function test_kink_getCurrentInterestRate_revert_whenInvalidSilo() public {
+        vm.expectRevert(IDynamicKinkModel.InvalidSilo.selector);
+        irm.getCurrentInterestRate(address(1), block.timestamp);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCurrentInterestRate_neverRevert -vv
+    */
+    /// forge-config: core_test.fuzz.runs = 1000
+    function test_kink_getCurrentInterestRate_neverRevert_fuzz(
+        RandomKinkConfig memory _config,
+        ISilo.UtilizationData memory _utilizationData,
+        uint256 _blockTimestamp
+    ) public {
+        vm.assume(_blockTimestamp >= _utilizationData.interestRateTimestamp);
+
+        _setUtilizationData(_utilizationData);
+
+        IDynamicKinkModel.Config memory cfg = _toConfig(_config);
+        _makeConfigValid(cfg);
+
+        irm.updateConfig(cfg);
+
+        uint256 rcur = irm.getCurrentInterestRate(address(this), _blockTimestamp);
+
+        console2.log("rcur %s", rcur);
+
+        if (_utilizationData.debtAssets == 0) assertEq(rcur, 0, "[getCurrentInterestRate] rcur is not 0 when no debt");
+        else assertTrue(rcur >= 0 && rcur <= uint256(irm.RCUR_CAP()), "[getCurrentInterestRate] rcur out of range");
     }
 
     function _kink_updateConfig_pass(IDynamicKinkModel.Config memory _config) internal {
