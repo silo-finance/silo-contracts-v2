@@ -194,7 +194,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         require(_config.u1.isBetween(0, _DP), InvalidU1());
         require(_config.u2.isBetween(_config.u1, _DP), InvalidU2());
 
-        require(_config.ucrit.isBetween(_config.u2, _DP), InvalidUcrit());
+        require(_config.ucrit.isBetween(_config.ulow, _DP), InvalidUcrit());
 
         require(_config.rmin.isBetween(0, _DP), InvalidRmin());
 
