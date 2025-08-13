@@ -48,6 +48,19 @@ contract DynamicKinkModelTest is KinkCommon {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_getModelStateAndConfig_config -vv
+    */
+    function test_kink_getModelStateAndConfig_config_fuzz(
+        RandomKinkConfig memory _config
+    ) public whenValidConfig(_config) {
+        IDynamicKinkModel.Config memory config = _toConfig(_config);
+        irm.updateConfig(config);
+
+        (, IDynamicKinkModel.Config memory c) = irm.getModelStateAndConfig();
+        assertEq(_hashConfig(c), _hashConfig(config), "config is not the same");
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --mt test_init_neverRevert_whenValidConfig -vv
     */
     function test_init_neverRevert_whenValidConfig_fuzz(
