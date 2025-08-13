@@ -214,4 +214,27 @@ contract KinkVerifyConfigTest is KinkCommon {
 
         irm.verifyConfig(config);
     }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_verifyConfig_minValues -vv
+    */
+    function test_kink_verifyConfig_minValues() public view {
+        IDynamicKinkModel.Config memory config;
+
+        config.ulow = 1;
+        config.u1 = 1;
+        config.u2 = 1;
+        config.ucrit = 1;
+        config.rmin = 1;
+        config.kmin = 1;
+        config.kmax = 1;
+        config.alpha = 1;
+        config.cminus = 1;
+        config.cplus = 1;
+        config.c1 = 1;
+        config.c2 = 1;
+        config.dmax = 1;
+
+        irm.verifyConfig(config);
+    }
 }
