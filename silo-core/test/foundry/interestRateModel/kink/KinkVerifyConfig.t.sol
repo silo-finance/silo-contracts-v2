@@ -192,9 +192,26 @@ contract KinkVerifyConfigTest is KinkCommon {
         irm.verifyConfig(config);
     }
 
-    function func_kink_verifyConfig_maxValues() public {
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_verifyConfig_maxValues -vv
+    */
+    function test_kink_verifyConfig_maxValues() public view {
         IDynamicKinkModel.Config memory config;
 
-        config.ulow = 0;
+        config.ulow = _DP;
+        config.u1 = _DP;
+        config.u2 = _DP;
+        config.ucrit = _DP;
+        config.rmin = _DP;
+        config.kmin = int96(UNIVERSAL_LIMIT);
+        config.kmax = int96(UNIVERSAL_LIMIT);
+        config.alpha = UNIVERSAL_LIMIT;
+        config.cminus = UNIVERSAL_LIMIT;
+        config.cplus = UNIVERSAL_LIMIT;
+        config.c1 = UNIVERSAL_LIMIT;
+        config.c2 = UNIVERSAL_LIMIT;
+        config.dmax = UNIVERSAL_LIMIT;
+
+        irm.verifyConfig(config);
     }
 }
