@@ -108,33 +108,34 @@ interface IDynamicKinkModel {
 
     event ConfigRestored(IDynamicKinkModelConfig indexed config);
 
-    error OnlySilo();
-    error InvalidSilo();
-    error InvalidDefaultConfig();
     error AddressZero();
     error AlreadyInitialized();
-    error InvalidUlow();
+    error EmptySilo();
+    error InvalidAlpha();
+    error InvalidC1();
+    error InvalidC2();
+    error InvalidCminus();
+    error InvalidCplus();
+    error InvalidDefaultConfig();
+    error InvalidDmax();
+    error InvalidKmax();
+    error InvalidKmin();
+    error InvalidRcritMax();
+    error InvalidRcritMin();
+    error InvalidRmin();
+    error InvalidSilo();
+    error InvalidT1();
+    error InvalidT2();
+    error InvalidTimestamp();
+    error InvalidTMin();
+    error InvalidTMinus();
+    error InvalidTPlus();
     error InvalidU1();
     error InvalidU2();
     error InvalidUcrit();
-    error InvalidRmin();
-    error InvalidRcritMin();
-    error InvalidRcritMax();
-    error InvalidKmin();
-    error InvalidKmax();
-    error InvalidAlpha();
-    error InvalidCminus();
-    error InvalidCplus();
-    error InvalidC1();
-    error InvalidC2();
-    error InvalidDmax();
-    error InvalidTMin();
-    error InvalidT1();
-    error InvalidT2();
-    error InvalidTMinus();
-    error InvalidTPlus();
+    error InvalidUlow();
+    error OnlySilo();
     error XOverflow();
-    error EmptySilo();
 
     function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo) external;
 

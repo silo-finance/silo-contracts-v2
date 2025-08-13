@@ -5,4 +5,8 @@ library KinkMath {
     function isBetween(int256 _var, int256 _low, int256 _hi) internal pure returns (bool) {
         return (_low <=_var && _var <= _hi);
     }
+
+    function willOverflowOnCastToInt256(uint256 _value) internal pure returns (bool) {
+        return _value > uint256(type(int256).max);
+    }
 }

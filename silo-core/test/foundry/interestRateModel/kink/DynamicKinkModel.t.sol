@@ -235,6 +235,7 @@ contract DynamicKinkModelTest is KinkCommon {
         irm.updateConfig(cfg);
 
         uint256 rcomp = irm.getCompoundInterestRateAndUpdate(_collateralAssets, _debtAssets, _interestRateTimestamp);
+        
         assertTrue(rcomp >= 0 && rcomp <= uint256(irm.RCOMP_CAP()), "rcomp out of range");
     }
 

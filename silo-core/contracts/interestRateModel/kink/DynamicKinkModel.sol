@@ -36,6 +36,7 @@ QA rules:
 contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     using KinkMath for int256;
     using KinkMath for int96;
+    using KinkMath for uint256;
 
     /// @dev DP in 18 decimal points used for integer calculations
     int256 internal constant _DP = int256(1e18);
@@ -111,13 +112,17 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
         require(msg.sender == state.silo, OnlySilo());
 
+        if (_collateralAssets.willOverflowOnCastToInt256()) return 0;
+        if (_debtAssets.willOverflowOnCastToInt256()) return 0;
+        if (_interestRateTimestamp.willOverflowOnCastToInt256()) return 0;
+
         try this.compoundInterestRate({
             _cfg: cfg,
             _state: state,
             _t0: SafeCast.toInt256(_interestRateTimestamp),
             _t1: SafeCast.toInt256(block.timestamp),
             _u: _calculateUtiliation(_collateralAssets, _debtAssets),
-            _tba: SafeCast.toInt256(_debtAssets)
+            _tba: int256(_debtAssets)
         }) returns (int256 rcompInt, int256 k) {
             rcomp = SafeCast.toUint256(rcompInt);
             modelState.k = _capK(k, cfg.kmin, cfg.kmax);
@@ -135,13 +140,17 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
         (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
 
+        if (data.interestRateTimestamp.willOverflowOnCastToInt256()) return 0;
+        if (_blockTimestamp.willOverflowOnCastToInt256()) return 0;
+        if (data.debtAssets.willOverflowOnCastToInt256()) return 0;
+
         try this.compoundInterestRate({
             _cfg: cfg,
             _state: state,
-            _t0: SafeCast.toInt256(data.interestRateTimestamp),
-            _t1: SafeCast.toInt256(_blockTimestamp),
+            _t0: int256(data.interestRateTimestamp),
+            _t1: int256(_blockTimestamp),
             _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
-            _tba: SafeCast.toInt256(data.debtAssets)
+            _tba: int256(data.debtAssets)
         }) returns (int256 rcompInt, int256) {
             rcomp = SafeCast.toUint256(rcompInt);
         } catch {
@@ -277,6 +286,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         if (_tba == 0) return (0, _state.k); 
 
         LocalVarsRCOMP memory _l;
+
+        require(_t0 <= _t1, InvalidTimestamp());
 
         _l.T = _t1 - _t0;
 
