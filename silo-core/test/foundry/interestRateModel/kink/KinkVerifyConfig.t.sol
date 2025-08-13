@@ -6,9 +6,47 @@ import {console2} from "forge-std/console2.sol";
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {KinkCommon} from "./KinkCommon.sol";
 
+/*
+FOUNDRY_PROFILE=core_test forge test --mc KinkVerifyConfigTest -vv
+*/
 contract KinkVerifyConfigTest is KinkCommon {
     function setUp() public {
         irm = new DynamicKinkModel();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_constants -vv
+    */
+    function test_kink_constants() public view {
+        int256 dp = 1e18;
+
+        assertEq(dp, _DP, "invalid local DP");
+
+        console2.log("UNIVERSAL_LIMIT %s", irm.UNIVERSAL_LIMIT());
+        console2.log("RCUR_CAP %s", irm.RCUR_CAP());
+        console2.log("RCOMP_CAP %s", irm.RCOMP_CAP());
+        console2.log("X_MAX %s", irm.X_MAX());
+
+        assertEq(irm.UNIVERSAL_LIMIT(), 1e9 * dp, "invalid UNIVERSAL_LIMIT");
+        assertEq(irm.UNIVERSAL_LIMIT(), UNIVERSAL_LIMIT, "local UNIVERSAL_LIMIT does not match");
+        
+        assertLe(
+            irm.UNIVERSAL_LIMIT(), 
+            type(int96).max, 
+            "universal limit is used ot cap int96, so we checking if cast does not overflow"
+        );
+
+
+        assertGe(
+            irm.UNIVERSAL_LIMIT(), 
+            type(int96).min, 
+            "universal limit is used ot cap int96, so we checking if cast does not overflow"
+        );
+
+        assertEq(irm.RCUR_CAP(), 25 * dp, "invalid RCUR_CAP");
+        assertEq(irm.RCOMP_CAP(), irm.RCUR_CAP() / 365 days, "invalid RCOMP_CAP");
+
+        assertEq(irm.X_MAX(), 11 * dp, "invalid X_MAX");
     }
 
     /*
@@ -17,31 +55,140 @@ contract KinkVerifyConfigTest is KinkCommon {
     function test_kink_verifyConfig() public {
         IDynamicKinkModel.Config memory config;
 
-        config.ulow = 20;
+        // empty config pass
+        irm.verifyConfig(config);
+
+        config.ulow = -1;
         vm.expectRevert(IDynamicKinkModel.InvalidUlow.selector);
         irm.verifyConfig(config);
 
-        config.u1 = 30e18;
+        config.ulow = 100e16;
+        vm.expectRevert(IDynamicKinkModel.InvalidUlow.selector);
+        irm.verifyConfig(config);
+
+        config.u1 = 1e18 + 1;
+        config.ulow = 50e16; // valid value
         vm.expectRevert(IDynamicKinkModel.InvalidU1.selector);
         irm.verifyConfig(config);
 
-        config.u1 = 100; // valid
-        config.u2 = 40e18;
+        config.u1 = 0.5e18; // valid value
         vm.expectRevert(IDynamicKinkModel.InvalidU2.selector);
         irm.verifyConfig(config);
 
-        config.u2 = 90;
+        config.u2 = 1e18 + 1;
         vm.expectRevert(IDynamicKinkModel.InvalidU2.selector);
         irm.verifyConfig(config);
 
-        config.u2 = 200; // valid
+        config.u2 = 0.9e18; // valid value
         vm.expectRevert(IDynamicKinkModel.InvalidUcrit.selector);
         irm.verifyConfig(config);
 
-        // config.ucrit = 100; // valid
-        // irm.verifyConfig(config);
+        config.ucrit = 1e18 + 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidUcrit.selector);
+        irm.verifyConfig(config);
 
-        // config.rmin = 100; // valid
-        // irm.verifyConfig(config);
+        config.ucrit = 1e18; // valid value
+        irm.verifyConfig(config);
+
+        // ----
+
+        config.rmin = -1;
+        vm.expectRevert(IDynamicKinkModel.InvalidRmin.selector);
+        irm.verifyConfig(config);
+
+        config.rmin = 1e18 + 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidRmin.selector);
+        irm.verifyConfig(config);
+
+        config.rmin = 100e16; // valid value
+        irm.verifyConfig(config);
+
+        config.kmin = -1;
+        vm.expectRevert(IDynamicKinkModel.InvalidKmin.selector);
+        irm.verifyConfig(config);
+
+        config.kmin = int96(UNIVERSAL_LIMIT) + 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidKmin.selector);
+        irm.verifyConfig(config);
+
+        config.kmin = 100; // valid value
+        vm.expectRevert(IDynamicKinkModel.InvalidKmax.selector);
+        irm.verifyConfig(config);
+
+        config.kmax = int96(UNIVERSAL_LIMIT) + 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidKmax.selector);
+        irm.verifyConfig(config);
+
+        config.kmax = int96(UNIVERSAL_LIMIT); // valid value
+        irm.verifyConfig(config);
+
+        // ----
+
+        config.alpha = -1;
+        vm.expectRevert(IDynamicKinkModel.InvalidAlpha.selector);
+        irm.verifyConfig(config);
+
+        config.alpha = UNIVERSAL_LIMIT + 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidAlpha.selector);
+        irm.verifyConfig(config);
+
+        config.alpha = UNIVERSAL_LIMIT; // valid value
+        irm.verifyConfig(config);
+
+        // ----
+
+        config.cminus = -1;
+        vm.expectRevert(IDynamicKinkModel.InvalidCminus.selector);
+        irm.verifyConfig(config);
+
+        config.cminus = UNIVERSAL_LIMIT + 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidCminus.selector);
+        irm.verifyConfig(config);
+
+        config.cminus = UNIVERSAL_LIMIT; // valid value
+        irm.verifyConfig(config);
+
+        config.cplus = -1;
+        vm.expectRevert(IDynamicKinkModel.InvalidCplus.selector);
+        irm.verifyConfig(config);
+
+        config.cplus = UNIVERSAL_LIMIT + 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidCplus.selector);
+        irm.verifyConfig(config);
+
+        config.cplus = UNIVERSAL_LIMIT / 2; // valid value
+        irm.verifyConfig(config);
+
+        config.c1 = -1;
+        vm.expectRevert(IDynamicKinkModel.InvalidC1.selector);
+        irm.verifyConfig(config);
+
+        config.c1 = UNIVERSAL_LIMIT + 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidC1.selector);
+        irm.verifyConfig(config);
+
+        config.c1 = UNIVERSAL_LIMIT / 2; // valid value
+        irm.verifyConfig(config);
+
+        // ----
+
+        config.c2 = -1;
+        vm.expectRevert(IDynamicKinkModel.InvalidC2.selector);
+        irm.verifyConfig(config);
+
+        config.c2 = UNIVERSAL_LIMIT + 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidC2.selector);
+        irm.verifyConfig(config);
+
+        config.c2 = UNIVERSAL_LIMIT / 2; // valid value
+        vm.expectRevert(IDynamicKinkModel.InvalidDmax.selector);
+        irm.verifyConfig(config);
+
+        config.dmax = UNIVERSAL_LIMIT + 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidDmax.selector);
+        irm.verifyConfig(config);
+
+        config.dmax = config.c2 + 1; // valid value
+        irm.verifyConfig(config);
     }
 }

@@ -27,26 +27,6 @@ contract DynamicKinkModelTest is KinkCommon {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --mt test_kink_constants -vv
-    */
-    function test_kink_constants() public view {
-        int256 dp = 1e18;
-
-        assertEq(dp, _DP, "invalid local DP");
-
-        console2.log("UNIVERSAL_LIMIT %s", irm.UNIVERSAL_LIMIT());
-        console2.log("RCUR_CAP %s", irm.RCUR_CAP());
-        console2.log("RCOMP_CAP %s", irm.RCOMP_CAP());
-        console2.log("X_MAX %s", irm.X_MAX());
-
-        assertEq(irm.UNIVERSAL_LIMIT(), 1e9 * dp, "invalid UNIVERSAL_LIMIT");
-        assertEq(irm.RCUR_CAP(), 25 * dp, "invalid RCUR_CAP");
-        assertEq(irm.RCOMP_CAP(), irm.RCUR_CAP() / 365 days, "invalid RCOMP_CAP");
-
-        assertEq(irm.X_MAX(), 11 * dp, "invalid X_MAX");
-    }
-
-    /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_initRevert_whenSiloZero -vv
     */
     function test_kink_initRevert_whenSiloZero() public {
