@@ -62,12 +62,17 @@ contract KinkVerifyConfigTest is KinkCommon {
         vm.expectRevert(IDynamicKinkModel.InvalidUlow.selector);
         irm.verifyConfig(config);
 
-        config.ulow = 100e16;
+        config.ulow = 1e18 + 1;
         vm.expectRevert(IDynamicKinkModel.InvalidUlow.selector);
         irm.verifyConfig(config);
 
+        config.ulow = 0.5e18; // valid value
+        
+        config.u1 = -1;
+        vm.expectRevert(IDynamicKinkModel.InvalidU1.selector);
+        irm.verifyConfig(config);
+        
         config.u1 = 1e18 + 1;
-        config.ulow = 50e16; // valid value
         vm.expectRevert(IDynamicKinkModel.InvalidU1.selector);
         irm.verifyConfig(config);
 
@@ -79,7 +84,7 @@ contract KinkVerifyConfigTest is KinkCommon {
         vm.expectRevert(IDynamicKinkModel.InvalidU2.selector);
         irm.verifyConfig(config);
 
-        config.u2 = 0.9e18; // valid value
+        config.u2 = 0.6e18; // valid value
         vm.expectRevert(IDynamicKinkModel.InvalidUcrit.selector);
         irm.verifyConfig(config);
 
@@ -235,6 +240,62 @@ contract KinkVerifyConfigTest is KinkCommon {
         config.c2 = 1;
         config.dmax = 1;
 
+        irm.verifyConfig(config);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_verifyConfig_relation_ucrit -vv
+    */
+    function test_kink_verifyConfig_relation_ucrit() public {
+        IDynamicKinkModel.Config memory config = _defaultConfig();
+
+        config.ucrit = config.ulow - 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidUcrit.selector);
+        irm.verifyConfig(config);
+
+        config.ucrit = config.u2; // valid value
+        irm.verifyConfig(config);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_verifyConfig_relation_u2 -vv
+    */
+    function test_kink_verifyConfig_relation_u2() public {
+        IDynamicKinkModel.Config memory config = _defaultConfig();
+
+        config.u2 = config.u1 - 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidU2.selector);
+        irm.verifyConfig(config);
+
+        config.u2 = config.u1; // valid value
+        irm.verifyConfig(config);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_verifyConfig_relation_kmax -vv
+    */
+    function test_kink_verifyConfig_relation_kmax() public {
+        IDynamicKinkModel.Config memory config = _defaultConfig();
+
+        config.kmax = config.kmin - 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidKmax.selector);
+        irm.verifyConfig(config);
+
+        config.kmax = config.kmin; // valid value
+        irm.verifyConfig(config);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_verifyConfig_relation_dmax -vv
+    */
+    function test_kink_verifyConfig_relation_dmax() public {
+        IDynamicKinkModel.Config memory config = _defaultConfig();
+
+        config.dmax = config.c2 - 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidDmax.selector);
+        irm.verifyConfig(config);
+
+        config.dmax = config.c2; // valid value
         irm.verifyConfig(config);
     }
 }
