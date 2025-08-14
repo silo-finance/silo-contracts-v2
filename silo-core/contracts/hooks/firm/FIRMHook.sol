@@ -213,13 +213,7 @@ contract FIRMHook is
 
         Hook.BeforeBorrowInput memory borrowInput = Hook.beforeBorrowDecode(_inputAndOutput);
 
-        uint256 interestTimeDelta = maturity - block.timestamp;
-        uint256 rcur = _getCurrentInterestRate(firmIrm, address(_silo1));
-        uint256 effectiveInterestRate = rcur * interestTimeDelta / 365 days;
-        uint256 interestPayment = borrowInput.assets * effectiveInterestRate / 1e18;
-
-        // Minimal interest is 10 wei to ensure an attacker can not round down interest to 0.
-        if (interestPayment < 10) interestPayment = 10;
+        uint256 interestPayment = _getInterestPayment(firmIrm, address(_silo1), maturity, borrowInput.assets);
 
         uint192 daoAndDeployerRevenue = _getDaoAndDeployerRevenue(address(_silo1), interestPayment);
         uint256 interestToDistribute = interestPayment - daoAndDeployerRevenue;
@@ -244,6 +238,32 @@ contract FIRMHook is
         });
     }
 
+    /// @notice Get the interest payment
+    /// @param _firmIrm address of the firm Irm
+    /// @param _silo1 address of the silo1
+    /// @param _maturity maturity date of the firm
+    /// @param _assets assets to borrow
+    /// @return interestPayment amount of interest payment
+    function _getInterestPayment(
+        IFixedInterestRateModel _firmIrm,
+        address _silo1,
+        uint256 _maturity,
+        uint256 _assets
+    ) internal view returns (uint256 interestPayment) {
+        uint256 interestTimeDelta = _maturity - block.timestamp;
+        uint256 rcur = _getCurrentInterestRate(_firmIrm, _silo1);
+        uint256 effectiveInterestRate = rcur * interestTimeDelta / 365 days;
+
+        interestPayment = _assets * effectiveInterestRate / 1e18;
+
+        // Minimal interest is 10 wei to ensure an attacker can not round down interest to 0.
+        if (interestPayment < 10) interestPayment = 10;
+    }
+
+    /// @notice Get the current interest rate
+    /// @param _firmIrm address of the firm Irm
+    /// @param _silo1 address of the silo1
+    /// @return rcur current interest rate
     function _getCurrentInterestRate(
         IFixedInterestRateModel _firmIrm,
         address _silo1
