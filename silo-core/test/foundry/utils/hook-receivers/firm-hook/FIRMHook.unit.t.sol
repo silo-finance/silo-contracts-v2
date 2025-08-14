@@ -182,24 +182,24 @@ contract FIRMHookUnitTest is Test {
     }
 
     /**
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_afterAction_CollateralTransferNotAllowed -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_afterAction_NotAllowed_collateral -vv
      */
-    function test_firmHook_afterAction_CollateralTransferNotAllowed() public {
+    function test_firmHook_afterAction_NotAllowed_collateral() public {
         uint256 collateralTokenTransferAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
 
         vm.prank(address(_silo0));
-        vm.expectRevert(abi.encodeWithSelector(Silo0ProtectedSilo1CollateralOnly.CollateralTransferNotAllowed.selector));
+        vm.expectRevert(abi.encodeWithSelector(Silo0ProtectedSilo1CollateralOnly.NotAllowed.selector));
         _hook.afterAction(address(_silo0), collateralTokenTransferAction, abi.encode(0));
     }
 
     /**
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_afterAction_ProtectedTransferNotAllowed -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_afterAction_NotAllowed_protected -vv
      */
-    function test_firmHook_afterAction_ProtectedTransferNotAllowed() public {
+    function test_firmHook_afterAction_NotAllowed_protected() public {
         uint256 protectedTokenTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
 
         vm.prank(address(_silo1));
-        vm.expectRevert(abi.encodeWithSelector(Silo0ProtectedSilo1CollateralOnly.ProtectedTransferNotAllowed.selector));
+        vm.expectRevert(abi.encodeWithSelector(Silo0ProtectedSilo1CollateralOnly.NotAllowed.selector));
         _hook.afterAction(address(_silo1), protectedTokenTransferAction, abi.encode(0));
     }
 

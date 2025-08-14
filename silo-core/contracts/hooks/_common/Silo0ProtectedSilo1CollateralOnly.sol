@@ -10,8 +10,7 @@ import {Hook} from "silo-core/contracts/lib/Hook.sol";
 abstract contract Silo0ProtectedSilo1CollateralOnly is BaseHookReceiver {
     using Hook for uint256;
 
-    error CollateralTransferNotAllowed();
-    error ProtectedTransferNotAllowed();
+    error NotAllowed();
     error Silo0LTVNotSet();
     error Silo1LTVMustBeZero();
     error InvalidSilo();
@@ -28,6 +27,7 @@ abstract contract Silo0ProtectedSilo1CollateralOnly is BaseHookReceiver {
         
         uint256 allowedToken = _silo == silo0 ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN;
         uint256 allowedAction = Hook.shareTokenTransfer(allowedToken);
+
         require(!_action.matchAction(allowedAction), NotAllowed());
     }
 
