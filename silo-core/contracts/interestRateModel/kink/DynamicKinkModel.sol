@@ -201,6 +201,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         require(_config.kmin.isBetween(0, UNIVERSAL_LIMIT), InvalidKmin());
         require(_config.kmax.isBetween(_config.kmin, UNIVERSAL_LIMIT), InvalidKmax());
 
+        // we store k as int96, so we double check if it is in the range of int96
+        require(_config.kmin.isBetween(0, type(int96).max), InvalidKmin());
+        require(_config.kmax.isBetween(_config.kmin, type(int96).max), InvalidKmax());
+
         require(_config.alpha.isBetween(0, UNIVERSAL_LIMIT), InvalidAlpha());
 
         require(_config.cminus.isBetween(0, UNIVERSAL_LIMIT), InvalidCminus());
@@ -379,7 +383,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     }
 
     function _capK(int256 _k, int256 _kmin, int256 _kmax) internal pure returns(int96 cappedK) {
-        // safe to cast to int96 because we know that _kmin and _kmax are in the range of int96
+        // safe to cast to int96, because we know, that _kmin and _kmax are in the range of int96
         cappedK = int96(SignedMath.max(_kmin, SignedMath.min(_kmax, _k)));
     }
 }
