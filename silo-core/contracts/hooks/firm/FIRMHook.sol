@@ -72,8 +72,8 @@ contract FIRMHook is
     }
 
     /// @inheritdoc IFIRMHook
-    function firm() external view returns (address firmAddress) {
-        firmAddress = FIRMHookStorage.firm();
+    function firmIrm() external view returns (address firmIrmAddress) {
+        firmIrmAddress = FIRMHookStorage.firmIrm();
     }
 
     /// @inheritdoc IFIRMHook
@@ -142,7 +142,7 @@ contract FIRMHook is
             require(
                 input.recipient == address(0) || // allow to burn collateral shares
                 input.recipient == FIRMHookStorage.firmVault() ||
-                input.recipient == FIRMHookStorage.firm(),
+                input.recipient == FIRMHookStorage.firmIrm(),
                 OnlyFIRMVaultOrFirmCanReceiveCollateral()
             );
         }
@@ -162,7 +162,7 @@ contract FIRMHook is
 
         $.maturityDate = uint64(_maturityDate);
         $.firmVault = _firmVault;
-        $.firm = silo1Config.interestRateModel;
+        $.firmIrm = silo1Config.interestRateModel;
 
         _configureHooks(silo0, silo1);
     }
@@ -207,14 +207,14 @@ contract FIRMHook is
         uint64 maturity = FIRMHookStorage.maturityDate();
         require(maturity >= block.timestamp, MaturityDateReached());
 
-        IFixedInterestRateModel fixedIRM = IFixedInterestRateModel(FIRMHookStorage.firm());
+        IFixedInterestRateModel firmIrm = IFixedInterestRateModel(FIRMHookStorage.firmIrm());
 
-        fixedIRM.accrueInterest();
+        firmIrm.accrueInterest();
 
         Hook.BeforeBorrowInput memory borrowInput = Hook.beforeBorrowDecode(_inputAndOutput);
 
         uint256 interestTimeDelta = maturity - block.timestamp;
-        uint256 rcur = fixedIRM.getCurrentInterestRate(address(_silo1), block.timestamp);
+        uint256 rcur = firmIrm.getCurrentInterestRate(address(_silo1), block.timestamp);
         uint256 effectiveInterestRate = rcur * interestTimeDelta / 365 days;
         uint256 interestPayment = borrowInput.assets * effectiveInterestRate / 1e18;
 
@@ -233,7 +233,7 @@ contract FIRMHook is
             interestToDistribute,
             interestPayment,
             daoAndDeployerRevenue,
-            fixedIRM
+            firmIrm
         );
 
         _silo1.callOnBehalfOfSilo({

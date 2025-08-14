@@ -53,7 +53,7 @@ contract FIRMHookUnitTest is Test {
     address internal _token1 = makeAddr("Token1");
     address internal _siloFactory = makeAddr("SiloFactory");
 
-    address internal _firm = makeAddr("Firm");
+    address internal _firmIrm = makeAddr("FirmIrm");
     address internal _firmVault = makeAddr("FirmVault");
     address internal _owner = makeAddr("Owner");
     address internal _borrower = makeAddr("borrower");
@@ -75,7 +75,7 @@ contract FIRMHookUnitTest is Test {
      */
     function test_firmHook_initialize() public view {
         assertEq(_hook.maturityDate(), _maturityDate, "maturityDate");
-        assertEq(_hook.firm(), _firm, "firm");
+        assertEq(_hook.firmIrm(), _firmIrm, "firmIrm");
         assertEq(_hook.firmVault(), _firmVault, "firmVault");
         assertEq(Ownable(_hook).owner(), _owner, "owner");
 
@@ -246,7 +246,7 @@ contract FIRMHookUnitTest is Test {
     function test_firmHook_afterAction_firm_recipient_doesNotRevert() public {
         uint256 collateralTokenTransferAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
 
-        bytes memory input = _getAfterTokenTransferInput(_firm);
+        bytes memory input = _getAfterTokenTransferInput(_firmIrm);
 
         vm.prank(address(_silo1));
         _hook.afterAction(address(_silo1), collateralTokenTransferAction, input);
@@ -400,7 +400,7 @@ contract FIRMHookUnitTest is Test {
         (,address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(_silo1));
 
         // Verify initial state
-        assertEq(IERC20(collateralShareToken).balanceOf(_firm), 0, "FIRM should have no collateral shares initially");
+        assertEq(IERC20(collateralShareToken).balanceOf(_firmIrm), 0, "FIRM should have no collateral shares initially");
         assertEq(IERC20(debtShareToken).balanceOf(_borrower), 0, "Borrower should have no debt shares initially");
 
         (uint192 revenueBefore,,, uint256 collateralAssetsBefore, uint256 debtAssetsBefore) = _silo1.getSiloStorage();
@@ -429,7 +429,7 @@ contract FIRMHookUnitTest is Test {
 
         // Verify shares were minted correctly
         // Collateral shares: 8 * 1e3 = 8000 (with decimals offset)
-        assertEq(IERC20(collateralShareToken).balanceOf(_firm), values.expectedInterestToDistribute * 1e3, "FIRM collateral shares");
+        assertEq(IERC20(collateralShareToken).balanceOf(_firmIrm), values.expectedInterestToDistribute * 1e3, "FIRM collateral shares");
         // Debt shares: 10 (no offset for debt)
         assertEq(IERC20(debtShareToken).balanceOf(_borrower), values.expectedInterestPayment, "Borrower debt shares");
     }
@@ -492,7 +492,7 @@ contract FIRMHookUnitTest is Test {
         (,address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(_silo1));
 
         // Verify initial state
-        assertEq(IERC20(collateralShareToken).balanceOf(_firm), 0, "FIRM should have no collateral shares initially");
+        assertEq(IERC20(collateralShareToken).balanceOf(_firmIrm), 0, "FIRM should have no collateral shares initially");
         assertEq(IERC20(debtShareToken).balanceOf(_borrower), 0, "Borrower should have no debt shares initially");
 
         (uint192 revenueBefore,,, uint256 collateralAssetsBefore, uint256 debtAssetsBefore) = _silo1.getSiloStorage();
@@ -521,7 +521,7 @@ contract FIRMHookUnitTest is Test {
 
         // Verify shares were minted correctly
         // Collateral shares: 9 * 1e3 = 9000 (with decimals offset)
-        assertEq(IERC20(collateralShareToken).balanceOf(_firm), values.expectedInterestToDistribute * 1e3, "FIRM collateral shares");
+        assertEq(IERC20(collateralShareToken).balanceOf(_firmIrm), values.expectedInterestToDistribute * 1e3, "FIRM collateral shares");
         // Debt shares: 10 (no offset for debt)
         assertEq(IERC20(debtShareToken).balanceOf(_borrower), values.expectedInterestPayment, "Borrower debt shares");
     }
@@ -571,7 +571,7 @@ contract FIRMHookUnitTest is Test {
         (,address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(_silo1));
 
         // Verify initial state
-        assertEq(IERC20(collateralShareToken).balanceOf(_firm), 0, "FIRM should have no collateral shares initially");
+        assertEq(IERC20(collateralShareToken).balanceOf(_firmIrm), 0, "FIRM should have no collateral shares initially");
         assertEq(IERC20(debtShareToken).balanceOf(_borrower), 0, "Borrower should have no debt shares initially");
         
         (uint192 revenueBefore,,, uint256 collateralAssetsBefore, uint256 debtAssetsBefore) = _silo1.getSiloStorage();
@@ -600,7 +600,7 @@ contract FIRMHookUnitTest is Test {
 
         // Verify shares were minted correctly
         // Collateral shares with 1e3 decimals offset
-        assertEq(IERC20(collateralShareToken).balanceOf(_firm), values.expectedInterestToDistribute * 1e3, "FIRM collateral shares");
+        assertEq(IERC20(collateralShareToken).balanceOf(_firmIrm), values.expectedInterestToDistribute * 1e3, "FIRM collateral shares");
         // Debt shares (no offset for debt)
         assertEq(IERC20(debtShareToken).balanceOf(_borrower), values.expectedInterestPayment, "Borrower debt shares");
     }
@@ -651,7 +651,7 @@ contract FIRMHookUnitTest is Test {
         (,address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(_silo1));
 
         // Verify initial state
-        assertEq(IERC20(collateralShareToken).balanceOf(_firm), 0, "FIRM should have no collateral shares initially");
+        assertEq(IERC20(collateralShareToken).balanceOf(_firmIrm), 0, "FIRM should have no collateral shares initially");
         assertEq(IERC20(debtShareToken).balanceOf(_borrower), 0, "Borrower should have no debt shares initially");
 
         (uint192 revenueBefore,,, uint256 collateralAssetsBefore, uint256 debtAssetsBefore) = _silo1.getSiloStorage();
@@ -681,7 +681,7 @@ contract FIRMHookUnitTest is Test {
         // Verify shares were minted correctly
         // Collateral shares with 1e3 decimals offset - use mulDiv to prevent overflow
         uint256 expectedCollateralShares = values.expectedInterestToDistribute * 1e3;
-        assertEq(IERC20(collateralShareToken).balanceOf(_firm), expectedCollateralShares, "FIRM collateral shares");
+        assertEq(IERC20(collateralShareToken).balanceOf(_firmIrm), expectedCollateralShares, "FIRM collateral shares");
         // Debt shares (no offset for debt)
         assertEq(IERC20(debtShareToken).balanceOf(_borrower), values.expectedInterestPayment, "Borrower debt shares");
 
@@ -730,7 +730,7 @@ contract FIRMHookUnitTest is Test {
         (,address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(_silo1));
 
         // Verify initial state
-        assertEq(IERC20(collateralShareToken).balanceOf(_firm), 0, "FIRM should have no collateral shares initially");
+        assertEq(IERC20(collateralShareToken).balanceOf(_firmIrm), 0, "FIRM should have no collateral shares initially");
         assertEq(IERC20(debtShareToken).balanceOf(_borrower), 0, "Borrower should have no debt shares initially");
 
         (uint192 revenueBefore,,, uint256 collateralAssetsBefore, uint256 debtAssetsBefore) = _silo1.getSiloStorage();
@@ -760,7 +760,7 @@ contract FIRMHookUnitTest is Test {
         // Verify shares were minted correctly.
         // Since it's the first borrow, shares should be 1:1 with assets.
         // We multiply by 1e3 to account for decimals offset in the silo.
-        assertEq(IERC20(collateralShareToken).balanceOf(_firm), expectedInterestToDistribute * 1e3, "FIRM should receive collateral shares");
+        assertEq(IERC20(collateralShareToken).balanceOf(_firmIrm), expectedInterestToDistribute * 1e3, "FIRM should receive collateral shares");
         assertEq(IERC20(debtShareToken).balanceOf(_borrower), expectedInterestPayment, "Borrower should receive debt shares");
     }
 
@@ -771,8 +771,8 @@ contract FIRMHookUnitTest is Test {
     function _mockFixedIRMCalls(uint256 _interestRate) internal {
         bytes memory inputAccrueInterest = abi.encodeWithSelector(IFixedInterestRateModel.accrueInterest.selector);
 
-        vm.mockCall(address(_firm), inputAccrueInterest, abi.encode(true));
-        vm.expectCall(address(_firm), inputAccrueInterest);
+        vm.mockCall(address(_firmIrm), inputAccrueInterest, abi.encode(true));
+        vm.expectCall(address(_firmIrm), inputAccrueInterest);
 
         bytes memory inputGetCurrentInterestRate = abi.encodeWithSelector(
             IInterestRateModel.getCurrentInterestRate.selector,
@@ -780,8 +780,8 @@ contract FIRMHookUnitTest is Test {
             block.timestamp
         );
 
-        vm.mockCall(address(_firm), inputGetCurrentInterestRate, abi.encode(_interestRate));
-        vm.expectCall(address(_firm), inputGetCurrentInterestRate);
+        vm.mockCall(address(_firmIrm), inputGetCurrentInterestRate, abi.encode(_interestRate));
+        vm.expectCall(address(_firmIrm), inputGetCurrentInterestRate);
 
         bytes memory inputGetCompoundInterestRate = abi.encodeWithSelector(
             IInterestRateModel.getCompoundInterestRate.selector,
@@ -789,8 +789,8 @@ contract FIRMHookUnitTest is Test {
             block.timestamp
         );
 
-        vm.mockCall(address(_firm), inputGetCompoundInterestRate, abi.encode(0));
-        vm.expectCall(address(_firm), inputGetCompoundInterestRate);
+        vm.mockCall(address(_firmIrm), inputGetCompoundInterestRate, abi.encode(0));
+        vm.expectCall(address(_firmIrm), inputGetCompoundInterestRate);
     }
 
     function _silo1Config() internal returns (ISiloConfig.ConfigData memory) {
@@ -805,12 +805,12 @@ contract FIRMHookUnitTest is Test {
             deployerFee: 0.1e18,
             silo: address(_silo1),
             token: _token1,
-            protectedShareToken: _firm,
+            protectedShareToken: _firmIrm,
             collateralShareToken: collateralShareToken,
             debtShareToken: debtShareToken,
             solvencyOracle: address(0),
             maxLtvOracle: address(0),
-            interestRateModel: _firm,
+            interestRateModel: _firmIrm,
             maxLtv: 0,
             lt: 0,
             liquidationTargetLtv: 0,
@@ -833,12 +833,12 @@ contract FIRMHookUnitTest is Test {
             deployerFee: 0.1e18,
             silo: address(_silo0),
             token: _token0,
-            protectedShareToken: _firm,
+            protectedShareToken: _firmIrm,
             collateralShareToken: collateralShareToken,
             debtShareToken: debtShareToken,
             solvencyOracle: address(0),
             maxLtvOracle: address(0),
-            interestRateModel: _firm,
+            interestRateModel: _firmIrm,
             maxLtv: 0.8e18,
             lt: 0.8e18,
             liquidationTargetLtv: 0.8e18,

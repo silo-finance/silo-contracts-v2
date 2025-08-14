@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 library FIRMHookStorage {
     struct FIRMHookStorageData {
         uint64 maturityDate;
-        address firm;
+        address firmIrm;
         address firmVault;
     }
 
@@ -15,8 +15,8 @@ library FIRMHookStorage {
         maturity = get().maturityDate;
     }
 
-    function firm() internal view returns (address firmAddress) {
-        firmAddress = get().firm;
+    function firmIrm() internal view returns (address firmIrmAddress) {
+        firmIrmAddress = get().firmIrm;
     }
 
     function firmVault() internal view returns (address firmVaultAddress) {

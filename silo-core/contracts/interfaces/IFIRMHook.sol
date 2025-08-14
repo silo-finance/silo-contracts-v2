@@ -32,7 +32,7 @@ interface IFIRMHook {
     function maturityDate() external view returns (uint256 maturity);
 
     /// @notice Get the fixed IRM address
-    function firm() external view returns (address firmAddress);
+    function firmIrm() external view returns (address firmIrmAddress);
 
     /// @notice Get the fixed IRM vault address
     function firmVault() external view returns (address firmVaultAddress);
