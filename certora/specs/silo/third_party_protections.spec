@@ -1,6 +1,9 @@
 /* Third party protection rules (i.e. unrelated addresses are not affected)  */
 
 import "../setup/CompleteSiloSetup.spec";
+import "../simplifications/Silo_noAccrueInterest_simplification_UNSAFE.spec";
+import "../simplifications/Oracle_quote_one_UNSAFE.spec";
+import "../simplifications/SiloMathLib_SAFE.spec";
 
 methods {
     // ---- `IInterestRateModel` -----------------------------------------------
@@ -212,6 +215,36 @@ rule HLP_borrowDoesntAffectOthers(address receiver, address other, uint256 asset
 
     assert balanceTokenBefore == balanceTokenAfter;
     assert balanceSharesBefore == balanceSharesAfter;
+    assert balanceCollateralBefore == balanceCollateralAfter;
+    assert balanceProtectedCollateralBefore == balanceProtectedCollateralAfter;
+}
+
+
+rule HLP_borrowRequiresAllowance(address receiver, address borrower, uint256 assets) 
+{
+    env e;
+    SafeAssumptions_withInvariants(e, borrower);
+    //silosTimestampSetupRequirements(e);
+    nonSceneAddressRequirements(borrower);
+
+    mathint balanceTokenBefore = token0.balanceOf(borrower);
+    mathint balanceSharesBefore = shareDebtToken0.balanceOf(borrower);
+    mathint balanceCollateralBefore = silo0.balanceOf(borrower);
+    mathint balanceProtectedCollateralBefore = shareProtectedCollateralToken0.balanceOf(borrower);
+    mathint allowanceBefore = shareDebtToken0.receiveAllowance(e, e.msg.sender, borrower);
+    
+    mathint shares = borrow(e, assets, receiver, borrower);
+
+    mathint balanceTokenAfter = token0.balanceOf(borrower);
+    mathint balanceSharesAfter = shareDebtToken0.balanceOf(borrower);
+    mathint balanceCollateralAfter = silo0.balanceOf(borrower);
+    mathint balanceProtectedCollateralAfter = shareProtectedCollateralToken0.balanceOf(borrower);
+    mathint allowanceAfter = shareDebtToken0.receiveAllowance(e, e.msg.sender, borrower);
+
+    assert borrower != e.msg.sender => allowanceBefore >= shares;
+    assert borrower != e.msg.sender => allowanceAfter == allowanceBefore - shares;    //violated https://prover.certora.com/output/6893/3390feb0cb2a47b2bcda188d39997467/
+    assert balanceTokenBefore <= balanceTokenAfter; //can go up if the receiver is the same as borrower
+    assert balanceSharesBefore + shares == balanceSharesAfter;
     assert balanceCollateralBefore == balanceCollateralAfter;
     assert balanceProtectedCollateralBefore == balanceProtectedCollateralAfter;
 }
