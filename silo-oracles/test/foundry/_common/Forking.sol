@@ -14,6 +14,7 @@ contract Forking is IForking, Test {
     string ARBITRUM_RPC_URL;
     string ETHEREUM_RPC_URL;
     string SONIC_RPC_URL;
+    string AVALANCHE_RPC_URL;
 
     /// @dev arbitrum checkpoints to ethereum, so block.number on Arbitrum is actually ethereum block.
     /// To handle this case and be able to add unit tests for expected block we will be using mapping
@@ -24,6 +25,7 @@ contract Forking is IForking, Test {
         ARBITRUM_RPC_URL = string(abi.encodePacked(vm.envString("RPC_ARBITRUM")));
         ETHEREUM_RPC_URL = string(abi.encodePacked(vm.envString("RPC_MAINNET")));
         SONIC_RPC_URL = string(abi.encodePacked(vm.envString("RPC_SONIC")));
+        AVALANCHE_RPC_URL = string(abi.encodePacked(vm.envString("RPC_AVALANCHE")));
 
         FORKED_CHAIN = _chain;
     }
@@ -35,6 +37,8 @@ contract Forking is IForking, Test {
             FORK_ID = _createFork(ETHEREUM_RPC_URL);
         } else if (FORKED_CHAIN == BlockChain.SONIC) {
             FORK_ID = _createFork(SONIC_RPC_URL);
+        } else if (FORKED_CHAIN == BlockChain.AVALANCHE) {
+            FORK_ID = _createFork(AVALANCHE_RPC_URL);
         }
     }
 
@@ -47,6 +51,8 @@ contract Forking is IForking, Test {
             FORK_ID = _createFork(ETHEREUM_RPC_URL, _forkingBlockNumber);
         } else if (FORKED_CHAIN == BlockChain.SONIC) {
             FORK_ID = _createFork(SONIC_RPC_URL, _forkingBlockNumber);
+        } else if (FORKED_CHAIN == BlockChain.AVALANCHE) {
+            FORK_ID = _createFork(AVALANCHE_RPC_URL, _forkingBlockNumber);
         }
     }
 
@@ -72,6 +78,14 @@ contract Forking is IForking, Test {
 
     function isSonic(BlockChain _chain) public pure returns (bool) {
         return _chain == BlockChain.SONIC;
+    }
+
+    function isAvalanche() public view returns (bool) {
+        return FORKED_CHAIN == BlockChain.AVALANCHE;
+    }
+
+    function isAvalanche(BlockChain _chain) public pure returns (bool) {
+        return _chain == BlockChain.AVALANCHE;
     }
 
     function getBlockChainID() public view returns (uint256 id) {
