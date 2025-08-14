@@ -9,27 +9,27 @@ import {PostconditionsSpec} from "./specs/PostconditionsSpec.t.sol";
 /// @notice Helper contract to aggregate all spec contracts, inherited in BaseHooks
 /// @dev inherits InvariantsSpec, PostconditionsSpec
 abstract contract SpecAggregator is InvariantsSpec, PostconditionsSpec {
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                      PROPERTY TYPES                                       //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    
-    /// In this invariant testing framework, there are two types of properties:
+///////////////////////////////////////////////////////////////////////////////////////////////
+//                                      PROPERTY TYPES                                       //
+///////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// - INVARIANTS (INV): 
-    ///   - Properties that should always hold true in the system. 
-    ///   - Implemented in the /invariants folder.
+/// In this invariant testing framework, there are two types of properties:
 
-    /// - POSTCONDITIONS:
-    ///   - Properties that should hold true after an action is executed.
-    ///   - Implemented in the /hooks and /handlers folders.
+/// - INVARIANTS (INV):
+///   - Properties that should always hold true in the system.
+///   - Implemented in the /invariants folder.
 
-    ///   - There are two types of POSTCONDITIONS:
+/// - POSTCONDITIONS:
+///   - Properties that should hold true after an action is executed.
+///   - Implemented in the /hooks and /handlers folders.
 
-    ///     - GLOBAL POSTCONDITIONS (GPOST): 
-    ///       - Properties that should always hold true after any action is executed.
-    ///       - Checked in the `_checkPostConditions` function within the HookAggregator contract.
+///   - There are two types of POSTCONDITIONS:
 
-    ///     - HANDLER-SPECIFIC POSTCONDITIONS (HSPOST): 
-    ///       - Properties that should hold true after a specific action is executed in a specific context.
-    ///       - Implemented within each handler function, under the HANDLER-SPECIFIC POSTCONDITIONS section.
+///     - GLOBAL POSTCONDITIONS (GPOST):
+///       - Properties that should always hold true after any action is executed.
+///       - Checked in the `_checkPostConditions` function within the HookAggregator contract.
+
+///     - HANDLER-SPECIFIC POSTCONDITIONS (HSPOST):
+///       - Properties that should hold true after a specific action is executed in a specific context.
+///       - Implemented within each handler function, under the HANDLER-SPECIFIC POSTCONDITIONS section.
 }

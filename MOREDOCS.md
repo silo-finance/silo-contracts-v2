@@ -126,19 +126,19 @@ brew install lcov
 rm lcov.info
 mkdir coverage
 
-FOUNDRY_PROFILE=core_with_test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-core.log
-cat coverage/silo-core.log | grep -i 'silo-core/contracts/' > coverage/silo-core.txt
-genhtml --ignore-errors inconsistent -ignore-errors range -o coverage/silo-core/ lcov.info
+AGGREGATOR=1INCH FOUNDRY_PROFILE=core_with_test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-core.log
+ cat coverage/silo-core.log | grep -i 'silo-core/contracts/' | grep -v -E '/(test|deploy|silo-oracles)/' > coverage/silo-core.txt
+ genhtml --ignore-errors inconsistent --ignore-errors range --exclude 'silo-oracles/*' --exclude '*/test/*' --exclude '*/deploy/*' -o coverage/silo-core/ lcov.info
 
 rm lcov.info
 FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.log
-cat coverage/silo-oracles-report.log | grep -i 'silo-oracles/contracts/' > coverage/silo-oracles.txt
-genhtml -o coverage/silo-oracles/ lcov.info
+cat coverage/silo-oracles.log | grep -i 'silo-oracles/contracts/' | grep -v -E '/(test|deploy|common|silo-core)/' > coverage/silo-oracles.txt
+genhtml --ignore-errors inconsistent --ignore-errors range --exclude 'silo-core/*' --exclude 'common/*' --exclude '*/test/*' --exclude '*/deploy/*' -o coverage/silo-oracles/ lcov.info
 
 rm lcov.info
 FOUNDRY_PROFILE=vaults_with_tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000
-cat coverage/silo-vaults.log | grep -i 'silo-vaults/contracts/' > coverage/silo-vaults.txt
-genhtml --ignore-errors inconsistent -ignore-errors range -o  coverage/silo-vaults/ lcov.info
+cat coverage/silo-vaults.log | grep -i 'silo-vaults/contracts/' | grep -v -E '/(test|deploy|common|mocks|silo-core|silo-oracles)/' > coverage/silo-vaults.txt
+genhtml --ignore-errors inconsistent --ignore-errors range --exclude 'silo-core/*' --exclude 'silo-oracles/*' --exclude 'common/*' --exclude '*/mocks/*' --exclude '*/test/*' --exclude '*/deploy/*' -o coverage/silo-vaults/ lcov.info
 ```
 
 ## Rounding policy

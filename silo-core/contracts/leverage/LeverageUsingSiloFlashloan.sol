@@ -5,8 +5,6 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
-import {TransientReentrancy} from "../hooks/_common/TransientReentrancy.sol";
-
 import {RevertLib} from "../lib/RevertLib.sol";
 
 import {ISilo} from "../interfaces/ISilo.sol";
@@ -15,7 +13,7 @@ import {IERC3156FlashBorrower} from "../interfaces/IERC3156FlashBorrower.sol";
 import {IERC3156FlashLender} from "../interfaces/IERC3156FlashLender.sol";
 import {IWrappedNativeToken} from "../interfaces/IWrappedNativeToken.sol";
 
-import {RevenueModule} from "./modules/RevenueModule.sol";
+import {RescueModule} from "./modules/RescueModule.sol";
 import {LeverageTxState} from "./modules/LeverageTxState.sol";
 
 /*
@@ -47,8 +45,7 @@ import {LeverageTxState} from "./modules/LeverageTxState.sol";
 abstract contract LeverageUsingSiloFlashloan is
     ILeverageUsingSiloFlashloan,
     IERC3156FlashBorrower,
-    RevenueModule,
-    TransientReentrancy,
+    RescueModule,
     LeverageTxState
 {
     using SafeERC20 for IERC20;
@@ -64,18 +61,8 @@ abstract contract LeverageUsingSiloFlashloan is
     }
 
     /// @inheritdoc ILeverageUsingSiloFlashloan
-    function calculateDebtReceiveApproval(ISilo _flashFrom, uint256 _flashAmount)
-        external
-        view
-        returns (uint256 debtReceiveApproval)
-    {
-        address token = _flashFrom.asset();
-        uint256 borrowAssets = _flashAmount + _flashFrom.flashFee(token, _flashAmount);
-        debtReceiveApproval = _flashFrom.convertToShares(borrowAssets, ISilo.AssetType.Debt);
-    }
-
-    /// @inheritdoc ILeverageUsingSiloFlashloan
     function openLeveragePositionPermit(
+        address _msgSender,
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         DepositArgs calldata _depositArgs,
@@ -84,13 +71,14 @@ abstract contract LeverageUsingSiloFlashloan is
         external
         virtual
     {
-        _executePermit(_depositAllowance, _depositArgs.silo.asset());
+        _executePermit(_msgSender, _depositAllowance, _depositArgs.silo.asset());
 
-        openLeveragePosition(_flashArgs, _swapArgs, _depositArgs);
+        openLeveragePosition(_msgSender, _flashArgs, _swapArgs, _depositArgs);
     }
 
     /// @inheritdoc ILeverageUsingSiloFlashloan
     function openLeveragePosition(
+        address _msgSender,
         FlashArgs calldata _flashArgs,
         bytes calldata _swapArgs,
         DepositArgs calldata _depositArgs
@@ -98,9 +86,9 @@ abstract contract LeverageUsingSiloFlashloan is
         public
         payable
         virtual
-        whenNotPaused
+        onlyRouter
         nonReentrant
-        setupTxState(_depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
+        setupTxState(_msgSender, _depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
     {
         _txMsgValue = msg.value;
 
@@ -114,6 +102,7 @@ abstract contract LeverageUsingSiloFlashloan is
 
     /// @inheritdoc ILeverageUsingSiloFlashloan
     function closeLeveragePositionPermit(
+        address _msgSender,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeArgs,
         Permit calldata _withdrawAllowance
@@ -121,26 +110,35 @@ abstract contract LeverageUsingSiloFlashloan is
         external
         virtual
     {
-        _executePermit(_withdrawAllowance, address(_closeArgs.siloWithCollateral));
+        address shareTokenToApprove = address(_closeArgs.siloWithCollateral);
+        
+        if (_closeArgs.collateralType == ISilo.CollateralType.Protected) {
+            (
+                shareTokenToApprove,,
+            ) = _closeArgs.siloWithCollateral.config().getShareTokens(address(_closeArgs.siloWithCollateral));
+        }
 
-        closeLeveragePosition(_swapArgs, _closeArgs);
+        _executePermit(_msgSender, _withdrawAllowance, shareTokenToApprove);
+
+        closeLeveragePosition(_msgSender, _swapArgs, _closeArgs);
     }
 
     /// @inheritdoc ILeverageUsingSiloFlashloan
     function closeLeveragePosition(
+        address _msgSender,
         bytes calldata _swapArgs,
         CloseLeverageArgs calldata _closeArgs
     )
         public
         virtual
-        whenNotPaused
+        onlyRouter
         nonReentrant
-        setupTxState(_closeArgs.siloWithCollateral, LeverageAction.Close, _closeArgs.flashloanTarget)
+        setupTxState(_msgSender, _closeArgs.siloWithCollateral, LeverageAction.Close, _closeArgs.flashloanTarget)
     {
         require(IERC3156FlashLender(_closeArgs.flashloanTarget).flashLoan({
             _receiver: this,
             _token: ISilo(_closeArgs.flashloanTarget).asset(),
-            _amount: _resolveOtherSilo(_closeArgs.siloWithCollateral).maxRepay(msg.sender),
+            _amount: _resolveOtherSilo(_closeArgs.siloWithCollateral).maxRepay(_msgSender),
             _data: abi.encode(_swapArgs, _closeArgs)
         }), FlashloanFailed());
     }
@@ -166,8 +164,10 @@ abstract contract LeverageUsingSiloFlashloan is
         } else revert UnknownAction();
 
         // approval for repay flashloan
-        _setMaxAllowance(IERC20(_borrowToken), _txFlashloanTarget, _flashloanAmount + _flashloanFee);
+        IERC20(_borrowToken).forceApprove(_txFlashloanTarget, _flashloanAmount + _flashloanFee);
 
+        // by resetting `_txFlashloanTarget` we basically making this method nonReentrant
+        _txFlashloanTarget = address(0);
         return _FLASHLOAN_CALLBACK;
     }
 
@@ -193,7 +193,7 @@ abstract contract LeverageUsingSiloFlashloan is
         uint256 totalDeposit = depositArgs.amount + collateralAmountAfterSwap;
 
         // Fee is taken on totalDeposit = user deposit amount + collateral amount after swap
-        uint256 feeForLeverage = calculateLeverageFee(totalDeposit);
+        uint256 feeForLeverage = ROUTER.calculateLeverageFee(totalDeposit);
 
         totalDeposit -= feeForLeverage;
 
@@ -229,7 +229,7 @@ abstract contract LeverageUsingSiloFlashloan is
     function _deposit(DepositArgs memory _depositArgs, uint256 _totalDeposit, address _asset) internal virtual {
         _transferTokensFromUser(_asset, _depositArgs.amount);
 
-        _setMaxAllowance(IERC20(_asset), address(_depositArgs.silo), _totalDeposit);
+        IERC20(_asset).forceApprove(address(_depositArgs.silo), _totalDeposit);
 
         _depositArgs.silo.deposit({
             _assets: _totalDeposit,
@@ -253,11 +253,7 @@ abstract contract LeverageUsingSiloFlashloan is
 
         ISilo siloWithDebt = _resolveOtherSilo(closeArgs.siloWithCollateral);
 
-        _setMaxAllowance({
-            _asset: IERC20(_debtToken),
-            _spender: address(siloWithDebt),
-            _requiredAmount: _flashloanAmount
-        });
+        IERC20(_debtToken).forceApprove(address(siloWithDebt), _flashloanAmount);
 
         siloWithDebt.repayShares(_getBorrowerTotalShareDebtBalance(siloWithDebt), _txMsgSender);
 
@@ -299,11 +295,6 @@ abstract contract LeverageUsingSiloFlashloan is
         virtual
         returns (uint256 amountOut);
 
-    function _setMaxAllowance(IERC20 _asset, address _spender, uint256 _requiredAmount) internal virtual {
-        uint256 allowance = _asset.allowance(address(this), _spender);
-        if (allowance < _requiredAmount) _asset.forceApprove(_spender, type(uint256).max);
-    }
-
     function _getBorrowerTotalShareDebtBalance(ISilo _siloWithDebt)
         internal
         view
@@ -336,9 +327,11 @@ abstract contract LeverageUsingSiloFlashloan is
         otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
     }
 
-    function _executePermit(Permit memory _permit, address _token) internal virtual {
+    function _executePermit(address _msgSender, Permit memory _permit, address _token) internal virtual {
+        if (_permit.deadline == 0) return;
+
         try IERC20Permit(_token).permit({
-            owner: msg.sender,
+            owner: _msgSender,
             spender: address(this),
             value: _permit.value,
             deadline: _permit.deadline,
@@ -360,6 +353,11 @@ abstract contract LeverageUsingSiloFlashloan is
             require(_txMsgValue == _expectedValue, IncorrectNativeTokenAmount());
 
             NATIVE_TOKEN.deposit{value: _txMsgValue}();
+            _txMsgValue = 0;
         }
+    }
+
+    function _payLeverageFee(address _token, uint256 _leverageFee) internal virtual {
+        if (_leverageFee != 0) IERC20(_token).safeTransfer(ROUTER.revenueReceiver(), _leverageFee);
     }
 }

@@ -72,7 +72,7 @@ contract CantinaTicket195 is CantinaTicket {
         vm.warp(block.timestamp + 50);
 
         // Retrieve the rewards balance before any claim.
-        uint256 rewardsBeforeClaim = _controller.getRewardsBalance(user1, _PROGRAM_NAME);
+        _controller.getRewardsBalance(user1, _PROGRAM_NAME);
         // At this point, rewards should roughly equal emissionPerSecond * 50 (subject to scaling factors).
 
         // User1 makes the first claim.
@@ -96,7 +96,7 @@ contract CantinaTicket195 is CantinaTicket {
 
         // Under correct behavior (i.e. if unclaimed rewards were properly cleared),
         // the additional rewards should only cover the extra 10 seconds:
-        uint256 expectedAdditionalReward = emissionPerSecond * 10;
+        emissionPerSecond * 10;
 
         // If the vulnerability is present, then unclaimed rewards from the first claim remain,
         // leading to a second claim that provides more than the expected additional rewards.

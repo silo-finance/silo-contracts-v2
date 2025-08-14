@@ -6,7 +6,6 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 import {InterestRateModelV2FactoryDeploy} from "./InterestRateModelV2FactoryDeploy.s.sol";
 import {InterestRateModelV2Deploy} from "./InterestRateModelV2Deploy.s.sol";
 import {SiloHookV1Deploy} from "./SiloHookV1Deploy.s.sol";
-import {PendleRewardsClaimerDeploy} from "./PendleRewardsClaimerDeploy.s.sol";
 import {SiloDeployerDeploy} from "./SiloDeployerDeploy.s.sol";
 import {LiquidationHelperDeploy} from "./LiquidationHelperDeploy.s.sol";
 import {TowerDeploy} from "./TowerDeploy.s.sol";
@@ -27,12 +26,11 @@ contract MainnetDeploy is CommonDeploy {
             new InterestRateModelV2FactoryDeploy();
         InterestRateModelV2Deploy interestRateModelV2Deploy = new InterestRateModelV2Deploy();
         SiloHookV1Deploy siloHookV1Deploy = new SiloHookV1Deploy();
-        PendleRewardsClaimerDeploy pendleRewardsClaimerDeploy = new PendleRewardsClaimerDeploy();
         SiloDeployerDeploy siloDeployerDeploy = new SiloDeployerDeploy();
         LiquidationHelperDeploy liquidationHelperDeploy = new LiquidationHelperDeploy();
         SiloLensDeploy siloLensDeploy = new SiloLensDeploy();
         TowerDeploy towerDeploy = new TowerDeploy();
-        SiloRouterV2Deploy SiloRouterV2Deploy = new SiloRouterV2Deploy();
+        SiloRouterV2Deploy siloRouterV2Deploy = new SiloRouterV2Deploy();
         ManualLiquidationHelperDeploy manualLiquidationHelperDeploy = new ManualLiquidationHelperDeploy();
 
         SiloIncentivesControllerFactoryDeploy siloIncentivesControllerFactoryDeploy =
@@ -42,12 +40,11 @@ contract MainnetDeploy is CommonDeploy {
         interestRateModelV2ConfigFactoryDeploy.run();
         interestRateModelV2Deploy.run();
         siloHookV1Deploy.run();
-        pendleRewardsClaimerDeploy.run();
         siloDeployerDeploy.run();
         liquidationHelperDeploy.run();
         siloLensDeploy.run();
         towerDeploy.run();
-        SiloRouterV2Deploy.run();
+        siloRouterV2Deploy.run();
         siloIncentivesControllerFactoryDeploy.run();
         manualLiquidationHelperDeploy.run();
     }

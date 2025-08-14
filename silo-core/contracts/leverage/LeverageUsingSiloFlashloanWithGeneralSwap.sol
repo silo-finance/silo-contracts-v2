@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
@@ -9,8 +8,9 @@ import {ILeverageUsingSiloFlashloan} from "../interfaces/ILeverageUsingSiloFlash
 
 import {GeneralSwapModule, IGeneralSwapModule} from "./modules/GeneralSwapModule.sol";
 import {LeverageUsingSiloFlashloan} from "./LeverageUsingSiloFlashloan.sol";
+import {RescueModule} from "./modules/RescueModule.sol";
 
-/// @notice This contract allow to create and close leverage position using flasnloan and swap.
+/// @notice This contract allow to create and close leverage position using flashloan and swap.
 contract LeverageUsingSiloFlashloanWithGeneralSwap is
     ILeverageUsingSiloFlashloan,
     LeverageUsingSiloFlashloan
@@ -23,7 +23,10 @@ contract LeverageUsingSiloFlashloanWithGeneralSwap is
     /// It can call any contract using any method. NEVER approve any tokens for it!
     IGeneralSwapModule public immutable SWAP_MODULE;
 
-    constructor (address _initialOwner, address _native) Ownable(_initialOwner) LeverageUsingSiloFlashloan(_native) {
+    constructor (
+        address _router,
+        address _native
+    ) RescueModule(_router) LeverageUsingSiloFlashloan(_native) {
         SWAP_MODULE = new GeneralSwapModule();
     }
 

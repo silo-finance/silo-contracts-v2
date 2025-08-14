@@ -54,6 +54,19 @@ contract SiloLensTest is SiloLittleHelper, Test {
     }
 
     /*
+        FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_SiloLens_getOracleAddresses
+    */
+    function test_SiloLens_getOracleAddresses() public view {
+        (address solvencyOracle, address maxLtvOracle) = (siloLens.getOracleAddresses(silo0));
+        assertEq(solvencyOracle, address(0), "solvencyOracle0");
+        assertEq(maxLtvOracle, address(0), "maxLtvOracle0");
+
+        (solvencyOracle, maxLtvOracle) = (siloLens.getOracleAddresses(silo1));
+        assertEq(solvencyOracle, address(0), "solvencyOracle1");
+        assertEq(maxLtvOracle, address(0), "maxLtvOracle1");
+    }
+
+    /*
         forge test -vvv --ffi --mt test_SiloLens_getDepositAPR
     */
     function test_SiloLens_getDepositAPR() public view {
@@ -143,9 +156,6 @@ contract SiloLensTest is SiloLittleHelper, Test {
         forge test -vvv --ffi --mt test_SiloLens_getFeesAndFeeReceivers
     */
     function test_SiloLens_getFeesAndFeeReceivers() public {
-        string memory chainAlias = ChainsLib.chainAlias();
-        address daoFeeReceiverConfig = makeAddr("DaoFeeReceiver");
-
         // hardcoded in the silo config for the local testing
         address deployerFeeReceiverConfig = 0xdEDEDEDEdEdEdEDedEDeDedEdEdeDedEdEDedEdE;
 
@@ -177,7 +187,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
     /*
         forge test -vvv --ffi --mt test_SiloLens_collateralBalanceOfUnderlying
     */
-    function test_SiloLens_collateralBalanceOfUnderlying() public {
+    function test_SiloLens_collateralBalanceOfUnderlying() public view {
         uint256 borrowerCollateralSilo0 = siloLens.collateralBalanceOfUnderlying(silo0, _depositor);
         assertEq(borrowerCollateralSilo0, 0);
 
@@ -196,7 +206,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
     /*
         forge test -vvv --ffi --mt test_SiloLens_debtBalanceOfUnderlying
     */
-    function test_SiloLens_debtBalanceOfUnderlying() public {
+    function test_SiloLens_debtBalanceOfUnderlying() public view {
         uint256 borrowerDebtSilo0 = siloLens.debtBalanceOfUnderlying(silo0, _borrower);
         assertEq(borrowerDebtSilo0, 0);
 

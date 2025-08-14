@@ -43,7 +43,7 @@ import "forge-std/console.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract Setup is BaseTest {
-    function _setUp() internal {
+    function _setUp() internal virtual {
         // Deploy assets
         _deployAssets();
 
@@ -64,7 +64,7 @@ contract Setup is BaseTest {
     //                                          SETUP FUNCTIONS                                  //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _deployAssets() internal {
+    function _deployAssets() internal virtual {
         _asset0 = new TestERC20("Test Token0", "TT0", 18);
         _asset1 = new TestERC20("Test Token1", "TT1", 6);
         baseAssets.push(address(_asset0));
@@ -291,7 +291,7 @@ contract Setup is BaseTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @notice Deploy protocol actors and initialize their balances
-    function _setUpActors() internal {
+    function _setUpActors() internal virtual {
         // Initialize the three actors of the fuzzers
         address[] memory addresses = new address[](3);
         addresses[0] = USER1;
@@ -317,6 +317,7 @@ contract Setup is BaseTest {
                 TestERC20 _token = TestERC20(tokens[j]);
                 _token.mint(_actor, INITIAL_BALANCE);
             }
+
             actorAddresses.push(_actor);
         }
     }
@@ -328,6 +329,7 @@ contract Setup is BaseTest {
     /// @return actorAddress Address of the deployed actor
     function _setUpActor(address userAddress, address[] memory tokens, address[] memory contracts)
         internal
+        virtual
         returns (address actorAddress)
     {
         bool success;

@@ -80,6 +80,7 @@ jobs:
           RPC_SONIC: ${{ secrets.RPC_SONIC }}
           RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
           RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
+          RPC_ARBITRUM_ONE: ${{ secrets.RPC_ARBITRUM }}
 
       - name: Extract optional price arguments from PR body
         id: price

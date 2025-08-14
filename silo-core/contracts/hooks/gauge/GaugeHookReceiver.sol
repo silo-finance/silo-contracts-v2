@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
-import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
-
+import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
@@ -13,13 +12,13 @@ import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiv
 
 /// @notice Silo share token hook receiver for the gauge.
 /// It notifies the gauge (if configured) about any balance update in the Silo share token.
-abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Ownable2Step {
+abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Ownable1and2Steps {
     using Hook for uint256;
     using Hook for bytes;
     
     mapping(IShareToken => ISiloIncentivesController) public configuredGauges;
 
-    constructor() Ownable(msg.sender) {
+    constructor() Ownable1and2Steps(msg.sender) {
         // lock implementation
         _transferOwnership(address(0));
     }

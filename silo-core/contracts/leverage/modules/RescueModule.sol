@@ -1,0 +1,73 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
+
+import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+
+import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
+import {TransientReentrancy} from "../../hooks/_common/TransientReentrancy.sol";
+
+/// @title Rescue Module for Leverage Operations
+/// @notice This contract collects and distributes revenue from leveraged operations.
+abstract contract RescueModule is TransientReentrancy {
+    using SafeERC20 for IERC20;
+
+    /// @notice The router of this leverage contract
+    ILeverageRouter public immutable ROUTER;
+
+    /// @notice Emitted when tokens are rescued
+    /// @param token Address of the token
+    /// @param amount Amount rescued
+    event TokensRescued(address indexed token, uint256 amount);
+
+    /// @dev Thrown when there is no tokens to rescue
+    error EmptyBalance(address token);
+
+    /// @dev Thrown when the caller is not the router
+    error OnlyRouter();
+
+    /// @dev Thrown when caller is not the leverage user
+    error OnlyLeverageUser();
+
+    /// @dev Thrown when native token transfer fails
+    error NativeTokenTransferFailed();
+
+    constructor(address _router) {
+        ROUTER = ILeverageRouter(_router);
+    }
+
+    modifier onlyRouter() {
+        require(msg.sender == address(ROUTER), OnlyRouter());
+        _;
+    }
+
+    modifier onlyLeverageUser() {
+        require(ROUTER.predictUserLeverageContract(msg.sender) == address(this), OnlyLeverageUser());
+        _;
+    }
+
+    /// @notice We do not expect anyone else to engage with a contract except the user
+    /// for whom this contract instance was cloned.
+    function rescueNativeTokens() external nonReentrant onlyLeverageUser {
+        uint256 balance = address(this).balance;
+        require(balance != 0, EmptyBalance(address(0)));
+
+        (bool success, ) = payable(msg.sender).call{value: balance}("");
+        require(success, NativeTokenTransferFailed());
+
+        emit TokensRescued(address(0), balance);
+    }
+
+    /// @notice We do not expect anyone else to engage with a contract except the user
+    /// for whom this contract instance was cloned.
+    /// @param _token ERC20 token to rescue
+    function rescueTokens(IERC20 _token) public nonReentrant onlyLeverageUser {
+        uint256 balance = _token.balanceOf(address(this));
+        require(balance != 0, EmptyBalance(address(_token)));
+
+        address receiver = msg.sender;
+
+        _token.safeTransfer(receiver, balance);
+        emit TokensRescued(address(_token), balance);
+    }
+}
