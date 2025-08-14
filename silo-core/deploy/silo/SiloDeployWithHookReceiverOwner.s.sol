@@ -33,5 +33,10 @@ contract SiloDeployWithHookReceiverOwner is SiloDeploy {
             initializationData: abi.encode(hookReceiverOwner)
         });
     }
+
+    function _getDKinkIRMInitialOwner() internal view override returns (address owner) {
+        string memory hookReceiverOwnerKey = vm.envString("HOOK_RECEIVER_OWNER");
+        owner = AddrLib.getAddress(hookReceiverOwnerKey);
+    }
 }
 

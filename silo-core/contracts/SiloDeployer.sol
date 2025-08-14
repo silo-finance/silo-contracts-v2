@@ -7,6 +7,8 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Factory} from "silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol";
+import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
+import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {SiloConfig} from "silo-core/contracts/SiloConfig.sol";
@@ -18,6 +20,7 @@ import {Create2Factory} from "common/utils/Create2Factory.sol";
 contract SiloDeployer is Create2Factory, ISiloDeployer {
     // solhint-disable var-name-mixedcase
     IInterestRateModelV2Factory public immutable IRM_CONFIG_FACTORY;
+    IDynamicKinkModelFactory public immutable DYNAMIC_KINK_MODEL_FACTORY;
     ISiloFactory public immutable SILO_FACTORY;
     address public immutable SILO_IMPL;
     address public immutable SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL;
@@ -26,12 +29,14 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
 
     constructor(
         IInterestRateModelV2Factory _irmConfigFactory,
+        IDynamicKinkModelFactory _dynamicKinkModelFactory,
         ISiloFactory _siloFactory,
         address _siloImpl,
         address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl
     ) {
         IRM_CONFIG_FACTORY = _irmConfigFactory;
+        DYNAMIC_KINK_MODEL_FACTORY = _dynamicKinkModelFactory;
         SILO_FACTORY = _siloFactory;
         SILO_IMPL = _siloImpl;
         SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL = _shareProtectedCollateralTokenImpl;
@@ -41,8 +46,8 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
     /// @inheritdoc ISiloDeployer
     function deploy(
         Oracles calldata _oracles,
-        IInterestRateModelV2.Config calldata _irmConfigData0,
-        IInterestRateModelV2.Config calldata _irmConfigData1,
+        bytes calldata _irmConfigData0,
+        bytes calldata _irmConfigData1,
         ClonableHookReceiver calldata _clonableHookReceiver,
         ISiloConfig.InitData memory _siloInitData
     )
@@ -144,17 +149,70 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
     /// @param _irmConfigData1 IRM config data for a silo `_TOKEN1`
     /// @param _siloInitData Silo configuration for the silo creation
     function _setUpIRMs(
-        IInterestRateModelV2.Config calldata _irmConfigData0,
-        IInterestRateModelV2.Config calldata _irmConfigData1,
+        bytes calldata _irmConfigData0,
+        bytes calldata _irmConfigData1,
         ISiloConfig.InitData memory _siloInitData
     ) internal {
-        bytes32 irmFactorySalt = _salt();
+        bytes32 salt = _salt();
 
-        (, IInterestRateModelV2 interestRateModel0) = IRM_CONFIG_FACTORY.create(_irmConfigData0, irmFactorySalt);
-        (, IInterestRateModelV2 interestRateModel1) = IRM_CONFIG_FACTORY.create(_irmConfigData1, irmFactorySalt);
+        if (_siloInitData.interestRateModel0 == address(IRM_CONFIG_FACTORY)) {
+            _siloInitData.interestRateModel0 = _createInterestRateModel(_irmConfigData0, salt);
+        }
 
-        _siloInitData.interestRateModel0 = address(interestRateModel0);
-        _siloInitData.interestRateModel1 = address(interestRateModel1);
+        if (_siloInitData.interestRateModel1 == address(IRM_CONFIG_FACTORY)) {
+            _siloInitData.interestRateModel1 = _createInterestRateModel(_irmConfigData1, salt);
+        }
+
+        uint256 creatorSiloCounter = SILO_FACTORY.creatorSiloCounter(msg.sender);
+
+        if (_siloInitData.interestRateModel0 == address(DYNAMIC_KINK_MODEL_FACTORY)) {
+            address silo = CloneDeterministic.predictSilo0Addr(
+                SILO_IMPL,
+                creatorSiloCounter,
+                address(SILO_FACTORY),
+                msg.sender
+            );
+
+            _siloInitData.interestRateModel0 = _createDKinkIRM(_irmConfigData0, silo, salt);
+        }
+
+        if (_siloInitData.interestRateModel1 == address(DYNAMIC_KINK_MODEL_FACTORY)) {
+            address silo = CloneDeterministic.predictSilo1Addr(
+                SILO_IMPL,
+                creatorSiloCounter,
+                address(SILO_FACTORY),
+                msg.sender
+            );
+
+            _siloInitData.interestRateModel1 = _createDKinkIRM(_irmConfigData1, silo, salt);
+        }
+    }
+
+    /// @notice Create an interest rate model
+    /// @param _irmConfigData IRM config data
+    /// @return interestRateModel Deployed interest rate model
+    function _createInterestRateModel(bytes memory _irmConfigData, bytes32 _salt) internal returns (address) {
+        IInterestRateModelV2.Config memory config = abi.decode(_irmConfigData, (IInterestRateModelV2.Config));
+        (, IInterestRateModelV2 interestRateModel) = IRM_CONFIG_FACTORY.create(config, _salt);
+
+        return address(interestRateModel);
+    }
+
+    /// @notice Create a DKinkIRM
+    /// @param _irmConfigData DKinkIRM config data
+    /// @param _silo Silo address
+    /// @return interestRateModel Deployed DKinkIRM
+    function _createDKinkIRM(bytes memory _irmConfigData, address _silo, bytes32 _salt) internal returns (address) {
+        DKinkIRMConfig memory dkink = abi.decode(_irmConfigData, (DKinkIRMConfig));
+
+        IInterestRateModel interestRateModel = DYNAMIC_KINK_MODEL_FACTORY.create(
+            dkink.config,
+            dkink.initialOwner,
+            _silo,
+            _salt
+        );
+
+        return address(interestRateModel);
     }
 
     /// @notice Create an oracle if it is not specified in the `_siloInitData` and has tx details for the creation

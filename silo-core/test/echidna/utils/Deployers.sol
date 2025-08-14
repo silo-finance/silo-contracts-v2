@@ -25,6 +25,8 @@ import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/hooks/g
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
+import {DynamicKinkModelFactory} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
+import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
 
 contract Deployers is VyperDeployer, Data {
     address timelockAdmin = address(0xb4b3);
@@ -143,12 +145,14 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deploySiloDeployer() internal {
+        address dkinkIRMConfigFactory = address(new DynamicKinkModelFactory());
         address siloImpl = address(new Silo(siloFactory));
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
         siloDeployer = ISiloDeployer(address(new SiloDeployer(
             interestRateModelV2ConfigFactory,
+            IDynamicKinkModelFactory(dkinkIRMConfigFactory),
             siloFactory,
             siloImpl,
             shareProtectedCollateralTokenImpl,
