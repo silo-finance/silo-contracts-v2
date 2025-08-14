@@ -61,6 +61,28 @@ contract DynamicKinkModelTest is KinkCommon {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_getModelStateAndConfig_state -vv
+    */
+    function test_kink_getModelStateAndConfig_state() public {
+        irm = DynamicKinkModel(address(FACTORY.create(_defaultConfig(), address(this), address(this))));
+
+        vm.warp(667222222);
+
+        (IDynamicKinkModel.ModelState memory stateBefore,) = irm.getModelStateAndConfig();
+
+        irm.getCompoundInterestRateAndUpdate({
+            _collateralAssets: 445000000000000000000000000, 
+            _debtAssets: 346111111111111116600547177, 
+            _interestRateTimestamp: 445000000
+        });
+
+        (IDynamicKinkModel.ModelState memory stateAfter,) = irm.getModelStateAndConfig();
+
+        assertLt(stateBefore.k, stateAfter.k, "k should change (grow)");
+        assertEq(stateAfter.silo, address(this), "silo should be the same");
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --mt test_init_neverRevert_whenValidConfig -vv
     */
     function test_init_neverRevert_whenValidConfig_fuzz(
