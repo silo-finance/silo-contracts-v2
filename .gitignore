@@ -60,3 +60,6 @@ certora/harness/vaults/contracts
 emv-**/*
 gambit_out/**
 collect.json
+
+#scripts
+silo-core/scripts/airdrop/data.csv

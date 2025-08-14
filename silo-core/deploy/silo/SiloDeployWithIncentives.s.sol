@@ -17,6 +17,11 @@ import {
 FOUNDRY_PROFILE=core CONFIG=wS_scUSD_Silo INCENTIVES_OWNER=GROWTH_MULTISIG INCENTIVIZED_ASSET=scUSD \
     forge script silo-core/deploy/silo/SiloDeployWithIncentives.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
+
+    It is possible to define an optional parameter for share token type:
+    SHARE_TOKEN_TYPE=COLLATERAL (borrowable collateral, default value)
+    SHARE_TOKEN_TYPE=COLLATERAL_ONLY (protected deposits)
+    SHARE_TOKEN_TYPE=DEBT (debt share token)
  */
 contract SiloDeployWithIncentives is SiloDeployWithDeployerOwner {
     function run() public override returns (ISiloConfig siloConfig) {

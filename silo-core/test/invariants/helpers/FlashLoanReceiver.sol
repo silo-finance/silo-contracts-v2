@@ -26,6 +26,8 @@ contract MockFlashLoanReceiver is IERC3156FlashBorrower, PropertiesAsserts, Post
 
         if (balance > _amount + _fee) {
             TestERC20(_token).burn(address(this), balance - _amount - _fee);
+        } else if (balance < _amount + _fee) {
+            TestERC20(_token).mint(address(this), _amount + _fee - balance);
         }
 
         assertEq(_initiator, sender, BORROWING_HSPOST_U3);

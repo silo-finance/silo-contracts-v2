@@ -7,7 +7,8 @@ env:
   RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
   RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
   RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
-  HYPERNATIVE_WATCHLIST: ${{ secrets.HYPERNATIVE_WATCHLIST }}
+  HYPERNATIVE_WATCHLIST_SANDBOX: ${{ secrets.HYPERNATIVE_WATCHLIST_SANDBOX }}
+  HYPERNATIVE_WATCHLIST_PAUSE: ${{ secrets.HYPERNATIVE_WATCHLIST_PAUSE }}
   HYPERNATIVE_CLIENT_ID: ${{ secrets.HYPERNATIVE_CLIENT_ID }}
   HYPERNATIVE_CLIENT_SECRET: ${{ secrets.HYPERNATIVE_CLIENT_SECRET }}
 
@@ -25,6 +26,21 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Run submodule update
+        run: git submodule update --init --recursive
+
+      - name: Build silo foundry utils
+        working-directory: ./gitmodules/silo-foundry-utils
+        run: |
+          cargo build --release
+          cp target/release/silo-foundry-utils ../../silo-foundry-utils
+          ../../silo-foundry-utils --version
 
       - name: Fetch addresses and send request for Sonic
         run: ./silo-core/scripts/hypernative/runHypernative.sh $RPC_SONIC sonic sonic
