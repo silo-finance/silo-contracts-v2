@@ -23,7 +23,7 @@ contract DynamicKinkModelTest is KinkCommon {
     function setUp() public {
         IDynamicKinkModel.Config memory emptyConfig; 
 
-        irm = DynamicKinkModel(address(FACTORY.create(emptyConfig, address(this), address(this))));
+        irm = DynamicKinkModel(address(FACTORY.create(emptyConfig, address(this), address(this), bytes32(0))));
     }
 
     /*
@@ -64,7 +64,7 @@ contract DynamicKinkModelTest is KinkCommon {
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_getModelStateAndConfig_state -vv
     */
     function test_kink_getModelStateAndConfig_state() public {
-        irm = DynamicKinkModel(address(FACTORY.create(_defaultConfig(), address(this), address(this))));
+        irm = DynamicKinkModel(address(FACTORY.create(_defaultConfig(), address(this), address(this), bytes32(0))));
 
         vm.warp(667222222);
 
