@@ -87,11 +87,11 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         emit Initialized(_initialOwner, _silo);
     }
 
-    function updateConfig(IDynamicKinkModel.Config calldata _config) external onlyOwner {
+    function updateConfig(IDynamicKinkModel.Config calldata _config) external virtual onlyOwner {
         _updateConfiguration(_config);
     }
 
-    function restoreLastConfig() external onlyOwner {
+    function restoreLastConfig() external virtual onlyOwner {
         IDynamicKinkModelConfig lastOne = configsHistory[irmConfig];
         require(address(lastOne) != address(0), AddressZero());
 
@@ -160,7 +160,12 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     }
 
     /// @notice it reverts for invalid silo
-    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp) external view returns (uint256 rcur) {
+    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        virtual
+        returns (uint256 rcur)
+    {
         (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
         require(_silo == state.silo, InvalidSilo());
 
@@ -183,7 +188,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         }
     }
 
-    function getModelStateAndConfig() public view returns (ModelState memory s, Config memory c) {
+    function getModelStateAndConfig() public view virtual returns (ModelState memory s, Config memory c) {
         s = modelState;
         c = irmConfig.getConfig();
     }
@@ -228,6 +233,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     )
         public
         pure
+        virtual
         returns (int256 rcur)
     {
         if (_tba == 0) return 0; // no debt, no interest
@@ -288,6 +294,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     )
         public
         pure
+        virtual
         returns (int256 rcomp, int256 k)
     {
         // no debt, no interest, overriding min APR
@@ -352,6 +359,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
     function _updateConfiguration(IDynamicKinkModel.Config memory _config)
         internal
+        virtual
         returns (IDynamicKinkModelConfig newCfg)
     {
         newCfg = _deployConfig(_config);
@@ -361,6 +369,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
     function _deployConfig(IDynamicKinkModel.Config memory _config)
         internal
+        virtual
         returns (IDynamicKinkModelConfig newCfg)
     {
         verifyConfig(_config);
@@ -375,7 +384,12 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     }
 
     // hard rule: utilization in the model should never be above 100%.
-    function _calculateUtiliation(uint256 _collateralAssets, uint256 _debtAssets) internal pure returns (int256) {
+    function _calculateUtiliation(uint256 _collateralAssets, uint256 _debtAssets) 
+        internal 
+        pure 
+        virtual 
+        returns (int256) 
+    {
         if (_debtAssets == 0) return 0;
         if (_collateralAssets == 0 || _debtAssets >= _collateralAssets) return _DP;
 
@@ -383,7 +397,12 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     }
 
     /// @dev we expect _kmin and _kmax to be in the range of int96
-    function _capK(int256 _k, int256 _kmin, int256 _kmax) internal pure returns(int96 cappedK) {
+    function _capK(int256 _k, int256 _kmin, int256 _kmax) 
+        internal 
+        pure 
+        virtual 
+        returns(int96 cappedK) 
+    {
         require(_kmin <= _kmax, InvalidKRange());
 
         // safe to cast to int96, because we know, that _kmin and _kmax are in the range of int96
