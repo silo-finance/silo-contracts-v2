@@ -214,7 +214,7 @@ contract FIRMHook is
         Hook.BeforeBorrowInput memory borrowInput = Hook.beforeBorrowDecode(_inputAndOutput);
 
         uint256 interestTimeDelta = maturity - block.timestamp;
-        uint256 rcur = firmIrm.getCurrentInterestRate(address(_silo1), block.timestamp);
+        uint256 rcur = _getCurrentInterestRate(firmIrm, address(_silo1));
         uint256 effectiveInterestRate = rcur * interestTimeDelta / 365 days;
         uint256 interestPayment = borrowInput.assets * effectiveInterestRate / 1e18;
 
@@ -242,6 +242,17 @@ contract FIRMHook is
             _callType: ISilo.CallType.Delegatecall,
             _input: input
         });
+    }
+
+    function _getCurrentInterestRate(
+        IFixedInterestRateModel _firmIrm,
+        address _silo1
+    ) internal view returns (uint256 rcur) {
+        try _firmIrm.getCurrentInterestRate(address(_silo1), block.timestamp) returns (uint256 _rcur) {
+            rcur = _rcur;
+        } catch {
+            rcur = 0;
+        }
     }
 
     /// @notice Get the dao and deployer revenue
