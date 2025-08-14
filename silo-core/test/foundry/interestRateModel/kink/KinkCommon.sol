@@ -199,4 +199,22 @@ abstract contract KinkCommon is Test {
     function _hashConfig(IDynamicKinkModel.Config memory _config) internal pure returns (bytes32) {
         return keccak256(abi.encode(_config));
     }
+
+    function _defaultConfig() internal pure returns (IDynamicKinkModel.Config memory) {
+        return IDynamicKinkModel.Config({
+            ulow: 200000000000000000,
+            u1: 500000000000000000,
+            u2: 700000000000000000,
+            ucrit: 600000000000000000,
+            rmin: 158549000,
+            kmin: 1585490000,
+            kmax: 3170980000,
+            alpha: 4000000000000000000,
+            cminus: 367011,
+            cplus: 36701,
+            c1: 3670,
+            c2: 3670,
+            dmax: 7340
+        });
+    }
 }
