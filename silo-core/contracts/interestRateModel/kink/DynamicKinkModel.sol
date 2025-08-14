@@ -382,7 +382,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         return int256(Math.mulDiv(_debtAssets, uint256(_DP), _collateralAssets, Math.Rounding.Floor));
     }
 
+    /// @dev we expect _kmin and _kmax to be in the range of int96
     function _capK(int256 _k, int256 _kmin, int256 _kmax) internal pure returns(int96 cappedK) {
+        require(_kmin <= _kmax, InvalidKRange());
+
         // safe to cast to int96, because we know, that _kmin and _kmax are in the range of int96
         cappedK = int96(SignedMath.max(_kmin, SignedMath.min(_kmax, _k)));
     }

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 
-import {DynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
+import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 
 contract KinkInternalMock is DynamicKinkModel {
     function calculateUtiliation(uint256 _collateralAssets, uint256 _debtAssets) external pure returns (int256) {
@@ -54,5 +54,26 @@ contract KinkModalInternalTest is Test {
         int256 u = irm.calculateUtiliation(_collateralAssets, _debtAssets);
         assertLe(u, _DP, "neverRevert_neverOverDP <= 100%");
         assertGe(u, 0, "neverRevert_neverOverDP >= 0");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_capK_InvalidKRange -vv
+    */
+    function test_kink_capK_InvalidKRange() public {
+        vm.expectRevert(IDynamicKinkModel.InvalidKRange.selector);
+        irm.capK(0, 1, 0);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_capK_fuzz -vv
+    */
+    /// forge-config: core_test.fuzz.runs = 1000
+    function test_kink_capK_fuzz(int256 _k, int96 _kmin, int96 _kmax) public view {
+        vm.assume(_kmin <= _kmax);
+
+        int96 cappedK = irm.capK(_k, _kmin, _kmax);
+
+        assertGe(cappedK, _kmin, "cappedK >= kmin");
+        assertLe(cappedK, _kmax, "cappedK <= kmax");
     }
 }

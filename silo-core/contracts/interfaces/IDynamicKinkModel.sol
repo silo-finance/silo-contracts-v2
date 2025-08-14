@@ -120,6 +120,7 @@ interface IDynamicKinkModel {
     error InvalidDmax();
     error InvalidKmax();
     error InvalidKmin();
+    error InvalidKRange();
     error InvalidRcritMax();
     error InvalidRcritMin();
     error InvalidRmin();
