@@ -18,7 +18,7 @@ interface IFIRMHook {
     /// @param _interestPayment amount of interest payment
     /// @param _daoAndDeployerRevenue amount of dao and deployer revenue
     /// @param _firm address of the firm
-    function mintSharesAndUpdateSiloState(
+    function siloTakesBorrowFeeUpfront(
         uint256 _debtShares,
         uint256 _collateralShares,
         address _borrower,

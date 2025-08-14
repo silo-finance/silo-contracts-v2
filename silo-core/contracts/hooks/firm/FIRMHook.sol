@@ -41,7 +41,7 @@ contract FIRMHook is
     using Hook for uint256;
 
     /// @inheritdoc IFIRMHook
-    function mintSharesAndUpdateSiloState(
+    function siloTakesBorrowFeeUpfront(
         uint256 _debtShares,
         uint256 _collateralShares,
         address _borrower,
@@ -58,9 +58,9 @@ contract FIRMHook is
         $.daoAndDeployerRevenue += _daoAndDeployerRevenue;
 
         // Mint shares
-        ISiloConfig config = ShareTokenLib.getShareTokenStorage().siloConfig;
+        ISiloConfig siloConfig = ShareTokenLib.getShareTokenStorage().siloConfig;
 
-        (, address collateral, address debt) = config.getShareTokens(address(this));
+        (, address collateral, address debt) = siloConfig.getShareTokens(address(this));
 
         IShareToken(debt).mint(_borrower, _borrower, _debtShares);
         IShareToken(collateral).mint(_firm, _firm, _collateralShares);
@@ -224,9 +224,9 @@ contract FIRMHook is
         uint192 daoAndDeployerRevenue = _getDaoAndDeployerRevenue(address(_silo1), interestPayment);
         uint256 interestToDistribute = interestPayment - daoAndDeployerRevenue;
 
-        // Call `mintSharesAndUpdateSiloState` to mint shares and update silo state
+        // Call `siloTakesBorrowFeeUpfront` to mint shares and update silo state
         bytes memory input = abi.encodeWithSelector(
-            this.mintSharesAndUpdateSiloState.selector,
+            this.siloTakesBorrowFeeUpfront.selector,
             _silo1.convertToShares(interestPayment, ISilo.AssetType.Debt),
             _silo1.convertToShares(interestToDistribute, ISilo.AssetType.Collateral),
             borrowInput.borrower,

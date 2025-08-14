@@ -11,8 +11,8 @@ abstract contract Silo0ProtectedSilo1CollateralOnly is BaseHookReceiver {
     using Hook for uint256;
 
     error NotAllowed();
-    error Silo0LTVNotSet();
-    error Silo1LTVMustBeZero();
+    error Silo0AssetMustBeBorrowable();
+    error Silo1AssetCanNotBeBorrowable();
     error InvalidSilo();
 
     /// @inheritdoc IHookReceiver
@@ -37,9 +37,9 @@ abstract contract Silo0ProtectedSilo1CollateralOnly is BaseHookReceiver {
         (address silo0, address silo1) = siloConfig.getSilos();
 
         ISiloConfig.ConfigData memory silo0Config = siloConfig.getConfig(silo0);
-        require(silo0Config.maxLtv != 0, Silo0LTVNotSet());
+        require(silo0Config.maxLtv != 0, Silo0AssetMustBeBorrowable());
 
         ISiloConfig.ConfigData memory silo1Config = siloConfig.getConfig(silo1);
-        require(silo1Config.maxLtv == 0, Silo1LTVMustBeZero());
+        require(silo1Config.maxLtv == 0, Silo1AssetCanNotBeBorrowable());
     }
 }

@@ -131,9 +131,9 @@ contract FIRMHookUnitTest is Test {
     }
 
     /**
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_initialize_Silo0LTVNotSet -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_initialize_Silo0AssetMustBeBorrowable -vv
      */
-    function test_firmHook_initialize_Silo0LTVNotSet() public {
+    function test_firmHook_initialize_Silo0AssetMustBeBorrowable() public {
         ISiloConfig.ConfigData memory silo1Config = _silo1Config();
         ISiloConfig.ConfigData memory silo0Config = _silo0Config();
 
@@ -143,14 +143,14 @@ contract FIRMHookUnitTest is Test {
 
         FIRMHook hook = FIRMHook(Clones.clone(address(new FIRMHook())));
 
-        vm.expectRevert(abi.encodeWithSelector(Silo0ProtectedSilo1CollateralOnly.Silo0LTVNotSet.selector));
+        vm.expectRevert(abi.encodeWithSelector(Silo0ProtectedSilo1CollateralOnly.Silo0AssetMustBeBorrowable.selector));
         hook.initialize(siloConfig, abi.encode(_owner, _firmVault, _maturityDate));
     }
 
     /**
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_initialize_Silo1LTVMustBeZero -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_initialize_Silo1AssetCanNotBeBorrowable -vv
      */
-    function test_firmHook_initialize_Silo1LTVMustBeZero() public {
+    function test_firmHook_initialize_Silo1AssetCanNotBeBorrowable() public {
         ISiloConfig.ConfigData memory silo1Config = _silo1Config();
         ISiloConfig.ConfigData memory silo0Config = _silo0Config();
 
@@ -160,7 +160,7 @@ contract FIRMHookUnitTest is Test {
 
         FIRMHook hook = FIRMHook(Clones.clone(address(new FIRMHook())));
 
-        vm.expectRevert(abi.encodeWithSelector(Silo0ProtectedSilo1CollateralOnly.Silo1LTVMustBeZero.selector));
+        vm.expectRevert(abi.encodeWithSelector(Silo0ProtectedSilo1CollateralOnly.Silo1AssetCanNotBeBorrowable.selector));
         hook.initialize(siloConfig, abi.encode(_owner, _firmVault, _maturityDate));
     }
 
@@ -275,11 +275,11 @@ contract FIRMHookUnitTest is Test {
     }
 
     /**
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_mintSharesAndUpdateSiloState_reverts -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_firmHook_siloTakesBorrowFeeUpfront_reverts -vv
      */
-    function test_firmHook_mintSharesAndUpdateSiloState_reverts() public {
+    function test_firmHook_siloTakesBorrowFeeUpfront_reverts() public {
         vm.expectRevert();
-        _hook.mintSharesAndUpdateSiloState(1e18, 1e18, address(address(this)), 1e18, 1e18, 1e18, address(this));
+        _hook.siloTakesBorrowFeeUpfront(1e18, 1e18, address(address(this)), 1e18, 1e18, 1e18, address(this));
     }
 
     /**
