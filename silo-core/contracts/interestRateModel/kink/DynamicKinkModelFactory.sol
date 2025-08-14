@@ -32,12 +32,17 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
-    function create(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo)
+    function create(
+        IDynamicKinkModel.Config calldata _config, 
+        address _initialOwner, 
+        address _silo,
+        bytes32 _externalSalt
+    )
         external
         virtual
         returns (IInterestRateModel irm)
     {
-        return _create(_config, _initialOwner, _silo, _salt());
+        return _create(_config, _initialOwner, _silo, _externalSalt);
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
@@ -101,6 +106,16 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     /// @inheritdoc IDynamicKinkModelFactory
     function verifyConfig(IDynamicKinkModel.Config calldata _config) external view virtual {
         IRM.verifyConfig(_config);
+    }
+
+    function predictAddress(address _deployer, bytes32 _externalSalt)
+        external
+        view
+        returns (address predictedAddress)
+    {
+        require(_deployer != address(0), DeployerCannotBeZero());
+
+        predictedAddress = Clones.predictDeterministicAddress(address(IRM), _createSalt(_deployer, _externalSalt));
     }
 
     function _create(
