@@ -28,7 +28,7 @@ import {
 
 import {DIAOracleFactoryMock} from "silo-core/test/foundry/_mocks/oracles-factories/DIAOracleFactoryMock.sol";
 
-// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloDeployTest
+// AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloDeployTest
 contract SiloDeployTest is IntegrationTest {
    uint256 internal constant _FORKING_BLOCK_NUMBER = 19780370;
 
@@ -64,7 +64,7 @@ contract SiloDeployTest is IntegrationTest {
         _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST).run();
     }
 
-    // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_hooks_are_initialized
+    // AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_hooks_are_initialized
     function test_hooks_are_initialized() public view {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
@@ -72,7 +72,7 @@ contract SiloDeployTest is IntegrationTest {
          _verifyHookReceiversForSilo(silo1);
     }
 
-    // FOUNDRY_PROFILE=core_test forge test -vv --ffi -mt test_oracles_deploy
+    // AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi -mt test_oracles_deploy
     function test_oracles_deploy() public view { // solhint-disable-line func-name-mixedcase
         (, address silo1) = _siloConfig.getSilos();
 
@@ -88,7 +88,7 @@ contract SiloDeployTest is IntegrationTest {
         );
     }
 
-    // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_encodeCallWithSalt -vv
+    // AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test --ffi --mt test_encodeCallWithSalt -vv
     function test_encodeCallWithSalt() public pure {
         bytes32 salt = keccak256(bytes("some string"));
 
@@ -105,7 +105,7 @@ contract SiloDeployTest is IntegrationTest {
         assertEq(keccak256(callDataForModification), keccak256(callDataExpected), "failed to update the salt");
     }
 
-    // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloConfig_and_hookReceiver_reorg
+    // AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloConfig_and_hookReceiver_reorg
     function test_siloConfig_and_hookReceiver_reorg() public {
         Vm.Wallet memory wallet1 = vm.createWallet("eoa1");
         Vm.Wallet memory wallet2 = vm.createWallet("eoa2");

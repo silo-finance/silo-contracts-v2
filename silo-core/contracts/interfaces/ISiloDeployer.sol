@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0;
 
 import {IInterestRateModelV2} from "./IInterestRateModelV2.sol";
+import {IDynamicKinkModel} from "./IDynamicKinkModel.sol";
 import {ISiloConfig} from "./ISiloConfig.sol";
 
 /// @notice Silo Deployer
@@ -28,6 +29,12 @@ interface ISiloDeployer {
         OracleCreationTxData maxLtvOracle1;
     }
 
+    /// @dev DKinkIRM config to be created during the Silo creation.
+    struct DKinkIRMConfig {
+        IDynamicKinkModel.Config config;
+        address initialOwner;
+    }
+
     /// @dev Emit after the Silo creation
     event SiloCreated(ISiloConfig siloConfig);
 
@@ -45,8 +52,8 @@ interface ISiloDeployer {
     /// @param _siloInitData Silo configuration for the silo creation
     function deploy(
         Oracles calldata _oracles,
-        IInterestRateModelV2.Config calldata _irmConfigData0,
-        IInterestRateModelV2.Config calldata _irmConfigData1,
+        bytes calldata _irmConfigData0,
+        bytes calldata _irmConfigData1,
         ClonableHookReceiver calldata _clonableHookReceiver,
         ISiloConfig.InitData memory _siloInitData
     )

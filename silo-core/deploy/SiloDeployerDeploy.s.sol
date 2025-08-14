@@ -7,6 +7,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {IInterestRateModelV2Factory} from "silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol";
+import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
@@ -77,6 +78,11 @@ contract SiloDeployerDeploy is CommonDeploy {
             chainAlias
         );
 
+        address dkinkIRMConfigFactory = SiloCoreDeployments.get(
+            SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY,
+            chainAlias
+        );
+
         vm.startBroadcast(deployerPrivateKey);
 
         address siloImpl = address(new Silo(siloFactory));
@@ -85,6 +91,7 @@ contract SiloDeployerDeploy is CommonDeploy {
 
         siloDeployer = ISiloDeployer(address(new SiloDeployer(
             IInterestRateModelV2Factory(irmConfigFactory),
+            IDynamicKinkModelFactory(dkinkIRMConfigFactory),
             siloFactory,
             siloImpl,
             shareProtectedCollateralTokenImpl,

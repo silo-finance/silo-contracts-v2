@@ -9,7 +9,9 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 import {CommonDeploy} from "../_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
+import {IDynamicKinkModel} from "silo-core/contracts/interfaces/IDynamicKinkModel.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
+import {DKinkIRMConfigData} from "../input-readers/DKinkIRMConfigData.sol";
 import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
 import {SiloDeployments} from "./SiloDeployments.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
@@ -42,6 +44,8 @@ abstract contract SiloDeploy is CommonDeploy {
 
     string[] public verificationIssues;
 
+    error UnknownInterestRateModelFactory();
+
     function useConfig(string memory _config) external returns (SiloDeploy) {
         configName = _config;
         return this;
@@ -70,10 +74,10 @@ abstract contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] Config prepared");
 
-        InterestRateModelConfigData modelData = new InterestRateModelConfigData();
+        bytes memory irmConfigData0;
+        bytes memory irmConfigData1;
 
-        IInterestRateModelV2.Config memory irmConfigData0 = modelData.getConfigData(config.interestRateModelConfig0);
-        IInterestRateModelV2.Config memory irmConfigData1 = modelData.getConfigData(config.interestRateModelConfig1);
+        (irmConfigData0, irmConfigData1) = _getIRMConfigData(config, siloInitData);
 
         console2.log("[SiloCommonDeploy] IRM configs prepared");
         
@@ -291,6 +295,48 @@ abstract contract SiloDeploy is CommonDeploy {
         txData.txInput = abi.encodeCall(IDIAOracleFactory.create, (config, bytes32(0)));
     }
 
+    function _getIRMConfigData(SiloConfigData.ConfigData memory _config, ISiloConfig.InitData memory _siloInitData)
+        internal
+        returns (
+            bytes memory irmConfigData0,
+            bytes memory irmConfigData1
+        )
+    {
+        InterestRateModelConfigData irmModelData = new InterestRateModelConfigData();
+
+        address irmConfigFactory = _resolveDeployedContract(SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY);
+        address dkinkIRMConfigFactory = _resolveDeployedContract(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY);
+
+        if (_siloInitData.interestRateModel0 == irmConfigFactory) {
+            irmConfigData0 = abi.encode(irmModelData.getConfigData(_config.interestRateModelConfig0));
+        } else if (_siloInitData.interestRateModel0 == dkinkIRMConfigFactory) {
+            irmConfigData0 = _prepareDKinkIRMConfig(_config.interestRateModelConfig0);
+        } else {
+            revert UnknownInterestRateModelFactory();
+        }
+
+        if (_siloInitData.interestRateModel1 == irmConfigFactory) {
+            irmConfigData1 = abi.encode(irmModelData.getConfigData(_config.interestRateModelConfig1));
+        } else if (_siloInitData.interestRateModel1 == dkinkIRMConfigFactory) {
+            irmConfigData1 = _prepareDKinkIRMConfig(_config.interestRateModelConfig1);
+        } else {
+            revert UnknownInterestRateModelFactory();
+        }
+    }
+
+    function _prepareDKinkIRMConfig(string memory _configName) internal returns (bytes memory irmConfigData) {
+        DKinkIRMConfigData dkinkIRMModelData = new DKinkIRMConfigData();
+
+        IDynamicKinkModel.Config memory dkinkIRMConfigData = dkinkIRMModelData.getConfigData(_configName);
+
+        ISiloDeployer.DKinkIRMConfig memory dkinkIRMConfig = ISiloDeployer.DKinkIRMConfig({
+            config: dkinkIRMConfigData,
+            initialOwner: _getDKinkIRMInitialOwner()
+        });
+
+        irmConfigData = abi.encode(dkinkIRMConfig);
+    }
+
     function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {
         contractAddress = SiloCoreDeployments.get(_name, ChainsLib.chainAlias());
         console2.log(string.concat("[SiloCommonDeploy] ", _name, " @ %s resolved "), contractAddress);
@@ -337,6 +383,8 @@ abstract contract SiloDeploy is CommonDeploy {
         internal
         virtual
         returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver);
+
+    function _getDKinkIRMInitialOwner() internal virtual returns (address);
 
     function _printAndValidateDetails(
         ISiloConfig _siloConfig,
