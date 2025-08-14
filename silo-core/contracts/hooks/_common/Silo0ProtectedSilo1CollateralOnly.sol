@@ -24,15 +24,11 @@ abstract contract Silo0ProtectedSilo1CollateralOnly is BaseHookReceiver {
     {
         (address silo0, address silo1) = siloConfig.getSilos();
 
-        if (_silo == silo0) { // Silo0: protected token transfers are allowed
-            uint256 collateralTokenTransferAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
-            require(!_action.matchAction(collateralTokenTransferAction), CollateralTransferNotAllowed());
-        } else if (_silo == silo1) { // Silo1: collateral token transfers are allowed
-            uint256 protectedTokenTransferAction = Hook.shareTokenTransfer(Hook.PROTECTED_TOKEN);
-            require(!_action.matchAction(protectedTokenTransferAction), ProtectedTransferNotAllowed());
-        } else {
-            revert InvalidSilo();
-        }
+        require(_silo == silo0 || _silo == silo1, InvalidSilo());
+        
+        uint256 allowedToken = _silo == silo0 ? Hook.COLLATERAL_TOKEN : Hook.PROTECTED_TOKEN;
+        uint256 allowedAction = Hook.shareTokenTransfer(allowedToken);
+        require(!_action.matchAction(allowedAction), NotAllowed());
     }
 
     /// @notice Initialize the Silo0ProtectedSilo1CollateralOnly hook
