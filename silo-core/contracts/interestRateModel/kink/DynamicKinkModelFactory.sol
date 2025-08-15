@@ -63,10 +63,11 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         require(defaultInt.u2.isInside(defaultInt.u1, defaultInt.ucrit), IDynamicKinkModel.InvalidU2());
         require(defaultInt.ucrit.isInside(defaultInt.u2, DP), IDynamicKinkModel.InvalidUcrit());
 
-        // 0 <= rmin < rcritMin <= rcritMax <= r100
+        // original: 0 <= rmin < rcritMin <= rcritMax <= r100
+        // proposed: 0 <= rmin < rcritMin < rritMax <= r100 TODO
 
         require(defaultInt.rmin.isInBelow(0, defaultInt.rcritMin), IDynamicKinkModel.InvalidRmin());
-        require(defaultInt.rcritMin.isInAbove(defaultInt.rmin, defaultInt.rcritMax), IDynamicKinkModel.InvalidRcritMin());
+        require(defaultInt.rcritMin.isInside(defaultInt.rmin, defaultInt.rcritMax), IDynamicKinkModel.InvalidRcritMin());
 
         require(
             defaultInt.rcritMax.isBetween(defaultInt.rcritMin, defaultInt.r100),
@@ -94,7 +95,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
         console2.log("s * config.kmax * (DP - defaultInt.ucrit)", s * config.kmax * (DP - defaultInt.ucrit));
         int256 divider = s * config.kmax * (DP - defaultInt.ucrit);
-        require(divider != 0, "TODO confirm with researchers if we can handle that in other way");
+        require(divider != 0, IDynamicKinkModel.AlphaDividerZero()); // TODO: check if we can handle this in other way
 
         config.alpha = (defaultInt.r100 - defaultInt.rmin - s * config.kmax * (DP - defaultInt.ulow)) / divider;
 
