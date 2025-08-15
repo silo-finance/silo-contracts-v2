@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
@@ -55,11 +57,11 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     {
         IDynamicKinkModel.UserFriendlyConfigInt memory defaultInt = _castConfig(_default);
 
-        // 0 <= ulow < u1 < u2 < ucrit <= DP
+        // 0 <= ulow < u1 < u2 < ucrit < DP
         require(defaultInt.ulow.isInBelow(0, defaultInt.u1), IDynamicKinkModel.InvalidUlow());
         require(defaultInt.u1.isInside(defaultInt.ulow, defaultInt.u2), IDynamicKinkModel.InvalidU1());
         require(defaultInt.u2.isInside(defaultInt.u1, defaultInt.ucrit), IDynamicKinkModel.InvalidU2());
-        require(defaultInt.ucrit.isInBelow(defaultInt.u2, DP), IDynamicKinkModel.InvalidUcrit());
+        require(defaultInt.ucrit.isInside(defaultInt.u2, DP), IDynamicKinkModel.InvalidUcrit());
 
         // 0 <= rmin < rcritMin <= rcritMax <= r100
 
@@ -90,8 +92,11 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         config.kmin = SafeCast.toInt96((defaultInt.rcritMin - defaultInt.rmin) / (defaultInt.ucrit - defaultInt.ulow) / s);
         config.kmax = SafeCast.toInt96((defaultInt.rcritMax - defaultInt.rmin) / (defaultInt.ucrit - defaultInt.ulow) / s);
 
-        config.alpha = (defaultInt.r100 - defaultInt.rmin - s * config.kmax * (DP - defaultInt.ulow))
-            / (s * config.kmax * (DP - defaultInt.ucrit));
+        console2.log("s * config.kmax * (DP - defaultInt.ucrit)", s * config.kmax * (DP - defaultInt.ucrit));
+        int256 divider = s * config.kmax * (DP - defaultInt.ucrit);
+        require(divider != 0, "TODO confirm with researchers if we can handle that in other way");
+
+        config.alpha = (defaultInt.r100 - defaultInt.rmin - s * config.kmax * (DP - defaultInt.ulow)) / divider;
 
         config.c1 = (config.kmax - config.kmin) / defaultInt.t1;
         config.c2 = (config.kmax - config.kmin) / defaultInt.t2;
