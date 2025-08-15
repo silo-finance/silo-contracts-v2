@@ -53,4 +53,6 @@ During liquidation, the protocol performs two conversions that both round down:
 1. Converting collateral assets to shares (rounds down)
 2. Converting shares back to assets for withdrawal (rounds down)
 
-With high asset/share ratios, the cumulative rounding error can exceed 2 wei. This causes `maxLiquidation()` to overestimate the available collateral, potentially leading to failed liquidation transactions when the actual withdrawable amount is less than calculated.
+When the asset/share ratio is high, cumulative rounding errors can exceed 2 wei. The estimated value may be up to 2 × rounding error higher, because there are two conversions that round down. As a result, maxLiquidation() may overestimate the collateral to be liquidated in such cases.
+
+**Recommendation**: Instead of comparing maxLiquidation directly with the actual liquidation result, just check whether the liquidation is profitable. This avoids failed transactions caused by a small wei-level overestimation.
