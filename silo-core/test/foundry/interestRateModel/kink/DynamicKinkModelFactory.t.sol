@@ -85,36 +85,32 @@ contract DynamicKinkModelFactoryTest is KinkCommon {
         IDynamicKinkModel.UserFriendlyConfig memory _in
         ) public view {
                
-        // bytes memory callData = hex"00000000000000000000000000000000000000000000000000000021791c744b00000000000000000000000000000000000000000000000000002f22dd842338000000000000000000000000000000000000000000000000000000000a9c20410000000000000000000000000000000000000000000000000000000000002ce6000000000000000000000000000000000000000000000000021919ac47b06448000000000000000000000000000000000000000000000000000000000003da730000000000000000000000000000000000000000000000000000000000076a7f0000000000000000000000000000000000000000000000ffffffffffffffffff00000000000000000000000000000000000000000000000000000000fffffffe0000000000000000000000000000000000000000000000000000000000041bc30000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000021e0000000000000000000000000000000000000000000000000000000000000017";
+        // bytes memory callData = hex"00000000000000000000000000000000000000000000000008d97676bb12ca4e00000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000e4e000000000000000000000000000000000000000000000000fffffffffffffffc00000000000000000000000000000000000000000000000002fedbb19c51b7d10000000000000000000000000000000000000000000000000000029ae8ab919b000000000000000000000000000000000000000000000000000000bdf77ce59f0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000d000000000000000000000000000000000000000000000000000000000000c1270000000000000000000000000000000000000000000000000000000000000cb40000000000000000000000000000000000000000000000000000000001d9ed6f00000000000000000000000000000000000000000000000000000000fffffffe";
         // IDynamicKinkModel.UserFriendlyConfig memory _in = abi.decode(callData, (IDynamicKinkModel.UserFriendlyConfig));
-
-        // with straight config as input, we fail with too many rejection, so we need to "help"
 
         _printUserFriendlyConfig(_in);
 
         // start help fuzzing ----------------------------
-        _in.ulow = uint64(_in.ulow.randomBelow(0, DP - 4)); // -4 is to have space for other 
-        _in.u1 = uint64(_in.u1.randomInside(_in.ulow, DP - 3));
-        _in.u2 = uint64(_in.u2.randomInside(_in.u1, DP - 2));
-        _in.ucrit = uint64(_in.ucrit.randomInside(_in.u2, DP));
-
-        _in.r100 = uint72(Math.max(2, _in.r100));
-        _in.rmin = uint72(_in.rmin.randomBelow(0, _in.r100 - 1));
-        _in.rcritMin = uint72(_in.rcritMin.randomAbove(_in.rmin, _in.r100));
-        _in.rcritMax = uint72(_in.rcritMax.randomBetween(_in.rcritMin, _in.r100));
-
-        uint256 s = 365 days;
-
-        _in.tMinus = uint32(_in.tMinus.randomInside(0, s * 100));
-        _in.t1 = uint32(_in.t1.randomBelow(_in.tMinus, s * 100));
-        _in.tMin = uint32(_in.tMin.randomInside(0, s * 100));
-        _in.tPlus = uint32(_in.tPlus.randomInside(_in.tMin, s * 100));
-        _in.t2 = uint32(_in.t2.randomInside(_in.tPlus, s * 100));
-        // end help fuzzing ----------------------------
+        // with straight config as input, we fail with too many rejection, so we need to "help" to build config that will pass
+        _buildRandomUserFriendlyConfig(_in);
+        // end help fuzzing ------------------------------
 
         _printUserFriendlyConfig(_in);
 
-        FACTORY.generateConfig(_in);
+        try FACTORY.generateConfig(_in) returns (IDynamicKinkModel.Config memory config) {
+            FACTORY.verifyConfig(config);
+        } catch (bytes memory revertData) {
+            bytes32 revertHash = keccak256(revertData);
+
+            // we only accept InvalidDefaultConfig or AlphaDividerZero errors, any other error is a failure
+            if (revertHash == keccak256(abi.encodeWithSelector(IDynamicKinkModel.InvalidDefaultConfig.selector))) {
+                vm.assume(false);
+            } else if (revertHash == keccak256(abi.encodeWithSelector(IDynamicKinkModel.AlphaDividerZero.selector))) {
+                vm.assume(false);
+            } else {
+                revert(string(revertData));
+            }
+        }
     }
 
     function _printUserFriendlyConfig(IDynamicKinkModel.UserFriendlyConfig memory _in) internal pure {
@@ -132,5 +128,30 @@ contract DynamicKinkModelFactoryTest is KinkCommon {
         console2.log("tMinus", _in.tMinus);
         console2.log("tPlus", _in.tPlus);
         console2.log("tMin", _in.tMin);
+    }
+
+    function _buildRandomUserFriendlyConfig(IDynamicKinkModel.UserFriendlyConfig memory _in) internal pure {
+        _in.ulow = uint64(_in.ulow.randomBelow(0, DP - 4)); // -4 is to have space for other values, for every `<` we need to sub 1
+        _in.u1 = uint64(_in.u1.randomInside(_in.ulow, DP - 3));
+        _in.u2 = uint64(_in.u2.randomInside(_in.u1, DP - 2));
+        _in.ucrit = uint64(_in.ucrit.randomInside(_in.u2, DP));
+
+        // minimal values: 0 <= rmin < rcritMin < rritMax <= r100 --> 0 <= 0 < 1 < 2 <= r100
+        _in.r100 = uint72(Math.max(2, _in.r100));
+        _in.rmin = uint72(_in.rmin.randomBelow(0, _in.r100 - 1));
+        _in.rcritMin = uint72(_in.rcritMin.randomInside(_in.rmin, _in.r100));
+        _in.rcritMax = uint72(_in.rcritMax.randomAbove(_in.rcritMin, _in.r100));
+
+        uint256 y = 365 days; // for purpose of fuzzing, 1y is a limit for time values
+        uint256 d = 1 days;
+
+        // 0 < tMin <= tPlus <= t2 < 100y  
+        _in.tMin = uint32(_in.tMin.randomBetween(d, y));
+        _in.tPlus = uint32(_in.tPlus.randomBetween(_in.tMin, y));
+        _in.t2 = uint32(_in.t2.randomBetween(_in.tPlus, y));
+
+        // 0 < tMinus <= t1 < 100y
+        _in.tMinus = uint32(_in.tMinus.randomBetween(d, y));
+        _in.t1 = uint32(_in.t1.randomBetween(_in.tMinus, y));
     }
 }
