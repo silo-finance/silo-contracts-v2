@@ -9,6 +9,7 @@ env:
   RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
   RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
   RPC_SONIC: ${{ secrets.RPC_SONIC }}
+  RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
   RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
   PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
 
