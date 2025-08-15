@@ -93,6 +93,8 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         config.kmin = SafeCast.toInt96((defaultInt.rcritMin - defaultInt.rmin) / (defaultInt.ucrit - defaultInt.ulow) / s);
         config.kmax = SafeCast.toInt96((defaultInt.rcritMax - defaultInt.rmin) / (defaultInt.ucrit - defaultInt.ulow) / s);
 
+        console2.log("config.kmax, defaultInt.ucrit", config.kmax);
+        console2.log(defaultInt.ucrit);
         console2.log("s * config.kmax * (DP - defaultInt.ucrit)", s * config.kmax * (DP - defaultInt.ucrit));
         int256 divider = s * config.kmax * (DP - defaultInt.ucrit);
         require(divider != 0, IDynamicKinkModel.AlphaDividerZero()); // TODO: check if we can handle this in other way

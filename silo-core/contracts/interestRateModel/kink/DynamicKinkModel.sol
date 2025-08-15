@@ -27,6 +27,7 @@ QA rules:
 - no debt no intrest
 - AlreadyInitialized: only one init
 - irmConfig should be never zero
+- test_kink_generateConfig_alwaysWorks - make it on echidna?
 */
 
 /// @title DynamicKinkModel
