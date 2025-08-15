@@ -9,6 +9,7 @@ env:
     RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
     RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
     RPC_SONIC: ${{ secrets.RPC_SONIC }}
+    RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
     PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
     VERIFIER_URL_SONIC: ${{ secrets.VERIFIER_URL_SONIC }}
     VERIFIER_API_KEY_SONIC: ${{ secrets.VERIFIER_API_KEY_SONIC }}

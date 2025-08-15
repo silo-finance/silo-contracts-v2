@@ -8,9 +8,17 @@ import {ISilo, IERC4626} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {SiloLens, ISiloLens} from "silo-core/contracts/SiloLens.sol";
+import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
+import {Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {console2} from "forge-std/console2.sol";
+import {Utils} from "silo-core/deploy/silo/verifier/Utils.sol";
 import {Test} from "forge-std/Test.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+
+interface OldGauge {
+    function killGauge() external;
+}
 
 contract NewMarketTest is Forking {
     string public constant SUCCESS_SYMBOL = unicode"✅";
@@ -29,6 +37,16 @@ contract NewMarketTest is Forking {
 
     uint256 public immutable MAX_LTV0; // solhint-disable-line var-name-mixedcase
     uint256 public immutable MAX_LTV1; // solhint-disable-line var-name-mixedcase
+
+    modifier logSiloConfigName() {
+        console2.log(
+            "Integration test for SiloConfig",
+            string.concat(TOKEN0.symbol(), "/", TOKEN1.symbol()),
+            address(SILO_CONFIG)
+        );
+
+        _;
+    }
 
     constructor(
         BlockChain _chain,
@@ -55,7 +73,7 @@ contract NewMarketTest is Forking {
         MAX_LTV1 = SILO_CONFIG.getConfig(silo1).maxLtv;
     }
 
-    function test_newMarketTest_borrowSilo0ToSilo1() public {
+    function test_newMarketTest_borrowSilo0ToSilo1() logSiloConfigName public {
         _borrowScenario({
             _collateralSilo: SILO0,
             _collateralToken: TOKEN0,
@@ -67,7 +85,7 @@ contract NewMarketTest is Forking {
         });
     }
 
-    function test_newMarketTest_borrowSilo1ToSilo0() public {
+    function test_newMarketTest_borrowSilo1ToSilo0() logSiloConfigName public {
         _borrowScenario({
             _collateralSilo: SILO1,
             _collateralToken: TOKEN1,
@@ -77,6 +95,11 @@ contract NewMarketTest is Forking {
             _debtPrice: EXTERNAL_PRICE0,
             _ltv: MAX_LTV1
         });
+    }
+
+    function test_checkGauges() logSiloConfigName public {
+        _checkGauges(ISiloConfig(SILO_CONFIG).getConfig(address(SILO0)));
+        _checkGauges(ISiloConfig(SILO_CONFIG).getConfig(address(SILO1)));
     }
 
     function _borrowScenario(
@@ -207,6 +230,47 @@ contract NewMarketTest is Forking {
 
         vm.prank(stranger);
         _silo.deposit(_amount, stranger);
+    }
+
+    function _checkGauges(ISiloConfig.ConfigData memory _configData) internal {
+        _checkGauge({
+            _configData: _configData,
+            _shareToken: IShareToken(_configData.protectedShareToken)
+        });
+
+        _checkGauge({
+            _configData: _configData,
+            _shareToken: IShareToken(_configData.collateralShareToken)
+        });
+
+        _checkGauge({
+            _configData: _configData,
+            _shareToken: IShareToken(_configData.debtShareToken)
+        });
+    }
+
+    function _checkGauge(ISiloConfig.ConfigData memory _configData, IShareToken _shareToken) internal {
+        GaugeHookReceiver hookReceiver = GaugeHookReceiver(_configData.hookReceiver);
+        string memory shareTokenName = Utils.tryGetTokenSymbol(address(_shareToken));
+        address gauge = address(hookReceiver.configuredGauges(_shareToken));
+
+        if (gauge == address(0)) {
+            console2.log(SKIPPED_SYMBOL, shareTokenName, "gauge does not exist");
+            return;
+        }
+
+        _tryKillOldGauge(gauge);
+
+        vm.prank(hookReceiver.owner());
+        hookReceiver.removeGauge(_shareToken);
+        assertEq(address(hookReceiver.configuredGauges(_shareToken)), address(0));
+
+        console2.log(SUCCESS_SYMBOL, shareTokenName, "gauge is removable");
+    }
+
+    function _tryKillOldGauge(address _gauge) internal {
+        vm.prank(Ownable(_gauge).owner());
+        try OldGauge(_gauge).killGauge() {} catch {}
     }
 
     function _logBorrowScenarioSkipped(
