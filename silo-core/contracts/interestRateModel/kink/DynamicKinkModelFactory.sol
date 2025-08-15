@@ -73,7 +73,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
             IDynamicKinkModel.InvalidRcritMax()
         );
 
-        int256 rCheckHi = (defaultInt.r100 - defaultInt.rcritMin) / (defaultInt.rcritMax - defaultInt.rcritMin);
+        int256 rCheckHi = (defaultInt.r100 - defaultInt.rmin) / (defaultInt.rcritMax - defaultInt.rmin);
         int256 rCheckLo = (DP - defaultInt.ucrit) / (defaultInt.ucrit - defaultInt.ulow);
         require(rCheckHi >= rCheckLo, IDynamicKinkModel.InvalidDefaultConfig());
 
