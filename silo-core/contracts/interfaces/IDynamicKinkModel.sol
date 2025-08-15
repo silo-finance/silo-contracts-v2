@@ -109,6 +109,7 @@ interface IDynamicKinkModel {
     event ConfigRestored(IDynamicKinkModelConfig indexed config);
 
     error AddressZero();
+    error AlphaDividerZero();
     error AlreadyInitialized();
     error EmptySilo();
     error InvalidAlpha();
