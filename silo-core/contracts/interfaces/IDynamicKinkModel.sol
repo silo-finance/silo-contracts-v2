@@ -19,19 +19,19 @@ interface IDynamicKinkModel {
     /// @param tPlus time that it takes to grow from the minimal to the maximal APR at utilization ucrit
     /// @param tMin minimal time it takes to grow from the minimal to the maximal APR at any utilization
     struct UserFriendlyConfig {
-        uint256 ulow;
-        uint256 ucrit;
-        uint256 u1;
-        uint256 u2;
-        uint256 rmin;
-        uint256 rcritMin;
-        uint256 rcritMax;
-        uint256 r100;
-        uint256 t1;
-        uint256 t2;
-        uint256 tMinus;
-        uint256 tPlus;
-        uint256 tMin;
+        uint64 ulow;
+        uint64 ucrit;
+        uint64 u1;
+        uint64 u2;
+        uint72 rmin;
+        uint72 rcritMin;
+        uint72 rcritMax;
+        uint72 r100;
+        uint32 t1;
+        uint32 t2;
+        uint32 tMinus;
+        uint32 tPlus;
+        uint32 tMin;
     }
 
     /// @dev same as UserFriendlyConfig but with int256 values to help with calculations
