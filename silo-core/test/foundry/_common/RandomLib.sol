@@ -1,9 +1,13 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.28;
+
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 library RandomLib {
+    /// @dev _min < _n < _max
     function randomInside(uint256 _n, uint256 _min, uint256 _max) internal pure returns (uint256) {
         require(
-            _min + 1 < _max, 
+            _min + 1 < _max,
             string.concat("invalid range for randomInside:", Strings.toString(_min), " + 1 < ", Strings.toString(_max))
         );
 
@@ -11,6 +15,7 @@ library RandomLib {
         return _min + 1 + (_n % diff);
     }
 
+    /// @dev _min <= _n <= _max
     function randomBetween(uint256 _n, uint256 _min, uint256 _max) internal pure returns (uint256) {
         require(
             _min <= _max, 
@@ -18,11 +23,15 @@ library RandomLib {
         );
 
         uint256 diff = _max - _min;
+        
         if (diff == 0) return _min;
+        if (diff == type(uint256).max) return _n;
+        if (diff == _max) return _n % (_max + 1);
 
         return _min + (_n % (diff + 1));
     }
 
+    /// @dev _min < _n <= _max
     function randomAbove(uint256 _n, uint256 _min, uint256 _max) internal pure returns (uint256) {
         require(
             _min < _max, 
@@ -35,6 +44,7 @@ library RandomLib {
         return _min + 1 + (_n % diff);
     }
 
+    /// @dev _min <= _n < _max
     function randomBelow(uint256 _n, uint256 _min, uint256 _max) internal pure returns (uint256) {
         require(
             _min < _max, 
