@@ -11,6 +11,8 @@ library RandomLib {
             string.concat("invalid range for randomInside:", Strings.toString(_min), " + 1 < ", Strings.toString(_max))
         );
 
+        if (_min < _n && _n < _max) return _n;
+
         uint256 diff = _max - _min - 1;
         return _min + 1 + (_n % diff);
     }
@@ -26,6 +28,7 @@ library RandomLib {
         
         if (diff == 0) return _min;
         if (diff == type(uint256).max) return _n;
+        if (_min <= _n && _n <= _max) return _n;
         if (diff == _max) return _n % (_max + 1);
 
         return _min + (_n % (diff + 1));
@@ -40,6 +43,7 @@ library RandomLib {
 
         uint256 diff = _max - _min;
         if (diff == 0) return _min;
+        if (_min < _n && _n <= _max) return _n;
 
         return _min + 1 + (_n % diff);
     }
@@ -53,6 +57,7 @@ library RandomLib {
 
         uint256 diff = _max - _min;
         if (diff == 0) return _min;
+        if (_min <= _n && _n < _max) return _n;
 
         return _min + (_n % diff);
     }
