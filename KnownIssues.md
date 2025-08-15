@@ -45,7 +45,7 @@ The leverage contract requires approval of share debt tokens so it can borrow on
 
 Silos with id < 100 on Sonic use `approve`. All other versions use `setReceiveApproval` fn.
 
-### Liquidation collateral underestimation
+### Liquidation collateral overestimation
 
 The `PartialLiquidationLib` uses a fixed `_UNDERESTIMATION` constant of 2 wei to account for rounding errors during liquidation conversions (assets → shares → assets). This underestimation becomes insufficient when the asset-to-share ratio is high.
 
