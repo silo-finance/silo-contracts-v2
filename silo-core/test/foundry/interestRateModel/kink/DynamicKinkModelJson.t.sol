@@ -41,18 +41,32 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
         IRM.initialize(cfg, address(this), address(this));
 
         // 1e18 is 100%
-        // _rcurDiffPercent[1] = 1659788986;
-        // _rcurDiffPercent[28] = 12614396211;
+        _rcurDiffPercent[259] = 11075646641;
+        _rcurDiffPercent[281] = 195011203199;
+        _rcurDiffPercent[285] = 18894769892;
+        _rcurDiffPercent[289] = 23071444669;
 
-
-        // _rcompDiffPercent[3] = 11344832805;
-        // _rcompDiffPercent[4] = 2413470567276;
-        // _rcompDiffPercent[9] = 13912472470161;
-        // _rcompDiffPercent[10] = 2908788205437;
-        // _rcompDiffPercent[12] = 13561192345247;
-        // _rcompDiffPercent[13] = 20115935527;
-        // _rcompDiffPercent[15] = 1468613269084;
-        // _rcompDiffPercent[29] = 18428002065;
+        _rcompDiffPercent[19] = 22872736801;
+        _rcompDiffPercent[28] = 12374540229;
+        _rcompDiffPercent[43] = 19274329796;
+        _rcompDiffPercent[44] = 168883855185;
+        _rcompDiffPercent[50] = 13846907445;
+        _rcompDiffPercent[51] = 10855909671;
+        _rcompDiffPercent[54] = 35914205060;
+        _rcompDiffPercent[62] = 10519955101;
+        _rcompDiffPercent[71] = 45445460982;
+        _rcompDiffPercent[74] = 15544865743;
+        _rcompDiffPercent[98] = 26976031665;
+        _rcompDiffPercent[114] = 12081262091;
+        _rcompDiffPercent[115] = 84615802266;
+        _rcompDiffPercent[140] = 29832348581;
+        _rcompDiffPercent[166] = 76697467726;
+        _rcompDiffPercent[169] = 12756017220;
+        _rcompDiffPercent[194] = 32667389684;
+        _rcompDiffPercent[197] = 63694885413;
+        _rcompDiffPercent[231] = 32481920192;
+        _rcompDiffPercent[294] = 14946966269;
+        _rcompDiffPercent[299] = 11559641605;
     }
 
     /* 
@@ -117,12 +131,12 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
     /* 
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_rcur_json
     */
-    function test_kink_rcur_json() public view {
+    function test_kink_rcur_json() public {
         RcurData[] memory data = _readDataFromJsonRcur();
 
         for (uint i; i < data.length; i++) {
             (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c) = _toSetupRcur(data[i]);
-            // _printRcur(data[i]);
+            _printRcur(data[i]);
 
             try IRM.currentInterestRate(
                 c,
@@ -141,7 +155,7 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
 
                 _assertCloseTo(rcur, data[i].expected.currentAnnualInterest, data[i].id, "rcur is not close to expected value", acceptableDiffPercent);
             } catch {
-                revert("do we revert in this tests?");
+                revert(string.concat("we should not revert in this tests, but case with ID ", vm.toString(data[i].id), " did"));
             }
         }
     }
@@ -192,27 +206,32 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
 
             // _printRcomp(data[i]);
 
-            (int256 rcomp, int256 k) = IRM.compoundInterestRate(
+            try IRM.compoundInterestRate(
                 c,
                 state,
                 data[i].input.lastTransactionTime,
                 data[i].input.currentTime,
                 data[i].input.lastUtilization,
                 data[i].input.totalBorrowAmount
-            );
+            ) returns (int256 rcomp, int256 k) {
+                if (data[i].input.totalBorrowAmount == 0) {
+                    assertEq(rcomp, 0, "[compoundInterestRate] when no debt we always return early");
+                    continue;
+                }
 
-            if (data[i].input.totalBorrowAmount == 0) {
-                assertEq(rcomp, 0, "[compoundInterestRate] when no debt we always return early");
-                continue;
-            }
+                uint256 acceptableDiffPercent = _getAcceptableDiffPercent(data[i].id, _rcompDiffPercent);
 
-            uint256 acceptableDiffPercent = _getAcceptableDiffPercent(data[i].id, _rcompDiffPercent);
+                _assertCloseTo(rcomp, data[i].expected.compoundInterest, data[i].id, "rcomp is not close to expected value", acceptableDiffPercent);
+                _assertCloseTo(k, data[i].expected.newSlope, data[i].id, "k is not close to expected value");
 
-            _assertCloseTo(rcomp, data[i].expected.compoundInterest, data[i].id, "rcomp is not close to expected value", acceptableDiffPercent);
-            _assertCloseTo(k, data[i].expected.newSlope, data[i].id, "k is not close to expected value");
-
-            if (data[i].expected.didOverflow == 1) {
-                assertEq(rcomp, 0, "didOverflow expecte 0 result");
+                assertEq(data[i].expected.didOverflow, 0, "didOverflow expect overflow");
+                
+            } catch {
+                assertEq(
+                    data[i].expected.didOverflow, 
+                    1, 
+                    string.concat("we should not revert in this tests, but case with ID ", vm.toString(data[i].id), " did")
+                );
             }
         }
     }

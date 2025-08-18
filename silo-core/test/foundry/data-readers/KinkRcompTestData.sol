@@ -48,7 +48,7 @@ contract KinkRcompTestData is Test {
 
     function _readDataFromJsonRcomp() internal view returns (RcompData[] memory data) {
         string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/silo-core/test/foundry/data/RcompDynamicKinkv8.json");
+        string memory path = string.concat(root, "/silo-core/test/foundry/data/KinkRcomptest.json");
         string memory json = vm.readFile(path);
 
         data = abi.decode(vm.parseJson(json, string(abi.encodePacked("."))), (RcompData[]));

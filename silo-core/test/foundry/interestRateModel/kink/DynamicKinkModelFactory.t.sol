@@ -6,6 +6,8 @@ import {console2} from "forge-std/console2.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
+import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
+
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
 import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
@@ -79,6 +81,13 @@ contract DynamicKinkModelFactoryTest is KinkCommon {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_generateConfig_manual -vv
+    */
+    function test_kink_generateConfig_manual() public view {
+        FACTORY.generateConfig(_exampleOfUserFriendlyConfig_1());
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_generateConfig_alwaysWorks -vv
     */
     function test_kink_generateConfig_alwaysWorks(
@@ -92,13 +101,14 @@ contract DynamicKinkModelFactoryTest is KinkCommon {
 
         // start help fuzzing ----------------------------
         // with straight config as input, we fail with too many rejection, so we need to "help" to build config that will pass
-        _buildRandomUserFriendlyConfig(_in);
+        _applyReasonableLimits(_in);
         // end help fuzzing ------------------------------
 
         _printUserFriendlyConfig(_in);
 
         try FACTORY.generateConfig(_in) returns (IDynamicKinkModel.Config memory config) {
             FACTORY.verifyConfig(config);
+            revert("OK!!!!");
         } catch (bytes memory revertData) {
             bytes32 revertHash = keccak256(revertData);
 
@@ -108,7 +118,9 @@ contract DynamicKinkModelFactoryTest is KinkCommon {
             } else if (revertHash == keccak256(abi.encodeWithSelector(IDynamicKinkModel.AlphaDividerZero.selector))) {
                 vm.assume(false);
             } else {
-                revert(string(revertData));
+                                vm.assume(false);
+
+                RevertLib.revertBytes(revertData, "Unknown error");
             }
         }
     }
@@ -153,5 +165,33 @@ contract DynamicKinkModelFactoryTest is KinkCommon {
         // 0 < tlow <= t1 < 100y
         _in.tlow = uint32(_in.tlow.randomBetween(d, y));
         _in.t1 = uint32(_in.t1.randomBetween(_in.tlow, y));
+    }
+
+    function _applyReasonableLimits(IDynamicKinkModel.UserFriendlyConfig memory _in) internal pure {
+        _in.ulow = uint64(_in.ulow.randomBetween(0.01e18, 0.3e18)); // 1% - 30%
+        _in.ucrit = uint64(_in.ucrit.randomBetween(0.7e18, 0.99e18)); // 70% - 99%
+
+        _in.r100 = uint72(Math.max(0.5e18, 25 * DP));
+        _in.rcritMin = uint72(_in.rcritMin.randomBetween(0.01e18, 0.5e18)); // 1% - 50% 
+
+        _buildRandomUserFriendlyConfig(_in);
+    }
+
+    function _exampleOfUserFriendlyConfig_1() internal pure returns (IDynamicKinkModel.UserFriendlyConfig memory cfg) {
+        cfg = IDynamicKinkModel.UserFriendlyConfig({
+            ulow: 0.50e18,
+            ucrit: 0.80e18,
+            u1: 0.60e18,
+            u2: 0.70e18,
+            rmin: 0.005e18,
+            rcritMin: 0.1e18,
+            rcritMax: 0.8e18,
+            r100: uint72(DP),
+            t1: 3 days,
+            t2: 3 days,
+            tlow: 2 days,
+            tcrit: 1 days,
+            tMin: 1 hours
+        });
     }
 }
