@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {console2} from "forge-std/console2.sol";
-
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
@@ -64,7 +62,10 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
         // 0 <= rmin < rcritMin <= rcritMax <= r100
 
-        require(defaultInt.rcritMin.isInAbove(defaultInt.rmin, defaultInt.rcritMax), IDynamicKinkModel.InvalidRcritMin());
+        require(
+            defaultInt.rcritMin.isInAbove(defaultInt.rmin, defaultInt.rcritMax), 
+            IDynamicKinkModel.InvalidRcritMin()
+        );
 
         require(
             defaultInt.rcritMax.isBetween(defaultInt.rcritMin, defaultInt.r100),
@@ -86,17 +87,19 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         require(defaultInt.t1.isInBelow(defaultInt.tlow, 100 * s), IDynamicKinkModel.InvalidT1());
 
         config.rmin = defaultInt.rmin / s;
-        config.kmin = SafeCast.toInt96((defaultInt.rcritMin - defaultInt.rmin) * DP / (defaultInt.ucrit - defaultInt.ulow) / s);
-        config.kmax = SafeCast.toInt96((defaultInt.rcritMax - defaultInt.rmin) * DP / (defaultInt.ucrit - defaultInt.ulow) / s);
 
-        console2.log("config.kmax, defaultInt.ucrit", config.kmax);
-        console2.log(defaultInt.ucrit);
-        console2.log("s * config.kmax * (DP - defaultInt.ucrit)", s * config.kmax * (DP - defaultInt.ucrit));
+        config.kmin = SafeCast.toInt96(
+            (defaultInt.rcritMin - defaultInt.rmin) * DP / (defaultInt.ucrit - defaultInt.ulow) / s
+        );
+        
+        config.kmax = SafeCast.toInt96(
+            (defaultInt.rcritMax - defaultInt.rmin) * DP / (defaultInt.ucrit - defaultInt.ulow) / s
+        );
+
         int256 divider = s * config.kmax * (DP - defaultInt.ucrit);
         require(divider != 0, IDynamicKinkModel.AlphaDividerZero()); // TODO: check if we can handle this in other way
 
         config.alpha = (defaultInt.r100 - defaultInt.rmin - s * config.kmax * (DP - defaultInt.ulow)) * DP / divider;
-        console2.log("config.alpha", config.alpha);
 
         config.c1 = (config.kmax - config.kmin) / defaultInt.t1;
         config.c2 = (config.kmax - config.kmin) / defaultInt.t2;
