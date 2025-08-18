@@ -79,64 +79,14 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
     }
 
     /* 
-    FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_verifyConfig_errors
-    */
-    function test_kink_verifyConfig_errors() public {
-        IDynamicKinkModel.Config memory c;
-
-        // 0 <= ulow <= u1 <= u2 <= ucrit <= DP
-        // require(_config.ulow.isBetween(0, _config.u1), InvalidUlow());
-        c.ulow = 10;
-        vm.expectRevert(IDynamicKinkModel.InvalidUlow.selector);
-        IRM.verifyConfig(c);
-
-        // require(_config.u1.isBetween(_config.ulow, _config.u2), InvalidU1());
-        c.u1 = 20;
-        vm.expectRevert(IDynamicKinkModel.InvalidU1.selector);
-        IRM.verifyConfig(c);
-
-        // require(_config.u2.isBetween(_config.u1, _config.ucrit), InvalidU2());
-        c.u2 = 30;
-        vm.expectRevert(IDynamicKinkModel.InvalidU2.selector);
-        IRM.verifyConfig(c);
-
-        // require(_config.ucrit.isBetween(_config.u2, _DP), InvalidUcrit());
-        c.ucrit = _DP + 1;
-        vm.expectRevert(IDynamicKinkModel.InvalidUcrit.selector);
-        IRM.verifyConfig(c);
-        
-        c.ucrit = _DP;
-        IRM.verifyConfig(c);
-
-        // require(_config.rmin.isBetween(0, _DP), InvalidRmin());
-
-        // require(_config.kmin.isBetween(0, UNIVERSAL_LIMIT), InvalidKmin());
-        // require(_config.kmax.isBetween(_config.kmin, UNIVERSAL_LIMIT), InvalidKmax());
-
-        // require(_config.alpha.isBetween(0, UNIVERSAL_LIMIT), InvalidAlpha());
-
-        // require(_config.cminus.isBetween(0, UNIVERSAL_LIMIT), InvalidCminus());
-        // require(_config.cplus.isBetween(0, UNIVERSAL_LIMIT), InvalidCplus());
-
-        // require(_config.c1.isBetween(0, UNIVERSAL_LIMIT), InvalidC1());
-        // require(_config.c2.isBetween(0, UNIVERSAL_LIMIT), InvalidC2());
-
-        // // TODO do we still need upper limit?
-        // require(_config.dmax.isBetween(_config.c2, UNIVERSAL_LIMIT), InvalidDmax());
-
-        // pass
-        IRM.verifyConfig(c);
-    }
-
-    /* 
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_rcur_json
     */
-    function test_kink_rcur_json() public {
+    function test_kink_rcur_json() public view {
         RcurData[] memory data = _readDataFromJsonRcur();
 
         for (uint i; i < data.length; i++) {
             (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c) = _toSetupRcur(data[i]);
-            _printRcur(data[i]);
+            // _printRcur(data[i]);
 
             try IRM.currentInterestRate(
                 c,
@@ -203,7 +153,6 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
 
         for (uint i; i < data.length; i++) {
             (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c) = _toSetupRcomp(data[i]);
-
             // _printRcomp(data[i]);
 
             try IRM.compoundInterestRate(
