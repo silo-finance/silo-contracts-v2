@@ -125,8 +125,8 @@ contract DynamicKinkModelFactoryTest is KinkCommon {
         console2.log("r100", _in.r100);
         console2.log("t1", _in.t1);
         console2.log("t2", _in.t2);
-        console2.log("tMinus", _in.tMinus);
-        console2.log("tPlus", _in.tPlus);
+        console2.log("tlow", _in.tlow);
+        console2.log("tcrit", _in.tcrit);
         console2.log("tMin", _in.tMin);
     }
 
@@ -145,13 +145,13 @@ contract DynamicKinkModelFactoryTest is KinkCommon {
         uint256 y = 365 days; // for purpose of fuzzing, 1y is a limit for time values
         uint256 d = 1 days;
 
-        // 0 < tMin <= tPlus <= t2 < 100y  
+        // 0 < tMin <= tcrit <= t2 < 100y  
         _in.tMin = uint32(_in.tMin.randomBetween(d, y));
-        _in.tPlus = uint32(_in.tPlus.randomBetween(_in.tMin, y));
-        _in.t2 = uint32(_in.t2.randomBetween(_in.tPlus, y));
+        _in.tcrit = uint32(_in.tcrit.randomBetween(_in.tMin, y));
+        _in.t2 = uint32(_in.t2.randomBetween(_in.tcrit, y));
 
-        // 0 < tMinus <= t1 < 100y
-        _in.tMinus = uint32(_in.tMinus.randomBetween(d, y));
-        _in.t1 = uint32(_in.t1.randomBetween(_in.tMinus, y));
+        // 0 < tlow <= t1 < 100y
+        _in.tlow = uint32(_in.tlow.randomBetween(d, y));
+        _in.t1 = uint32(_in.t1.randomBetween(_in.tlow, y));
     }
 }

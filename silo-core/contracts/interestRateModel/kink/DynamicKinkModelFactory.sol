@@ -80,14 +80,14 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
         int256 s = 365 days;
 
-        // 0 < tMin <= tPlus <= t2 < 100y  
-        require(defaultInt.tMin.isInAbove(0, defaultInt.tPlus), IDynamicKinkModel.InvalidTMin());
-        require(defaultInt.tPlus.isBetween(defaultInt.tMin, defaultInt.t2), IDynamicKinkModel.InvalidTPlus());
-        require(defaultInt.t2.isInBelow(defaultInt.tPlus, 100 * s), IDynamicKinkModel.InvalidT2());
+        // 0 < tMin <= tcrit <= t2 < 100y  
+        require(defaultInt.tMin.isInAbove(0, defaultInt.tcrit), IDynamicKinkModel.InvalidTMin());
+        require(defaultInt.tcrit.isBetween(defaultInt.tMin, defaultInt.t2), IDynamicKinkModel.InvalidTPlus());
+        require(defaultInt.t2.isInBelow(defaultInt.tcrit, 100 * s), IDynamicKinkModel.InvalidT2());
 
-        // 0 < tMinus <= t1 < 100y
-        require(defaultInt.tMinus.isInAbove(0, defaultInt.t1), IDynamicKinkModel.InvalidTMinus());
-        require(defaultInt.t1.isInBelow(defaultInt.tMinus, 100 * s), IDynamicKinkModel.InvalidT1());
+        // 0 < tlow <= t1 < 100y
+        require(defaultInt.tlow.isInAbove(0, defaultInt.t1), IDynamicKinkModel.InvalidTMinus());
+        require(defaultInt.t1.isInBelow(defaultInt.tlow, 100 * s), IDynamicKinkModel.InvalidT1());
 
         config.rmin = defaultInt.rmin / s;
         config.kmin = SafeCast.toInt96((defaultInt.rcritMin - defaultInt.rmin) / (defaultInt.ucrit - defaultInt.ulow) / s);
@@ -104,10 +104,10 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         config.c1 = (config.kmax - config.kmin) / defaultInt.t1;
         config.c2 = (config.kmax - config.kmin) / defaultInt.t2;
         
-        config.cminus = ((config.kmax - config.kmin) / defaultInt.tMinus - config.c1)
+        config.cminus = ((config.kmax - config.kmin) / defaultInt.tlow - config.c1)
             / (defaultInt.u1 - defaultInt.ulow);
         
-        config.cplus = ((config.kmax - config.kmin) / defaultInt.tPlus - config.c2)
+        config.cplus = ((config.kmax - config.kmin) / defaultInt.tcrit - config.c2)
             / (defaultInt.ucrit - defaultInt.u2);
         
         config.dmax = (config.kmax - config.kmin) / defaultInt.tMin;
@@ -166,8 +166,8 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         config.r100 = SafeCast.toInt256(_default.r100);
         config.t1 = SafeCast.toInt256(_default.t1);
         config.t2 = SafeCast.toInt256(_default.t2);
-        config.tMinus = SafeCast.toInt256(_default.tMinus);
-        config.tPlus = SafeCast.toInt256(_default.tPlus);
+        config.tlow = SafeCast.toInt256(_default.tlow);
+        config.tcrit = SafeCast.toInt256(_default.tcrit);
         config.tMin = SafeCast.toInt256(_default.tMin);
     }
 }
