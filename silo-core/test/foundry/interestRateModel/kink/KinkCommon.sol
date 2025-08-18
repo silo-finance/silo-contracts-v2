@@ -106,29 +106,8 @@ abstract contract KinkCommon is Test {
         });
     }
 
-    function _randomizeConfig(
-        RandomKinkConfig memory _config, 
-        uint128 _randomizer
-    ) internal pure returns (IDynamicKinkModel.Config memory cfg) {
-        cfg = _toConfig(RandomKinkConfig({
-            ulow: _generateRandomNumber64(_config.ulow, _randomizer),
-            u1: _generateRandomNumber64(_config.u1, _randomizer),
-            u2: _generateRandomNumber64(_config.u2, _randomizer),
-            ucrit: _generateRandomNumber64(_config.ucrit, _randomizer),
-            rmin: _generateRandomNumber64(_config.rmin, _randomizer),
-            kmin: _generateRandomNumber96(_config.kmin, _randomizer),
-            kmax: _generateRandomNumber96(_config.kmax, _randomizer),
-            alpha: _generateRandomNumber96(_config.alpha, _randomizer),
-            cminus: _generateRandomNumber96(_config.cminus, _randomizer),
-            cplus: _generateRandomNumber96(_config.cplus, _randomizer),
-            c1: _generateRandomNumber96(_config.c1, _randomizer),
-            c2: _generateRandomNumber96(_config.c2, _randomizer),
-            dmax: _generateRandomNumber96(_config.dmax, _randomizer)
-        }));
-    }
-
     function _makeConfigValid(IDynamicKinkModel.Config memory _config) internal pure {
-         _config.u1 = _getBetween(_config.u1, 0, _DP);
+        _config.u1 = _getBetween(_config.u1, 0, _DP);
         _config.u2 = _getBetween(_config.u2, _config.u1, _DP);
         _config.ulow = _getBetween(_config.ulow, 0, _config.u1);
     
@@ -146,16 +125,6 @@ abstract contract KinkCommon is Test {
 
     function _getBetween(int256 _n, int256 _min, int256 _max) internal pure returns (int256) {
         return SignedMath.max(SignedMath.min(_n, _max), _min);
-    }
-
-    function _generateRandomNumber64(uint64 _n, uint128 _modulo) internal pure returns (uint64) {
-        if (_modulo == 0) return _n;
-        return uint64((uint128(_n) % _modulo) % uint64(type(uint64).max));
-    }
-
-    function _generateRandomNumber96(uint96 _n, uint128 _modulo) internal pure returns (uint96) {
-        if (_modulo == 0) return _n;
-        return uint96((uint128(_n) % _modulo) % uint96(type(uint96).max));
     }
 
     function _assertConfigEq(

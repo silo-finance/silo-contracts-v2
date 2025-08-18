@@ -153,29 +153,9 @@ contract DynamicKinkModelTest is KinkCommon {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfig_randomMultipleTimes1 -vv
-
-    with RandomKinkConfig[] fuzzing fails because it is to hard to find valid configs
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfig_randomMultipleTimes_fuzz -vv
     */
-    function test_kink_updateConfig_randomMultipleTimes1_fuzz(
-        RandomKinkConfig memory _config, 
-        uint64[10] memory _randomizers
-    ) public whenValidConfig(_config) {
-        _kink_updateConfig_pass(_toConfig(_config));
-
-        for (uint256 i = 0; i < _randomizers.length; i++) {
-            IDynamicKinkModel.Config memory randomConfig = _randomizeConfig(_config, _randomizers[i]);
-            _makeConfigValid(randomConfig);
-            _printConfig(randomConfig);
-            
-            _kink_updateConfig_pass(randomConfig);
-        }
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfig_randomMultipleTimes2_fuzz -vv
-    */
-    function test_kink_updateConfig_randomMultipleTimes2_fuzz(
+    function test_kink_updateConfig_randomMultipleTimes_fuzz(
         RandomKinkConfig[10] memory _config
     ) public {
         
