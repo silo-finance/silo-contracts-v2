@@ -108,7 +108,7 @@ json_structure = {
 }
 
 # Relative path to the JSON file
-output_file = os.path.join(script_dir, "market.json")
+output_file = os.path.join(script_dir, f"Silo_{data[0]["token"]}_{data[1]["token"]}.json")
 
 with open(output_file, "w", encoding="utf-8") as jsonfile:
     json.dump(json_structure, jsonfile, indent=4, ensure_ascii=False)
