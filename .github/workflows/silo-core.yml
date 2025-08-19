@@ -81,7 +81,7 @@ jobs:
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: 1.2.3
+                    commit: a813a2cee7dd4926e7c56fd8a785b54f32e0d10f
 
             -   name: Run submodule update
                 run: git submodule update --init --recursive
@@ -149,7 +149,7 @@ jobs:
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: 1.2.3
+                    commit: a813a2cee7dd4926e7c56fd8a785b54f32e0d10f
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
@@ -199,7 +199,7 @@ jobs:
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: 1.2.3
+                    commit: a813a2cee7dd4926e7c56fd8a785b54f32e0d10f
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
@@ -248,7 +248,7 @@ jobs:
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: 1.2.3
+                    commit: a813a2cee7dd4926e7c56fd8a785b54f32e0d10f
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
@@ -291,7 +291,7 @@ jobs:
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: 1.2.3
+                    commit: a813a2cee7dd4926e7c56fd8a785b54f32e0d10f
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
