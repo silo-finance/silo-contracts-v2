@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 import {console2} from "forge-std/console2.sol";
 
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
-import {KinkCommon} from "./KinkCommon.sol";
+import {KinkCommonTest} from "./KinkCommon.t.sol";
 
 /*
 FOUNDRY_PROFILE=core_test forge test --mc KinkVerifyConfigTest -vv
 */
-contract KinkVerifyConfigTest is KinkCommon {
+contract KinkVerifyConfigTest is KinkCommonTest {
     function setUp() public {
         irm = new DynamicKinkModel();
     }

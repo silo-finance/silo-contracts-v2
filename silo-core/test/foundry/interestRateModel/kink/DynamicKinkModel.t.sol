@@ -10,12 +10,12 @@ import {IDynamicKinkModelConfig} from "../../../../contracts/interestRateModel/k
 import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
-import {KinkCommon} from "./KinkCommon.sol";
+import {KinkCommonTest} from "./KinkCommon.t.sol";
 
 /* 
 FOUNDRY_PROFILE=core_test forge test --mc DynamicKinkModelTest -vv
 */
-contract DynamicKinkModelTest is KinkCommon {
+contract DynamicKinkModelTest is KinkCommonTest {
     DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory();
 
     mapping (bytes32 => bool) private seen;

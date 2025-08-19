@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {KinkCommon} from "./KinkCommon.sol";
 import {IDynamicKinkModel} from "../../../../contracts/interfaces/IDynamicKinkModel.sol";
 import {DynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
 
-contract DynamicKinkModelConfigTest is KinkCommon {
+import {KinkCommonTest} from "./KinkCommon.t.sol";
+
+contract DynamicKinkModelConfigTest is KinkCommonTest {
     DynamicKinkModelConfig config; 
 
     /*

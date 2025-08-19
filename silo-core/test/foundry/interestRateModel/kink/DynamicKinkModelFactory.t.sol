@@ -15,15 +15,24 @@ import {IDynamicKinkModelFactory} from "../../../../contracts/interfaces/IDynami
 import {IInterestRateModel} from "../../../../contracts/interfaces/IInterestRateModel.sol";
 
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
-import {KinkCommon} from "./KinkCommon.sol";
+import {KinkCommonTest} from "./KinkCommon.t.sol";
 
 import {RandomLib} from "../../_common/RandomLib.sol";
 
+contract DynamicKinkFactoryMock is DynamicKinkModelFactory {
+    function castConfig(IDynamicKinkModel.UserFriendlyConfig calldata _default) 
+        external 
+        pure 
+        returns (IDynamicKinkModel.UserFriendlyConfigInt memory) 
+    {
+        return _castConfig(_default);
+    }
+}
 
 /* 
 FOUNDRY_PROFILE=core_test forge test --mc DynamicKinkModelFactoryTest -vv
 */
-contract DynamicKinkModelFactoryTest is KinkCommon {
+contract DynamicKinkModelFactoryTest is KinkCommonTest {
     using RandomLib for uint256;
     using RandomLib for uint72;
     using RandomLib for uint64;
@@ -56,6 +65,8 @@ contract DynamicKinkModelFactoryTest is KinkCommon {
         address _deployer, 
         bytes32 _externalSalt
     ) public whenValidConfig(_config) {
+        vm.assume(_deployer != address(0));
+
         address predictedAddress = FACTORY.predictAddress(_deployer, _externalSalt);
         IDynamicKinkModel.Config memory config = _toConfig(_config);
         FACTORY.verifyConfig(config);
@@ -124,6 +135,20 @@ contract DynamicKinkModelFactoryTest is KinkCommon {
                 RevertLib.revertBytes(revertData, "Unknown error");
             }
         }
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_castConfig -vv
+    */
+    function test_kink_castConfig(IDynamicKinkModel.UserFriendlyConfig memory _in) public {
+        DynamicKinkFactoryMock factory = new DynamicKinkFactoryMock();
+
+        IDynamicKinkModel.UserFriendlyConfigInt memory _out = factory.castConfig(_in);
+
+        bytes32 hashIn = keccak256(abi.encode(_in));
+        bytes32 hashOut = keccak256(abi.encode(_out));
+
+        assertEq(hashIn, hashOut, "castConfig fail In != Out");
     }
 
     function _printUserFriendlyConfig(IDynamicKinkModel.UserFriendlyConfig memory _in) internal pure {
