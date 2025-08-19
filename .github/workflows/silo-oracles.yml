@@ -78,7 +78,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          commit: a813a2cee7dd4926e7c56fd8a785b54f32e0d10f
+          commit: v1.2.3
 
       - name: Build silo foundry utils
         working-directory: ./gitmodules/silo-foundry-utils
