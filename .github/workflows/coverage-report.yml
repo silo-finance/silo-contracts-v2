@@ -37,7 +37,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          commit: v1.2.3
+          version: v1.2.3
 
       - name: Install lcov 2.1
         run: |
