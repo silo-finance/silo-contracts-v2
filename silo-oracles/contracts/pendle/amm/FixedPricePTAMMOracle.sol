@@ -37,12 +37,12 @@ contract FixedPricePTAMMOracle is IFixedPricePTAMMOracle, Initializable {
     }
 
     /// @inheritdoc ISiloOracle
-    function beforeQuote(address) external pure virtual override {
-        // nothing to execute
+    function quoteToken() external view virtual returns (address) {
+        return oracleConfig.getConfig().quoteToken;
     }
 
     /// @inheritdoc ISiloOracle
-    function quoteToken() external view virtual returns (address) {
-        return oracleConfig.getConfig().quoteToken;
+    function beforeQuote(address) external pure virtual override {
+        // nothing to execute
     }
 }
