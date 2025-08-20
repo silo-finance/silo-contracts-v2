@@ -5,8 +5,8 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 contract OracleForQA is ISiloOracle {
-    address immutable QUOTE_TOKEN;
-    uint256 immutable BASE_DECIMALS;
+    address public immutable QUOTE_TOKEN;
+    uint256 public immutable BASE_DECIMALS;
 
     uint256 public priceOfOneBaseToken;
 

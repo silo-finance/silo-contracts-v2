@@ -16,18 +16,6 @@ contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory, IFixedPr
         // noting to configure
     }
 
-    function predictAddress(address _deployer, bytes32 _externalSalt)
-        external
-        view
-        returns (address predictedAddress)
-    {
-        require(_deployer != address(0), DeployerCannotBeZero());
-
-        predictedAddress = Clones.predictDeterministicAddress(
-            ORACLE_IMPLEMENTATION, _createSalt(_deployer, _externalSalt)
-        );
-    }
-
     function create(
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config,
         bytes32 _externalSalt
@@ -49,6 +37,18 @@ contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory, IFixedPr
         _saveOracle(address(oracle), address(oracleConfig), id);
 
         oracle.initialize(oracleConfig);
+    }
+
+    function predictAddress(address _deployer, bytes32 _externalSalt)
+        external
+        view
+        returns (address predictedAddress)
+    {
+        require(_deployer != address(0), DeployerCannotBeZero());
+
+        predictedAddress = Clones.predictDeterministicAddress(
+            ORACLE_IMPLEMENTATION, _createSalt(_deployer, _externalSalt)
+        );
     }
 
     function hashConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
