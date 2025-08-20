@@ -21,12 +21,6 @@ TODO
 QA rules:
 - if utilization goes up -> rcomp always go up (unless overflow, then == 0)
 - if utilization goes down -> rcomp always go down?
-- there should be no overflow when utilization goes down
-- function should never throw (unless we will decive to remove uncheck)
-- hard rule: utilization (setup.u) in the model should never be above 100%.
-- no debt no intrest
-- AlreadyInitialized: only one init
-- irmConfig should be never zero
 - test_kink_generateConfig_alwaysWorks - make it on echidna?
 */
 
