@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - pendle/lp-tokens/wrappers/PendleWrapperLPTToSyOracle.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory pendle/lp-tokens/wrappers">pendle/lp-tokens/wrappers</a> - PendleWrapperLPTToSyOracle.sol<span style="font-size: 80%;"> (source / <a href="PendleWrapperLPTToSyOracle.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-08-20 18:53:11</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+          </tr>
+                  <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: GPL-2.0-or-later</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity 0.8.28;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : import {PendleLPTToSyOracle} from &quot;../PendleLPTToSyOracle.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {ISiloOracle} from &quot;silo-core/contracts/interfaces/ISiloOracle.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {IPendleLPWrapperLike} from &quot;silo-oracles/contracts/pendle/interfaces/IPendleLPWrapperLike.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : </span>
+<span id="L8"><span class="lineNum">       8</span>              : /// @notice Price provider for the wrapped Pendle LP tokens.</span>
+<span id="L9"><span class="lineNum">       9</span>              : /// @dev Wrapped tokens are priced 1:1 with Pendle LP tokens.</span>
+<span id="L10"><span class="lineNum">      10</span>              : contract PendleWrapperLPTToSyOracle is PendleLPTToSyOracle {</span>
+<span id="L11"><span class="lineNum">      11</span>              :     IPendleLPWrapperLike public immutable LPT_WRAPPER;</span>
+<span id="L12"><span class="lineNum">      12</span>              : </span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC tlaBgGNC">           1 :     constructor(</span></span>
+<span id="L14"><span class="lineNum">      14</span>              :         ISiloOracle _underlyingOracle,</span>
+<span id="L15"><span class="lineNum">      15</span>              :         IPendleLPWrapperLike _lptWrapper</span>
+<span id="L16"><span class="lineNum">      16</span>              :     ) PendleLPTToSyOracle(_underlyingOracle, _lptWrapper.LP()) {</span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">           1 :         LPT_WRAPPER = _lptWrapper;</span></span>
+<span id="L18"><span class="lineNum">      18</span>              :     }</span>
+<span id="L19"><span class="lineNum">      19</span>              : </span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">           1 :     function _getBaseToken() internal view override returns (address baseToken) {</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">           1 :         baseToken = address(LPT_WRAPPER);</span></span>
+<span id="L22"><span class="lineNum">      22</span>              :     }</span>
+<span id="L23"><span class="lineNum">      23</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
