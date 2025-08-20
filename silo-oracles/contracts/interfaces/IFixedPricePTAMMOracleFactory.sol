@@ -9,10 +9,7 @@ interface IFixedPricePTAMMOracleFactory {
     error AddressZero();
     error TokensAreTheSame();
 
-    function create(
-        IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config, 
-        bytes32 _externalSalt
-    ) 
-        external 
+    function create(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config, bytes32 _externalSalt)
+        external
         returns (IFixedPricePTAMMOracle oracle);
 }
