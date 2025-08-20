@@ -15,7 +15,7 @@
     "liquidationFee0": 250,
     "flashloanFee0": 0,
     "callBeforeQuote0": false,
-    "token1": "ETH",
+    "token1": "WETH",
     "solvencyOracle1": "NO_ORACLE",
     "maxLtvOracle1": "NO_ORACLE",
     "interestRateModel1": "InterestRateModelV2Factory.sol",
