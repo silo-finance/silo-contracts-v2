@@ -33,8 +33,8 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
     /// @inheritdoc IDynamicKinkModelFactory
     function create(
-        IDynamicKinkModel.Config calldata _config, 
-        address _initialOwner, 
+        IDynamicKinkModel.Config calldata _config,
+        address _initialOwner,
         address _silo,
         bytes32 _externalSalt
     )
@@ -63,13 +63,11 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         // 0 <= rmin < rcritMin <= rcritMax <= r100
 
         require(
-            defaultInt.rcritMin.isInAbove(defaultInt.rmin, defaultInt.rcritMax), 
-            IDynamicKinkModel.InvalidRcritMin()
+            defaultInt.rcritMin.isInAbove(defaultInt.rmin, defaultInt.rcritMax), IDynamicKinkModel.InvalidRcritMin()
         );
 
         require(
-            defaultInt.rcritMax.isBetween(defaultInt.rcritMin, defaultInt.r100),
-            IDynamicKinkModel.InvalidRcritMax()
+            defaultInt.rcritMax.isBetween(defaultInt.rcritMin, defaultInt.r100), IDynamicKinkModel.InvalidRcritMax()
         );
 
         int256 rCheckHi = (defaultInt.r100 - defaultInt.rmin) * DP / (defaultInt.rcritMax - defaultInt.rmin);
@@ -78,7 +76,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
         int256 s = 365 days;
 
-        // 0 < tMin <= tcrit <= t2 < 100y  
+        // 0 < tMin <= tcrit <= t2 < 100y
         require(defaultInt.tcrit.isBetween(defaultInt.tMin, defaultInt.t2), IDynamicKinkModel.InvalidTPlus());
         require(defaultInt.t2.isInBelow(defaultInt.tcrit, 100 * s), IDynamicKinkModel.InvalidT2());
 
@@ -97,19 +95,19 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         );
 
         int256 divider = s * config.kmax * (DP - defaultInt.ucrit);
-        require(divider != 0, IDynamicKinkModel.AlphaDividerZero()); // TODO: check if we can handle this in other way
+        require(divider != 0, IDynamicKinkModel.AlphaDividerZero());
 
         config.alpha = (defaultInt.r100 - defaultInt.rmin - s * config.kmax * (DP - defaultInt.ulow)) * DP / divider;
 
         config.c1 = (config.kmax - config.kmin) / defaultInt.t1;
         config.c2 = (config.kmax - config.kmin) / defaultInt.t2;
-        
-        config.cminus = ((config.kmax - config.kmin) / defaultInt.tlow - config.c1) * DP
-            / (defaultInt.u1 - defaultInt.ulow);
-        
-        config.cplus = ((config.kmax - config.kmin) / defaultInt.tcrit - config.c2) * DP
-            / (defaultInt.ucrit - defaultInt.u2);
-        
+
+        config.cminus =
+            ((config.kmax - config.kmin) / defaultInt.tlow - config.c1) * DP / (defaultInt.u1 - defaultInt.ulow);
+
+        config.cplus =
+            ((config.kmax - config.kmin) / defaultInt.tcrit - config.c2) * DP / (defaultInt.ucrit - defaultInt.u2);
+
         config.dmax = (config.kmax - config.kmin) / defaultInt.tMin;
 
         IDynamicKinkModel(address(IRM)).verifyConfig(config);

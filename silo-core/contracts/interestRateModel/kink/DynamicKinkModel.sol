@@ -165,7 +165,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         require(_silo == state.silo, InvalidSilo());
 
         ISilo.UtilizationData memory data = ISilo(state.silo).utilizationData();
-        
+
         if (data.debtAssets.willOverflowOnCastToInt256()) return 0;
         if (_blockTimestamp.willOverflowOnCastToInt256()) return 0;
 
@@ -250,17 +250,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         int256 k = _state.k;
 
         if (_u < _cfg.u1) {
-            k = SignedMath.max(
-                k - (_cfg.c1 + _cfg.cminus * (_cfg.u1 - _u) / _DP) * T,
-                _cfg.kmin
-            );
+            k = SignedMath.max(k - (_cfg.c1 + _cfg.cminus * (_cfg.u1 - _u) / _DP) * T, _cfg.kmin);
         } else if (_u > _cfg.u2) {
             k = SignedMath.min(
-                k + SignedMath.min(
-                    _cfg.c2 + _cfg.cplus * (_u - _cfg.u2) / _DP,
-                    _cfg.dmax
-                ) * T,
-                _cfg.kmax
+                k + SignedMath.min(_cfg.c2 + _cfg.cplus * (_u - _cfg.u2) / _DP, _cfg.dmax) * T, _cfg.kmax
             );
         }
 
@@ -293,7 +286,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         returns (int256 rcomp, int256 k)
     {
         // no debt, no interest, overriding min APR
-        if (_tba == 0) return (0, _state.k); 
+        if (_tba == 0) return (0, _state.k);
 
         LocalVarsRCOMP memory _l;
 
@@ -305,10 +298,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         if (_u < _cfg.u1) {
             _l.roc = -_cfg.c1 - _cfg.cminus * (_cfg.u1 - _u) / _DP;
         } else if (_u > _cfg.u2) {
-            _l.roc = SignedMath.min(
-                _cfg.c2 + _cfg.cplus * (_u - _cfg.u2) / _DP,
-                _cfg.dmax
-            );
+            _l.roc = SignedMath.min(_cfg.c2 + _cfg.cplus * (_u - _cfg.u2) / _DP, _cfg.dmax);
         }
 
         k = _state.k;
@@ -379,11 +369,11 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     }
 
     // hard rule: utilization in the model should never be above 100%.
-    function _calculateUtiliation(uint256 _collateralAssets, uint256 _debtAssets) 
-        internal 
-        pure 
-        virtual 
-        returns (int256) 
+    function _calculateUtiliation(uint256 _collateralAssets, uint256 _debtAssets)
+        internal
+        pure
+        virtual
+        returns (int256)
     {
         if (_debtAssets == 0) return 0;
         if (_collateralAssets == 0 || _debtAssets >= _collateralAssets) return _DP;
