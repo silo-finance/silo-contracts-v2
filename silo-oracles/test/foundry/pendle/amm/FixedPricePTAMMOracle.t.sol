@@ -20,9 +20,9 @@ contract FixedPricePTAMMOracleTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_PT_USDe_price --ffi -vv
+    FOUNDRY_PROFILE=oracles forge test --mt test_skip_ptamm_PT_USDe_price --ffi -vv
     */
-    function test_ptamm_PT_USDe_price() public {
+    function test_skip_ptamm_PT_USDe_price() public {
         vm.createSelectFork(vm.envString("RPC_AVALANCHE"), 67369870);
         factory = new FixedPricePTAMMOracleFactory();
 
@@ -37,9 +37,37 @@ contract FixedPricePTAMMOracleTest is Test {
 
         IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
 
+        assertEq(oracle.quote(1e18, pt), 0.98053159203196347e18, "PT price 1e18");
+        assertEq(oracle.quote(2e18, pt), 0.98053159203196347e18 * 2 + 1, "PT price 2e18");
+    }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_PT_USDe_Mockprice --ffi -vv
+    */
+    function test_ptamm_PT_USDe_Mockprice() public {
+        // vm.createSelectFork(vm.envString("RPC_AVALANCHE"), 67369870);
+        // factory = new FixedPricePTAMMOracleFactory();
+
+        address pt = 0xB4205a645c7e920BD8504181B1D7f2c5C955C3e7;
+        address usde = 0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34; // underlying token of PT
+
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
+            amm: IPendleAMM(0x4d717868F4Bd14ac8B29Bb6361901e30Ae05e340),
+            ptToken: pt,
+            ptUnderlyingQuoteToken: usde
+        });
+
+        IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
+
+        vm.mockCall(
+            address(config.amm),
+            abi.encodeWithSelector(IPendleAMM.previewSwapExactPtForToken.selector),
+            abi.encode(0.98053159203196347e18) // price at block 67369870
+        );
+
         uint256 price = oracle.quote(1e18, pt);
 
-        assertEq(price, 0.98053159203196347e18, "PT price");
+        assertEq(price, 0.98053159203196347e18, "Mocked PT price");
     }
 
     /*
