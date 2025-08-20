@@ -25,8 +25,10 @@ contract FixedPricePTAMMOracle is IFixedPricePTAMMOracle, Initializable {
 
     /// @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
-        IFixedPricePTAMMOracleConfig.DeploymentConfig memory cfg = oracleConfig.getConfig();
-        require(cfg.quoteToken != address(0), NotInitialized());
+        IFixedPricePTAMMOracleConfig oracleCfg = oracleConfig;
+        require(address(oracleCfg) != address(0), NotInitialized());
+        
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory cfg = oracleCfg.getConfig();
 
         require(_baseToken == cfg.baseToken, AssetNotSupported());
         require(_baseAmount <= type(uint128).max, BaseAmountOverflow());
