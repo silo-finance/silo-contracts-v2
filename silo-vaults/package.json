@@ -13,6 +13,6 @@
     "solhint": "~3.4.1"
   },
   "scripts": {
-    "lint:sol": "solhint \"contracts/**/*.sol\" --ignore-path .solhintignore --max-warnings=0"
+    "lint:sol": "../scripts/lint-sol.sh 39" 
   }
 }
