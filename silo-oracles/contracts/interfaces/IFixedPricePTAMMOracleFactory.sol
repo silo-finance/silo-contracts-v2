@@ -5,6 +5,7 @@ import {IFixedPricePTAMMOracleConfig} from "./IFixedPricePTAMMOracleConfig.sol";
 import {IFixedPricePTAMMOracle} from "./IFixedPricePTAMMOracle.sol";
 
 interface IFixedPricePTAMMOracleFactory {
+    error DeployerCannotBeZero();
     error AddressZero();
     error TokensAreTheSame();
 

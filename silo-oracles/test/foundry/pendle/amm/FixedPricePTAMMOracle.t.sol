@@ -36,4 +36,45 @@ contract FixedPricePTAMMOracleTest is Test {
 
         assertEq(price, 0.980531592031963470e18, "PT price");
     }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_predictAddress --ffi -vv
+    */
+    function test_predictAddress_fuzz(
+        address _deployer, 
+        bytes32 _externalSalt,
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config
+    ) public {
+        vm.assume(_deployer != address(0));
+        vm.assume(_config.baseToken != address(0));
+        vm.assume(_config.quoteToken != address(0));
+        vm.assume(_config.quoteToken != _config.baseToken);
+
+        address predictedAddress = factory.predictAddress(_deployer, _externalSalt);
+
+        vm.prank(_deployer);
+        address oracle = address(factory.create(_config, _externalSalt));
+
+        assertEq(oracle, predictedAddress, "Predicted address does not match");
+    }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_reusableConfigs_fuzz --ffi -vv
+    */
+    function test_ptamm_reusableConfigs_fuzz(
+        address _deployer, 
+        bytes32 _externalSalt,
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config
+    ) public {
+        vm.assume(_deployer != address(0));
+        vm.assume(_config.baseToken != address(0));
+        vm.assume(_config.quoteToken != address(0));
+        vm.assume(_config.quoteToken != _config.baseToken);
+
+        vm.prank(_deployer);
+        address oracle1 = address(factory.create(_config, _externalSalt));
+        address oracle2 = address(factory.create(_config, bytes32(0)));
+
+        assertEq(oracle1, oracle2, "Oracle addresses should be the same if we reuse the same config");
+    }
 }
