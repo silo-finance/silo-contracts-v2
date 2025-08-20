@@ -9,6 +9,9 @@ import {IFixedPricePTAMMOracle} from "silo-oracles/contracts/interfaces/IFixedPr
 import {IPendleAMM} from "silo-oracles/contracts/interfaces/IPendleAMM.sol";
 import {FixedPricePTAMMOracle} from "silo-oracles/contracts/pendle/amm/FixedPricePTAMMOracle.sol";
 
+/*
+    FOUNDRY_PROFILE=oracles forge test --mc FixedPricePTAMMOracleTest --ffi -vv
+*/
 contract FixedPricePTAMMOracleTest is Test {
     FixedPricePTAMMOracleFactory factory;
 
@@ -28,8 +31,8 @@ contract FixedPricePTAMMOracleTest is Test {
 
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(0x4d717868F4Bd14ac8B29Bb6361901e30Ae05e340),
-            baseToken: pt,
-            quoteToken: usde
+            ptToken: pt,
+            ptUnderlyingQuoteToken: usde
         });
 
         IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
@@ -45,8 +48,8 @@ contract FixedPricePTAMMOracleTest is Test {
     function test_ptamm_quote_zeroPrice() public {
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(makeAddr("amm")),
-            baseToken: makeAddr("baseToken"),
-            quoteToken: makeAddr("quoteToken")
+            ptToken: makeAddr("ptToken"),
+            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken")
         });
 
         IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
@@ -56,7 +59,7 @@ contract FixedPricePTAMMOracleTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSelector(IFixedPricePTAMMOracle.ZeroQuote.selector));
-        oracle.quote(1e18, config.baseToken);
+        oracle.quote(1e18, config.ptToken);
     }
 
     /*
@@ -65,8 +68,8 @@ contract FixedPricePTAMMOracleTest is Test {
     function test_ptamm_quote_AssetNotSupported() public {
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(makeAddr("amm")),
-            baseToken: makeAddr("baseToken"),
-            quoteToken: makeAddr("quoteToken")
+            ptToken: makeAddr("ptToken"),
+            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken")
         });
 
         IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
@@ -81,27 +84,27 @@ contract FixedPricePTAMMOracleTest is Test {
     function test_ptamm_quote_BaseAmountOverflow() public {
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(makeAddr("amm")),
-            baseToken: makeAddr("baseToken"),
-            quoteToken: makeAddr("quoteToken")
+            ptToken: makeAddr("ptToken"),
+            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken")
         });
 
         IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
 
         vm.expectRevert(abi.encodeWithSelector(IFixedPricePTAMMOracle.BaseAmountOverflow.selector));
-        oracle.quote(2 ** 128, config.baseToken);
+        oracle.quote(2 ** 128, config.ptToken);
     }
 
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_quoteToken --ffi -vv
     */
     function test_ptamm_quoteToken_fuzz(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) public {
-        vm.assume(_config.quoteToken != address(0));
-        vm.assume(_config.baseToken != address(0));
-        vm.assume(_config.quoteToken != _config.baseToken);
+        vm.assume(_config.ptUnderlyingQuoteToken != address(0));
+        vm.assume(_config.ptToken != address(0));
+        vm.assume(_config.ptUnderlyingQuoteToken != _config.ptToken);
 
         IFixedPricePTAMMOracle oracle = factory.create(_config, bytes32(0));
 
-        assertEq(oracle.quoteToken(), _config.quoteToken);
+        assertEq(oracle.quoteToken(), _config.ptUnderlyingQuoteToken);
     }
 
     /*
@@ -120,6 +123,6 @@ contract FixedPricePTAMMOracleTest is Test {
         FixedPricePTAMMOracle oracle = new FixedPricePTAMMOracle();
 
         vm.expectRevert(abi.encodeWithSelector(IFixedPricePTAMMOracle.NotInitialized.selector));
-        oracle.quote(1e18, makeAddr("baseToken"));
+        oracle.quote(1e18, makeAddr("ptToken"));
     }
 }

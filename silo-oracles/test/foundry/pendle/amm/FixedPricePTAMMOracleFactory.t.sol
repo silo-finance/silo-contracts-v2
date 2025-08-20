@@ -31,9 +31,9 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config
     ) public {
         vm.assume(_deployer != address(0));
-        vm.assume(_config.baseToken != address(0));
-        vm.assume(_config.quoteToken != address(0));
-        vm.assume(_config.quoteToken != _config.baseToken);
+        vm.assume(_config.ptToken != address(0));
+        vm.assume(_config.ptUnderlyingQuoteToken != address(0));
+        vm.assume(_config.ptUnderlyingQuoteToken != _config.ptToken);
 
         address predictedAddress = factory.predictAddress(_deployer, _externalSalt);
 
@@ -52,9 +52,9 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config
     ) public {
         vm.assume(_deployer != address(0));
-        vm.assume(_config.baseToken != address(0));
-        vm.assume(_config.quoteToken != address(0));
-        vm.assume(_config.quoteToken != _config.baseToken);
+        vm.assume(_config.ptToken != address(0));
+        vm.assume(_config.ptUnderlyingQuoteToken != address(0));
+        vm.assume(_config.ptUnderlyingQuoteToken != _config.ptToken);
 
         vm.prank(_deployer);
         address oracle1 = address(factory.create(_config, _externalSalt));
@@ -90,9 +90,9 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         public
         view
     {
-        vm.assume(_config.baseToken != address(0));
-        vm.assume(_config.quoteToken != address(0));
-        vm.assume(_config.quoteToken != _config.baseToken);
+        vm.assume(_config.ptToken != address(0));
+        vm.assume(_config.ptUnderlyingQuoteToken != address(0));
+        vm.assume(_config.ptUnderlyingQuoteToken != _config.ptToken);
 
         factory.verifyConfig(_config);
     }
@@ -106,19 +106,19 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         vm.expectRevert(abi.encodeWithSelector(IFixedPricePTAMMOracleFactory.AddressZero.selector));
         factory.verifyConfig(config);
 
-        config.baseToken = address(1);
+        config.ptToken = address(1);
         vm.expectRevert(abi.encodeWithSelector(IFixedPricePTAMMOracleFactory.AddressZero.selector));
         factory.verifyConfig(config);
 
-        config.quoteToken = address(0);
+        config.ptUnderlyingQuoteToken = address(0);
         vm.expectRevert(abi.encodeWithSelector(IFixedPricePTAMMOracleFactory.AddressZero.selector));
         factory.verifyConfig(config);
 
-        config.quoteToken = address(1);
+        config.ptUnderlyingQuoteToken = address(1);
         vm.expectRevert(abi.encodeWithSelector(IFixedPricePTAMMOracleFactory.TokensAreTheSame.selector));
         factory.verifyConfig(config);
 
-        config.quoteToken = address(2);
+        config.ptUnderlyingQuoteToken = address(2);
         factory.verifyConfig(config); // pass
     }
 
@@ -157,8 +157,8 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
     function test_ptamm_clone_alreadyInitialized() public {
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(0x4d717868F4Bd14ac8B29Bb6361901e30Ae05e340),
-            baseToken: address(1),
-            quoteToken: address(2)
+            ptToken: address(1),
+            ptUnderlyingQuoteToken: address(2)
         });
 
         address oracle = address(factory.create(config, bytes32(0)));

@@ -61,8 +61,8 @@ contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory, IFixedPr
     }
 
     function verifyConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) public view virtual {
-        if (_config.quoteToken == address(0)) revert AddressZero();
-        if (_config.baseToken == address(0)) revert AddressZero();
-        if (_config.quoteToken == _config.baseToken) revert TokensAreTheSame();
+        require(_config.ptUnderlyingQuoteToken != address(0), AddressZero());
+        require(_config.ptToken != address(0), AddressZero());
+        require(_config.ptUnderlyingQuoteToken != _config.ptToken, TokensAreTheSame());
     }
 }
