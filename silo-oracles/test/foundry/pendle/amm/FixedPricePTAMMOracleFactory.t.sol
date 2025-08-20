@@ -66,19 +66,22 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_reorg --ffi -vv
     */
-    function test_ptamm_reorg(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) public {
-        address eoa1 = makeAddr("eoa1");
-        address eoa2 = makeAddr("eoa2");
+    function test_ptamm_reorg(address _eoa1, address _eoa2) public {
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
+            amm: IPendleAMM(makeAddr("amm")),
+            ptToken: makeAddr("ptToken"),
+            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken")
+        });
 
         uint256 snapshot = vm.snapshotState();
 
-        vm.prank(eoa1);
-        address oracle1 = address(factory.create(_config, bytes32(0)));
+        vm.prank(_eoa1);
+        address oracle1 = address(factory.create(config, bytes32(0)));
 
         vm.revertToState(snapshot);
 
-        vm.prank(eoa2);
-        address oracle2 = address(factory.create(_config, bytes32(0)));
+        vm.prank(_eoa2);
+        address oracle2 = address(factory.create(config, bytes32(0)));
 
         assertNotEq(oracle1, oracle2, "Oracle addresses should be different if we reorg");
     }
