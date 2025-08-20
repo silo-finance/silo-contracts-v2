@@ -97,7 +97,7 @@ contract UniswapV3OracleTest is UniswapPools {
     /*
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3Oracle_oldestTimestamp
     */
-    function test_UniswapV3Oracle_oldestTimestamp() public {
+    function test_UniswapV3Oracle_oldestTimestamp() public view {
         // last one is 1692794747
         // oldest is 1692741935
         assertEq(uint256(PRICE_PROVIDER.oldestTimestamp()), 1692741935, "expect to be oldest");

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
+/// @dev https://pendle.notion.site/Cross-chain-PT-21f567a21d3780c5b7c9fe055565d762
 interface IPendleAMM {
     /// @dev Call this function to preview swap PT → token
     /// @param _PT PT token
@@ -10,5 +11,5 @@ interface IPendleAMM {
         address _PT,
         uint256 _exactPtIn,
         address _token
-    ) public view returns (uint256 amountTokenOut);
+    ) external view returns (uint256 amountTokenOut);
 }

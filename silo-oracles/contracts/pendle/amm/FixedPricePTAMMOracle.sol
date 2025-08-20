@@ -4,10 +4,9 @@ pragma solidity 0.8.28;
 import {Initializable} from  "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IFixedPricePTAMMOracleConfig} from "../../interfaces/IFixedPricePTAMMOracleConfig.sol";
+import {IFixedPricePTAMMOracle} from "../../interfaces/IFixedPricePTAMMOracle.sol";
 
-
-
-contract FixedPricePTAMMOracle is IFixedPricePTAMMOracle, ISiloOracle, Initializable {
+contract FixedPricePTAMMOracle is IFixedPricePTAMMOracle, Initializable {
     IFixedPricePTAMMOracleConfig public oracleConfig;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -26,7 +25,7 @@ contract FixedPricePTAMMOracle is IFixedPricePTAMMOracle, ISiloOracle, Initializ
 
     /// @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
-        IFixedPricePTAMMOracleConfig.Config memory cfg = oracleConfig.getConfig();
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory cfg = oracleConfig.getConfig();
         require(cfg.quoteToken != address(0), NotInitialized());
 
         require(_baseToken == cfg.baseToken, AssetNotSupported());
@@ -35,6 +34,11 @@ contract FixedPricePTAMMOracle is IFixedPricePTAMMOracle, ISiloOracle, Initializ
         quoteAmount = cfg.amm.previewSwapExactPtForToken(_baseToken, _baseAmount, cfg.quoteToken);
 
         require(quoteAmount != 0, ZeroQuote());
+    }
+
+    /// @inheritdoc ISiloOracle
+    function beforeQuote(address) external pure virtual override {
+        // nothing to execute
     }
 
     /// @inheritdoc ISiloOracle

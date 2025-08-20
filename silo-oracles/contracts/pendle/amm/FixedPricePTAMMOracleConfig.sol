@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
-import {IPendleAMM} from "../interfaces/IPendleAMM.sol";
+import {IPendleAMM} from "../../interfaces/IPendleAMM.sol";
 import {IFixedPricePTAMMOracleConfig} from "../../interfaces/IFixedPricePTAMMOracleConfig.sol";
 
 contract FixedPricePTAMMOracleConfig is IFixedPricePTAMMOracleConfig {

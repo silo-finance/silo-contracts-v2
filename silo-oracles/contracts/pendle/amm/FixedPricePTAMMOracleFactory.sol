@@ -8,8 +8,10 @@ import {OracleFactory} from "../../_common/OracleFactory.sol";
 import {IFixedPricePTAMMOracleConfig} from "../../interfaces/IFixedPricePTAMMOracleConfig.sol";
 import {FixedPricePTAMMOracle} from "./FixedPricePTAMMOracle.sol";
 import {FixedPricePTAMMOracleConfig} from "./FixedPricePTAMMOracleConfig.sol";
+import {IFixedPricePTAMMOracleFactory} from "../../interfaces/IFixedPricePTAMMOracleFactory.sol";
+import {IFixedPricePTAMMOracle} from "../../interfaces/IFixedPricePTAMMOracle.sol";
 
-contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory {
+contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory, IFixedPricePTAMMOracleFactory {
     constructor() OracleFactory(address(new FixedPricePTAMMOracle())) {
         // noting to configure
     }
@@ -17,20 +19,20 @@ contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory {
     function create(
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config,
         bytes32 _externalSalt
-    ) external virtual returns (FixedPricePTAMMOracle oracle) {
+    ) external virtual returns (IFixedPricePTAMMOracle oracle) {
         bytes32 id = hashConfig(_config);
 
-        FixedPricePTAMMOracleConfig oracleConfig = FixedPricePTAMMOracleConfig(getConfigAddress[id]);
+        IFixedPricePTAMMOracleConfig oracleConfig = IFixedPricePTAMMOracleConfig(getConfigAddress[id]);
 
         if (address(oracleConfig) != address(0)) {
             // config already exists, so oracle exists as well
-            return FixedPricePTAMMOracle(getOracleAddress[address(oracleConfig)]);
+            return IFixedPricePTAMMOracle(getOracleAddress[address(oracleConfig)]);
         }
 
         verifyConfig(_config);
 
         oracleConfig = new FixedPricePTAMMOracleConfig(_config);
-        oracle = FixedPricePTAMMOracle(Clones.cloneDeterministic(ORACLE_IMPLEMENTATION, _salt(_externalSalt)));
+        oracle = IFixedPricePTAMMOracle(Clones.cloneDeterministic(ORACLE_IMPLEMENTATION, _salt(_externalSalt)));
 
         _saveOracle(address(oracle), address(oracleConfig), id);
 
