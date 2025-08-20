@@ -22,7 +22,7 @@ contract FixedPricePTAMMOracleTest is Test {
     */
     function test_ptamm_PT_USDe_price() public {
         address pt = 0xB4205a645c7e920BD8504181B1D7f2c5C955C3e7;
-        address usde = 0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34;
+        address usde = 0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34; // underlying token of PT
 
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(0x4d717868F4Bd14ac8B29Bb6361901e30Ae05e340),
