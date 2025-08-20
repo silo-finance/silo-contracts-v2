@@ -12,13 +12,13 @@ contract FixedPricePTAMMOracleConfig is IFixedPricePTAMMOracleConfig {
     /// @dev all verification should be done by factory
     constructor(DeploymentConfig memory _cfg) {
         _PENDLE_AMM = _cfg.amm;
-        _BASE_TOKEN = _cfg.baseToken;
-        _QUOTE_TOKEN = _cfg.quoteToken;
+        _BASE_TOKEN = _cfg.ptToken;
+        _QUOTE_TOKEN = _cfg.ptUnderlyingQuoteToken;
     }
 
     function getConfig() external view virtual returns (DeploymentConfig memory cfg) {
         cfg.amm = _PENDLE_AMM;
-        cfg.baseToken = _BASE_TOKEN;
-        cfg.quoteToken = _QUOTE_TOKEN;
+        cfg.ptToken = _BASE_TOKEN;
+        cfg.ptUnderlyingQuoteToken = _QUOTE_TOKEN;
     }
 }

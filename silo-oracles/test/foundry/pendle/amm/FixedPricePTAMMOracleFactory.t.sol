@@ -26,7 +26,7 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
     FOUNDRY_PROFILE=oracles forge test --mt test_predictAddress --ffi -vv
     */
     function test_predictAddress_fuzz(
-        address _deployer, 
+        address _deployer,
         bytes32 _externalSalt,
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config
     ) public {
@@ -47,7 +47,7 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
     FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_reusableConfigs_fuzz --ffi -vv
     */
     function test_ptamm_reusableConfigs_fuzz(
-        address _deployer, 
+        address _deployer,
         bytes32 _externalSalt,
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config
     ) public {
@@ -86,9 +86,9 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_verifyConfig_pass_fuzz --ffi -vv
     */
-    function test_ptamm_verifyConfig_pass_fuzz(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) 
-        public 
-        view 
+    function test_ptamm_verifyConfig_pass_fuzz(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
+        public
+        view
     {
         vm.assume(_config.baseToken != address(0));
         vm.assume(_config.quoteToken != address(0));

@@ -16,10 +16,11 @@ contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory, IFixedPr
         // noting to configure
     }
 
-    function create(
-        IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config,
-        bytes32 _externalSalt
-    ) external virtual returns (IFixedPricePTAMMOracle oracle) {
+    function create(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config, bytes32 _externalSalt)
+        external
+        virtual
+        returns (IFixedPricePTAMMOracle oracle)
+    {
         bytes32 id = hashConfig(_config);
 
         IFixedPricePTAMMOracleConfig oracleConfig = IFixedPricePTAMMOracleConfig(getConfigAddress[id]);
@@ -46,15 +47,14 @@ contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory, IFixedPr
     {
         require(_deployer != address(0), DeployerCannotBeZero());
 
-        predictedAddress = Clones.predictDeterministicAddress(
-            ORACLE_IMPLEMENTATION, _createSalt(_deployer, _externalSalt)
-        );
+        predictedAddress =
+            Clones.predictDeterministicAddress(ORACLE_IMPLEMENTATION, _createSalt(_deployer, _externalSalt));
     }
 
     function hashConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
         public
-        virtual
         view
+        virtual
         returns (bytes32 configId)
     {
         configId = keccak256(abi.encode(_config));

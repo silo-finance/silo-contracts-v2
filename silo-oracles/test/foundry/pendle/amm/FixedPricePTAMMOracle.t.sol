@@ -36,14 +36,13 @@ contract FixedPricePTAMMOracleTest is Test {
 
         uint256 price = oracle.quote(1e18, pt);
 
-        assertEq(price, 0.980531592031963470e18, "PT price");
+        assertEq(price, 0.98053159203196347e18, "PT price");
     }
 
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_quote_zeroPrice --ffi -vv
     */
     function test_ptamm_quote_zeroPrice() public {
-       
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(makeAddr("amm")),
             baseToken: makeAddr("baseToken"),
@@ -53,9 +52,7 @@ contract FixedPricePTAMMOracleTest is Test {
         IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
 
         vm.mockCall(
-            address(config.amm),
-            abi.encodeWithSelector(IPendleAMM.previewSwapExactPtForToken.selector),
-            abi.encode(0)
+            address(config.amm), abi.encodeWithSelector(IPendleAMM.previewSwapExactPtForToken.selector), abi.encode(0)
         );
 
         vm.expectRevert(abi.encodeWithSelector(IFixedPricePTAMMOracle.ZeroQuote.selector));
@@ -87,7 +84,7 @@ contract FixedPricePTAMMOracleTest is Test {
             baseToken: makeAddr("baseToken"),
             quoteToken: makeAddr("quoteToken")
         });
-        
+
         IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
 
         vm.expectRevert(abi.encodeWithSelector(IFixedPricePTAMMOracle.BaseAmountOverflow.selector));
