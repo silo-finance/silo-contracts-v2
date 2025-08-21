@@ -18,8 +18,4 @@ interface IFixedPricePTAMMOracleFactory {
     function hashConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) external view returns (bytes32 configId);
 
     function verifyConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) external view;
-
-    function getConfigAddress(bytes32 _configId) external view returns (address configAddress);
-
-    function getOracleAddress(address _configAddress) external view returns (address oracleAddress);
 }
