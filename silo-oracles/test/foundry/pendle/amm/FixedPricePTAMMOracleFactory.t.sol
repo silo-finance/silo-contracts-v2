@@ -50,15 +50,13 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         address oracle = address(factory.create(_config, _externalSalt));
 
         assertEq(oracle, predictedAddress, "Predicted address does not match");
-        
+
         address oracle2 = address(factory.create(_config, _externalSalt));
 
         address predictedAddress2 = factory.predictAddress(_config, _deployer, _externalSalt);
 
         assertEq(
-            predictedAddress, 
-            predictedAddress2, 
-            "predicted addresses should be the same if we reuse the same config"
+            predictedAddress, predictedAddress2, "predicted addresses should be the same if we reuse the same config"
         );
 
         assertEq(oracle2, oracle, "Oracle addresses should be the same if we reuse the same config");
@@ -110,7 +108,7 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
     FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_reorg --ffi -vv
     */
     function test_ptamm_reorg(
-        address _eoa1, 
+        address _eoa1,
         address _eoa2,
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config1,
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config2
@@ -145,7 +143,6 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         view
         assumeValidConfig(_config)
     {
-
         factory.verifyConfig(_config);
     }
 
@@ -228,9 +225,9 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_getConfig --ffi -vv
     */
-    function test_ptamm_getConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) 
+    function test_ptamm_getConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
         public
-        assumeValidConfig(_config) 
+        assumeValidConfig(_config)
     {
         IFixedPricePTAMMOracle oracle = factory.create(_config, bytes32(0));
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory cfg = oracle.oracleConfig().getConfig();
@@ -241,7 +238,11 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         assertEq(cfg.hardcoddedQuoteToken, _config.hardcoddedQuoteToken, "Hardcoded quote token should match");
     }
 
-    function _hashConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) internal view returns (bytes32) {
+    function _hashConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
+        internal
+        view
+        returns (bytes32)
+    {
         return keccak256(abi.encode(_config));
     }
 }

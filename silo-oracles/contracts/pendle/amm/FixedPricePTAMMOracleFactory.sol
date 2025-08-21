@@ -38,8 +38,8 @@ contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory, IFixedPr
     }
 
     function predictAddress(
-        IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config, 
-        address _deployer, 
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config,
+        address _deployer,
         bytes32 _externalSalt
     )
         external

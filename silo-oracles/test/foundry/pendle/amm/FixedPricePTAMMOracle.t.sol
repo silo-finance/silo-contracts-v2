@@ -140,9 +140,9 @@ contract FixedPricePTAMMOracleTest is Test {
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_quoteToken --ffi -vv
     */
-    function test_ptamm_quoteToken_fuzz(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) 
-        public 
-        assumeValidConfig(_config) 
+    function test_ptamm_quoteToken_fuzz(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
+        public
+        assumeValidConfig(_config)
     {
         IFixedPricePTAMMOracle oracle = factory.create(_config, bytes32(0));
 
