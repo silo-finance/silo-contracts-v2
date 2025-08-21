@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-08-20 18:53:11</td>
+            <td class="headerValue">2025-08-21 08:18:32</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -78,11 +78,11 @@
 <span id="L16"><span class="lineNum">      16</span>              : </span>
 <span id="L17"><span class="lineNum">      17</span>              :     /// @notice validation of config is checked in factory, therefore you should not deploy and initialize directly</span>
 <span id="L18"><span class="lineNum">      18</span>              :     /// use factory always.</span>
-<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">        1288 :     function initialize(IFixedPricePTAMMOracleConfig _configAddress) external virtual initializer {</span></span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">        1285 :         require(address(_configAddress) != address(0), EmptyConfigAddress());</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">        1289 :     function initialize(IFixedPricePTAMMOracleConfig _configAddress) external virtual initializer {</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">        1286 :         require(address(_configAddress) != address(0), EmptyConfigAddress());</span></span>
 <span id="L21"><span class="lineNum">      21</span>              : </span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">        1285 :         oracleConfig = _configAddress;</span></span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">        1285 :         emit FixedPricePTAMMOracleInitialized(_configAddress);</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">        1286 :         oracleConfig = _configAddress;</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">        1286 :         emit FixedPricePTAMMOracleInitialized(_configAddress);</span></span>
 <span id="L24"><span class="lineNum">      24</span>              :     }</span>
 <span id="L25"><span class="lineNum">      25</span>              : </span>
 <span id="L26"><span class="lineNum">      26</span>              :     /// @inheritdoc ISiloOracle</span>
