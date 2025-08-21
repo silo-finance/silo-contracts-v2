@@ -239,14 +239,14 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
     /*
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3OracleFactory_creationTokensCheck
     */
-    function test_UniswapV3OracleFactory_creationTokensCheck() public {
+    function test_UniswapV3OracleFactory_creationTokensCheck() public view {
         assertEq(PRICE_PROVIDER.quoteToken(), address(tokens["USDC"]), "quote token match");
     }
 
     /*
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3OracleFactory_creationConfigCheck
     */
-    function test_UniswapV3OracleFactory_creationConfigCheck() public {
+    function test_UniswapV3OracleFactory_creationConfigCheck() public view {
         UniswapV3OracleConfig configContract = PRICE_PROVIDER.oracleConfig();
         IUniswapV3Oracle.UniswapV3Config memory config = configContract.getConfig();
 

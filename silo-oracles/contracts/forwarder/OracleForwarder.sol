@@ -35,8 +35,8 @@ contract OracleForwarder is Ownable2Step, IOracleForwarder {
     }
 
     // @inheritdoc ISiloOracle
-    function quoteToken() external virtual view returns (address quoteToken) {
-        quoteToken = QUOTE_TOKEN;
+    function quoteToken() external virtual view returns (address token) {
+        token = QUOTE_TOKEN;
     }
 
     function _setOracle(ISiloOracle _oracle) internal virtual {
