@@ -13,6 +13,6 @@
     "solhint": "~3.4.1"
   },
   "scripts": {
-    "lint:sol": "../scripts/lint-sol.sh 12"
+    "lint:sol": "../scripts/lint-sol.sh 7"
   }
 }
