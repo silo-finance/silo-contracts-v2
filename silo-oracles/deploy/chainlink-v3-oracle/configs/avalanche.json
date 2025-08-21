@@ -100,16 +100,6 @@
         "normalizationDivider": 1e18,
         "normalizationMultiplier": 0
     },
-    "CROSS-CHAIN-LINEAR_PT-USDe-25SEP2025_USDC": {
-        "baseToken": "PT-USDe-25SEP2025",
-        "quoteToken": "USDC",
-        "primaryAggregator": "CROSS-CHAIN-LINEAR_PT-USDe-25SEP2025_USDC_AGGREGATOR",
-        "primaryHeartbeat": 87001,
-        "secondaryAggregator": "",
-        "secondaryHeartbeat": 0,
-        "normalizationDivider": 1e18,
-        "normalizationMultiplier": 0
-    },
     "CHAINLINK_USDT_USD": {
         "baseToken": "USDT",
         "quoteToken": "SILO_VIRTUAL_USD_8",
