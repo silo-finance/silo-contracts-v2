@@ -5,7 +5,7 @@
     "daoFee": 1000,
     "deployerFee": 0,
     "token0": "PT_Ethena_USDe_25SEP2025",
-    "solvencyOracle0": "PT_AMM_PT-USDe-25SEP2025_USDC-TODO",
+    "solvencyOracle0": "PT_AMM_ORACLE_PT-USDe-25SEP2025_USDC",
     "maxLtvOracle0": "NO_ORACLE",
     "interestRateModel0": "InterestRateModelV2.sol",
     "interestRateModelConfig0": "stableHighCapV12",
