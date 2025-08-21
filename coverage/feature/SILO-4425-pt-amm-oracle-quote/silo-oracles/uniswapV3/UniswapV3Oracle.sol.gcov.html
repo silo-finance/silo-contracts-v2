@@ -1,0 +1,321 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - uniswapV3/UniswapV3Oracle.sol</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory uniswapV3">uniswapV3</a> - UniswapV3Oracle.sol<span style="font-size: 80%;"> (source / <a href="UniswapV3Oracle.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryMed">83.6&nbsp;%</td>
+            <td class="headerCovTableEntry">55</td>
+            <td class="headerCovTableEntry">46</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-08-21 10:59:33</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">72.7&nbsp;%</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">8</td>
+          </tr>
+                  <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: GPL-2.0-or-later</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity 0.7.6;</span>
+<span id="L3"><span class="lineNum">       3</span>              : pragma abicoder v2;</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : import {OracleLibrary} from  &quot;uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {IUniswapV3Pool} from  &quot;uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : </span>
+<span id="L8"><span class="lineNum">       8</span>              : import {ISiloOracle} from &quot;silo-core/contracts/interfaces/ISiloOracle.sol&quot;;</span>
+<span id="L9"><span class="lineNum">       9</span>              : </span>
+<span id="L10"><span class="lineNum">      10</span>              : import {RevertBytes} from  &quot;../lib/RevertBytes.sol&quot;;</span>
+<span id="L11"><span class="lineNum">      11</span>              : import {IUniswapV3Oracle} from &quot;../interfaces/IUniswapV3Oracle.sol&quot;;</span>
+<span id="L12"><span class="lineNum">      12</span>              : import {UniswapV3OracleConfig} from &quot;./UniswapV3OracleConfig.sol&quot;;</span>
+<span id="L13"><span class="lineNum">      13</span>              : </span>
+<span id="L14"><span class="lineNum">      14</span>              : contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle {</span>
+<span id="L15"><span class="lineNum">      15</span>              :     using RevertBytes for bytes;</span>
+<span id="L16"><span class="lineNum">      16</span>              : </span>
+<span id="L17"><span class="lineNum">      17</span>              :     /// @dev Uniswap can revert with &quot;Old&quot; error when begin of TWAP period is older than oldest observation.</span>
+<span id="L18"><span class="lineNum">      18</span>              :     /// This hash is for catch this error.</span>
+<span id="L19"><span class="lineNum">      19</span>              :     /// Assuming we checked for BufferFull (so we do have all required observations), we can safely reduce period</span>
+<span id="L20"><span class="lineNum">      20</span>              :     /// to oldest available time and we can fetch price.</span>
+<span id="L21"><span class="lineNum">      21</span>              :     /// NOTICE: buffer check is disabled (we not doing that check on oracle creation), that means it is possible</span>
+<span id="L22"><span class="lineNum">      22</span>              :     /// to deploy oracle configured for TWAP N, even when there is not enough observations to provide that price.</span>
+<span id="L23"><span class="lineNum">      23</span>              :     /// it is recommended to execute `adjustOracleCardinality` asap, even before deployment if possible.</span>
+<span id="L24"><span class="lineNum">      24</span>              :     /// Reason for disabling this check is to allow early deployments. However it should not be used</span>
+<span id="L25"><span class="lineNum">      25</span>              :     /// until buffer will be filled up because TWAP price can be invalid</span>
+<span id="L26"><span class="lineNum">      26</span>              :     bytes32 public constant OLD_ERROR_HASH = keccak256(abi.encodeWithSignature(&quot;Error(string)&quot;, &quot;OLD&quot;));</span>
+<span id="L27"><span class="lineNum">      27</span>              : </span>
+<span id="L28"><span class="lineNum">      28</span>              :     /// @dev deployment with configuration setup, can not be immutable because it is initialized</span>
+<span id="L29"><span class="lineNum">      29</span>              :     UniswapV3OracleConfig public oracleConfig;</span>
+<span id="L30"><span class="lineNum">      30</span>              : </span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC tlaBgGNC">          25 :     constructor() {</span></span>
+<span id="L32"><span class="lineNum">      32</span>              :         // disable initializer</span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">          25 :         oracleConfig = UniswapV3OracleConfig(address(this));</span></span>
+<span id="L34"><span class="lineNum">      34</span>              :     }</span>
+<span id="L35"><span class="lineNum">      35</span>              : </span>
+<span id="L36"><span class="lineNum">      36</span>              :     /// @param _configAddress UniswapV3OracleConfig address</span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">          27 :     function initialize(UniswapV3OracleConfig _configAddress) external virtual {</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">          27 :         if (address(oracleConfig) != address(0)) revert(&quot;Initializable: contract is already initialized&quot;);</span></span>
+<span id="L39"><span class="lineNum">      39</span>              : </span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">          25 :         oracleConfig = _configAddress;</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">          25 :         emit UniswapV3ConfigDeployed(_configAddress);</span></span>
+<span id="L42"><span class="lineNum">      42</span>              :     }</span>
+<span id="L43"><span class="lineNum">      43</span>              : </span>
+<span id="L44"><span class="lineNum">      44</span>              :     /// @notice Adjust UniV3 pool cardinality to Silo's requirements.</span>
+<span id="L45"><span class="lineNum">      45</span>              :     /// Call `observationsStatus` to see, if you need to execute this method.</span>
+<span id="L46"><span class="lineNum">      46</span>              :     /// This method prepares pool for setup for price provider. In order to run `setupAsset` for asset,</span>
+<span id="L47"><span class="lineNum">      47</span>              :     /// pool must have buffer to provide TWAP price. By calling this adjustment (and waiting necessary amount of time)</span>
+<span id="L48"><span class="lineNum">      48</span>              :     /// pool will be ready for setup. It will collect valid number of observations, so the pool can be used</span>
+<span id="L49"><span class="lineNum">      49</span>              :     /// once price data is ready.</span>
+<span id="L50"><span class="lineNum">      50</span>              :     /// @dev Increases observation cardinality for univ3 oracle pool if needed, see getPrice desc for details.</span>
+<span id="L51"><span class="lineNum">      51</span>              :     /// We should call it on init and when we are changing the pool (univ3 can have multiple pools for the same tokens)</span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaUNC tlaBgUNC">           0 :     function adjustOracleCardinality() external virtual {</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaUNC">           0 :         UniswapV3Config memory config = oracleConfig.getConfig();</span></span>
+<span id="L54"><span class="lineNum">      54</span>              : </span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaUNC">           0 :         (,,,, uint16 cardinalityNext,,) = config.pool.slot0();</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaUNC">           0 :         if (cardinalityNext &gt;= config.requiredCardinality) revert(&quot;NotNecessary&quot;);</span></span>
+<span id="L57"><span class="lineNum">      57</span>              : </span>
+<span id="L58"><span class="lineNum">      58</span>              :         // initialize required amount of slots, it will cost!</span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaUNC">           0 :         config.pool.increaseObservationCardinalityNext(config.requiredCardinality);</span></span>
+<span id="L60"><span class="lineNum">      60</span>              :     }</span>
+<span id="L61"><span class="lineNum">      61</span>              : </span>
+<span id="L62"><span class="lineNum">      62</span>              :     /// @inheritdoc ISiloOracle</span>
+<span id="L63"><span class="lineNum">      63</span>              :     /// @notice please check `_calculatePeriodAndTicks` for buffer comments</span>
+<span id="L64"><span class="lineNum">      64</span>              :     /// @dev UniV3 saves price only on: mint, burn and swap.</span>
+<span id="L65"><span class="lineNum">      65</span>              :     /// Mint and burn will write observation only when &quot;current tick is inside the passed range&quot; of ticks.</span>
+<span id="L66"><span class="lineNum">      66</span>              :     /// I think that means, that if we minting/burning outside ticks range  (so outside current price)</span>
+<span id="L67"><span class="lineNum">      67</span>              :     /// it will not modify observation. So we left with swap.</span>
+<span id="L68"><span class="lineNum">      68</span>              :     ///</span>
+<span id="L69"><span class="lineNum">      69</span>              :     /// Swap will write observation under this condition:</span>
+<span id="L70"><span class="lineNum">      70</span>              :     ///     // update tick and write an oracle entry if the tick change</span>
+<span id="L71"><span class="lineNum">      71</span>              :     ///     if (state.tick != slot0Start.tick) {</span>
+<span id="L72"><span class="lineNum">      72</span>              :     /// that means, it is possible that price will be up to date (in a range of same tick)</span>
+<span id="L73"><span class="lineNum">      73</span>              :     /// but observation timestamp will be old.</span>
+<span id="L74"><span class="lineNum">      74</span>              :     ///</span>
+<span id="L75"><span class="lineNum">      75</span>              :     /// Every pool by default comes with just one slot for observation (cardinality == 1).</span>
+<span id="L76"><span class="lineNum">      76</span>              :     /// We can increase number of slots so TWAP price will be &quot;better&quot;.</span>
+<span id="L77"><span class="lineNum">      77</span>              :     /// When we increase, we have to wait until new tx will write new observation.</span>
+<span id="L78"><span class="lineNum">      78</span>              :     /// Based on all above, we can tell how old is observation, but this does not mean the price is wrong.</span>
+<span id="L79"><span class="lineNum">      79</span>              :     /// UniV3 recommends to use `observe` and `OracleLibrary.consult` uses it.</span>
+<span id="L80"><span class="lineNum">      80</span>              :     /// `observe` reverts if `secondsAgo` &gt; oldest observation, means, if there is any price observation in selected</span>
+<span id="L81"><span class="lineNum">      81</span>              :     /// time frame, it will revert. Otherwise it will return either exact TWAP price or by interpolation.</span>
+<span id="L82"><span class="lineNum">      82</span>              :     ///</span>
+<span id="L83"><span class="lineNum">      83</span>              :     /// Conclusion: we can choose how many observation pool will be storing, but we need to remember,</span>
+<span id="L84"><span class="lineNum">      84</span>              :     /// not all of them might be used to provide our price. Final question is: how many observations we need?</span>
+<span id="L85"><span class="lineNum">      85</span>              :     ///</span>
+<span id="L86"><span class="lineNum">      86</span>              :     /// How UniV3 calculates TWAP</span>
+<span id="L87"><span class="lineNum">      87</span>              :     /// we ask for TWAP on time range ago:now using `OracleLibrary.consult`, it is all about find the right tick</span>
+<span id="L88"><span class="lineNum">      88</span>              :     /// - we call `IUniswapV3Pool(pool).observe(secondAgo)` that returns two accumulator values (for ago and now)</span>
+<span id="L89"><span class="lineNum">      89</span>              :     /// - each observation is resolved by `observeSingle`</span>
+<span id="L90"><span class="lineNum">      90</span>              :     ///   - for _now_ we just using latest observation, and if it does not match timestamp, we interpolate (!)</span>
+<span id="L91"><span class="lineNum">      91</span>              :     ///     and this is how we got the _tickCumulative_, so in extreme situation, if last observation was made day ago,</span>
+<span id="L92"><span class="lineNum">      92</span>              :     ///     UniV3 will interpolate to reflect _tickCumulative_ at current time</span>
+<span id="L93"><span class="lineNum">      93</span>              :     ///   - for _ago_ we search for observation using `getSurroundingObservations` that give us</span>
+<span id="L94"><span class="lineNum">      94</span>              :     ///     before and after observation, base on which we calculate &quot;avg&quot; and we have target _tickCumulative_</span>
+<span id="L95"><span class="lineNum">      95</span>              :     ///     - getSurroundingObservations: it's job is to find 2 observations based on which we calculate tickCumulative</span>
+<span id="L96"><span class="lineNum">      96</span>              :     ///       here is where all calculations can revert, if ago &lt; oldest observation, otherwise it will be calculated</span>
+<span id="L97"><span class="lineNum">      97</span>              :     ///       either by interpolation or we will have exact match</span>
+<span id="L98"><span class="lineNum">      98</span>              :     /// - now with both _tickCumulative_s we calculating TWAP</span>
+<span id="L99"><span class="lineNum">      99</span>              :     ///</span>
+<span id="L100"><span class="lineNum">     100</span>              :     /// recommended observations are = 30 min / blockTime</span>
+<span id="L101"><span class="lineNum">     101</span> <span class="tlaGNC tlaBgGNC">           7 :     function quote(uint256 _baseAmount, address _baseToken)</span></span>
+<span id="L102"><span class="lineNum">     102</span>              :         external</span>
+<span id="L103"><span class="lineNum">     103</span>              :         view</span>
+<span id="L104"><span class="lineNum">     104</span>              :         virtual</span>
+<span id="L105"><span class="lineNum">     105</span>              :         override</span>
+<span id="L106"><span class="lineNum">     106</span>              :         returns (uint256 quoteAmount)</span>
+<span id="L107"><span class="lineNum">     107</span>              :     {</span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">           7 :         if (_baseAmount &gt; type(uint128).max) revert(&quot;Overflow&quot;);</span></span>
+<span id="L109"><span class="lineNum">     109</span>              : </span>
+<span id="L110"><span class="lineNum">     110</span> <span class="tlaGNC">           6 :         UniswapV3Config memory config = oracleConfig.getConfig();</span></span>
+<span id="L111"><span class="lineNum">     111</span>              : </span>
+<span id="L112"><span class="lineNum">     112</span>              :         // this will force to optimise gas by not doing call for quote</span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">           6 :         if (_baseToken == config.quoteToken) revert(&quot;UseBaseAmount&quot;);</span></span>
+<span id="L114"><span class="lineNum">     114</span>              : </span>
+<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">           5 :         int24 timeWeightedAverageTick = _consult(config.pool, config.periodForAvgPrice);</span></span>
+<span id="L116"><span class="lineNum">     116</span>              : </span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">           5 :         quoteAmount = OracleLibrary.getQuoteAtTick(</span></span>
+<span id="L118"><span class="lineNum">     118</span>              :             timeWeightedAverageTick, uint128(_baseAmount), _baseToken, config.quoteToken</span>
+<span id="L119"><span class="lineNum">     119</span>              :         );</span>
+<span id="L120"><span class="lineNum">     120</span>              : </span>
+<span id="L121"><span class="lineNum">     121</span>              :         // zero is also returned on invalid base token</span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">           5 :         if (quoteAmount == 0) revert(&quot;ZeroQuote&quot;);</span></span>
+<span id="L123"><span class="lineNum">     123</span>              :     }</span>
+<span id="L124"><span class="lineNum">     124</span>              : </span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">           1 :     function quoteToken() external view override virtual returns (address) {</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">           1 :         return oracleConfig.getConfig().quoteToken;</span></span>
+<span id="L127"><span class="lineNum">     127</span>              :     }</span>
+<span id="L128"><span class="lineNum">     128</span>              : </span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">           1 :     function oldestTimestamp() external view virtual returns (uint32 oldestTimestamps) {</span></span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">           1 :         UniswapV3Config memory config = oracleConfig.getConfig();</span></span>
+<span id="L131"><span class="lineNum">     131</span>              : </span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">           1 :         (,, uint16 observationIndex, uint16 currentObservationCardinality,,,) = config.pool.slot0();</span></span>
+<span id="L133"><span class="lineNum">     133</span>              : </span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">           1 :         oldestTimestamps</span></span>
+<span id="L135"><span class="lineNum">     135</span>              :             = resolveOldestObservationTimestamp(config.pool, observationIndex, currentObservationCardinality);</span>
+<span id="L136"><span class="lineNum">     136</span>              :     }</span>
+<span id="L137"><span class="lineNum">     137</span>              : </span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaUNC tlaBgUNC">           0 :     function beforeQuote(address) external pure virtual override {</span></span>
+<span id="L139"><span class="lineNum">     139</span>              :         // nothing to execute</span>
+<span id="L140"><span class="lineNum">     140</span>              :     }</span>
+<span id="L141"><span class="lineNum">     141</span>              : </span>
+<span id="L142"><span class="lineNum">     142</span>              :     /// @param _pool uniswap V3 pool address</span>
+<span id="L143"><span class="lineNum">     143</span>              :     /// @param _currentObservationIndex the most-recently updated index of the observations array</span>
+<span id="L144"><span class="lineNum">     144</span>              :     /// @param _currentObservationCardinality the current maximum number of observations that are being stored</span>
+<span id="L145"><span class="lineNum">     145</span>              :     /// @return lastObservationTimestamp last observation timestamp</span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaUNC">           0 :     function resolveOldestObservationTimestamp(</span></span>
+<span id="L147"><span class="lineNum">     147</span>              :         IUniswapV3Pool _pool,</span>
+<span id="L148"><span class="lineNum">     148</span>              :         uint16 _currentObservationIndex,</span>
+<span id="L149"><span class="lineNum">     149</span>              :         uint16 _currentObservationCardinality</span>
+<span id="L150"><span class="lineNum">     150</span>              :     )</span>
+<span id="L151"><span class="lineNum">     151</span>              :         public</span>
+<span id="L152"><span class="lineNum">     152</span>              :         view</span>
+<span id="L153"><span class="lineNum">     153</span>              :         virtual</span>
+<span id="L154"><span class="lineNum">     154</span>              :         returns (uint32 lastObservationTimestamp)</span>
+<span id="L155"><span class="lineNum">     155</span>              :     {</span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC tlaBgGNC">           2 :         bool initialized;</span></span>
+<span id="L157"><span class="lineNum">     157</span>              : </span>
+<span id="L158"><span class="lineNum">     158</span> <span class="tlaGNC">           2 :         (</span></span>
+<span id="L159"><span class="lineNum">     159</span>              :             lastObservationTimestamp,,,</span>
+<span id="L160"><span class="lineNum">     160</span>              :             initialized</span>
+<span id="L161"><span class="lineNum">     161</span>              :         ) = _pool.observations((_currentObservationIndex + 1) % _currentObservationCardinality);</span>
+<span id="L162"><span class="lineNum">     162</span>              : </span>
+<span id="L163"><span class="lineNum">     163</span>              :         // if not initialized, we just check id#0 as this will be the oldest</span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">           2 :         if (!initialized) {</span></span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaUNC tlaBgUNC">           0 :             (lastObservationTimestamp,,,) = _pool.observations(0);</span></span>
+<span id="L166"><span class="lineNum">     166</span>              :         }</span>
+<span id="L167"><span class="lineNum">     167</span>              :     }</span>
+<span id="L168"><span class="lineNum">     168</span>              : </span>
+<span id="L169"><span class="lineNum">     169</span>              :     /// @notice Fetches time-weighted average tick using Uniswap V3 oracle</span>
+<span id="L170"><span class="lineNum">     170</span>              :     /// @dev this is based on `OracleLibrary.consult`, we adjusted it to handle `OLD` error, time window will adjust</span>
+<span id="L171"><span class="lineNum">     171</span>              :     /// to available pool observations</span>
+<span id="L172"><span class="lineNum">     172</span>              :     /// @param _pool Address of Uniswap V3 pool that we want to observe</span>
+<span id="L173"><span class="lineNum">     173</span>              :     /// @param _periodForAvgPrice TWAP period in seconds.</span>
+<span id="L174"><span class="lineNum">     174</span>              :     /// Number of seconds for which time-weighted average should be calculated, ie. 1800 means 30 min</span>
+<span id="L175"><span class="lineNum">     175</span>              :     /// @return timeWeightedAverageTick time-weighted average tick from (block.timestamp - period) to block.timestamp</span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaGNC tlaBgGNC">           5 :     function _consult(IUniswapV3Pool _pool, uint32 _periodForAvgPrice)</span></span>
+<span id="L177"><span class="lineNum">     177</span>              :         internal</span>
+<span id="L178"><span class="lineNum">     178</span>              :         view</span>
+<span id="L179"><span class="lineNum">     179</span>              :         virtual</span>
+<span id="L180"><span class="lineNum">     180</span>              :         returns (int24 timeWeightedAverageTick)</span>
+<span id="L181"><span class="lineNum">     181</span>              :     {</span>
+<span id="L182"><span class="lineNum">     182</span> <span class="tlaGNC">           5 :         (uint32 period, int56[] memory tickCumulatives) = _calculatePeriodAndTicks(_pool, _periodForAvgPrice);</span></span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaGNC">           5 :         int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];</span></span>
+<span id="L184"><span class="lineNum">     184</span>              : </span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaGNC">           5 :         timeWeightedAverageTick = int24(tickCumulativesDelta / period);</span></span>
+<span id="L186"><span class="lineNum">     186</span>              : </span>
+<span id="L187"><span class="lineNum">     187</span>              :         // Always round to negative infinity</span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">           5 :         if (tickCumulativesDelta &lt; 0 &amp;&amp; (tickCumulativesDelta % period != 0)) timeWeightedAverageTick--;</span></span>
+<span id="L189"><span class="lineNum">     189</span>              :     }</span>
+<span id="L190"><span class="lineNum">     190</span>              : </span>
+<span id="L191"><span class="lineNum">     191</span>              :     /// @param _pool Address of Uniswap V3 pool</span>
+<span id="L192"><span class="lineNum">     192</span>              :     /// @param _periodForAvgPrice TWAP period in seconds.</span>
+<span id="L193"><span class="lineNum">     193</span>              :     /// Number of seconds for which time-weighted average should be calculated, ie. 1800 means 30 min</span>
+<span id="L194"><span class="lineNum">     194</span>              :     /// @return period Number of seconds in the past to start calculating time-weighted average</span>
+<span id="L195"><span class="lineNum">     195</span>              :     /// @return tickCumulatives Cumulative tick values as of each secondsAgos from the current block timestamp</span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaGNC">           5 :     function _calculatePeriodAndTicks(IUniswapV3Pool _pool, uint32 _periodForAvgPrice)</span></span>
+<span id="L197"><span class="lineNum">     197</span>              :         internal</span>
+<span id="L198"><span class="lineNum">     198</span>              :         view</span>
+<span id="L199"><span class="lineNum">     199</span>              :         virtual</span>
+<span id="L200"><span class="lineNum">     200</span>              :         returns (uint32 period, int56[] memory tickCumulatives)</span>
+<span id="L201"><span class="lineNum">     201</span>              :     {</span>
+<span id="L202"><span class="lineNum">     202</span> <span class="tlaGNC">           5 :         period = _periodForAvgPrice;</span></span>
+<span id="L203"><span class="lineNum">     203</span> <span class="tlaGNC">           5 :         bool old;</span></span>
+<span id="L204"><span class="lineNum">     204</span>              : </span>
+<span id="L205"><span class="lineNum">     205</span> <span class="tlaGNC">           5 :         (tickCumulatives, old) = _observe(_pool, period);</span></span>
+<span id="L206"><span class="lineNum">     206</span>              : </span>
+<span id="L207"><span class="lineNum">     207</span> <span class="tlaGNC">           1 :         if (old) {</span></span>
+<span id="L208"><span class="lineNum">     208</span> <span class="tlaGNC">           1 :             (,, uint16 observationIndex, uint16 currentObservationCardinality,,,) = _pool.slot0();</span></span>
+<span id="L209"><span class="lineNum">     209</span>              : </span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaGNC">           1 :             uint32 latestTimestamp =</span></span>
+<span id="L211"><span class="lineNum">     211</span> <span class="tlaGNC">           1 :                 resolveOldestObservationTimestamp(_pool, observationIndex, currentObservationCardinality);</span></span>
+<span id="L212"><span class="lineNum">     212</span>              : </span>
+<span id="L213"><span class="lineNum">     213</span>              :             // WARNING: please check desc for `OLD_ERROR_HASH`</span>
+<span id="L214"><span class="lineNum">     214</span>              :             // adjusting period to handle the case, where we might have enough observations but query period is beyond</span>
+<span id="L215"><span class="lineNum">     215</span> <span class="tlaGNC">           1 :             period = uint32(block.timestamp - latestTimestamp);</span></span>
+<span id="L216"><span class="lineNum">     216</span>              : </span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaGNC">           1 :             (tickCumulatives, old) = _observe(_pool, period);</span></span>
+<span id="L218"><span class="lineNum">     218</span> <span class="tlaUNC tlaBgUNC">           0 :             if (old) revert(&quot;STILL OLD&quot;);</span></span>
+<span id="L219"><span class="lineNum">     219</span>              :         }</span>
+<span id="L220"><span class="lineNum">     220</span>              :     }</span>
+<span id="L221"><span class="lineNum">     221</span>              : </span>
+<span id="L222"><span class="lineNum">     222</span>              :     /// @param _pool UniV3 pool address</span>
+<span id="L223"><span class="lineNum">     223</span>              :     /// @param _period Number of seconds in the past to start calculating time-weighted average</span>
+<span id="L224"><span class="lineNum">     224</span> <span class="tlaGNC tlaBgGNC">           6 :     function _observe(IUniswapV3Pool _pool, uint32 _period)</span></span>
+<span id="L225"><span class="lineNum">     225</span>              :         internal</span>
+<span id="L226"><span class="lineNum">     226</span>              :         view</span>
+<span id="L227"><span class="lineNum">     227</span>              :         virtual</span>
+<span id="L228"><span class="lineNum">     228</span>              :         returns (int56[] memory tickCumulatives, bool old)</span>
+<span id="L229"><span class="lineNum">     229</span>              :     {</span>
+<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC">           6 :         uint32[] memory secondAgos = new uint32[](2);</span></span>
+<span id="L231"><span class="lineNum">     231</span> <span class="tlaGNC">           6 :         secondAgos[0] = _period;</span></span>
+<span id="L232"><span class="lineNum">     232</span>              :         // secondAgos[1] = 0; // default is 0</span>
+<span id="L233"><span class="lineNum">     233</span>              : </span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">           6 :         try _pool.observe(secondAgos)</span></span>
+<span id="L235"><span class="lineNum">     235</span>              :             returns (int56[] memory ticks, uint160[] memory)</span>
+<span id="L236"><span class="lineNum">     236</span>              :         {</span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC">           5 :             tickCumulatives = ticks;</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">           5 :             old = false;</span></span>
+<span id="L239"><span class="lineNum">     239</span>              :         }</span>
+<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">           1 :         catch (bytes memory reason) {</span></span>
+<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">           1 :             if (keccak256(reason) != OLD_ERROR_HASH) reason.revertBytes(&quot;_observe&quot;);</span></span>
+<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">           1 :             old = true;</span></span>
+<span id="L243"><span class="lineNum">     243</span>              :         }</span>
+<span id="L244"><span class="lineNum">     244</span>              :     }</span>
+<span id="L245"><span class="lineNum">     245</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
