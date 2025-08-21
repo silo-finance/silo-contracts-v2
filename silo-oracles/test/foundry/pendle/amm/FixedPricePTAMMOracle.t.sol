@@ -15,6 +15,15 @@ import {FixedPricePTAMMOracle} from "silo-oracles/contracts/pendle/amm/FixedPric
 contract FixedPricePTAMMOracleTest is Test {
     FixedPricePTAMMOracleFactory factory;
 
+    modifier assumeValidConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) {
+        vm.assume(_config.ptToken != address(0));
+        vm.assume(_config.ptUnderlyingQuoteToken != address(0));
+        vm.assume(_config.ptUnderlyingQuoteToken != _config.ptToken);
+        vm.assume(_config.hardcoddedQuoteToken != _config.ptToken);
+
+        _;
+    }
+
     function setUp() public {
         factory = new FixedPricePTAMMOracleFactory();
     }
@@ -32,7 +41,8 @@ contract FixedPricePTAMMOracleTest is Test {
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(0x4d717868F4Bd14ac8B29Bb6361901e30Ae05e340),
             ptToken: pt,
-            ptUnderlyingQuoteToken: usde
+            ptUnderlyingQuoteToken: usde,
+            hardcoddedQuoteToken: address(1)
         });
 
         IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
@@ -50,11 +60,13 @@ contract FixedPricePTAMMOracleTest is Test {
 
         address pt = 0xB4205a645c7e920BD8504181B1D7f2c5C955C3e7;
         address usde = 0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34; // underlying token of PT
+        address usdc = makeAddr("usdc");
 
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(0x4d717868F4Bd14ac8B29Bb6361901e30Ae05e340),
             ptToken: pt,
-            ptUnderlyingQuoteToken: usde
+            ptUnderlyingQuoteToken: usde,
+            hardcoddedQuoteToken: usdc
         });
 
         IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
@@ -77,7 +89,8 @@ contract FixedPricePTAMMOracleTest is Test {
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(makeAddr("amm")),
             ptToken: makeAddr("ptToken"),
-            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken")
+            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken"),
+            hardcoddedQuoteToken: address(0)
         });
 
         IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
@@ -97,7 +110,8 @@ contract FixedPricePTAMMOracleTest is Test {
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(makeAddr("amm")),
             ptToken: makeAddr("ptToken"),
-            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken")
+            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken"),
+            hardcoddedQuoteToken: address(0)
         });
 
         IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
@@ -113,7 +127,8 @@ contract FixedPricePTAMMOracleTest is Test {
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(makeAddr("amm")),
             ptToken: makeAddr("ptToken"),
-            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken")
+            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken"),
+            hardcoddedQuoteToken: address(0)
         });
 
         IFixedPricePTAMMOracle oracle = factory.create(config, bytes32(0));
@@ -125,14 +140,17 @@ contract FixedPricePTAMMOracleTest is Test {
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_quoteToken --ffi -vv
     */
-    function test_ptamm_quoteToken_fuzz(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) public {
-        vm.assume(_config.ptUnderlyingQuoteToken != address(0));
-        vm.assume(_config.ptToken != address(0));
-        vm.assume(_config.ptUnderlyingQuoteToken != _config.ptToken);
-
+    function test_ptamm_quoteToken_fuzz(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) 
+        public 
+        assumeValidConfig(_config) 
+    {
         IFixedPricePTAMMOracle oracle = factory.create(_config, bytes32(0));
 
-        assertEq(oracle.quoteToken(), _config.ptUnderlyingQuoteToken);
+        address expectedQuoteToken = _config.hardcoddedQuoteToken == address(0) 
+            ? _config.ptUnderlyingQuoteToken 
+            : _config.hardcoddedQuoteToken;
+
+        assertEq(oracle.quoteToken(), expectedQuoteToken, "Quote token should match");
     }
 
     /*
