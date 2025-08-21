@@ -35,12 +35,46 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         vm.assume(_config.ptUnderlyingQuoteToken != address(0));
         vm.assume(_config.ptUnderlyingQuoteToken != _config.ptToken);
 
-        address predictedAddress = factory.predictAddress(_deployer, _externalSalt);
+        address predictedAddress = factory.predictAddress(_config, _deployer, _externalSalt);
 
         vm.prank(_deployer);
         address oracle = address(factory.create(_config, _externalSalt));
 
         assertEq(oracle, predictedAddress, "Predicted address does not match");
+        
+        address oracle2 = address(factory.create(_config, _externalSalt));
+
+        address predictedAddress2 = factory.predictAddress(_config, _deployer, _externalSalt);
+
+        assertEq(
+            predictedAddress, 
+            predictedAddress2, 
+            "predicted addresses should be the same if we reuse the same config"
+        );
+
+        assertEq(oracle2, oracle, "Oracle addresses should be the same if we reuse the same config");
+    }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_resolveExistingOracle --ffi -vv
+    */
+    function test_ptamm_resolveExistingOracle() public {
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
+            amm: IPendleAMM(makeAddr("amm")),
+            ptToken: makeAddr("ptToken"),
+            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken")
+        });
+
+        bytes32 configId = factory.hashConfig(config);
+
+        address existingOracle = factory.resolveExistingOracle(configId);
+
+        assertEq(existingOracle, address(0), "No existing oracle should be found");
+
+        address oracle = address(factory.create(config, bytes32(0)));
+
+        existingOracle = factory.resolveExistingOracle(configId);
+        assertEq(existingOracle, address(oracle), "Existing oracle should be found");
     }
 
     /*

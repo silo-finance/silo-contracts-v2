@@ -23,16 +23,13 @@ contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory, IFixedPr
     {
         bytes32 id = hashConfig(_config);
 
-        IFixedPricePTAMMOracleConfig oracleConfig = IFixedPricePTAMMOracleConfig(getConfigAddress[id]);
+        address existingOracle = resolveExistingOracle(id);
 
-        if (address(oracleConfig) != address(0)) {
-            // config already exists, so oracle exists as well
-            return IFixedPricePTAMMOracle(getOracleAddress[address(oracleConfig)]);
-        }
+        if (existingOracle != address(0)) return IFixedPricePTAMMOracle(existingOracle);
 
         verifyConfig(_config);
 
-        oracleConfig = new FixedPricePTAMMOracleConfig(_config);
+        IFixedPricePTAMMOracleConfig oracleConfig = new FixedPricePTAMMOracleConfig(_config);
         oracle = IFixedPricePTAMMOracle(Clones.cloneDeterministic(ORACLE_IMPLEMENTATION, _salt(_externalSalt)));
 
         _saveOracle(address(oracle), address(oracleConfig), id);
@@ -40,11 +37,19 @@ contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory, IFixedPr
         oracle.initialize(oracleConfig);
     }
 
-    function predictAddress(address _deployer, bytes32 _externalSalt)
+    function predictAddress(
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config, 
+        address _deployer, 
+        bytes32 _externalSalt
+    )
         external
         view
         returns (address predictedAddress)
     {
+        bytes32 id = hashConfig(_config);
+        address existingOracle = resolveExistingOracle(id);
+        if (existingOracle != address(0)) return existingOracle;
+
         require(_deployer != address(0), DeployerCannotBeZero());
 
         predictedAddress =
@@ -64,5 +69,10 @@ contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory, IFixedPr
         require(_config.ptUnderlyingQuoteToken != address(0), AddressZero());
         require(_config.ptToken != address(0), AddressZero());
         require(_config.ptUnderlyingQuoteToken != _config.ptToken, TokensAreTheSame());
+    }
+
+    function resolveExistingOracle(bytes32 _configId) public view virtual returns (address oracle) {
+        address oracleConfig = getConfigAddress[_configId];
+        return oracleConfig == address(0) ? address(0) : getOracleAddress[oracleConfig];
     }
 }
