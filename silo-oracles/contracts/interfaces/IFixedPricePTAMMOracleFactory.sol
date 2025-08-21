@@ -15,7 +15,7 @@ interface IFixedPricePTAMMOracleFactory {
 
     function resolveExistingOracle(bytes32 _configId) external view returns (address oracle);
 
-    function hashConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) 
+    function hashConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
         external
         view
         returns (bytes32 configId);
