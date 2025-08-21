@@ -18,6 +18,15 @@ import {IPendleAMM} from "silo-oracles/contracts/interfaces/IPendleAMM.sol";
 contract FixedPricePTAMMOracleFactoryTest is Test {
     FixedPricePTAMMOracleFactory immutable factory;
 
+    modifier assumeValidConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) {
+        vm.assume(_config.ptToken != address(0));
+        vm.assume(_config.ptUnderlyingQuoteToken != address(0));
+        vm.assume(_config.ptUnderlyingQuoteToken != _config.ptToken);
+        vm.assume(_config.hardcoddedQuoteToken != _config.ptToken);
+
+        _;
+    }
+
     constructor() {
         factory = new FixedPricePTAMMOracleFactory();
     }
@@ -29,11 +38,11 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         address _deployer,
         bytes32 _externalSalt,
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config
-    ) public {
+    ) 
+        public 
+        assumeValidConfig(_config) 
+    {
         vm.assume(_deployer != address(0));
-        vm.assume(_config.ptToken != address(0));
-        vm.assume(_config.ptUnderlyingQuoteToken != address(0));
-        vm.assume(_config.ptUnderlyingQuoteToken != _config.ptToken);
 
         address predictedAddress = factory.predictAddress(_config, _deployer, _externalSalt);
 
@@ -41,15 +50,13 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         address oracle = address(factory.create(_config, _externalSalt));
 
         assertEq(oracle, predictedAddress, "Predicted address does not match");
-        
+
         address oracle2 = address(factory.create(_config, _externalSalt));
 
         address predictedAddress2 = factory.predictAddress(_config, _deployer, _externalSalt);
 
         assertEq(
-            predictedAddress, 
-            predictedAddress2, 
-            "predicted addresses should be the same if we reuse the same config"
+            predictedAddress, predictedAddress2, "predicted addresses should be the same if we reuse the same config"
         );
 
         assertEq(oracle2, oracle, "Oracle addresses should be the same if we reuse the same config");
@@ -62,7 +69,8 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(makeAddr("amm")),
             ptToken: makeAddr("ptToken"),
-            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken")
+            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken"),
+            hardcoddedQuoteToken: address(0)
         });
 
         bytes32 configId = factory.hashConfig(config);
@@ -84,11 +92,10 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         address _deployer,
         bytes32 _externalSalt,
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config
-    ) public {
-        vm.assume(_deployer != address(0));
-        vm.assume(_config.ptToken != address(0));
-        vm.assume(_config.ptUnderlyingQuoteToken != address(0));
-        vm.assume(_config.ptUnderlyingQuoteToken != _config.ptToken);
+    ) 
+        public 
+        assumeValidConfig(_config) 
+    {
 
         vm.prank(_deployer);
         address oracle1 = address(factory.create(_config, _externalSalt));
@@ -100,22 +107,30 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_reorg --ffi -vv
     */
-    function test_ptamm_reorg(address _eoa1, address _eoa2) public {
-        IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
-            amm: IPendleAMM(makeAddr("amm")),
-            ptToken: makeAddr("ptToken"),
-            ptUnderlyingQuoteToken: makeAddr("ptUnderlyingQuoteToken")
-        });
+    function test_ptamm_reorg(
+        address _eoa1,
+        address _eoa2,
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config1,
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config2
+    ) 
+        public 
+        assumeValidConfig(_config1) 
+        assumeValidConfig(_config2) 
+    {
+        vm.assume(_eoa1 != address(0));
+        vm.assume(_eoa2 != address(0));
+        vm.assume(_eoa1 != _eoa2);
+        vm.assume(_hashConfig(_config1) != _hashConfig(_config2));
 
         uint256 snapshot = vm.snapshotState();
 
         vm.prank(_eoa1);
-        address oracle1 = address(factory.create(config, bytes32(0)));
+        address oracle1 = address(factory.create(_config1, bytes32(0)));
 
         vm.revertToState(snapshot);
 
         vm.prank(_eoa2);
-        address oracle2 = address(factory.create(config, bytes32(0)));
+        address oracle2 = address(factory.create(_config2, bytes32(0)));
 
         assertNotEq(oracle1, oracle2, "Oracle addresses should be different if we reorg");
     }
@@ -126,11 +141,8 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
     function test_ptamm_verifyConfig_pass_fuzz(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
         public
         view
+        assumeValidConfig(_config)
     {
-        vm.assume(_config.ptToken != address(0));
-        vm.assume(_config.ptUnderlyingQuoteToken != address(0));
-        vm.assume(_config.ptUnderlyingQuoteToken != _config.ptToken);
-
         factory.verifyConfig(_config);
     }
 
@@ -155,7 +167,12 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         vm.expectRevert(abi.encodeWithSelector(IFixedPricePTAMMOracleFactory.TokensAreTheSame.selector));
         factory.verifyConfig(config);
 
+        config.hardcoddedQuoteToken = address(1);
+        vm.expectRevert(abi.encodeWithSelector(IFixedPricePTAMMOracleFactory.TokensAreTheSame.selector));
+        factory.verifyConfig(config);
+
         config.ptUnderlyingQuoteToken = address(2);
+        config.hardcoddedQuoteToken = address(0);
         factory.verifyConfig(config); // pass
     }
 
@@ -195,12 +212,37 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory config = IFixedPricePTAMMOracleConfig.DeploymentConfig({
             amm: IPendleAMM(0x4d717868F4Bd14ac8B29Bb6361901e30Ae05e340),
             ptToken: address(1),
-            ptUnderlyingQuoteToken: address(2)
+            ptUnderlyingQuoteToken: address(2),
+            hardcoddedQuoteToken: address(0)
         });
 
         address oracle = address(factory.create(config, bytes32(0)));
 
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
         IFixedPricePTAMMOracle(oracle).initialize(IFixedPricePTAMMOracleConfig(address(1)));
+    }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_ptamm_getConfig --ffi -vv
+    */
+    function test_ptamm_getConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
+        public
+        assumeValidConfig(_config)
+    {
+        IFixedPricePTAMMOracle oracle = factory.create(_config, bytes32(0));
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory cfg = oracle.oracleConfig().getConfig();
+
+        assertEq(address(cfg.amm), address(_config.amm), "AMM should match");
+        assertEq(cfg.ptToken, _config.ptToken, "PT token should match");
+        assertEq(cfg.ptUnderlyingQuoteToken, _config.ptUnderlyingQuoteToken, "PT underlying quote token should match");
+        assertEq(cfg.hardcoddedQuoteToken, _config.hardcoddedQuoteToken, "Hardcoded quote token should match");
+    }
+
+    function _hashConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
+        internal
+        view
+        returns (bytes32)
+    {
+        return keccak256(abi.encode(_config));
     }
 }

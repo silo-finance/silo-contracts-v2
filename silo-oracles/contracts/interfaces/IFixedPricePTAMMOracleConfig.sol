@@ -7,11 +7,15 @@ interface IFixedPricePTAMMOracleConfig {
     /// @param amm Pendle AMM contract address,
     /// see https://pendle.notion.site/Cross-chain-PT-21f567a21d3780c5b7c9fe055565d762
     /// @param ptToken PT token address
-    /// @param ptUnderlyingQuoteToken quote token address, that must be underlying token of PT
+    /// @param ptUnderlyingQuoteToken quote token address, that must be underlying token of PT,
+    /// this token will be used to query AMM for price of PT
+    /// @param hardcoddedQuoteToken quote token address, if 0, then quote token is ptUnderlyingQuoteToken,
+    /// this token will be used for quoteToken() function in oracle
     struct DeploymentConfig {
         IPendleAMM amm;
         address ptToken;
         address ptUnderlyingQuoteToken;
+        address hardcoddedQuoteToken;
     }
 
     function getConfig() external view returns (DeploymentConfig memory cfg);

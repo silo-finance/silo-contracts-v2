@@ -38,8 +38,8 @@ contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory, IFixedPr
     }
 
     function predictAddress(
-        IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config, 
-        address _deployer, 
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config,
+        address _deployer,
         bytes32 _externalSalt
     )
         external
@@ -69,6 +69,7 @@ contract FixedPricePTAMMOracleFactory is Create2Factory, OracleFactory, IFixedPr
         require(_config.ptUnderlyingQuoteToken != address(0), AddressZero());
         require(_config.ptToken != address(0), AddressZero());
         require(_config.ptUnderlyingQuoteToken != _config.ptToken, TokensAreTheSame());
+        require(_config.hardcoddedQuoteToken != _config.ptToken, TokensAreTheSame());
     }
 
     function resolveExistingOracle(bytes32 _configId) public view virtual returns (address oracle) {

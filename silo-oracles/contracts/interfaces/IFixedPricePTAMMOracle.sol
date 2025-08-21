@@ -14,4 +14,6 @@ interface IFixedPricePTAMMOracle is ISiloOracle {
     error ZeroQuote();
 
     function initialize(IFixedPricePTAMMOracleConfig _configAddress) external;
+
+    function oracleConfig() external view returns (IFixedPricePTAMMOracleConfig);
 }

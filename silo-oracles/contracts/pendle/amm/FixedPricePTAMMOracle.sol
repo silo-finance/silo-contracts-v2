@@ -40,7 +40,7 @@ contract FixedPricePTAMMOracle is IFixedPricePTAMMOracle, Initializable {
 
     /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
-        return oracleConfig.getConfig().ptUnderlyingQuoteToken;
+        return oracleConfig.getConfig().hardcoddedQuoteToken;
     }
 
     /// @inheritdoc ISiloOracle
