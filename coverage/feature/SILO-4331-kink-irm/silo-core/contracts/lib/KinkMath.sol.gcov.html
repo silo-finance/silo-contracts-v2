@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-08-22 07:02:09</td>
+            <td class="headerValue">2025-08-22 12:51:36</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -64,24 +64,24 @@
 <span id="L2"><span class="lineNum">       2</span>              : pragma solidity ^0.8.0;</span>
 <span id="L3"><span class="lineNum">       3</span>              : </span>
 <span id="L4"><span class="lineNum">       4</span>              : library KinkMath {</span>
-<span id="L5"><span class="lineNum">       5</span> <span class="tlaGNC tlaBgGNC">      178708 :     function isBetween(int256 _var, int256 _lowIncluded, int256 _hiIncluded) internal pure returns (bool) {</span></span>
-<span id="L6"><span class="lineNum">       6</span> <span class="tlaGNC">      178708 :         return (_lowIncluded &lt;=_var &amp;&amp; _var &lt;= _hiIncluded);</span></span>
+<span id="L5"><span class="lineNum">       5</span> <span class="tlaGNC tlaBgGNC">      190720 :     function isBetween(int256 _var, int256 _lowIncluded, int256 _hiIncluded) internal pure returns (bool) {</span></span>
+<span id="L6"><span class="lineNum">       6</span> <span class="tlaGNC">      190720 :         return (_lowIncluded &lt;=_var &amp;&amp; _var &lt;= _hiIncluded);</span></span>
 <span id="L7"><span class="lineNum">       7</span>              :     }</span>
 <span id="L8"><span class="lineNum">       8</span>              : </span>
-<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC">        1360 :     function isInBelow(int256 _var, int256 _lowIncluded, int256 _hiExcluded) internal pure returns (bool) {</span></span>
-<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">        1360 :         return (_lowIncluded &lt;=_var &amp;&amp; _var &lt; _hiExcluded);</span></span>
+<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC">        1872 :     function isInBelow(int256 _var, int256 _lowIncluded, int256 _hiExcluded) internal pure returns (bool) {</span></span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">        1872 :         return (_lowIncluded &lt;=_var &amp;&amp; _var &lt; _hiExcluded);</span></span>
 <span id="L11"><span class="lineNum">      11</span>              :     }</span>
 <span id="L12"><span class="lineNum">      12</span>              : </span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">        1256 :     function isInAbove(int256 _var, int256 _lowExcluded, int256 _hiIncluded) internal pure returns (bool) {</span></span>
-<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">        1256 :         return (_lowExcluded &lt; _var &amp;&amp; _var &lt;= _hiIncluded);</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">        1512 :     function isInAbove(int256 _var, int256 _lowExcluded, int256 _hiIncluded) internal pure returns (bool) {</span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">        1512 :         return (_lowExcluded &lt; _var &amp;&amp; _var &lt;= _hiIncluded);</span></span>
 <span id="L15"><span class="lineNum">      15</span>              :     }</span>
 <span id="L16"><span class="lineNum">      16</span>              : </span>
-<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">        3256 :     function isInside(int256 _var, int256 _lowExcluded, int256 _hiExcluded) internal pure returns (bool) {</span></span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">        3256 :         return (_lowExcluded &lt; _var &amp;&amp; _var &lt; _hiExcluded);</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">        4024 :     function isInside(int256 _var, int256 _lowExcluded, int256 _hiExcluded) internal pure returns (bool) {</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">        4024 :         return (_lowExcluded &lt; _var &amp;&amp; _var &lt; _hiExcluded);</span></span>
 <span id="L19"><span class="lineNum">      19</span>              :     }</span>
 <span id="L20"><span class="lineNum">      20</span>              : </span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">        4000 :     function willOverflowOnCastToInt256(uint256 _value) internal pure returns (bool) {</span></span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">        4000 :         return _value &gt; uint256(type(int256).max);</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">        3990 :     function willOverflowOnCastToInt256(uint256 _value) internal pure returns (bool) {</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">        3990 :         return _value &gt; uint256(type(int256).max);</span></span>
 <span id="L23"><span class="lineNum">      23</span>              :     }</span>
 <span id="L24"><span class="lineNum">      24</span>              : }</span>
         </pre>
