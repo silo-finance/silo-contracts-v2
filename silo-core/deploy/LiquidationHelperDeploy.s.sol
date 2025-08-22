@@ -14,18 +14,17 @@ import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/l
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 /*
-    FOUNDRY_PROFILE=core AGGREGATOR=1INCH \
+    FOUNDRY_PROFILE=core AGGREGATOR=ENSO \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
-        --ffi --rpc-url $RPC_SONIC \
+        --ffi --rpc-url $RPC_AVALANCHE \
         --broadcast --verify
 
     Resume verification:
     FOUNDRY_PROFILE=core AGGREGATOR=ODOS \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
-        --ffi --rpc-url $RPC_INK \
+        --ffi --rpc-url $RPC_MAINNET \
         --verify \
         --verifier blockscout \
-        --verifier-url $VERIFIER_URL_INK \
         --private-key $PRIVATE_KEY \
         --resume
 
