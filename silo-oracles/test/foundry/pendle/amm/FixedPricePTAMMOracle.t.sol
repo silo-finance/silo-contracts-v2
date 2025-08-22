@@ -146,11 +146,9 @@ contract FixedPricePTAMMOracleTest is Test {
     {
         IFixedPricePTAMMOracle oracle = factory.create(_config, bytes32(0));
 
-        address expectedQuoteToken = _config.hardcoddedQuoteToken == address(0) 
-            ? _config.ptUnderlyingQuoteToken 
-            : _config.hardcoddedQuoteToken;
+        IFixedPricePTAMMOracle oracle = factory.create(_config, bytes32(0));
 
-        assertEq(oracle.quoteToken(), expectedQuoteToken, "Quote token should match");
+        assertEq(oracle.quoteToken(), _config.hardcoddedQuoteToken, "Quote token should match");
     }
 
     /*
