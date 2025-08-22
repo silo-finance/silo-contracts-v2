@@ -32,6 +32,7 @@ import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
+import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 
 /// @dev use `SiloDeployWithDeployerOwner` or `SiloDeployWithHookReceiverOwner`
 abstract contract SiloDeploy is CommonDeploy {
@@ -466,7 +467,7 @@ abstract contract SiloDeploy is CommonDeploy {
 
         if (assetDecimals != 0) {
             uint256 quoteTokenPrice = oracle.quote(10 ** assetDecimals, _asset);
-            console2.log("\t\tquote", quoteTokenPrice);
+            console2.log("\t\tquote %s\n", PriceFormatter.formatPriceInE18(quoteTokenPrice));
         }
     }
 

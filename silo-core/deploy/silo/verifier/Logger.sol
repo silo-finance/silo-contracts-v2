@@ -43,6 +43,7 @@ contract Logger is Test {
         uint256 amount;
         string name;
         bool logExponentialNotation; // will log 1e123 instead of 1000...0000
+        bool quoteForOneToken; // if we checking price for one token (10 ^ decimals)
     }
 
     struct OldChainlinkV3Config {
@@ -218,7 +219,7 @@ contract Logger is Test {
 
 
         console2.log("\n\tQuotes for different amounts:");
-        (QuoteNamedAmount[] memory amountsToQuote) = _getAmountsToQuote(baseTokenDecimals);
+        QuoteNamedAmount[] memory amountsToQuote = _getAmountsToQuote(baseTokenDecimals);
 
         for (uint i; i < amountsToQuote.length; i++) {
             _printPrice(_oracle, _baseToken, amountsToQuote[i]);
@@ -474,6 +475,14 @@ contract Logger is Test {
             } else {
                 console2.log("\tPrice for %s = %s", _quoteNamedAmount.name, price);
             }
+
+            if (_quoteNamedAmount.quoteForOneToken && (price < 0.0001e18 || price > 200_000e18)) {
+                console2.log(
+                    "\t", 
+                    WARNING_SYMBOL, 
+                    "Price looks odd, check normalization, we expect 18 decimals for price \n"
+                );
+            }
         } else {
             console2.log("\t", WARNING_SYMBOL, "Price reverts for", _quoteNamedAmount.name);
         }
@@ -490,61 +499,71 @@ contract Logger is Test {
         amountsToQuote[0] = QuoteNamedAmount({
             amount: 1,
             name: "1 wei (lowest amount)",
-            logExponentialNotation: false
+            logExponentialNotation: false,
+            quoteForOneToken: false
         });
 
         amountsToQuote[1] = QuoteNamedAmount({
             amount: 10,
             name: "10 wei",
-            logExponentialNotation: false
+            logExponentialNotation: false,
+            quoteForOneToken: false
         });
 
         amountsToQuote[2] = QuoteNamedAmount({
             amount: oneToken / 10,
             name: "0.1 token",
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: false
         });
 
         amountsToQuote[3] = QuoteNamedAmount({
             amount: oneToken / 2,
             name: "0.5 token",
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: false
         });
 
         amountsToQuote[4] = QuoteNamedAmount({
             amount: oneToken,
             name: string.concat("1 token in own decimals (10^", Strings.toString(_baseTokenDecimals), ")"),
-            logExponentialNotation: false
+            logExponentialNotation: false,
+            quoteForOneToken: true
         });
 
         amountsToQuote[5] = QuoteNamedAmount({
             amount: oneToken,
             name: string.concat("1 token in own decimals (10^", Strings.toString(_baseTokenDecimals), ") exp format"),
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: true
         });
 
         amountsToQuote[6] = QuoteNamedAmount({
             amount: 100 * oneToken,
             name: "100 tokens",
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: false
         });
 
         amountsToQuote[7] = QuoteNamedAmount({
             amount: 10_000 * oneToken,
             name: "10,000 tokens",
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: false
         });
 
         amountsToQuote[8] = QuoteNamedAmount({
             amount: 10**36,
             name: "10**36 wei",
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: false
         });
 
         amountsToQuote[9] = QuoteNamedAmount({
             amount: 10**20 * oneToken,
             name: "10**20 tokens (More than USA GDP if the token worth at least 0.001 cent)",
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: false
         });
     }
 }
