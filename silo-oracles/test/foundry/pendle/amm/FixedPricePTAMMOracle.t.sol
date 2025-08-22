@@ -146,8 +146,6 @@ contract FixedPricePTAMMOracleTest is Test {
     {
         IFixedPricePTAMMOracle oracle = factory.create(_config, bytes32(0));
 
-        IFixedPricePTAMMOracle oracle = factory.create(_config, bytes32(0));
-
         assertEq(oracle.quoteToken(), _config.hardcoddedQuoteToken, "Quote token should match");
     }
 
