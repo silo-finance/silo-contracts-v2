@@ -14,9 +14,9 @@ import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/l
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 /*
-    FOUNDRY_PROFILE=core AGGREGATOR=ODOS \
+    FOUNDRY_PROFILE=core AGGREGATOR=ENSO \
         forge script silo-core/deploy/LiquidationHelperDeploy.s.sol:LiquidationHelperDeploy \
-        --ffi --rpc-url $RPC_MAINNET \
+        --ffi --rpc-url $RPC_AVALANCHE \
         --broadcast --verify
 
     Resume verification:
