@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-08-27 09:02:52</td>
+            <td class="headerValue">2025-08-27 11:08:32</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -74,24 +74,24 @@
 <span id="L12"><span class="lineNum">      12</span>              :     bytes4 internal immutable _SY_RATE_METHOD_SELECTOR;</span>
 <span id="L13"><span class="lineNum">      13</span>              : </span>
 <span id="L14"><span class="lineNum">      14</span>              :     /// @dev all verification should be done by factory</span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC tlaBgGNC">        2057 :     constructor(OracleConfig memory _cfg) {</span></span>
-<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">        2057 :         require(_cfg.linearOracle != address(0), LinearOracleCannotBeZero());</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC tlaBgGNC">        2058 :     constructor(OracleConfig memory _cfg) {</span></span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">        2058 :         require(_cfg.linearOracle != address(0), LinearOracleCannotBeZero());</span></span>
 <span id="L17"><span class="lineNum">      17</span>              : </span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">        2057 :         _LINEAR_ORACLE = _cfg.linearOracle;</span></span>
-<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">        2057 :         _PT_TOKEN = _cfg.ptToken;</span></span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">        2057 :         _SY_TOKEN = _cfg.syToken;</span></span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">        2057 :         _EXPECTED_UNDERLYING_TOKEN = _cfg.expectedUnderlyingToken;</span></span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">        2057 :         _HARDCODED_QUOTE_TOKEN = _cfg.hardcodedQuoteToken;</span></span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">        2057 :         _SY_RATE_METHOD_SELECTOR = _cfg.syRateMethodSelector;</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">        2058 :         _LINEAR_ORACLE = _cfg.linearOracle;</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">        2058 :         _PT_TOKEN = _cfg.ptToken;</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">        2058 :         _SY_TOKEN = _cfg.syToken;</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">        2058 :         _EXPECTED_UNDERLYING_TOKEN = _cfg.expectedUnderlyingToken;</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">        2058 :         _HARDCODED_QUOTE_TOKEN = _cfg.hardcodedQuoteToken;</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">        2058 :         _SY_RATE_METHOD_SELECTOR = _cfg.syRateMethodSelector;</span></span>
 <span id="L24"><span class="lineNum">      24</span>              :     }</span>
 <span id="L25"><span class="lineNum">      25</span>              : </span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">         519 :     function getConfig() external view virtual returns (OracleConfig memory cfg) {</span></span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">         519 :         cfg.linearOracle = _LINEAR_ORACLE;</span></span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">         519 :         cfg.ptToken = _PT_TOKEN;</span></span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">         519 :         cfg.syToken = _SY_TOKEN;</span></span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">         519 :         cfg.expectedUnderlyingToken = _EXPECTED_UNDERLYING_TOKEN;</span></span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">         519 :         cfg.hardcodedQuoteToken = _HARDCODED_QUOTE_TOKEN;</span></span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">         519 :         cfg.syRateMethodSelector = _SY_RATE_METHOD_SELECTOR;</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">         522 :     function getConfig() external view virtual returns (OracleConfig memory cfg) {</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">         522 :         cfg.linearOracle = _LINEAR_ORACLE;</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">         522 :         cfg.ptToken = _PT_TOKEN;</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">         522 :         cfg.syToken = _SY_TOKEN;</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">         522 :         cfg.expectedUnderlyingToken = _EXPECTED_UNDERLYING_TOKEN;</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">         522 :         cfg.hardcodedQuoteToken = _HARDCODED_QUOTE_TOKEN;</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">         522 :         cfg.syRateMethodSelector = _SY_RATE_METHOD_SELECTOR;</span></span>
 <span id="L33"><span class="lineNum">      33</span>              :     }</span>
 <span id="L34"><span class="lineNum">      34</span>              : }</span>
         </pre>

@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-08-27 09:02:52</td>
+            <td class="headerValue">2025-08-27 11:08:32</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -82,36 +82,36 @@
 <span id="L20"><span class="lineNum">      20</span>              : contract PTLinearOracleFactory is Create2Factory, OracleFactory, IPTLinearOracleFactory {</span>
 <span id="L21"><span class="lineNum">      21</span>              :     ISparkLinearDiscountOracleFactory public immutable PENDLE_LINEAR_ORACLE_FACTORY;</span>
 <span id="L22"><span class="lineNum">      22</span>              : </span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">          22 :     constructor(address _pendleLinearOracleFactory) OracleFactory(address(new PTLinearOracle())) {</span></span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">          22 :         require(_pendleLinearOracleFactory != address(0), AddressZero());</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">          23 :     constructor(address _pendleLinearOracleFactory) OracleFactory(address(new PTLinearOracle())) {</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">          23 :         require(_pendleLinearOracleFactory != address(0), AddressZero());</span></span>
 <span id="L25"><span class="lineNum">      25</span>              : </span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">          22 :         PENDLE_LINEAR_ORACLE_FACTORY = ISparkLinearDiscountOracleFactory(_pendleLinearOracleFactory);</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">          23 :         PENDLE_LINEAR_ORACLE_FACTORY = ISparkLinearDiscountOracleFactory(_pendleLinearOracleFactory);</span></span>
 <span id="L27"><span class="lineNum">      27</span>              :     }</span>
 <span id="L28"><span class="lineNum">      28</span>              : </span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">        2569 :     function create(DeploymentConfig memory _config, bytes32 _externalSalt)</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">        2570 :     function create(DeploymentConfig memory _config, bytes32 _externalSalt)</span></span>
 <span id="L30"><span class="lineNum">      30</span>              :         external</span>
 <span id="L31"><span class="lineNum">      31</span>              :         virtual</span>
 <span id="L32"><span class="lineNum">      32</span>              :         returns (IPTLinearOracle oracle)</span>
 <span id="L33"><span class="lineNum">      33</span>              :     {</span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">        2569 :         IPTLinearOracleConfig.OracleConfig memory oracleConfig = createAndVerifyConfig(_config);</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">        2570 :         IPTLinearOracleConfig.OracleConfig memory oracleConfig = createAndVerifyConfig(_config);</span></span>
 <span id="L35"><span class="lineNum">      35</span>              : </span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">        2569 :         bytes32 id = hashConfig(oracleConfig);</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">        2570 :         bytes32 id = hashConfig(oracleConfig);</span></span>
 <span id="L37"><span class="lineNum">      37</span>              : </span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">        2569 :         address existingOracle = resolveExistingOracle(id);</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">        2570 :         address existingOracle = resolveExistingOracle(id);</span></span>
 <span id="L39"><span class="lineNum">      39</span>              : </span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">        2569 :         if (existingOracle != address(0)) return IPTLinearOracle(existingOracle);</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">        2570 :         if (existingOracle != address(0)) return IPTLinearOracle(existingOracle);</span></span>
 <span id="L41"><span class="lineNum">      41</span>              : </span>
-<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">        2057 :         oracleConfig.linearOracle = PENDLE_LINEAR_ORACLE_FACTORY.createWithPt({</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">        2058 :         oracleConfig.linearOracle = PENDLE_LINEAR_ORACLE_FACTORY.createWithPt({</span></span>
 <span id="L43"><span class="lineNum">      43</span>              :             pt: _config.ptMarket, </span>
 <span id="L44"><span class="lineNum">      44</span>              :             baseDiscountPerYear: _config.maxYield</span>
 <span id="L45"><span class="lineNum">      45</span>              :         });</span>
 <span id="L46"><span class="lineNum">      46</span>              : </span>
-<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">        2057 :         IPTLinearOracleConfig oracleConfigAddress = new PTLinearOracleConfig(oracleConfig);</span></span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">        2057 :         oracle = IPTLinearOracle(Clones.cloneDeterministic(ORACLE_IMPLEMENTATION, _salt(_externalSalt)));</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">        2058 :         IPTLinearOracleConfig oracleConfigAddress = new PTLinearOracleConfig(oracleConfig);</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">        2058 :         oracle = IPTLinearOracle(Clones.cloneDeterministic(ORACLE_IMPLEMENTATION, _salt(_externalSalt)));</span></span>
 <span id="L49"><span class="lineNum">      49</span>              : </span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">        2057 :         _saveOracle(address(oracle), address(oracleConfigAddress), id);</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">        2058 :         _saveOracle(address(oracle), address(oracleConfigAddress), id);</span></span>
 <span id="L51"><span class="lineNum">      51</span>              : </span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">        2057 :         oracle.initialize(oracleConfigAddress, _config.syRateMethod);</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">        2058 :         oracle.initialize(oracleConfigAddress, _config.syRateMethod);</span></span>
 <span id="L53"><span class="lineNum">      53</span>              :     }</span>
 <span id="L54"><span class="lineNum">      54</span>              : </span>
 <span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">         512 :     function predictAddress(DeploymentConfig memory _config, address _deployer, bytes32 _externalSalt)</span></span>
@@ -139,9 +139,9 @@
 <span id="L77"><span class="lineNum">      77</span>              :     {</span>
 <span id="L78"><span class="lineNum">      78</span>              :         // for ID generation we using address(0) because linearOracleFactory deploy PTLinearOracle every time</span>
 <span id="L79"><span class="lineNum">      79</span>              :         // even for the same config</span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">        3593 :         require(_config.linearOracle == address(0), AddressZero());</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">        3594 :         require(_config.linearOracle == address(0), AddressZero());</span></span>
 <span id="L81"><span class="lineNum">      81</span>              : </span>
-<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">        3593 :         configId = keccak256(abi.encode(_config));</span></span>
+<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">        3594 :         configId = keccak256(abi.encode(_config));</span></span>
 <span id="L83"><span class="lineNum">      83</span>              :     }</span>
 <span id="L84"><span class="lineNum">      84</span>              : </span>
 <span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">         522 :     function createAndVerifyConfig(DeploymentConfig memory _config)</span></span>
@@ -150,11 +150,11 @@
 <span id="L88"><span class="lineNum">      88</span>              :         virtual</span>
 <span id="L89"><span class="lineNum">      89</span>              :         returns (IPTLinearOracleConfig.OracleConfig memory oracleConfig)</span>
 <span id="L90"><span class="lineNum">      90</span>              :     {</span>
-<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">        3603 :         require(_config.maxYield &lt; 1e18, InvalidMaxYield());</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">        3604 :         require(_config.maxYield &lt; 1e18, InvalidMaxYield());</span></span>
 <span id="L92"><span class="lineNum">      92</span>              : </span>
-<span id="L93"><span class="lineNum">      93</span> <span class="tlaGNC">        3602 :         require(_config.expectedUnderlyingToken != address(0), AddressZero());</span></span>
-<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">        3601 :         require(_config.hardcodedQuoteToken != address(0), AddressZero());</span></span>
-<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">        3600 :         require(bytes(_config.syRateMethod).length &gt; 2, InvalidSyRateMethod()); // `f()` is the minimum length</span></span>
+<span id="L93"><span class="lineNum">      93</span> <span class="tlaGNC">        3603 :         require(_config.expectedUnderlyingToken != address(0), AddressZero());</span></span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">        3602 :         require(_config.hardcodedQuoteToken != address(0), AddressZero());</span></span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">        3601 :         require(bytes(_config.syRateMethod).length &gt; 2, InvalidSyRateMethod()); // `f()` is the minimum length</span></span>
 <span id="L96"><span class="lineNum">      96</span>              : </span>
 <span id="L97"><span class="lineNum">      97</span>              :         /*</span>
 <span id="L98"><span class="lineNum">      98</span>              :             Pendle Markets can have multiple PTs (one per maturity). PTs are issued per tokenization </span>
@@ -163,9 +163,9 @@
 <span id="L101"><span class="lineNum">     101</span>              : </span>
 <span id="L102"><span class="lineNum">     102</span>              :             In case we will have different PT as expected, quote will fail, because base asset will not match.</span>
 <span id="L103"><span class="lineNum">     103</span>              :         */</span>
-<span id="L104"><span class="lineNum">     104</span> <span class="tlaGNC">        3599 :         (address syToken, address ptToken,) = IPendleMarketV3Like(_config.ptMarket).readTokens();</span></span>
+<span id="L104"><span class="lineNum">     104</span> <span class="tlaGNC">        3600 :         (address syToken, address ptToken,) = IPendleMarketV3Like(_config.ptMarket).readTokens();</span></span>
 <span id="L105"><span class="lineNum">     105</span>              : </span>
-<span id="L106"><span class="lineNum">     106</span> <span class="tlaGNC">        3599 :         oracleConfig = IPTLinearOracleConfig.OracleConfig({</span></span>
+<span id="L106"><span class="lineNum">     106</span> <span class="tlaGNC">        3600 :         oracleConfig = IPTLinearOracleConfig.OracleConfig({</span></span>
 <span id="L107"><span class="lineNum">     107</span>              :             ptToken: ptToken,</span>
 <span id="L108"><span class="lineNum">     108</span>              :             syToken: syToken,</span>
 <span id="L109"><span class="lineNum">     109</span>              :             expectedUnderlyingToken: _config.expectedUnderlyingToken,</span>
@@ -174,27 +174,27 @@
 <span id="L112"><span class="lineNum">     112</span>              :             linearOracle: address(0) // for ID generation we using address(0)</span>
 <span id="L113"><span class="lineNum">     113</span>              :         });</span>
 <span id="L114"><span class="lineNum">     114</span>              : </span>
-<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">        3599 :         _verifyMarket(oracleConfig);</span></span>
+<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">        3600 :         _verifyMarket(oracleConfig);</span></span>
 <span id="L116"><span class="lineNum">     116</span>              :     }</span>
 <span id="L117"><span class="lineNum">     117</span>              : </span>
 <span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">         512 :     function resolveExistingOracle(bytes32 _configId) public view virtual returns (address oracle) {</span></span>
-<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">        3593 :         address oracleConfig = getConfigAddress[_configId];</span></span>
-<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">        3593 :         return oracleConfig == address(0) ? address(0) : getOracleAddress[oracleConfig];</span></span>
+<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">        3594 :         address oracleConfig = getConfigAddress[_configId];</span></span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">        3594 :         return oracleConfig == address(0) ? address(0) : getOracleAddress[oracleConfig];</span></span>
 <span id="L121"><span class="lineNum">     121</span>              :     }</span>
 <span id="L122"><span class="lineNum">     122</span>              : </span>
-<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">        3599 :     function _verifyMarket(IPTLinearOracleConfig.OracleConfig memory _oracleConfig) internal view virtual {</span></span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">        3600 :     function _verifyMarket(IPTLinearOracleConfig.OracleConfig memory _oracleConfig) internal view virtual {</span></span>
 <span id="L124"><span class="lineNum">     124</span>              :         // check if syRateMethod is valid</span>
-<span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">        3599 :         PTLinearOracle(ORACLE_IMPLEMENTATION).callForExchangeFactor(</span></span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">        3600 :         PTLinearOracle(ORACLE_IMPLEMENTATION).callForExchangeFactor(</span></span>
 <span id="L126"><span class="lineNum">     126</span>              :             _oracleConfig.syToken, _oracleConfig.syRateMethodSelector</span>
 <span id="L127"><span class="lineNum">     127</span>              :         );</span>
 <span id="L128"><span class="lineNum">     128</span>              : </span>
-<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">        3597 :         (, address assetAddress,) = IPendleSYTokenLike(_oracleConfig.syToken).assetInfo();</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">        3598 :         (, address assetAddress,) = IPendleSYTokenLike(_oracleConfig.syToken).assetInfo();</span></span>
 <span id="L130"><span class="lineNum">     130</span>              : </span>
-<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">        3597 :         require(assetAddress == _oracleConfig.expectedUnderlyingToken, AssetAddressMustBeOurUnderlyingToken());</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">        3598 :         require(assetAddress == _oracleConfig.expectedUnderlyingToken, AssetAddressMustBeOurUnderlyingToken());</span></span>
 <span id="L132"><span class="lineNum">     132</span>              : </span>
-<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">        3596 :         uint256 maturityDate = IPendlePTLike(_oracleConfig.ptToken).expiry();</span></span>
-<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">        3596 :         require(maturityDate != 0 &amp;&amp; maturityDate &lt; type(uint64).max, MaturityDateInvalid());</span></span>
-<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">        3595 :         require(maturityDate &gt; block.timestamp, MaturityDateIsInThePast());</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">        3597 :         uint256 maturityDate = IPendlePTLike(_oracleConfig.ptToken).expiry();</span></span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">        3597 :         require(maturityDate != 0 &amp;&amp; maturityDate &lt; type(uint64).max, MaturityDateInvalid());</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">        3596 :         require(maturityDate &gt; block.timestamp, MaturityDateIsInThePast());</span></span>
 <span id="L136"><span class="lineNum">     136</span>              :     }</span>
 <span id="L137"><span class="lineNum">     137</span>              : }</span>
         </pre>
