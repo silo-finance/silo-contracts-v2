@@ -131,6 +131,7 @@ contract PTLinearOracleFactory is Create2Factory, OracleFactory, IPTLinearOracle
         require(assetAddress == _oracleConfig.expectedUnderlyingToken, AssetAddressMustBeOurUnderlyingToken());
 
         uint256 maturityDate = IPendlePTLike(_oracleConfig.ptToken).expiry();
+        require(maturityDate != 0 && maturityDate < type(uint64).max, MaturityDateInvalid());
         require(maturityDate > block.timestamp, MaturityDateIsInThePast());
     }
 }

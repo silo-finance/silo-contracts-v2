@@ -30,6 +30,7 @@ interface IPTLinearOracleFactory {
     error AssetAddressMustBeOurUnderlyingToken();
     error InvalidExchangeFactor();
     error MaturityDateIsInThePast();
+    error MaturityDateInvalid();
 
     function create(DeploymentConfig memory _config, bytes32 _externalSalt)
         external
