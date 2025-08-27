@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
+import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
+import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+
 import {PTLinearOracleFactory} from "silo-oracles/contracts/pendle/linear/PTLinearOracleFactory.sol";
 import {IPTLinearOracleConfig} from "silo-oracles/contracts/interfaces/IPTLinearOracleConfig.sol";
 import {IPTLinearOracle} from "silo-oracles/contracts/interfaces/IPTLinearOracle.sol";
@@ -10,6 +13,11 @@ import {PTLinearMocks} from "./_common/PTLinearMocks.sol";
 import {PTLinearOracle} from "silo-oracles/contracts/pendle/linear/PTLinearOracle.sol";
 
 import {SparkLinearDiscountOracleFactoryMock} from "./_common/SparkLinearDiscountOracleFactoryMock.sol";
+
+
+contract Token is ERC20 {
+    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
+}
 
 /*
     FOUNDRY_PROFILE=oracles forge test --mc PTLinearOracleTest --ffi -vv
@@ -57,6 +65,64 @@ contract PTLinearOracleTest is PTLinearMocks {
 
         assertEq(price, 1e18 * 0.9e18 * 0.8e18 / DP / DP, "Mocked PT price");
         assertEq(price, 0.72e18, "Mocked PT price");
+    }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_ptLinear_description --ffi -vv
+    */
+    function test_ptLinear_description() public {
+        ERC20 pt = new Token("pt token", "PT");
+        ERC20 quoteToken = new Token("quote token", "QUOTE");
+
+        IPTLinearOracleFactory.DeploymentConfig memory config;
+        config.hardcodedQuoteToken = address(quoteToken);
+        config.expectedUnderlyingToken = address(quoteToken);
+
+        _makeValidConfig(config);
+        _mockReadTokens(makeAddr("syToken"), address(pt), address(quoteToken));
+        _mockExchangeRate(1e18);
+        _mockAssetInfo(address(quoteToken));
+        _mockExpiry(address(pt), block.timestamp + 1 days);
+
+        AggregatorV3Interface oracle = AggregatorV3Interface(address(factory.create(config, bytes32(0))));
+
+        assertEq(oracle.description(), "PTLinearOracle for PT / QUOTE", "Description should match");
+    }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_ptLinear_version --ffi -vv
+    */
+    function test_ptLinear_version() public {
+        AggregatorV3Interface oracle = AggregatorV3Interface(address(_createOracle()));
+        assertEq(oracle.version(), 1, "Version should match");
+    }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_ptLinear_decimals --ffi -vv
+    */
+    function test_ptLinear_decimals() public {
+        AggregatorV3Interface oracle = AggregatorV3Interface(address(_createOracle()));
+        assertEq(oracle.decimals(), 18, "Decimals should match");
+    }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_ptLinear_getRoundData --ffi -vv
+    */
+    function test_ptLinear_getRoundData() public {
+        AggregatorV3Interface oracle = AggregatorV3Interface(address(_createOracle()));
+
+        _mockLatestRoundData(0.9e18);
+        _mockExchangeRate(0.8e18);
+
+        (
+            uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+        ) = oracle.getRoundData(0);
+
+        assertEq(roundId, 0);
+        assertEq(answer, 0);
+        assertEq(startedAt, 0);
+        assertEq(updatedAt, 0);
+        assertEq(answeredInRound, 0);
     }
 
     /*
@@ -132,11 +198,18 @@ contract PTLinearOracleTest is PTLinearMocks {
         oracle.quote(1e18, makeAddr("ptToken"));
     }
 
+    function _createOracle(IPTLinearOracleFactory.DeploymentConfig memory _config) 
+        internal 
+        returns (IPTLinearOracle oracle) 
+    {
+        _makeValidConfig(_config);
+        _doAllNecessaryMockCalls(_config);
+
+        oracle = factory.create(_config, bytes32(0));
+    }
+
     function _createOracle() internal returns (IPTLinearOracle oracle) {
         IPTLinearOracleFactory.DeploymentConfig memory config;
-        _makeValidConfig(config);
-        _doAllNecessaryMockCalls(config);
-
-        oracle = factory.create(config, bytes32(0));
+        oracle = _createOracle(config);
     }
 }

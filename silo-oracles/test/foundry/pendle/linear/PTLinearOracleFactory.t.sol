@@ -196,7 +196,7 @@ contract PTLinearOracleFactoryTest is PTLinearMocks {
 
         _mockAssetInfo(makeAddr("underlyingToken"));
         vm.warp(100);
-        _mockExpiry(block.timestamp);
+        _mockExpiry(makeAddr("ptToken"), block.timestamp);
         vm.expectRevert(abi.encodeWithSelector(IPTLinearOracleFactory.MaturityDateIsInThePast.selector));
         factory.createAndVerifyConfig(config);
 

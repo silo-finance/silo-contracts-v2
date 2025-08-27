@@ -87,11 +87,11 @@ contract PTLinearMocks is Test {
     }
 
     function _mockExpiry() internal {
-        _mockExpiry(block.timestamp + 1 days);
+        _mockExpiry(makeAddr("ptToken"), block.timestamp + 1 days);
     }
 
-    function _mockExpiry(uint256 _expiry) internal {
-        vm.mockCall(makeAddr("ptToken"), abi.encodeWithSelector(IPendlePTLike.expiry.selector), abi.encode(_expiry));
+    function _mockExpiry(address _ptToken, uint256 _expiry) internal {
+        vm.mockCall(_ptToken, abi.encodeWithSelector(IPendlePTLike.expiry.selector), abi.encode(_expiry));
     }
 
     function _mockAssetInfo() internal {

@@ -3,15 +3,14 @@ pragma solidity 0.8.28;
 
 import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
+import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
+
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IPTLinearOracleConfig} from "../../interfaces/IPTLinearOracleConfig.sol";
 import {IPTLinearOracle} from "../../interfaces/IPTLinearOracle.sol";
 
-/*
-TODO:
-- add chainlink interface, so we can use in input to other oracles
-*/
 contract PTLinearOracle is IPTLinearOracle, Initializable, AggregatorV3Interface {
     uint256 internal constant _DP = 1e18;
 
@@ -40,7 +39,7 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, AggregatorV3Interface
     }
 
     /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken) public view virtual returns (uint256 quoteAmount) {
         IPTLinearOracleConfig oracleCfg = oracleConfig;
         require(address(oracleCfg) != address(0), NotInitialized());
 
@@ -59,12 +58,18 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, AggregatorV3Interface
     }
 
     /// @inheritdoc AggregatorV3Interface
+    /// @notice because this is just a proxy to interface, only answer will have non zero value
+    /// return value is in 18 decimals, not 8 like in chainlink
     function latestRoundData() external 
         view 
         virtual 
         override 
-        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) {
-        // TODO: implement for 1.0 base token
+        returns (uint80, int256 answer, uint256, uint256, uint80) 
+    {
+        address baseToken = oracleConfig.getConfig().ptToken;
+        uint256 baseAmount = 10 ** TokenHelper.assertAndGetDecimals(baseToken);
+
+        answer = SafeCast.toInt256(quote(baseAmount, baseToken));
     }
 
     /// @inheritdoc ISiloOracle
@@ -77,9 +82,32 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, AggregatorV3Interface
         (, ptMultiplier,,,) = AggregatorV3Interface(oracleConfig.getConfig().linearOracle).latestRoundData();
     }
 
+    /// @inheritdoc AggregatorV3Interface
+    function description() external view returns (string memory) {
+        string memory baseSymbol = TokenHelper.symbol(oracleConfig.getConfig().ptToken);
+        string memory quoteSymbol = TokenHelper.symbol(oracleConfig.getConfig().hardcodedQuoteToken);
+        return string.concat("PTLinearOracle for ", baseSymbol, " / ", quoteSymbol);
+    }
+
     /// @inheritdoc ISiloOracle
     function beforeQuote(address) external pure virtual override {
         // nothing to execute
+    }
+
+    /// @inheritdoc AggregatorV3Interface
+    function decimals() external pure returns (uint8) {
+        return 18;
+    }
+
+    /// @inheritdoc AggregatorV3Interface
+    function version() external pure returns (uint256) {
+        return 1;
+    }
+
+    /// @notice not in use, always returns 0s, use latestRoundData instead
+    function getRoundData(uint80 /* _roundId */) external pure returns (uint80, int256, uint256, uint256, uint80)
+    {
+        return (0, 0, 0, 0, 0);
     }
 
     /// @inheritdoc IPTLinearOracle
