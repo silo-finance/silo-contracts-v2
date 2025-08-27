@@ -35,4 +35,5 @@ library AddrKey {
     string constant public PENDLE_ORACLE = "PENDLE_ORACLE";
     string constant public PYTH_SHADOW_USD_aggregator = "PYTH_SHADOW_USD_aggregator";
     string constant public WRAPPER_LPT_eUSDe_14AUG25 = "Wrapper-LPT-sUSDe-25SEP25";
+    string constant public PENDLE_LINEAR_ORACLE_FACTORY = "PENDLE_LINEAR_ORACLE_FACTORY";
 }

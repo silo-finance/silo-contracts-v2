@@ -9,4 +9,5 @@ interface IPendleSYTokenLike {
 
     function yieldToken() external view returns (address);
     function assetInfo() external view returns (AssetType assetType, address assetAddress, uint8 assetDecimals);
+    function exchangeRate() external view returns (uint256);
 }
