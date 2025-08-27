@@ -14,7 +14,6 @@ import {PTLinearOracle} from "silo-oracles/contracts/pendle/linear/PTLinearOracl
 
 import {SparkLinearDiscountOracleFactoryMock} from "./_common/SparkLinearDiscountOracleFactoryMock.sol";
 
-
 contract Token is ERC20 {
     constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
 }
@@ -198,9 +197,9 @@ contract PTLinearOracleTest is PTLinearMocks {
         oracle.quote(1e18, makeAddr("ptToken"));
     }
 
-    function _createOracle(IPTLinearOracleFactory.DeploymentConfig memory _config) 
-        internal 
-        returns (IPTLinearOracle oracle) 
+    function _createOracle(IPTLinearOracleFactory.DeploymentConfig memory _config)
+        internal
+        returns (IPTLinearOracle oracle)
     {
         _makeValidConfig(_config);
         _doAllNecessaryMockCalls(_config);
