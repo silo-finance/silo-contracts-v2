@@ -13,7 +13,7 @@ import {console2} from "forge-std/console2.sol";
 /**
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/pendle/PendlePTOracleFactoryDeploy.s.sol \
-    --ffi --rpc-url $RPC_SONIC --broadcast --verify
+    --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
  */
 contract PendlePTOracleFactoryDeploy is CommonDeploy {
     function run() public returns (address factory) {
