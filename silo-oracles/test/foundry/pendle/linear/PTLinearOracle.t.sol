@@ -28,28 +28,16 @@ contract PTLinearOracleTest is PTLinearMocks {
         factory = new PTLinearOracleFactory(address(new SparkLinearDiscountOracleFactoryMock()));
     }
 
-    // /*
-    // FOUNDRY_PROFILE=oracles forge test --mt test_skip_ptamm_PT_USDe_price --ffi -vv
-    // */
-    // function test_skip_ptamm_PT_USDe_price() public {
-    //     vm.createSelectFork(vm.envString("RPC_AVALANCHE"), 67369870);
-    //     factory = new PTLinearOracleFactory();
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_ptLinear_multiplier --ffi -vv
+    */
+    function test_ptLinear_multiplier() public {
+        IPTLinearOracle oracle = _createOracle();
 
-    //     address pt = 0xB4205a645c7e920BD8504181B1D7f2c5C955C3e7;
-    //     address usde = 0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34; // underlying token of PT
+        _mockLatestRoundData(0.9e18);
 
-    //     IPTLinearOracleConfig.OracleConfig memory config = IPTLinearOracleConfig.OracleConfig({
-    //         amm: IPendleAMM(0x4d717868F4Bd14ac8B29Bb6361901e30Ae05e340),
-    //         ptToken: pt,
-    //         ptUnderlyingQuoteToken: usde,
-    //         hardcoddedQuoteToken: address(1)
-    //     });
-
-    //     IPTLinearOracle oracle = factory.create(config, bytes32(0));
-
-    //     assertEq(oracle.quote(1e18, pt), 0.98053159203196347e18, "PT price 1e18");
-    //     assertEq(oracle.quote(2e18, pt), 0.98053159203196347e18 * 2 + 1, "PT price 2e18");
-    // }
+        assertEq(oracle.multiplier(), 0.9e18);
+    }
 
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_ptLinear_Mockprice --ffi -vv
@@ -64,6 +52,18 @@ contract PTLinearOracleTest is PTLinearMocks {
 
         assertEq(price, 1e18 * 0.9e18 * 0.8e18 / DP / DP, "Mocked PT price");
         assertEq(price, 0.72e18, "Mocked PT price");
+
+        _mockDecimals();
+
+        (
+            uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
+        ) = AggregatorV3Interface(address(oracle)).latestRoundData();
+
+        assertEq(roundId, 0);
+        assertEq(uint256(answer), price, "latestRoundData reutrns same data as quote");
+        assertEq(startedAt, 0);
+        assertEq(updatedAt, 0);
+        assertEq(answeredInRound, 0);
     }
 
     /*

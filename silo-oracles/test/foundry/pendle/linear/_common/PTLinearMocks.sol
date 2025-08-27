@@ -105,4 +105,10 @@ contract PTLinearMocks is Test {
             abi.encode(IPendleSYTokenLike.AssetType.TOKEN, _underlyingToken, 18)
         );
     }
+
+    function _mockDecimals() internal {
+        vm.mockCall(
+            makeAddr("ptToken"), abi.encodeWithSelector(AggregatorV3Interface.decimals.selector), abi.encode(18)
+        );
+    }
 }
