@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.28;
 
-import {Forking} from "silo-oracles/test/foundry/_common/Forking.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {ISilo, IERC4626} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -15,28 +14,39 @@ import {console2} from "forge-std/console2.sol";
 import {Utils} from "silo-core/deploy/silo/verifier/Utils.sol";
 import {Test} from "forge-std/Test.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 interface OldGauge {
     function killGauge() external;
 }
 
-contract NewMarketTest is Forking {
+/**
+The test is designed to be run right after the silo lending market deployment.
+It is excluded from the general tests CI pipeline and has separate workflow.
+
+FOUNDRY_PROFILE=core_test CONFIG=0x6Fb80aFD7DCa6e91ac196C3F3aDA3115E186ed11 \
+    EXTERNAL_PRICE_0=112 EXTERNAL_PRICE_1=100 \
+    RPC_URL=https://arb1.arbitrum.io/rpc \
+    forge test --mc "NewMarketTest" --ffi -vv
+ */
+// solhint-disable var-name-mixedcase
+contract NewMarketTest is Test {
     string public constant SUCCESS_SYMBOL = unicode"✅";
     string public constant SKIPPED_SYMBOL = unicode"⏩";
     string public constant DELIMITER = "------------------------------";
 
-    SiloConfig public immutable SILO_CONFIG; // solhint-disable-line var-name-mixedcase
-    uint256 public immutable EXTERNAL_PRICE0; // solhint-disable-line var-name-mixedcase
-    uint256 public immutable EXTERNAL_PRICE1; // solhint-disable-line var-name-mixedcase
+    SiloConfig public SILO_CONFIG;
+    uint256 public EXTERNAL_PRICE0;
+    uint256 public EXTERNAL_PRICE1;
 
-    ISilo public immutable SILO0; // solhint-disable-line var-name-mixedcase
-    ISilo public immutable SILO1; // solhint-disable-line var-name-mixedcase
+    ISilo public SILO0;
+    ISilo public SILO1;
 
-    IERC20Metadata public immutable TOKEN0; // solhint-disable-line var-name-mixedcase
-    IERC20Metadata public immutable TOKEN1; // solhint-disable-line var-name-mixedcase
+    IERC20Metadata public TOKEN0;
+    IERC20Metadata public TOKEN1;
 
-    uint256 public immutable MAX_LTV0; // solhint-disable-line var-name-mixedcase
-    uint256 public immutable MAX_LTV1; // solhint-disable-line var-name-mixedcase
+    uint256 public MAX_LTV0;
+    uint256 public MAX_LTV1;
 
     modifier logSiloConfigName() {
         console2.log(
@@ -48,14 +58,15 @@ contract NewMarketTest is Forking {
         _;
     }
 
-    constructor(
-        BlockChain _chain,
-        uint256 _blockToFork,
-        address _siloConfig,
-        uint256 _externalPrice0,
-        uint256 _externalPrice1
-    ) Forking(_chain) {
-        initFork(_blockToFork);
+    function setUp() public {
+        AddrLib.init();
+
+        address _siloConfig = vm.envAddress("CONFIG");
+        uint256 _externalPrice0 = vm.envUint("EXTERNAL_PRICE_0");
+        uint256 _externalPrice1 = vm.envUint("EXTERNAL_PRICE_1");
+        string memory _rpc = vm.envString("RPC_URL");
+
+        vm.createSelectFork(_rpc);
 
         SILO_CONFIG = SiloConfig(_siloConfig);
         EXTERNAL_PRICE0 = _externalPrice0;
