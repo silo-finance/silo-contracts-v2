@@ -38,29 +38,11 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, AggregatorV3Interface
         emit PTLinearOracleInitialized(_configAddress);
     }
 
-    /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) public view virtual returns (uint256 quoteAmount) {
-        IPTLinearOracleConfig oracleCfg = oracleConfig;
-        require(address(oracleCfg) != address(0), NotInitialized());
-
-        IPTLinearOracleConfig.OracleConfig memory cfg = oracleCfg.getConfig();
-
-        require(_baseToken == cfg.ptToken, AssetNotSupported());
-        require(_baseAmount <= type(uint128).max, BaseAmountOverflow());
-
-        (, int256 ptMultiplier,,,) = AggregatorV3Interface(cfg.linearOracle).latestRoundData();
-
-        uint256 exchangeFactor = callForExchangeFactor(cfg.syToken, cfg.syRateMethodSelector);
-
-        quoteAmount = _baseAmount * exchangeFactor * uint256(ptMultiplier) / _DP / _DP;
-
-        require(quoteAmount != 0, ZeroQuote());
-    }
-
     /// @inheritdoc AggregatorV3Interface
     /// @notice because this is just a proxy to interface, only answer will have non zero value
     /// return value is in 18 decimals, not 8 like in chainlink
-    function latestRoundData() external 
+    function latestRoundData() 
+        external 
         view 
         virtual 
         override 
@@ -108,6 +90,25 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, AggregatorV3Interface
     function getRoundData(uint80 /* _roundId */) external pure returns (uint80, int256, uint256, uint256, uint80)
     {
         return (0, 0, 0, 0, 0);
+    }
+
+    /// @inheritdoc ISiloOracle
+    function quote(uint256 _baseAmount, address _baseToken) public view virtual returns (uint256 quoteAmount) {
+        IPTLinearOracleConfig oracleCfg = oracleConfig;
+        require(address(oracleCfg) != address(0), NotInitialized());
+
+        IPTLinearOracleConfig.OracleConfig memory cfg = oracleCfg.getConfig();
+
+        require(_baseToken == cfg.ptToken, AssetNotSupported());
+        require(_baseAmount <= type(uint128).max, BaseAmountOverflow());
+
+        (, int256 ptMultiplier,,,) = AggregatorV3Interface(cfg.linearOracle).latestRoundData();
+
+        uint256 exchangeFactor = callForExchangeFactor(cfg.syToken, cfg.syRateMethodSelector);
+
+        quoteAmount = _baseAmount * exchangeFactor * uint256(ptMultiplier) / _DP / _DP;
+
+        require(quoteAmount != 0, ZeroQuote());
     }
 
     /// @inheritdoc IPTLinearOracle
