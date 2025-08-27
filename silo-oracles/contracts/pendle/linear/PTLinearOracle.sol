@@ -8,7 +8,11 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IPTLinearOracleConfig} from "../../interfaces/IPTLinearOracleConfig.sol";
 import {IPTLinearOracle} from "../../interfaces/IPTLinearOracle.sol";
 
-contract PTLinearOracle is IPTLinearOracle, Initializable {
+/*
+TODO:
+- add chainlink interface, so we can use in input to other oracles
+*/
+contract PTLinearOracle is IPTLinearOracle, Initializable, AggregatorV3Interface {
     uint256 internal constant _DP = 1e18;
 
     IPTLinearOracleConfig public oracleConfig;
@@ -52,6 +56,15 @@ contract PTLinearOracle is IPTLinearOracle, Initializable {
         quoteAmount = _baseAmount * exchangeFactor * uint256(ptMultiplier) / _DP / _DP;
 
         require(quoteAmount != 0, ZeroQuote());
+    }
+
+    /// @inheritdoc AggregatorV3Interface
+    function latestRoundData() external 
+        view 
+        virtual 
+        override 
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) {
+        // TODO: implement for 1.0 base token
     }
 
     /// @inheritdoc ISiloOracle
