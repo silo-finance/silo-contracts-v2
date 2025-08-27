@@ -11,11 +11,11 @@ contract SiloOracleMock2 is StdCheatsSafe, ISiloOracle {
 
     event BeforeQuoteSiloOracleMock2();
 
-    function beforeQuote(address _baseToken) external {
+    function beforeQuote(address /* _baseToken */) external {
         emit BeforeQuoteSiloOracleMock2();
     }
 
-    function quote(uint256 _baseAmount, address _baseToken) external view returns (uint256 quoteAmount) {
+    function quote(uint256 /* _baseAmount */, address /* _baseToken */) external pure returns (uint256 quoteAmount) {
         quoteAmount = QUOTE_AMOUNT;
     }
 

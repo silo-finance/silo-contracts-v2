@@ -200,7 +200,7 @@ contract DIAOracleTest is DIAConfigDefault {
         DIA_ORACLE.quote(2 ** 128, address(tokens["RDPX"]));
     }
 
-    function test_DIAOracle_quoteToken() public {
+    function test_DIAOracle_quoteToken() public view {
         assertEq(address(DIA_ORACLE.quoteToken()), address(tokens["USDT"]), "must be USDC");
     }
 }

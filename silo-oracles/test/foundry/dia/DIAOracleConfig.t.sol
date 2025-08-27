@@ -23,7 +23,7 @@ contract DIAOracleConfigTest is DIAConfigDefault {
         CFG = new DIAOracleConfig(_defaultDIAConfig(10 ** (18 + 8 - 18), 0));
     }
 
-    function test_DIAOracleConfig_getQuoteData() public {
+    function test_DIAOracleConfig_getQuoteData() public view {
         IDIAOracle.DIAConfig memory config = CFG.getConfig();
 
         assertEq(address(config.diaOracle), address(DIA_ORACLE_V2), "diaOracle");
