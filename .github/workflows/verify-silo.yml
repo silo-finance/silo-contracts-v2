@@ -124,6 +124,15 @@ jobs:
           awk '/== Logs ==/ { print_flag = 1 } print_flag' output.log >> result.txt
           echo '```' >> result.txt
 
+      - name: Run test
+        id: test
+        run: |
+          echo "Running test for ${{ steps.extract.outputs.CONFIG_NAME }} (${{ steps.extract.outputs.CONFIG }}) on ${{ steps.extract.outputs.CHAIN }}"
+          FOUNDRY_PROFILE=core_test CONFIG=${{ steps.extract.outputs.CONFIG }} \
+          EXTERNAL_PRICE_0=${{ steps.price.outputs.EXTERNAL_PRICE_0 }} EXTERNAL_PRICE_1=${{ steps.price.outputs.EXTERNAL_PRICE_1 }} \
+          RPC_URL=${{ steps.extract.outputs.RPC_URL }} \
+          forge test --mc "NewMarketTest" --ffi -vv
+
       # Post result as a sticky comment on the PR
       - name: Comment result on PR
         uses: marocchino/sticky-pull-request-comment@v2
