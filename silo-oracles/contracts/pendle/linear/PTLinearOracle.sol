@@ -53,6 +53,7 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, AggregatorV3Interface
         uint256 baseAmount = 10 ** TokenHelper.assertAndGetDecimals(baseToken);
 
         answer = SafeCast.toInt256(quote(baseAmount, baseToken));
+        return (0, answer, 0, 0, 0);
     }
 
     /// @inheritdoc ISiloOracle
