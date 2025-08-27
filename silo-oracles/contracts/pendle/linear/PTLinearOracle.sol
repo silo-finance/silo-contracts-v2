@@ -13,6 +13,7 @@ import {IPTLinearOracle} from "../../interfaces/IPTLinearOracle.sol";
 
 contract PTLinearOracle is IPTLinearOracle, Initializable, AggregatorV3Interface {
     uint256 internal constant _DP = 1e18;
+    uint256 internal constant _DP_2 = 1e36;
 
     IPTLinearOracleConfig public oracleConfig;
 
@@ -102,11 +103,16 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, AggregatorV3Interface
         require(_baseToken == cfg.ptToken, AssetNotSupported());
         require(_baseAmount <= type(uint128).max, BaseAmountOverflow());
 
+        /*
+        ptMultiplier is a simple, deterministic feed that returns a discount factor for a given PT. 
+        The factor increases linearly as time passes and converges to 1.0 at maturity, 
+        so integrators can price PT conservatively without relying on external market data.
+        */
         (, int256 ptMultiplier,,,) = AggregatorV3Interface(cfg.linearOracle).latestRoundData();
 
         uint256 exchangeFactor = callForExchangeFactor(cfg.syToken, cfg.syRateMethodSelector);
 
-        quoteAmount = _baseAmount * exchangeFactor * uint256(ptMultiplier) / _DP / _DP;
+        quoteAmount = _baseAmount * exchangeFactor * uint256(ptMultiplier) / _DP_2;
 
         require(quoteAmount != 0, ZeroQuote());
     }
