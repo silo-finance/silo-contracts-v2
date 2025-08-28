@@ -6,7 +6,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
 
 /**
-FOUNDRY_PROFILE=core CONFIG=Silo_rsETH_ETH HOOK_RECEIVER_OWNER=DAO \
+FOUNDRY_PROFILE=core CONFIG=Silo_PT-sUSDai-19NOV25_USDC HOOK_RECEIVER_OWNER=DAO \
     forge script silo-core/deploy/silo/SiloDeployWithHookReceiverOwner.s.sol \
     --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
 

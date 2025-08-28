@@ -100,15 +100,6 @@ jobs:
           echo "EXTERNAL_PRICE_0=$PRICE_0" >> $GITHUB_OUTPUT
           echo "EXTERNAL_PRICE_1=$PRICE_1" >> $GITHUB_OUTPUT
 
-      - name: Run test
-        id: test
-        run: |
-          echo "Running test for ${{ steps.extract.outputs.CONFIG_NAME }} (${{ steps.extract.outputs.CONFIG }}) on ${{ steps.extract.outputs.CHAIN }}"
-          FOUNDRY_PROFILE=core_test CONFIG=${{ steps.extract.outputs.CONFIG }} \
-          EXTERNAL_PRICE_0=${{ steps.price.outputs.EXTERNAL_PRICE_0 }} EXTERNAL_PRICE_1=${{ steps.price.outputs.EXTERNAL_PRICE_1 }} \
-          RPC_URL=${{ steps.extract.outputs.RPC_URL }} \
-          forge test --mc "NewMarketTest" --ffi -vv
-
       # Run the forge script with extracted parameters
       - name: Run verify script
         id: verify
@@ -139,3 +130,14 @@ jobs:
         with:
           header: verify-silo
           path: result.txt
+
+      - name: Run LIVE MARKET QA
+        id: live-market-qa
+        run: |
+          echo "Running LIVE MARKET QA for ${{ steps.extract.outputs.CONFIG_NAME }} (${{ steps.extract.outputs.CONFIG }}) on ${{ steps.extract.outputs.CHAIN }}"
+          FOUNDRY_PROFILE=core_test CONFIG=${{ steps.extract.outputs.CONFIG }} \
+          EXTERNAL_PRICE_0=${{ steps.price.outputs.EXTERNAL_PRICE_0 }} EXTERNAL_PRICE_1=${{ steps.price.outputs.EXTERNAL_PRICE_1 }} \
+          RPC_URL=${{ steps.extract.outputs.RPC_URL }} \
+          forge test --mc "NewMarketTest" --ffi -vv
+  
+        

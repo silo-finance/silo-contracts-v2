@@ -14,10 +14,17 @@ import argparse
 
 
 def to_percent(percentage_string):
-    numeric_value = float(percentage_string.strip('%')) * 100
-    return int(round(numeric_value, 0))
+    try:
+        numeric_value = float(percentage_string.strip('%')) * 100
+        return int(round(numeric_value, 0))
+    except (ValueError, AttributeError):
+        return "N/A"
 
-def find_config_name(configName: str, filename: str = 'silo-core/deploy/input/InterestRateModelConfigs.json') -> str:
+def find_config_name(configName: str, is_borrowable: str, filename: str = 'silo-core/deploy/input/InterestRateModelConfigs.json') -> str:
+    # Check if not borrowable (case insensitive)
+    if is_borrowable.lower() == 'non-borrowable':
+        return 'NA'
+    
     if configName == 'NA':
         return ''
 
@@ -86,7 +93,7 @@ json_structure = {
     "solvencyOracle0": "",
     "maxLtvOracle0": "",
     "interestRateModel0": "InterestRateModelV2Factory.sol",
-    "interestRateModelConfig0": find_config_name(data[0]["interestRateModelConfig"]),
+    "interestRateModelConfig0": find_config_name(data[0]["interestRateModelConfig"], data[0]["Borrowable"]),
     "maxLtv0": to_percent(data[0]["maxLtv"]),
     "lt0": to_percent(data[0]["lt"]),
     "liquidationTargetLtv0": to_percent(data[0]["liquidationTargetLtv"]),
@@ -98,7 +105,7 @@ json_structure = {
     "solvencyOracle1": "",
     "maxLtvOracle1": "",
     "interestRateModel1": "InterestRateModelV2Factory.sol",
-    "interestRateModelConfig1": find_config_name(data[1]["interestRateModelConfig"]),
+    "interestRateModelConfig1": find_config_name(data[1]["interestRateModelConfig"], data[1]["Borrowable"]),
     "maxLtv1": to_percent(data[1]["maxLtv"]),
     "lt1": to_percent(data[1]["lt"]),
     "liquidationTargetLtv1": to_percent(data[1]["liquidationTargetLtv"]),

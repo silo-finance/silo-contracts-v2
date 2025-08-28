@@ -240,7 +240,7 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
 
     function _hashConfig(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
         internal
-        view
+        pure
         returns (bytes32)
     {
         return keccak256(abi.encode(_config));

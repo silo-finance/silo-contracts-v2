@@ -10,6 +10,7 @@ library AddrKey {
     string constant public USDC = "USDC";
     string constant public USDC_E = "USDC.e";
     string constant public USDC_ETH_UNI_POOL = "USDC_ETH_UNI_POOL";
+    string constant public USDai = "USDai";
     string constant public SNX_USDC_UNIV3_POOL = "SNX_USDC_UNIV3_POOL";
     string constant public SNX = "SNX";
     string constant public LINK = "LINK";
