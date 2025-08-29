@@ -59,7 +59,7 @@ jobs:
                     path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
                     key: home-runner-work-silo-contracts-v2-gitmodules
 
-            -   uses: actions/checkout@v3
+            -   uses: actions/checkout@v5
                 with:
                     submodules: recursive
 
@@ -108,7 +108,7 @@ jobs:
 
         steps:
             -   name: Checkout sources
-                uses: actions/checkout@v3
+                uses: actions/checkout@v5
 
             -   name: Set up Node.js
                 uses: actions/setup-node@v3
@@ -132,7 +132,7 @@ jobs:
                     path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
                     key: home-runner-work-silo-contracts-v2-gitmodules
 
-            -   uses: actions/checkout@v3
+            -   uses: actions/checkout@v5
 
             -   name: Cache gitmodules
                 uses: actions/cache@v3
@@ -182,7 +182,7 @@ jobs:
                     path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
                     key: home-runner-work-silo-contracts-v2-gitmodules
 
-            -   uses: actions/checkout@v3
+            -   uses: actions/checkout@v5
 
             -   name: Cache gitmodules
                 uses: actions/cache@v3
@@ -231,7 +231,7 @@ jobs:
                     path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
                     key: home-runner-work-silo-contracts-v2-gitmodules
 
-            -   uses: actions/checkout@v3
+            -   uses: actions/checkout@v5
 
             -   name: Cache gitmodules
                 uses: actions/cache@v3
@@ -274,7 +274,7 @@ jobs:
                     path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
                     key: home-runner-work-silo-contracts-v2-gitmodules
 
-            -   uses: actions/checkout@v3
+            -   uses: actions/checkout@v5
 
             -   name: Cache gitmodules
                 uses: actions/cache@v3

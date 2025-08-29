@@ -46,7 +46,7 @@ jobs:
     silo-vaults-tests:
         runs-on: ubuntu-latest
         steps:
-            -   uses: actions/checkout@v3
+            -   uses: actions/checkout@v5
                 with:
                     submodules: recursive
 
@@ -85,7 +85,7 @@ jobs:
 
         steps:
             -   name: Checkout sources
-                uses: actions/checkout@v3
+                uses: actions/checkout@v5
 
             -   name: Set up Node.js
                 uses: actions/setup-node@v3
