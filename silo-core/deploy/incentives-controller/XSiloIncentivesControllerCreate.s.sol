@@ -103,7 +103,7 @@ contract XSiloIncentivesControllerCreate is CommonDeploy {
 
     function _qa(ISiloIncentivesController _incentivesController) internal {
         console2.log("--------------------------------");
-        console2.log("ISiloIncentivesController QA");
+        console2.log("ISiloIncentivesController QA ", address(_incentivesController));
         console2.log("block %s, timestamp %s", block.number, block.timestamp);
         console2.log("--------------------------------");
 
@@ -117,9 +117,11 @@ contract XSiloIncentivesControllerCreate is CommonDeploy {
         address xSiloHolder = 0xe153437bC974cfE3E06C21c08AeBbf30abaefa2E;
         _usexSiloMethodsToMakeSureAreWorking(_incentivesController, xSiloHolder);
 
+        console2.log("setting notification receiver to 0");
         vm.prank(xSilo.owner());
         xSilo.setNotificationReceiver(INotificationReceiver(address(0)), true);
 
+        _makeXSiloMoves();
     }
 
     function _usexSiloMethodsToMakeSureAreWorking(ISiloIncentivesController _incentivesController, address _holder) internal {
@@ -172,6 +174,8 @@ contract XSiloIncentivesControllerCreate is CommonDeploy {
     }
 
     function _makeXSiloMoves() internal {
+        console2.log("-------------------------------- xSilo moves");
+
         IERC20 siloToken = IERC20(xSilo.asset());
 
         vm.warp(block.timestamp + 1 hours);
@@ -191,12 +195,16 @@ contract XSiloIncentivesControllerCreate is CommonDeploy {
 
         siloToken.approve(address(xSilo), siloBalance);
         uint256 shares = xSilo.deposit(siloBalance / 2, qaUser);
-        console2.log("shares", shares);
+        console2.log("shares after deposit", shares);
         require(shares > 0, "failed to deposit silo tokens");        
         
         vm.warp(block.timestamp + 1 hours);
 
-        xSilo.redeem(shares, qaUser, qaUser);
+        uint256 assets = xSilo.redeem(shares, qaUser, qaUser);
+        console2.log("assets after redeem", assets);
+        require(assets > 0, "failed to redeem xSilo tokens");
+
+        console2.log("--------------------------------");
 
         vm.stopPrank();
     }
