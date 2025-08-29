@@ -94,7 +94,7 @@ contract XSiloIncentivesControllerCreate is CommonDeploy {
         KeyValueStorage.setAddress({
             _file: SiloIncentivesControllerDeployments.DEPLOYMENTS_FILE,
             _key1: ChainsLib.chainAlias(),
-            _key2: "XSilo",
+            _key2: "SIC XSilo",
             _value: incentivesController
         });
 
@@ -116,6 +116,10 @@ contract XSiloIncentivesControllerCreate is CommonDeploy {
 
         address xSiloHolder = 0xe153437bC974cfE3E06C21c08AeBbf30abaefa2E;
         _usexSiloMethodsToMakeSureAreWorking(_incentivesController, xSiloHolder);
+
+        vm.prank(xSilo.owner());
+        xSilo.setNotificationReceiver(INotificationReceiver(address(0)), true);
+
     }
 
     function _usexSiloMethodsToMakeSureAreWorking(ISiloIncentivesController _incentivesController, address _holder) internal {
