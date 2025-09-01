@@ -123,6 +123,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             modelState.k = _capK(k, cfg.kmin, cfg.kmax);
         } catch {
             rcomp = 0;
+            modelState.k = cfg.kmin; // k should be set to min on overflow
         }
     }
 
@@ -293,6 +294,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         require(_t0 <= _t1, InvalidTimestamp());
 
         _l.T = _t1 - _t0;
+        // if there is no time change, then k should not change
+        if (_l.T == 0) return (0, _state.k);
 
         // roc calculations
         if (_u < _cfg.u1) {
@@ -338,6 +341,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         // limit rcomp
         if (rcomp > RCOMP_CAP_PER_SECOND * _l.T) {
             rcomp = RCOMP_CAP_PER_SECOND * _l.T;
+            // k should be set to min only on overflow or cap
             k = _cfg.kmin;
         }
     }
