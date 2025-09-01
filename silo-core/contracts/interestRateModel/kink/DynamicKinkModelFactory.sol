@@ -27,8 +27,8 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
     mapping(address irm => bool) public createdByFactory;
 
-    constructor() {
-        IRM = new DynamicKinkModel();
+    constructor(DynamicKinkModel _implementation) {
+        IRM = _implementation;
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
