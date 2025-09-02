@@ -85,8 +85,15 @@ jobs:
       - name: Extract optional price arguments from PR body
         id: price
         run: |
+          # Fetch the current PR body using GitHub API
+          CURRENT_BODY=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.number }}" \
+            | jq -r '.body')
+          
           # Replace \r with newlines to handle copy-paste from Windows
-          CLEANED_BODY=$(echo "${{ github.event.pull_request.body }}" | sed 's/\r/\n/g')
+          CLEANED_BODY=$(echo "$CURRENT_BODY" | sed 's/\r/\n/g')
       
           # Extract prices using pattern match
           PRICE_0=$(echo "$CLEANED_BODY" | grep -i 'EXTERNAL_PRICE_0' | head -n1 | sed 's/ //g' | cut -d= -f2)
