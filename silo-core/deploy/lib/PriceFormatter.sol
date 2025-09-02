@@ -57,6 +57,34 @@ library PriceFormatter {
         }
     }
 
+
+    function formatPriceInE(uint256 _in, uint256 _e) internal pure returns (string memory) {
+        uint256 base = 10 ** _e;
+        uint256 integerPart = _in / base;
+        uint256 fractionalPart = _in % base;
+
+        string memory integerStr = vm.toString(integerPart);
+        uint256 leadingZeros = _e - bytes(vm.toString(fractionalPart)).length;
+
+        while (fractionalPart != 0 && fractionalPart % 10 == 0) {
+            fractionalPart /= 10;
+        }
+
+        string memory fractionalStr = vm.toString(fractionalPart);
+
+        for (uint256 i = 0; i < leadingZeros; i++) {
+            fractionalStr = string.concat("0", fractionalStr);
+        }
+
+        if (integerPart == 0) {
+            return string.concat("0.", fractionalStr, "e", vm.toString(_e));
+        } if (fractionalPart == 0) {
+            return string.concat(integerStr, "e", vm.toString(_e));
+        } else {
+            return string.concat(integerStr, ".", fractionalStr, "e", vm.toString(_e));
+        }
+    }
+
     function digits(uint256 _in) internal pure returns (string memory) {
         uint256 l = bytes(vm.toString(_in)).length;
         if (l < 6) return "";
