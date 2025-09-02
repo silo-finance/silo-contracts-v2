@@ -20,6 +20,7 @@ import {CheckIrmOwner} from "silo-core/deploy/silo/verifier/checks/silo/CheckIrm
 import {CheckIncentivesOwner} from "silo-core/deploy/silo/verifier/checks/silo/CheckIncentivesOwner.sol";
 import {CheckShareTokensInGauge} from "silo-core/deploy/silo/verifier/checks/silo/CheckShareTokensInGauge.sol";
 import {CheckSiloImplementation} from "silo-core/deploy/silo/verifier/checks/silo/CheckSiloImplementation.sol";
+import {CheckSiloFactory} from "silo-core/deploy/silo/verifier/checks/silo/CheckSiloFactory.sol";
 
 import {CheckPriceDoesNotReturnZero} from
     "silo-core/deploy/silo/verifier/checks/behavior/CheckPriceDoesNotReturnZero.sol";
@@ -87,6 +88,7 @@ contract SiloVerifier {
     }
 
     function _buildSiloStateChecks(ISiloConfig.ConfigData memory _configData, bool _isSiloZero) internal {
+        _checks.push(new CheckSiloFactory(_configData, _isSiloZero));
         _checks.push(new CheckDaoFee(_configData, _isSiloZero));
         _checks.push(new CheckDeployerFee(_configData, _isSiloZero));
         _checks.push(new CheckLiquidationFee(_configData, _isSiloZero));
