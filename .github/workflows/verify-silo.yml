@@ -99,8 +99,16 @@ jobs:
           PRICE_0=$(echo "$CLEANED_BODY" | grep -i 'EXTERNAL_PRICE_0' | head -n1 | sed 's/ //g' | cut -d= -f2)
           PRICE_1=$(echo "$CLEANED_BODY" | grep -i 'EXTERNAL_PRICE_1' | head -n1 | sed 's/ //g' | cut -d= -f2)
           
-          PRICE_0=${PRICE_0:-99999}
-          PRICE_1=${PRICE_1:-100000}
+          # Check if prices are missing and fail with error
+          if [[ -z "$PRICE_0" ]]; then
+            echo "::error title=Missing Price::EXTERNAL_PRICE_0 not found in PR body. Please add EXTERNAL_PRICE_0=<value> to the PR description."
+            exit 1
+          fi
+          
+          if [[ -z "$PRICE_1" ]]; then
+            echo "::error title=Missing Price::EXTERNAL_PRICE_1 not found in PR body. Please add EXTERNAL_PRICE_1=<value> to the PR description."
+            exit 1
+          fi
           
           echo "$PRICE_0"
           echo "$PRICE_1"
