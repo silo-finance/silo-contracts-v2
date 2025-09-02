@@ -17,6 +17,7 @@ import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 import {IMulticall3} from "silo-core/scripts/interfaces/IMulticall3.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
+import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 
 /*
 # arbitrum
@@ -25,21 +26,7 @@ FOUNDRY_PROFILE=core FACTORY=0x384DC7759d35313F0b567D42bf2f611B285B657C\
   forge script silo-core/scripts/WithdrawFees.s.sol \
   --ffi --rpc-url $RPC_ARBITRUM --broadcast
 
-FOUNDRY_PROFILE=core FACTORY=0xaE94617314381809C2a195fcDE469e7998132B40\
-  forge script silo-core/scripts/WithdrawFees.s.sol \
-  --ffi --rpc-url $RPC_ARBITRUM --broadcast
-
-
-FOUNDRY_PROFILE=core FACTORY=0xf7dc975C96B434D436b9bF45E7a45c95F0521442\
-  forge script silo-core/scripts/WithdrawFees.s.sol \
-  --ffi --rpc-url $RPC_ARBITRUM --broadcast
-
-
 FOUNDRY_PROFILE=core FACTORY=0x621Eacb756c7fa8bC0EA33059B881055d1693a33\
-  forge script silo-core/scripts/WithdrawFees.s.sol \
-  --ffi --rpc-url $RPC_ARBITRUM --broadcast
-
-FOUNDRY_PROFILE=core FACTORY=0xb720078680Dc65B54568673410aBb81195E08122\
   forge script silo-core/scripts/WithdrawFees.s.sol \
   --ffi --rpc-url $RPC_ARBITRUM --broadcast
 
@@ -82,17 +69,21 @@ contract WithdrawFees is CommonDeploy, StdAssertions {
         ISiloLens lens = ISiloLens(getDeployedAddress(SiloCoreContracts.SILO_LENS));
 
         uint256 startingSiloId;
+        uint256 nextSiloId = factory.getNextSiloId();
 
         if (_startingIdIsOne(factory)) {
             startingSiloId = 1;
         } else if (_startingIdIsHundredOne(factory)) {
             startingSiloId = 101;
+        } else if (nextSiloId == 100 || nextSiloId == 0) {
+            console2.log("No silos exist");
+            return;
         } else {
             revert("Starting Silo id is not 1 or 101");
         }
 
         console2.log("Starting silo id for a SiloFactory is", startingSiloId);
-        uint256 amountOfMarkets = factory.getNextSiloId() - startingSiloId;
+        uint256 amountOfMarkets = nextSiloId - startingSiloId;
         console2.log("Total markets exist", amountOfMarkets);
 
         for (uint256 i = 0; i < amountOfMarkets; i++) {
@@ -124,8 +115,10 @@ contract WithdrawFees is CommonDeploy, StdAssertions {
         (uint256 daoRevenue, uint256 deployerRevenue) =
             _withdrawFeesPreview(ISilo(_silo), daoAndDeployerRevenue, daoFee, deployerFee, deployerFeeReceiver);
 
+        if (daoRevenue == 0 && deployerRevenue == 0) return;
+
         uint256 underlyingAssetDecimals = TokenHelper.assertAndGetDecimals(ISilo(_silo).asset());
-        uint256 withdrawLimit = 10* underlyingAssetDecimals / 10_000;
+        uint256 withdrawLimit = 10 ** underlyingAssetDecimals / 10_000;
 
         // skip markets with < 0.0001 token fees
         if (daoRevenue < withdrawLimit && deployerRevenue < withdrawLimit) {
@@ -136,9 +129,9 @@ contract WithdrawFees is CommonDeploy, StdAssertions {
                     "] Skipping silo: ",
                     Strings.toHexString(_silo),
                     " with daoRevenue: ",
-                    Strings.toString(daoRevenue),
+                    PriceFormatter.formatPriceInE(daoRevenue, underlyingAssetDecimals),
                     " and deployerRevenue: ",
-                    Strings.toString(deployerRevenue)
+                    PriceFormatter.formatPriceInE(deployerRevenue, underlyingAssetDecimals)
                 )
             );
 
