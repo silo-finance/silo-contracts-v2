@@ -34,29 +34,27 @@ FOUNDRY_PROFILE=core FACTORY=0x44347A91Cf3E9B30F80e2161438E0f10fCeDA0a0\
   forge script silo-core/scripts/WithdrawFees.s.sol \
   --ffi --rpc-url $RPC_ARBITRUM --broadcast
 
- 
- # avalanche
- 
-FOUNDRY_PROFILE=core FACTORY=0x92cECB67Ed267FF98026F814D813fDF3054C6Ff9\
+  
+FOUNDRY_PROFILE=core FACTORY=0x92cECB67Ed267FF98026F814D813fDF3054C6Ff9 \
     forge script silo-core/scripts/WithdrawFees.s.sol \
     --ffi --rpc-url $RPC_AVALANCHE --broadcast
-
-
-FOUNDRY_PROFILE=core FACTORY=0xD13921239e3832FDC4141FDE544D3D058B529A5D\
-    forge script silo-core/scripts/WithdrawFees.s.sol \
-    --ffi --rpc-url $RPC_INK --broadcast
-
 
 FOUNDRY_PROFILE=core FACTORY=0x22a3cF6149bFa611bAFc89Fd721918EC3Cf7b581\
     forge script silo-core/scripts/WithdrawFees.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast
 
-
 FOUNDRY_PROFILE=core FACTORY=0xFa773e2c7df79B43dc4BCdAe398c5DCA94236BC5\
     forge script silo-core/scripts/WithdrawFees.s.sol \
     --ffi --rpc-url $RPC_OPTIMISM --broadcast
 
+# sonic 
+
 FOUNDRY_PROFILE=core FACTORY=0x4e9dE3a64c911A37f7EB2fCb06D1e68c3cBe9203\
+    forge script silo-core/scripts/WithdrawFees.s.sol \
+    --ffi --rpc-url $RPC_SONIC --broadcast
+
+
+FOUNDRY_PROFILE=core FACTORY=0xa42001D6d2237d2c74108FE360403C4b796B7170\
     forge script silo-core/scripts/WithdrawFees.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast
 */
@@ -75,7 +73,7 @@ contract WithdrawFees is CommonDeploy, StdAssertions {
             startingSiloId = 1;
         } else if (_startingIdIsHundredOne(factory)) {
             startingSiloId = 101;
-        } else if (nextSiloId == 100 || nextSiloId == 0) {
+        } else if (nextSiloId == 101 || nextSiloId == 1) {
             console2.log("No silos exist");
             return;
         } else {
@@ -117,10 +115,13 @@ contract WithdrawFees is CommonDeploy, StdAssertions {
 
         if (daoRevenue == 0 && deployerRevenue == 0) return;
 
-        uint256 underlyingAssetDecimals = TokenHelper.assertAndGetDecimals(ISilo(_silo).asset());
-        uint256 withdrawLimit = 10 ** underlyingAssetDecimals / 10_000;
+        address asset = ISilo(_silo).asset();
+        string memory symbol = TokenHelper.symbol(asset);
 
-        // skip markets with < 0.0001 token fees
+        uint256 underlyingAssetDecimals = TokenHelper.assertAndGetDecimals(asset);
+        uint256 withdrawLimit = 10 ** underlyingAssetDecimals / 100;
+
+        // skip markets with < 0.01 token fees
         if (daoRevenue < withdrawLimit && deployerRevenue < withdrawLimit) {
             console2.log(
                 string.concat(
@@ -128,6 +129,8 @@ contract WithdrawFees is CommonDeploy, StdAssertions {
                     Strings.toString(_siloId),
                     "] Skipping silo: ",
                     Strings.toHexString(_silo),
+                    " ",
+                    symbol,
                     " with daoRevenue: ",
                     PriceFormatter.formatPriceInE(daoRevenue, underlyingAssetDecimals),
                     " and deployerRevenue: ",
