@@ -10,6 +10,7 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {SiloOraclesFactoriesContracts, SiloOraclesFactoriesDeployments} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtLpOracleLike.sol";
@@ -46,7 +47,10 @@ abstract contract PTLinearOracleDeployCommon is CommonDeploy {
 
         console2.log("--------------------------------");
         console2.log("deployed oracle, set this address to the json file:");
-        console2.log(address(oracle));
+        console2.log(
+            string.concat("LINEAR_ORACLE_", IERC20Metadata(_pt).symbol(), "_HARDCODED_USDC: "),
+            address(oracle)
+        );
         console2.log("--------------------------------");
 
         _verifyOracle(oracle, _pt);
@@ -107,7 +111,7 @@ abstract contract PTLinearOracleDeployCommon is CommonDeploy {
         console2.log("--------------------------------");
 
         require(assetType == IPendleSYTokenLike.AssetType.TOKEN, "assetType is not TOKEN");
-        require(assetAddress == _expectedUnderlyingToken, "assetAddress must be our underlying token");
+        require(assetAddress == _expectedUnderlyingToken, "PT asset must be our underlying token");
 
         console2.log("Pendle Market:", _market);
         console2.log("PT Token:", _ptToken);
