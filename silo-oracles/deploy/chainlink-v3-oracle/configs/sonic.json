@@ -357,6 +357,17 @@
         "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
     },
+    "EORACLE_xUSD_dUSD": {
+        "baseToken": "xUSD",
+        "quoteToken": "dUSD",
+        "primaryAggregator": "EORACLE_xUSD_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
+        "invertSecondPrice": false
+    },
     "CHAINLINK_stS_S": {
         "baseToken": "stS",
         "quoteToken": "wS",
