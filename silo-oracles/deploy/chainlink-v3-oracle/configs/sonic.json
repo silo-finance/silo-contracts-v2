@@ -291,7 +291,7 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
-    "EORACLE_yUSD_dUSD": {
+    "EORACLE_HARDCODED_yUSD_dUSD": {
         "baseToken": "yUSD",
         "quoteToken": "dUSD",
         "primaryAggregator": "EORACLE_yUSD_USD_aggregator",
