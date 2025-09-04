@@ -110,8 +110,7 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
         try FACTORY.generateConfig(_in) returns (IDynamicKinkModel.Config memory config) {
             // any config can be used to create IRM
             FACTORY.create(config, address(this), address(this), bytes32(0));
-        } catch (bytes memory revertData) {
-            bytes32 revertHash = keccak256(revertData);
+        } catch {
             vm.assume(false);
         }
     }
