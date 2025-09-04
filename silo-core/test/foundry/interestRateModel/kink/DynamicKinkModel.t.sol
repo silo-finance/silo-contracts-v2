@@ -16,7 +16,7 @@ import {KinkCommonTest} from "./KinkCommon.t.sol";
 FOUNDRY_PROFILE=core_test forge test --mc DynamicKinkModelTest -vv
 */
 contract DynamicKinkModelTest is KinkCommonTest {
-    DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory();
+    DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModel());
 
     mapping(bytes32 => bool) private seen;
 
