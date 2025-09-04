@@ -66,7 +66,7 @@ contract KinkDefaultConfigTestData is Test {
         data = new UserInputData[](dataJson.length);
 
         for (uint i; i < dataJson.length; i++) {
-            // console2.log("dataJson[i].id", dataJson[i].id);
+            console2.log("dataJson[i].id", dataJson[i].id);
             data[i] = _toConfigStruct(dataJson[i]);
         }
 
@@ -143,7 +143,7 @@ contract KinkDefaultConfigTestData is Test {
     }
 
     function _toConfigStruct(UserInputDataJson memory _in) internal pure returns (UserInputData memory _out) {
-        // console2.log("config transform");
+        console2.log("config transform");
 
         _out.config = IDynamicKinkModel.Config({
             ulow: int256(_in.config.ulow),
@@ -161,7 +161,7 @@ contract KinkDefaultConfigTestData is Test {
             dmax: int256(_in.config.dmax)
         });
 
-        // console2.log("input transform");
+        console2.log("input transform");
         _out.input = IDynamicKinkModel.UserFriendlyConfig({
             ulow: SafeCast.toUint64(_in.input.ulow),
             u1: SafeCast.toUint64(_in.input.u1),
