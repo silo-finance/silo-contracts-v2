@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {SignedMath} from "openzeppelin5/utils/math/SignedMath.sol";
@@ -226,6 +228,13 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     {
         if (_tba == 0) return 0; // no debt, no interest
 
+        console2.log("currentInterestRate input: ---------");
+        console2.log("_t0: ", _t0);
+        console2.log("_t1: ", _t1);
+        console2.log("_u: ", _u);
+        console2.log("_tba: ", _tba);
+        console2.log("---------");
+
         int256 T = _t1 - _t0;
 
         // k is stored capped, so we can use it as is
@@ -269,6 +278,15 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         virtual
         returns (int256 rcomp, int256 k)
     {
+        console2.log("compoundInterestRate input: ---------- start");
+        console2.log("_state.k: ", _state.k);
+        console2.log("_t0: ", _t0);
+        console2.log("_t1: ", _t1);
+        console2.log("_u: ", _u);
+        console2.log("_tba: ", _tba);
+        console2.log("compoundInterestRate input: ---------- end");
+
+
         // no debt, no interest, overriding min APR
         if (_tba == 0) return (0, _state.k);
 
