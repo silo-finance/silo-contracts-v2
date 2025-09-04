@@ -21,7 +21,7 @@ import {RandomLib} from "../../_common/RandomLib.sol";
 
 contract DynamicKinkFactoryMock is DynamicKinkModelFactory {
     constructor() DynamicKinkModelFactory(new DynamicKinkModel()) {}
-    
+
     function castConfig(IDynamicKinkModel.UserFriendlyConfig calldata _default)
         external
         pure
