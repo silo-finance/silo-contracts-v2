@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {SignedMath} from "openzeppelin5/utils/math/SignedMath.sol";
@@ -232,6 +234,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         virtual
         returns (int256 rcur)
     {
+        console2.log("\ncurrentInterestRate run:");
+
         if (_tba == 0) return 0; // no debt, no interest
 
         // call it to verify if we revert
@@ -246,30 +250,64 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         // });
 
         int256 T = _t1 - _t0;
+        console2.log("T:", T);
 
         // k is stored capped, so we can use it as is
         int256 k = _state.k;
+        console2.log("k:", k);
 
         if (_u < _cfg.u1) {
             k = SignedMath.max(k - (_cfg.c1 + _cfg.cminus * (_cfg.u1 - _u) / _DP) * T, _cfg.kmin);
+            console2.log("\t_cfg.c1", _cfg.c1);
+            console2.log("\t_cfg.cminus", _cfg.cminus);
+            console2.log("\t_cfg.u1", _cfg.u1);
+            console2.log("\t_u", _u);
+            console2.log("\tT", T);
+            console2.log("\t_cfg.kmin", _cfg.kmin);
+            console2.log("_u < _cfg.u1, k:", k);
         } else if (_u > _cfg.u2) {
             k = SignedMath.min(
                 k + SignedMath.min(_cfg.c2 + _cfg.cplus * (_u - _cfg.u2) / _DP, _cfg.dmax) * T, _cfg.kmax
             );
+            console2.log("\t_cfg.c2", _cfg.c2);
+            console2.log("\t_cfg.cplus", _cfg.cplus);
+            console2.log("\t_cfg.u2", _cfg.u2);
+            console2.log("\t_u", _u);
+            console2.log("\tT", T);
+            console2.log("\t_cfg.dmax", _cfg.dmax);
+            console2.log("_u > _cfg.u2, k:", k);
         }
 
         // additional interest rate
         if (_u >= _cfg.ulow) {
+            console2.log("_u >= _cfg.ulow");
+            console2.log("\t_cfg.ulow", _cfg.ulow);
+            console2.log("\t_u", _u);
+
             rcur = _u - _cfg.ulow;
+            console2.log("#1 rcur:", rcur);
 
             if (_u >= _cfg.ucrit) {
+                console2.log("_u >= _cfg.ucrit");
+                console2.log("\t_cfg.alpha", _cfg.alpha);
+                console2.log("\t_u", _u);
+                console2.log("\t_cfg.ucrit", _cfg.ucrit);
                 rcur = rcur + _cfg.alpha * (_u - _cfg.ucrit) / _DP;
+                console2.log("#2 rcur:", rcur);
             }
 
             rcur = rcur * k / _DP;
+            console2.log("\t rcur:", rcur);
+            console2.log("\t k:", k);
+            console2.log("#3 rcur:", rcur);
         }
 
         rcur = SignedMath.min((rcur + _cfg.rmin) * ONE_YEAR, RCUR_CAP);
+        console2.log("\t_cfg.rmin", _cfg.rmin);
+        console2.log("\tONE_YEAR", ONE_YEAR);
+        console2.log("\tRCUR_CAP", RCUR_CAP);
+        console2.log("#4 rcur:", rcur);
+        console2.log("currentInterestRate end.\n");
     }
 
     /// @inheritdoc IDynamicKinkModel
