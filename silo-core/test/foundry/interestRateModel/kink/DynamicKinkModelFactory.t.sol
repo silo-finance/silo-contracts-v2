@@ -20,6 +20,8 @@ import {KinkCommonTest} from "./KinkCommon.t.sol";
 import {RandomLib} from "../../_common/RandomLib.sol";
 
 contract DynamicKinkFactoryMock is DynamicKinkModelFactory {
+    constructor() DynamicKinkModelFactory(new DynamicKinkModel()) {}
+    
     function castConfig(IDynamicKinkModel.UserFriendlyConfig calldata _default)
         external
         pure
@@ -40,7 +42,7 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
 
     uint256 constant DP = 1e18;
 
-    DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory();
+    DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModel());
 
     function setUp() public {
         IDynamicKinkModel.Config memory emptyConfig;

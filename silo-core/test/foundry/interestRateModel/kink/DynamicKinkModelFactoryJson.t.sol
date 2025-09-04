@@ -7,6 +7,7 @@ import {console2} from "forge-std/console2.sol";
 import {IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {DynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
 import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
+import {DynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 
 import {KinkDefaultConfigTestData} from "../../data-readers/KinkDefaultConfigTestData.sol";
 
@@ -19,7 +20,7 @@ contract DynamicKinkModelFactoryJsonTest is KinkDefaultConfigTestData, KinkCommo
     DynamicKinkModelFactory immutable FACTORY;
 
     constructor() {
-        FACTORY = new DynamicKinkModelFactory();
+        FACTORY = new DynamicKinkModelFactory(new DynamicKinkModel());
     }
 
     /*
