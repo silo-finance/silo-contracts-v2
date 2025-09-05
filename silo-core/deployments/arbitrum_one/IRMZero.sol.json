@@ -1,0 +1,118 @@
+{
+  "address": "0xf4a46DC09E3e17d60ab54e1E9AEb47faaa5ad6F3",
+  "abi": [
+    {
+      "type": "function",
+      "name": "decimals",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getCompoundInterestRate",
+      "inputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getCompoundInterestRateAndUpdate",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getCurrentInterestRate",
+      "inputs": [
+        {
+          "name": "_silo",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "_blockTimestamp",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "rcur",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "initialize",
+      "inputs": [
+        {
+          "name": "_irmConfig",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "InterestRateModelError",
+      "inputs": [],
+      "anonymous": false
+    }
+  ],
+  "bytecode": "0x6080604052348015600e575f5ffd5b5061016d8061001c5f395ff3fe608060405234801561000f575f5ffd5b5060043610610055575f3560e01c8063313ce5671461005957806364efe1771461006d57806384de969a14610082578063c4d66de814610098578063cfdfcffa1461006d575b5f5ffd5b5f5b60405190815260200160405180910390f35b61005b61007b3660046100c6565b5f92915050565b61005b6100903660046100ee565b5f9392505050565b6100a96100a6366004610117565b50565b005b80356001600160a01b03811681146100c1575f5ffd5b919050565b5f5f604083850312156100d7575f5ffd5b6100e0836100ab565b946020939093013593505050565b5f5f5f60608486031215610100575f5ffd5b505081359360208301359350604090920135919050565b5f60208284031215610127575f5ffd5b610130826100ab565b939250505056fea2646970667358221220425d9eb2fdefe4a164819e9660f294497460692c9d6df5303b6718b2a5b85f5464736f6c634300081c0033",
+  "deployedBytecode": "0x608060405234801561000f575f5ffd5b5060043610610055575f3560e01c8063313ce5671461005957806364efe1771461006d57806384de969a14610082578063c4d66de814610098578063cfdfcffa1461006d575b5f5ffd5b5f5b60405190815260200160405180910390f35b61005b61007b3660046100c6565b5f92915050565b61005b6100903660046100ee565b5f9392505050565b6100a96100a6366004610117565b50565b005b80356001600160a01b03811681146100c1575f5ffd5b919050565b5f5f604083850312156100d7575f5ffd5b6100e0836100ab565b946020939093013593505050565b5f5f5f60608486031215610100575f5ffd5b505081359360208301359350604090920135919050565b5f60208284031215610127575f5ffd5b610130826100ab565b939250505056fea2646970667358221220425d9eb2fdefe4a164819e9660f294497460692c9d6df5303b6718b2a5b85f5464736f6c634300081c0033",
+  "language": "Solidity",
+  "compiler": "0.8.28+commit.7893614a"
+}

@@ -9,7 +9,7 @@ import {IRMZero} from "silo-core/contracts/interestRateModel/IRMZero.sol";
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/IRMZeroDeploy.s.sol \
-        --ffi --rpc-url $RPC_SONIC --broadcast --verify
+        --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
 
     Resume verification:
     FOUNDRY_PROFILE=core \
