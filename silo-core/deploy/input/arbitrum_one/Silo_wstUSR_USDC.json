@@ -8,7 +8,7 @@
     "solvencyOracle0": "CHAINLINK_HARDCODED_wstUSR_stUSR",
     "maxLtvOracle0": "NO_ORACLE",
     "interestRateModel0": "InterestRateModelV2Factory.sol",
-    "interestRateModelConfig0": "NA",
+    "interestRateModelConfig0": "stableHighCapV17",
     "maxLtv0": 9200,
     "lt0": 9500,
     "liquidationTargetLtv0": 9400,
