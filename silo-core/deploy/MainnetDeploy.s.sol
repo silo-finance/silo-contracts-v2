@@ -14,7 +14,6 @@ import {SiloRouterV2Deploy} from "./SiloRouterV2Deploy.s.sol";
 import {SiloFactoryDeploy} from "./SiloFactoryDeploy.s.sol";
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 import {ManualLiquidationHelperDeploy} from "silo-core/deploy/ManualLiquidationHelperDeploy.s.sol";
-import {IRMZeroDeploy} from "silo-core/deploy/IRMZeroDeploy.s.sol";
 
 /**
     FOUNDRY_PROFILE=core \
@@ -33,9 +32,6 @@ contract MainnetDeploy is CommonDeploy {
         TowerDeploy towerDeploy = new TowerDeploy();
         SiloRouterV2Deploy siloRouterV2Deploy = new SiloRouterV2Deploy();
         ManualLiquidationHelperDeploy manualLiquidationHelperDeploy = new ManualLiquidationHelperDeploy();
-        IRMZeroDeploy irmZeroDeploy = new IRMZeroDeploy();
-
-        irmZeroDeploy.run();
 
         SiloIncentivesControllerFactoryDeploy siloIncentivesControllerFactoryDeploy =
             new SiloIncentivesControllerFactoryDeploy();
