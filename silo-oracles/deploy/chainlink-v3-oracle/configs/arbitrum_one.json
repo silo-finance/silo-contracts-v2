@@ -1,4 +1,15 @@
 {
+    "CHAINLINK_USDC_USD_V1": {
+        "baseToken": "USDC",
+        "quoteToken": "SILO_VIRTUAL_USD_8_OLD",
+        "primaryAggregator": "CHAINLINK_USDC_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
+        "invertSecondPrice": false
+    },
     "CHAINLINK_USDC_USD": {
         "baseToken": "USDC",
         "quoteToken": "SILO_VIRTUAL_USD_8",
@@ -186,6 +197,7 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
+
     "CHAINLINK_RYT_USDC": {
         "baseToken": "RYT",
         "quoteToken": "USDC",
@@ -195,6 +207,16 @@
         "secondaryHeartbeat": 0,
         "normalizationDivider": 1e18,
         "normalizationMultiplier": 0,
+    },
+    "EORACLE_xUSD_USD": {
+        "baseToken": "xUSD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "EORACLE_xUSD_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
     }
 }
