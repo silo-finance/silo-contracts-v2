@@ -207,5 +207,16 @@
         "normalizationDivider": 0,
         "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
+    },
+    "CHAINLINK_HARDCODED_wstUSR_stUSR": {
+        "baseToken": "wstUSR",
+        "quoteToken": "USDC",
+        "primaryAggregator": "CHAINLINK_wstUSR_stUSR_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }
