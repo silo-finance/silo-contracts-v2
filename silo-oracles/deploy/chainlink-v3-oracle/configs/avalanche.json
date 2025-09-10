@@ -39,6 +39,16 @@
         "normalizationDivider": 0,
         "normalizationMultiplier": 1e4
     },
+    "REDSTONE_sUSDe_USD": {
+        "baseToken": "sUSDe",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "REDSTONE_sUSDe_USD_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0
+    },
     "CHAINLINK_USDC_USD": {
         "baseToken": "USDC",
         "quoteToken": "SILO_VIRTUAL_USD_8",
@@ -48,6 +58,16 @@
         "secondaryHeartbeat": 0,
         "normalizationDivider": 0,
         "normalizationMultiplier": 1e4
+    },
+    "EORACLE_PT_sw_esdeUSD_3_deUSD_2026_02_06_HARDCODE_USDC": {
+        "baseToken": "PT_sw_esdeUSD_3_deUSD_2026_02_06",
+        "quoteToken": "USDC",
+        "primaryAggregator": "PT_sw_esdeUSD_3_deUSD_2026_02_06_deUSD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0
     },
     "EORACLE_HARDCODE_xBTC_BTC.b": {
         "baseToken": "xBTC",
