@@ -81,13 +81,13 @@ contract FixedPricePTAmmOracleDeploy is CommonDeploy, SaveDeployedOracle {
     }
 
     function _makeOracleName(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) internal view returns (string memory) {
-        bool hardcodedQuote = _config.hardcoddedQuoteToken == _config.ptUnderlyingQuoteToken;
+        bool hardcodedQuote = _config.hardcoddedQuoteToken != _config.ptUnderlyingQuoteToken;
 
         return string.concat(
             "PENDLE_FIXED_PRICE_PT_AMM_ORACLE_",
             IERC20Metadata(_config.ptToken).symbol(),
             "_",
-            hardcodedQuote ? "" : "HARDCODED_",
+            hardcodedQuote ? "HARDCODED_" : "",
             IERC20Metadata(hardcodedQuote ? _config.hardcoddedQuoteToken : _config.ptUnderlyingQuoteToken).symbol()
         );
     }
