@@ -2,17 +2,20 @@
 pragma solidity 0.8.28;
 
 import {console2} from "forge-std/console2.sol";
+import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 
 import {CommonDeploy} from "../../CommonDeploy.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
-import {SiloOraclesFactoriesContracts, SiloOraclesFactoriesDeployments} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
+import {
+    SiloOraclesFactoriesContracts,
+    SiloOraclesFactoriesDeployments
+} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 
 import {IFixedPricePTAMMOracleFactory} from "silo-oracles/contracts/interfaces/IFixedPricePTAMMOracleFactory.sol";
 import {IFixedPricePTAMMOracleConfig} from "silo-oracles/contracts/interfaces/IFixedPricePTAMMOracleConfig.sol";
 import {IFixedPricePTAMMOracle} from "silo-oracles/contracts/interfaces/IFixedPricePTAMMOracle.sol";
 import {IPendleAMM} from "silo-oracles/contracts/interfaces/IPendleAMM.sol";
-
 
 abstract contract PTAmmOracleDeployCommon is CommonDeploy {
     function _deployPTAmmOracle(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) internal {
@@ -22,10 +25,11 @@ abstract contract PTAmmOracleDeployCommon is CommonDeploy {
 
         string memory chainAlias = ChainsLib.chainAlias();
 
-        IFixedPricePTAMMOracleFactory factory = IFixedPricePTAMMOracleFactory(SiloOraclesFactoriesDeployments.get(
-            SiloOraclesFactoriesContracts.FIXED_PRICE_PT_AMM_ORACLE_FACTORY,
-            chainAlias
-        ));
+        IFixedPricePTAMMOracleFactory factory = IFixedPricePTAMMOracleFactory(
+            SiloOraclesFactoriesDeployments.get(
+                SiloOraclesFactoriesContracts.FIXED_PRICE_PT_AMM_ORACLE_FACTORY, chainAlias
+            )
+        );
 
         console2.log("factory: ", address(factory));
         require(address(factory) != address(0), "factory is not deployed");
@@ -33,7 +37,11 @@ abstract contract PTAmmOracleDeployCommon is CommonDeploy {
         address existingOracle = factory.resolveExistingOracle(factory.hashConfig(_config));
 
         console2.log("existing oracle: ", existingOracle);
-        if (existingOracle != address(0)) return;
+
+        if (existingOracle != address(0)) {
+            _querySamplePrice(IFixedPricePTAMMOracle(existingOracle), _config);
+            return;
+        }
 
         vm.startBroadcast(deployerPrivateKey);
         IFixedPricePTAMMOracle oracle = factory.create(_config, bytes32(0));
@@ -41,7 +49,14 @@ abstract contract PTAmmOracleDeployCommon is CommonDeploy {
 
         console2.log("deployed oracle: ", address(oracle));
 
-        uint256 samplePrice = oracle.quote(1e18, _config.ptToken);
-        console2.log("sample price for 1e18 PT: ", samplePrice);
+        _querySamplePrice(oracle, _config);
+    }
+
+    function _querySamplePrice(
+        IFixedPricePTAMMOracle _oracle,
+        IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config
+    ) internal view {
+        uint256 samplePrice = _oracle.quote(1e18, _config.ptToken);
+        console2.log("sample price for 1e18 PT: ", PriceFormatter.formatPriceInE18(samplePrice));
     }
 }
