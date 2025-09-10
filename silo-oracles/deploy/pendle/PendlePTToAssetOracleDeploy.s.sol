@@ -7,8 +7,6 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {PendlePTToAssetOracleFactory} from "silo-oracles/contracts/pendle/PendlePTToAssetOracleFactory.sol";
 import {PendlePTToAssetOracle} from "silo-oracles/contracts/pendle/PendlePTToAssetOracle.sol";
-import {OraclesDeployments} from "../OraclesDeployments.sol";
-import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol"; 
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
