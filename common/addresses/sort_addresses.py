@@ -6,7 +6,7 @@ This script reads all JSON files from the current directory (common/addresses),
 sorts the data alphabetically by key, and overwrites the files with sorted data.
 
 Usage:
-    python3 sort_addresses.py
+    python3 common/addresses/sort_addresses.py
 
 The script will:
 1. Find all .json files in the current directory
@@ -42,6 +42,7 @@ def sort_json_file(file_path: str) -> bool:
         # Write the sorted data back to the file with proper formatting
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(sorted_data, f, indent=4, separators=(',', ': '))
+            f.write('\n')  # Add newline at the end
         
         print(f"✅ Sorted: {os.path.basename(file_path)}")
         return True
