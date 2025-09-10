@@ -66,6 +66,7 @@ contract FixedPricePTAmmOracleDeploy is CommonDeploy, SaveDeployedOracle {
 
         if (existingOracle != address(0)) {
             _querySamplePrice(IFixedPricePTAMMOracle(existingOracle), _config);
+            _qa(IFixedPricePTAMMOracle(existingOracle), _config);
             return;
         }
 
@@ -78,6 +79,7 @@ contract FixedPricePTAmmOracleDeploy is CommonDeploy, SaveDeployedOracle {
         _saveDeployedOracle(address(oracle), _makeOracleName(_config));
 
         _querySamplePrice(oracle, _config);
+        _qa(oracle, _config);
     }
 
     function _makeOracleName(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) internal view returns (string memory) {
@@ -95,8 +97,18 @@ contract FixedPricePTAmmOracleDeploy is CommonDeploy, SaveDeployedOracle {
     function _querySamplePrice(
         IFixedPricePTAMMOracle _oracle,
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config
-    ) internal view {
-        uint256 samplePrice = _oracle.quote(1e18, _config.ptToken);
-        console2.log("sample price for 1e18 PT: ", PriceFormatter.formatPriceInE18(samplePrice));
+    ) internal view returns (uint256 price) {
+        price = _oracle.quote(1e18, _config.ptToken);
+        console2.log("sample price for 1e18 PT: ", PriceFormatter.formatPriceInE18(price));
+    }
+
+
+    function _qa(IFixedPricePTAMMOracle _oracle, IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) internal {
+        console2.log("QAing oracle: ", address(_oracle));
+        _querySamplePrice(_oracle, _config);
+
+        vm.warp(block.timestamp + 365 days * 3);
+        console2.log("after 3 years: ");
+        _querySamplePrice(_oracle, _config);
     }
 }
