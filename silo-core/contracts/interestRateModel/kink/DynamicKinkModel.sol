@@ -258,18 +258,22 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             );
         }
 
-        // additional interest rate
+        int256 excessU; // additional interest rate
         if (_u >= _cfg.ulow) {
-            rcur = _u - _cfg.ulow;
+            excessU = _u - _cfg.ulow;
 
             if (_u >= _cfg.ucrit) {
-                rcur = rcur + _cfg.alpha * (_u - _cfg.ucrit) / _DP;
+                excessU = excessU + _cfg.alpha * (_u - _cfg.ucrit) / _DP;
             }
 
-            rcur = rcur * k / _DP;
+            // rcur = rcur * k / _DP;
+            // rcur = (excessU * k + _cfg.rmin) * ONE_YEAR / _DP;
+            rcur = excessU * k * ONE_YEAR / _DP + _cfg.rmin * ONE_YEAR;
+        } else {
+            rcur = _cfg.rmin * ONE_YEAR;
         }
 
-        rcur = SignedMath.min((rcur + _cfg.rmin) * ONE_YEAR, RCUR_CAP);
+        rcur = SignedMath.min(rcur, RCUR_CAP);
     }
 
     /// @inheritdoc IDynamicKinkModel
