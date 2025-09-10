@@ -29,8 +29,9 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
 
     int256 constant _DP = 10 ** 18;
 
+    uint256 acceptableDiffPercentRcur = 6e9;
     mapping(uint256 id => uint256 aloowedDiffPercent) private _rcompDiffPercent;
-    mapping(uint256 id => uint256 aloowedDiffPercent) private _rcurDiffPercent;
+    // mapping(uint256 id => uint256 aloowedDiffPercent) private _rcurDiffPercent;
 
     ISilo.UtilizationData public utilizationData;
 
@@ -41,10 +42,10 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
         IRM.initialize(cfg, address(this), address(this));
 
         // 1e18 is 100%
-        _rcurDiffPercent[259] = 11075646641;
-        _rcurDiffPercent[281] = 195011203199;
-        _rcurDiffPercent[285] = 18894769892;
-        _rcurDiffPercent[289] = 23071444669;
+        // _rcurDiffPercent[259] = 11075646641;
+        // _rcurDiffPercent[281] = 195011203199;
+        // _rcurDiffPercent[285] = 18894769892;
+        // _rcurDiffPercent[289] = 23071444669;
 
         _rcompDiffPercent[19] = 22872736801;
         _rcompDiffPercent[28] = 12374540229;
@@ -65,6 +66,7 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
         _rcompDiffPercent[194] = 32667389684;
         _rcompDiffPercent[197] = 63694885413;
         _rcompDiffPercent[231] = 32481920192;
+        _rcompDiffPercent[264] = 8449010067;
         _rcompDiffPercent[294] = 14946966269;
         _rcompDiffPercent[299] = 11559641605;
     }
@@ -81,12 +83,12 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
     /* 
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_rcur_json
     */
-    function test_kink_rcur_json() public view {
+    function test_kink_rcur_json() public {
         RcurData[] memory data = _readDataFromJsonRcur();
 
-        for (uint256 i; i < data.length; i++) {
+        for (uint256 i = 0; i < data.length; i++) {
             (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c) = _toSetupRcur(data[i]);
-            // _printRcur(data[i]);
+            _printRcur(data[i]);
 
             try IRM.currentInterestRate(
                 c,
@@ -101,14 +103,12 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
                     continue;
                 }
 
-                uint256 acceptableDiffPercent = _getAcceptableDiffPercent(data[i].id, _rcurDiffPercent);
-
                 _assertCloseTo(
                     rcur,
                     data[i].expected.currentAnnualInterest,
                     data[i].id,
                     "rcur is not close to expected value",
-                    acceptableDiffPercent
+                    acceptableDiffPercentRcur
                 );
             } catch {
                 revert(
@@ -144,14 +144,12 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
                 continue;
             }
 
-            uint256 acceptableDiffPercent = _getAcceptableDiffPercent(data[i].id, _rcurDiffPercent);
-
             _assertCloseTo(
                 SafeCast.toInt256(rcur),
                 data[i].expected.currentAnnualInterest,
                 data[i].id,
                 "[getCurrentInterestRate] rcur is not close to expected value",
-                acceptableDiffPercent
+                acceptableDiffPercentRcur
             );
         }
     }
@@ -307,7 +305,7 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
         acceptableDiffPercent = _diffs[_id];
 
         if (acceptableDiffPercent == 0) {
-            acceptableDiffPercent = 1e10; // default value for tiny differences
+            acceptableDiffPercent = 7e9; // default value for tiny differences
         }
     }
 }
