@@ -6,9 +6,9 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
 
 /**
-FOUNDRY_PROFILE=core CONFIG=Silo_USDC_USDai HOOK_RECEIVER_OWNER=DAO \
+FOUNDRY_PROFILE=core CONFIG=Silo_sUSDe_USDC HOOK_RECEIVER_OWNER=DAO \
     forge script silo-core/deploy/silo/SiloDeployWithHookReceiverOwner.s.sol \
-    --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
+    --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify
 
 Resume verification:
     FOUNDRY_PROFILE=core CONFIG=Silo_WAVAX_USDC HOOK_RECEIVER_OWNER=DAO \
