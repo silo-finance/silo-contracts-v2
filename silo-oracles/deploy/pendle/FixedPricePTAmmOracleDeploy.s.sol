@@ -9,13 +9,13 @@ import {PTAmmOracleDeployCommon} from "./deployment-helpers/PTAmmOracleDeployCom
 import {IFixedPricePTAMMOracleConfig} from "silo-oracles/contracts/interfaces/IFixedPricePTAMMOracleConfig.sol";
 import {IPendleAMM} from "silo-oracles/contracts/interfaces/IPendleAMM.sol";
 
-/**
- * FOUNDRY_PROFILE=oracles \
- * PT_TOKEN=PT_Ethena_USDe_25SEP2025 \
- * PT_UNDERLYING_QUOTE_TOKEN=USDe \
- * HARDCODED_QUOTE_TOKEN=USDC \
- *     forge script silo-oracles/deploy/pendle/FixedPricePTAmmOracleDeploy.s.sol \
- *     --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify
+/*
+FOUNDRY_PROFILE=oracles \
+ PT_TOKEN=PT_Ethena_USDe_27Nov2025 \
+ PT_UNDERLYING_QUOTE_TOKEN=USDe \
+ HARDCODED_QUOTE_TOKEN=USDC \
+    forge script silo-oracles/deploy/pendle/FixedPricePTAmmOracleDeploy.s.sol \
+    --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify
  */
 contract FixedPricePTAmmOracleDeploy is PTAmmOracleDeployCommon {
     function run() public {
