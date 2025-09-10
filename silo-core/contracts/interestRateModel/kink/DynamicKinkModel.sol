@@ -266,8 +266,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
                 excessU = excessU + _cfg.alpha * (_u - _cfg.ucrit) / _DP;
             }
 
-            // rcur = rcur * k / _DP;
-            // rcur = (excessU * k + _cfg.rmin) * ONE_YEAR / _DP;
             rcur = excessU * k * ONE_YEAR / _DP + _cfg.rmin * ONE_YEAR;
         } else {
             rcur = _cfg.rmin * ONE_YEAR;
