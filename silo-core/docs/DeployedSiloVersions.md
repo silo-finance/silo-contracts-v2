@@ -55,7 +55,7 @@
 
 
  **Network: Avalanche** \
- id 100 -  [3.8.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.8.0) \
+ id 100 -  version [3.8.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.8.0) \
  SiloDeployer [0x3D1FE4DA8812f506f65FfD5e61E2c3f6A01cCD39](https://snowtrace.io/address/0x3D1FE4DA8812f506f65FfD5e61E2c3f6A01cCD39) \
  Silo Implementation [0x2C7E816323B2E3894EB98d53B2cbec659aE26441](https://snowtrace.io/address/0x2C7E816323B2E3894EB98d53B2cbec659aE26441) \
  Silo Factory [0x92cECB67Ed267FF98026F814D813fDF3054C6Ff9](https://snowtrace.io/address/0x92cECB67Ed267FF98026F814D813fDF3054C6Ff9)
