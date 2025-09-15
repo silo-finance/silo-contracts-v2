@@ -52,4 +52,12 @@
  SiloDeployer [0xb59605f42A1c564aacc9387132Ad712295b21E55](https://explorer.inkonchain.com/address/0xb59605f42A1c564aacc9387132Ad712295b21E55) \
  Silo Implementation [0xd3De080436b9d38DC315944c16d89C050C414Fed](https://explorer.inkonchain.com/address/0xd3De080436b9d38DC315944c16d89C050C414Fed) \
  Silo Factory [0xD13921239e3832FDC4141FDE544D3D058B529A5D](https://explorer.inkonchain.com/address/0xD13921239e3832FDC4141FDE544D3D058B529A5D)
- 
+
+
+https://snowtrace.io/address/0x3D1FE4DA8812f506f65FfD5e61E2c3f6A01cCD39/contract/43114/code
+
+ **Network: Avalanche** \
+ id 100 -  [3.8.0](https://github.com/silo-finance/silo-contracts-v2/releases/tag/3.8.0) \
+ SiloDeployer [0x3D1FE4DA8812f506f65FfD5e61E2c3f6A01cCD39](https://snowtrace.io/address/0x3D1FE4DA8812f506f65FfD5e61E2c3f6A01cCD39) \
+ Silo Implementation [0x2C7E816323B2E3894EB98d53B2cbec659aE26441](https://snowtrace.io/address/0x2C7E816323B2E3894EB98d53B2cbec659aE26441) \
+ Silo Factory [0x92cECB67Ed267FF98026F814D813fDF3054C6Ff9](https://snowtrace.io/address/0x92cECB67Ed267FF98026F814D813fDF3054C6Ff9)
