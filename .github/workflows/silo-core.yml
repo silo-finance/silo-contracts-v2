@@ -50,6 +50,7 @@ on:
             - .github/workflows/silo-core.yml
 
 jobs:
+<<<<<<< HEAD
     silo-core-cache:
         runs-on: ubuntu-latest
         steps:
@@ -121,8 +122,9 @@ jobs:
             -   name: Solidity Lint
                 run: yarn workspace silo-core lint:sol
 
+=======
+>>>>>>> 1ba54c1d (silo-core: Echidna tests for dynamic kink irm)
     fast-tests:
-        needs: silo-core-cache
         runs-on: ubuntu-latest
 
         steps:
@@ -159,7 +161,8 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: all fast test
-                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest|NewMarketTest" --ffi -vv
+<<<<<<< HEAD
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest" --ffi -vv
 
     slow-contracts-tests:
         strategy:
@@ -302,3 +305,8 @@ jobs:
 
             -   name: ${{ matrix.match-contract }}
                 run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc ${{ matrix.match-contract }} --ffi -vv
+=======
+                # run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest" --ffi -vv
+                # run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mt "test_leverage_anySiloForFlashloan|test_leverage_setLeverageFee_fail_ReceiverZero" --ffi -vvvv
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mt "test_leverage_setLeverageFee_fail_ReceiverZero" --ffi -vvvv
+>>>>>>> 1ba54c1d (silo-core: Echidna tests for dynamic kink irm)
