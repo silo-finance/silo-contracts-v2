@@ -4,7 +4,7 @@
     "hookReceiverImplementation": "SiloHookV1.sol",
     "daoFee": 1000,
     "deployerFee": 0,
-    "token0": "PT-USDf-29Jan26",
+    "token0": "PT-USDf-29JAN2026",
     "solvencyOracle0": "LINEAR_HARDCODE_PT-USDf-29JAN2026_USDC",
     "maxLtvOracle0": "NO_ORACLE",
     "interestRateModel0": "InterestRateModelV2Factory.sol",
