@@ -79,6 +79,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         _updateConfiguration(_config);
     }
 
+    /// @inheritdoc IDynamicKinkModel
     function restoreLastConfig() external virtual onlyOwner {
         IDynamicKinkModelConfig lastOne = configsHistory[irmConfig];
         require(address(lastOne) != address(0), AddressZero());
@@ -88,6 +89,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         emit ConfigRestored(lastOne);
     }
 
+    /// @inheritdoc IDynamicKinkModel
     function getCompoundInterestRateAndUpdate(
         uint256 _collateralAssets,
         uint256 _debtAssets,
@@ -103,12 +105,13 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         if (_collateralAssets.willOverflowOnCastToInt256()) return 0;
         if (_debtAssets.willOverflowOnCastToInt256()) return 0;
         if (_interestRateTimestamp.willOverflowOnCastToInt256()) return 0;
+        if (block.timestamp.willOverflowOnCastToInt256()) return 0;
 
         try this.compoundInterestRate({
             _cfg: cfg,
             _state: state,
-            _t0: SafeCast.toInt256(_interestRateTimestamp),
-            _t1: SafeCast.toInt256(block.timestamp),
+            _t0: int256(_interestRateTimestamp),
+            _t1: int256(block.timestamp),
             _u: _calculateUtiliation(_collateralAssets, _debtAssets),
             _tba: int256(_debtAssets)
         }) returns (int256 rcompInt, int256 k) {
@@ -120,6 +123,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         }
     }
 
+    /// @inheritdoc IDynamicKinkModel
     function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)
         external
         view
@@ -253,6 +257,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         }
 
         rcur = SignedMath.min(rcur, RCUR_CAP);
+        // TODO add check for negative rcur and return 0
     }
 
     /// @inheritdoc IDynamicKinkModel
@@ -320,6 +325,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         require(_l.x <= X_MAX, XOverflow());
 
         rcomp = PRBMathSD59x18.exp(_l.x) - _DP;
+        // TODO add check for negative rcomp and return 0
 
         // limit rcomp
         if (rcomp > RCOMP_CAP_PER_SECOND * _l.T) {
@@ -346,7 +352,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     {
         verifyConfig(_config);
 
-        newCfg = new DynamicKinkModelConfig(_config);
+        newCfg = new DynamicKinkModelConfig(_config); // TODO add info to interface that by setting up same congig we can reset k
 
         configsHistory[newCfg] = irmConfig;
 

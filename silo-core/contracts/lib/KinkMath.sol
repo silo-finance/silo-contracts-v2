@@ -19,6 +19,6 @@ library KinkMath {
     }
 
     function willOverflowOnCastToInt256(uint256 _value) internal pure returns (bool) {
-        return _value > uint256(type(int256).max);
+        return _value > uint256(type(int256).max); // TODO check openzeppelin SafeCast.sol
     }
 }
