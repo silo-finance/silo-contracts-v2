@@ -4,18 +4,45 @@ pragma solidity >=0.5.0;
 import {IDynamicKinkModel} from "./IDynamicKinkModel.sol";
 import {IInterestRateModel} from "./IInterestRateModel.sol";
 
+/// @title IDynamicKinkModelFactory
+/// @notice Factory interface for creating Dynamic Kink Interest Rate Model instances
+/// @dev This factory creates and manages DynamicKinkModel instances using a clone pattern.
+///      It provides utilities for configuration generation, validation, and deterministic
+///      address prediction using CREATE2.
+/// 
+///      Key Features:
+///      - Creates DynamicKinkModel instances via cloning
+///      - Converts user-friendly configs to internal model parameters
+///      - Validates configurations before deployment
+///      - Predicts deterministic addresses for CREATE2 deployments
+///      - Tracks which models were created by this factory
+/// 
+///      Usage Flow:
+///      1. Use generateConfig() to convert UserFriendlyConfig to internal Config
+///      2. Use verifyConfig() to validate the configuration
+///      3. Use create() to deploy a new DynamicKinkModel instance
+///      4. Use predictAddress() to determine the deployment address beforehand
 interface IDynamicKinkModelFactory {
+    /// @notice Emitted when a new DynamicKinkModel instance is created
+    /// @param irm The address of the newly created DynamicKinkModel instance
     event NewDynamicKinkModel(IDynamicKinkModel indexed irm);
 
+    /// @notice Thrown when trying to predict address with zero deployer address
     error DeployerCannotBeZero();
 
-    /// @dev verifies config and creates IRM config contract
-    /// @notice it can be used in separate tx eg config can be prepared before it will be used for Silo creation
-    /// @param _config IRM configuration
-    /// @param _initialOwner initial owner of model
-    /// @param _silo address of silo for which model is created
-    /// @param _externalSalt external salt for the create2 call
-    /// @return irm deployed (or existing one, depends on the config) contract address
+    /// @notice Creates a new DynamicKinkModel instance using CREATE2
+    /// @dev This function verifies the configuration, creates a clone of the implementation,
+    ///      initializes it with the provided parameters, and tracks it in the factory.
+    ///      The same salt will always produce the same address, enabling deterministic deployments.
+    /// 
+    ///      The function can be used in separate transactions - configurations can be prepared
+    ///      and validated before being used for Silo creation.
+    /// 
+    /// @param _config Configuration parameters for the DynamicKinkModel
+    /// @param _initialOwner Address that will own and control the created model instance
+    /// @param _silo Address of the Silo contract this model will serve
+    /// @param _externalSalt External salt for the CREATE2 deterministic deployment
+    /// @return irm The deployed DynamicKinkModel instance (IInterestRateModel interface)
     function create(
         IDynamicKinkModel.Config calldata _config, 
         address _initialOwner,
@@ -25,33 +52,60 @@ interface IDynamicKinkModelFactory {
         external
         returns (IInterestRateModel irm);
 
-    /// @notice Generates a default config for the DynamicKinkModel based on the provided parameters.
-    /// @dev This function is used to create a config that can be used to initialize a DynamicKinkModel instance.
-    /// @param _default Default configuration parameters for the DynamicKinkModel.
-    /// @return config The generated configuration for the DynamicKinkModel.
+    /// @notice Converts user-friendly configuration to internal model parameters
+    /// @dev This function takes intuitive configuration parameters and converts them to the
+    ///      internal mathematical parameters used by the DynamicKinkModel. It performs
+    ///      validation to ensure the configuration is mathematically sound and within
+    ///      acceptable limits.
+    /// 
+    ///      The conversion includes:
+    ///      - Converting annual rates to per-second rates
+    ///      - Calculating slope parameters (kmin, kmax) from rate ranges
+    ///      - Computing time-based coefficients (c1, c2, cminus, cplus)
+    ///      - Validating parameter relationships and constraints
+    /// 
+    /// @param _default User-friendly configuration parameters (utilization thresholds, rates, times)
+    /// @return config Internal configuration parameters ready for model initialization
     function generateConfig(IDynamicKinkModel.UserFriendlyConfig calldata _default)
         external
         view
         returns (IDynamicKinkModel.Config memory config);
 
-    /// @notice Check if variables in config match the limits from model whitepaper.
-    /// Some limits are narrower than in whhitepaper, because of additional research, see:
-    /// https://silofinance.atlassian.net/wiki/spaces/SF/pages/347963393/DynamicKink+model+config+limits+V1
-    /// @dev it throws when config is invalid
-    /// @param _config DynamicKinkModel config struct, does not include the state of the model.
+    /// @notice Validates that configuration parameters are within acceptable limits
+    /// @dev This function checks if all configuration parameters are within the safe operating ranges
+    ///      defined by the model whitepaper. Some limits are narrower than the original whitepaper
+    ///      due to additional research and safety considerations.
+    /// 
+    ///      For detailed limits, see:
+    ///      https://silofinance.atlassian.net/wiki/spaces/SF/pages/347963393/DynamicKink+model+config+limits+V1
+    /// 
+    /// @param _config The configuration to validate (does not include model state)
+    /// @custom:throws Reverts if any parameter is outside acceptable limits
     function verifyConfig(IDynamicKinkModel.Config calldata _config) external view;
 
-    /// @dev Predicts the address of the IRM contract that will be created with the given salt and deployer.
-    /// @param _deployer Address of the deployer.
-    /// @param _externalSalt External salt for the create2 call.
-    /// @return predictedAddress Predicted address of the IRM contract.
+    /// @notice Predicts the deterministic address of a DynamicKinkModel that would be created
+    /// @dev This function calculates the address that would be generated by CREATE2 when
+    ///      creating a DynamicKinkModel with the given deployer and salt. This enables
+    ///      front-running protection and allows users to know the address before deployment.
+    /// 
+    ///      The same deployer and salt will always produce the same predicted address.
+    /// 
+    /// @param _deployer Address of the account that will deploy the model
+    /// @param _externalSalt External salt for the CREATE2 deterministic deployment
+    /// @return predictedAddress The address where the DynamicKinkModel would be deployed
     function predictAddress(address _deployer, bytes32 _externalSalt)
         external
         view
         returns (address predictedAddress);
 
-    /// @dev Checks if the IRM contract was created by the factory.
-    /// @param _irm Address of the IRM contract.
-    /// @return isCreated True if the IRM contract was created by the factory, false otherwise.
+    /// @notice Checks if a DynamicKinkModel was created by this factory
+    /// @dev This function verifies whether a given address corresponds to a DynamicKinkModel
+    ///      instance that was deployed through this factory. This is useful for:
+    ///      - Verifying the authenticity of model instances
+    ///      - Implementing access controls based on factory creation
+    ///      - Tracking and managing factory-deployed models
+    /// 
+    /// @param _irm Address of the DynamicKinkModel contract to check
+    /// @return isCreated True if the model was created by this factory, false otherwise
     function createdByFactory(address _irm) external view returns (bool isCreated);
 }
