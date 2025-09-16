@@ -140,14 +140,14 @@ interface IDynamicKinkModel {
     error XOverflow();
 
     function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo) external;
-
-    function RCOMP_CAP_PER_SECOND() external view returns (int256);
-    function RCUR_CAP() external view returns (int256);
-    function ONE_YEAR() external view returns (int256);
-    function X_MAX() external view returns (int256);
-    function UNIVERSAL_LIMIT() external view returns (int256);
     function irmConfig() external view returns (IDynamicKinkModelConfig);
     function getModelStateAndConfig() external view returns (ModelState memory s, Config memory c);
+
+    function RCOMP_CAP_PER_SECOND() external view returns (int256); // solhint-disable-line func-name-mixedcase
+    function RCUR_CAP() external view returns (int256); // solhint-disable-line func-name-mixedcase
+    function ONE_YEAR() external view returns (int256); // solhint-disable-line func-name-mixedcase
+    function X_MAX() external view returns (int256); // solhint-disable-line func-name-mixedcase
+    function UNIVERSAL_LIMIT() external view returns (int256); // solhint-disable-line func-name-mixedcase
 
     /// @notice Check if variables in config match the limits from model whitepaper.
     /// Some limits are narrower than in whhitepaper, because of additional research, see:
