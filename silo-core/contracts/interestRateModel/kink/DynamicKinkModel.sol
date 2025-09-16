@@ -226,17 +226,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     {
         if (_tba == 0) return 0; // no debt, no interest
 
-        // call it to verify if we revert
-        // TODO remove it but add rule to echidna that: compoundInterestRate = 0 => currentInterestRate = 0;
-        // compoundInterestRate({
-        //     _cfg: _cfg,
-        //     _state: _state,
-        //     _t0: _t0,
-        //     _t1: _t1,
-        //     _u: _u,
-        //     _tba: _tba
-        // });
-
         int256 T = _t1 - _t0;
 
         // k is stored capped, so we can use it as is
