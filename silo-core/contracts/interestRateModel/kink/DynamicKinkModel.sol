@@ -16,13 +16,6 @@ import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.
 import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
 import {KinkMath} from "../../lib/KinkMath.sol";
 
-/*
-TODO 
-QA rules:
-- if utilization goes up -> rcomp always go up (unless overflow, then == 0)
-- if utilization goes down -> rcomp always go down?
-- test_kink_generateConfig_alwaysWorks - make it on echidna?
-*/
 
 /// @title DynamicKinkModel
 /// @notice Refer to Silo DynamicKinkModel paper for more details.
@@ -214,7 +207,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         require(_config.c1.isBetween(0, UNIVERSAL_LIMIT), InvalidC1());
         require(_config.c2.isBetween(0, UNIVERSAL_LIMIT), InvalidC2());
 
-        // TODO do we still need upper limit?
         require(_config.dmax.isBetween(_config.c2, UNIVERSAL_LIMIT), InvalidDmax());
     }
 
