@@ -116,13 +116,21 @@ abstract contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] deploy done");
 
-        SiloDeployments.save(ChainsLib.chainAlias(), configName, address(siloConfig));
+        _saveSilo(siloConfig, configName);
 
         _saveOracles(siloConfig, config, siloData.NO_ORACLE_KEY());
 
         console2.log("[SiloCommonDeploy] run() finished.");
 
         _printAndValidateDetails(siloConfig, siloInitData);
+    }
+
+    function _saveSilo(ISiloConfig _siloConfig, string memory _configName) internal {
+        SiloDeployments.save({
+            _chain: ChainsLib.chainAlias(),
+            _name: string.concat(_configName, "_id", vm.toString(_siloConfig.SILO_ID())),
+            _deployed: address(_siloConfig)
+        });
     }
 
     function _saveOracles(
