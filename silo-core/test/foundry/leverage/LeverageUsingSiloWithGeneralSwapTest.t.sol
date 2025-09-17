@@ -1321,7 +1321,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         address userLeverageContract = leverageRouter.predictUserLeverageContract(wallet.addr);
         
         if (_rescuer == wallet.addr) {
-            vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(0)));
+            vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(token0)));
         } else {
             vm.expectRevert(RescueModule.OnlyLeverageUser.selector);
         }
