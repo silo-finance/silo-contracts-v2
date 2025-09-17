@@ -17,7 +17,7 @@ contract KinkMathLibTest is Test {
     function test_kinkMath_isBetween_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
         vm.assume(_low <= _hi);
 
-        bool result = _var.isBetween(_low, _hi);
+        bool result = _var.inClosedInterval(_low, _hi);
 
         if (_low <= _var && _var <= _hi) assertTrue(result, "var should be between");
         else assertFalse(result, "var should NOT be between");
@@ -29,7 +29,7 @@ contract KinkMathLibTest is Test {
     function test_kinkMath_isInBelow_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
         vm.assume(_low <= _hi);
 
-        bool result = _var.isInBelow(_low, _hi);
+        bool result = _var.inOpenIntervalLowIncluded(_low, _hi);
 
         if (_low <= _var && _var < _hi) assertTrue(result, "var should be in below");
         else assertFalse(result, "var should NOT be in below");
@@ -41,7 +41,7 @@ contract KinkMathLibTest is Test {
     function test_kinkMath_isInAbove_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
         vm.assume(_low <= _hi);
 
-        bool result = _var.isInAbove(_low, _hi);
+        bool result = _var.inOpenIntervalTopIncluded(_low, _hi);
 
         if (_low < _var && _var <= _hi) assertTrue(result, "var should be in above");
         else assertFalse(result, "var should NOT be in above");
@@ -53,7 +53,7 @@ contract KinkMathLibTest is Test {
     function test_kinkMath_isInside_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
         vm.assume(_low < _hi);
 
-        bool result = _var.isInside(_low, _hi);
+        bool result = _var.inOpenInterval(_low, _hi);
 
         if (_low < _var && _var < _hi) assertTrue(result, "var should be inside");
         else assertFalse(result, "var should NOT be inside");
@@ -63,7 +63,7 @@ contract KinkMathLibTest is Test {
         FOUNDRY_PROFILE=core_test forge test --mt test_kinkMath_willOverflowOnCastToInt256_fuzz -vv
     */
     function test_kinkMath_willOverflowOnCastToInt256_fuzz(uint256 _value) public pure {
-        bool result = _value.willOverflowOnCastToInt256();
+        bool result = _value.wouldOverflowOnCastToInt256();
 
         if (_value > uint256(type(int256).max)) assertTrue(result, "value should overflow");
         else assertFalse(result, "value should NOT overflow");

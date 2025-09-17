@@ -56,9 +56,9 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         IDynamicKinkModel.UserFriendlyConfigInt memory defaultInt = _castConfig(_default);
 
         // 0 <= ulow < u1 < u2 < ucrit < DP
-        require(defaultInt.u1.isInside(defaultInt.ulow, defaultInt.u2), IDynamicKinkModel.InvalidU1());
-        require(defaultInt.u2.isInside(defaultInt.u1, defaultInt.ucrit), IDynamicKinkModel.InvalidU2());
-        require(defaultInt.ucrit.isInside(defaultInt.u2, DP), IDynamicKinkModel.InvalidUcrit());
+        require(defaultInt.u1.inOpenInterval(defaultInt.ulow, defaultInt.u2), IDynamicKinkModel.InvalidU1());
+        require(defaultInt.u2.inOpenInterval(defaultInt.u1, defaultInt.ucrit), IDynamicKinkModel.InvalidU2());
+        require(defaultInt.ucrit.inOpenInterval(defaultInt.u2, DP), IDynamicKinkModel.InvalidUcrit());
 
         config.ulow = defaultInt.ulow;
         config.u1 = defaultInt.u1;
@@ -68,11 +68,13 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         // 0 <= rmin < rcritMin <= rcritMax <= r100
 
         require(
-            defaultInt.rcritMin.isInAbove(defaultInt.rmin, defaultInt.rcritMax), IDynamicKinkModel.InvalidRcritMin()
+            defaultInt.rcritMin.inOpenIntervalTopIncluded(defaultInt.rmin, defaultInt.rcritMax), 
+            IDynamicKinkModel.InvalidRcritMin()
         );
 
         require(
-            defaultInt.rcritMax.isBetween(defaultInt.rcritMin, defaultInt.r100), IDynamicKinkModel.InvalidRcritMax()
+            defaultInt.rcritMax.inClosedInterval(defaultInt.rcritMin, defaultInt.r100), 
+            IDynamicKinkModel.InvalidRcritMax()
         );
 
         int256 rCheckHi = (defaultInt.r100 - defaultInt.rmin) * DP / (defaultInt.rcritMax - defaultInt.rmin);
@@ -82,12 +84,12 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         int256 s = 365 days;
 
         // 0 < tMin <= tcrit <= t2 < 100y // TODO update whitepaper with tcrit, tlow
-        require(defaultInt.tcrit.isBetween(defaultInt.tMin, defaultInt.t2), IDynamicKinkModel.InvalidTPlus());
-        require(defaultInt.t2.isInBelow(defaultInt.tcrit, 100 * s), IDynamicKinkModel.InvalidT2());
+        require(defaultInt.tcrit.inClosedInterval(defaultInt.tMin, defaultInt.t2), IDynamicKinkModel.InvalidTPlus());
+        require(defaultInt.t2.inOpenIntervalLowIncluded(defaultInt.tcrit, 100 * s), IDynamicKinkModel.InvalidT2());
 
         // 0 < tlow <= t1 < 100y
         require(defaultInt.tlow != 0, IDynamicKinkModel.InvalidTMinus()); // TODO InvalidTMinus -> InvalidTLow
-        require(defaultInt.t1.isInBelow(defaultInt.tlow, 100 * s), IDynamicKinkModel.InvalidT1());
+        require(defaultInt.t1.inOpenIntervalLowIncluded(defaultInt.tlow, 100 * s), IDynamicKinkModel.InvalidT1());
 
         config.rmin = defaultInt.rmin / s;
 

@@ -104,10 +104,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
         require(msg.sender == state.silo, OnlySilo());
 
-        if (_collateralAssets.willOverflowOnCastToInt256()) return 0;
-        if (_debtAssets.willOverflowOnCastToInt256()) return 0;
-        if (_interestRateTimestamp.willOverflowOnCastToInt256()) return 0;
-        if (block.timestamp.willOverflowOnCastToInt256()) return 0;
+        if (_collateralAssets.wouldOverflowOnCastToInt256()) return 0;
+        if (_debtAssets.wouldOverflowOnCastToInt256()) return 0;
+        if (_interestRateTimestamp.wouldOverflowOnCastToInt256()) return 0;
+        if (block.timestamp.wouldOverflowOnCastToInt256()) return 0;
 
         try this.compoundInterestRate({
             _cfg: cfg,
@@ -137,8 +137,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
-        if (_blockTimestamp.willOverflowOnCastToInt256()) return 0;
-        if (data.debtAssets.willOverflowOnCastToInt256()) return 0;
+        if (_blockTimestamp.wouldOverflowOnCastToInt256()) return 0;
+        if (data.debtAssets.wouldOverflowOnCastToInt256()) return 0;
 
         try this.compoundInterestRate({
             _cfg: cfg,
@@ -166,8 +166,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
         ISilo.UtilizationData memory data = ISilo(state.silo).utilizationData();
 
-        if (data.debtAssets.willOverflowOnCastToInt256()) return 0;
-        if (_blockTimestamp.willOverflowOnCastToInt256()) return 0;
+        if (data.debtAssets.wouldOverflowOnCastToInt256()) return 0;
+        if (_blockTimestamp.wouldOverflowOnCastToInt256()) return 0;
 
         try this.currentInterestRate({
             _cfg: cfg,
@@ -197,30 +197,31 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     // TODO update whitepapaer witn <= DP
     /// @inheritdoc IDynamicKinkModel
     function verifyConfig(IDynamicKinkModel.Config memory _config) public view virtual {
-        require(_config.ulow.isBetween(0, _DP), InvalidUlow());
-        require(_config.u1.isBetween(0, _DP), InvalidU1());
-        require(_config.u2.isBetween(_config.u1, _DP), InvalidU2());
+        require(_config.ulow.inClosedInterval(0, _DP), InvalidUlow());
+        require(_config.u1.inClosedInterval(0, _DP), InvalidU1());
+        require(_config.u2.inClosedInterval(_config.u1, _DP), InvalidU2());
 
-        require(_config.ucrit.isBetween(_config.ulow, _DP), InvalidUcrit());
+        require(_config.ucrit.inClosedInterval(_config.ulow, _DP), InvalidUcrit());
 
-        require(_config.rmin.isBetween(0, _DP), InvalidRmin()); // TODO check if we should use RCOMP_CAP_PER_SECOND instead of _DP
+        require(_config.rmin.inClosedInterval(0, _DP), InvalidRmin()); 
+        // TODO check if we should use RCOMP_CAP_PER_SECOND instead of _DP
 
-        require(_config.kmin.isBetween(0, UNIVERSAL_LIMIT), InvalidKmin());
-        require(_config.kmax.isBetween(_config.kmin, UNIVERSAL_LIMIT), InvalidKmax());
+        require(_config.kmin.inClosedInterval(0, UNIVERSAL_LIMIT), InvalidKmin());
+        require(_config.kmax.inClosedInterval(_config.kmin, UNIVERSAL_LIMIT), InvalidKmax());
 
         // we store k as int96, so we double check if it is in the range of int96
-        require(_config.kmin.isBetween(0, type(int96).max), InvalidKmin());
-        require(_config.kmax.isBetween(_config.kmin, type(int96).max), InvalidKmax());
+        require(_config.kmin.inClosedInterval(0, type(int96).max), InvalidKmin());
+        require(_config.kmax.inClosedInterval(_config.kmin, type(int96).max), InvalidKmax());
 
-        require(_config.alpha.isBetween(0, UNIVERSAL_LIMIT), InvalidAlpha());
+        require(_config.alpha.inClosedInterval(0, UNIVERSAL_LIMIT), InvalidAlpha());
 
-        require(_config.cminus.isBetween(0, UNIVERSAL_LIMIT), InvalidCminus());
-        require(_config.cplus.isBetween(0, UNIVERSAL_LIMIT), InvalidCplus());
+        require(_config.cminus.inClosedInterval(0, UNIVERSAL_LIMIT), InvalidCminus());
+        require(_config.cplus.inClosedInterval(0, UNIVERSAL_LIMIT), InvalidCplus());
 
-        require(_config.c1.isBetween(0, UNIVERSAL_LIMIT), InvalidC1());
-        require(_config.c2.isBetween(0, UNIVERSAL_LIMIT), InvalidC2());
+        require(_config.c1.inClosedInterval(0, UNIVERSAL_LIMIT), InvalidC1());
+        require(_config.c2.inClosedInterval(0, UNIVERSAL_LIMIT), InvalidC2());
 
-        require(_config.dmax.isBetween(_config.c2, UNIVERSAL_LIMIT), InvalidDmax());
+        require(_config.dmax.inClosedInterval(_config.c2, UNIVERSAL_LIMIT), InvalidDmax());
     }
 
     /// @inheritdoc IDynamicKinkModel
@@ -363,7 +364,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     {
         verifyConfig(_config);
 
-        newCfg = new DynamicKinkModelConfig(_config); // TODO add info to interface that by setting up same congig we can reset k
+        newCfg = new DynamicKinkModelConfig(_config); 
+        // TODO add info to interface that by setting up same congig we can reset k
 
         configsHistory[newCfg] = irmConfig;
 
