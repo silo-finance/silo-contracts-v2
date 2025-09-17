@@ -35,8 +35,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     ///     valid.
     int256 public constant UNIVERSAL_LIMIT = 1e9 * _DP;
 
-    /// @dev maximum value of current interest rate the model will return. This is 2,500% APR in 18-decimals.
-    int256 public constant RCUR_CAP = 25 * _DP;
+    /// @dev maximum value of current interest rate the model will return. This is 1,000% APR in 18-decimals.
+    int256 public constant RCUR_CAP = 10 * _DP;
 
     /// @dev seconds per year used in interest calculations.
     int256 public constant ONE_YEAR = 365 days;
