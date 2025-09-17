@@ -50,9 +50,9 @@ emv*
 silo-core/deploy/input/_importFromCsv/
 !silo-core/deploy/input/_importFromCsv/marketImport.py
 
-# !silo-oracles/broadcast/ERC4626OracleHardcodeQuoteDeploy.s.sol/1/run-latest.json
 **/broadcast/
-!**/run-latest.json
+**/broadcast/*
+!silo-core/broadcast/SiloDeployerDeploy.s.sol/**/run-latest.json
 
 # certora
 .certora_internal
