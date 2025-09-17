@@ -176,6 +176,8 @@ interface IDynamicKinkModel {
     error InvalidU2();
     error InvalidUcrit();
     error InvalidUlow();
+    error NegativeRcomp();
+    error NegativeRcur();
     error OnlySilo();
     error XOverflow();
 

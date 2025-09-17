@@ -266,8 +266,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
             rcur = _cfg.rmin * ONE_YEAR;
         }
 
+        require(rcur >= 0, NegativeRcur());
         rcur = SignedMath.min(rcur, RCUR_CAP);
-        // TODO add check for negative rcur and return 0
     }
 
     /// @inheritdoc IDynamicKinkModel
@@ -335,7 +335,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         require(_l.x <= X_MAX, XOverflow());
 
         rcomp = PRBMathSD59x18.exp(_l.x) - _DP;
-        // TODO add check for negative rcomp and return 0
+        require(rcomp >= 0, NegativeRcomp());
 
         // limit rcomp
         if (rcomp > RCOMP_CAP_PER_SECOND * _l.T) {
