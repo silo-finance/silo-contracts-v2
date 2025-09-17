@@ -5,7 +5,7 @@
     "daoFee": 1000,
     "deployerFee": 0,
     "token0": "savETH",
-    "solvencyOracle0": "NO_ORACLE",
+    "solvencyOracle0": "ERC4626_savETH_HARDCODE_QUOTE_WETH",
     "maxLtvOracle0": "NO_ORACLE",
     "interestRateModel0": "InterestRateModelV2Factory.sol",
     "interestRateModelConfig0": "stableHighCapV18",
