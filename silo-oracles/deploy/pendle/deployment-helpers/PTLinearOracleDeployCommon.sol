@@ -108,6 +108,7 @@ abstract contract PTLinearOracleDeployCommon is CommonDeploy {
         console2.log("assetType:", assetType == IPendleSYTokenLike.AssetType.TOKEN ? "TOKEN" : "LIQUIDITY");
         console2.log("assetAddress:", assetAddress);
         console2.log("assetDecimals:", assetDecimals);
+        console2.log("expectedUnderlyingToken:", _expectedUnderlyingToken);
         console2.log("--------------------------------");
 
         require(assetType == IPendleSYTokenLike.AssetType.TOKEN, "assetType is not TOKEN");
