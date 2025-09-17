@@ -15,7 +15,7 @@ import {ERC4626OracleFactory} from "silo-oracles/contracts/erc4626/ERC4626Oracle
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 /*
-FOUNDRY_PROFILE=oracles VAULT=wsrUSD forge test -vv --ffi --mc ERC4626PriceManipulation
+FOUNDRY_PROFILE=oracles VAULT=savETH forge test -vv --ffi --mc ERC4626PriceManipulation
 */
 contract ERC4626PriceManipulation is IntegrationTest {
     IERC4626 internal _vault = IERC4626(0xc8CF6D7991f15525488b2A83Df53468D682Ba4B0); // sUSDf - Ethereum
@@ -30,7 +30,7 @@ contract ERC4626PriceManipulation is IntegrationTest {
     address internal _attacker = makeAddr("attacker");
 
     function setUp() public {
-        uint256 blockToFork = 22679533;
+        uint256 blockToFork = 23377000;
         vm.createSelectFork(vm.envString("RPC_MAINNET"), blockToFork);
         string memory vaultAddressString = vm.envOr("VAULT", string(""));
 
