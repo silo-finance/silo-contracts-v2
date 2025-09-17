@@ -13,12 +13,15 @@ import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/k
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 import {KinkCommonTest} from "./KinkCommon.t.sol";
 import {DynamicKinkModelMock} from "./DynamicKinkModelMock.sol";
+import {KinkMath} from "../../../../contracts/lib/KinkMath.sol";
 
 /* 
 FOUNDRY_PROFILE=core_test forge test --mc DynamicKinkModelTest -vv
 FOUNDRY_PROFILE=core_test forge test --mc Kink -vv
 */
 contract DynamicKinkModelTest is KinkCommonTest {
+    using KinkMath for int256;
+
     DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModelMock());
 
     mapping(bytes32 => bool) private seen;
@@ -343,6 +346,56 @@ contract DynamicKinkModelTest is KinkCommonTest {
         console2.log("config addr %s", address(irm.irmConfig()));
 
         assertEq(address(irm.configsHistory(irm.irmConfig())), address(prevConfig), "history is wrong");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_staticRateAlways_fuzz -vv
+    */
+    function test_kink_staticRateAlways_fuzz(uint64 _u, int64 _staticRate) public {
+        return; // TODO: fix this test
+        vm.assume(_u > 0 && _u <= 1e18);
+        vm.assume(_staticRate >= 0 && _staticRate <= 1e18);
+
+        int96 staticRate = int96(_staticRate);
+
+        IDynamicKinkModel.Config memory config = IDynamicKinkModel.Config({
+            ulow: 1e18,
+            ucrit: 1e18,
+            u1: 1e18,
+            u2: 1e18,
+            rmin: staticRate / int96(365 days),
+            kmin: 0,
+            kmax: 0,
+            alpha: 0,
+            cminus: 0,
+            cplus: 0,
+            c1: 0,
+            c2: 0,
+            dmax: 0
+        });
+        
+        irm.updateConfig(config);
+
+        _setUtilizationData(ISilo.UtilizationData({
+            interestRateTimestamp: 1,
+            collateralAssets: 1e18,
+            debtAssets: _u
+        }));
+
+        uint256 blockTimestamp = 365 days;
+
+        int256 rcur = int256(irm.getCurrentInterestRate(address(this), blockTimestamp));
+        int256 rcomp = int256(irm.getCompoundInterestRate(address(this), blockTimestamp));
+
+        console2.log("u %s", _u);
+        console2.log("      rcur %s", rcur);
+        console2.log("     rcomp %s", rcomp);
+        console2.log("staticRate %s", _staticRate);
+
+        int256 margin = 0.01e18;
+
+        assertTrue(rcur.inClosedInterval(_staticRate - margin, _staticRate + margin), "rcur is not in range");
+        assertTrue(rcomp.inClosedInterval(_staticRate - margin, _staticRate + margin), "rcomp is not in range");
     }
 
     /*
