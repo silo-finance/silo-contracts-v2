@@ -8,6 +8,7 @@ import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {DynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
+import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 
 import {KinkRcompTestData} from "../../data-readers/KinkRcompTestData.sol";
 import {KinkRcurTestData} from "../../data-readers/KinkRcurTestData.sol";
@@ -25,6 +26,8 @@ contract DynamicKinkModelMock is DynamicKinkModel {
 FOUNDRY_PROFILE=core_test forge test -vv --mc DynamicKinkModelJsonTest
 */
 contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
+    DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModelMock());
+
     DynamicKinkModelMock immutable IRM;
 
     int256 constant _DP = 10 ** 18;
@@ -37,11 +40,9 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
     constructor() {
         IDynamicKinkModel.Config memory cfg;
 
-        IRM = new DynamicKinkModelMock();
-        IRM.initialize(cfg, address(this), address(this));
+        IRM = DynamicKinkModelMock(address(FACTORY.create(cfg, address(this), address(this), bytes32(0))));
 
         // 1e18 is 100%
-
         _rcompDiffPercent[19] = 22872736801;
         _rcompDiffPercent[28] = 12374540229;
         _rcompDiffPercent[43] = 19274329796;
