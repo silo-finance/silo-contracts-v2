@@ -367,4 +367,35 @@ contract DynamicKinkModelTest is KinkCommonTest {
         assertEq(irm.getCurrentInterestRate(address(this), blockTimestamp), 0, "rcur is not 0");
         assertEq(irm.getCompoundInterestRate(address(this), blockTimestamp), 0, "rcomp is not 0");
     }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_zeroRateAlways_u0 -vv
+    */
+    function test_kink_zeroRateAlways_u0() public {
+       _kink_zeroRateAlways_u(0);
+    }
+
+    function test_kink_zeroRateAlways_u90() public {
+        _kink_zeroRateAlways_u(0.9e18);
+    }
+
+    function test_kink_zeroRateAlways_u100() public {
+        _kink_zeroRateAlways_u(1e18);
+    }
+
+    function _kink_zeroRateAlways_u(uint256 _u) public {
+        _setUtilizationData(ISilo.UtilizationData({
+            interestRateTimestamp: 1,
+            collateralAssets: 1e18,
+            debtAssets: _u
+        }));
+
+        IDynamicKinkModel.Config memory config;
+        irm.updateConfig(config);
+
+        uint256 blockTimestamp = 365 days;
+
+        assertEq(irm.getCurrentInterestRate(address(this), blockTimestamp), 0, "rcur is not 0");
+        assertEq(irm.getCompoundInterestRate(address(this), blockTimestamp), 0, "rcomp is not 0");
+    }
 }

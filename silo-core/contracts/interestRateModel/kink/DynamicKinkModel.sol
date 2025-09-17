@@ -190,7 +190,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     }
 
     // TODO check if we can have static N% always eg by set u == 100% or r min == rmax by using generateConfig()
-    // TODO check if we can have static % to 0% always, does not matter what is utiliztion by using generateConfig()
     // TODO developer must be able to generate config from knowing only APR (static).
     
 
