@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {console2} from "forge-std/console2.sol";
 
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
@@ -33,7 +34,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
         DynamicKinkModel newModel = new DynamicKinkModel();
         IDynamicKinkModel.Config memory config;
 
-        vm.expectRevert(IDynamicKinkModel.EmptySilo.selector);
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
         newModel.initialize(config, address(this), address(0));
     }
 
@@ -43,7 +44,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
     function test_kink_initRevert_whenAlreadyInitialized() public {
         IDynamicKinkModel.Config memory config;
 
-        vm.expectRevert(IDynamicKinkModel.AlreadyInitialized.selector);
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
         irm.initialize(config, address(this), address(this));
     }
 
@@ -93,18 +94,16 @@ contract DynamicKinkModelTest is KinkCommonTest {
     ) public whenValidConfig(_config) {
         vm.assume(_silo != address(0));
 
-        IDynamicKinkModel.Config memory config = _toConfig(_config);
-        DynamicKinkModel newModel = new DynamicKinkModel();
-
         vm.expectEmit(true, true, true, true);
         emit IDynamicKinkModel.Initialized(_initialOwner, _silo);
 
-        newModel.initialize(config, _initialOwner, _silo);
+        IDynamicKinkModel.Config memory config = _toConfig(_config);
+        DynamicKinkModel newModel = DynamicKinkModel(address(FACTORY.create(config, _initialOwner, _silo, bytes32(0))));
 
         _assertConfigEq(config, newModel.irmConfig().getConfig(), "init never revert");
 
         // re-init should revert
-        vm.expectRevert(IDynamicKinkModel.AlreadyInitialized.selector);
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
         newModel.initialize(config, _initialOwner, _silo);
     }
 

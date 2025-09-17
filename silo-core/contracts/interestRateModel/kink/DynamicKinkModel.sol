@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {SignedMath} from "openzeppelin5/utils/math/SignedMath.sol";
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
 import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 
@@ -21,7 +22,7 @@ import {KinkMath} from "../../lib/KinkMath.sol";
 /// @notice Refer to Silo DynamicKinkModel paper for more details.
 /// @dev it follows `IInterestRateModel` interface except `initialize` method
 /// @custom:security-contact security@silo.finance
-contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
+contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable {
     using KinkMath for int256;
     using KinkMath for int96;
     using KinkMath for uint256;
@@ -57,15 +58,15 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     constructor() Ownable1and2Steps(address(0xdead)) {
         // lock the implementation
         _transferOwnership(address(0));
-        /// TODO inherit initialize from openzeppelin5
+        _disableInitializers();
     }
 
     function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo)
         external
         virtual
+        initializer
     {
         require(_silo != address(0), EmptySilo());
-        require(modelState.silo == address(0), AlreadyInitialized());
 
         modelState.silo = _silo;
 
