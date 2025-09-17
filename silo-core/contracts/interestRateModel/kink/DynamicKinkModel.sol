@@ -204,7 +204,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         require(_config.ucrit.inClosedInterval(_config.ulow, _DP), InvalidUcrit());
 
         require(_config.rmin.inClosedInterval(0, _DP), InvalidRmin()); 
-        // TODO check if we should use RCOMP_CAP_PER_SECOND instead of _DP
 
         require(_config.kmin.inClosedInterval(0, UNIVERSAL_LIMIT), InvalidKmin());
         require(_config.kmax.inClosedInterval(_config.kmin, UNIVERSAL_LIMIT), InvalidKmax());
