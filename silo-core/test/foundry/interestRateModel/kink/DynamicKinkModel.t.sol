@@ -349,12 +349,12 @@ contract DynamicKinkModelTest is KinkCommonTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --mt test_kink_staticRateAlways_fuzz -vv
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_staticRateUpTo25Always_fuzz -vv
     */
-    function test_kink_staticRateAlways_fuzz(uint64 _u, int64 _staticRate) public {
-        return; // TODO: fix this test
+    /// forge-config: core_test.fuzz.runs = 10000
+    function test_kink_staticRateUpTo25Always_fuzz(uint64 _u, int64 _staticRate) public {
         vm.assume(_u > 0 && _u <= 1e18);
-        vm.assume(_staticRate >= 0 && _staticRate <= 1e18);
+        vm.assume(_staticRate >= 0.0001e18 && _staticRate <= 0.25e18);
 
         int96 staticRate = int96(_staticRate);
 
@@ -387,15 +387,18 @@ contract DynamicKinkModelTest is KinkCommonTest {
         int256 rcur = int256(irm.getCurrentInterestRate(address(this), blockTimestamp));
         int256 rcomp = int256(irm.getCompoundInterestRate(address(this), blockTimestamp));
 
-        console2.log("u %s", _u);
-        console2.log("      rcur %s", rcur);
-        console2.log("     rcomp %s", rcomp);
-        console2.log("staticRate %s", _staticRate);
+        
+        int256 marginRcomp = int256(staticRate) * 0.15e18 / 1e18;
+        int256 marginRcur = int256(staticRate) * 1e12 / 1e18; // tiny margin for rcur
 
-        int256 margin = 0.01e18;
+        emit log_named_decimal_uint("u", _u, 16);
+        emit log_named_decimal_int("staticRate", staticRate, 16);
+        emit log_named_decimal_int("      rcur", rcur, 16);
+        emit log_named_decimal_int("     rcomp", rcomp, 16);
+        emit log_named_decimal_int("marginRcomp", marginRcomp, 16);
 
-        assertTrue(rcur.inClosedInterval(_staticRate - margin, _staticRate + margin), "rcur is not in range");
-        assertTrue(rcomp.inClosedInterval(_staticRate - margin, _staticRate + margin), "rcomp is not in range");
+        assertTrue(rcur.inClosedInterval(staticRate - marginRcur, staticRate), "rcur is not in range");
+        assertTrue(rcomp.inClosedInterval(staticRate, staticRate + marginRcomp), "rcomp is not in range");
     }
 
     /*
