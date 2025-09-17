@@ -182,6 +182,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         }
     }
 
+    /// @inheritdoc IDynamicKinkModel
     function getModelStateAndConfig() public view virtual returns (ModelState memory s, Config memory c) {
         s = modelState;
         c = irmConfig.getConfig();

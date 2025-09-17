@@ -185,6 +185,53 @@ interface IDynamicKinkModel {
     /// @param _initialOwner Address that will own and control this model instance
     /// @param _silo Address of the Silo contract this model will serve
     function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo) external;
+
+    /// @notice Calculate compound interest rate and update the model's internal state
+    /// @dev This function is the primary method used by Silo contracts to calculate
+    ///      and accrue interest. Unlike getCompoundInterestRate(), this function
+    ///      modifies the model's internal state by updating the dynamic slope value (k).
+    /// 
+    ///      This function should only be called by the associated Silo contract,
+    ///      as it performs state updates that affect future interest calculations.
+    ///      It includes comprehensive overflow protection and gracefully handles
+    ///      calculation errors by returning 0 and resetting the slope to minimum.
+    /// 
+    ///      The function calculates interest based on:
+    ///      - Current collateral and debt amounts
+    ///      - Time elapsed since last interest rate update
+    ///      - Dynamic slope adjustments based on utilization patterns
+    /// 
+    /// @param _collateralAssets Total collateral assets in the Silo (in asset units)
+    /// @param _debtAssets Total debt assets in the Silo (in asset units)
+    /// @param _interestRateTimestamp Timestamp of the last interest rate update
+    /// @return rcomp Total compound interest multiplier (in 18 decimals, represents total accrued interest)
+    /// @custom:throws OnlySilo() if called by any address other than the associated Silo contract
+    function getCompoundInterestRateAndUpdate(
+        uint256 _collateralAssets,
+        uint256 _debtAssets,
+        uint256 _interestRateTimestamp
+    )
+        external
+        returns (uint256 rcomp);
+
+    /// @notice Restore the model to its previous configuration
+    /// @dev This function allows the model owner to revert to the previous configuration
+    ///      if a new configuration proves to be problematic. It maintains a history
+    ///      of configurations to enable this rollback functionality.
+    /// 
+    ///      When a configuration is restored:
+    ///      - The model switches back to the previous configuration contract
+    ///      - The dynamic slope (k) is reset to the minimum value from the restored config
+    ///      - A ConfigRestored event is emitted
+    /// 
+    ///      This is useful for:
+    ///      - Reverting problematic configuration changes
+    ///      - Testing different configurations safely
+    ///      - Emergency rollbacks if new parameters cause issues
+    /// 
+    /// @custom:throws AddressZero() if there is no previous configuration to restore to
+    /// @custom:throws OnlyOwner() if called by any address other than the model owner
+    function restoreLastConfig() external;
     
     /// @notice Get the current configuration contract for this model
     /// @return config The IDynamicKinkModelConfig contract containing the model parameters
@@ -202,7 +249,7 @@ interface IDynamicKinkModel {
     /// @notice Maximum current interest rate (prevents extreme APRs)
     /// @return cap Maximum annual interest rate in 18 decimals (e.g., 25e18 = 2500% APR)
     function RCUR_CAP() external view returns (int256 cap); // solhint-disable-line func-name-mixedcase
-    
+
     /// @notice Number of seconds in one year (used for rate calculations)
     /// @return secondsInYear Seconds in one year (365 days)
     function ONE_YEAR() external view returns (int256 secondsInYear); // solhint-disable-line func-name-mixedcase
@@ -226,6 +273,23 @@ interface IDynamicKinkModel {
     /// @param _config The configuration to validate (does not include model state)
     /// @custom:throws Reverts if any parameter is outside acceptable limits
     function verifyConfig(IDynamicKinkModel.Config calldata _config) external view;
+
+    /// @notice Calculate compound interest rate for a specific Silo at a given timestamp
+    /// @dev This function calculates the total compound interest that has accrued over time
+    ///      for a specific Silo contract.
+    /// 
+    ///      The function fetches current utilization data from the Silo contract and
+    ///      calculates interest based on the time elapsed since the last rate update.
+    ///      It handles overflow protection and returns 0 if calculations would overflow.
+    /// 
+    /// @param _silo Address of the Silo contract to calculate interest for
+    /// @param _blockTimestamp Timestamp to calculate interest up to (usually block.timestamp)
+    /// @return rcomp Total compound interest multiplier (in 18 decimals, represents total accrued interest)
+    /// @custom:throws InvalidSilo() if the provided Silo address doesn't match this model's associated Silo
+    function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        returns (uint256 rcomp);
 
     /// @notice Calculate the compound interest rate for a given time period
     /// @dev This function calculates how much interest has accrued over a time period,
