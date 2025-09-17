@@ -186,6 +186,12 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         c = irmConfig.getConfig();
     }
 
+    // TODO check if we can have static N% always eg by set u == 100% or r min == rmax by using generateConfig()
+    // TODO check if we can have static % to 0% always, does not matter what is utiliztion by using generateConfig()
+    // TODO developer must be able to generate config from knowing only APR (static).
+    
+
+    // TODO update whitepapaer witn <= DP
     /// @inheritdoc IDynamicKinkModel
     function verifyConfig(IDynamicKinkModel.Config memory _config) public view virtual {
         require(_config.ulow.isBetween(0, _DP), InvalidUlow());
@@ -194,7 +200,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
 
         require(_config.ucrit.isBetween(_config.ulow, _DP), InvalidUcrit());
 
-        require(_config.rmin.isBetween(0, _DP), InvalidRmin());
+        require(_config.rmin.isBetween(0, _DP), InvalidRmin()); // TODO check if we should use RCOMP_CAP_PER_SECOND instead of _DP
 
         require(_config.kmin.isBetween(0, UNIVERSAL_LIMIT), InvalidKmin());
         require(_config.kmax.isBetween(_config.kmin, UNIVERSAL_LIMIT), InvalidKmax());
@@ -229,7 +235,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         returns (int256 rcur)
     {
         if (_tba == 0) return 0; // no debt, no interest
-
+        
         int256 T = _t1 - _t0;
 
         // k is stored capped, so we can use it as is
@@ -285,7 +291,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
         // if there is no time change, then k should not change
         if (_l.T == 0) return (0, _state.k);
 
-        // roc calculations
+        // rate of change of k
         if (_u < _cfg.u1) {
             _l.roc = -_cfg.c1 - _cfg.cminus * (_cfg.u1 - _u) / _DP;
         } else if (_u > _cfg.u2) {
@@ -302,7 +308,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             _l.x = _cfg.kmax * _l.T - (_cfg.kmax - k) ** 2 / (2 * _l.roc);
             k = _cfg.kmax;
         } else if (_l.k1 < _cfg.kmin) {
-            _l.x = _cfg.kmin * _l.T - (_state.k - _cfg.kmin) ** 2 / (2 * _l.roc);
+            _l.x = _cfg.kmin * _l.T - (k - _cfg.kmin) ** 2 / (2 * _l.roc);
             k = _cfg.kmin;
         } else {
             _l.x = (k + _l.k1) * _l.T / 2;
@@ -333,6 +339,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
             // k should be set to min only on overflow or cap
             k = _cfg.kmin;
         }
+
+        // TODO update whitepaper and remove oveflow check that we not using
     }
 
     function _updateConfiguration(IDynamicKinkModel.Config memory _config)
