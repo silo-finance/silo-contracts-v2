@@ -12,9 +12,10 @@ contract KinkMathLibTest is Test {
     using KinkMath for uint256;
 
     /*
-        FOUNDRY_PROFILE=core_test forge test --mt test_kinkMath_isBetween_fuzz -vv
+        FOUNDRY_PROFILE=core_test forge test --mt test_kinkMath_inClosedInterval_fuzz -vv
     */
-    function test_kinkMath_isBetween_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
+    /// forge-config: core_test.fuzz.runs = 1000
+    function test_kinkMath_inClosedInterval_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
         vm.assume(_low <= _hi);
 
         bool result = _var.inClosedInterval(_low, _hi);
@@ -24,9 +25,10 @@ contract KinkMathLibTest is Test {
     }
 
     /*
-        FOUNDRY_PROFILE=core_test forge test --mt test_kinkMath_isInBelow_fuzz -vv
+        FOUNDRY_PROFILE=core_test forge test --mt test_kinkMath_inOpenIntervalLowIncluded_fuzz -vv
     */
-    function test_kinkMath_isInBelow_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
+    /// forge-config: core_test.fuzz.runs = 1000
+    function test_kinkMath_inOpenIntervalLowIncluded_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
         vm.assume(_low <= _hi);
 
         bool result = _var.inOpenIntervalLowIncluded(_low, _hi);
@@ -36,9 +38,10 @@ contract KinkMathLibTest is Test {
     }
 
     /*
-        FOUNDRY_PROFILE=core_test forge test --mt test_kinkMath_isInAbove_fuzz -vv
+        FOUNDRY_PROFILE=core_test forge test --mt test_kinkMath_inOpenIntervalTopIncluded_fuzz -vv
     */
-    function test_kinkMath_isInAbove_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
+    /// forge-config: core_test.fuzz.runs = 1000
+    function test_kinkMath_inOpenIntervalTopIncluded_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
         vm.assume(_low <= _hi);
 
         bool result = _var.inOpenIntervalTopIncluded(_low, _hi);
@@ -48,9 +51,10 @@ contract KinkMathLibTest is Test {
     }
 
     /*
-        FOUNDRY_PROFILE=core_test forge test --mt test_kinkMath_isInside_fuzz -vv
+        FOUNDRY_PROFILE=core_test forge test --mt test_kinkMath_inOpenInterval_fuzz -vv
     */
-    function test_kinkMath_isInside_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
+    /// forge-config: core_test.fuzz.runs = 1000
+    function test_kinkMath_inOpenInterval_fuzz(int256 _var, int256 _low, int256 _hi) public pure {
         vm.assume(_low < _hi);
 
         bool result = _var.inOpenInterval(_low, _hi);
@@ -60,9 +64,10 @@ contract KinkMathLibTest is Test {
     }
 
     /*
-        FOUNDRY_PROFILE=core_test forge test --mt test_kinkMath_willOverflowOnCastToInt256_fuzz -vv
+        FOUNDRY_PROFILE=core_test forge test --mt test_kinkMath_wouldOverflowOnCastToInt256_fuzz -vv
     */
-    function test_kinkMath_willOverflowOnCastToInt256_fuzz(uint256 _value) public pure {
+    /// forge-config: core_test.fuzz.runs = 1000
+    function test_kinkMath_wouldOverflowOnCastToInt256_fuzz(uint256 _value) public pure {
         bool result = _value.wouldOverflowOnCastToInt256();
 
         if (_value > uint256(type(int256).max)) assertTrue(result, "value should overflow");

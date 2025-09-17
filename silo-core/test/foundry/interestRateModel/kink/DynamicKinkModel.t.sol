@@ -15,6 +15,7 @@ import {KinkCommonTest} from "./KinkCommon.t.sol";
 
 /* 
 FOUNDRY_PROFILE=core_test forge test --mc DynamicKinkModelTest -vv
+FOUNDRY_PROFILE=core_test forge test --mc Kink -vv
 */
 contract DynamicKinkModelTest is KinkCommonTest {
     DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModel());
@@ -51,6 +52,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_getModelStateAndConfig_config -vv
     */
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_kink_getModelStateAndConfig_config_fuzz(RandomKinkConfig memory _config)
         public
         whenValidConfig(_config)
@@ -85,8 +87,9 @@ contract DynamicKinkModelTest is KinkCommonTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --mt test_init_neverRevert_whenValidConfig -vv
+    FOUNDRY_PROFILE=core_test forge test --mt test_init_neverRevert_whenValidConfig_fuzz -vv
     */
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_init_neverRevert_whenValidConfig_fuzz(
         RandomKinkConfig memory _config,
         address _initialOwner,
@@ -123,6 +126,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfig_fail_whenInvalidConfig -vv
     */
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_kink_updateConfig_fail_whenInvalidConfig_fuzz(IDynamicKinkModel.Config calldata _config) public {
         vm.assume(!_isValidConfig(_config));
 
@@ -133,6 +137,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
     /*
         FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfig_multipleTimes -vv
     */
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_kink_updateConfig_multipleTimes_fuzz(RandomKinkConfig memory _config)
         public
         whenValidConfig(_config)
@@ -145,6 +150,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_updateConfig_randomMultipleTimes_fuzz -vv
     */
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_kink_updateConfig_randomMultipleTimes_fuzz(RandomKinkConfig[10] memory _config) public {
         for (uint256 i = 0; i < _config.length; i++) {
             IDynamicKinkModel.Config memory randomConfig = _toConfig(_config[i]);
@@ -180,6 +186,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_restoreLastConfig_fuzz -vv
     */
+    /// forge-config: core_test.fuzz.runs = 1000
     function test_kink_restoreLastConfig_fuzz(RandomKinkConfig[10] memory _config) public {
         bytes32[] memory history = new bytes32[](_config.length);
         IDynamicKinkModelConfig[] memory historyAddrs = new IDynamicKinkModelConfig[](_config.length);
