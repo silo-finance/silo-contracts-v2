@@ -353,10 +353,10 @@ contract DynamicKinkModelTest is KinkCommonTest {
     */
     /// forge-config: core_test.fuzz.runs = 10000
     function test_kink_staticRateUpTo25Always_fuzz(uint64 _u, int64 _staticRate) public {
-        vm.assume(_u > 0 && _u <= 1e18);
-        vm.assume(_staticRate >= 0.0001e18 && _staticRate <= 0.25e18);
+        vm.assume(_staticRate >= 0);
 
-        int96 staticRate = int96(_staticRate);
+        _u = 1 + _u % 1e18;
+        int96 staticRate = int96(0.0001e18 + _staticRate % 0.25e18); // range 0.0001e18 ~ 0.25e18
 
         IDynamicKinkModel.Config memory config = IDynamicKinkModel.Config({
             ulow: 1e18,
