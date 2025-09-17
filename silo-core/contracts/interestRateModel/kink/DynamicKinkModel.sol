@@ -57,6 +57,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps {
     constructor() Ownable1and2Steps(address(0xdead)) {
         // lock the implementation
         _transferOwnership(address(0));
+        /// TODO inherit initialize from openzeppelin5
     }
 
     function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo)
