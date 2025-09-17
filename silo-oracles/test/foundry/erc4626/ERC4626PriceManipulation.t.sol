@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
@@ -15,7 +17,7 @@ import {ERC4626OracleFactory} from "silo-oracles/contracts/erc4626/ERC4626Oracle
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 /*
-FOUNDRY_PROFILE=oracles VAULT=wsrUSD forge test -vv --ffi --mc ERC4626PriceManipulation
+FOUNDRY_PROFILE=oracles VAULT=savETH forge test -vv --ffi --mc ERC4626PriceManipulation
 */
 contract ERC4626PriceManipulation is IntegrationTest {
     IERC4626 internal _vault = IERC4626(0xc8CF6D7991f15525488b2A83Df53468D682Ba4B0); // sUSDf - Ethereum
@@ -30,7 +32,7 @@ contract ERC4626PriceManipulation is IntegrationTest {
     address internal _attacker = makeAddr("attacker");
 
     function setUp() public {
-        uint256 blockToFork = 22679533;
+        uint256 blockToFork = 23377000;
         vm.createSelectFork(vm.envString("RPC_MAINNET"), blockToFork);
         string memory vaultAddressString = vm.envOr("VAULT", string(""));
 
@@ -54,21 +56,30 @@ contract ERC4626PriceManipulation is IntegrationTest {
         _assetSymbol = IERC20Metadata(address(_asset)).symbol();
         _ticker = string.concat(_vaultSymbol, "/", _assetSymbol);
 
-        _logPrice("Initial price");
+        _logPrice("[setUp]Initial price");
         _logVaultSharesAndAssets();
 
-        emit log_string("\n");
+        emit log_string("[setUp] end \n");
     }
 
     modifier priceDidNotChange() {
         uint256 initialPrice = _getPrice();
         _;
         uint256 finalPrice = _getPrice();
-        assertEq(initialPrice, finalPrice, "Price changed");
+
+        string memory direction = initialPrice < finalPrice ? "increased" : "decreased";
+
+        console2.log("[priceDidNotChange] check: ", initialPrice == finalPrice ? "PASS" : "FAILED");
+
+        assertEq(
+            initialPrice,
+            finalPrice, 
+            string.concat("Price ", direction, ": ", vm.toString(initialPrice), " => ", vm.toString(finalPrice))
+        );
     }
 
     /*
-    VAULT=wsrUSD FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_donation -vv
+    VAULT=savETH FOUNDRY_PROFILE=oracles forge test --ffi --mt test_ERC4626PriceManipulation_donation -vv
     */
     function test_ERC4626PriceManipulation_donation() public {
         uint256 attackerBalance = _fundAttackerWithTotalAssets();
@@ -78,7 +89,7 @@ contract ERC4626PriceManipulation is IntegrationTest {
         vm.prank(_attacker);
         _asset.transfer(address(_vault), attackerBalance);
 
-        _logPrice("After 100% donation");
+        _logPrice("\tAfter 100% donation\n");
         _logVaultSharesAndAssets();
 
         uint256 priceAfterDonation = _getPrice();
