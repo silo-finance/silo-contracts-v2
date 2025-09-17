@@ -388,7 +388,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
         int256 rcomp = int256(irm.getCompoundInterestRate(address(this), blockTimestamp));
 
         
-        int256 marginRcomp = int256(staticRate) * 0.15e18 / 1e18;
+        int256 marginRcomp = int256(staticRate) * 0.14e18 / 1e18;
         int256 marginRcur = int256(staticRate) * 1e12 / 1e18; // tiny margin for rcur
 
         emit log_named_decimal_uint("u", _u, 16);

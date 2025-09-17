@@ -189,10 +189,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         c = irmConfig.getConfig();
     }
 
-    // TODO check if we can have static N% always eg by set u == 100% or r min == rmax by using generateConfig()
-    // TODO developer must be able to generate config from knowing only APR (static).
-    
-
     // TODO update whitepapaer witn <= DP
     /// @inheritdoc IDynamicKinkModel
     function verifyConfig(IDynamicKinkModel.Config memory _config) public view virtual {
