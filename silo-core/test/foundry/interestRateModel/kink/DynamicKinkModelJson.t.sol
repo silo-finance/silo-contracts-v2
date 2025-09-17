@@ -31,7 +31,6 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
 
     uint256 acceptableDiffPercentRcur = 6e9;
     mapping(uint256 id => uint256 aloowedDiffPercent) private _rcompDiffPercent;
-    // mapping(uint256 id => uint256 aloowedDiffPercent) private _rcurDiffPercent;
 
     ISilo.UtilizationData public utilizationData;
 
@@ -42,10 +41,6 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
         IRM.initialize(cfg, address(this), address(this));
 
         // 1e18 is 100%
-        // _rcurDiffPercent[259] = 11075646641;
-        // _rcurDiffPercent[281] = 195011203199;
-        // _rcurDiffPercent[285] = 18894769892;
-        // _rcurDiffPercent[289] = 23071444669;
 
         _rcompDiffPercent[19] = 22872736801;
         _rcompDiffPercent[28] = 12374540229;
