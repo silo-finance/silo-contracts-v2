@@ -188,6 +188,12 @@ interface IDynamicKinkModel {
     /// @param _silo Address of the Silo contract this model will serve
     function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo) external;
 
+    /// @notice Update the model configuration
+    /// @dev This function allows the model owner to update the configuration of the model.
+    ///      By setting the same config, we can reset k to kmin.
+    /// @param _config The new configuration parameters for the interest rate model
+    function updateConfig(IDynamicKinkModel.Config calldata _config) external;
+
     /// @notice Calculate compound interest rate and update the model's internal state
     /// @dev This function is the primary method used by Silo contracts to calculate
     ///      and accrue interest. Unlike getCompoundInterestRate(), this function

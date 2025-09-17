@@ -365,7 +365,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         verifyConfig(_config);
 
         newCfg = new DynamicKinkModelConfig(_config); 
-        // TODO add info to interface that by setting up same congig we can reset k
 
         configsHistory[newCfg] = irmConfig;
 
