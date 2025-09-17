@@ -12,13 +12,14 @@ import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/k
 
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 import {KinkCommonTest} from "./KinkCommon.t.sol";
+import {DynamicKinkModelMock} from "./DynamicKinkModelMock.sol";
 
 /* 
 FOUNDRY_PROFILE=core_test forge test --mc DynamicKinkModelTest -vv
 FOUNDRY_PROFILE=core_test forge test --mc Kink -vv
 */
 contract DynamicKinkModelTest is KinkCommonTest {
-    DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModel());
+    DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModelMock());
 
     mapping(bytes32 => bool) private seen;
 
@@ -342,5 +343,28 @@ contract DynamicKinkModelTest is KinkCommonTest {
         console2.log("config addr %s", address(irm.irmConfig()));
 
         assertEq(address(irm.configsHistory(irm.irmConfig())), address(prevConfig), "history is wrong");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_zeroRateAlways_fuzz -vv
+
+    test is we can simply create config that will return always static rate
+    */
+    /// forge-config: core_test.fuzz.runs = 1000
+    function test_kink_zeroRateAlways_fuzz(
+        ISilo.UtilizationData memory _utilizationData,
+        uint32 _warp
+    ) public {
+        vm.assume(type(uint64).max - _warp >= _utilizationData.interestRateTimestamp);
+
+        _setUtilizationData(_utilizationData);
+
+        IDynamicKinkModel.Config memory config;
+        irm.updateConfig(config);
+
+        uint256 blockTimestamp = _warp + _utilizationData.interestRateTimestamp;
+
+        assertEq(irm.getCurrentInterestRate(address(this), blockTimestamp), 0, "rcur is not 0");
+        assertEq(irm.getCompoundInterestRate(address(this), blockTimestamp), 0, "rcomp is not 0");
     }
 }

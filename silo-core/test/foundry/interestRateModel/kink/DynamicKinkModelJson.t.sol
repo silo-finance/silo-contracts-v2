@@ -14,13 +14,7 @@ import {KinkRcompTestData} from "../../data-readers/KinkRcompTestData.sol";
 import {KinkRcurTestData} from "../../data-readers/KinkRcurTestData.sol";
 
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
-
-contract DynamicKinkModelMock is DynamicKinkModel {
-    function mockState(IDynamicKinkModel.Config memory _c, int96 _k) external {
-        irmConfig = new DynamicKinkModelConfig(_c);
-        modelState.k = _k;
-    }
-}
+import {DynamicKinkModelMock} from "./DynamicKinkModelMock.sol";
 
 /* 
 FOUNDRY_PROFILE=core_test forge test -vv --mc DynamicKinkModelJsonTest
