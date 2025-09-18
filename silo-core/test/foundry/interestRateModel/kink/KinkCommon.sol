@@ -122,6 +122,26 @@ abstract contract KinkCommon {
         return keccak256(abi.encode(_config));
     }
 
+    function _hashImmutableConfig(IDynamicKinkModel.ImmutableConfig memory _immutableConfig)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encode(_immutableConfig));
+    }
+
+    function _getIRMConfig(IDynamicKinkModel _irm) internal view returns (IDynamicKinkModel.Config memory cfg) {
+        (cfg,) = _irm.irmConfig().getConfig();
+    }
+
+    function _getIRMImmutableConfig(IDynamicKinkModel _irm)
+        internal
+        view
+        returns (IDynamicKinkModel.ImmutableConfig memory immutableConfig)
+    {
+        (, immutableConfig) = _irm.irmConfig().getConfig();
+    }
+
     function _defaultConfig() internal pure returns (IDynamicKinkModel.Config memory) {
         return IDynamicKinkModel.Config({
             ulow: 200000000000000000,
@@ -138,5 +158,9 @@ abstract contract KinkCommon {
             c2: 3670,
             dmax: 7340
         });
+    }
+
+    function _defaultImmutableConfig() internal pure returns (IDynamicKinkModel.ImmutableConfig memory) {
+        return IDynamicKinkModel.ImmutableConfig({timelock: 0 days, rcompCapPerSecond: int96(10e18) / 365 days});
     }
 }

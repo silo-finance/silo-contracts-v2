@@ -25,6 +25,8 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
     DynamicKinkModelMock immutable IRM;
 
     int256 constant _DP = 10 ** 18;
+    uint32 constant _TIMELOCK = 0 days;
+    int96 constant _RCOMP_CAP_PER_SECOND = 1;
 
     uint256 acceptableDiffPercentRcur = 6e9;
     mapping(uint256 id => uint256 aloowedDiffPercent) private _rcompDiffPercent;
@@ -34,7 +36,11 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
     constructor() {
         IDynamicKinkModel.Config memory cfg;
 
-        IRM = DynamicKinkModelMock(address(FACTORY.create(cfg, address(this), address(this), bytes32(0))));
+        IDynamicKinkModel.ImmutableConfig memory immutableCfg =
+            IDynamicKinkModel.ImmutableConfig({timelock: _TIMELOCK, rcompCapPerSecond: _RCOMP_CAP_PER_SECOND});
+
+        IRM =
+            DynamicKinkModelMock(address(FACTORY.create(cfg, immutableCfg, address(this), address(this), bytes32(0))));
 
         // 1e18 is 100%
         _rcompDiffPercent[19] = 22872736801;
@@ -157,6 +163,7 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
             try IRM.compoundInterestRate(
                 c,
                 state,
+                int256(_RCOMP_CAP_PER_SECOND),
                 data[i].input.lastTransactionTime,
                 data[i].input.currentTime,
                 data[i].input.lastUtilization,

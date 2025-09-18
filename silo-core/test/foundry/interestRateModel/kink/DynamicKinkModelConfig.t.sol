@@ -12,12 +12,21 @@ contract DynamicKinkModelConfigTest is KinkCommonTest {
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_config_getConfig -vv
     */
-    function test_kink_config_getConfig(IDynamicKinkModel.Config memory _config) public {
-        config = new DynamicKinkModelConfig(_config);
+    function test_kink_config_getConfig(
+        IDynamicKinkModel.Config memory _config,
+        IDynamicKinkModel.ImmutableConfig memory _immutableConfig
+    ) public {
+        config = new DynamicKinkModelConfig(_config, _immutableConfig);
+        (IDynamicKinkModel.Config memory cfg, IDynamicKinkModel.ImmutableConfig memory immutableCfg) =
+            config.getConfig();
 
-        bytes32 hashIn = _hashConfig(_config);
-        bytes32 hashOut = _hashConfig(config.getConfig());
+        bytes32 configHashIn = _hashConfig(_config);
+        bytes32 immutableConfigHashIn = _hashImmutableConfig(_immutableConfig);
 
-        assertEq(hashIn, hashOut, "hashIn != hashOut");
+        bytes32 configHashOut = _hashConfig(cfg);
+        bytes32 immutableConfigHashOut = _hashImmutableConfig(immutableCfg);
+
+        assertEq(configHashIn, configHashOut, "configHashIn != configHashOut");
+        assertEq(immutableConfigHashIn, immutableConfigHashOut, "immutableConfigHashIn != immutableConfigHashOut");
     }
 }

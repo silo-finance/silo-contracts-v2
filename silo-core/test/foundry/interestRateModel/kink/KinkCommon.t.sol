@@ -15,6 +15,14 @@ contract KinkCommonTest is Test, KinkCommon {
         _;
     }
 
+    modifier whenValidImmutableConfig(IDynamicKinkModel.ImmutableConfig memory _immutableConfig) {
+        vm.assume(_immutableConfig.timelock <= irm.MAX_TIMELOCK());
+        vm.assume(_immutableConfig.rcompCapPerSecond > 0);
+        vm.assume(_immutableConfig.rcompCapPerSecond <= irm.RCOMP_CAP_PER_SECOND());
+
+        _;
+    }
+
     /*  
     FOUNDRY_PROFILE=core_test forge test --mt test_self_makeConfigValid -vv
     */

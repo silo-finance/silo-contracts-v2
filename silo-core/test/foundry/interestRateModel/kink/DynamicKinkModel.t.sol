@@ -29,7 +29,9 @@ contract DynamicKinkModelTest is KinkCommonTest {
     function setUp() public {
         IDynamicKinkModel.Config memory emptyConfig;
 
-        irm = DynamicKinkModel(address(FACTORY.create(emptyConfig, address(this), address(this), bytes32(0))));
+        irm = DynamicKinkModel(
+            address(FACTORY.create(emptyConfig, _defaultImmutableConfig(), address(this), address(this), bytes32(0)))
+        );
     }
 
     /*
@@ -38,9 +40,10 @@ contract DynamicKinkModelTest is KinkCommonTest {
     function test_kink_initRevert_whenSiloZero() public {
         DynamicKinkModel newModel = new DynamicKinkModel();
         IDynamicKinkModel.Config memory config;
+        IDynamicKinkModel.ImmutableConfig memory immutableConfig;
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        newModel.initialize(config, address(this), address(0));
+        newModel.initialize(config, immutableConfig, address(this), address(0));
     }
 
     /*
@@ -48,9 +51,10 @@ contract DynamicKinkModelTest is KinkCommonTest {
     */
     function test_kink_initRevert_whenAlreadyInitialized() public {
         IDynamicKinkModel.Config memory config;
+        IDynamicKinkModel.ImmutableConfig memory immutableConfig;
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        irm.initialize(config, address(this), address(this));
+        irm.initialize(config, immutableConfig, address(this), address(this));
     }
 
     /*
@@ -61,22 +65,34 @@ contract DynamicKinkModelTest is KinkCommonTest {
         public
         whenValidConfig(_config)
     {
+        IDynamicKinkModel.ImmutableConfig memory immutableConfig = _getIRMImmutableConfig(irm);
+
         IDynamicKinkModel.Config memory config = _toConfig(_config);
         irm.updateConfig(config);
 
-        (, IDynamicKinkModel.Config memory c) = irm.getModelStateAndConfig();
+        (, IDynamicKinkModel.Config memory c,) = irm.getModelStateAndConfig();
         assertEq(_hashConfig(c), _hashConfig(config), "config is not the same");
+
+        assertEq(
+            _hashImmutableConfig(immutableConfig),
+            _hashImmutableConfig(immutableConfig),
+            "immutableConfig is not the same"
+        );
     }
 
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_getModelStateAndConfig_state -vv
     */
     function test_kink_getModelStateAndConfig_state() public {
-        irm = DynamicKinkModel(address(FACTORY.create(_defaultConfig(), address(this), address(this), bytes32(0))));
+        irm = DynamicKinkModel(
+            address(
+                FACTORY.create(_defaultConfig(), _defaultImmutableConfig(), address(this), address(this), bytes32(0))
+            )
+        );
 
         vm.warp(667222222);
 
-        (IDynamicKinkModel.ModelState memory stateBefore,) = irm.getModelStateAndConfig();
+        (IDynamicKinkModel.ModelState memory stateBefore,,) = irm.getModelStateAndConfig();
 
         irm.getCompoundInterestRateAndUpdate({
             _collateralAssets: 445000000000000000000000000,
@@ -84,7 +100,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
             _interestRateTimestamp: 445000000
         });
 
-        (IDynamicKinkModel.ModelState memory stateAfter,) = irm.getModelStateAndConfig();
+        (IDynamicKinkModel.ModelState memory stateAfter,,) = irm.getModelStateAndConfig();
 
         assertLt(stateBefore.k, stateAfter.k, "k should change (grow)");
         assertEq(stateAfter.silo, address(this), "silo should be the same");
@@ -93,25 +109,28 @@ contract DynamicKinkModelTest is KinkCommonTest {
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_init_neverRevert_whenValidConfig_fuzz -vv
     */
-    /// forge-config: core_test.fuzz.runs = 1000
+    /// forge-config: core_test.fuzz.runs=1000
     function test_init_neverRevert_whenValidConfig_fuzz(
-        RandomKinkConfig memory _config,
+        RandomKinkConfig calldata _config,
         address _initialOwner,
         address _silo
     ) public whenValidConfig(_config) {
         vm.assume(_silo != address(0));
 
+        IDynamicKinkModel.ImmutableConfig memory immutableConfig = _defaultImmutableConfig();
+
         vm.expectEmit(true, true, true, true);
         emit IDynamicKinkModel.Initialized(_initialOwner, _silo);
 
         IDynamicKinkModel.Config memory config = _toConfig(_config);
-        DynamicKinkModel newModel = DynamicKinkModel(address(FACTORY.create(config, _initialOwner, _silo, bytes32(0))));
+        DynamicKinkModel newModel =
+            DynamicKinkModel(address(FACTORY.create(config, immutableConfig, _initialOwner, _silo, bytes32(0))));
 
-        _assertConfigEq(config, newModel.irmConfig().getConfig(), "init never revert");
+        _assertConfigEq(config, _getIRMConfig(newModel), "init never revert");
 
         // re-init should revert
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        newModel.initialize(config, _initialOwner, _silo);
+        newModel.initialize(config, immutableConfig, _initialOwner, _silo);
     }
 
     /*
@@ -166,68 +185,6 @@ contract DynamicKinkModelTest is KinkCommonTest {
 
             _kink_updateConfig_pass(randomConfig);
         }
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test --mt test_kink_restoreLastConfig_revertWhenNoHistory -vv
-    */
-    function test_kink_restoreLastConfig_revertWhenNoHistory() public {
-        vm.expectRevert(IDynamicKinkModel.AddressZero.selector);
-        irm.restoreLastConfig();
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test --mt test_kink_restoreLastConfig_revertWhenNotOwner -vv
-    */
-    function test_kink_restoreLastConfig_revertWhenNotOwner() public {
-        address randomUser = makeAddr("RandomUser");
-
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, randomUser));
-        vm.prank(randomUser);
-        irm.restoreLastConfig();
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test --mt test_kink_restoreLastConfig_fuzz -vv
-    */
-    /// forge-config: core_test.fuzz.runs = 1000
-    function test_kink_restoreLastConfig_fuzz(RandomKinkConfig[10] memory _config) public {
-        bytes32[] memory history = new bytes32[](_config.length);
-        IDynamicKinkModelConfig[] memory historyAddrs = new IDynamicKinkModelConfig[](_config.length);
-
-        IDynamicKinkModelConfig originalIrmConfig = irm.irmConfig();
-
-        for (uint256 i = 0; i < _config.length; i++) {
-            history[i] = _hashConfig(irm.irmConfig().getConfig());
-            historyAddrs[i] = irm.irmConfig();
-
-            IDynamicKinkModel.Config memory cfg = _toConfig(_config[i]);
-            _makeConfigValid(cfg);
-
-            _kink_updateConfig_pass(cfg);
-        }
-
-        for (uint256 k = 0; k < _config.length; k++) {
-            uint256 i = _config.length - k - 1;
-            vm.expectEmit(true, true, true, true);
-            emit IDynamicKinkModel.ConfigRestored(historyAddrs[i]);
-
-            console2.log("[%s] expected irm addr %s", i, address(historyAddrs[i]));
-
-            irm.restoreLastConfig();
-            console2.log("restored %s", i);
-
-            assertEq(history[i], _hashConfig(irm.irmConfig().getConfig()), "config was not restored");
-            assertEq(address(irm.irmConfig()), address(historyAddrs[i]), "irm config addr was not restored");
-        }
-
-        assertEq(
-            address(irm.irmConfig()), address(originalIrmConfig), "irm config addr was not restored to the original"
-        );
-
-        // at the end there is nothing more to restore
-        vm.expectRevert(IDynamicKinkModel.AddressZero.selector);
-        irm.restoreLastConfig();
     }
 
     /*
@@ -333,6 +290,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
 
     function _kink_updateConfig_pass(IDynamicKinkModel.Config memory _config) internal {
         IDynamicKinkModelConfig prevConfig = irm.irmConfig();
+        (, IDynamicKinkModel.ImmutableConfig memory prevImmutable) = prevConfig.getConfig();
 
         uint256 nonce = vm.getNonce(address(irm));
         address newConfigAddress = vm.computeCreateAddress(address(irm), nonce);
@@ -342,10 +300,14 @@ contract DynamicKinkModelTest is KinkCommonTest {
         emit IDynamicKinkModel.NewConfig(IDynamicKinkModelConfig(newConfigAddress));
 
         irm.updateConfig(_config);
-        _assertConfigEq(_config, irm.irmConfig().getConfig(), "updateConfig_pass");
+        IDynamicKinkModel.ImmutableConfig memory newImmutable = _getIRMImmutableConfig(irm);
+
+        _assertConfigEq(_config, _getIRMConfig(irm), "updateConfig_pass");
         console2.log("config addr %s", address(irm.irmConfig()));
 
         assertEq(address(irm.configsHistory(irm.irmConfig())), address(prevConfig), "history is wrong");
+        assertEq(newImmutable.timelock, prevImmutable.timelock, "timelock is not the same");
+        assertEq(newImmutable.rcompCapPerSecond, prevImmutable.rcompCapPerSecond, "rcompCapPerSecond is not the same");
     }
 
     /*
@@ -373,21 +335,16 @@ contract DynamicKinkModelTest is KinkCommonTest {
             c2: 0,
             dmax: 0
         });
-        
+
         irm.updateConfig(config);
 
-        _setUtilizationData(ISilo.UtilizationData({
-            interestRateTimestamp: 1,
-            collateralAssets: 1e18,
-            debtAssets: _u
-        }));
+        _setUtilizationData(ISilo.UtilizationData({interestRateTimestamp: 1, collateralAssets: 1e18, debtAssets: _u}));
 
         uint256 blockTimestamp = 365 days;
 
         int256 rcur = int256(irm.getCurrentInterestRate(address(this), blockTimestamp));
         int256 rcomp = int256(irm.getCompoundInterestRate(address(this), blockTimestamp));
 
-        
         int256 marginRcomp = int256(staticRate) * 0.14e18 / 1e18;
         int256 marginRcur = int256(staticRate) * 1e12 / 1e18; // tiny margin for rcur
 
@@ -407,10 +364,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
     test is we can simply create config that will return always static rate
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_kink_zeroRateAlways_fuzz(
-        ISilo.UtilizationData memory _utilizationData,
-        uint32 _warp
-    ) public {
+    function test_kink_zeroRateAlways_fuzz(ISilo.UtilizationData memory _utilizationData, uint32 _warp) public {
         vm.assume(type(uint64).max - _warp >= _utilizationData.interestRateTimestamp);
 
         _setUtilizationData(_utilizationData);
@@ -428,7 +382,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_zeroRateAlways_u0 -vv
     */
     function test_kink_zeroRateAlways_u0() public {
-       _kink_zeroRateAlways_u(0);
+        _kink_zeroRateAlways_u(0);
     }
 
     function test_kink_zeroRateAlways_u90() public {
@@ -440,11 +394,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
     }
 
     function _kink_zeroRateAlways_u(uint256 _u) public {
-        _setUtilizationData(ISilo.UtilizationData({
-            interestRateTimestamp: 1,
-            collateralAssets: 1e18,
-            debtAssets: _u
-        }));
+        _setUtilizationData(ISilo.UtilizationData({interestRateTimestamp: 1, collateralAssets: 1e18, debtAssets: _u}));
 
         IDynamicKinkModel.Config memory config;
         irm.updateConfig(config);

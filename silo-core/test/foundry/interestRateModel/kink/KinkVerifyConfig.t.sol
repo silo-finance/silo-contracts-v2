@@ -29,6 +29,7 @@ contract KinkVerifyConfigTest is KinkCommonTest {
 
         assertEq(irm.UNIVERSAL_LIMIT(), 1e9 * dp, "invalid UNIVERSAL_LIMIT");
         assertEq(irm.UNIVERSAL_LIMIT(), UNIVERSAL_LIMIT, "local UNIVERSAL_LIMIT does not match");
+        assertEq(irm.MAX_TIMELOCK(), 30 days, "invalid MAX_TIMELOCK");
 
         assertLe(
             irm.UNIVERSAL_LIMIT(),
@@ -42,7 +43,7 @@ contract KinkVerifyConfigTest is KinkCommonTest {
             "universal limit is used ot cap int96, so we checking if cast does not overflow"
         );
 
-        assertEq(irm.RCUR_CAP(), 25 * dp, "invalid RCUR_CAP");
+        assertEq(irm.RCUR_CAP(), 10 * dp, "invalid RCUR_CAP");
         assertEq(irm.RCOMP_CAP_PER_SECOND(), irm.RCUR_CAP() / 365 days, "invalid RCOMP_CAP_PER_SECOND");
 
         assertEq(irm.X_MAX(), 11 * dp, "invalid X_MAX");
