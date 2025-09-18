@@ -70,7 +70,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
         IDynamicKinkModel.Config memory config = _toConfig(_config);
         irm.updateConfig(config);
 
-        (, IDynamicKinkModel.Config memory c,) = irm.getModelStateAndConfig();
+        (, IDynamicKinkModel.Config memory c,) = irm.getModelStateAndConfig({_usePending: false});
         assertEq(_hashConfig(c), _hashConfig(config), "config is not the same");
 
         assertEq(
@@ -92,7 +92,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
 
         vm.warp(667222222);
 
-        (IDynamicKinkModel.ModelState memory stateBefore,,) = irm.getModelStateAndConfig();
+        (IDynamicKinkModel.ModelState memory stateBefore,,) = irm.getModelStateAndConfig({_usePending: false});
 
         irm.getCompoundInterestRateAndUpdate({
             _collateralAssets: 445000000000000000000000000,
@@ -100,7 +100,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
             _interestRateTimestamp: 445000000
         });
 
-        (IDynamicKinkModel.ModelState memory stateAfter,,) = irm.getModelStateAndConfig();
+        (IDynamicKinkModel.ModelState memory stateAfter,,) = irm.getModelStateAndConfig({_usePending: false});
 
         assertLt(stateBefore.k, stateAfter.k, "k should change (grow)");
         assertEq(stateAfter.silo, address(this), "silo should be the same");
@@ -297,7 +297,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
         console2.log("newConfigAddress %s for nonce %s", newConfigAddress, nonce);
 
         vm.expectEmit(true, true, true, true);
-        emit IDynamicKinkModel.NewConfig(IDynamicKinkModelConfig(newConfigAddress));
+        emit IDynamicKinkModel.NewConfig(IDynamicKinkModelConfig(newConfigAddress), false);
 
         irm.updateConfig(_config);
         IDynamicKinkModel.ImmutableConfig memory newImmutable = _getIRMImmutableConfig(irm);
@@ -317,7 +317,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
     function test_kink_staticRateUpTo25Always_fuzz(uint64 _u, int64 _staticRate) public {
         vm.assume(_staticRate >= 0);
 
-        _u = 1 + _u % 1e18;
+        _u = 1 + _u % 1e18; // range 100 ~ 1e18
         int96 staticRate = int96(0.0001e18 + _staticRate % 0.25e18); // range 0.0001e18 ~ 0.25e18
 
         IDynamicKinkModel.Config memory config = IDynamicKinkModel.Config({
