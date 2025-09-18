@@ -147,7 +147,12 @@ interface IDynamicKinkModel {
 
     /// @notice Emitted when a new configuration is set for the model
     /// @param config The new configuration contract address
-    event NewConfig(IDynamicKinkModelConfig indexed config);
+    /// @param isPending Whether the configuration is pending because of timelock
+    event NewConfig(IDynamicKinkModelConfig indexed config, bool isPending);
+
+    /// @notice Emitted when a pending configuration update is canceled
+    /// @param config The canceled configuration contract address
+    event PendingUpdateConfigCanceled(IDynamicKinkModelConfig indexed config);
 
     error AddressZero();
     error AlphaDividerZero();
@@ -181,7 +186,10 @@ interface IDynamicKinkModel {
     error InvalidUlow();
     error NegativeRcomp();
     error NegativeRcur();
+    error NoPendingUpdateToCancel();
+    error NoPendingConfig();
     error OnlySilo();
+    error PendingUpdate();
     error XOverflow();
 
     /// @notice Initialize the Dynamic Kink Model with configuration and ownership
@@ -203,6 +211,11 @@ interface IDynamicKinkModel {
     ///      By setting the same config, we can reset k to kmin.
     /// @param _config The new configuration parameters for the interest rate model
     function updateConfig(IDynamicKinkModel.Config calldata _config) external;
+
+    /// @notice Cancel the pending configuration update
+    /// @dev This function allows the model owner to cancel the pending configuration update.
+    ///      It will revert if there is no pending update.
+    function cancelPendingUpdateConfig() external;
 
     /// @notice Calculate compound interest rate and update the model's internal state
     /// @dev This function is the primary method used by Silo contracts to calculate
@@ -232,15 +245,16 @@ interface IDynamicKinkModel {
         external
         returns (uint256 rcomp);
     
-    /// @notice Get the current configuration contract for this model
+    /// @notice Get the current (active) configuration contract for this model
     /// @return config The IDynamicKinkModelConfig contract containing the model parameters
     function irmConfig() external view returns (IDynamicKinkModelConfig config);
     
     /// @notice Get both the current model state and configuration
+    /// @param _usePending Whether to use the pending configuration to pull config from
     /// @return state Current state of the model (including dynamic slope value)
-    /// @return config Current configuration parameters
+    /// @return config configuration parameters, either active or pending, depending on _usePending
     /// @return immutableConfig Immutable configuration parameters
-    function getModelStateAndConfig() 
+    function getModelStateAndConfig(bool _usePending) 
         external 
         view 
         returns (ModelState memory state, Config memory config, ImmutableConfig memory immutableConfig);
@@ -268,6 +282,12 @@ interface IDynamicKinkModel {
     /// @notice Maximum time lock for configuration changes
     /// @return maxTimeLock Maximum time lock for configuration changes
     function MAX_TIMELOCK() external view returns (uint32 maxTimeLock); // solhint-disable-line func-name-mixedcase
+
+    /// @return timestamp Timestamp at which the pending configuration becomes active
+    function activateConfigAt() external view returns (uint256 timestamp);
+
+    /// @return pendingIrmConfig Pending irm config for configuration changes, 0 if no pending
+    function pendingIrmConfig() external view returns (address pendingIrmConfig);
 
     /// @notice Validate that configuration parameters are within acceptable limits
     /// @dev This function checks if all configuration parameters are within the safe operating ranges
@@ -297,6 +317,27 @@ interface IDynamicKinkModel {
         external
         view
         returns (uint256 rcomp);
+
+    /// @notice Same as getCompoundInterestRate but uses pending configuration, throws if no pending
+    function getPendingCompoundInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        returns (uint256 rcomp);
+
+    /// @notice get current annual interest rate
+    /// @param _silo address of Silo for which interest rate should be calculated
+    /// @param _blockTimestamp timestamp to calculate interest up to (usually block.timestamp)
+    /// @return rcur current annual interest rate (1e18 == 100%)
+    function getCurrentInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        returns (uint256 rcur);
+
+    /// @notice Same as getCurrentInterestRate but uses pending configuration, throws if no pending
+    function getPendingInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        returns (uint256 rcur);
 
     /// @notice Calculate the compound interest rate for a given time period
     /// @dev This function calculates how much interest has accrued over a time period,

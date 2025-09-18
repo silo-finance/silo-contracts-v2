@@ -35,7 +35,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     int256 public constant UNIVERSAL_LIMIT = 1e9 * _DP;
 
     /// @dev maximum value of current interest rate the model will return. This is 1,000% APR in 18-decimals.
-    int256 public constant RCUR_CAP = 10 * _DP;
+    int256 public constant RCUR_CAP = 10 * _DP; // TODO update json rcomp file to new cap 1000%
 
     /// @dev seconds per year used in interest calculations.
     int256 public constant ONE_YEAR = 365 days;
@@ -50,11 +50,13 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
     ModelState public modelState;
 
+    /// @inheritdoc IDynamicKinkModel
+    uint256 public activateConfigAt;
+
     /// @dev Map of all configs for the model, used for restoring to last state
     mapping(IDynamicKinkModelConfig current => IDynamicKinkModelConfig prev) public configsHistory;
 
-    /// @dev Config for the model
-    IDynamicKinkModelConfig public irmConfig;
+    IDynamicKinkModelConfig internal _irmConfig;
 
     constructor() Ownable1and2Steps(address(0xdead)) {
         // lock the implementation
@@ -86,8 +88,23 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         emit Initialized(_initialOwner, _silo);
     }
 
+    /// @inheritdoc IDynamicKinkModel
     function updateConfig(IDynamicKinkModel.Config calldata _config) external virtual onlyOwner {
         _updateConfiguration(_config);
+    }
+
+    /// @inheritdoc IDynamicKinkModel
+    function cancelPendingUpdateConfig() external virtual onlyOwner {
+        require(activateConfigAt > block.timestamp, NoPendingUpdateToCancel());
+
+        IDynamicKinkModelConfig pendingConfig = _irmConfig;
+
+        _irmConfig = configsHistory[pendingConfig];
+        configsHistory[pendingConfig] = IDynamicKinkModelConfig(address(0));
+
+        activateConfigAt = 0;
+
+        emit PendingUpdateConfigCanceled(pendingConfig);
     }
 
     /// @inheritdoc IDynamicKinkModel
@@ -100,7 +117,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (uint256 rcomp) 
     {
-        (ModelState memory state, Config memory cfg, ImmutableConfig memory immutableCfg) = getModelStateAndConfig();
+        (
+            ModelState memory state, Config memory cfg, ImmutableConfig memory immutableCfg
+        ) = getModelStateAndConfig({_usePending: false});
+
         require(msg.sender == state.silo, OnlySilo());
 
         if (_collateralAssets.wouldOverflowOnCastToInt256()) return 0;
@@ -132,27 +152,16 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (uint256 rcomp)
     {
-        (ModelState memory state, Config memory cfg, ImmutableConfig memory immutableCfg) = getModelStateAndConfig();
-        require(_silo == state.silo, InvalidSilo());
+        rcomp = _getCompoundInterestRate({_silo: _silo, _blockTimestamp: _blockTimestamp, _usePending: false});
+    }
 
-        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
-
-        if (_blockTimestamp.wouldOverflowOnCastToInt256()) return 0;
-        if (data.debtAssets.wouldOverflowOnCastToInt256()) return 0;
-
-        try this.compoundInterestRate({
-            _cfg: cfg,
-            _state: state,
-            _rcompCapPerSecond: immutableCfg.rcompCapPerSecond,
-            _t0: int256(uint256(data.interestRateTimestamp)),
-            _t1: int256(_blockTimestamp),
-            _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
-            _tba: int256(data.debtAssets)
-        }) returns (int256 rcompInt, int256) {
-            rcomp = SafeCast.toUint256(rcompInt);
-        } catch {
-            rcomp = 0;
-        }
+    function getPendingCompoundInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        virtual
+        returns (uint256 rcomp)
+    {
+        rcomp = _getCompoundInterestRate({_silo: _silo, _blockTimestamp: _blockTimestamp, _usePending: true});
     }
 
     /// @notice it reverts for invalid silo
@@ -162,37 +171,43 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (uint256 rcur)
     {
-        (ModelState memory state, Config memory cfg,) = getModelStateAndConfig();
-        require(_silo == state.silo, InvalidSilo());
+        rcur = _getCurrentInterestRate({_silo: _silo, _blockTimestamp: _blockTimestamp, _usePending: false});
+    }
 
-        ISilo.UtilizationData memory data = ISilo(state.silo).utilizationData();
-
-        if (data.debtAssets.wouldOverflowOnCastToInt256()) return 0;
-        if (_blockTimestamp.wouldOverflowOnCastToInt256()) return 0;
-
-        try this.currentInterestRate({
-            _cfg: cfg,
-            _state: state,
-            _t0: SafeCast.toInt256(data.interestRateTimestamp),
-            _t1: int256(_blockTimestamp),
-            _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
-            _tba: int256(data.debtAssets)
-        }) returns (int256 rcurInt) {
-            rcur = SafeCast.toUint256(rcurInt);
-        } catch {
-            rcur = 0;
-        }
+    function getPendingInterestRate(address _silo, uint256 _blockTimestamp)
+        external
+        view
+        virtual
+        returns (uint256 rcur)
+    {
+        rcur = _getCurrentInterestRate({_silo: _silo, _blockTimestamp: _blockTimestamp, _usePending: true});
     }
 
     /// @inheritdoc IDynamicKinkModel
-    function getModelStateAndConfig()
+    function irmConfig() public view returns (IDynamicKinkModelConfig config) {
+        config = activateConfigAt > block.timestamp ? configsHistory[_irmConfig] : _irmConfig;
+    }
+
+    /// @inheritdoc IDynamicKinkModel
+    function pendingIrmConfig() public view returns (address config) {
+        config = activateConfigAt > block.timestamp ? address(_irmConfig) : address(0);
+    }
+
+    /// @inheritdoc IDynamicKinkModel
+    function getModelStateAndConfig(bool _usePending)
         public
         view
         virtual
         returns (ModelState memory state, Config memory config, ImmutableConfig memory immutableConfig)
     {
+        IDynamicKinkModelConfig irmConfigToUse = _usePending 
+            ? IDynamicKinkModelConfig(pendingIrmConfig()) 
+            : irmConfig();
+
+        require(address(irmConfigToUse) != address(0), NoPendingConfig());
+
         state = modelState;
-        (config, immutableConfig) = irmConfig.getConfig();
+        (config, immutableConfig) = irmConfigToUse.getConfig();
     }
 
     // TODO update whitepapaer witn <= DP
@@ -349,7 +364,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     }
 
     function _updateConfiguration(IDynamicKinkModel.Config memory _config) internal virtual {
-        (, IDynamicKinkModel.ImmutableConfig memory immutableConfig) = irmConfig.getConfig();
+        // even if _irmConfig is pending timelock, immutable config can be pulled from it
+        (, IDynamicKinkModel.ImmutableConfig memory immutableConfig) = _irmConfig.getConfig();
         _updateConfiguration(_config, immutableConfig);
     }
 
@@ -357,15 +373,23 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         IDynamicKinkModel.Config memory _config,
         IDynamicKinkModel.ImmutableConfig memory _immutableConfig
     ) internal virtual {
+        require(activateConfigAt <= block.timestamp, PendingUpdate());
+        bool isPending;
+
+        if (_immutableConfig.timelock != 0) {
+            isPending = true;
+            activateConfigAt = block.timestamp + _immutableConfig.timelock;
+        }
+
         verifyConfig(_config);
 
-        IDynamicKinkModelConfig newCfg = new DynamicKinkModelConfig(_config, _immutableConfig);
+        IDynamicKinkModelConfig newCfg = IDynamicKinkModelConfig(new DynamicKinkModelConfig(_config, _immutableConfig));
 
-        configsHistory[newCfg] = irmConfig;
+        configsHistory[newCfg] = _irmConfig;
         modelState.k = _config.kmin;
-        irmConfig = newCfg;
+        _irmConfig = newCfg;
 
-        emit NewConfig(newCfg);
+        emit NewConfig(newCfg, isPending);
     }
 
     // hard rule: utilization in the model should never be above 100%.
@@ -387,5 +411,65 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
         // safe to cast to int96, because we know, that _kmin and _kmax are in the range of int96
         cappedK = int96(SignedMath.max(_kmin, SignedMath.min(_kmax, _k)));
+    }
+
+    function _getCompoundInterestRate(address _silo, uint256 _blockTimestamp, bool _usePending)
+        internal
+        view
+        virtual
+        returns (uint256 rcomp)
+    {
+        (
+            ModelState memory state, Config memory cfg, ImmutableConfig memory immutableCfg
+        ) = getModelStateAndConfig(_usePending);
+
+        require(_silo == state.silo, InvalidSilo());
+
+        ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
+
+        if (_blockTimestamp.wouldOverflowOnCastToInt256()) return 0;
+        if (data.debtAssets.wouldOverflowOnCastToInt256()) return 0;
+
+        try this.compoundInterestRate({
+            _cfg: cfg,
+            _state: state,
+            _rcompCapPerSecond: immutableCfg.rcompCapPerSecond,
+            _t0: int256(uint256(data.interestRateTimestamp)),
+            _t1: int256(_blockTimestamp),
+            _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
+            _tba: int256(data.debtAssets)
+        }) returns (int256 rcompInt, int256) {
+            rcomp = SafeCast.toUint256(rcompInt);
+        } catch {
+            rcomp = 0;
+        }
+    }
+
+    function _getCurrentInterestRate(address _silo, uint256 _blockTimestamp, bool _usePending)
+        internal
+        view
+        virtual
+        returns (uint256 rcur)
+    {
+        (ModelState memory state, Config memory cfg,) = getModelStateAndConfig(_usePending);
+        require(_silo == state.silo, InvalidSilo());
+
+        ISilo.UtilizationData memory data = ISilo(state.silo).utilizationData();
+
+        if (data.debtAssets.wouldOverflowOnCastToInt256()) return 0;
+        if (_blockTimestamp.wouldOverflowOnCastToInt256()) return 0;
+
+        try this.currentInterestRate({
+            _cfg: cfg,
+            _state: state,
+            _t0: SafeCast.toInt256(data.interestRateTimestamp),
+            _t1: int256(_blockTimestamp),
+            _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
+            _tba: int256(data.debtAssets)
+        }) returns (int256 rcurInt) {
+            rcur = SafeCast.toUint256(rcurInt);
+        } catch {
+            rcur = 0;
+        }
     }
 }
