@@ -21,7 +21,10 @@ contract DynamicKinkModelConfig is IDynamicKinkModelConfig {
     int256 internal immutable _C2;
     int256 internal immutable _DMAX;
 
-    constructor(IDynamicKinkModel.Config memory _config) {
+    uint32 internal immutable _TIMELOCK;
+    int96 internal immutable _RCOMP_CAP_PER_SECOND;
+
+    constructor(IDynamicKinkModel.Config memory _config, IDynamicKinkModel.ImmutableConfig memory _immutableConfig) {
         _ULOW = _config.ulow;
         _U1 = _config.u1;
         _U2 = _config.u2;
@@ -35,10 +38,18 @@ contract DynamicKinkModelConfig is IDynamicKinkModelConfig {
         _C1 = _config.c1;
         _C2 = _config.c2;
         _DMAX = _config.dmax;
+
+        _TIMELOCK = _immutableConfig.timelock;
+        _RCOMP_CAP_PER_SECOND = _immutableConfig.rcompCapPerSecond;
     }
 
     /// @inheritdoc IDynamicKinkModelConfig
-    function getConfig() external view virtual returns (IDynamicKinkModel.Config memory config) {
+    function getConfig()
+        external
+        view
+        virtual
+        returns (IDynamicKinkModel.Config memory config, IDynamicKinkModel.ImmutableConfig memory immutableConfig)
+    {
         config.ulow = _ULOW;
         config.u1 = _U1;
         config.u2 = _U2;
@@ -52,5 +63,8 @@ contract DynamicKinkModelConfig is IDynamicKinkModelConfig {
         config.c1 = _C1;
         config.c2 = _C2;
         config.dmax = _DMAX;
+
+        immutableConfig.timelock = _TIMELOCK;
+        immutableConfig.rcompCapPerSecond = _RCOMP_CAP_PER_SECOND;
     }
 }

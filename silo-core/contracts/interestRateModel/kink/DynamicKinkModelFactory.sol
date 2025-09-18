@@ -34,6 +34,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     /// @inheritdoc IDynamicKinkModelFactory
     function create(
         IDynamicKinkModel.Config calldata _config,
+        IDynamicKinkModel.ImmutableConfig calldata _immutableConfig,
         address _initialOwner,
         address _silo,
         bytes32 _externalSalt
@@ -42,7 +43,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         virtual
         returns (IInterestRateModel irm)
     {
-        return _create(_config, _initialOwner, _silo, _externalSalt);
+        return _create(_config, _immutableConfig, _initialOwner, _silo, _externalSalt);
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
@@ -68,12 +69,12 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         // 0 <= rmin < rcritMin <= rcritMax <= r100
 
         require(
-            defaultInt.rcritMin.inOpenIntervalTopIncluded(defaultInt.rmin, defaultInt.rcritMax), 
+            defaultInt.rcritMin.inOpenIntervalTopIncluded(defaultInt.rmin, defaultInt.rcritMax),
             IDynamicKinkModel.InvalidRcritMin()
         );
 
         require(
-            defaultInt.rcritMax.inClosedInterval(defaultInt.rcritMin, defaultInt.r100), 
+            defaultInt.rcritMax.inClosedInterval(defaultInt.rcritMin, defaultInt.r100),
             IDynamicKinkModel.InvalidRcritMax()
         );
 
@@ -134,6 +135,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
     function _create(
         IDynamicKinkModel.Config memory _config,
+        IDynamicKinkModel.ImmutableConfig memory _immutableConfig,
         address _initialOwner,
         address _silo,
         bytes32 _externalSalt
@@ -147,7 +149,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         bytes32 salt = _salt(_externalSalt);
 
         irm = IInterestRateModel(Clones.cloneDeterministic(address(IRM), salt));
-        IDynamicKinkModel(address(irm)).initialize(_config, _initialOwner, _silo);
+        IDynamicKinkModel(address(irm)).initialize(_config, _immutableConfig, _initialOwner, _silo);
 
         createdByFactory[address(irm)] = true;
         emit NewDynamicKinkModel(IDynamicKinkModel(address(irm)));

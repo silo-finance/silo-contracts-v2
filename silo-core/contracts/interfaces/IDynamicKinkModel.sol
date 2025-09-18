@@ -105,6 +105,11 @@ interface IDynamicKinkModel {
         int256 dmax;
     }
 
+    struct ImmutableConfig {
+        uint32 timelock;
+        int96 rcompCapPerSecond;
+    }
+
     /// @notice Internal variables used during compound interest calculations
     /// @dev This structure contains temporary variables used in the mathematical calculations.
     ///      Integrators typically don't need to interact with these values directly.
@@ -144,10 +149,6 @@ interface IDynamicKinkModel {
     /// @param config The new configuration contract address
     event NewConfig(IDynamicKinkModelConfig indexed config);
 
-    /// @notice Emitted when the model configuration is restored to a previous state
-    /// @param config The restored configuration contract address
-    event ConfigRestored(IDynamicKinkModelConfig indexed config);
-
     error AddressZero();
     error AlphaDividerZero();
     error AlreadyInitialized();
@@ -162,12 +163,14 @@ interface IDynamicKinkModel {
     error InvalidKmax();
     error InvalidKmin();
     error InvalidKRange();
+    error InvalidRcompCapPerSecond();
     error InvalidRcritMax();
     error InvalidRcritMin();
     error InvalidRmin();
     error InvalidSilo();
     error InvalidT1();
     error InvalidT2();
+    error InvalidTimelock();
     error InvalidTimestamp();
     error InvalidTMin();
     error InvalidTMinus();
@@ -184,9 +187,16 @@ interface IDynamicKinkModel {
     /// @notice Initialize the Dynamic Kink Model with configuration and ownership
     /// @dev This function sets up the model for a specific Silo contract. Can only be called once.
     /// @param _config The configuration parameters for the interest rate model
+    /// @param _immutableConfig The immutable configuration parameters for the interest rate model
     /// @param _initialOwner Address that will own and control this model instance
     /// @param _silo Address of the Silo contract this model will serve
-    function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo) external;
+    function initialize(
+        IDynamicKinkModel.Config calldata _config, 
+        IDynamicKinkModel.ImmutableConfig calldata _immutableConfig, 
+        address _initialOwner, 
+        address _silo
+    ) 
+        external;
 
     /// @notice Update the model configuration
     /// @dev This function allows the model owner to update the configuration of the model.
@@ -221,34 +231,19 @@ interface IDynamicKinkModel {
     )
         external
         returns (uint256 rcomp);
-
-    /// @notice Restore the model to its previous configuration
-    /// @dev This function allows the model owner to revert to the previous configuration
-    ///      if a new configuration proves to be problematic. It maintains a history
-    ///      of configurations to enable this rollback functionality.
-    /// 
-    ///      When a configuration is restored:
-    ///      - The model switches back to the previous configuration contract
-    ///      - The dynamic slope (k) is reset to the minimum value from the restored config
-    ///      - A ConfigRestored event is emitted
-    /// 
-    ///      This is useful for:
-    ///      - Reverting problematic configuration changes
-    ///      - Testing different configurations safely
-    ///      - Emergency rollbacks if new parameters cause issues
-    /// 
-    /// @custom:throws AddressZero() if there is no previous configuration to restore to
-    /// @custom:throws OnlyOwner() if called by any address other than the model owner
-    function restoreLastConfig() external;
     
     /// @notice Get the current configuration contract for this model
     /// @return config The IDynamicKinkModelConfig contract containing the model parameters
     function irmConfig() external view returns (IDynamicKinkModelConfig config);
     
     /// @notice Get both the current model state and configuration
-    /// @return s Current state of the model (including dynamic slope value)
-    /// @return c Current configuration parameters
-    function getModelStateAndConfig() external view returns (ModelState memory s, Config memory c);
+    /// @return state Current state of the model (including dynamic slope value)
+    /// @return config Current configuration parameters
+    /// @return immutableConfig Immutable configuration parameters
+    function getModelStateAndConfig() 
+        external 
+        view 
+        returns (ModelState memory state, Config memory config, ImmutableConfig memory immutableConfig);
 
     /// @notice Maximum compound interest rate per second (prevents extreme rates)
     /// @return cap Maximum per-second compound interest rate in 18 decimals
@@ -269,6 +264,10 @@ interface IDynamicKinkModel {
     /// @notice Universal limit for various model parameters
     /// @return limit Maximum allowed value for certain configuration parameters
     function UNIVERSAL_LIMIT() external view returns (int256 limit); // solhint-disable-line func-name-mixedcase
+
+    /// @notice Maximum time lock for configuration changes
+    /// @return maxTimeLock Maximum time lock for configuration changes
+    function MAX_TIMELOCK() external view returns (uint32 maxTimeLock); // solhint-disable-line func-name-mixedcase
 
     /// @notice Validate that configuration parameters are within acceptable limits
     /// @dev This function checks if all configuration parameters are within the safe operating ranges
@@ -309,6 +308,7 @@ interface IDynamicKinkModel {
     /// 
     /// @param _cfg Model configuration parameters
     /// @param _state Current model state (including dynamic slope value)
+    /// @param _rcompCapPerSecond Maximum compound interest rate per second
     /// @param _t0 Timestamp of the last interest rate update
     /// @param _t1 Current timestamp for the calculation
     /// @param _u Utilization ratio at time _t0 (0 to 1e18, where 1e18 = 100% utilized)
@@ -318,6 +318,7 @@ interface IDynamicKinkModel {
     function compoundInterestRate(
         Config memory _cfg,
         ModelState memory _state,
+        int256 _rcompCapPerSecond,
         int256 _t0,
         int256 _t1,
         int256 _u,

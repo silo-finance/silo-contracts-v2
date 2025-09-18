@@ -17,7 +17,6 @@ import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.
 import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
 import {KinkMath} from "../../lib/KinkMath.sol";
 
-
 /// @title DynamicKinkModel
 /// @notice Refer to Silo DynamicKinkModel paper for more details.
 /// @dev it follows `IInterestRateModel` interface except `initialize` method
@@ -47,6 +46,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     /// @dev maximum exp() input to prevent an overflow.
     int256 public constant X_MAX = 11 * _DP;
 
+    uint32 public constant MAX_TIMELOCK = 30 days;
+
     ModelState public modelState;
 
     /// @dev Map of all configs for the model, used for restoring to last state
@@ -61,16 +62,24 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         _disableInitializers();
     }
 
-    function initialize(IDynamicKinkModel.Config calldata _config, address _initialOwner, address _silo)
+    function initialize(
+        IDynamicKinkModel.Config calldata _config,
+        IDynamicKinkModel.ImmutableConfig calldata _immutableConfig,
+        address _initialOwner,
+        address _silo
+    )
         external
         virtual
         initializer
     {
         require(_silo != address(0), EmptySilo());
+        require(_immutableConfig.timelock <= MAX_TIMELOCK, InvalidTimelock());
+        require(_immutableConfig.rcompCapPerSecond > 0, InvalidRcompCapPerSecond());
+        require(_immutableConfig.rcompCapPerSecond <= RCOMP_CAP_PER_SECOND, InvalidRcompCapPerSecond());
 
         modelState.silo = _silo;
 
-        _updateConfiguration(_config);
+        _updateConfiguration(_config, _immutableConfig);
 
         _transferOwnership(_initialOwner);
 
@@ -79,16 +88,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
     function updateConfig(IDynamicKinkModel.Config calldata _config) external virtual onlyOwner {
         _updateConfiguration(_config);
-    }
-
-    /// @inheritdoc IDynamicKinkModel
-    function restoreLastConfig() external virtual onlyOwner {
-        IDynamicKinkModelConfig lastOne = configsHistory[irmConfig];
-        require(address(lastOne) != address(0), AddressZero());
-
-        irmConfig = lastOne;
-        modelState.k = lastOne.getConfig().kmin;
-        emit ConfigRestored(lastOne);
     }
 
     /// @inheritdoc IDynamicKinkModel
@@ -101,7 +100,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (uint256 rcomp) 
     {
-        (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
+        (ModelState memory state, Config memory cfg, ImmutableConfig memory immutableCfg) = getModelStateAndConfig();
         require(msg.sender == state.silo, OnlySilo());
 
         if (_collateralAssets.wouldOverflowOnCastToInt256()) return 0;
@@ -112,6 +111,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         try this.compoundInterestRate({
             _cfg: cfg,
             _state: state,
+            _rcompCapPerSecond: immutableCfg.rcompCapPerSecond,
             _t0: int256(_interestRateTimestamp),
             _t1: int256(block.timestamp),
             _u: _calculateUtiliation(_collateralAssets, _debtAssets),
@@ -132,7 +132,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (uint256 rcomp)
     {
-        (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
+        (ModelState memory state, Config memory cfg, ImmutableConfig memory immutableCfg) = getModelStateAndConfig();
         require(_silo == state.silo, InvalidSilo());
 
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
@@ -143,6 +143,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         try this.compoundInterestRate({
             _cfg: cfg,
             _state: state,
+            _rcompCapPerSecond: immutableCfg.rcompCapPerSecond,
             _t0: int256(uint256(data.interestRateTimestamp)),
             _t1: int256(_blockTimestamp),
             _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
@@ -161,7 +162,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (uint256 rcur)
     {
-        (ModelState memory state, Config memory cfg) = getModelStateAndConfig();
+        (ModelState memory state, Config memory cfg,) = getModelStateAndConfig();
         require(_silo == state.silo, InvalidSilo());
 
         ISilo.UtilizationData memory data = ISilo(state.silo).utilizationData();
@@ -184,9 +185,14 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     }
 
     /// @inheritdoc IDynamicKinkModel
-    function getModelStateAndConfig() public view virtual returns (ModelState memory s, Config memory c) {
-        s = modelState;
-        c = irmConfig.getConfig();
+    function getModelStateAndConfig()
+        public
+        view
+        virtual
+        returns (ModelState memory state, Config memory config, ImmutableConfig memory immutableConfig)
+    {
+        state = modelState;
+        (config, immutableConfig) = irmConfig.getConfig();
     }
 
     // TODO update whitepapaer witn <= DP
@@ -198,7 +204,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
         require(_config.ucrit.inClosedInterval(_config.ulow, _DP), InvalidUcrit());
 
-        require(_config.rmin.inClosedInterval(0, _DP), InvalidRmin()); 
+        require(_config.rmin.inClosedInterval(0, _DP), InvalidRmin());
 
         require(_config.kmin.inClosedInterval(0, UNIVERSAL_LIMIT), InvalidKmin());
         require(_config.kmax.inClosedInterval(_config.kmin, UNIVERSAL_LIMIT), InvalidKmax());
@@ -233,7 +239,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         returns (int256 rcur)
     {
         if (_tba == 0) return 0; // no debt, no interest
-        
+
         int256 T = _t1 - _t0;
 
         // k is stored capped, so we can use it as is
@@ -267,9 +273,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     /// @inheritdoc IDynamicKinkModel
     function compoundInterestRate( // solhint-disable-line code-complexity, function-max-lines
         Config memory _cfg,
-        ModelState memory _state, 
+        ModelState memory _state,
+        int256 _rcompCapPerSecond,
         int256 _t0,
-        int256 _t1, 
+        int256 _t1,
         int256 _u,
         int256 _tba
     )
@@ -332,8 +339,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         require(rcomp >= 0, NegativeRcomp());
 
         // limit rcomp
-        if (rcomp > RCOMP_CAP_PER_SECOND * _l.T) {
-            rcomp = RCOMP_CAP_PER_SECOND * _l.T;
+        if (rcomp > _rcompCapPerSecond * _l.T) {
+            rcomp = _rcompCapPerSecond * _l.T;
             // k should be set to min only on overflow or cap
             k = _cfg.kmin;
         }
@@ -341,27 +348,21 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         // TODO update whitepaper and remove oveflow check that we not using
     }
 
-    function _updateConfiguration(IDynamicKinkModel.Config memory _config)
-        internal
-        virtual
-        returns (IDynamicKinkModelConfig newCfg)
-    {
-        newCfg = _deployConfig(_config);
-
-        modelState.k = _config.kmin;
+    function _updateConfiguration(IDynamicKinkModel.Config memory _config) internal virtual {
+        (, IDynamicKinkModel.ImmutableConfig memory immutableConfig) = irmConfig.getConfig();
+        _updateConfiguration(_config, immutableConfig);
     }
 
-    function _deployConfig(IDynamicKinkModel.Config memory _config)
-        internal
-        virtual
-        returns (IDynamicKinkModelConfig newCfg)
-    {
+    function _updateConfiguration(
+        IDynamicKinkModel.Config memory _config,
+        IDynamicKinkModel.ImmutableConfig memory _immutableConfig
+    ) internal virtual {
         verifyConfig(_config);
 
-        newCfg = new DynamicKinkModelConfig(_config); 
+        IDynamicKinkModelConfig newCfg = new DynamicKinkModelConfig(_config, _immutableConfig);
 
         configsHistory[newCfg] = irmConfig;
-
+        modelState.k = _config.kmin;
         irmConfig = newCfg;
 
         emit NewConfig(newCfg);

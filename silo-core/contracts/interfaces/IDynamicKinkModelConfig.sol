@@ -5,5 +5,8 @@ import {IDynamicKinkModel} from "./IDynamicKinkModel.sol";
 
 interface IDynamicKinkModelConfig {
     /// @return config returns immutable IRM configuration that is present in contract
-    function getConfig() external view returns (IDynamicKinkModel.Config memory config);
+    function getConfig() 
+        external 
+        view 
+        returns (IDynamicKinkModel.Config memory config, IDynamicKinkModel.ImmutableConfig memory immutableConfig);
 }
