@@ -29,7 +29,7 @@ contract KinkVerifyConfigTest is KinkCommonTest {
 
         assertEq(irm.UNIVERSAL_LIMIT(), 1e9 * dp, "invalid UNIVERSAL_LIMIT");
         assertEq(irm.UNIVERSAL_LIMIT(), UNIVERSAL_LIMIT, "local UNIVERSAL_LIMIT does not match");
-        assertEq(irm.MAX_TIMELOCK(), 30 days, "invalid MAX_TIMELOCK");
+        assertEq(irm.MAX_TIMELOCK(), 7 days, "invalid MAX_TIMELOCK");
 
         assertLe(
             irm.UNIVERSAL_LIMIT(),

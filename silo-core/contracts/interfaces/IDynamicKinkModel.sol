@@ -147,8 +147,8 @@ interface IDynamicKinkModel {
 
     /// @notice Emitted when a new configuration is set for the model
     /// @param config The new configuration contract address
-    /// @param isPending Whether the configuration is pending because of timelock
-    event NewConfig(IDynamicKinkModelConfig indexed config, bool isPending);
+    /// @param activeAt Timestamp at which the configuration becomes active
+    event NewConfig(IDynamicKinkModelConfig indexed config, uint256 activeAt);
 
     /// @notice Emitted when a pending configuration update is canceled
     /// @param config The canceled configuration contract address
@@ -334,7 +334,7 @@ interface IDynamicKinkModel {
         returns (uint256 rcur);
 
     /// @notice Same as getCurrentInterestRate but uses pending configuration, throws if no pending
-    function getPendingInterestRate(address _silo, uint256 _blockTimestamp)
+    function getPendingCurrentInterestRate(address _silo, uint256 _blockTimestamp)
         external
         view
         returns (uint256 rcur);

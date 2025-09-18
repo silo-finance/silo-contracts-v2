@@ -297,7 +297,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
         console2.log("newConfigAddress %s for nonce %s", newConfigAddress, nonce);
 
         vm.expectEmit(true, true, true, true);
-        emit IDynamicKinkModel.NewConfig(IDynamicKinkModelConfig(newConfigAddress), false);
+        emit IDynamicKinkModel.NewConfig(IDynamicKinkModelConfig(newConfigAddress), block.timestamp);
 
         irm.updateConfig(_config);
         IDynamicKinkModel.ImmutableConfig memory newImmutable = _getIRMImmutableConfig(irm);

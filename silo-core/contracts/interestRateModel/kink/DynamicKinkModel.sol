@@ -174,7 +174,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         rcur = _getCurrentInterestRate({_silo: _silo, _blockTimestamp: _blockTimestamp, _usePending: false});
     }
 
-    function getPendingInterestRate(address _silo, uint256 _blockTimestamp)
+    function getPendingCurrentInterestRate(address _silo, uint256 _blockTimestamp)
         external
         view
         virtual
@@ -374,11 +374,12 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         IDynamicKinkModel.ImmutableConfig memory _immutableConfig
     ) internal virtual {
         require(activateConfigAt <= block.timestamp, PendingUpdate());
-        bool isPending;
+
+        uint256 activeAt = block.timestamp;
 
         if (_immutableConfig.timelock != 0) {
-            isPending = true;
-            activateConfigAt = block.timestamp + _immutableConfig.timelock;
+            activeAt = block.timestamp + _immutableConfig.timelock;
+            activateConfigAt = activeAt;
         }
 
         verifyConfig(_config);
@@ -389,7 +390,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         modelState.k = _config.kmin;
         _irmConfig = newCfg;
 
-        emit NewConfig(newCfg, isPending);
+        emit NewConfig(newCfg, activeAt);
     }
 
     // hard rule: utilization in the model should never be above 100%.
@@ -419,9 +420,8 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (uint256 rcomp)
     {
-        (
-            ModelState memory state, Config memory cfg, ImmutableConfig memory immutableCfg
-        ) = getModelStateAndConfig(_usePending);
+        (ModelState memory state, Config memory cfg, ImmutableConfig memory immutableCfg) =
+            getModelStateAndConfig(_usePending);
 
         require(_silo == state.silo, InvalidSilo());
 
