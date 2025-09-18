@@ -46,7 +46,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     /// @dev maximum exp() input to prevent an overflow.
     int256 public constant X_MAX = 11 * _DP;
 
-    uint32 public constant MAX_TIMELOCK = 30 days;
+    uint32 public constant MAX_TIMELOCK = 7 days;
 
     ModelState public modelState;
 
