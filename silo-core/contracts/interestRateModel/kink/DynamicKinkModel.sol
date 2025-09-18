@@ -117,32 +117,14 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (uint256 rcomp) 
     {
-        (
-            ModelState memory state, Config memory cfg, ImmutableConfig memory immutableCfg
-        ) = getModelStateAndConfig({_usePending: false});
-
-        require(msg.sender == state.silo, OnlySilo());
-
-        if (_collateralAssets.wouldOverflowOnCastToInt256()) return 0;
-        if (_debtAssets.wouldOverflowOnCastToInt256()) return 0;
-        if (_interestRateTimestamp.wouldOverflowOnCastToInt256()) return 0;
-        if (block.timestamp.wouldOverflowOnCastToInt256()) return 0;
-
-        try this.compoundInterestRate({
-            _cfg: cfg,
-            _state: state,
-            _rcompCapPerSecond: immutableCfg.rcompCapPerSecond,
-            _t0: int256(_interestRateTimestamp),
-            _t1: int256(block.timestamp),
-            _u: _calculateUtiliation(_collateralAssets, _debtAssets),
-            _tba: int256(_debtAssets)
-        }) returns (int256 rcompInt, int256 k) {
-            rcomp = SafeCast.toUint256(rcompInt);
-            modelState.k = _capK(k, cfg.kmin, cfg.kmax);
-        } catch {
-            rcomp = 0;
-            modelState.k = cfg.kmin; // k should be set to min on overflow
-        }
+        (rcomp, modelState.k) = _getCompoundInterestRate(CompoundInterestRateArgs({
+            silo: modelState.silo,
+            collateralAssets: _collateralAssets,
+            debtAssets: _debtAssets,
+            interestRateTimestamp: _interestRateTimestamp,
+            blockTimestamp: block.timestamp,
+            usePending: false
+        }));
     }
 
     /// @inheritdoc IDynamicKinkModel
@@ -152,7 +134,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (uint256 rcomp)
     {
-        rcomp = _getCompoundInterestRate({_silo: _silo, _blockTimestamp: _blockTimestamp, _usePending: false});
+        (rcomp,) = _getCompoundInterestRate({_silo: _silo, _blockTimestamp: _blockTimestamp, _usePending: false});
     }
 
     function getPendingCompoundInterestRate(address _silo, uint256 _blockTimestamp)
@@ -161,7 +143,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (uint256 rcomp)
     {
-        rcomp = _getCompoundInterestRate({_silo: _silo, _blockTimestamp: _blockTimestamp, _usePending: true});
+        (rcomp,) = _getCompoundInterestRate({_silo: _silo, _blockTimestamp: _blockTimestamp, _usePending: true});
     }
 
     /// @notice it reverts for invalid silo
@@ -414,34 +396,58 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         cappedK = int96(SignedMath.max(_kmin, SignedMath.min(_kmax, _k)));
     }
 
-    function _getCompoundInterestRate(address _silo, uint256 _blockTimestamp, bool _usePending)
+    function _getCompoundInterestRate(
+        address _silo,
+        uint256 _blockTimestamp,
+        bool _usePending
+    )
         internal
         view
         virtual
-        returns (uint256 rcomp)
+        returns (uint256 rcomp, int96 k)
     {
-        (ModelState memory state, Config memory cfg, ImmutableConfig memory immutableCfg) =
-            getModelStateAndConfig(_usePending);
-
-        require(_silo == state.silo, InvalidSilo());
-
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
-        if (_blockTimestamp.wouldOverflowOnCastToInt256()) return 0;
-        if (data.debtAssets.wouldOverflowOnCastToInt256()) return 0;
+        (rcomp, k) = _getCompoundInterestRate(CompoundInterestRateArgs({
+            silo: _silo,
+            collateralAssets: data.collateralAssets,
+            debtAssets: data.debtAssets,
+            interestRateTimestamp: data.interestRateTimestamp,
+            blockTimestamp: _blockTimestamp,
+            usePending: _usePending
+        }));
+    }
+
+    function _getCompoundInterestRate(CompoundInterestRateArgs memory _args)
+        internal
+        view
+        virtual
+        returns (uint256 rcomp, int96 k)
+    {
+        (ModelState memory state, Config memory cfg, ImmutableConfig memory immutableCfg) =
+            getModelStateAndConfig(_args.usePending);
+
+        require(_args.silo == state.silo, InvalidSilo());
+
+        if (_args.interestRateTimestamp.wouldOverflowOnCastToInt256()) return (0, 0);
+        if (_args.blockTimestamp.wouldOverflowOnCastToInt256()) return (0, 0);
+        if (_args.collateralAssets.wouldOverflowOnCastToInt256()) return (0, 0);
+        if (_args.debtAssets.wouldOverflowOnCastToInt256()) return (0, 0);
 
         try this.compoundInterestRate({
             _cfg: cfg,
             _state: state,
             _rcompCapPerSecond: immutableCfg.rcompCapPerSecond,
-            _t0: int256(uint256(data.interestRateTimestamp)),
-            _t1: int256(_blockTimestamp),
-            _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
-            _tba: int256(data.debtAssets)
-        }) returns (int256 rcompInt, int256) {
+            _t0: int256(uint256(_args.interestRateTimestamp)),
+            _t1: int256(_args.blockTimestamp),
+            _u: _calculateUtiliation(_args.collateralAssets, _args.debtAssets),
+            _tba: int256(_args.debtAssets)
+        }) returns (int256 rcompInt, int256 newK) {
             rcomp = SafeCast.toUint256(rcompInt);
+            k = _capK(newK, cfg.kmin, cfg.kmax);
         } catch {
             rcomp = 0;
+            k = cfg.kmin; // k should be set to min on overflow
         }
     }
 

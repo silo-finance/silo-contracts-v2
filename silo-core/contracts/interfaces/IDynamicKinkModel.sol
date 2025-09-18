@@ -129,6 +129,15 @@ interface IDynamicKinkModel {
         int256 interest;
     }
 
+    struct CompoundInterestRateArgs {
+        address silo;
+        uint256 collateralAssets;
+        uint256 debtAssets;
+        uint256 interestRateTimestamp;
+        uint256 blockTimestamp;
+        bool usePending;
+    }
+
     /// @notice Current state of the Dynamic Kink Model
     /// @dev This structure tracks the current state of the model, including the dynamic slope value
     ///      that changes over time based on utilization patterns.
