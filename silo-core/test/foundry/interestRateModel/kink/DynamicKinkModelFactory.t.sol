@@ -91,9 +91,6 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
         RandomKinkConfig memory _config,
         IDynamicKinkModel.ImmutableArgs memory _immutableConfig
     ) public whenValidConfig(_config) whenValidImmutableArgs(_immutableConfig) {
-        vm.assume(_immutableConfig.timelock <= FACTORY.IRM().MAX_TIMELOCK());
-        vm.assume(_immutableConfig.rcompCap <= FACTORY.IRM().RCUR_CAP());
-
         address predictedAddress = FACTORY.predictAddress(address(this), bytes32(0));
 
         vm.expectEmit(true, true, true, true);
