@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 
+import {SignedMath} from "openzeppelin5/utils/math/SignedMath.sol";
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 
 import {KinkCommon} from "./KinkCommon.sol";
@@ -15,10 +16,9 @@ contract KinkCommonTest is Test, KinkCommon {
         _;
     }
 
-    modifier whenValidImmutableArgs(IDynamicKinkModel.ImmutableArgs memory _immutableArgs) {
+    modifier makeValidImmutableArgs(IDynamicKinkModel.ImmutableArgs memory _immutableArgs) {
         _immutableArgs.timelock = uint32(_immutableArgs.timelock % (FACTORY.IRM().MAX_TIMELOCK() + 1));
-        _immutableArgs.rcompCap = int96(_immutableArgs.rcompCap % FACTORY.IRM().RCUR_CAP());
-        vm.assume(_immutableArgs.rcompCap > 0);
+        _immutableArgs.rcompCap = int96(SignedMath.max(1, _immutableArgs.rcompCap % FACTORY.IRM().RCUR_CAP()));
 
         _;
     }

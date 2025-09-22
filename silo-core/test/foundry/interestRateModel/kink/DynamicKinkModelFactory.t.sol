@@ -84,17 +84,17 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_create_pass_fuzz -vv
     */
-    /// forge-config: core_test.fuzz.runs = 1000
+    // forge-config: core_test.fuzz.runs = 1000
     function test_kink_create_pass_fuzz(
         RandomKinkConfig memory _config,
-        IDynamicKinkModel.ImmutableArgs memory _immutableConfig
-    ) public whenValidConfig(_config) whenValidImmutableArgs(_immutableConfig) {
+        IDynamicKinkModel.ImmutableArgs memory _immutableArgs
+    ) public whenValidConfig(_config) makeValidImmutableArgs(_immutableArgs) {
         address predictedAddress = FACTORY.predictAddress(address(this), bytes32(0));
 
         vm.expectEmit(true, true, true, true);
         emit IDynamicKinkModelFactory.NewDynamicKinkModel(IDynamicKinkModel(predictedAddress));
 
-        FACTORY.create(_toConfig(_config), _immutableConfig, address(this), address(this), bytes32(0));
+        FACTORY.create(_toConfig(_config), _immutableArgs, address(this), address(this), bytes32(0));
 
         assertTrue(FACTORY.createdByFactory(predictedAddress));
     }
@@ -102,7 +102,7 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_generateConfig_alwaysWorks -vv
     */
-    /// forge-config: core_test.fuzz.runs = 1000
+    // forge-config: core_test.fuzz.runs = 1000
     function test_kink_generateConfig_alwaysWorks_fuzz(IDynamicKinkModel.UserFriendlyConfig memory _in) public {
         // _printUserFriendlyConfig(_in);
 
