@@ -1,26 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {console2} from "forge-std/console2.sol";
-
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
-import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
 import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 
-import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 import {KinkCommonTest} from "./KinkCommon.t.sol";
 import {DynamicKinkModelMock} from "./DynamicKinkModelMock.sol";
-import {KinkMath} from "../../../../contracts/lib/KinkMath.sol";
 
 /* 
 FOUNDRY_PROFILE=core_test forge test --mc DynamicKinkModelTimelockTest -vv
 */
 contract DynamicKinkModelTimelockTest is KinkCommonTest {
-    using KinkMath for int256;
-
     address silo = address(this);
 
     DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModelMock());
@@ -110,6 +103,16 @@ contract DynamicKinkModelTimelockTest is KinkCommonTest {
         assertEq(irm.activateConfigAt(), block.timestamp, "activateConfigAt should be equal to block.timestamp");
 
         _assertModelWorksWithDesiredConfig(pendingIrmConfig);
+    }
+
+    /*
+        FOUNDRY_PROFILE=core_test forge test --mt test_kink_cancelPendingUpdateConfig_onlyOwner -vv
+    */
+    function test_kink_cancelPendingUpdateConfig_onlyOwner() public {
+        vm.prank(address(1));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(1)));
+
+        irm.cancelPendingUpdateConfig();
     }
 
     /*

@@ -11,11 +11,8 @@ import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 import {IDynamicKinkModelFactory} from "../../interfaces/IDynamicKinkModelFactory.sol";
 
 import {DynamicKinkModel} from "./DynamicKinkModel.sol";
-import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
 import {KinkMath} from "../../lib/KinkMath.sol";
 
-/// @title DynamicKinkModelFactory
-/// @dev It creates DynamicKinkModelConfig.
 contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     using KinkMath for int256;
 

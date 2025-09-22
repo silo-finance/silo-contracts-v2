@@ -10,7 +10,6 @@ import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 
 import {PRBMathSD59x18} from "../../lib/PRBMathSD59x18.sol";
 import {ISilo} from "../../interfaces/ISilo.sol";
-import {ISiloConfig} from "../../interfaces/ISiloConfig.sol";
 import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.sol";
 
@@ -81,7 +80,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
         IDynamicKinkModel.ImmutableConfig memory immutableConfig = IDynamicKinkModel.ImmutableConfig({
             timelock: _immutableArgs.timelock,
-            rcompCapPerSecond: int96(_immutableArgs.rcompCap / ONE_YEAR)
+            rcompCapPerSecond: int96(_immutableArgs.rcompCap / ONE_YEAR) // forge-lint: disable-line(unsafe-typecast)
         });
 
         modelState.silo = _silo;
@@ -386,6 +385,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         if (_debtAssets == 0) return 0;
         if (_collateralAssets == 0 || _debtAssets >= _collateralAssets) return _DP;
 
+        // forge-lint: disable-next-line(unsafe-typecast)
         return int256(Math.mulDiv(_debtAssets, uint256(_DP), _collateralAssets, Math.Rounding.Floor));
     }
 
@@ -470,7 +470,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
             _cfg: cfg,
             _state: state,
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
-            _t1: int256(_blockTimestamp),
+            _t1: int256(_blockTimestamp), // forge-lint: disable-line(unsafe-typecast)
             _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
             _tba: int256(data.debtAssets) // forge-lint: disable-line(unsafe-typecast)
         }) returns (int256 rcurInt) {
