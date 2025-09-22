@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-08-22 12:51:36</td>
+            <td class="headerValue">2025-09-22 14:46:55</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -82,10 +82,10 @@
 <span id="L20"><span class="lineNum">      20</span>              :     // keccak256(abi.encode(uint256(keccak256(&quot;silo.storage.ShareToken&quot;)) - 1)) &amp; ~bytes32(uint256(0xff))</span>
 <span id="L21"><span class="lineNum">      21</span>              :     bytes32 private constant _STORAGE_LOCATION = 0x01b0b3f9d6e360167e522fa2b18ba597ad7b2b35841fec7e1ca4dbb0adea1200;</span>
 <span id="L22"><span class="lineNum">      22</span>              : </span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">     2594735 :     function getShareTokenStorage() internal pure returns (IShareToken.ShareTokenStorage storage $) {</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">     2596963 :     function getShareTokenStorage() internal pure returns (IShareToken.ShareTokenStorage storage $) {</span></span>
 <span id="L24"><span class="lineNum">      24</span>              :         // solhint-disable-next-line no-inline-assembly</span>
 <span id="L25"><span class="lineNum">      25</span>              :         assembly {</span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">     2594735 :             $.slot := _STORAGE_LOCATION</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">     2596963 :             $.slot := _STORAGE_LOCATION</span></span>
 <span id="L27"><span class="lineNum">      27</span>              :         }</span>
 <span id="L28"><span class="lineNum">      28</span>              :     }</span>
 <span id="L29"><span class="lineNum">      29</span>              : </span>
@@ -200,20 +200,20 @@
 <span id="L138"><span class="lineNum">     138</span>              :     /// @param _sender sender address</span>
 <span id="L139"><span class="lineNum">     139</span>              :     /// @param _recipient recipient address</span>
 <span id="L140"><span class="lineNum">     140</span>              :     /// @return bool true if operation is real transfer, false if it is mint or burn</span>
-<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC tlaBgGNC">      347240 :     function isTransfer(address _sender, address _recipient) internal pure returns (bool) {</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC tlaBgGNC">      347470 :     function isTransfer(address _sender, address _recipient) internal pure returns (bool) {</span></span>
 <span id="L142"><span class="lineNum">     142</span>              :         // in order this check to be true, it is required to have:</span>
 <span id="L143"><span class="lineNum">     143</span>              :         // require(sender != address(0), &quot;ERC20: transfer from the zero address&quot;);</span>
 <span id="L144"><span class="lineNum">     144</span>              :         // require(recipient != address(0), &quot;ERC20: transfer to the zero address&quot;);</span>
 <span id="L145"><span class="lineNum">     145</span>              :         // on transfer. ERC20 has them, so we good.</span>
-<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">      347240 :         return _sender != address(0) &amp;&amp; _recipient != address(0);</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">      347470 :         return _sender != address(0) &amp;&amp; _recipient != address(0);</span></span>
 <span id="L147"><span class="lineNum">     147</span>              :     }</span>
 <span id="L148"><span class="lineNum">     148</span>              : </span>
-<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">      955692 :     function siloConfig() internal view returns (ISiloConfig thisSiloConfig) {</span></span>
-<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">      955692 :         return ShareTokenLib.getShareTokenStorage().siloConfig;</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">      957207 :     function siloConfig() internal view returns (ISiloConfig thisSiloConfig) {</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">      957207 :         return ShareTokenLib.getShareTokenStorage().siloConfig;</span></span>
 <span id="L151"><span class="lineNum">     151</span>              :     }</span>
 <span id="L152"><span class="lineNum">     152</span>              : </span>
-<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">      247059 :     function getConfig() internal view returns (ISiloConfig.ConfigData memory thisSiloConfigData) {</span></span>
-<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">      247059 :         thisSiloConfigData = ShareTokenLib.getShareTokenStorage().siloConfig.getConfig(address(this));</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">      247135 :     function getConfig() internal view returns (ISiloConfig.ConfigData memory thisSiloConfigData) {</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">      247135 :         thisSiloConfigData = ShareTokenLib.getShareTokenStorage().siloConfig.getConfig(address(this));</span></span>
 <span id="L155"><span class="lineNum">     155</span>              :     }</span>
 <span id="L156"><span class="lineNum">     156</span>              : }</span>
         </pre>

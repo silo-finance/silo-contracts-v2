@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-08-22 12:51:36</td>
+            <td class="headerValue">2025-09-22 14:46:55</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -138,33 +138,33 @@
 <span id="L76"><span class="lineNum">      76</span>              :     }</span>
 <span id="L77"><span class="lineNum">      77</span>              : </span>
 <span id="L78"><span class="lineNum">      78</span>              :     /// @inheritdoc ISilo</span>
-<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">      185801 :     function config() external view virtual returns (ISiloConfig siloConfig) {</span></span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">      185801 :         siloConfig = ShareTokenLib.siloConfig();</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">      186431 :     function config() external view virtual returns (ISiloConfig siloConfig) {</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">      186431 :         siloConfig = ShareTokenLib.siloConfig();</span></span>
 <span id="L81"><span class="lineNum">      81</span>              :     }</span>
 <span id="L82"><span class="lineNum">      82</span>              : </span>
 <span id="L83"><span class="lineNum">      83</span>              :     /// @inheritdoc ISilo</span>
-<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">      934117 :     function utilizationData() external view virtual returns (UtilizationData memory) {</span></span>
-<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">      934117 :         return Views.utilizationData();</span></span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">      937081 :     function utilizationData() external view virtual returns (UtilizationData memory) {</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">      937081 :         return Views.utilizationData();</span></span>
 <span id="L86"><span class="lineNum">      86</span>              :     }</span>
 <span id="L87"><span class="lineNum">      87</span>              : </span>
 <span id="L88"><span class="lineNum">      88</span>              :     /// @inheritdoc ISilo</span>
-<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">       56357 :     function getLiquidity() external view virtual returns (uint256 liquidity) {</span></span>
-<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">       56357 :         return SiloLendingLib.getLiquidity(ShareTokenLib.siloConfig());</span></span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">       56385 :     function getLiquidity() external view virtual returns (uint256 liquidity) {</span></span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">       56385 :         return SiloLendingLib.getLiquidity(ShareTokenLib.siloConfig());</span></span>
 <span id="L91"><span class="lineNum">      91</span>              :     }</span>
 <span id="L92"><span class="lineNum">      92</span>              : </span>
 <span id="L93"><span class="lineNum">      93</span>              :     /// @inheritdoc ISilo</span>
-<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">      110611 :     function isSolvent(address _borrower) external view virtual returns (bool) {</span></span>
-<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">      110611 :         return Views.isSolvent(_borrower);</span></span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">      111336 :     function isSolvent(address _borrower) external view virtual returns (bool) {</span></span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">      111336 :         return Views.isSolvent(_borrower);</span></span>
 <span id="L96"><span class="lineNum">      96</span>              :     }</span>
 <span id="L97"><span class="lineNum">      97</span>              : </span>
 <span id="L98"><span class="lineNum">      98</span>              :     /// @inheritdoc ISilo</span>
-<span id="L99"><span class="lineNum">      99</span> <span class="tlaGNC">      606721 :     function getTotalAssetsStorage(AssetType _assetType)</span></span>
+<span id="L99"><span class="lineNum">      99</span> <span class="tlaGNC">      608294 :     function getTotalAssetsStorage(AssetType _assetType)</span></span>
 <span id="L100"><span class="lineNum">     100</span>              :         external</span>
 <span id="L101"><span class="lineNum">     101</span>              :         view</span>
 <span id="L102"><span class="lineNum">     102</span>              :         virtual</span>
 <span id="L103"><span class="lineNum">     103</span>              :         returns (uint256 totalAssetsByType)</span>
 <span id="L104"><span class="lineNum">     104</span>              :     {</span>
-<span id="L105"><span class="lineNum">     105</span> <span class="tlaGNC">      606721 :         totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];</span></span>
+<span id="L105"><span class="lineNum">     105</span> <span class="tlaGNC">      608294 :         totalAssetsByType = SiloStorageLib.getSiloStorage().totalAssets[_assetType];</span></span>
 <span id="L106"><span class="lineNum">     106</span>              :     }</span>
 <span id="L107"><span class="lineNum">     107</span>              : </span>
 <span id="L108"><span class="lineNum">     108</span>              :     /// @inheritdoc ISilo</span>
@@ -189,8 +189,8 @@
 <span id="L127"><span class="lineNum">     127</span>              :     }</span>
 <span id="L128"><span class="lineNum">     128</span>              : </span>
 <span id="L129"><span class="lineNum">     129</span>              :     /// @inheritdoc ISilo</span>
-<span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">        6775 :     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {</span></span>
-<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">        6775 :         totalCollateralAssets = _totalAssets();</span></span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">        6766 :     function getCollateralAssets() external view virtual returns (uint256 totalCollateralAssets) {</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">        6766 :         totalCollateralAssets = _totalAssets();</span></span>
 <span id="L132"><span class="lineNum">     132</span>              :     }</span>
 <span id="L133"><span class="lineNum">     133</span>              : </span>
 <span id="L134"><span class="lineNum">     134</span>              :     /// @inheritdoc ISilo</span>
@@ -199,23 +199,23 @@
 <span id="L137"><span class="lineNum">     137</span>              :     }</span>
 <span id="L138"><span class="lineNum">     138</span>              : </span>
 <span id="L139"><span class="lineNum">     139</span>              :     /// @inheritdoc ISilo</span>
-<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">      403096 :     function getCollateralAndProtectedTotalsStorage()</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">      404545 :     function getCollateralAndProtectedTotalsStorage()</span></span>
 <span id="L141"><span class="lineNum">     141</span>              :         external</span>
 <span id="L142"><span class="lineNum">     142</span>              :         view</span>
 <span id="L143"><span class="lineNum">     143</span>              :         virtual</span>
 <span id="L144"><span class="lineNum">     144</span>              :         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)</span>
 <span id="L145"><span class="lineNum">     145</span>              :     {</span>
-<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">      403096 :         (totalCollateralAssets, totalProtectedAssets) = Views.getCollateralAndProtectedAssets();</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">      404545 :         (totalCollateralAssets, totalProtectedAssets) = Views.getCollateralAndProtectedAssets();</span></span>
 <span id="L147"><span class="lineNum">     147</span>              :     }</span>
 <span id="L148"><span class="lineNum">     148</span>              : </span>
 <span id="L149"><span class="lineNum">     149</span>              :     /// @inheritdoc ISilo</span>
-<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">      438672 :     function getCollateralAndDebtTotalsStorage()</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">      440152 :     function getCollateralAndDebtTotalsStorage()</span></span>
 <span id="L151"><span class="lineNum">     151</span>              :         external</span>
 <span id="L152"><span class="lineNum">     152</span>              :         view</span>
 <span id="L153"><span class="lineNum">     153</span>              :         virtual</span>
 <span id="L154"><span class="lineNum">     154</span>              :         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)</span>
 <span id="L155"><span class="lineNum">     155</span>              :     {</span>
-<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC">      438672 :         (totalCollateralAssets, totalDebtAssets) = Views.getCollateralAndDebtAssets();</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC">      440152 :         (totalCollateralAssets, totalDebtAssets) = Views.getCollateralAndDebtAssets();</span></span>
 <span id="L157"><span class="lineNum">     157</span>              :     }</span>
 <span id="L158"><span class="lineNum">     158</span>              : </span>
 <span id="L159"><span class="lineNum">     159</span>              :     // ERC4626</span>
@@ -253,8 +253,8 @@
 <span id="L191"><span class="lineNum">     191</span>              :     }</span>
 <span id="L192"><span class="lineNum">     192</span>              : </span>
 <span id="L193"><span class="lineNum">     193</span>              :     /// @inheritdoc IERC4626</span>
-<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">         520 :     function previewDeposit(uint256 _assets) external view virtual returns (uint256 shares) {</span></span>
-<span id="L195"><span class="lineNum">     195</span> <span class="tlaGNC">         520 :         return _previewDeposit(_assets, CollateralType.Collateral);</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">         516 :     function previewDeposit(uint256 _assets) external view virtual returns (uint256 shares) {</span></span>
+<span id="L195"><span class="lineNum">     195</span> <span class="tlaGNC">         516 :         return _previewDeposit(_assets, CollateralType.Collateral);</span></span>
 <span id="L196"><span class="lineNum">     196</span>              :     }</span>
 <span id="L197"><span class="lineNum">     197</span>              : </span>
 <span id="L198"><span class="lineNum">     198</span>              :     /// @inheritdoc IERC4626</span>
@@ -272,13 +272,13 @@
 <span id="L210"><span class="lineNum">     210</span>              :     }</span>
 <span id="L211"><span class="lineNum">     211</span>              : </span>
 <span id="L212"><span class="lineNum">     212</span>              :     /// @inheritdoc IERC4626</span>
-<span id="L213"><span class="lineNum">     213</span> <span class="tlaGNC">         913 :     function previewMint(uint256 _shares) external view virtual returns (uint256 assets) {</span></span>
-<span id="L214"><span class="lineNum">     214</span> <span class="tlaGNC">         913 :         return _previewMint(_shares, CollateralType.Collateral);</span></span>
+<span id="L213"><span class="lineNum">     213</span> <span class="tlaGNC">         907 :     function previewMint(uint256 _shares) external view virtual returns (uint256 assets) {</span></span>
+<span id="L214"><span class="lineNum">     214</span> <span class="tlaGNC">         907 :         return _previewMint(_shares, CollateralType.Collateral);</span></span>
 <span id="L215"><span class="lineNum">     215</span>              :     }</span>
 <span id="L216"><span class="lineNum">     216</span>              : </span>
 <span id="L217"><span class="lineNum">     217</span>              :     /// @inheritdoc IERC4626</span>
-<span id="L218"><span class="lineNum">     218</span> <span class="tlaGNC">        2980 :     function mint(uint256 _shares, address _receiver) external virtual returns (uint256 assets) {</span></span>
-<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC">        2980 :         (assets,) = _deposit({</span></span>
+<span id="L218"><span class="lineNum">     218</span> <span class="tlaGNC">        2974 :     function mint(uint256 _shares, address _receiver) external virtual returns (uint256 assets) {</span></span>
+<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC">        2974 :         (assets,) = _deposit({</span></span>
 <span id="L220"><span class="lineNum">     220</span>              :             _assets: 0,</span>
 <span id="L221"><span class="lineNum">     221</span>              :             _shares: _shares,</span>
 <span id="L222"><span class="lineNum">     222</span>              :             _receiver: _receiver,</span>
@@ -297,12 +297,12 @@
 <span id="L235"><span class="lineNum">     235</span>              :     }</span>
 <span id="L236"><span class="lineNum">     236</span>              : </span>
 <span id="L237"><span class="lineNum">     237</span>              :     /// @inheritdoc IERC4626</span>
-<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">        6536 :     function withdraw(uint256 _assets, address _receiver, address _owner)</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">        6527 :     function withdraw(uint256 _assets, address _receiver, address _owner)</span></span>
 <span id="L239"><span class="lineNum">     239</span>              :         external</span>
 <span id="L240"><span class="lineNum">     240</span>              :         virtual</span>
 <span id="L241"><span class="lineNum">     241</span>              :         returns (uint256 shares)</span>
 <span id="L242"><span class="lineNum">     242</span>              :     {</span>
-<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">        6536 :         (, shares) = _withdraw({</span></span>
+<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">        6527 :         (, shares) = _withdraw({</span></span>
 <span id="L244"><span class="lineNum">     244</span>              :             _assets: _assets,</span>
 <span id="L245"><span class="lineNum">     245</span>              :             _shares: 0,</span>
 <span id="L246"><span class="lineNum">     246</span>              :             _receiver: _receiver,</span>
@@ -323,12 +323,12 @@
 <span id="L261"><span class="lineNum">     261</span>              :     }</span>
 <span id="L262"><span class="lineNum">     262</span>              : </span>
 <span id="L263"><span class="lineNum">     263</span>              :     /// @inheritdoc IERC4626</span>
-<span id="L264"><span class="lineNum">     264</span> <span class="tlaGNC">        5656 :     function redeem(uint256 _shares, address _receiver, address _owner)</span></span>
+<span id="L264"><span class="lineNum">     264</span> <span class="tlaGNC">        5649 :     function redeem(uint256 _shares, address _receiver, address _owner)</span></span>
 <span id="L265"><span class="lineNum">     265</span>              :         external</span>
 <span id="L266"><span class="lineNum">     266</span>              :         virtual</span>
 <span id="L267"><span class="lineNum">     267</span>              :         returns (uint256 assets)</span>
 <span id="L268"><span class="lineNum">     268</span>              :     {</span>
-<span id="L269"><span class="lineNum">     269</span> <span class="tlaGNC">        5656 :         (assets,) = _withdraw({</span></span>
+<span id="L269"><span class="lineNum">     269</span> <span class="tlaGNC">        5649 :         (assets,) = _withdraw({</span></span>
 <span id="L270"><span class="lineNum">     270</span>              :             _assets: 0,</span>
 <span id="L271"><span class="lineNum">     271</span>              :             _shares: _shares,</span>
 <span id="L272"><span class="lineNum">     272</span>              :             _receiver: _receiver,</span>
@@ -349,22 +349,22 @@
 <span id="L287"><span class="lineNum">     287</span>              :     }</span>
 <span id="L288"><span class="lineNum">     288</span>              : </span>
 <span id="L289"><span class="lineNum">     289</span>              :     /// @inheritdoc ISilo</span>
-<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">        1638 :     function previewDeposit(uint256 _assets, CollateralType _collateralType)</span></span>
+<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">        1642 :     function previewDeposit(uint256 _assets, CollateralType _collateralType)</span></span>
 <span id="L291"><span class="lineNum">     291</span>              :         external</span>
 <span id="L292"><span class="lineNum">     292</span>              :         view</span>
 <span id="L293"><span class="lineNum">     293</span>              :         virtual</span>
 <span id="L294"><span class="lineNum">     294</span>              :         returns (uint256 shares)</span>
 <span id="L295"><span class="lineNum">     295</span>              :     {</span>
-<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">        1638 :         return _previewDeposit(_assets, _collateralType);</span></span>
+<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">        1642 :         return _previewDeposit(_assets, _collateralType);</span></span>
 <span id="L297"><span class="lineNum">     297</span>              :     }</span>
 <span id="L298"><span class="lineNum">     298</span>              : </span>
 <span id="L299"><span class="lineNum">     299</span>              :     /// @inheritdoc ISilo</span>
-<span id="L300"><span class="lineNum">     300</span> <span class="tlaGNC">      100211 :     function deposit(uint256 _assets, address _receiver, CollateralType _collateralType)</span></span>
+<span id="L300"><span class="lineNum">     300</span> <span class="tlaGNC">      100210 :     function deposit(uint256 _assets, address _receiver, CollateralType _collateralType)</span></span>
 <span id="L301"><span class="lineNum">     301</span>              :         external</span>
 <span id="L302"><span class="lineNum">     302</span>              :         virtual</span>
 <span id="L303"><span class="lineNum">     303</span>              :         returns (uint256 shares)</span>
 <span id="L304"><span class="lineNum">     304</span>              :     {</span>
-<span id="L305"><span class="lineNum">     305</span> <span class="tlaGNC">      100210 :         (, shares) = _deposit({</span></span>
+<span id="L305"><span class="lineNum">     305</span> <span class="tlaGNC">      100209 :         (, shares) = _deposit({</span></span>
 <span id="L306"><span class="lineNum">     306</span>              :             _assets: _assets,</span>
 <span id="L307"><span class="lineNum">     307</span>              :             _shares: 0,</span>
 <span id="L308"><span class="lineNum">     308</span>              :             _receiver: _receiver,</span>
@@ -373,22 +373,22 @@
 <span id="L311"><span class="lineNum">     311</span>              :     }</span>
 <span id="L312"><span class="lineNum">     312</span>              : </span>
 <span id="L313"><span class="lineNum">     313</span>              :     /// @inheritdoc ISilo</span>
-<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">         736 :     function previewMint(uint256 _shares, CollateralType _collateralType)</span></span>
+<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">         742 :     function previewMint(uint256 _shares, CollateralType _collateralType)</span></span>
 <span id="L315"><span class="lineNum">     315</span>              :         external</span>
 <span id="L316"><span class="lineNum">     316</span>              :         view</span>
 <span id="L317"><span class="lineNum">     317</span>              :         virtual</span>
 <span id="L318"><span class="lineNum">     318</span>              :         returns (uint256 assets)</span>
 <span id="L319"><span class="lineNum">     319</span>              :     {</span>
-<span id="L320"><span class="lineNum">     320</span> <span class="tlaGNC">         736 :         return _previewMint(_shares, _collateralType);</span></span>
+<span id="L320"><span class="lineNum">     320</span> <span class="tlaGNC">         742 :         return _previewMint(_shares, _collateralType);</span></span>
 <span id="L321"><span class="lineNum">     321</span>              :     }</span>
 <span id="L322"><span class="lineNum">     322</span>              : </span>
 <span id="L323"><span class="lineNum">     323</span>              :     /// @inheritdoc ISilo</span>
-<span id="L324"><span class="lineNum">     324</span> <span class="tlaGNC">         960 :     function mint(uint256 _shares, address _receiver, CollateralType _collateralType)</span></span>
+<span id="L324"><span class="lineNum">     324</span> <span class="tlaGNC">         966 :     function mint(uint256 _shares, address _receiver, CollateralType _collateralType)</span></span>
 <span id="L325"><span class="lineNum">     325</span>              :         external</span>
 <span id="L326"><span class="lineNum">     326</span>              :         virtual</span>
 <span id="L327"><span class="lineNum">     327</span>              :         returns (uint256 assets)</span>
 <span id="L328"><span class="lineNum">     328</span>              :     {</span>
-<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">         960 :         (assets,) = _deposit({</span></span>
+<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">         966 :         (assets,) = _deposit({</span></span>
 <span id="L330"><span class="lineNum">     330</span>              :             _assets: 0,</span>
 <span id="L331"><span class="lineNum">     331</span>              :             _shares: _shares,</span>
 <span id="L332"><span class="lineNum">     332</span>              :             _receiver: _receiver,</span>
@@ -443,22 +443,22 @@
 <span id="L381"><span class="lineNum">     381</span>              :     }</span>
 <span id="L382"><span class="lineNum">     382</span>              : </span>
 <span id="L383"><span class="lineNum">     383</span>              :     /// @inheritdoc ISilo</span>
-<span id="L384"><span class="lineNum">     384</span> <span class="tlaGNC">       15724 :     function previewRedeem(uint256 _shares, CollateralType _collateralType)</span></span>
+<span id="L384"><span class="lineNum">     384</span> <span class="tlaGNC">       15736 :     function previewRedeem(uint256 _shares, CollateralType _collateralType)</span></span>
 <span id="L385"><span class="lineNum">     385</span>              :         external</span>
 <span id="L386"><span class="lineNum">     386</span>              :         view</span>
 <span id="L387"><span class="lineNum">     387</span>              :         virtual</span>
 <span id="L388"><span class="lineNum">     388</span>              :         returns (uint256 assets)</span>
 <span id="L389"><span class="lineNum">     389</span>              :     {</span>
-<span id="L390"><span class="lineNum">     390</span> <span class="tlaGNC">       15724 :         return _previewRedeem(_shares, _collateralType);</span></span>
+<span id="L390"><span class="lineNum">     390</span> <span class="tlaGNC">       15736 :         return _previewRedeem(_shares, _collateralType);</span></span>
 <span id="L391"><span class="lineNum">     391</span>              :     }</span>
 <span id="L392"><span class="lineNum">     392</span>              : </span>
 <span id="L393"><span class="lineNum">     393</span>              :     /// @inheritdoc ISilo</span>
-<span id="L394"><span class="lineNum">     394</span> <span class="tlaGNC">       12160 :     function redeem(uint256 _shares, address _receiver, address _owner, CollateralType _collateralType)</span></span>
+<span id="L394"><span class="lineNum">     394</span> <span class="tlaGNC">       12173 :     function redeem(uint256 _shares, address _receiver, address _owner, CollateralType _collateralType)</span></span>
 <span id="L395"><span class="lineNum">     395</span>              :         external</span>
 <span id="L396"><span class="lineNum">     396</span>              :         virtual</span>
 <span id="L397"><span class="lineNum">     397</span>              :         returns (uint256 assets)</span>
 <span id="L398"><span class="lineNum">     398</span>              :     {</span>
-<span id="L399"><span class="lineNum">     399</span> <span class="tlaGNC">       12160 :         (assets,) = _withdraw({</span></span>
+<span id="L399"><span class="lineNum">     399</span> <span class="tlaGNC">       12173 :         (assets,) = _withdraw({</span></span>
 <span id="L400"><span class="lineNum">     400</span>              :             _assets: 0,</span>
 <span id="L401"><span class="lineNum">     401</span>              :             _shares: _shares,</span>
 <span id="L402"><span class="lineNum">     402</span>              :             _receiver: _receiver,</span>
@@ -485,15 +485,15 @@
 <span id="L423"><span class="lineNum">     423</span>              :     }</span>
 <span id="L424"><span class="lineNum">     424</span>              : </span>
 <span id="L425"><span class="lineNum">     425</span>              :     /// @inheritdoc ISilo</span>
-<span id="L426"><span class="lineNum">     426</span> <span class="tlaGNC">       32026 :     function borrow(uint256 _assets, address _receiver, address _borrower)</span></span>
+<span id="L426"><span class="lineNum">     426</span> <span class="tlaGNC">       32049 :     function borrow(uint256 _assets, address _receiver, address _borrower)</span></span>
 <span id="L427"><span class="lineNum">     427</span>              :         external</span>
 <span id="L428"><span class="lineNum">     428</span>              :         virtual</span>
 <span id="L429"><span class="lineNum">     429</span>              :         returns (uint256 shares)</span>
 <span id="L430"><span class="lineNum">     430</span>              :     {</span>
-<span id="L431"><span class="lineNum">     431</span> <span class="tlaGNC">       32026 :         uint256 assets;</span></span>
-<span id="L432"><span class="lineNum">     432</span> <span class="tlaGNC">       32026 :         bool collateralTypeChanged;</span></span>
+<span id="L431"><span class="lineNum">     431</span> <span class="tlaGNC">       32049 :         uint256 assets;</span></span>
+<span id="L432"><span class="lineNum">     432</span> <span class="tlaGNC">       32049 :         bool collateralTypeChanged;</span></span>
 <span id="L433"><span class="lineNum">     433</span>              : </span>
-<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">       32026 :         (assets, shares, collateralTypeChanged) = Actions.borrow(</span></span>
+<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">       32049 :         (assets, shares, collateralTypeChanged) = Actions.borrow(</span></span>
 <span id="L435"><span class="lineNum">     435</span>              :             BorrowArgs({</span>
 <span id="L436"><span class="lineNum">     436</span>              :                 assets: _assets,</span>
 <span id="L437"><span class="lineNum">     437</span>              :                 shares: 0,</span>
@@ -502,9 +502,9 @@
 <span id="L440"><span class="lineNum">     440</span>              :             })</span>
 <span id="L441"><span class="lineNum">     441</span>              :         );</span>
 <span id="L442"><span class="lineNum">     442</span>              : </span>
-<span id="L443"><span class="lineNum">     443</span> <span class="tlaGNC">       28613 :         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);</span></span>
+<span id="L443"><span class="lineNum">     443</span> <span class="tlaGNC">       28636 :         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);</span></span>
 <span id="L444"><span class="lineNum">     444</span>              : </span>
-<span id="L445"><span class="lineNum">     445</span> <span class="tlaGNC">       26170 :         if (collateralTypeChanged) emit CollateralTypeChanged(msg.sender);</span></span>
+<span id="L445"><span class="lineNum">     445</span> <span class="tlaGNC">       26193 :         if (collateralTypeChanged) emit CollateralTypeChanged(msg.sender);</span></span>
 <span id="L446"><span class="lineNum">     446</span>              :     }</span>
 <span id="L447"><span class="lineNum">     447</span>              : </span>
 <span id="L448"><span class="lineNum">     448</span>              :     /// @inheritdoc ISilo</span>
@@ -552,15 +552,15 @@
 <span id="L490"><span class="lineNum">     490</span>              :     }</span>
 <span id="L491"><span class="lineNum">     491</span>              : </span>
 <span id="L492"><span class="lineNum">     492</span>              :     /// @inheritdoc ISilo</span>
-<span id="L493"><span class="lineNum">     493</span> <span class="tlaGNC">       20818 :     function borrowSameAsset(uint256 _assets, address _receiver, address _borrower)</span></span>
+<span id="L493"><span class="lineNum">     493</span> <span class="tlaGNC">       20838 :     function borrowSameAsset(uint256 _assets, address _receiver, address _borrower)</span></span>
 <span id="L494"><span class="lineNum">     494</span>              :         external</span>
 <span id="L495"><span class="lineNum">     495</span>              :         virtual</span>
 <span id="L496"><span class="lineNum">     496</span>              :         returns (uint256 shares)</span>
 <span id="L497"><span class="lineNum">     497</span>              :     {</span>
-<span id="L498"><span class="lineNum">     498</span> <span class="tlaGNC">       20818 :         uint256 assets;</span></span>
-<span id="L499"><span class="lineNum">     499</span> <span class="tlaGNC">       20818 :         bool collateralTypeChanged;</span></span>
+<span id="L498"><span class="lineNum">     498</span> <span class="tlaGNC">       20838 :         uint256 assets;</span></span>
+<span id="L499"><span class="lineNum">     499</span> <span class="tlaGNC">       20838 :         bool collateralTypeChanged;</span></span>
 <span id="L500"><span class="lineNum">     500</span>              : </span>
-<span id="L501"><span class="lineNum">     501</span> <span class="tlaGNC">       20818 :         (assets, shares, collateralTypeChanged) = Actions.borrowSameAsset(</span></span>
+<span id="L501"><span class="lineNum">     501</span> <span class="tlaGNC">       20838 :         (assets, shares, collateralTypeChanged) = Actions.borrowSameAsset(</span></span>
 <span id="L502"><span class="lineNum">     502</span>              :             BorrowArgs({</span>
 <span id="L503"><span class="lineNum">     503</span>              :                 assets: _assets,</span>
 <span id="L504"><span class="lineNum">     504</span>              :                 shares: 0,</span>
@@ -569,9 +569,9 @@
 <span id="L507"><span class="lineNum">     507</span>              :             })</span>
 <span id="L508"><span class="lineNum">     508</span>              :         );</span>
 <span id="L509"><span class="lineNum">     509</span>              : </span>
-<span id="L510"><span class="lineNum">     510</span> <span class="tlaGNC">       17696 :         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);</span></span>
+<span id="L510"><span class="lineNum">     510</span> <span class="tlaGNC">       17716 :         emit Borrow(msg.sender, _receiver, _borrower, assets, shares);</span></span>
 <span id="L511"><span class="lineNum">     511</span>              : </span>
-<span id="L512"><span class="lineNum">     512</span> <span class="tlaGNC">       15645 :         if (collateralTypeChanged) emit CollateralTypeChanged(msg.sender);</span></span>
+<span id="L512"><span class="lineNum">     512</span> <span class="tlaGNC">       15665 :         if (collateralTypeChanged) emit CollateralTypeChanged(msg.sender);</span></span>
 <span id="L513"><span class="lineNum">     513</span>              :     }</span>
 <span id="L514"><span class="lineNum">     514</span>              : </span>
 <span id="L515"><span class="lineNum">     515</span>              :     /// @inheritdoc ISilo</span>
@@ -610,37 +610,37 @@
 <span id="L548"><span class="lineNum">     548</span>              :     }</span>
 <span id="L549"><span class="lineNum">     549</span>              : </span>
 <span id="L550"><span class="lineNum">     550</span>              :     /// @inheritdoc ISilo</span>
-<span id="L551"><span class="lineNum">     551</span> <span class="tlaGNC">       21353 :     function maxRepay(address _borrower) external view virtual returns (uint256 assets) {</span></span>
-<span id="L552"><span class="lineNum">     552</span> <span class="tlaGNC">       21353 :         assets = Views.maxRepay(_borrower);</span></span>
+<span id="L551"><span class="lineNum">     551</span> <span class="tlaGNC">       21340 :     function maxRepay(address _borrower) external view virtual returns (uint256 assets) {</span></span>
+<span id="L552"><span class="lineNum">     552</span> <span class="tlaGNC">       21340 :         assets = Views.maxRepay(_borrower);</span></span>
 <span id="L553"><span class="lineNum">     553</span>              :     }</span>
 <span id="L554"><span class="lineNum">     554</span>              : </span>
 <span id="L555"><span class="lineNum">     555</span>              :     /// @inheritdoc ISilo</span>
-<span id="L556"><span class="lineNum">     556</span> <span class="tlaGNC">        2319 :     function previewRepay(uint256 _assets) external view virtual returns (uint256 shares) {</span></span>
-<span id="L557"><span class="lineNum">     557</span> <span class="tlaGNC">        2319 :         (</span></span>
+<span id="L556"><span class="lineNum">     556</span> <span class="tlaGNC">        2321 :     function previewRepay(uint256 _assets) external view virtual returns (uint256 shares) {</span></span>
+<span id="L557"><span class="lineNum">     557</span> <span class="tlaGNC">        2321 :         (</span></span>
 <span id="L558"><span class="lineNum">     558</span>              :             uint256 totalSiloAssets, uint256 totalShares</span>
-<span id="L559"><span class="lineNum">     559</span> <span class="tlaGNC">        2319 :         ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), AssetType.Debt);</span></span>
+<span id="L559"><span class="lineNum">     559</span> <span class="tlaGNC">        2321 :         ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), AssetType.Debt);</span></span>
 <span id="L560"><span class="lineNum">     560</span>              : </span>
-<span id="L561"><span class="lineNum">     561</span> <span class="tlaGNC">        2319 :         return SiloMathLib.convertToShares(</span></span>
+<span id="L561"><span class="lineNum">     561</span> <span class="tlaGNC">        2321 :         return SiloMathLib.convertToShares(</span></span>
 <span id="L562"><span class="lineNum">     562</span>              :             _assets, totalSiloAssets, totalShares, Rounding.REPAY_TO_SHARES, AssetType.Debt</span>
 <span id="L563"><span class="lineNum">     563</span>              :         );</span>
 <span id="L564"><span class="lineNum">     564</span>              :     }</span>
 <span id="L565"><span class="lineNum">     565</span>              : </span>
 <span id="L566"><span class="lineNum">     566</span>              :     /// @inheritdoc ISilo</span>
-<span id="L567"><span class="lineNum">     567</span> <span class="tlaGNC">       19118 :     function repay(uint256 _assets, address _borrower)</span></span>
+<span id="L567"><span class="lineNum">     567</span> <span class="tlaGNC">       19154 :     function repay(uint256 _assets, address _borrower)</span></span>
 <span id="L568"><span class="lineNum">     568</span>              :         external</span>
 <span id="L569"><span class="lineNum">     569</span>              :         virtual</span>
 <span id="L570"><span class="lineNum">     570</span>              :         returns (uint256 shares)</span>
 <span id="L571"><span class="lineNum">     571</span>              :     {</span>
-<span id="L572"><span class="lineNum">     572</span> <span class="tlaGNC">       19118 :         uint256 assets;</span></span>
+<span id="L572"><span class="lineNum">     572</span> <span class="tlaGNC">       19154 :         uint256 assets;</span></span>
 <span id="L573"><span class="lineNum">     573</span>              : </span>
-<span id="L574"><span class="lineNum">     574</span> <span class="tlaGNC">       19118 :         (assets, shares) = Actions.repay({</span></span>
+<span id="L574"><span class="lineNum">     574</span> <span class="tlaGNC">       19154 :         (assets, shares) = Actions.repay({</span></span>
 <span id="L575"><span class="lineNum">     575</span>              :             _assets: _assets,</span>
 <span id="L576"><span class="lineNum">     576</span>              :             _shares: 0,</span>
 <span id="L577"><span class="lineNum">     577</span>              :             _borrower: _borrower,</span>
 <span id="L578"><span class="lineNum">     578</span>              :             _repayer: msg.sender</span>
 <span id="L579"><span class="lineNum">     579</span>              :         });</span>
 <span id="L580"><span class="lineNum">     580</span>              : </span>
-<span id="L581"><span class="lineNum">     581</span> <span class="tlaGNC">       19080 :         emit Repay(msg.sender, _borrower, assets, shares);</span></span>
+<span id="L581"><span class="lineNum">     581</span> <span class="tlaGNC">       19116 :         emit Repay(msg.sender, _borrower, assets, shares);</span></span>
 <span id="L582"><span class="lineNum">     582</span>              :     }</span>
 <span id="L583"><span class="lineNum">     583</span>              : </span>
 <span id="L584"><span class="lineNum">     584</span>              :     /// @inheritdoc ISilo</span>
@@ -650,32 +650,32 @@
 <span id="L588"><span class="lineNum">     588</span>              :     }</span>
 <span id="L589"><span class="lineNum">     589</span>              : </span>
 <span id="L590"><span class="lineNum">     590</span>              :     /// @inheritdoc ISilo</span>
-<span id="L591"><span class="lineNum">     591</span> <span class="tlaGNC">       16290 :     function previewRepayShares(uint256 _shares) external view virtual returns (uint256 assets) {</span></span>
-<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC">       16290 :         (</span></span>
+<span id="L591"><span class="lineNum">     591</span> <span class="tlaGNC">       16328 :     function previewRepayShares(uint256 _shares) external view virtual returns (uint256 assets) {</span></span>
+<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC">       16328 :         (</span></span>
 <span id="L593"><span class="lineNum">     593</span>              :             uint256 totalSiloAssets, uint256 totalShares</span>
-<span id="L594"><span class="lineNum">     594</span> <span class="tlaGNC">       16290 :         ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), AssetType.Debt);</span></span>
+<span id="L594"><span class="lineNum">     594</span> <span class="tlaGNC">       16328 :         ) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(ShareTokenLib.getConfig(), AssetType.Debt);</span></span>
 <span id="L595"><span class="lineNum">     595</span>              : </span>
-<span id="L596"><span class="lineNum">     596</span> <span class="tlaGNC">       16290 :         return SiloMathLib.convertToAssets(</span></span>
+<span id="L596"><span class="lineNum">     596</span> <span class="tlaGNC">       16328 :         return SiloMathLib.convertToAssets(</span></span>
 <span id="L597"><span class="lineNum">     597</span>              :             _shares, totalSiloAssets, totalShares, Rounding.REPAY_TO_ASSETS, AssetType.Debt</span>
 <span id="L598"><span class="lineNum">     598</span>              :         );</span>
 <span id="L599"><span class="lineNum">     599</span>              :     }</span>
 <span id="L600"><span class="lineNum">     600</span>              : </span>
 <span id="L601"><span class="lineNum">     601</span>              :     /// @inheritdoc ISilo</span>
-<span id="L602"><span class="lineNum">     602</span> <span class="tlaGNC">        5452 :     function repayShares(uint256 _shares, address _borrower)</span></span>
+<span id="L602"><span class="lineNum">     602</span> <span class="tlaGNC">        5450 :     function repayShares(uint256 _shares, address _borrower)</span></span>
 <span id="L603"><span class="lineNum">     603</span>              :         external</span>
 <span id="L604"><span class="lineNum">     604</span>              :         virtual</span>
 <span id="L605"><span class="lineNum">     605</span>              :         returns (uint256 assets)</span>
 <span id="L606"><span class="lineNum">     606</span>              :     {</span>
-<span id="L607"><span class="lineNum">     607</span> <span class="tlaGNC">        5452 :         uint256 shares;</span></span>
+<span id="L607"><span class="lineNum">     607</span> <span class="tlaGNC">        5450 :         uint256 shares;</span></span>
 <span id="L608"><span class="lineNum">     608</span>              : </span>
-<span id="L609"><span class="lineNum">     609</span> <span class="tlaGNC">        5452 :         (assets, shares) = Actions.repay({</span></span>
+<span id="L609"><span class="lineNum">     609</span> <span class="tlaGNC">        5450 :         (assets, shares) = Actions.repay({</span></span>
 <span id="L610"><span class="lineNum">     610</span>              :             _assets: 0,</span>
 <span id="L611"><span class="lineNum">     611</span>              :             _shares: _shares,</span>
 <span id="L612"><span class="lineNum">     612</span>              :             _borrower: _borrower,</span>
 <span id="L613"><span class="lineNum">     613</span>              :             _repayer: msg.sender</span>
 <span id="L614"><span class="lineNum">     614</span>              :         });</span>
 <span id="L615"><span class="lineNum">     615</span>              : </span>
-<span id="L616"><span class="lineNum">     616</span> <span class="tlaGNC">        5417 :         emit Repay(msg.sender, _borrower, assets, shares);</span></span>
+<span id="L616"><span class="lineNum">     616</span> <span class="tlaGNC">        5415 :         emit Repay(msg.sender, _borrower, assets, shares);</span></span>
 <span id="L617"><span class="lineNum">     617</span>              :     }</span>
 <span id="L618"><span class="lineNum">     618</span>              : </span>
 <span id="L619"><span class="lineNum">     619</span>              :     /// @inheritdoc IERC3156FlashLender</span>
@@ -699,18 +699,18 @@
 <span id="L637"><span class="lineNum">     637</span>              :     }</span>
 <span id="L638"><span class="lineNum">     638</span>              : </span>
 <span id="L639"><span class="lineNum">     639</span>              :     /// @inheritdoc ISilo</span>
-<span id="L640"><span class="lineNum">     640</span> <span class="tlaGNC">      155798 :     function accrueInterest() external virtual returns (uint256 accruedInterest) {</span></span>
-<span id="L641"><span class="lineNum">     641</span> <span class="tlaGNC">      155798 :         accruedInterest = _accrueInterest();</span></span>
+<span id="L640"><span class="lineNum">     640</span> <span class="tlaGNC">      155844 :     function accrueInterest() external virtual returns (uint256 accruedInterest) {</span></span>
+<span id="L641"><span class="lineNum">     641</span> <span class="tlaGNC">      155844 :         accruedInterest = _accrueInterest();</span></span>
 <span id="L642"><span class="lineNum">     642</span>              :     }</span>
 <span id="L643"><span class="lineNum">     643</span>              : </span>
 <span id="L644"><span class="lineNum">     644</span>              :     /// @inheritdoc ISilo</span>
-<span id="L645"><span class="lineNum">     645</span> <span class="tlaGNC">      319434 :     function accrueInterestForConfig(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee)</span></span>
+<span id="L645"><span class="lineNum">     645</span> <span class="tlaGNC">      319527 :     function accrueInterestForConfig(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee)</span></span>
 <span id="L646"><span class="lineNum">     646</span>              :         external</span>
 <span id="L647"><span class="lineNum">     647</span>              :         virtual</span>
 <span id="L648"><span class="lineNum">     648</span>              :     {</span>
-<span id="L649"><span class="lineNum">     649</span> <span class="tlaGNC">      319434 :         require(msg.sender == address(ShareTokenLib.siloConfig()), OnlySiloConfig());</span></span>
+<span id="L649"><span class="lineNum">     649</span> <span class="tlaGNC">      319527 :         require(msg.sender == address(ShareTokenLib.siloConfig()), OnlySiloConfig());</span></span>
 <span id="L650"><span class="lineNum">     650</span>              : </span>
-<span id="L651"><span class="lineNum">     651</span> <span class="tlaGNC">      319434 :         _accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);</span></span>
+<span id="L651"><span class="lineNum">     651</span> <span class="tlaGNC">      319527 :         _accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);</span></span>
 <span id="L652"><span class="lineNum">     652</span>              :     }</span>
 <span id="L653"><span class="lineNum">     653</span>              : </span>
 <span id="L654"><span class="lineNum">     654</span>              :     /// @inheritdoc ISilo</span>
@@ -721,8 +721,8 @@
 <span id="L659"><span class="lineNum">     659</span> <span class="tlaGNC">         267 :         emit WithdrawnFees(daoFees, deployerFees, redirectedDeployerFees);</span></span>
 <span id="L660"><span class="lineNum">     660</span>              :     }</span>
 <span id="L661"><span class="lineNum">     661</span>              : </span>
-<span id="L662"><span class="lineNum">     662</span> <span class="tlaGNC">        7074 :     function _totalAssets() internal view virtual returns (uint256 totalManagedAssets) {</span></span>
-<span id="L663"><span class="lineNum">     663</span> <span class="tlaGNC">        7074 :         (totalManagedAssets,) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(</span></span>
+<span id="L662"><span class="lineNum">     662</span> <span class="tlaGNC">        7065 :     function _totalAssets() internal view virtual returns (uint256 totalManagedAssets) {</span></span>
+<span id="L663"><span class="lineNum">     663</span> <span class="tlaGNC">        7065 :         (totalManagedAssets,) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(</span></span>
 <span id="L664"><span class="lineNum">     664</span>              :             ShareTokenLib.getConfig(),</span>
 <span id="L665"><span class="lineNum">     665</span>              :             AssetType.Collateral</span>
 <span id="L666"><span class="lineNum">     666</span>              :         );</span>
@@ -756,7 +756,7 @@
 <span id="L694"><span class="lineNum">     694</span>              :         );</span>
 <span id="L695"><span class="lineNum">     695</span>              :     }</span>
 <span id="L696"><span class="lineNum">     696</span>              : </span>
-<span id="L697"><span class="lineNum">     697</span> <span class="tlaGNC">      137060 :     function _deposit(</span></span>
+<span id="L697"><span class="lineNum">     697</span> <span class="tlaGNC">      137059 :     function _deposit(</span></span>
 <span id="L698"><span class="lineNum">     698</span>              :         uint256 _assets,</span>
 <span id="L699"><span class="lineNum">     699</span>              :         uint256 _shares,</span>
 <span id="L700"><span class="lineNum">     700</span>              :         address _receiver,</span>
@@ -766,18 +766,18 @@
 <span id="L704"><span class="lineNum">     704</span>              :         virtual</span>
 <span id="L705"><span class="lineNum">     705</span>              :         returns (uint256 assets, uint256 shares)</span>
 <span id="L706"><span class="lineNum">     706</span>              :     {</span>
-<span id="L707"><span class="lineNum">     707</span> <span class="tlaGNC">      137060 :         (</span></span>
+<span id="L707"><span class="lineNum">     707</span> <span class="tlaGNC">      137059 :         (</span></span>
 <span id="L708"><span class="lineNum">     708</span>              :             assets, shares</span>
 <span id="L709"><span class="lineNum">     709</span>              :         ) = Actions.deposit(_assets, _shares, _receiver, _collateralType);</span>
 <span id="L710"><span class="lineNum">     710</span>              : </span>
-<span id="L711"><span class="lineNum">     711</span> <span class="tlaGNC">      136920 :         if (_collateralType == CollateralType.Collateral) {</span></span>
-<span id="L712"><span class="lineNum">     712</span> <span class="tlaGNC">      120259 :             emit Deposit(msg.sender, _receiver, assets, shares);</span></span>
+<span id="L711"><span class="lineNum">     711</span> <span class="tlaGNC">      136919 :         if (_collateralType == CollateralType.Collateral) {</span></span>
+<span id="L712"><span class="lineNum">     712</span> <span class="tlaGNC">      120272 :             emit Deposit(msg.sender, _receiver, assets, shares);</span></span>
 <span id="L713"><span class="lineNum">     713</span>              :         } else {</span>
-<span id="L714"><span class="lineNum">     714</span> <span class="tlaGNC">       16661 :             emit DepositProtected(msg.sender, _receiver, assets, shares);</span></span>
+<span id="L714"><span class="lineNum">     714</span> <span class="tlaGNC">       16647 :             emit DepositProtected(msg.sender, _receiver, assets, shares);</span></span>
 <span id="L715"><span class="lineNum">     715</span>              :         }</span>
 <span id="L716"><span class="lineNum">     716</span>              :     }</span>
 <span id="L717"><span class="lineNum">     717</span>              : </span>
-<span id="L718"><span class="lineNum">     718</span> <span class="tlaGNC">       29307 :     function _withdraw(</span></span>
+<span id="L718"><span class="lineNum">     718</span> <span class="tlaGNC">       29304 :     function _withdraw(</span></span>
 <span id="L719"><span class="lineNum">     719</span>              :         uint256 _assets,</span>
 <span id="L720"><span class="lineNum">     720</span>              :         uint256 _shares,</span>
 <span id="L721"><span class="lineNum">     721</span>              :         address _receiver,</span>
@@ -789,7 +789,7 @@
 <span id="L727"><span class="lineNum">     727</span>              :         virtual</span>
 <span id="L728"><span class="lineNum">     728</span>              :         returns (uint256 assets, uint256 shares)</span>
 <span id="L729"><span class="lineNum">     729</span>              :     {</span>
-<span id="L730"><span class="lineNum">     730</span> <span class="tlaGNC">       29307 :         (assets, shares) = Actions.withdraw(</span></span>
+<span id="L730"><span class="lineNum">     730</span> <span class="tlaGNC">       29304 :         (assets, shares) = Actions.withdraw(</span></span>
 <span id="L731"><span class="lineNum">     731</span>              :             WithdrawArgs({</span>
 <span id="L732"><span class="lineNum">     732</span>              :                 assets: _assets,</span>
 <span id="L733"><span class="lineNum">     733</span>              :                 shares: _shares,</span>
@@ -800,8 +800,8 @@
 <span id="L738"><span class="lineNum">     738</span>              :             })</span>
 <span id="L739"><span class="lineNum">     739</span>              :         );</span>
 <span id="L740"><span class="lineNum">     740</span>              : </span>
-<span id="L741"><span class="lineNum">     741</span> <span class="tlaGNC">       25776 :         if (_collateralType == CollateralType.Collateral) {</span></span>
-<span id="L742"><span class="lineNum">     742</span> <span class="tlaGNC">       20878 :             emit Withdraw(msg.sender, _receiver, _owner, assets, shares);</span></span>
+<span id="L741"><span class="lineNum">     741</span> <span class="tlaGNC">       25771 :         if (_collateralType == CollateralType.Collateral) {</span></span>
+<span id="L742"><span class="lineNum">     742</span> <span class="tlaGNC">       20873 :             emit Withdraw(msg.sender, _receiver, _owner, assets, shares);</span></span>
 <span id="L743"><span class="lineNum">     743</span>              :         } else {</span>
 <span id="L744"><span class="lineNum">     744</span> <span class="tlaGNC">        4898 :             emit WithdrawProtected(msg.sender, _receiver, _owner, assets, shares);</span></span>
 <span id="L745"><span class="lineNum">     745</span>              :         }</span>
@@ -842,18 +842,18 @@
 <span id="L780"><span class="lineNum">     780</span>              :         );</span>
 <span id="L781"><span class="lineNum">     781</span>              :     }</span>
 <span id="L782"><span class="lineNum">     782</span>              : </span>
-<span id="L783"><span class="lineNum">     783</span> <span class="tlaGNC">       16290 :     function _previewRedeem(</span></span>
+<span id="L783"><span class="lineNum">     783</span> <span class="tlaGNC">       16302 :     function _previewRedeem(</span></span>
 <span id="L784"><span class="lineNum">     784</span>              :         uint256 _shares,</span>
 <span id="L785"><span class="lineNum">     785</span>              :         CollateralType _collateralType</span>
 <span id="L786"><span class="lineNum">     786</span>              :     ) internal view virtual returns (uint256 assets) {</span>
-<span id="L787"><span class="lineNum">     787</span> <span class="tlaGNC">       16290 :         ISilo.AssetType assetType = AssetType(uint256(_collateralType));</span></span>
+<span id="L787"><span class="lineNum">     787</span> <span class="tlaGNC">       16302 :         ISilo.AssetType assetType = AssetType(uint256(_collateralType));</span></span>
 <span id="L788"><span class="lineNum">     788</span>              : </span>
-<span id="L789"><span class="lineNum">     789</span> <span class="tlaGNC">       16290 :         (uint256 totalSiloAssets, uint256 totalShares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(</span></span>
+<span id="L789"><span class="lineNum">     789</span> <span class="tlaGNC">       16302 :         (uint256 totalSiloAssets, uint256 totalShares) = SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(</span></span>
 <span id="L790"><span class="lineNum">     790</span>              :             ShareTokenLib.getConfig(),</span>
 <span id="L791"><span class="lineNum">     791</span>              :             assetType</span>
 <span id="L792"><span class="lineNum">     792</span>              :         );</span>
 <span id="L793"><span class="lineNum">     793</span>              : </span>
-<span id="L794"><span class="lineNum">     794</span> <span class="tlaGNC">       16290 :         return SiloMathLib.convertToAssets(</span></span>
+<span id="L794"><span class="lineNum">     794</span> <span class="tlaGNC">       16302 :         return SiloMathLib.convertToAssets(</span></span>
 <span id="L795"><span class="lineNum">     795</span>              :             _shares, totalSiloAssets, totalShares, Rounding.WITHDRAW_TO_ASSETS, assetType</span>
 <span id="L796"><span class="lineNum">     796</span>              :         );</span>
 <span id="L797"><span class="lineNum">     797</span>              :     }</span>
@@ -883,18 +883,18 @@
 <span id="L821"><span class="lineNum">     821</span> <span class="tlaGNC">        9541 :         return Views.maxWithdraw(_owner, _collateralType);</span></span>
 <span id="L822"><span class="lineNum">     822</span>              :     }</span>
 <span id="L823"><span class="lineNum">     823</span>              : </span>
-<span id="L824"><span class="lineNum">     824</span> <span class="tlaGNC">      156962 :     function _accrueInterest() internal virtual returns (uint256 accruedInterest) {</span></span>
-<span id="L825"><span class="lineNum">     825</span> <span class="tlaGNC">      156962 :         ISiloConfig.ConfigData memory cfg = ShareTokenLib.getConfig();</span></span>
-<span id="L826"><span class="lineNum">     826</span> <span class="tlaGNC">      156962 :         accruedInterest = _accrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee);</span></span>
+<span id="L824"><span class="lineNum">     824</span> <span class="tlaGNC">      157008 :     function _accrueInterest() internal virtual returns (uint256 accruedInterest) {</span></span>
+<span id="L825"><span class="lineNum">     825</span> <span class="tlaGNC">      157008 :         ISiloConfig.ConfigData memory cfg = ShareTokenLib.getConfig();</span></span>
+<span id="L826"><span class="lineNum">     826</span> <span class="tlaGNC">      157008 :         accruedInterest = _accrueInterestForAsset(cfg.interestRateModel, cfg.daoFee, cfg.deployerFee);</span></span>
 <span id="L827"><span class="lineNum">     827</span>              :     }</span>
 <span id="L828"><span class="lineNum">     828</span>              : </span>
-<span id="L829"><span class="lineNum">     829</span> <span class="tlaGNC">      476396 :     function _accrueInterestForAsset(</span></span>
+<span id="L829"><span class="lineNum">     829</span> <span class="tlaGNC">      476535 :     function _accrueInterestForAsset(</span></span>
 <span id="L830"><span class="lineNum">     830</span>              :         address _interestRateModel,</span>
 <span id="L831"><span class="lineNum">     831</span>              :         uint256 _daoFee,</span>
 <span id="L832"><span class="lineNum">     832</span>              :         uint256 _deployerFee</span>
 <span id="L833"><span class="lineNum">     833</span>              :     ) internal virtual returns (uint256 accruedInterest) {</span>
-<span id="L834"><span class="lineNum">     834</span> <span class="tlaGNC">      476396 :         accruedInterest = SiloLendingLib.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);</span></span>
-<span id="L835"><span class="lineNum">     835</span> <span class="tlaGNC">      476396 :         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);</span></span>
+<span id="L834"><span class="lineNum">     834</span> <span class="tlaGNC">      476535 :         accruedInterest = SiloLendingLib.accrueInterestForAsset(_interestRateModel, _daoFee, _deployerFee);</span></span>
+<span id="L835"><span class="lineNum">     835</span> <span class="tlaGNC">      476535 :         if (accruedInterest != 0) emit AccruedInterest(accruedInterest);</span></span>
 <span id="L836"><span class="lineNum">     836</span>              :     }</span>
 <span id="L837"><span class="lineNum">     837</span>              : }</span>
         </pre>

@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-08-22 12:51:36</td>
+            <td class="headerValue">2025-09-22 14:46:55</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -81,10 +81,10 @@
 <span id="L19"><span class="lineNum">      19</span>              :     /// @dev Accrued interest is entirely added to `debtAssets` but only part of it is added to `collateralAssets`. The</span>
 <span id="L20"><span class="lineNum">      20</span>              :     ///      difference is DAO's and deployer's cut. That means DAO's and deployer's cut is not considered a borrowable</span>
 <span id="L21"><span class="lineNum">      21</span>              :     ///      liquidity.</span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC tlaBgGNC">      173082 :     function liquidity(uint256 _collateralAssets, uint256 _debtAssets) internal pure returns (uint256 liquidAssets) {</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC tlaBgGNC">      173105 :     function liquidity(uint256 _collateralAssets, uint256 _debtAssets) internal pure returns (uint256 liquidAssets) {</span></span>
 <span id="L23"><span class="lineNum">      23</span>              :         unchecked {</span>
 <span id="L24"><span class="lineNum">      24</span>              :             // we checked the underflow</span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">      173082 :             liquidAssets = _debtAssets &gt; _collateralAssets ? 0 : _collateralAssets - _debtAssets;</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">      173105 :             liquidAssets = _debtAssets &gt; _collateralAssets ? 0 : _collateralAssets - _debtAssets;</span></span>
 <span id="L26"><span class="lineNum">      26</span>              :         }</span>
 <span id="L27"><span class="lineNum">      27</span>              :     }</span>
 <span id="L28"><span class="lineNum">      28</span>              : </span>
@@ -98,7 +98,7 @@
 <span id="L36"><span class="lineNum">      36</span>              :     /// @return debtAssetsWithInterest The debt assets with accrued interest</span>
 <span id="L37"><span class="lineNum">      37</span>              :     /// @return daoAndDeployerRevenue Total fees amount to be split between DAO and deployer</span>
 <span id="L38"><span class="lineNum">      38</span>              :     /// @return accruedInterest The total accrued interest</span>
-<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">      588255 :     function getCollateralAmountsWithInterest(</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">      589712 :     function getCollateralAmountsWithInterest(</span></span>
 <span id="L40"><span class="lineNum">      40</span>              :         uint256 _collateralAssets,</span>
 <span id="L41"><span class="lineNum">      41</span>              :         uint256 _debtAssets,</span>
 <span id="L42"><span class="lineNum">      42</span>              :         uint256 _rcomp,</span>
@@ -114,29 +114,29 @@
 <span id="L52"><span class="lineNum">      52</span>              :             uint256 accruedInterest</span>
 <span id="L53"><span class="lineNum">      53</span>              :         )</span>
 <span id="L54"><span class="lineNum">      54</span>              :     {</span>
-<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">      588255 :         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">      589712 :         (debtAssetsWithInterest, accruedInterest) = getDebtAmountsWithInterest(_debtAssets, _rcomp);</span></span>
 <span id="L56"><span class="lineNum">      56</span>              : </span>
-<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">      588255 :         uint256 fees;</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">      589712 :         uint256 fees;</span></span>
 <span id="L58"><span class="lineNum">      58</span>              : </span>
 <span id="L59"><span class="lineNum">      59</span>              :         // _daoFee and _deployerFee are expected to be less than 1e18, so we will not overflow</span>
-<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">      588255 :         unchecked { fees = _daoFee + _deployerFee; }</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">      589712 :         unchecked { fees = _daoFee + _deployerFee; }</span></span>
 <span id="L61"><span class="lineNum">      61</span>              : </span>
-<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">      588255 :         daoAndDeployerRevenue = mulDivOverflow(accruedInterest, fees, _PRECISION_DECIMALS);</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">      589712 :         daoAndDeployerRevenue = mulDivOverflow(accruedInterest, fees, _PRECISION_DECIMALS);</span></span>
 <span id="L63"><span class="lineNum">      63</span>              : </span>
 <span id="L64"><span class="lineNum">      64</span>              :         // we will not underflow because daoAndDeployerRevenue is chunk of accruedInterest</span>
-<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">      588255 :         uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">      589712 :         uint256 collateralInterest = accruedInterest - daoAndDeployerRevenue;</span></span>
 <span id="L66"><span class="lineNum">      66</span>              : </span>
-<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">      588255 :         uint256 cap;</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">      589712 :         uint256 cap;</span></span>
 <span id="L68"><span class="lineNum">      68</span>              :         // save to uncheck because variable can not be more than max</span>
-<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">      588255 :         unchecked { cap = type(uint256).max - _collateralAssets; }</span></span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">      589712 :         unchecked { cap = type(uint256).max - _collateralAssets; }</span></span>
 <span id="L70"><span class="lineNum">      70</span>              : </span>
-<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">      588255 :         if (cap &lt; collateralInterest) {</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">      589712 :         if (cap &lt; collateralInterest) {</span></span>
 <span id="L72"><span class="lineNum">      72</span>              :             // avoid overflow on interest</span>
 <span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">           5 :             collateralInterest = cap;</span></span>
 <span id="L74"><span class="lineNum">      74</span>              :         }</span>
 <span id="L75"><span class="lineNum">      75</span>              : </span>
 <span id="L76"><span class="lineNum">      76</span>              :         // safe to uncheck because of cap</span>
-<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">      588255 :         unchecked {  collateralAssetsWithInterest = _collateralAssets + collateralInterest; }</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">      589712 :         unchecked {  collateralAssetsWithInterest = _collateralAssets + collateralInterest; }</span></span>
 <span id="L78"><span class="lineNum">      78</span>              :     }</span>
 <span id="L79"><span class="lineNum">      79</span>              : </span>
 <span id="L80"><span class="lineNum">      80</span>              :     /// @notice Calculate the debt assets with accrued interest, it should never revert with over/under flow</span>
@@ -144,23 +144,23 @@
 <span id="L82"><span class="lineNum">      82</span>              :     /// @param _rcomp Compound interest rate for the debt in 18 decimal precision</span>
 <span id="L83"><span class="lineNum">      83</span>              :     /// @return debtAssetsWithInterest The debt assets including the accrued interest</span>
 <span id="L84"><span class="lineNum">      84</span>              :     /// @return accruedInterest The total amount of interest accrued on the debt assets</span>
-<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">     1081131 :     function getDebtAmountsWithInterest(uint256 _totalDebtAssets, uint256 _rcomp)</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">     1084072 :     function getDebtAmountsWithInterest(uint256 _totalDebtAssets, uint256 _rcomp)</span></span>
 <span id="L86"><span class="lineNum">      86</span>              :         internal</span>
 <span id="L87"><span class="lineNum">      87</span>              :         pure</span>
 <span id="L88"><span class="lineNum">      88</span>              :         returns (uint256 debtAssetsWithInterest, uint256 accruedInterest)</span>
 <span id="L89"><span class="lineNum">      89</span>              :     {</span>
-<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">     1081131 :         if (_totalDebtAssets == 0 || _rcomp == 0) {</span></span>
-<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">      616825 :             return (_totalDebtAssets, 0);</span></span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">     1084072 :         if (_totalDebtAssets == 0 || _rcomp == 0) {</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">      617558 :             return (_totalDebtAssets, 0);</span></span>
 <span id="L92"><span class="lineNum">      92</span>              :         }</span>
 <span id="L93"><span class="lineNum">      93</span>              : </span>
-<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">      464306 :         accruedInterest = mulDivOverflow(_totalDebtAssets, _rcomp, _PRECISION_DECIMALS);</span></span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">      466514 :         accruedInterest = mulDivOverflow(_totalDebtAssets, _rcomp, _PRECISION_DECIMALS);</span></span>
 <span id="L95"><span class="lineNum">      95</span>              : </span>
 <span id="L96"><span class="lineNum">      96</span>              :         unchecked {</span>
 <span id="L97"><span class="lineNum">      97</span>              :             // We intentionally allow overflow here, to prevent transaction revert due to interest calculation.</span>
-<span id="L98"><span class="lineNum">      98</span> <span class="tlaGNC">      464306 :             debtAssetsWithInterest = _totalDebtAssets + accruedInterest;</span></span>
+<span id="L98"><span class="lineNum">      98</span> <span class="tlaGNC">      466514 :             debtAssetsWithInterest = _totalDebtAssets + accruedInterest;</span></span>
 <span id="L99"><span class="lineNum">      99</span>              : </span>
 <span id="L100"><span class="lineNum">     100</span>              :             // If overflow occurs, we skip accruing interest.</span>
-<span id="L101"><span class="lineNum">     101</span> <span class="tlaGNC">      464306 :             if (debtAssetsWithInterest &lt; _totalDebtAssets) {</span></span>
+<span id="L101"><span class="lineNum">     101</span> <span class="tlaGNC">      466514 :             if (debtAssetsWithInterest &lt; _totalDebtAssets) {</span></span>
 <span id="L102"><span class="lineNum">     102</span> <span class="tlaGNC">           1 :                 debtAssetsWithInterest = _totalDebtAssets;</span></span>
 <span id="L103"><span class="lineNum">     103</span> <span class="tlaGNC">           1 :                 accruedInterest = 0;</span></span>
 <span id="L104"><span class="lineNum">     104</span>              :             }</span>
@@ -175,29 +175,29 @@
 <span id="L113"><span class="lineNum">     113</span>              :     /// @return utilization value, capped to 100%</span>
 <span id="L114"><span class="lineNum">     114</span>              :     /// Limiting utilization ratio by 100% max will allows us to perform better interest rate computations</span>
 <span id="L115"><span class="lineNum">     115</span>              :     /// and should not affect any other part of protocol. It is possible to go over 100% only when bad debt.</span>
-<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">     1104367 :     function calculateUtilization(uint256 _dp, uint256 _collateralAssets, uint256 _debtAssets)</span></span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">     1107373 :     function calculateUtilization(uint256 _dp, uint256 _collateralAssets, uint256 _debtAssets)</span></span>
 <span id="L117"><span class="lineNum">     117</span>              :         internal</span>
 <span id="L118"><span class="lineNum">     118</span>              :         pure</span>
 <span id="L119"><span class="lineNum">     119</span>              :         returns (uint256 utilization)</span>
 <span id="L120"><span class="lineNum">     120</span>              :     {</span>
-<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC">     1104367 :         if (_collateralAssets == 0 || _debtAssets == 0 || _dp == 0) return 0;</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC">     1107373 :         if (_collateralAssets == 0 || _debtAssets == 0 || _dp == 0) return 0;</span></span>
 <span id="L122"><span class="lineNum">     122</span>              : </span>
 <span id="L123"><span class="lineNum">     123</span>              :         /*</span>
 <span id="L124"><span class="lineNum">     124</span>              :             how to prevent overflow on: _debtAssets.mulDiv(_dp, _collateralAssets, Rounding.ACCRUED_INTEREST):</span>
 <span id="L125"><span class="lineNum">     125</span>              :             1. max &gt; _debtAssets * _dp / _collateralAssets</span>
 <span id="L126"><span class="lineNum">     126</span>              :             2. max / _dp &gt; _debtAssets / _collateralAssets</span>
 <span id="L127"><span class="lineNum">     127</span>              :         */</span>
-<span id="L128"><span class="lineNum">     128</span> <span class="tlaGNC">      777553 :         if (type(uint256).max / _dp &gt; _debtAssets / _collateralAssets) {</span></span>
-<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">      777297 :             utilization = _debtAssets.mulDiv(_dp, _collateralAssets, Rounding.ACCRUED_INTEREST);</span></span>
+<span id="L128"><span class="lineNum">     128</span> <span class="tlaGNC">      780473 :         if (type(uint256).max / _dp &gt; _debtAssets / _collateralAssets) {</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">      780217 :             utilization = _debtAssets.mulDiv(_dp, _collateralAssets, Rounding.ACCRUED_INTEREST);</span></span>
 <span id="L130"><span class="lineNum">     130</span>              :             // cap at 100%</span>
-<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">      777297 :             if (utilization &gt; _dp) utilization = _dp;</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">      780217 :             if (utilization &gt; _dp) utilization = _dp;</span></span>
 <span id="L132"><span class="lineNum">     132</span>              :         } else {</span>
 <span id="L133"><span class="lineNum">     133</span>              :             // we have overflow</span>
 <span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">         256 :             utilization = _dp;</span></span>
 <span id="L135"><span class="lineNum">     135</span>              :         }</span>
 <span id="L136"><span class="lineNum">     136</span>              :     }</span>
 <span id="L137"><span class="lineNum">     137</span>              : </span>
-<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">      250724 :     function convertToAssetsOrToShares(</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">      250797 :     function convertToAssetsOrToShares(</span></span>
 <span id="L139"><span class="lineNum">     139</span>              :         uint256 _assets,</span>
 <span id="L140"><span class="lineNum">     140</span>              :         uint256 _shares,</span>
 <span id="L141"><span class="lineNum">     141</span>              :         uint256 _totalAssets,</span>
@@ -206,15 +206,15 @@
 <span id="L144"><span class="lineNum">     144</span>              :         Math.Rounding _roundingToShares,</span>
 <span id="L145"><span class="lineNum">     145</span>              :         ISilo.AssetType _assetType</span>
 <span id="L146"><span class="lineNum">     146</span>              :     ) internal pure returns (uint256 assets, uint256 shares) {</span>
-<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">      250724 :         if (_assets == 0) {</span></span>
-<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">       34384 :             require(_shares != 0, ISilo.InputZeroShares());</span></span>
-<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">       34371 :             shares = _shares;</span></span>
-<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">       34371 :             assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets, _assetType);</span></span>
-<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">       34371 :             require(assets != 0, ISilo.ReturnZeroAssets());</span></span>
-<span id="L152"><span class="lineNum">     152</span> <span class="tlaGNC">      216340 :         } else if (_shares == 0) {</span></span>
-<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">      216339 :             shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares, _assetType);</span></span>
-<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">      216311 :             assets = _assets;</span></span>
-<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">      216311 :             require(shares != 0, ISilo.ReturnZeroShares());</span></span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">      250797 :         if (_assets == 0) {</span></span>
+<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">       34388 :             require(_shares != 0, ISilo.InputZeroShares());</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">       34375 :             shares = _shares;</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">       34375 :             assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets, _assetType);</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">       34375 :             require(assets != 0, ISilo.ReturnZeroAssets());</span></span>
+<span id="L152"><span class="lineNum">     152</span> <span class="tlaGNC">      216409 :         } else if (_shares == 0) {</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">      216408 :             shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares, _assetType);</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">      216384 :             assets = _assets;</span></span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">      216384 :             require(shares != 0, ISilo.ReturnZeroShares());</span></span>
 <span id="L156"><span class="lineNum">     156</span>              :         } else {</span>
 <span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC">           1 :             revert ISilo.InputCanBeAssetsOrShares();</span></span>
 <span id="L158"><span class="lineNum">     158</span>              :         }</span>
@@ -222,38 +222,38 @@
 <span id="L160"><span class="lineNum">     160</span>              : </span>
 <span id="L161"><span class="lineNum">     161</span>              :     /// @dev Math for collateral is exact copy of</span>
 <span id="L162"><span class="lineNum">     162</span>              :     ///      openzeppelin5/contracts/token/ERC20/extensions/ERC4626._convertToShares</span>
-<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">      286361 :     function convertToShares(</span></span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">      286559 :     function convertToShares(</span></span>
 <span id="L164"><span class="lineNum">     164</span>              :         uint256 _assets,</span>
 <span id="L165"><span class="lineNum">     165</span>              :         uint256 _totalAssets,</span>
 <span id="L166"><span class="lineNum">     166</span>              :         uint256 _totalShares,</span>
 <span id="L167"><span class="lineNum">     167</span>              :         Math.Rounding _rounding,</span>
 <span id="L168"><span class="lineNum">     168</span>              :         ISilo.AssetType _assetType</span>
 <span id="L169"><span class="lineNum">     169</span>              :     ) internal pure returns (uint256 shares) {</span>
-<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">      286361 :         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">      286559 :         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);</span></span>
 <span id="L171"><span class="lineNum">     171</span>              : </span>
 <span id="L172"><span class="lineNum">     172</span>              :         // initially, in case of debt, if silo is empty we return shares==assets</span>
 <span id="L173"><span class="lineNum">     173</span>              :         // for collateral, this will never be the case, because we are adding `+1` and offset in `_commonConvertTo`</span>
-<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">      286361 :         if (totalShares == 0) return _assets;</span></span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">      286559 :         if (totalShares == 0) return _assets;</span></span>
 <span id="L175"><span class="lineNum">     175</span>              : </span>
-<span id="L176"><span class="lineNum">     176</span> <span class="tlaGNC">      230294 :         shares = _assets.mulDiv(totalShares, totalAssets, _rounding);</span></span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaGNC">      230385 :         shares = _assets.mulDiv(totalShares, totalAssets, _rounding);</span></span>
 <span id="L177"><span class="lineNum">     177</span>              :     }</span>
 <span id="L178"><span class="lineNum">     178</span>              : </span>
 <span id="L179"><span class="lineNum">     179</span>              :     /// @dev Math for collateral is exact copy of</span>
 <span id="L180"><span class="lineNum">     180</span>              :     ///      openzeppelin5/contracts/token/ERC20/extensions/ERC4626._convertToAssets</span>
-<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">     1352324 :     function convertToAssets(</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">     1356769 :     function convertToAssets(</span></span>
 <span id="L182"><span class="lineNum">     182</span>              :         uint256 _shares,</span>
 <span id="L183"><span class="lineNum">     183</span>              :         uint256 _totalAssets,</span>
 <span id="L184"><span class="lineNum">     184</span>              :         uint256 _totalShares,</span>
 <span id="L185"><span class="lineNum">     185</span>              :         Math.Rounding _rounding,</span>
 <span id="L186"><span class="lineNum">     186</span>              :         ISilo.AssetType _assetType</span>
 <span id="L187"><span class="lineNum">     187</span>              :     ) internal pure returns (uint256 assets) {</span>
-<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">     1352324 :         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">     1356769 :         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);</span></span>
 <span id="L189"><span class="lineNum">     189</span>              : </span>
 <span id="L190"><span class="lineNum">     190</span>              :         // initially, in case of debt, if silo is empty we return shares==assets</span>
 <span id="L191"><span class="lineNum">     191</span>              :         // for collateral, this will never be the case, because of `+1` in line above</span>
-<span id="L192"><span class="lineNum">     192</span> <span class="tlaGNC">     1352324 :         if (totalShares == 0) return _shares;</span></span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaGNC">     1356769 :         if (totalShares == 0) return _shares;</span></span>
 <span id="L193"><span class="lineNum">     193</span>              : </span>
-<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">     1323556 :         assets = _shares.mulDiv(totalAssets, totalShares, _rounding);</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">     1327998 :         assets = _shares.mulDiv(totalAssets, totalShares, _rounding);</span></span>
 <span id="L195"><span class="lineNum">     195</span>              :     }</span>
 <span id="L196"><span class="lineNum">     196</span>              : </span>
 <span id="L197"><span class="lineNum">     197</span>              :     /// @param _collateralMaxLtv maxLTV in 18 decimals that is set for debt asset</span>
@@ -266,16 +266,16 @@
 <span id="L204"><span class="lineNum">     204</span>              :         uint256 _borrowerDebtValue</span>
 <span id="L205"><span class="lineNum">     205</span>              :     ) internal pure returns (uint256 maxBorrowValue) {</span>
 <span id="L206"><span class="lineNum">     206</span> <span class="tlaGNC">       26872 :         if (_sumOfBorrowerCollateralValue == 0) {</span></span>
-<span id="L207"><span class="lineNum">     207</span> <span class="tlaGNC">         185 :             return 0;</span></span>
+<span id="L207"><span class="lineNum">     207</span> <span class="tlaGNC">         143 :             return 0;</span></span>
 <span id="L208"><span class="lineNum">     208</span>              :         }</span>
 <span id="L209"><span class="lineNum">     209</span>              : </span>
-<span id="L210"><span class="lineNum">     210</span> <span class="tlaGNC">       26687 :         uint256 maxDebtValue = _sumOfBorrowerCollateralValue.mulDiv(</span></span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaGNC">       26729 :         uint256 maxDebtValue = _sumOfBorrowerCollateralValue.mulDiv(</span></span>
 <span id="L211"><span class="lineNum">     211</span>              :             _collateralMaxLtv, _PRECISION_DECIMALS, Rounding.MAX_BORROW_VALUE</span>
 <span id="L212"><span class="lineNum">     212</span>              :         );</span>
 <span id="L213"><span class="lineNum">     213</span>              : </span>
 <span id="L214"><span class="lineNum">     214</span>              :         unchecked {</span>
 <span id="L215"><span class="lineNum">     215</span>              :             // we will not underflow because we checking `maxDebtValue &gt; _borrowerDebtValue`</span>
-<span id="L216"><span class="lineNum">     216</span> <span class="tlaGNC">       26687 :             maxBorrowValue = maxDebtValue &gt; _borrowerDebtValue ? maxDebtValue - _borrowerDebtValue : 0;</span></span>
+<span id="L216"><span class="lineNum">     216</span> <span class="tlaGNC">       26729 :             maxBorrowValue = maxDebtValue &gt; _borrowerDebtValue ? maxDebtValue - _borrowerDebtValue : 0;</span></span>
 <span id="L217"><span class="lineNum">     217</span>              :         }</span>
 <span id="L218"><span class="lineNum">     218</span>              :     }</span>
 <span id="L219"><span class="lineNum">     219</span>              : </span>
@@ -302,14 +302,14 @@
 <span id="L240"><span class="lineNum">     240</span>              : </span>
 <span id="L241"><span class="lineNum">     241</span>              :         // if we over LT, we can not withdraw</span>
 <span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">        4657 :         if (_sumOfCollateralsValue &lt;= minimumCollateralValue) {</span></span>
-<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">        1368 :             return 0;</span></span>
+<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">        1372 :             return 0;</span></span>
 <span id="L244"><span class="lineNum">     244</span>              :         }</span>
 <span id="L245"><span class="lineNum">     245</span>              : </span>
-<span id="L246"><span class="lineNum">     246</span> <span class="tlaGNC">        3289 :         uint256 spareCollateralValue;</span></span>
+<span id="L246"><span class="lineNum">     246</span> <span class="tlaGNC">        3285 :         uint256 spareCollateralValue;</span></span>
 <span id="L247"><span class="lineNum">     247</span>              :         // safe because we checked `if (_sumOfCollateralsValue &lt;= minimumCollateralValue)`</span>
-<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">        3289 :         unchecked { spareCollateralValue = _sumOfCollateralsValue - minimumCollateralValue; }</span></span>
+<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">        3285 :         unchecked { spareCollateralValue = _sumOfCollateralsValue - minimumCollateralValue; }</span></span>
 <span id="L249"><span class="lineNum">     249</span>              : </span>
-<span id="L250"><span class="lineNum">     250</span> <span class="tlaGNC">        3289 :         maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets)</span></span>
+<span id="L250"><span class="lineNum">     250</span> <span class="tlaGNC">        3285 :         maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets)</span></span>
 <span id="L251"><span class="lineNum">     251</span>              :                 .mulDiv(spareCollateralValue, _sumOfCollateralsValue, Rounding.MAX_WITHDRAW_TO_ASSETS);</span>
 <span id="L252"><span class="lineNum">     252</span>              :     }</span>
 <span id="L253"><span class="lineNum">     253</span>              : </span>
@@ -334,19 +334,19 @@
 <span id="L272"><span class="lineNum">     272</span>              :         uint256 _liquidity</span>
 <span id="L273"><span class="lineNum">     273</span>              :     ) internal pure returns (uint256 assets, uint256 shares) {</span>
 <span id="L274"><span class="lineNum">     274</span> <span class="tlaGNC">        4656 :         if (_maxAssets == 0) return (0, 0);</span></span>
-<span id="L275"><span class="lineNum">     275</span> <span class="tlaGNC">        3293 :         if (_assetTypeShareTokenTotalSupply == 0) return (0, 0);</span></span>
+<span id="L275"><span class="lineNum">     275</span> <span class="tlaGNC">        3289 :         if (_assetTypeShareTokenTotalSupply == 0) return (0, 0);</span></span>
 <span id="L276"><span class="lineNum">     276</span>              : </span>
-<span id="L277"><span class="lineNum">     277</span> <span class="tlaGNC">        3290 :         if (_collateralType == ISilo.CollateralType.Collateral) {</span></span>
-<span id="L278"><span class="lineNum">     278</span> <span class="tlaGNC">        3284 :             assets = _maxAssets &gt; _borrowerCollateralAssets ? _borrowerCollateralAssets : _maxAssets;</span></span>
+<span id="L277"><span class="lineNum">     277</span> <span class="tlaGNC">        3286 :         if (_collateralType == ISilo.CollateralType.Collateral) {</span></span>
+<span id="L278"><span class="lineNum">     278</span> <span class="tlaGNC">        3280 :             assets = _maxAssets &gt; _borrowerCollateralAssets ? _borrowerCollateralAssets : _maxAssets;</span></span>
 <span id="L279"><span class="lineNum">     279</span>              : </span>
-<span id="L280"><span class="lineNum">     280</span> <span class="tlaGNC">        3284 :             if (assets &gt; _liquidity) {</span></span>
-<span id="L281"><span class="lineNum">     281</span> <span class="tlaGNC">         210 :                 assets = _liquidity;</span></span>
+<span id="L280"><span class="lineNum">     280</span> <span class="tlaGNC">        3280 :             if (assets &gt; _liquidity) {</span></span>
+<span id="L281"><span class="lineNum">     281</span> <span class="tlaGNC">         216 :                 assets = _liquidity;</span></span>
 <span id="L282"><span class="lineNum">     282</span>              :             }</span>
 <span id="L283"><span class="lineNum">     283</span>              :         } else {</span>
 <span id="L284"><span class="lineNum">     284</span> <span class="tlaGNC">           6 :             assets = _maxAssets &gt; _borrowerProtectedAssets ? _borrowerProtectedAssets : _maxAssets;</span></span>
 <span id="L285"><span class="lineNum">     285</span>              :         }</span>
 <span id="L286"><span class="lineNum">     286</span>              : </span>
-<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">        3290 :         shares = SiloMathLib.convertToShares(</span></span>
+<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">        3286 :         shares = SiloMathLib.convertToShares(</span></span>
 <span id="L288"><span class="lineNum">     288</span>              :             assets,</span>
 <span id="L289"><span class="lineNum">     289</span>              :             _totalAssets,</span>
 <span id="L290"><span class="lineNum">     290</span>              :             _assetTypeShareTokenTotalSupply,</span>
@@ -357,37 +357,37 @@
 <span id="L295"><span class="lineNum">     295</span>              : </span>
 <span id="L296"><span class="lineNum">     296</span>              :     /// @dev executed `_a * _b / _c`, reverts on _c == 0</span>
 <span id="L297"><span class="lineNum">     297</span>              :     /// @return mulDivResult on overflow returns 0</span>
-<span id="L298"><span class="lineNum">     298</span> <span class="tlaGNC">     1052817 :     function mulDivOverflow(uint256 _a, uint256 _b, uint256 _c)</span></span>
+<span id="L298"><span class="lineNum">     298</span> <span class="tlaGNC">     1056482 :     function mulDivOverflow(uint256 _a, uint256 _b, uint256 _c)</span></span>
 <span id="L299"><span class="lineNum">     299</span>              :         internal</span>
 <span id="L300"><span class="lineNum">     300</span>              :         pure</span>
 <span id="L301"><span class="lineNum">     301</span>              :         returns (uint256 mulDivResult)</span>
 <span id="L302"><span class="lineNum">     302</span>              :     {</span>
-<span id="L303"><span class="lineNum">     303</span> <span class="tlaGNC">     1052817 :         if (_a == 0) return (0);</span></span>
+<span id="L303"><span class="lineNum">     303</span> <span class="tlaGNC">     1056482 :         if (_a == 0) return (0);</span></span>
 <span id="L304"><span class="lineNum">     304</span>              : </span>
 <span id="L305"><span class="lineNum">     305</span>              :         unchecked {</span>
 <span id="L306"><span class="lineNum">     306</span>              :             // we have to uncheck to detect overflow</span>
-<span id="L307"><span class="lineNum">     307</span> <span class="tlaGNC">      628772 :             mulDivResult = _a * _b;</span></span>
-<span id="L308"><span class="lineNum">     308</span> <span class="tlaGNC">      628772 :             if (mulDivResult / _a != _b) return 0;</span></span>
+<span id="L307"><span class="lineNum">     307</span> <span class="tlaGNC">      632364 :             mulDivResult = _a * _b;</span></span>
+<span id="L308"><span class="lineNum">     308</span> <span class="tlaGNC">      632364 :             if (mulDivResult / _a != _b) return 0;</span></span>
 <span id="L309"><span class="lineNum">     309</span>              : </span>
-<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">      628549 :             mulDivResult /= _c;</span></span>
+<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">      632141 :             mulDivResult /= _c;</span></span>
 <span id="L311"><span class="lineNum">     311</span>              :         }</span>
 <span id="L312"><span class="lineNum">     312</span>              :     }</span>
 <span id="L313"><span class="lineNum">     313</span>              : </span>
 <span id="L314"><span class="lineNum">     314</span>              :     /// @dev Debt calculations should not lower the result. Debt is a liability so protocol should not take any for</span>
 <span id="L315"><span class="lineNum">     315</span>              :     /// itself. It should return actual result and round it up.</span>
-<span id="L316"><span class="lineNum">     316</span> <span class="tlaGNC">     1638685 :     function _commonConvertTo(</span></span>
+<span id="L316"><span class="lineNum">     316</span> <span class="tlaGNC">     1643328 :     function _commonConvertTo(</span></span>
 <span id="L317"><span class="lineNum">     317</span>              :         uint256 _totalAssets,</span>
 <span id="L318"><span class="lineNum">     318</span>              :         uint256 _totalShares,</span>
 <span id="L319"><span class="lineNum">     319</span>              :         ISilo.AssetType _assetType</span>
 <span id="L320"><span class="lineNum">     320</span>              :     ) private pure returns (uint256 totalShares, uint256 totalAssets) {</span>
-<span id="L321"><span class="lineNum">     321</span> <span class="tlaGNC">     1638685 :         if (_totalShares == 0) {</span></span>
+<span id="L321"><span class="lineNum">     321</span> <span class="tlaGNC">     1643328 :         if (_totalShares == 0) {</span></span>
 <span id="L322"><span class="lineNum">     322</span>              :             // silo is empty and we have dust to redistribute: this can only happen when everyone exits silo</span>
 <span id="L323"><span class="lineNum">     323</span>              :             // this case can happen only for collateral, because for collateral we rounding in favorite of protocol</span>
 <span id="L324"><span class="lineNum">     324</span>              :             // by resetting totalAssets, the dust that we have will go to first depositor and we starts from clean state</span>
-<span id="L325"><span class="lineNum">     325</span> <span class="tlaGNC">      562181 :             _totalAssets = 0;</span></span>
+<span id="L325"><span class="lineNum">     325</span> <span class="tlaGNC">      563707 :             _totalAssets = 0;</span></span>
 <span id="L326"><span class="lineNum">     326</span>              :         }</span>
 <span id="L327"><span class="lineNum">     327</span>              : </span>
-<span id="L328"><span class="lineNum">     328</span> <span class="tlaGNC">     1638685 :             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt</span></span>
+<span id="L328"><span class="lineNum">     328</span> <span class="tlaGNC">     1643328 :             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt</span></span>
 <span id="L329"><span class="lineNum">     329</span>              :                 ? (_totalShares, _totalAssets)</span>
 <span id="L330"><span class="lineNum">     330</span>              :                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);</span>
 <span id="L331"><span class="lineNum">     331</span>              :     }</span>
@@ -398,18 +398,18 @@
 <span id="L336"><span class="lineNum">     336</span>              :     /// @param _currentFraction The current fraction to add to the result</span>
 <span id="L337"><span class="lineNum">     337</span>              :     /// @return integral The integral part of the fraction</span>
 <span id="L338"><span class="lineNum">     338</span>              :     /// @return fraction The fractional part of the fraction</span>
-<span id="L339"><span class="lineNum">     339</span> <span class="tlaGNC">      207763 :     function calculateFraction(</span></span>
+<span id="L339"><span class="lineNum">     339</span> <span class="tlaGNC">      207693 :     function calculateFraction(</span></span>
 <span id="L340"><span class="lineNum">     340</span>              :         uint256 _total,</span>
 <span id="L341"><span class="lineNum">     341</span>              :         uint256 _percent,</span>
 <span id="L342"><span class="lineNum">     342</span>              :         uint64 _currentFraction</span>
 <span id="L343"><span class="lineNum">     343</span>              :     ) internal pure returns (uint256 integral, uint64 fraction) {</span>
-<span id="L344"><span class="lineNum">     344</span> <span class="tlaGNC">      207763 :         if (_total == 0) {</span></span>
-<span id="L345"><span class="lineNum">     345</span> <span class="tlaGNC">       88636 :             return (0, _currentFraction);</span></span>
+<span id="L344"><span class="lineNum">     344</span> <span class="tlaGNC">      207693 :         if (_total == 0) {</span></span>
+<span id="L345"><span class="lineNum">     345</span> <span class="tlaGNC">       88558 :             return (0, _currentFraction);</span></span>
 <span id="L346"><span class="lineNum">     346</span>              :         }</span>
 <span id="L347"><span class="lineNum">     347</span>              : </span>
 <span id="L348"><span class="lineNum">     348</span>              :         unchecked {</span>
 <span id="L349"><span class="lineNum">     349</span>              :             // safe to unchecked because: _currentFraction if never more than max uint256, div is safe</span>
-<span id="L350"><span class="lineNum">     350</span> <span class="tlaGNC">      119127 :             if (type(uint256).max / _total &lt; _percent) {</span></span>
+<span id="L350"><span class="lineNum">     350</span> <span class="tlaGNC">      119135 :             if (type(uint256).max / _total &lt; _percent) {</span></span>
 <span id="L351"><span class="lineNum">     351</span>              :                 // when overflow, reset `_currentFraction ` to zero as part of circuit breaker</span>
 <span id="L352"><span class="lineNum">     352</span> <span class="tlaGNC">          76 :                 return (0, 0);</span></span>
 <span id="L353"><span class="lineNum">     353</span>              :             }</span>
@@ -418,11 +418,11 @@
 <span id="L356"><span class="lineNum">     356</span>              :             // `% _PRECISION_DECIMALS` safe, because max value after modulo will be 1e18 - 1  (_PRECISION_DECIMALS - 1)</span>
 <span id="L357"><span class="lineNum">     357</span>              :             // and this is less than 2 ** 64</span>
 <span id="L358"><span class="lineNum">     358</span>              :             // calculate remainder for current interest</span>
-<span id="L359"><span class="lineNum">     359</span> <span class="tlaGNC">      119051 :             uint256 remainder = (_total * _percent) % _PRECISION_DECIMALS;</span></span>
+<span id="L359"><span class="lineNum">     359</span> <span class="tlaGNC">      119059 :             uint256 remainder = (_total * _percent) % _PRECISION_DECIMALS;</span></span>
 <span id="L360"><span class="lineNum">     360</span>              :             // integral is amount above 1e18 after adding _currentFraction and remainder</span>
-<span id="L361"><span class="lineNum">     361</span> <span class="tlaGNC">      119051 :             integral = (_currentFraction + remainder) / _PRECISION_DECIMALS;</span></span>
+<span id="L361"><span class="lineNum">     361</span> <span class="tlaGNC">      119059 :             integral = (_currentFraction + remainder) / _PRECISION_DECIMALS;</span></span>
 <span id="L362"><span class="lineNum">     362</span>              :             // fraction is what we get below 1e18</span>
-<span id="L363"><span class="lineNum">     363</span> <span class="tlaGNC">      119051 :             fraction = uint64((_currentFraction + remainder) % _PRECISION_DECIMALS);</span></span>
+<span id="L363"><span class="lineNum">     363</span> <span class="tlaGNC">      119059 :             fraction = uint64((_currentFraction + remainder) % _PRECISION_DECIMALS);</span></span>
 <span id="L364"><span class="lineNum">     364</span>              :         }</span>
 <span id="L365"><span class="lineNum">     365</span>              :     }</span>
 <span id="L366"><span class="lineNum">     366</span>              : }</span>

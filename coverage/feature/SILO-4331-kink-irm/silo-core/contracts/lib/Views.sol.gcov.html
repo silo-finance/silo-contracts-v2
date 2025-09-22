@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-08-22 12:51:36</td>
+            <td class="headerValue">2025-09-22 14:46:55</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -87,13 +87,13 @@
 <span id="L25"><span class="lineNum">      25</span>              : </span>
 <span id="L26"><span class="lineNum">      26</span>              :     bytes32 internal constant _FLASHLOAN_CALLBACK = keccak256(&quot;ERC3156FlashBorrower.onFlashLoan&quot;);</span>
 <span id="L27"><span class="lineNum">      27</span>              : </span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC tlaBgGNC">      110611 :     function isSolvent(address _borrower) external view returns (bool) {</span></span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">      110611 :         (</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC tlaBgGNC">      111336 :     function isSolvent(address _borrower) external view returns (bool) {</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">      111336 :         (</span></span>
 <span id="L30"><span class="lineNum">      30</span>              :             ISiloConfig.ConfigData memory collateral,</span>
 <span id="L31"><span class="lineNum">      31</span>              :             ISiloConfig.ConfigData memory debt</span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">      110611 :         ) = ShareTokenLib.siloConfig().getConfigsForSolvency(_borrower);</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">      111336 :         ) = ShareTokenLib.siloConfig().getConfigsForSolvency(_borrower);</span></span>
 <span id="L33"><span class="lineNum">      33</span>              : </span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">      110611 :         return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, ISilo.AccrueInterestInMemory.Yes);</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">      111336 :         return SiloSolvencyLib.isSolvent(collateral, debt, _borrower, ISilo.AccrueInterestInMemory.Yes);</span></span>
 <span id="L35"><span class="lineNum">      35</span>              :     }</span>
 <span id="L36"><span class="lineNum">      36</span>              : </span>
 <span id="L37"><span class="lineNum">      37</span>              :     /// @notice Returns flash fee amount</span>
@@ -140,14 +140,14 @@
 <span id="L78"><span class="lineNum">      78</span>              :         );</span>
 <span id="L79"><span class="lineNum">      79</span>              :     }</span>
 <span id="L80"><span class="lineNum">      80</span>              : </span>
-<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">       21353 :     function maxRepay(address _borrower) external view returns (uint256 assets) {</span></span>
-<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">       21353 :         ISiloConfig.ConfigData memory configData = ShareTokenLib.getConfig();</span></span>
-<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">       21353 :         uint256 shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">       21340 :     function maxRepay(address _borrower) external view returns (uint256 assets) {</span></span>
+<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">       21340 :         ISiloConfig.ConfigData memory configData = ShareTokenLib.getConfig();</span></span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">       21340 :         uint256 shares = IShareToken(configData.debtShareToken).balanceOf(_borrower);</span></span>
 <span id="L84"><span class="lineNum">      84</span>              : </span>
-<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">       21353 :         (uint256 totalSiloAssets, uint256 totalShares) =</span></span>
-<span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">       21353 :             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, ISilo.AssetType.Debt);</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">       21340 :         (uint256 totalSiloAssets, uint256 totalShares) =</span></span>
+<span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">       21340 :             SiloStdLib.getTotalAssetsAndTotalSharesWithInterest(configData, ISilo.AssetType.Debt);</span></span>
 <span id="L87"><span class="lineNum">      87</span>              : </span>
-<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">       21353 :         return SiloMathLib.convertToAssets(</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">       21340 :         return SiloMathLib.convertToAssets(</span></span>
 <span id="L89"><span class="lineNum">      89</span>              :             shares, totalSiloAssets, totalShares, Rounding.MAX_REPAY_TO_ASSETS, ISilo.AssetType.Debt</span>
 <span id="L90"><span class="lineNum">      90</span>              :         );</span>
 <span id="L91"><span class="lineNum">      91</span>              :     }</span>
@@ -176,10 +176,10 @@
 <span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">        1450 :         fractions = SiloStorageLib.getSiloStorage().fractions;</span></span>
 <span id="L115"><span class="lineNum">     115</span>              :     }</span>
 <span id="L116"><span class="lineNum">     116</span>              : </span>
-<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">      934119 :     function utilizationData() internal view returns (ISilo.UtilizationData memory) {</span></span>
-<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">      934119 :         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();</span></span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">      937083 :     function utilizationData() internal view returns (ISilo.UtilizationData memory) {</span></span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">      937083 :         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();</span></span>
 <span id="L119"><span class="lineNum">     119</span>              : </span>
-<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">      934119 :         return ISilo.UtilizationData({</span></span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">      937083 :         return ISilo.UtilizationData({</span></span>
 <span id="L121"><span class="lineNum">     121</span>              :             collateralAssets: $.totalAssets[ISilo.AssetType.Collateral],</span>
 <span id="L122"><span class="lineNum">     122</span>              :             debtAssets: $.totalAssets[ISilo.AssetType.Debt],</span>
 <span id="L123"><span class="lineNum">     123</span>              :             interestRateTimestamp: $.interestRateTimestamp</span>
@@ -194,26 +194,26 @@
 <span id="L132"><span class="lineNum">     132</span>              :         );</span>
 <span id="L133"><span class="lineNum">     133</span>              :     }</span>
 <span id="L134"><span class="lineNum">     134</span>              : </span>
-<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">      403096 :     function getCollateralAndProtectedAssets()</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">      404545 :     function getCollateralAndProtectedAssets()</span></span>
 <span id="L136"><span class="lineNum">     136</span>              :         internal</span>
 <span id="L137"><span class="lineNum">     137</span>              :         view</span>
 <span id="L138"><span class="lineNum">     138</span>              :         returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)</span>
 <span id="L139"><span class="lineNum">     139</span>              :     {</span>
-<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">      403096 :         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">      404545 :         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();</span></span>
 <span id="L141"><span class="lineNum">     141</span>              : </span>
-<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">      403096 :         totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];</span></span>
-<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">      403096 :         totalProtectedAssets = $.totalAssets[ISilo.AssetType.Protected];</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">      404545 :         totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">      404545 :         totalProtectedAssets = $.totalAssets[ISilo.AssetType.Protected];</span></span>
 <span id="L144"><span class="lineNum">     144</span>              :     }</span>
 <span id="L145"><span class="lineNum">     145</span>              : </span>
-<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">      438672 :     function getCollateralAndDebtAssets()</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">      440152 :     function getCollateralAndDebtAssets()</span></span>
 <span id="L147"><span class="lineNum">     147</span>              :         internal</span>
 <span id="L148"><span class="lineNum">     148</span>              :         view</span>
 <span id="L149"><span class="lineNum">     149</span>              :         returns (uint256 totalCollateralAssets, uint256 totalDebtAssets)</span>
 <span id="L150"><span class="lineNum">     150</span>              :     {</span>
-<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">      438672 :         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">      440152 :         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();</span></span>
 <span id="L152"><span class="lineNum">     152</span>              : </span>
-<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">      438672 :         totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];</span></span>
-<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">      438672 :         totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">      440152 :         totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">      440152 :         totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];</span></span>
 <span id="L155"><span class="lineNum">     155</span>              :     }</span>
 <span id="L156"><span class="lineNum">     156</span>              : </span>
 <span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC">         889 :     function copySiloConfig(</span></span>

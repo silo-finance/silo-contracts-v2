@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-08-22 12:51:36</td>
+            <td class="headerValue">2025-09-22 14:46:55</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -122,7 +122,7 @@
 <span id="L60"><span class="lineNum">      60</span>              :     /// @param _collateralType Type of collateral (Protected or Collateral)</span>
 <span id="L61"><span class="lineNum">      61</span>              :     /// @return assets Amount of assets deposited</span>
 <span id="L62"><span class="lineNum">      62</span>              :     /// @return shares Amount of shares minted due to deposit</span>
-<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">      137060 :     function deposit(</span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">      137059 :     function deposit(</span></span>
 <span id="L64"><span class="lineNum">      64</span>              :         uint256 _assets,</span>
 <span id="L65"><span class="lineNum">      65</span>              :         uint256 _shares,</span>
 <span id="L66"><span class="lineNum">      66</span>              :         address _receiver,</span>
@@ -131,18 +131,18 @@
 <span id="L69"><span class="lineNum">      69</span>              :         external</span>
 <span id="L70"><span class="lineNum">      70</span>              :         returns (uint256 assets, uint256 shares)</span>
 <span id="L71"><span class="lineNum">      71</span>              :     {</span>
-<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">      137060 :         _hookCallBeforeDeposit(_collateralType, _assets, _shares, _receiver);</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">      137059 :         _hookCallBeforeDeposit(_collateralType, _assets, _shares, _receiver);</span></span>
 <span id="L73"><span class="lineNum">      73</span>              : </span>
-<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">      137059 :         ISiloConfig siloConfig = ShareTokenLib.siloConfig();</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">      137058 :         ISiloConfig siloConfig = ShareTokenLib.siloConfig();</span></span>
 <span id="L75"><span class="lineNum">      75</span>              : </span>
-<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">      137059 :         siloConfig.turnOnReentrancyProtection();</span></span>
-<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">      136923 :         siloConfig.accrueInterestForSilo(address(this));</span></span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">      137058 :         siloConfig.turnOnReentrancyProtection();</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">      136922 :         siloConfig.accrueInterestForSilo(address(this));</span></span>
 <span id="L78"><span class="lineNum">      78</span>              : </span>
-<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">      136923 :         (</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">      136922 :         (</span></span>
 <span id="L80"><span class="lineNum">      80</span>              :             address shareToken, address asset</span>
-<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">      136923 :         ) = siloConfig.getCollateralShareTokenAndAsset(address(this), _collateralType);</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">      136922 :         ) = siloConfig.getCollateralShareTokenAndAsset(address(this), _collateralType);</span></span>
 <span id="L82"><span class="lineNum">      82</span>              : </span>
-<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">      136923 :         (assets, shares) = SiloERC4626Lib.deposit({</span></span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">      136922 :         (assets, shares) = SiloERC4626Lib.deposit({</span></span>
 <span id="L84"><span class="lineNum">      84</span>              :             _token: asset,</span>
 <span id="L85"><span class="lineNum">      85</span>              :             _depositor: msg.sender,</span>
 <span id="L86"><span class="lineNum">      86</span>              :             _assets: _assets,</span>
@@ -152,9 +152,9 @@
 <span id="L90"><span class="lineNum">      90</span>              :             _collateralType: _collateralType</span>
 <span id="L91"><span class="lineNum">      91</span>              :         });</span>
 <span id="L92"><span class="lineNum">      92</span>              : </span>
-<span id="L93"><span class="lineNum">      93</span> <span class="tlaGNC">      136920 :         siloConfig.turnOffReentrancyProtection();</span></span>
+<span id="L93"><span class="lineNum">      93</span> <span class="tlaGNC">      136919 :         siloConfig.turnOffReentrancyProtection();</span></span>
 <span id="L94"><span class="lineNum">      94</span>              : </span>
-<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">      136920 :         _hookCallAfterDeposit(_collateralType, _assets, _shares, _receiver, assets, shares);</span></span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">      136919 :         _hookCallAfterDeposit(_collateralType, _assets, _shares, _receiver, assets, shares);</span></span>
 <span id="L96"><span class="lineNum">      96</span>              :     }</span>
 <span id="L97"><span class="lineNum">      97</span>              : </span>
 <span id="L98"><span class="lineNum">      98</span>              :     /// @notice Implements IERC4626.withdraw for protected (non-borrowable) and borrowable collateral</span>
@@ -168,24 +168,24 @@
 <span id="L106"><span class="lineNum">     106</span>              :     /// - `collateralType`: Specifies whether withdrawal is protected or borrowable collateral</span>
 <span id="L107"><span class="lineNum">     107</span>              :     /// @return assets Amount of assets withdrawn</span>
 <span id="L108"><span class="lineNum">     108</span>              :     /// @return shares Amount of shares burnt during withdrawal</span>
-<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">       29307 :     function withdraw(ISilo.WithdrawArgs calldata _args)</span></span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">       29304 :     function withdraw(ISilo.WithdrawArgs calldata _args)</span></span>
 <span id="L110"><span class="lineNum">     110</span>              :         external</span>
 <span id="L111"><span class="lineNum">     111</span>              :         returns (uint256 assets, uint256 shares)</span>
 <span id="L112"><span class="lineNum">     112</span>              :     {</span>
-<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">       29307 :         _hookCallBeforeWithdraw(_args);</span></span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">       29304 :         _hookCallBeforeWithdraw(_args);</span></span>
 <span id="L114"><span class="lineNum">     114</span>              : </span>
-<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">       29307 :         ISiloConfig siloConfig = ShareTokenLib.siloConfig();</span></span>
+<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">       29304 :         ISiloConfig siloConfig = ShareTokenLib.siloConfig();</span></span>
 <span id="L116"><span class="lineNum">     116</span>              : </span>
-<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">       29307 :         siloConfig.turnOnReentrancyProtection();</span></span>
-<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">       29171 :         siloConfig.accrueInterestForBothSilos();</span></span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">       29304 :         siloConfig.turnOnReentrancyProtection();</span></span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">       29168 :         siloConfig.accrueInterestForBothSilos();</span></span>
 <span id="L119"><span class="lineNum">     119</span>              : </span>
-<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">       29171 :         ISiloConfig.DepositConfig memory depositConfig;</span></span>
-<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC">       29171 :         ISiloConfig.ConfigData memory collateralConfig;</span></span>
-<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">       29171 :         ISiloConfig.ConfigData memory debtConfig;</span></span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">       29168 :         ISiloConfig.DepositConfig memory depositConfig;</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC">       29168 :         ISiloConfig.ConfigData memory collateralConfig;</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">       29168 :         ISiloConfig.ConfigData memory debtConfig;</span></span>
 <span id="L123"><span class="lineNum">     123</span>              : </span>
-<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">       29171 :         (depositConfig, collateralConfig, debtConfig) = siloConfig.getConfigsForWithdraw(address(this), _args.owner);</span></span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">       29168 :         (depositConfig, collateralConfig, debtConfig) = siloConfig.getConfigsForWithdraw(address(this), _args.owner);</span></span>
 <span id="L125"><span class="lineNum">     125</span>              : </span>
-<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">       29171 :         (assets, shares) = SiloERC4626Lib.withdraw(</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">       29168 :         (assets, shares) = SiloERC4626Lib.withdraw(</span></span>
 <span id="L127"><span class="lineNum">     127</span>              :             depositConfig.token,</span>
 <span id="L128"><span class="lineNum">     128</span>              :             _args.collateralType == ISilo.CollateralType.Collateral</span>
 <span id="L129"><span class="lineNum">     129</span>              :                 ? depositConfig.collateralShareToken</span>
@@ -193,14 +193,14 @@
 <span id="L131"><span class="lineNum">     131</span>              :             _args</span>
 <span id="L132"><span class="lineNum">     132</span>              :         );</span>
 <span id="L133"><span class="lineNum">     133</span>              : </span>
-<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">       27204 :         if (depositConfig.silo == collateralConfig.silo) {</span></span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">       27197 :         if (depositConfig.silo == collateralConfig.silo) {</span></span>
 <span id="L135"><span class="lineNum">     135</span>              :             // If deposit is collateral, then check the solvency.</span>
-<span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">        3971 :             _checkSolvencyWithoutAccruingInterest(collateralConfig, debtConfig, _args.owner);</span></span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">        3953 :             _checkSolvencyWithoutAccruingInterest(collateralConfig, debtConfig, _args.owner);</span></span>
 <span id="L137"><span class="lineNum">     137</span>              :         }</span>
 <span id="L138"><span class="lineNum">     138</span>              : </span>
-<span id="L139"><span class="lineNum">     139</span> <span class="tlaGNC">       25776 :         siloConfig.turnOffReentrancyProtection();</span></span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaGNC">       25771 :         siloConfig.turnOffReentrancyProtection();</span></span>
 <span id="L140"><span class="lineNum">     140</span>              : </span>
-<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">       25776 :         _hookCallAfterWithdraw(_args, assets, shares);</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">       25771 :         _hookCallAfterWithdraw(_args, assets, shares);</span></span>
 <span id="L142"><span class="lineNum">     142</span>              :     }</span>
 <span id="L143"><span class="lineNum">     143</span>              : </span>
 <span id="L144"><span class="lineNum">     144</span>              :     /// @notice Allows an address to borrow a specified amount of assets</span>
@@ -212,37 +212,37 @@
 <span id="L150"><span class="lineNum">     150</span>              :     /// @return assets Amount of assets borrowed</span>
 <span id="L151"><span class="lineNum">     151</span>              :     /// @return shares Amount of shares minted for the borrowed assets</span>
 <span id="L152"><span class="lineNum">     152</span>              :     /// @return collateralTypeChanged TRUE if action changed collateral type</span>
-<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">       39376 :     function borrow(ISilo.BorrowArgs memory _args)</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">       39399 :     function borrow(ISilo.BorrowArgs memory _args)</span></span>
 <span id="L154"><span class="lineNum">     154</span>              :         external</span>
 <span id="L155"><span class="lineNum">     155</span>              :         returns (uint256 assets, uint256 shares, bool collateralTypeChanged)</span>
 <span id="L156"><span class="lineNum">     156</span>              :     {</span>
-<span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC">       39376 :         _hookCallBeforeBorrow(_args, Hook.BORROW);</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC">       39399 :         _hookCallBeforeBorrow(_args, Hook.BORROW);</span></span>
 <span id="L158"><span class="lineNum">     158</span>              : </span>
-<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">       39376 :         ISiloConfig siloConfig = ShareTokenLib.siloConfig();</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">       39399 :         ISiloConfig siloConfig = ShareTokenLib.siloConfig();</span></span>
 <span id="L160"><span class="lineNum">     160</span>              : </span>
-<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">       39376 :         require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());</span></span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">       39399 :         require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());</span></span>
 <span id="L162"><span class="lineNum">     162</span>              : </span>
-<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">       39374 :         siloConfig.turnOnReentrancyProtection();</span></span>
-<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">       39306 :         siloConfig.accrueInterestForBothSilos();</span></span>
-<span id="L165"><span class="lineNum">     165</span> <span class="tlaGNC">       39306 :         collateralTypeChanged = siloConfig.setOtherSiloAsCollateralSilo(_args.borrower);</span></span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">       39397 :         siloConfig.turnOnReentrancyProtection();</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">       39329 :         siloConfig.accrueInterestForBothSilos();</span></span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaGNC">       39329 :         collateralTypeChanged = siloConfig.setOtherSiloAsCollateralSilo(_args.borrower);</span></span>
 <span id="L166"><span class="lineNum">     166</span>              : </span>
-<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">       39306 :         ISiloConfig.ConfigData memory collateralConfig;</span></span>
-<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">       39306 :         ISiloConfig.ConfigData memory debtConfig;</span></span>
+<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">       39329 :         ISiloConfig.ConfigData memory collateralConfig;</span></span>
+<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">       39329 :         ISiloConfig.ConfigData memory debtConfig;</span></span>
 <span id="L169"><span class="lineNum">     169</span>              : </span>
-<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">       39306 :         (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow({_debtSilo: address(this)});</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">       39329 :         (collateralConfig, debtConfig) = siloConfig.getConfigsForBorrow({_debtSilo: address(this)});</span></span>
 <span id="L171"><span class="lineNum">     171</span>              : </span>
-<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">       39306 :         (assets, shares) = SiloLendingLib.borrow(</span></span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">       39329 :         (assets, shares) = SiloLendingLib.borrow(</span></span>
 <span id="L173"><span class="lineNum">     173</span>              :             debtConfig.debtShareToken,</span>
 <span id="L174"><span class="lineNum">     174</span>              :             debtConfig.token,</span>
 <span id="L175"><span class="lineNum">     175</span>              :             msg.sender,</span>
 <span id="L176"><span class="lineNum">     176</span>              :             _args</span>
 <span id="L177"><span class="lineNum">     177</span>              :         );</span>
 <span id="L178"><span class="lineNum">     178</span>              : </span>
-<span id="L179"><span class="lineNum">     179</span> <span class="tlaGNC">       38313 :         _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower);</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaGNC">       38361 :         _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower);</span></span>
 <span id="L180"><span class="lineNum">     180</span>              : </span>
-<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">       34137 :         siloConfig.turnOffReentrancyProtection();</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">       34160 :         siloConfig.turnOffReentrancyProtection();</span></span>
 <span id="L182"><span class="lineNum">     182</span>              : </span>
-<span id="L183"><span class="lineNum">     183</span> <span class="tlaGNC">       34137 :         _hookCallAfterBorrow(_args, Hook.BORROW, assets, shares);</span></span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaGNC">       34160 :         _hookCallAfterBorrow(_args, Hook.BORROW, assets, shares);</span></span>
 <span id="L184"><span class="lineNum">     184</span>              :     }</span>
 <span id="L185"><span class="lineNum">     185</span>              : </span>
 <span id="L186"><span class="lineNum">     186</span>              :     /// @notice Allows an address to borrow a specified amount of assets that will be back up with deposit made with the</span>
@@ -250,35 +250,35 @@
 <span id="L188"><span class="lineNum">     188</span>              :     /// @param _args check ISilo.BorrowArgs for details</span>
 <span id="L189"><span class="lineNum">     189</span>              :     /// @return assets Amount of assets borrowed</span>
 <span id="L190"><span class="lineNum">     190</span>              :     /// @return shares Amount of shares minted for the borrowed assets</span>
-<span id="L191"><span class="lineNum">     191</span> <span class="tlaGNC">       20818 :     function borrowSameAsset(ISilo.BorrowArgs memory _args)</span></span>
+<span id="L191"><span class="lineNum">     191</span> <span class="tlaGNC">       20838 :     function borrowSameAsset(ISilo.BorrowArgs memory _args)</span></span>
 <span id="L192"><span class="lineNum">     192</span>              :         external</span>
 <span id="L193"><span class="lineNum">     193</span>              :         returns (uint256 assets, uint256 shares, bool collateralTypeChanged)</span>
 <span id="L194"><span class="lineNum">     194</span>              :     {</span>
-<span id="L195"><span class="lineNum">     195</span> <span class="tlaGNC">       20818 :         _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);</span></span>
+<span id="L195"><span class="lineNum">     195</span> <span class="tlaGNC">       20838 :         _hookCallBeforeBorrow(_args, Hook.BORROW_SAME_ASSET);</span></span>
 <span id="L196"><span class="lineNum">     196</span>              : </span>
-<span id="L197"><span class="lineNum">     197</span> <span class="tlaGNC">       20818 :         ISiloConfig siloConfig = ShareTokenLib.siloConfig();</span></span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaGNC">       20838 :         ISiloConfig siloConfig = ShareTokenLib.siloConfig();</span></span>
 <span id="L198"><span class="lineNum">     198</span>              : </span>
-<span id="L199"><span class="lineNum">     199</span> <span class="tlaGNC">       20818 :         require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());</span></span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaGNC">       20838 :         require(!siloConfig.hasDebtInOtherSilo(address(this), _args.borrower), ISilo.BorrowNotPossible());</span></span>
 <span id="L200"><span class="lineNum">     200</span>              : </span>
-<span id="L201"><span class="lineNum">     201</span> <span class="tlaGNC">       20815 :         siloConfig.turnOnReentrancyProtection();</span></span>
-<span id="L202"><span class="lineNum">     202</span> <span class="tlaGNC">       20781 :         siloConfig.accrueInterestForSilo(address(this));</span></span>
-<span id="L203"><span class="lineNum">     203</span> <span class="tlaGNC">       20781 :         collateralTypeChanged = siloConfig.setThisSiloAsCollateralSilo(_args.borrower);</span></span>
+<span id="L201"><span class="lineNum">     201</span> <span class="tlaGNC">       20835 :         siloConfig.turnOnReentrancyProtection();</span></span>
+<span id="L202"><span class="lineNum">     202</span> <span class="tlaGNC">       20801 :         siloConfig.accrueInterestForSilo(address(this));</span></span>
+<span id="L203"><span class="lineNum">     203</span> <span class="tlaGNC">       20801 :         collateralTypeChanged = siloConfig.setThisSiloAsCollateralSilo(_args.borrower);</span></span>
 <span id="L204"><span class="lineNum">     204</span>              : </span>
-<span id="L205"><span class="lineNum">     205</span> <span class="tlaGNC">       20781 :         ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(this));</span></span>
-<span id="L206"><span class="lineNum">     206</span> <span class="tlaGNC">       20781 :         ISiloConfig.ConfigData memory debtConfig = collateralConfig;</span></span>
+<span id="L205"><span class="lineNum">     205</span> <span class="tlaGNC">       20801 :         ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(this));</span></span>
+<span id="L206"><span class="lineNum">     206</span> <span class="tlaGNC">       20801 :         ISiloConfig.ConfigData memory debtConfig = collateralConfig;</span></span>
 <span id="L207"><span class="lineNum">     207</span>              : </span>
-<span id="L208"><span class="lineNum">     208</span> <span class="tlaGNC">       20781 :         (assets, shares) = SiloLendingLib.borrow({</span></span>
+<span id="L208"><span class="lineNum">     208</span> <span class="tlaGNC">       20801 :         (assets, shares) = SiloLendingLib.borrow({</span></span>
 <span id="L209"><span class="lineNum">     209</span>              :             _debtShareToken: debtConfig.debtShareToken,</span>
 <span id="L210"><span class="lineNum">     210</span>              :             _token: debtConfig.token,</span>
 <span id="L211"><span class="lineNum">     211</span>              :             _spender: msg.sender,</span>
 <span id="L212"><span class="lineNum">     212</span>              :             _args: _args</span>
 <span id="L213"><span class="lineNum">     213</span>              :         });</span>
 <span id="L214"><span class="lineNum">     214</span>              : </span>
-<span id="L215"><span class="lineNum">     215</span> <span class="tlaGNC">       20772 :         _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower);</span></span>
+<span id="L215"><span class="lineNum">     215</span> <span class="tlaGNC">       20792 :         _checkLTVWithoutAccruingInterest(collateralConfig, debtConfig, _args.borrower);</span></span>
 <span id="L216"><span class="lineNum">     216</span>              : </span>
-<span id="L217"><span class="lineNum">     217</span> <span class="tlaGNC">       17696 :         siloConfig.turnOffReentrancyProtection();</span></span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaGNC">       17716 :         siloConfig.turnOffReentrancyProtection();</span></span>
 <span id="L218"><span class="lineNum">     218</span>              : </span>
-<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC">       17696 :         _hookCallAfterBorrow(_args, Hook.BORROW_SAME_ASSET, assets, shares);</span></span>
+<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC">       17716 :         _hookCallAfterBorrow(_args, Hook.BORROW_SAME_ASSET, assets, shares);</span></span>
 <span id="L220"><span class="lineNum">     220</span>              :     }</span>
 <span id="L221"><span class="lineNum">     221</span>              : </span>
 <span id="L222"><span class="lineNum">     222</span>              :     /// @notice Repays a given asset amount and returns the equivalent number of shares</span>
@@ -288,7 +288,7 @@
 <span id="L226"><span class="lineNum">     226</span>              :     /// @return assets number of assets that had been repay</span>
 <span id="L227"><span class="lineNum">     227</span>              :     /// @return shares number of shares that had been repay</span>
 <span id="L228"><span class="lineNum">     228</span>              :     // solhint-disable-next-line function-max-lines</span>
-<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">       24570 :     function repay(</span></span>
+<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">       24604 :     function repay(</span></span>
 <span id="L230"><span class="lineNum">     230</span>              :         uint256 _assets,</span>
 <span id="L231"><span class="lineNum">     231</span>              :         uint256 _shares,</span>
 <span id="L232"><span class="lineNum">     232</span>              :         address _borrower,</span>
@@ -297,27 +297,27 @@
 <span id="L235"><span class="lineNum">     235</span>              :         external</span>
 <span id="L236"><span class="lineNum">     236</span>              :         returns (uint256 assets, uint256 shares)</span>
 <span id="L237"><span class="lineNum">     237</span>              :     {</span>
-<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">       24570 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">       24604 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
 <span id="L239"><span class="lineNum">     239</span>              : </span>
-<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">       24570 :         if (_shareStorage.hookSetup.hooksBefore.matchAction(Hook.REPAY)) {</span></span>
+<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">       24604 :         if (_shareStorage.hookSetup.hooksBefore.matchAction(Hook.REPAY)) {</span></span>
 <span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">           4 :             bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer);</span></span>
 <span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">           4 :             IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), Hook.REPAY, data);</span></span>
 <span id="L243"><span class="lineNum">     243</span>              :         }</span>
 <span id="L244"><span class="lineNum">     244</span>              : </span>
-<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">       24570 :         ISiloConfig siloConfig = _shareStorage.siloConfig;</span></span>
+<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">       24604 :         ISiloConfig siloConfig = _shareStorage.siloConfig;</span></span>
 <span id="L246"><span class="lineNum">     246</span>              : </span>
-<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">       24570 :         siloConfig.turnOnReentrancyProtection();</span></span>
-<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">       24502 :         siloConfig.accrueInterestForSilo(address(this));</span></span>
+<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">       24604 :         siloConfig.turnOnReentrancyProtection();</span></span>
+<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">       24536 :         siloConfig.accrueInterestForSilo(address(this));</span></span>
 <span id="L249"><span class="lineNum">     249</span>              : </span>
-<span id="L250"><span class="lineNum">     250</span> <span class="tlaGNC">       24502 :         (address debtShareToken, address debtAsset) = siloConfig.getDebtShareTokenAndAsset(address(this));</span></span>
+<span id="L250"><span class="lineNum">     250</span> <span class="tlaGNC">       24536 :         (address debtShareToken, address debtAsset) = siloConfig.getDebtShareTokenAndAsset(address(this));</span></span>
 <span id="L251"><span class="lineNum">     251</span>              : </span>
-<span id="L252"><span class="lineNum">     252</span> <span class="tlaGNC">       24502 :         (assets, shares) = SiloLendingLib.repay(</span></span>
+<span id="L252"><span class="lineNum">     252</span> <span class="tlaGNC">       24536 :         (assets, shares) = SiloLendingLib.repay(</span></span>
 <span id="L253"><span class="lineNum">     253</span>              :             IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer</span>
 <span id="L254"><span class="lineNum">     254</span>              :         );</span>
 <span id="L255"><span class="lineNum">     255</span>              : </span>
-<span id="L256"><span class="lineNum">     256</span> <span class="tlaGNC">       24497 :         siloConfig.turnOffReentrancyProtection();</span></span>
+<span id="L256"><span class="lineNum">     256</span> <span class="tlaGNC">       24531 :         siloConfig.turnOffReentrancyProtection();</span></span>
 <span id="L257"><span class="lineNum">     257</span>              : </span>
-<span id="L258"><span class="lineNum">     258</span> <span class="tlaGNC">       24497 :         if (_shareStorage.hookSetup.hooksAfter.matchAction(Hook.REPAY)) {</span></span>
+<span id="L258"><span class="lineNum">     258</span> <span class="tlaGNC">       24531 :         if (_shareStorage.hookSetup.hooksAfter.matchAction(Hook.REPAY)) {</span></span>
 <span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">           3 :             bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares);</span></span>
 <span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">           3 :             IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), Hook.REPAY, data);</span></span>
 <span id="L261"><span class="lineNum">     261</span>              :         }</span>
@@ -584,49 +584,49 @@
 <span id="L522"><span class="lineNum">     522</span>              :     }</span>
 <span id="L523"><span class="lineNum">     523</span>              : </span>
 <span id="L524"><span class="lineNum">     524</span>              :     // this method expect interest to be already accrued</span>
-<span id="L525"><span class="lineNum">     525</span> <span class="tlaGNC">        3995 :     function _checkSolvencyWithoutAccruingInterest(</span></span>
+<span id="L525"><span class="lineNum">     525</span> <span class="tlaGNC">        3977 :     function _checkSolvencyWithoutAccruingInterest(</span></span>
 <span id="L526"><span class="lineNum">     526</span>              :         ISiloConfig.ConfigData memory _collateralConfig,</span>
 <span id="L527"><span class="lineNum">     527</span>              :         ISiloConfig.ConfigData memory _debtConfig,</span>
 <span id="L528"><span class="lineNum">     528</span>              :         address _user</span>
 <span id="L529"><span class="lineNum">     529</span>              :     ) private {</span>
-<span id="L530"><span class="lineNum">     530</span> <span class="tlaGNC">        3995 :         if (_debtConfig.silo != _collateralConfig.silo) {</span></span>
-<span id="L531"><span class="lineNum">     531</span> <span class="tlaGNC">        3711 :             _collateralConfig.callSolvencyOracleBeforeQuote();</span></span>
-<span id="L532"><span class="lineNum">     532</span> <span class="tlaGNC">        3711 :             _debtConfig.callSolvencyOracleBeforeQuote();</span></span>
+<span id="L530"><span class="lineNum">     530</span> <span class="tlaGNC">        3977 :         if (_debtConfig.silo != _collateralConfig.silo) {</span></span>
+<span id="L531"><span class="lineNum">     531</span> <span class="tlaGNC">        3693 :             _collateralConfig.callSolvencyOracleBeforeQuote();</span></span>
+<span id="L532"><span class="lineNum">     532</span> <span class="tlaGNC">        3693 :             _debtConfig.callSolvencyOracleBeforeQuote();</span></span>
 <span id="L533"><span class="lineNum">     533</span>              :         }</span>
 <span id="L534"><span class="lineNum">     534</span>              : </span>
-<span id="L535"><span class="lineNum">     535</span> <span class="tlaGNC">        3995 :         bool userIsSolvent = SiloSolvencyLib.isSolvent(</span></span>
+<span id="L535"><span class="lineNum">     535</span> <span class="tlaGNC">        3977 :         bool userIsSolvent = SiloSolvencyLib.isSolvent(</span></span>
 <span id="L536"><span class="lineNum">     536</span>              :             _collateralConfig, _debtConfig, _user, ISilo.AccrueInterestInMemory.No</span>
 <span id="L537"><span class="lineNum">     537</span>              :         );</span>
 <span id="L538"><span class="lineNum">     538</span>              : </span>
-<span id="L539"><span class="lineNum">     539</span> <span class="tlaGNC">        3995 :         require(userIsSolvent, ISilo.NotSolvent());</span></span>
+<span id="L539"><span class="lineNum">     539</span> <span class="tlaGNC">        3977 :         require(userIsSolvent, ISilo.NotSolvent());</span></span>
 <span id="L540"><span class="lineNum">     540</span>              :     }</span>
 <span id="L541"><span class="lineNum">     541</span>              : </span>
 <span id="L542"><span class="lineNum">     542</span>              :     // this method expect interest to be already accrued</span>
-<span id="L543"><span class="lineNum">     543</span> <span class="tlaGNC">       59085 :     function _checkLTVWithoutAccruingInterest(</span></span>
+<span id="L543"><span class="lineNum">     543</span> <span class="tlaGNC">       59153 :     function _checkLTVWithoutAccruingInterest(</span></span>
 <span id="L544"><span class="lineNum">     544</span>              :         ISiloConfig.ConfigData memory _collateralConfig,</span>
 <span id="L545"><span class="lineNum">     545</span>              :         ISiloConfig.ConfigData memory _debtConfig,</span>
 <span id="L546"><span class="lineNum">     546</span>              :         address _borrower</span>
 <span id="L547"><span class="lineNum">     547</span>              :     ) private {</span>
-<span id="L548"><span class="lineNum">     548</span> <span class="tlaGNC">       59085 :         if (_collateralConfig.silo != _debtConfig.silo) {</span></span>
-<span id="L549"><span class="lineNum">     549</span> <span class="tlaGNC">       38313 :             _collateralConfig.callMaxLtvOracleBeforeQuote();</span></span>
-<span id="L550"><span class="lineNum">     550</span> <span class="tlaGNC">       38313 :             _debtConfig.callMaxLtvOracleBeforeQuote();</span></span>
+<span id="L548"><span class="lineNum">     548</span> <span class="tlaGNC">       59153 :         if (_collateralConfig.silo != _debtConfig.silo) {</span></span>
+<span id="L549"><span class="lineNum">     549</span> <span class="tlaGNC">       38361 :             _collateralConfig.callMaxLtvOracleBeforeQuote();</span></span>
+<span id="L550"><span class="lineNum">     550</span> <span class="tlaGNC">       38361 :             _debtConfig.callMaxLtvOracleBeforeQuote();</span></span>
 <span id="L551"><span class="lineNum">     551</span>              :         }</span>
 <span id="L552"><span class="lineNum">     552</span>              : </span>
-<span id="L553"><span class="lineNum">     553</span> <span class="tlaGNC">       59085 :         bool borrowerIsBelowMaxLtv = SiloSolvencyLib.isBelowMaxLtv(</span></span>
+<span id="L553"><span class="lineNum">     553</span> <span class="tlaGNC">       59153 :         bool borrowerIsBelowMaxLtv = SiloSolvencyLib.isBelowMaxLtv(</span></span>
 <span id="L554"><span class="lineNum">     554</span>              :             _collateralConfig, _debtConfig, _borrower, ISilo.AccrueInterestInMemory.No</span>
 <span id="L555"><span class="lineNum">     555</span>              :         );</span>
 <span id="L556"><span class="lineNum">     556</span>              : </span>
-<span id="L557"><span class="lineNum">     557</span> <span class="tlaGNC">       59084 :         require(borrowerIsBelowMaxLtv, ISilo.AboveMaxLtv());</span></span>
+<span id="L557"><span class="lineNum">     557</span> <span class="tlaGNC">       59152 :         require(borrowerIsBelowMaxLtv, ISilo.AboveMaxLtv());</span></span>
 <span id="L558"><span class="lineNum">     558</span>              :     }</span>
 <span id="L559"><span class="lineNum">     559</span>              : </span>
-<span id="L560"><span class="lineNum">     560</span> <span class="tlaGNC">       29307 :     function _hookCallBeforeWithdraw(</span></span>
+<span id="L560"><span class="lineNum">     560</span> <span class="tlaGNC">       29304 :     function _hookCallBeforeWithdraw(</span></span>
 <span id="L561"><span class="lineNum">     561</span>              :         ISilo.WithdrawArgs calldata _args</span>
 <span id="L562"><span class="lineNum">     562</span>              :     ) private {</span>
-<span id="L563"><span class="lineNum">     563</span> <span class="tlaGNC">       29307 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
+<span id="L563"><span class="lineNum">     563</span> <span class="tlaGNC">       29304 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
 <span id="L564"><span class="lineNum">     564</span>              : </span>
-<span id="L565"><span class="lineNum">     565</span> <span class="tlaGNC">       29307 :         uint256 action = Hook.withdrawAction(_args.collateralType);</span></span>
+<span id="L565"><span class="lineNum">     565</span> <span class="tlaGNC">       29304 :         uint256 action = Hook.withdrawAction(_args.collateralType);</span></span>
 <span id="L566"><span class="lineNum">     566</span>              : </span>
-<span id="L567"><span class="lineNum">     567</span> <span class="tlaGNC">       29307 :         if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;</span></span>
+<span id="L567"><span class="lineNum">     567</span> <span class="tlaGNC">       29304 :         if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;</span></span>
 <span id="L568"><span class="lineNum">     568</span>              : </span>
 <span id="L569"><span class="lineNum">     569</span> <span class="tlaGNC">          12 :         bytes memory data =</span></span>
 <span id="L570"><span class="lineNum">     570</span> <span class="tlaGNC">          12 :             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender);</span></span>
@@ -634,16 +634,16 @@
 <span id="L572"><span class="lineNum">     572</span> <span class="tlaGNC">          12 :         IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), action, data);</span></span>
 <span id="L573"><span class="lineNum">     573</span>              :     }</span>
 <span id="L574"><span class="lineNum">     574</span>              : </span>
-<span id="L575"><span class="lineNum">     575</span> <span class="tlaGNC">       25776 :     function _hookCallAfterWithdraw(</span></span>
+<span id="L575"><span class="lineNum">     575</span> <span class="tlaGNC">       25771 :     function _hookCallAfterWithdraw(</span></span>
 <span id="L576"><span class="lineNum">     576</span>              :         ISilo.WithdrawArgs calldata _args,</span>
 <span id="L577"><span class="lineNum">     577</span>              :         uint256 assets,</span>
 <span id="L578"><span class="lineNum">     578</span>              :         uint256 shares</span>
 <span id="L579"><span class="lineNum">     579</span>              :     ) private {</span>
-<span id="L580"><span class="lineNum">     580</span> <span class="tlaGNC">       25776 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
+<span id="L580"><span class="lineNum">     580</span> <span class="tlaGNC">       25771 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
 <span id="L581"><span class="lineNum">     581</span>              : </span>
-<span id="L582"><span class="lineNum">     582</span> <span class="tlaGNC">       25776 :         uint256 action = Hook.withdrawAction(_args.collateralType);</span></span>
+<span id="L582"><span class="lineNum">     582</span> <span class="tlaGNC">       25771 :         uint256 action = Hook.withdrawAction(_args.collateralType);</span></span>
 <span id="L583"><span class="lineNum">     583</span>              : </span>
-<span id="L584"><span class="lineNum">     584</span> <span class="tlaGNC">       25776 :         if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;</span></span>
+<span id="L584"><span class="lineNum">     584</span> <span class="tlaGNC">       25771 :         if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;</span></span>
 <span id="L585"><span class="lineNum">     585</span>              : </span>
 <span id="L586"><span class="lineNum">     586</span> <span class="tlaGNC">           9 :         bytes memory data =</span></span>
 <span id="L587"><span class="lineNum">     587</span> <span class="tlaGNC">           9 :             abi.encodePacked(_args.assets, _args.shares, _args.receiver, _args.owner, _args.spender, assets, shares);</span></span>
@@ -651,10 +651,10 @@
 <span id="L589"><span class="lineNum">     589</span> <span class="tlaGNC">           9 :         IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);</span></span>
 <span id="L590"><span class="lineNum">     590</span>              :     }</span>
 <span id="L591"><span class="lineNum">     591</span>              : </span>
-<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC">       60194 :     function _hookCallBeforeBorrow(ISilo.BorrowArgs memory _args, uint256 action) private {</span></span>
-<span id="L593"><span class="lineNum">     593</span> <span class="tlaGNC">       60194 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
+<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC">       60237 :     function _hookCallBeforeBorrow(ISilo.BorrowArgs memory _args, uint256 action) private {</span></span>
+<span id="L593"><span class="lineNum">     593</span> <span class="tlaGNC">       60237 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
 <span id="L594"><span class="lineNum">     594</span>              : </span>
-<span id="L595"><span class="lineNum">     595</span> <span class="tlaGNC">       60194 :         if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;</span></span>
+<span id="L595"><span class="lineNum">     595</span> <span class="tlaGNC">       60237 :         if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;</span></span>
 <span id="L596"><span class="lineNum">     596</span>              : </span>
 <span id="L597"><span class="lineNum">     597</span> <span class="tlaGNC">           5 :         bytes memory data = abi.encodePacked(</span></span>
 <span id="L598"><span class="lineNum">     598</span>              :             _args.assets,</span>
@@ -667,15 +667,15 @@
 <span id="L605"><span class="lineNum">     605</span> <span class="tlaGNC">           5 :         IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), action, data);</span></span>
 <span id="L606"><span class="lineNum">     606</span>              :     }</span>
 <span id="L607"><span class="lineNum">     607</span>              : </span>
-<span id="L608"><span class="lineNum">     608</span> <span class="tlaGNC">       51833 :     function _hookCallAfterBorrow(</span></span>
+<span id="L608"><span class="lineNum">     608</span> <span class="tlaGNC">       51876 :     function _hookCallAfterBorrow(</span></span>
 <span id="L609"><span class="lineNum">     609</span>              :         ISilo.BorrowArgs memory _args,</span>
 <span id="L610"><span class="lineNum">     610</span>              :         uint256 action,</span>
 <span id="L611"><span class="lineNum">     611</span>              :         uint256 assets,</span>
 <span id="L612"><span class="lineNum">     612</span>              :         uint256 shares</span>
 <span id="L613"><span class="lineNum">     613</span>              :     ) private {</span>
-<span id="L614"><span class="lineNum">     614</span> <span class="tlaGNC">       51833 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
+<span id="L614"><span class="lineNum">     614</span> <span class="tlaGNC">       51876 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
 <span id="L615"><span class="lineNum">     615</span>              : </span>
-<span id="L616"><span class="lineNum">     616</span> <span class="tlaGNC">       51833 :         if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;</span></span>
+<span id="L616"><span class="lineNum">     616</span> <span class="tlaGNC">       51876 :         if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;</span></span>
 <span id="L617"><span class="lineNum">     617</span>              : </span>
 <span id="L618"><span class="lineNum">     618</span> <span class="tlaGNC">           3 :         bytes memory data = abi.encodePacked(</span></span>
 <span id="L619"><span class="lineNum">     619</span>              :             _args.assets,</span>
@@ -717,23 +717,23 @@
 <span id="L655"><span class="lineNum">     655</span> <span class="tlaGNC">           3 :         IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);</span></span>
 <span id="L656"><span class="lineNum">     656</span>              :     }</span>
 <span id="L657"><span class="lineNum">     657</span>              : </span>
-<span id="L658"><span class="lineNum">     658</span> <span class="tlaGNC">      137060 :     function _hookCallBeforeDeposit(</span></span>
+<span id="L658"><span class="lineNum">     658</span> <span class="tlaGNC">      137059 :     function _hookCallBeforeDeposit(</span></span>
 <span id="L659"><span class="lineNum">     659</span>              :         ISilo.CollateralType _collateralType,</span>
 <span id="L660"><span class="lineNum">     660</span>              :         uint256 _assets,</span>
 <span id="L661"><span class="lineNum">     661</span>              :         uint256 _shares,</span>
 <span id="L662"><span class="lineNum">     662</span>              :         address _receiver</span>
 <span id="L663"><span class="lineNum">     663</span>              :     ) private {</span>
-<span id="L664"><span class="lineNum">     664</span> <span class="tlaGNC">      137060 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
-<span id="L665"><span class="lineNum">     665</span> <span class="tlaGNC">      137060 :         uint256 action = Hook.depositAction(_collateralType);</span></span>
+<span id="L664"><span class="lineNum">     664</span> <span class="tlaGNC">      137059 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
+<span id="L665"><span class="lineNum">     665</span> <span class="tlaGNC">      137059 :         uint256 action = Hook.depositAction(_collateralType);</span></span>
 <span id="L666"><span class="lineNum">     666</span>              : </span>
-<span id="L667"><span class="lineNum">     667</span> <span class="tlaGNC">      137060 :         if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;</span></span>
+<span id="L667"><span class="lineNum">     667</span> <span class="tlaGNC">      137059 :         if (!_shareStorage.hookSetup.hooksBefore.matchAction(action)) return;</span></span>
 <span id="L668"><span class="lineNum">     668</span>              : </span>
 <span id="L669"><span class="lineNum">     669</span> <span class="tlaGNC">          20 :         bytes memory data = abi.encodePacked(_assets, _shares, _receiver);</span></span>
 <span id="L670"><span class="lineNum">     670</span>              : </span>
 <span id="L671"><span class="lineNum">     671</span> <span class="tlaGNC">          20 :         IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), action, data);</span></span>
 <span id="L672"><span class="lineNum">     672</span>              :     }</span>
 <span id="L673"><span class="lineNum">     673</span>              : </span>
-<span id="L674"><span class="lineNum">     674</span> <span class="tlaGNC">      136920 :     function _hookCallAfterDeposit(</span></span>
+<span id="L674"><span class="lineNum">     674</span> <span class="tlaGNC">      136919 :     function _hookCallAfterDeposit(</span></span>
 <span id="L675"><span class="lineNum">     675</span>              :         ISilo.CollateralType _collateralType,</span>
 <span id="L676"><span class="lineNum">     676</span>              :         uint256 _assets,</span>
 <span id="L677"><span class="lineNum">     677</span>              :         uint256 _shares,</span>
@@ -741,10 +741,10 @@
 <span id="L679"><span class="lineNum">     679</span>              :         uint256 _exactAssets,</span>
 <span id="L680"><span class="lineNum">     680</span>              :         uint256 _exactShare</span>
 <span id="L681"><span class="lineNum">     681</span>              :     ) private {</span>
-<span id="L682"><span class="lineNum">     682</span> <span class="tlaGNC">      136920 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
-<span id="L683"><span class="lineNum">     683</span> <span class="tlaGNC">      136920 :         uint256 action = Hook.depositAction(_collateralType);</span></span>
+<span id="L682"><span class="lineNum">     682</span> <span class="tlaGNC">      136919 :         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();</span></span>
+<span id="L683"><span class="lineNum">     683</span> <span class="tlaGNC">      136919 :         uint256 action = Hook.depositAction(_collateralType);</span></span>
 <span id="L684"><span class="lineNum">     684</span>              : </span>
-<span id="L685"><span class="lineNum">     685</span> <span class="tlaGNC">      136920 :         if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;</span></span>
+<span id="L685"><span class="lineNum">     685</span> <span class="tlaGNC">      136919 :         if (!_shareStorage.hookSetup.hooksAfter.matchAction(action)) return;</span></span>
 <span id="L686"><span class="lineNum">     686</span>              : </span>
 <span id="L687"><span class="lineNum">     687</span> <span class="tlaGNC">          10 :         bytes memory data = abi.encodePacked(_assets, _shares, _receiver, _exactAssets, _exactShare);</span></span>
 <span id="L688"><span class="lineNum">     688</span>              : </span>

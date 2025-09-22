@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-08-22 12:51:36</td>
+            <td class="headerValue">2025-09-22 14:46:55</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -150,7 +150,7 @@
 <span id="L88"><span class="lineNum">      88</span>              :     }</span>
 <span id="L89"><span class="lineNum">      89</span>              : </span>
 <span id="L90"><span class="lineNum">      90</span>              :     /// @inheritdoc IInterestRateModel</span>
-<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">      166454 :     function getCompoundInterestRateAndUpdate(</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">      166496 :     function getCompoundInterestRateAndUpdate(</span></span>
 <span id="L92"><span class="lineNum">      92</span>              :         uint256 _collateralAssets,</span>
 <span id="L93"><span class="lineNum">      93</span>              :         uint256 _debtAssets,</span>
 <span id="L94"><span class="lineNum">      94</span>              :         uint256 _interestRateTimestamp</span>
@@ -161,14 +161,14 @@
 <span id="L99"><span class="lineNum">      99</span>              :         returns (uint256 rcomp)</span>
 <span id="L100"><span class="lineNum">     100</span>              :     {</span>
 <span id="L101"><span class="lineNum">     101</span>              :         // assume that caller is Silo</span>
-<span id="L102"><span class="lineNum">     102</span> <span class="tlaGNC">      166454 :         address silo = msg.sender;</span></span>
+<span id="L102"><span class="lineNum">     102</span> <span class="tlaGNC">      166496 :         address silo = msg.sender;</span></span>
 <span id="L103"><span class="lineNum">     103</span>              : </span>
-<span id="L104"><span class="lineNum">     104</span> <span class="tlaGNC">      166454 :         Setup storage currentSetup = getSetup[silo];</span></span>
+<span id="L104"><span class="lineNum">     104</span> <span class="tlaGNC">      166496 :         Setup storage currentSetup = getSetup[silo];</span></span>
 <span id="L105"><span class="lineNum">     105</span>              : </span>
-<span id="L106"><span class="lineNum">     106</span> <span class="tlaGNC">      166454 :         int256 ri;</span></span>
-<span id="L107"><span class="lineNum">     107</span> <span class="tlaGNC">      166454 :         int256 Tcrit;</span></span>
+<span id="L106"><span class="lineNum">     106</span> <span class="tlaGNC">      166496 :         int256 ri;</span></span>
+<span id="L107"><span class="lineNum">     107</span> <span class="tlaGNC">      166496 :         int256 Tcrit;</span></span>
 <span id="L108"><span class="lineNum">     108</span>              : </span>
-<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">      166454 :         (rcomp, ri, Tcrit) = calculateCompoundInterestRate(</span></span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">      166496 :         (rcomp, ri, Tcrit) = calculateCompoundInterestRate(</span></span>
 <span id="L110"><span class="lineNum">     110</span>              :             getConfig(silo),</span>
 <span id="L111"><span class="lineNum">     111</span>              :             _collateralAssets,</span>
 <span id="L112"><span class="lineNum">     112</span>              :             _debtAssets,</span>
@@ -176,13 +176,13 @@
 <span id="L114"><span class="lineNum">     114</span>              :             block.timestamp</span>
 <span id="L115"><span class="lineNum">     115</span>              :         );</span>
 <span id="L116"><span class="lineNum">     116</span>              : </span>
-<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">      166454 :         currentSetup.initialized = true;</span></span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">      166496 :         currentSetup.initialized = true;</span></span>
 <span id="L118"><span class="lineNum">     118</span>              : </span>
-<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">      166454 :         currentSetup.ri = ri &gt; type(int112).max</span></span>
+<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">      166496 :         currentSetup.ri = ri &gt; type(int112).max</span></span>
 <span id="L120"><span class="lineNum">     120</span>              :             ? type(int112).max</span>
 <span id="L121"><span class="lineNum">     121</span>              :             : ri &lt; type(int112).min ? type(int112).min : int112(ri);</span>
 <span id="L122"><span class="lineNum">     122</span>              : </span>
-<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">      166454 :         currentSetup.Tcrit = Tcrit &gt; type(int112).max</span></span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">      166496 :         currentSetup.Tcrit = Tcrit &gt; type(int112).max</span></span>
 <span id="L124"><span class="lineNum">     124</span>              :             ? type(int112).max</span>
 <span id="L125"><span class="lineNum">     125</span>              :             : Tcrit &lt; type(int112).min ? type(int112).min : int112(Tcrit);</span>
 <span id="L126"><span class="lineNum">     126</span>              :     }</span>
@@ -193,16 +193,16 @@
 <span id="L131"><span class="lineNum">     131</span>              :     }</span>
 <span id="L132"><span class="lineNum">     132</span>              : </span>
 <span id="L133"><span class="lineNum">     133</span>              :     /// @inheritdoc IInterestRateModel</span>
-<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">      930249 :     function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)</span></span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">      933213 :     function getCompoundInterestRate(address _silo, uint256 _blockTimestamp)</span></span>
 <span id="L135"><span class="lineNum">     135</span>              :         external</span>
 <span id="L136"><span class="lineNum">     136</span>              :         view</span>
 <span id="L137"><span class="lineNum">     137</span>              :         virtual</span>
 <span id="L138"><span class="lineNum">     138</span>              :         override</span>
 <span id="L139"><span class="lineNum">     139</span>              :         returns (uint256 rcomp)</span>
 <span id="L140"><span class="lineNum">     140</span>              :     {</span>
-<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">      930249 :         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">      933213 :         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();</span></span>
 <span id="L142"><span class="lineNum">     142</span>              : </span>
-<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">      930249 :         (rcomp,,) = calculateCompoundInterestRate(</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">      933213 :         (rcomp,,) = calculateCompoundInterestRate(</span></span>
 <span id="L144"><span class="lineNum">     144</span>              :             getConfig(_silo),</span>
 <span id="L145"><span class="lineNum">     145</span>              :             data.collateralAssets,</span>
 <span id="L146"><span class="lineNum">     146</span>              :             data.debtAssets,</span>
@@ -250,13 +250,13 @@
 <span id="L188"><span class="lineNum">     188</span>              :     }</span>
 <span id="L189"><span class="lineNum">     189</span>              : </span>
 <span id="L190"><span class="lineNum">     190</span> <span class="tlaGNC">           3 :     function getConfig(address _silo) public view virtual returns (Config memory fullConfig) {</span></span>
-<span id="L191"><span class="lineNum">     191</span> <span class="tlaGNC">     1098328 :         Setup memory siloSetup = getSetup[_silo];</span></span>
-<span id="L192"><span class="lineNum">     192</span> <span class="tlaGNC">     1098328 :         fullConfig = irmConfig.getConfig();</span></span>
+<span id="L191"><span class="lineNum">     191</span> <span class="tlaGNC">     1101334 :         Setup memory siloSetup = getSetup[_silo];</span></span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaGNC">     1101334 :         fullConfig = irmConfig.getConfig();</span></span>
 <span id="L193"><span class="lineNum">     193</span>              : </span>
 <span id="L194"><span class="lineNum">     194</span>              :         // if initialized, read ri and Tcrit from storage. Otherwise use config values.</span>
-<span id="L195"><span class="lineNum">     195</span> <span class="tlaGNC">      392724 :         if (siloSetup.initialized) {</span></span>
-<span id="L196"><span class="lineNum">     196</span> <span class="tlaGNC">      392724 :             fullConfig.ri = siloSetup.ri;</span></span>
-<span id="L197"><span class="lineNum">     197</span> <span class="tlaGNC">      392724 :             fullConfig.Tcrit = siloSetup.Tcrit;</span></span>
+<span id="L195"><span class="lineNum">     195</span> <span class="tlaGNC">      393387 :         if (siloSetup.initialized) {</span></span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaGNC">      393387 :             fullConfig.ri = siloSetup.ri;</span></span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaGNC">      393387 :             fullConfig.Tcrit = siloSetup.Tcrit;</span></span>
 <span id="L198"><span class="lineNum">     198</span>              :         }</span>
 <span id="L199"><span class="lineNum">     199</span>              :     }</span>
 <span id="L200"><span class="lineNum">     200</span>              : </span>
@@ -326,7 +326,7 @@
 <span id="L264"><span class="lineNum">     264</span>              :         int256 ri,</span>
 <span id="L265"><span class="lineNum">     265</span>              :         int256 Tcrit</span>
 <span id="L266"><span class="lineNum">     266</span>              :     ) {</span>
-<span id="L267"><span class="lineNum">     267</span> <span class="tlaGNC">     1096704 :         (rcomp, ri, Tcrit,) = calculateCompoundInterestRateWithOverflowDetection(</span></span>
+<span id="L267"><span class="lineNum">     267</span> <span class="tlaGNC">     1099710 :         (rcomp, ri, Tcrit,) = calculateCompoundInterestRateWithOverflowDetection(</span></span>
 <span id="L268"><span class="lineNum">     268</span>              :             _c,</span>
 <span id="L269"><span class="lineNum">     269</span>              :             _totalDeposits,</span>
 <span id="L270"><span class="lineNum">     270</span>              :             _totalBorrowAmount,</span>
@@ -348,66 +348,66 @@
 <span id="L286"><span class="lineNum">     286</span>              :         int256 Tcrit,</span>
 <span id="L287"><span class="lineNum">     287</span>              :         bool overflow</span>
 <span id="L288"><span class="lineNum">     288</span>              :     ) {</span>
-<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">     1100985 :         ri = _c.ri;</span></span>
-<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">     1100985 :         Tcrit = _c.Tcrit;</span></span>
+<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">     1103991 :         ri = _c.ri;</span></span>
+<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">     1103991 :         Tcrit = _c.Tcrit;</span></span>
 <span id="L291"><span class="lineNum">     291</span>              : </span>
 <span id="L292"><span class="lineNum">     292</span>              :         // struct for local vars to avoid &quot;Stack too deep&quot;</span>
-<span id="L293"><span class="lineNum">     293</span> <span class="tlaGNC">     1100985 :         LocalVarsRComp memory _l = LocalVarsRComp(0,0,0,0,0,0,0,0,0,0);</span></span>
+<span id="L293"><span class="lineNum">     293</span> <span class="tlaGNC">     1103991 :         LocalVarsRComp memory _l = LocalVarsRComp(0,0,0,0,0,0,0,0,0,0);</span></span>
 <span id="L294"><span class="lineNum">     294</span>              : </span>
-<span id="L295"><span class="lineNum">     295</span> <span class="tlaGNC">     1100985 :         require(_interestRateTimestamp &lt;= _blockTimestamp, InvalidTimestamps());</span></span>
+<span id="L295"><span class="lineNum">     295</span> <span class="tlaGNC">     1103991 :         require(_interestRateTimestamp &lt;= _blockTimestamp, InvalidTimestamps());</span></span>
 <span id="L296"><span class="lineNum">     296</span>              : </span>
 <span id="L297"><span class="lineNum">     297</span>              :         // There can't be an underflow in the subtraction because of the previous check</span>
 <span id="L298"><span class="lineNum">     298</span>              :         unchecked {</span>
 <span id="L299"><span class="lineNum">     299</span>              :             // length of time period in seconds</span>
-<span id="L300"><span class="lineNum">     300</span> <span class="tlaGNC">     1100984 :             _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();</span></span>
+<span id="L300"><span class="lineNum">     300</span> <span class="tlaGNC">     1103990 :             _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();</span></span>
 <span id="L301"><span class="lineNum">     301</span>              :         }</span>
 <span id="L302"><span class="lineNum">     302</span>              : </span>
-<span id="L303"><span class="lineNum">     303</span> <span class="tlaGNC">     1100984 :         int256 decimalPoints = int256(_DP);</span></span>
+<span id="L303"><span class="lineNum">     303</span> <span class="tlaGNC">     1103990 :         int256 decimalPoints = int256(_DP);</span></span>
 <span id="L304"><span class="lineNum">     304</span>              : </span>
-<span id="L305"><span class="lineNum">     305</span> <span class="tlaGNC">     1100984 :         _l.u = SiloMathLib.calculateUtilization(_DP, _totalDeposits, _totalBorrowAmount).toInt256();</span></span>
+<span id="L305"><span class="lineNum">     305</span> <span class="tlaGNC">     1103990 :         _l.u = SiloMathLib.calculateUtilization(_DP, _totalDeposits, _totalBorrowAmount).toInt256();</span></span>
 <span id="L306"><span class="lineNum">     306</span>              : </span>
 <span id="L307"><span class="lineNum">     307</span>              :         // slopei := ki * (u0 - uopt )</span>
-<span id="L308"><span class="lineNum">     308</span> <span class="tlaGNC">     1100984 :         _l.slopei = _c.ki * (_l.u - _c.uopt) / decimalPoints;</span></span>
+<span id="L308"><span class="lineNum">     308</span> <span class="tlaGNC">     1103990 :         _l.slopei = _c.ki * (_l.u - _c.uopt) / decimalPoints;</span></span>
 <span id="L309"><span class="lineNum">     309</span>              : </span>
-<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">     1100984 :         if (_l.u &gt; _c.ucrit) {</span></span>
+<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">     1103990 :         if (_l.u &gt; _c.ucrit) {</span></span>
 <span id="L311"><span class="lineNum">     311</span>              :             // rp := kcrit * (1 + Tcrit) * (u0 - ucrit )</span>
-<span id="L312"><span class="lineNum">     312</span> <span class="tlaGNC">       37939 :             _l.rp = _c.kcrit * (decimalPoints + Tcrit) / decimalPoints * (_l.u - _c.ucrit) / decimalPoints;</span></span>
+<span id="L312"><span class="lineNum">     312</span> <span class="tlaGNC">       37923 :             _l.rp = _c.kcrit * (decimalPoints + Tcrit) / decimalPoints * (_l.u - _c.ucrit) / decimalPoints;</span></span>
 <span id="L313"><span class="lineNum">     313</span>              :             // slope := slopei + kcrit * beta * (u0 - ucrit )</span>
-<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">       37939 :             _l.slope = _l.slopei + _c.kcrit * _c.beta / decimalPoints * (_l.u - _c.ucrit) / decimalPoints;</span></span>
+<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">       37923 :             _l.slope = _l.slopei + _c.kcrit * _c.beta / decimalPoints * (_l.u - _c.ucrit) / decimalPoints;</span></span>
 <span id="L315"><span class="lineNum">     315</span>              :             // Tcrit := Tcrit + beta * T</span>
-<span id="L316"><span class="lineNum">     316</span> <span class="tlaGNC">       37939 :             Tcrit = Tcrit + _c.beta * _l.T;</span></span>
+<span id="L316"><span class="lineNum">     316</span> <span class="tlaGNC">       37923 :             Tcrit = Tcrit + _c.beta * _l.T;</span></span>
 <span id="L317"><span class="lineNum">     317</span>              :         } else {</span>
 <span id="L318"><span class="lineNum">     318</span>              :             // rp := min (0, klow * (u0 - ulow ))</span>
-<span id="L319"><span class="lineNum">     319</span> <span class="tlaGNC">     1063045 :             _l.rp = _min(0, _c.klow * (_l.u - _c.ulow) / decimalPoints);</span></span>
+<span id="L319"><span class="lineNum">     319</span> <span class="tlaGNC">     1066067 :             _l.rp = _min(0, _c.klow * (_l.u - _c.ulow) / decimalPoints);</span></span>
 <span id="L320"><span class="lineNum">     320</span>              :             // slope := slopei</span>
-<span id="L321"><span class="lineNum">     321</span> <span class="tlaGNC">     1063045 :             _l.slope = _l.slopei;</span></span>
+<span id="L321"><span class="lineNum">     321</span> <span class="tlaGNC">     1066067 :             _l.slope = _l.slopei;</span></span>
 <span id="L322"><span class="lineNum">     322</span>              :             // Tcrit := max (0, Tcrit - beta * T)</span>
-<span id="L323"><span class="lineNum">     323</span> <span class="tlaGNC">     1063045 :             Tcrit = _max(0, Tcrit - _c.beta * _l.T);</span></span>
+<span id="L323"><span class="lineNum">     323</span> <span class="tlaGNC">     1066067 :             Tcrit = _max(0, Tcrit - _c.beta * _l.T);</span></span>
 <span id="L324"><span class="lineNum">     324</span>              :         }</span>
 <span id="L325"><span class="lineNum">     325</span>              : </span>
 <span id="L326"><span class="lineNum">     326</span>              :         // rlin := klin * u0 # lower bound between t0 and t1</span>
-<span id="L327"><span class="lineNum">     327</span> <span class="tlaGNC">     1100984 :         _l.rlin = _c.klin * _l.u / decimalPoints;</span></span>
+<span id="L327"><span class="lineNum">     327</span> <span class="tlaGNC">     1103990 :         _l.rlin = _c.klin * _l.u / decimalPoints;</span></span>
 <span id="L328"><span class="lineNum">     328</span>              :         // ri := max(ri , rlin )</span>
-<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">     1100984 :         ri = _max(ri , _l.rlin);</span></span>
+<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">     1103990 :         ri = _max(ri , _l.rlin);</span></span>
 <span id="L330"><span class="lineNum">     330</span>              :         // r0 := ri + rp # interest rate at t0 ignoring lower bound</span>
-<span id="L331"><span class="lineNum">     331</span> <span class="tlaGNC">     1100984 :         _l.r0 = ri + _l.rp;</span></span>
+<span id="L331"><span class="lineNum">     331</span> <span class="tlaGNC">     1103990 :         _l.r0 = ri + _l.rp;</span></span>
 <span id="L332"><span class="lineNum">     332</span>              :         // r1 := r0 + slope *T # what interest rate would be at t1 ignoring lower bound</span>
-<span id="L333"><span class="lineNum">     333</span> <span class="tlaGNC">     1100984 :         _l.r1 = _l.r0 + _l.slope * _l.T;</span></span>
+<span id="L333"><span class="lineNum">     333</span> <span class="tlaGNC">     1103990 :         _l.r1 = _l.r0 + _l.slope * _l.T;</span></span>
 <span id="L334"><span class="lineNum">     334</span>              : </span>
 <span id="L335"><span class="lineNum">     335</span>              :         // Calculating the compound interest</span>
 <span id="L336"><span class="lineNum">     336</span>              : </span>
-<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">     1100984 :         if (_l.r0 &gt;= _l.rlin &amp;&amp; _l.r1 &gt;= _l.rlin) {</span></span>
+<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">     1103990 :         if (_l.r0 &gt;= _l.rlin &amp;&amp; _l.r1 &gt;= _l.rlin) {</span></span>
 <span id="L338"><span class="lineNum">     338</span>              :             // lower bound isn’t activated</span>
 <span id="L339"><span class="lineNum">     339</span>              :             // rcomp := exp (( r0 + r1) * T / 2) - 1</span>
-<span id="L340"><span class="lineNum">     340</span> <span class="tlaGNC">      341865 :             _l.x = (_l.r0 + _l.r1) * _l.T / 2;</span></span>
-<span id="L341"><span class="lineNum">     341</span> <span class="tlaGNC">      759119 :         } else if (_l.r0 &lt; _l.rlin &amp;&amp; _l.r1 &lt; _l.rlin) {</span></span>
+<span id="L340"><span class="lineNum">     340</span> <span class="tlaGNC">      342962 :             _l.x = (_l.r0 + _l.r1) * _l.T / 2;</span></span>
+<span id="L341"><span class="lineNum">     341</span> <span class="tlaGNC">      761028 :         } else if (_l.r0 &lt; _l.rlin &amp;&amp; _l.r1 &lt; _l.rlin) {</span></span>
 <span id="L342"><span class="lineNum">     342</span>              :             // lower bound is active during the whole time</span>
 <span id="L343"><span class="lineNum">     343</span>              :             // rcomp := exp( rlin * T) - 1</span>
-<span id="L344"><span class="lineNum">     344</span> <span class="tlaGNC">      555900 :             _l.x = _l.rlin * _l.T;</span></span>
-<span id="L345"><span class="lineNum">     345</span> <span class="tlaGNC">      203219 :         } else if (_l.r0 &gt;= _l.rlin &amp;&amp; _l.r1 &lt; _l.rlin) {</span></span>
+<span id="L344"><span class="lineNum">     344</span> <span class="tlaGNC">      554783 :             _l.x = _l.rlin * _l.T;</span></span>
+<span id="L345"><span class="lineNum">     345</span> <span class="tlaGNC">      206245 :         } else if (_l.r0 &gt;= _l.rlin &amp;&amp; _l.r1 &lt; _l.rlin) {</span></span>
 <span id="L346"><span class="lineNum">     346</span>              :             // lower bound is active after some time</span>
 <span id="L347"><span class="lineNum">     347</span>              :             // rcomp := exp( rlin *T - (r0 - rlin )^2/ slope /2) - 1</span>
-<span id="L348"><span class="lineNum">     348</span> <span class="tlaGNC">      203218 :             _l.x = _l.rlin * _l.T - (_l.r0 - _l.rlin)**2 / _l.slope / 2;</span></span>
+<span id="L348"><span class="lineNum">     348</span> <span class="tlaGNC">      206244 :             _l.x = _l.rlin * _l.T - (_l.r0 - _l.rlin)**2 / _l.slope / 2;</span></span>
 <span id="L349"><span class="lineNum">     349</span>              :         } else {</span>
 <span id="L350"><span class="lineNum">     350</span>              :             // lower bound is active before some time</span>
 <span id="L351"><span class="lineNum">     351</span>              :             // rcomp := exp( rlin *T + (r1 - rlin )^2/ slope /2) - 1</span>
@@ -415,23 +415,23 @@
 <span id="L353"><span class="lineNum">     353</span>              :         }</span>
 <span id="L354"><span class="lineNum">     354</span>              : </span>
 <span id="L355"><span class="lineNum">     355</span>              :         // ri := max(ri + slopei * T, rlin )</span>
-<span id="L356"><span class="lineNum">     356</span> <span class="tlaGNC">     1100984 :         ri = _max(ri + _l.slopei * _l.T, _l.rlin);</span></span>
+<span id="L356"><span class="lineNum">     356</span> <span class="tlaGNC">     1103990 :         ri = _max(ri + _l.slopei * _l.T, _l.rlin);</span></span>
 <span id="L357"><span class="lineNum">     357</span>              : </span>
 <span id="L358"><span class="lineNum">     358</span>              :         // Checking for the overflow below. In case of the overflow, ri and Tcrit will be set back to zeros. Rcomp is</span>
 <span id="L359"><span class="lineNum">     359</span>              :         // calculated to not make an overflow in totalBorrowedAmount, totalDeposits.</span>
-<span id="L360"><span class="lineNum">     360</span> <span class="tlaGNC">     1100984 :         (rcomp, overflow) = _calculateRComp(_totalDeposits, _totalBorrowAmount, _l.x);</span></span>
+<span id="L360"><span class="lineNum">     360</span> <span class="tlaGNC">     1103990 :         (rcomp, overflow) = _calculateRComp(_totalDeposits, _totalBorrowAmount, _l.x);</span></span>
 <span id="L361"><span class="lineNum">     361</span>              : </span>
 <span id="L362"><span class="lineNum">     362</span>              :         // if we got a limit for rcomp, we reset Tcrit and Ri model parameters to zeros</span>
 <span id="L363"><span class="lineNum">     363</span>              :         // Resetting parameters will make IR drop from 10k%/year to 100% per year and it will start growing again.</span>
 <span id="L364"><span class="lineNum">     364</span>              :         // If we don’t reset, we will have to wait ~2 weeks to make IR drop (low utilization ratio required).</span>
 <span id="L365"><span class="lineNum">     365</span>              :         // So zeroing parameters is a only hope for a market to get well again, otherwise it will be almost impossible.</span>
-<span id="L366"><span class="lineNum">     366</span> <span class="tlaGNC">     1100984 :         bool capApplied;</span></span>
+<span id="L366"><span class="lineNum">     366</span> <span class="tlaGNC">     1103990 :         bool capApplied;</span></span>
 <span id="L367"><span class="lineNum">     367</span>              : </span>
-<span id="L368"><span class="lineNum">     368</span> <span class="tlaGNC">     1100984 :         (rcomp, capApplied) = _compoundInterestRateCAP(rcomp, _l.T.toUint256());</span></span>
+<span id="L368"><span class="lineNum">     368</span> <span class="tlaGNC">     1103990 :         (rcomp, capApplied) = _compoundInterestRateCAP(rcomp, _l.T.toUint256());</span></span>
 <span id="L369"><span class="lineNum">     369</span>              : </span>
-<span id="L370"><span class="lineNum">     370</span> <span class="tlaGNC">     1100984 :         if (overflow || capApplied) {</span></span>
-<span id="L371"><span class="lineNum">     371</span> <span class="tlaGNC">        9492 :             ri = 0;</span></span>
-<span id="L372"><span class="lineNum">     372</span> <span class="tlaGNC">        9492 :             Tcrit = 0;</span></span>
+<span id="L370"><span class="lineNum">     370</span> <span class="tlaGNC">     1103990 :         if (overflow || capApplied) {</span></span>
+<span id="L371"><span class="lineNum">     371</span> <span class="tlaGNC">        9493 :             ri = 0;</span></span>
+<span id="L372"><span class="lineNum">     372</span> <span class="tlaGNC">        9493 :             Tcrit = 0;</span></span>
 <span id="L373"><span class="lineNum">     373</span>              :         }</span>
 <span id="L374"><span class="lineNum">     374</span>              :     }</span>
 <span id="L375"><span class="lineNum">     375</span>              : </span>
@@ -467,41 +467,41 @@
 <span id="L405"><span class="lineNum">     405</span>              : </span>
 <span id="L406"><span class="lineNum">     406</span>              :     /// @dev checks for the overflow in rcomp calculations, accruedInterest, totalDeposits and totalBorrowedAmount.</span>
 <span id="L407"><span class="lineNum">     407</span>              :     /// In case of the overflow, rcomp is reduced to make totalDeposits and totalBorrowedAmount &lt;= 2**196.</span>
-<span id="L408"><span class="lineNum">     408</span> <span class="tlaGNC">     1101240 :     function _calculateRComp(</span></span>
+<span id="L408"><span class="lineNum">     408</span> <span class="tlaGNC">     1104246 :     function _calculateRComp(</span></span>
 <span id="L409"><span class="lineNum">     409</span>              :         uint256 _totalDeposits,</span>
 <span id="L410"><span class="lineNum">     410</span>              :         uint256 _totalBorrowAmount,</span>
 <span id="L411"><span class="lineNum">     411</span>              :         int256 _x</span>
 <span id="L412"><span class="lineNum">     412</span>              :     ) internal pure virtual returns (uint256 rcomp, bool overflow) {</span>
-<span id="L413"><span class="lineNum">     413</span> <span class="tlaGNC">     1101240 :         int256 rcompSigned;</span></span>
+<span id="L413"><span class="lineNum">     413</span> <span class="tlaGNC">     1104246 :         int256 rcompSigned;</span></span>
 <span id="L414"><span class="lineNum">     414</span>              : </span>
-<span id="L415"><span class="lineNum">     415</span> <span class="tlaGNC">     1101240 :         if (_x &gt;= X_MAX) {</span></span>
-<span id="L416"><span class="lineNum">     416</span> <span class="tlaGNC">        2389 :             rcomp = RCOMP_MAX;</span></span>
+<span id="L415"><span class="lineNum">     415</span> <span class="tlaGNC">     1104246 :         if (_x &gt;= X_MAX) {</span></span>
+<span id="L416"><span class="lineNum">     416</span> <span class="tlaGNC">        2355 :             rcomp = RCOMP_MAX;</span></span>
 <span id="L417"><span class="lineNum">     417</span>              :             // overflow, but not return now. It counts as an overflow to reset model parameters,</span>
 <span id="L418"><span class="lineNum">     418</span>              :             // but later on we can get overflow worse.</span>
-<span id="L419"><span class="lineNum">     419</span> <span class="tlaGNC">        2389 :             overflow = true;</span></span>
+<span id="L419"><span class="lineNum">     419</span> <span class="tlaGNC">        2355 :             overflow = true;</span></span>
 <span id="L420"><span class="lineNum">     420</span>              :         } else {</span>
-<span id="L421"><span class="lineNum">     421</span> <span class="tlaGNC">     1098851 :             rcompSigned = _x.exp() - int256(_DP);</span></span>
-<span id="L422"><span class="lineNum">     422</span> <span class="tlaGNC">     1098851 :             rcomp = rcompSigned &gt; 0 ? rcompSigned.toUint256() : 0;</span></span>
+<span id="L421"><span class="lineNum">     421</span> <span class="tlaGNC">     1101891 :             rcompSigned = _x.exp() - int256(_DP);</span></span>
+<span id="L422"><span class="lineNum">     422</span> <span class="tlaGNC">     1101891 :             rcomp = rcompSigned &gt; 0 ? rcompSigned.toUint256() : 0;</span></span>
 <span id="L423"><span class="lineNum">     423</span>              :         }</span>
 <span id="L424"><span class="lineNum">     424</span>              : </span>
 <span id="L425"><span class="lineNum">     425</span>              :         unchecked {</span>
 <span id="L426"><span class="lineNum">     426</span>              :             // maxAmount = max(_totalDeposits, _totalBorrowAmount) to see</span>
 <span id="L427"><span class="lineNum">     427</span>              :             // if any of this variables overflow in result.</span>
-<span id="L428"><span class="lineNum">     428</span> <span class="tlaGNC">     1101240 :             uint256 maxAmount = _totalDeposits &gt; _totalBorrowAmount ? _totalDeposits : _totalBorrowAmount;</span></span>
+<span id="L428"><span class="lineNum">     428</span> <span class="tlaGNC">     1104246 :             uint256 maxAmount = _totalDeposits &gt; _totalBorrowAmount ? _totalDeposits : _totalBorrowAmount;</span></span>
 <span id="L429"><span class="lineNum">     429</span>              : </span>
-<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">     1101240 :             if (maxAmount &gt;= ASSET_DATA_OVERFLOW_LIMIT) {</span></span>
-<span id="L431"><span class="lineNum">     431</span> <span class="tlaGNC">        4480 :                 return (0, true);</span></span>
+<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">     1104246 :             if (maxAmount &gt;= ASSET_DATA_OVERFLOW_LIMIT) {</span></span>
+<span id="L431"><span class="lineNum">     431</span> <span class="tlaGNC">        4515 :                 return (0, true);</span></span>
 <span id="L432"><span class="lineNum">     432</span>              :             }</span>
 <span id="L433"><span class="lineNum">     433</span>              : </span>
-<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">     1096760 :             uint256 rcompMulTBA = rcomp * _totalBorrowAmount;</span></span>
+<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">     1099731 :             uint256 rcompMulTBA = rcomp * _totalBorrowAmount;</span></span>
 <span id="L435"><span class="lineNum">     435</span>              : </span>
-<span id="L436"><span class="lineNum">     436</span> <span class="tlaGNC">     1096760 :             if (rcompMulTBA == 0) {</span></span>
-<span id="L437"><span class="lineNum">     437</span> <span class="tlaGNC">      632254 :                 return (rcomp, overflow);</span></span>
+<span id="L436"><span class="lineNum">     436</span> <span class="tlaGNC">     1099731 :             if (rcompMulTBA == 0) {</span></span>
+<span id="L437"><span class="lineNum">     437</span> <span class="tlaGNC">      633017 :                 return (rcomp, overflow);</span></span>
 <span id="L438"><span class="lineNum">     438</span>              :             }</span>
 <span id="L439"><span class="lineNum">     439</span>              : </span>
 <span id="L440"><span class="lineNum">     440</span>              :             if (</span>
-<span id="L441"><span class="lineNum">     441</span> <span class="tlaGNC">      464506 :                 rcompMulTBA / rcomp != _totalBorrowAmount ||</span></span>
-<span id="L442"><span class="lineNum">     442</span> <span class="tlaGNC">      464506 :                 rcompMulTBA / _DP &gt; ASSET_DATA_OVERFLOW_LIMIT - maxAmount</span></span>
+<span id="L441"><span class="lineNum">     441</span> <span class="tlaGNC">      466714 :                 rcompMulTBA / rcomp != _totalBorrowAmount ||</span></span>
+<span id="L442"><span class="lineNum">     442</span> <span class="tlaGNC">      466714 :                 rcompMulTBA / _DP &gt; ASSET_DATA_OVERFLOW_LIMIT - maxAmount</span></span>
 <span id="L443"><span class="lineNum">     443</span> <span class="tlaGNC">        1031 :             ) {</span></span>
 <span id="L444"><span class="lineNum">     444</span> <span class="tlaGNC">        1031 :                 rcomp = (ASSET_DATA_OVERFLOW_LIMIT - maxAmount) * _DP / _totalBorrowAmount;</span></span>
 <span id="L445"><span class="lineNum">     445</span>              : </span>
@@ -511,13 +511,13 @@
 <span id="L449"><span class="lineNum">     449</span>              :     }</span>
 <span id="L450"><span class="lineNum">     450</span>              : </span>
 <span id="L451"><span class="lineNum">     451</span>              :     /// @dev Returns the largest of two numbers</span>
-<span id="L452"><span class="lineNum">     452</span> <span class="tlaGNC">     3269516 :     function _max(int256 a, int256 b) internal pure virtual returns (int256) {</span></span>
-<span id="L453"><span class="lineNum">     453</span> <span class="tlaGNC">     3269516 :         return a &gt; b ? a : b;</span></span>
+<span id="L452"><span class="lineNum">     452</span> <span class="tlaGNC">     3278550 :     function _max(int256 a, int256 b) internal pure virtual returns (int256) {</span></span>
+<span id="L453"><span class="lineNum">     453</span> <span class="tlaGNC">     3278550 :         return a &gt; b ? a : b;</span></span>
 <span id="L454"><span class="lineNum">     454</span>              :     }</span>
 <span id="L455"><span class="lineNum">     455</span>              : </span>
 <span id="L456"><span class="lineNum">     456</span>              :     /// @dev Returns the smallest of two numbers</span>
-<span id="L457"><span class="lineNum">     457</span> <span class="tlaGNC">     1063227 :     function _min(int256 a, int256 b) internal pure virtual returns (int256) {</span></span>
-<span id="L458"><span class="lineNum">     458</span> <span class="tlaGNC">     1063227 :         return a &lt; b ? a : b;</span></span>
+<span id="L457"><span class="lineNum">     457</span> <span class="tlaGNC">     1066249 :     function _min(int256 a, int256 b) internal pure virtual returns (int256) {</span></span>
+<span id="L458"><span class="lineNum">     458</span> <span class="tlaGNC">     1066249 :         return a &lt; b ? a : b;</span></span>
 <span id="L459"><span class="lineNum">     459</span>              :     }</span>
 <span id="L460"><span class="lineNum">     460</span>              : </span>
 <span id="L461"><span class="lineNum">     461</span>              :     /// @dev in order to keep methods pure and bee able to deploy easily new caps,</span>
@@ -529,15 +529,15 @@
 <span id="L467"><span class="lineNum">     467</span>              :     /// rcomp in this case, which will serve as the limit.</span>
 <span id="L468"><span class="lineNum">     468</span>              :     /// If we got this limit, we should make Tcrit and Ri equal to zero, otherwise there is a low probability of the</span>
 <span id="L469"><span class="lineNum">     469</span>              :     /// market going back below the limit.</span>
-<span id="L470"><span class="lineNum">     470</span> <span class="tlaGNC">     1100984 :     function _compoundInterestRateCAP(uint256 _rcomp, uint256 _t)</span></span>
+<span id="L470"><span class="lineNum">     470</span> <span class="tlaGNC">     1103990 :     function _compoundInterestRateCAP(uint256 _rcomp, uint256 _t)</span></span>
 <span id="L471"><span class="lineNum">     471</span>              :         internal</span>
 <span id="L472"><span class="lineNum">     472</span>              :         pure</span>
 <span id="L473"><span class="lineNum">     473</span>              :         virtual</span>
 <span id="L474"><span class="lineNum">     474</span>              :         returns (uint256 updatedRcomp, bool capApplied)</span>
 <span id="L475"><span class="lineNum">     475</span>              :     {</span>
 <span id="L476"><span class="lineNum">     476</span>              :         // uint256 cap = 10**20 / (365 * 24 * 3600); // this is per-second rate because _l.T is in seconds.</span>
-<span id="L477"><span class="lineNum">     477</span> <span class="tlaGNC">     1100984 :         uint256 cap = 3170979198376 * _t;</span></span>
-<span id="L478"><span class="lineNum">     478</span> <span class="tlaGNC">     1100984 :         return _rcomp &gt; cap ? (cap, true) : (_rcomp, false);</span></span>
+<span id="L477"><span class="lineNum">     477</span> <span class="tlaGNC">     1103990 :         uint256 cap = 3170979198376 * _t;</span></span>
+<span id="L478"><span class="lineNum">     478</span> <span class="tlaGNC">     1103990 :         return _rcomp &gt; cap ? (cap, true) : (_rcomp, false);</span></span>
 <span id="L479"><span class="lineNum">     479</span>              :     }</span>
 <span id="L480"><span class="lineNum">     480</span>              : </span>
 <span id="L481"><span class="lineNum">     481</span>              :     /// @notice limit for rcur - RCUR_CAP (FE/integrations, does not affect our protocol).</span>
