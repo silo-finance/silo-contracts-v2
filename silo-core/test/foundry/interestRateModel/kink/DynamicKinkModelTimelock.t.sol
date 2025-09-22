@@ -66,13 +66,21 @@ contract DynamicKinkModelTimelockTest is KinkCommonTest {
 
         irm.updateConfig(config);
 
-        assertNotEq(irm.pendingIrmConfig(), address(0), "pendingIrmConfig exists");
+        address pendingIrmConfig = irm.pendingIrmConfig();
+
+        assertNotEq(pendingIrmConfig, address(0), "pendingIrmConfig exists");
         assertEq(irm.activateConfigAt(), block.timestamp + 1 days, "activateConfigAt is not correct");
 
         _assertModelWorksWithDesiredConfig(prevIrmConfig);
 
-        vm.expectCall(irm.pendingIrmConfig(), abi.encodeWithSelector(IDynamicKinkModelConfig.getConfig.selector));
+        vm.expectCall(pendingIrmConfig, abi.encodeWithSelector(IDynamicKinkModelConfig.getConfig.selector));
         irm.getModelStateAndConfig(true);
+
+        vm.expectCall(pendingIrmConfig, abi.encodeWithSelector(IDynamicKinkModelConfig.getConfig.selector));
+        irm.getPendingCurrentInterestRate(silo, block.timestamp);
+
+        vm.expectCall(pendingIrmConfig, abi.encodeWithSelector(IDynamicKinkModelConfig.getConfig.selector));
+        irm.getPendingCompoundInterestRate(silo, block.timestamp);
     }
     
     /*
