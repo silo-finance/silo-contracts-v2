@@ -375,20 +375,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         emit NewConfig(newCfg, activateConfigAt);
     }
 
-    // hard rule: utilization in the model should never be above 100%.
-    function _calculateUtiliation(uint256 _collateralAssets, uint256 _debtAssets)
-        internal
-        pure
-        virtual
-        returns (int256)
-    {
-        if (_debtAssets == 0) return 0;
-        if (_collateralAssets == 0 || _debtAssets >= _collateralAssets) return _DP;
-
-        // forge-lint: disable-next-line(unsafe-typecast)
-        return int256(Math.mulDiv(_debtAssets, uint256(_DP), _collateralAssets, Math.Rounding.Floor));
-    }
-
     function _getCompoundInterestRate(
         address _silo,
         uint256 _blockTimestamp,
@@ -470,6 +456,20 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         } catch {
             rcur = 0;
         }
+    }
+
+    // hard rule: utilization in the model should never be above 100%.
+    function _calculateUtiliation(uint256 _collateralAssets, uint256 _debtAssets)
+        internal
+        pure
+        virtual
+        returns (int256)
+    {
+        if (_debtAssets == 0) return 0;
+        if (_collateralAssets == 0 || _debtAssets >= _collateralAssets) return _DP;
+
+        // forge-lint: disable-next-line(unsafe-typecast)
+        return int256(Math.mulDiv(_debtAssets, uint256(_DP), _collateralAssets, Math.Rounding.Floor));
     }
 
     /// @dev we expect _kmin and _kmax to be in the range of int96
