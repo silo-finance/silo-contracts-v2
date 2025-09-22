@@ -50,8 +50,10 @@ contract SiloRouterPendleLPTsTest is Test {
 
         assertEq(pendleLPToken.balanceOf(depositor), amount, "Expect to have 100 pendle LP tokens");
 
+        address userRouter = address(router.predictUserSiloRouterContract(depositor));
+
         vm.prank(depositor);
-        pendleLPToken.approve(address(router), amount);
+        pendleLPToken.approve(userRouter, amount);
 
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.wrapPendleLP, (wrapper, pendleLPToken, depositor, amount));
@@ -75,14 +77,16 @@ contract SiloRouterPendleLPTsTest is Test {
         vm.prank(pendleLPWhale);
         pendleLPToken.transfer(depositor, amount);
 
+        address userRouter = address(router.predictUserSiloRouterContract(depositor));
+
         vm.prank(depositor);
         pendleLPToken.approve(address(wrapper), amount);
 
         vm.prank(depositor);
-        wrapper.wrap(address(router), amount);
+        wrapper.wrap(userRouter, amount);
 
         assertEq(pendleLPToken.balanceOf(depositor), 0, "Expect to have no pendle LP tokens");
-        assertEq(IERC20(address(wrapper)).balanceOf(address(router)), amount, "Expect to have 100 wrapped pendle LP tokens");
+        assertEq(IERC20(address(wrapper)).balanceOf(userRouter), amount, "Expect to have 100 wrapped pendle LP tokens");
 
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.unwrapPendleLP, (wrapper, depositor, amount));
@@ -91,7 +95,7 @@ contract SiloRouterPendleLPTsTest is Test {
         router.multicall{value: 0}(data);
 
         assertEq(pendleLPToken.balanceOf(depositor), amount, "Expect to have 100 pendle LP tokens");
-        assertEq(IERC20(address(wrapper)).balanceOf(address(router)), 0, "Expect to have no wrapped pendle LP tokens");
+        assertEq(IERC20(address(wrapper)).balanceOf(userRouter), 0, "Expect to have no wrapped pendle LP tokens");
     }
 
     /*
@@ -106,14 +110,16 @@ contract SiloRouterPendleLPTsTest is Test {
         vm.prank(pendleLPWhale);
         pendleLPToken.transfer(depositor, amount);
 
+        address userRouter = address(router.predictUserSiloRouterContract(depositor));
+
         vm.prank(depositor);
         pendleLPToken.approve(address(wrapper), amount);
 
         vm.prank(depositor);
-        wrapper.wrap(address(router), amount);
+        wrapper.wrap(userRouter, amount);
 
         assertEq(pendleLPToken.balanceOf(depositor), 0, "Expect to have no pendle LP tokens");
-        assertEq(IERC20(address(wrapper)).balanceOf(address(router)), amount, "Expect to have 100 wrapped pendle LP tokens");
+        assertEq(IERC20(address(wrapper)).balanceOf(userRouter), amount, "Expect to have 100 wrapped pendle LP tokens");
 
         bytes[] memory data = new bytes[](1);
         data[0] = abi.encodeCall(SiloRouterV2Implementation.unwrapAllPendleLP, (wrapper, depositor));
@@ -122,6 +128,6 @@ contract SiloRouterPendleLPTsTest is Test {
         router.multicall{value: 0}(data);
 
         assertEq(pendleLPToken.balanceOf(depositor), amount, "Expect to have 100 pendle LP tokens");
-        assertEq(IERC20(address(wrapper)).balanceOf(address(router)), 0, "Expect to have no wrapped pendle LP tokens");
+        assertEq(IERC20(address(wrapper)).balanceOf(userRouter), 0, "Expect to have no wrapped pendle LP tokens");
     }
 }

@@ -90,6 +90,9 @@ Supporting the following scenarios:
 contract SiloRouterV2Implementation is ISiloRouterV2Implementation {
     using SafeERC20 for IERC20;
 
+    /// @notice Transient variable to store the msgSender
+    address public transient msgSender;
+
     /// @inheritdoc ISiloRouterV2Implementation
     function wrap(IWrappedNativeToken _native, uint256 _amount) public payable virtual {
         _native.deposit{value: _amount}();
@@ -163,7 +166,7 @@ contract SiloRouterV2Implementation is ISiloRouterV2Implementation {
 
     /// @inheritdoc ISiloRouterV2Implementation
     function transferFrom(IERC20 _token, address _to, uint256 _amount) public payable virtual {
-        _token.safeTransferFrom(msg.sender, _to, _amount);
+        _token.safeTransferFrom(msgSender, _to, _amount);
     }
 
     /// @inheritdoc ISiloRouterV2Implementation
@@ -177,7 +180,7 @@ contract SiloRouterV2Implementation is ISiloRouterV2Implementation {
         uint256 _amount,
         ISilo.CollateralType _collateral
     ) external payable virtual returns (uint256 shares) {
-        shares = _silo.deposit(_amount, msg.sender, _collateral);
+        shares = _silo.deposit(_amount, msgSender, _collateral);
     }
 
     /// @inheritdoc ISiloRouterV2Implementation
@@ -187,7 +190,7 @@ contract SiloRouterV2Implementation is ISiloRouterV2Implementation {
         address _receiver,
         ISilo.CollateralType _collateral
     ) external payable virtual returns (uint256 shares) {
-        shares = _silo.withdraw(_amount, _receiver, msg.sender, _collateral);
+        shares = _silo.withdraw(_amount, _receiver,msgSender, _collateral);
     }
 
     /// @inheritdoc ISiloRouterV2Implementation
@@ -196,8 +199,8 @@ contract SiloRouterV2Implementation is ISiloRouterV2Implementation {
         address _receiver,
         ISilo.CollateralType _collateral
     ) external payable virtual returns (uint256 assets) {
-        uint256 sharesAmount = _silo.maxRedeem(msg.sender, _collateral);
-        assets = _silo.redeem(sharesAmount, _receiver, msg.sender, _collateral);
+        uint256 sharesAmount = _silo.maxRedeem(msgSender, _collateral);
+        assets = _silo.redeem(sharesAmount, _receiver,msgSender, _collateral);
     }
 
     /// @inheritdoc ISiloRouterV2Implementation
@@ -206,7 +209,7 @@ contract SiloRouterV2Implementation is ISiloRouterV2Implementation {
         uint256 _assets,
         address _receiver
     ) external payable virtual returns (uint256 shares) {
-        shares = _silo.borrow(_assets, _receiver, msg.sender);
+        shares = _silo.borrow(_assets, _receiver, msgSender);
     }
 
     /// @inheritdoc ISiloRouterV2Implementation
@@ -215,17 +218,17 @@ contract SiloRouterV2Implementation is ISiloRouterV2Implementation {
         uint256 _assets,
         address _receiver
     ) external payable virtual returns (uint256 shares) {
-        shares = _silo.borrowSameAsset(_assets, _receiver, msg.sender);
+        shares = _silo.borrowSameAsset(_assets, _receiver, msgSender);
     }
 
     /// @inheritdoc ISiloRouterV2Implementation
     function repay(ISilo _silo, uint256 _assets) public payable virtual returns (uint256 shares) {
-        shares = _silo.repay(_assets, msg.sender);
+        shares = _silo.repay(_assets, msgSender);
     }
 
     /// @inheritdoc ISiloRouterV2Implementation
     function repayAll(ISilo _silo) external payable virtual returns (uint256 shares) {
-        uint256 repayAmount = _silo.maxRepay(msg.sender);
+        uint256 repayAmount = _silo.maxRepay(msgSender);
         IERC20 asset = IERC20(_silo.asset());
 
         transferFrom(asset, address(this), repayAmount);
@@ -239,7 +242,7 @@ contract SiloRouterV2Implementation is ISiloRouterV2Implementation {
         IWrappedNativeToken _native,
         ISilo _silo
     ) external payable virtual returns (uint256 shares) {
-        uint256 repayAmount = _silo.maxRepay(msg.sender);
+        uint256 repayAmount = _silo.maxRepay(msgSender);
 
         wrap(_native, repayAmount);
         approve(IERC20(address(_native)), address(_silo), repayAmount);

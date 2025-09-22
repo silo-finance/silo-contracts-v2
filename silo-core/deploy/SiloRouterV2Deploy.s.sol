@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloRouterV2} from "silo-core/contracts/silo-router/SiloRouterV2.sol";
-import {SiloRouterV2Implementation} from "silo-core/contracts/silo-router/SiloRouterV2Implementation.sol";
 
 /**
     FOUNDRY_PROFILE=core \
@@ -27,9 +26,7 @@ contract SiloRouterV2Deploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        SiloRouterV2Implementation implementation = new SiloRouterV2Implementation();
-
-        siloRouterV2 = new SiloRouterV2(deployer, address(implementation));
+        siloRouterV2 = new SiloRouterV2(deployer);
 
         vm.stopBroadcast();
 
