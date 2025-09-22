@@ -58,6 +58,28 @@ contract DynamicKinkModelTest is KinkCommonTest {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_initRevert_whenInvalidRcompCap -vv
+    */
+    function test_kink_initRevert_whenInvalidRcompCap() public {
+        IDynamicKinkModel.Config memory config;
+        IDynamicKinkModel.ImmutableArgs memory immutableArgs = _defaultImmutableArgs();
+        immutableArgs.rcompCap = 0;
+
+        vm.expectRevert(IDynamicKinkModel.InvalidRcompCap.selector);
+        FACTORY.create(config, immutableArgs, address(this), address(this), bytes32(0));
+
+        immutableArgs.rcompCap = int96(irm.RCUR_CAP() + 1);
+
+        vm.expectRevert(IDynamicKinkModel.InvalidRcompCap.selector);
+        FACTORY.create(config, immutableArgs, address(this), address(this), bytes32(0));
+
+        //counterexample for rcompCapPerSecond
+        immutableArgs.rcompCap = int96(irm.RCUR_CAP());
+
+        FACTORY.create(config, immutableArgs, address(this), address(this), bytes32(0));
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_getModelStateAndConfig_config -vv
     */
     /// forge-config: core_test.fuzz.runs = 1000
