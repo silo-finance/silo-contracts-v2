@@ -273,6 +273,10 @@ interface IDynamicKinkModel {
         view 
         returns (ModelState memory state, Config memory config, ImmutableConfig memory immutableConfig);
 
+    /// @notice Maximum compound interest rate per second (prevents extreme rates)
+    /// @return cap Maximum per-second compound interest rate in 18 decimals
+    function RCOMP_CAP_PER_SECOND() external view returns (int256 cap); // solhint-disable-line func-name-mixedcase
+    
     /// @notice Maximum current interest rate (prevents extreme APRs)
     /// @return cap Maximum annual interest rate in 18 decimals (e.g., 25e18 = 2500% APR)
     function RCUR_CAP() external view returns (int256 cap); // solhint-disable-line func-name-mixedcase

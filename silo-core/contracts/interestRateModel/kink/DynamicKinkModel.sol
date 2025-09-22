@@ -40,6 +40,9 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     /// @dev seconds per year used in interest calculations.
     int256 public constant ONE_YEAR = 365 days;
 
+    /// @dev maximum value of compound interest per second the model will return. This is per-second rate.
+    int256 public constant RCOMP_CAP_PER_SECOND = RCUR_CAP / ONE_YEAR;
+
     /// @dev maximum exp() input to prevent an overflow.
     int256 public constant X_MAX = 11 * _DP;
 
