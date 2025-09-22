@@ -44,12 +44,12 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
 
     DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModel());
 
-    IDynamicKinkModel.ImmutableConfig immutableConfig = _defaultImmutableConfig();
+    IDynamicKinkModel.ImmutableArgs immutableArgs = _defaultImmutableArgs();
 
     function setUp() public {
         IDynamicKinkModel.Config memory emptyConfig;
         irm = DynamicKinkModel(
-            address(FACTORY.create(emptyConfig, immutableConfig, address(this), address(this), bytes32(0)))
+            address(FACTORY.create(emptyConfig, immutableArgs, address(this), address(this), bytes32(0)))
         );
     }
 
@@ -60,7 +60,7 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
         vm.assume(!_isValidConfig(_config));
 
         vm.expectRevert();
-        FACTORY.create(_config, immutableConfig, address(this), address(this), bytes32(0));
+        FACTORY.create(_config, immutableArgs, address(this), address(this), bytes32(0));
     }
 
     /*
@@ -78,7 +78,7 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
 
         vm.prank(_deployer);
         IInterestRateModel deployedIrm =
-            FACTORY.create(config, immutableConfig, address(this), address(this), _externalSalt);
+            FACTORY.create(config, immutableArgs, address(this), address(this), _externalSalt);
 
         assertEq(predictedAddress, address(deployedIrm), "predicted address is not the same as the deployed address");
     }
@@ -89,10 +89,10 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
     /// forge-config: core_test.fuzz.runs = 1000
     function test_kink_create_pass_fuzz(
         RandomKinkConfig memory _config,
-        IDynamicKinkModel.ImmutableConfig memory _immutableConfig
-    ) public whenValidConfig(_config) whenValidImmutableConfig(_immutableConfig) {
+        IDynamicKinkModel.ImmutableArgs memory _immutableConfig
+    ) public whenValidConfig(_config) whenValidImmutableArgs(_immutableConfig) {
         vm.assume(_immutableConfig.timelock <= FACTORY.IRM().MAX_TIMELOCK());
-        vm.assume(_immutableConfig.rcompCapPerSecond <= FACTORY.IRM().RCOMP_CAP_PER_SECOND());
+        vm.assume(_immutableConfig.rcompCap <= FACTORY.IRM().RCUR_CAP());
 
         address predictedAddress = FACTORY.predictAddress(address(this), bytes32(0));
 
@@ -121,7 +121,7 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
 
         try FACTORY.generateConfig(_in) returns (IDynamicKinkModel.Config memory config) {
             // any config can be used to create IRM
-            FACTORY.create(config, immutableConfig, address(this), address(this), bytes32(0));
+            FACTORY.create(config, immutableArgs, address(this), address(this), bytes32(0));
         } catch {
             vm.assume(false);
         }

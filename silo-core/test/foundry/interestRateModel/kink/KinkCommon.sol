@@ -160,7 +160,7 @@ abstract contract KinkCommon {
         });
     }
 
-    function _defaultImmutableConfig() internal pure returns (IDynamicKinkModel.ImmutableConfig memory) {
-        return IDynamicKinkModel.ImmutableConfig({timelock: 0 days, rcompCapPerSecond: int96(10e18) / 365 days});
+    function _defaultImmutableArgs() internal view returns (IDynamicKinkModel.ImmutableArgs memory) {
+        return IDynamicKinkModel.ImmutableArgs({timelock: 0 days, rcompCap: int96(irm.RCUR_CAP())});
     }
 }

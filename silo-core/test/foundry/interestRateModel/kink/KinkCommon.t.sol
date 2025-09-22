@@ -15,10 +15,10 @@ contract KinkCommonTest is Test, KinkCommon {
         _;
     }
 
-    modifier whenValidImmutableConfig(IDynamicKinkModel.ImmutableConfig memory _immutableConfig) {
-        vm.assume(_immutableConfig.timelock <= irm.MAX_TIMELOCK());
-        vm.assume(_immutableConfig.rcompCapPerSecond > 0);
-        vm.assume(_immutableConfig.rcompCapPerSecond <= irm.RCOMP_CAP_PER_SECOND());
+    modifier whenValidImmutableArgs(IDynamicKinkModel.ImmutableArgs memory _immutableArgs) {
+        vm.assume(_immutableArgs.timelock <= irm.MAX_TIMELOCK());
+        vm.assume(_immutableArgs.rcompCap > 0);
+        vm.assume(_immutableArgs.rcompCap <= irm.RCUR_CAP());
 
         _;
     }

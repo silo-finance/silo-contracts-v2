@@ -30,7 +30,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
         IDynamicKinkModel.Config memory emptyConfig;
 
         irm = DynamicKinkModel(
-            address(FACTORY.create(emptyConfig, _defaultImmutableConfig(), address(this), address(this), bytes32(0)))
+            address(FACTORY.create(emptyConfig, _defaultImmutableArgs(), address(this), address(this), bytes32(0)))
         );
     }
 
@@ -40,10 +40,10 @@ contract DynamicKinkModelTest is KinkCommonTest {
     function test_kink_initRevert_whenSiloZero() public {
         DynamicKinkModel newModel = new DynamicKinkModel();
         IDynamicKinkModel.Config memory config;
-        IDynamicKinkModel.ImmutableConfig memory immutableConfig;
+        IDynamicKinkModel.ImmutableArgs memory immutableArgs;
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        newModel.initialize(config, immutableConfig, address(this), address(0));
+        newModel.initialize(config, immutableArgs, address(this), address(0));
     }
 
     /*
@@ -51,10 +51,10 @@ contract DynamicKinkModelTest is KinkCommonTest {
     */
     function test_kink_initRevert_whenAlreadyInitialized() public {
         IDynamicKinkModel.Config memory config;
-        IDynamicKinkModel.ImmutableConfig memory immutableConfig;
+        IDynamicKinkModel.ImmutableArgs memory immutableArgs;
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        irm.initialize(config, immutableConfig, address(this), address(this));
+        irm.initialize(config, immutableArgs, address(this), address(this));
     }
 
     /*
@@ -86,7 +86,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
     function test_kink_getModelStateAndConfig_state() public {
         irm = DynamicKinkModel(
             address(
-                FACTORY.create(_defaultConfig(), _defaultImmutableConfig(), address(this), address(this), bytes32(0))
+                FACTORY.create(_defaultConfig(), _defaultImmutableArgs(), address(this), address(this), bytes32(0))
             )
         );
 
@@ -117,20 +117,20 @@ contract DynamicKinkModelTest is KinkCommonTest {
     ) public whenValidConfig(_config) {
         vm.assume(_silo != address(0));
 
-        IDynamicKinkModel.ImmutableConfig memory immutableConfig = _defaultImmutableConfig();
+        IDynamicKinkModel.ImmutableArgs memory immutableArgs = _defaultImmutableArgs();
 
         vm.expectEmit(true, true, true, true);
         emit IDynamicKinkModel.Initialized(_initialOwner, _silo);
 
         IDynamicKinkModel.Config memory config = _toConfig(_config);
         DynamicKinkModel newModel =
-            DynamicKinkModel(address(FACTORY.create(config, immutableConfig, _initialOwner, _silo, bytes32(0))));
+            DynamicKinkModel(address(FACTORY.create(config, immutableArgs, _initialOwner, _silo, bytes32(0))));
 
         _assertConfigEq(config, _getIRMConfig(newModel), "init never revert");
 
         // re-init should revert
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        newModel.initialize(config, immutableConfig, _initialOwner, _silo);
+        newModel.initialize(config, immutableArgs, _initialOwner, _silo);
     }
 
     /*
