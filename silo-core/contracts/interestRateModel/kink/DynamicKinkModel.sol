@@ -357,12 +357,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     ) internal virtual {
         require(activateConfigAt <= block.timestamp, PendingUpdate());
 
-        uint256 activeAt = block.timestamp;
-
-        if (_immutableConfig.timelock != 0) {
-            activeAt = block.timestamp + _immutableConfig.timelock;
-            activateConfigAt = activeAt;
-        }
+        activateConfigAt = block.timestamp + _immutableConfig.timelock;
 
         verifyConfig(_config);
 
