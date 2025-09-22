@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-09-22 14:46:55</td>
+            <td class="headerValue">2025-09-22 15:11:15</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -124,8 +124,8 @@
 <span id="L62"><span class="lineNum">      62</span>              :     /// @dev This is a safety check for casting unsigned to signed integers</span>
 <span id="L63"><span class="lineNum">      63</span>              :     /// @param _value The uint256 value to check</span>
 <span id="L64"><span class="lineNum">      64</span>              :     /// @return wouldOverflow true if casting would cause overflow</span>
-<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">        6852 :     function wouldOverflowOnCastToInt256(uint256 _value) internal pure returns (bool wouldOverflow) {</span></span>
-<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">        6852 :         return _value &gt; uint256(type(int256).max); // TODO check openzeppelin SafeCast.sol</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">        6858 :     function wouldOverflowOnCastToInt256(uint256 _value) internal pure returns (bool wouldOverflow) {</span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">        6858 :         return _value &gt; uint256(type(int256).max); // TODO check openzeppelin SafeCast.sol</span></span>
 <span id="L67"><span class="lineNum">      67</span>              :     }</span>
 <span id="L68"><span class="lineNum">      68</span>              : }</span>
         </pre>
