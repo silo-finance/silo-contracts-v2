@@ -39,16 +39,14 @@ interface IDynamicKinkModelFactory {
     ///      and validated before being used for Silo creation.
     /// 
     /// @param _config Updatable configuration parameters
-    /// @param _timelock Immutable timelock
-    /// @param _rcompCap Immutable annual compound interest rate cap
+    /// @param _immutableArgs Immutable configuration arguments
     /// @param _initialOwner Address that will own and control the created model instance
     /// @param _silo Address of the Silo contract this model will serve
     /// @param _externalSalt External salt for the CREATE2 deterministic deployment
     /// @return irm The deployed DynamicKinkModel instance (IInterestRateModel interface)
     function create(
         IDynamicKinkModel.Config calldata _config, 
-        uint32 _timelock,
-        int96 _rcompCap,
+        IDynamicKinkModel.ImmutableArgs calldata _immutableArgs,
         address _initialOwner,
         address _silo,
         bytes32 _externalSalt

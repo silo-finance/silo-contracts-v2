@@ -37,8 +37,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     /// @inheritdoc IDynamicKinkModelFactory
     function create(
         IDynamicKinkModel.Config calldata _config,
-        uint32 _timelock,
-        int96 _rcompCap,
+        IDynamicKinkModel.ImmutableArgs calldata _immutableArgs,
         address _initialOwner,
         address _silo,
         bytes32 _externalSalt
@@ -47,12 +46,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         virtual
         returns (IInterestRateModel irm)
     {
-        IDynamicKinkModel.ImmutableConfig memory immutableConfig = IDynamicKinkModel.ImmutableConfig({
-            timelock: _timelock,
-            rcompCapPerSecond: _rcompCap / ONE_YEAR
-        });
-
-        return _create(_config, immutableConfig, _initialOwner, _silo, _externalSalt);
+        return _create(_config, _immutableArgs, _initialOwner, _silo, _externalSalt);
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
@@ -144,7 +138,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
     function _create(
         IDynamicKinkModel.Config memory _config,
-        IDynamicKinkModel.ImmutableConfig memory _immutableConfig,
+        IDynamicKinkModel.ImmutableArgs memory _immutableArgs,
         address _initialOwner,
         address _silo,
         bytes32 _externalSalt
@@ -158,7 +152,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         bytes32 salt = _salt(_externalSalt);
 
         irm = IInterestRateModel(Clones.cloneDeterministic(address(IRM), salt));
-        IDynamicKinkModel(address(irm)).initialize(_config, _immutableConfig, _initialOwner, _silo);
+        IDynamicKinkModel(address(irm)).initialize(_config, _immutableArgs, _initialOwner, _silo);
 
         createdByFactory[address(irm)] = true;
         emit NewDynamicKinkModel(IDynamicKinkModel(address(irm)));

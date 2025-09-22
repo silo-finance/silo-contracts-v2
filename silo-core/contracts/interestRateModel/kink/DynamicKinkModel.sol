@@ -40,9 +40,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     /// @dev seconds per year used in interest calculations.
     int256 public constant ONE_YEAR = 365 days;
 
-    /// @dev maximum value of compound interest per second the model will return. This is per-second rate.
-    int256 public constant RCOMP_CAP_PER_SECOND = RCUR_CAP / ONE_YEAR;
-
     /// @dev maximum exp() input to prevent an overflow.
     int256 public constant X_MAX = 11 * _DP;
 
@@ -66,7 +63,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
     function initialize(
         IDynamicKinkModel.Config calldata _config,
-        IDynamicKinkModel.ImmutableConfig calldata _immutableConfig,
+        IDynamicKinkModel.ImmutableArgs calldata _immutableArgs,
         address _initialOwner,
         address _silo
     )
@@ -75,13 +72,18 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         initializer
     {
         require(_silo != address(0), EmptySilo());
-        require(_immutableConfig.timelock <= MAX_TIMELOCK, InvalidTimelock());
-        require(_immutableConfig.rcompCapPerSecond > 0, InvalidRcompCapPerSecond());
-        require(_immutableConfig.rcompCapPerSecond <= RCOMP_CAP_PER_SECOND, InvalidRcompCapPerSecond());
+        require(_immutableArgs.timelock <= MAX_TIMELOCK, InvalidTimelock());
+        require(_immutableArgs.rcompCap > 0, InvalidRcompCap());
+        require(_immutableArgs.rcompCap <= RCUR_CAP, InvalidRcompCap());
+
+        IDynamicKinkModel.ImmutableConfig memory immutableConfig = IDynamicKinkModel.ImmutableConfig({
+            timelock: _immutableArgs.timelock,
+            rcompCapPerSecond: int96(_immutableArgs.rcompCap / ONE_YEAR)
+        });
 
         modelState.silo = _silo;
 
-        _updateConfiguration(_config, _immutableConfig);
+        _updateConfiguration(_config, immutableConfig);
 
         _transferOwnership(_initialOwner);
 
@@ -367,7 +369,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         modelState.k = _config.kmin;
         _irmConfig = newCfg;
 
-        emit NewConfig(newCfg, activeAt);
+        emit NewConfig(newCfg, activateConfigAt);
     }
 
     // hard rule: utilization in the model should never be above 100%.
@@ -466,7 +468,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
             _t0: SafeCast.toInt256(data.interestRateTimestamp),
             _t1: int256(_blockTimestamp),
             _u: _calculateUtiliation(data.collateralAssets, data.debtAssets),
-            _tba: int256(data.debtAssets)
+            _tba: int256(data.debtAssets) // forge-lint: disable-line(unsafe-typecast)
         }) returns (int256 rcurInt) {
             rcur = SafeCast.toUint256(rcurInt);
         } catch {
