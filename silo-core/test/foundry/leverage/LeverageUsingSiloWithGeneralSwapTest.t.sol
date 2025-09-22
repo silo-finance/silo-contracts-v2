@@ -104,6 +104,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     function _deployLeverage() internal returns (LeverageRouter) {
         AddrLib.init();
         AddrLib.setAddress(AddrKey.DAO, address(this));
+        emit log("DAO is set to this test contract");
+        emit log_named_uint("chain ID", block.chainid);
 
         LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy deployer =
             new LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy();
@@ -1460,6 +1462,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     */
     function test_leverage_setLeverageFee_fail_ReceiverZero() public {
         LeverageRouter newLeverageRouter = _deployLeverage();
+
         uint256 newFee = 0.01e18;
         vm.expectRevert(abi.encodeWithSelector(ILeverageRouter.ReceiverZero.selector));
         newLeverageRouter.setLeverageFee(newFee);

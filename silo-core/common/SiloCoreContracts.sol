@@ -9,8 +9,11 @@ library SiloCoreContracts {
     string public constant SILO_FACTORY = "SiloFactory.sol";
     string public constant INTEREST_RATE_MODEL_V2_FACTORY = "InterestRateModelV2Factory.sol";
     string public constant INTEREST_RATE_MODEL_V2 = "InterestRateModelV2.sol";
+    string public constant DYNAMIC_KINK_MODEL_FACTORY = "DynamicKinkModelFactory.sol";
+    string public constant DYNAMIC_KINK_MODEL = "DynamicKinkModel.sol";
     string public constant SILO_HOOK_V1 = "SiloHookV1.sol";
     string public constant SILO_DEPLOYER = "SiloDeployer.sol";
+    string public constant SILO_DEPLOYER_KINK = "SiloDeployerKink.sol";
     string public constant SILO = "Silo.sol";
     string public constant PARTIAL_LIQUIDATION = "PartialLiquidation.sol";
     string public constant PENDLE_REWARDS_CLAIMER = "PendleRewardsClaimer.sol";

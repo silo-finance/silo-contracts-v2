@@ -7,7 +7,6 @@ import {console2} from "forge-std/console2.sol";
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
 
 // Contracts
-import {LeverageTester} from "./LeverageTester.t.sol";
 import {SetupLeverage} from "./SetupLeverage.t.sol";
 import {InvariantsLeverage} from "./InvariantsLeverage.t.sol";
 
