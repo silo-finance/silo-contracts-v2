@@ -192,8 +192,8 @@ interface IDynamicKinkModel {
     error InvalidTimelock();
     error InvalidTimestamp();
     error InvalidTMin();
-    error InvalidTMinus();
-    error InvalidTPlus();
+    error InvalidTLow();
+    error InvalidTCrit();
     error InvalidU1();
     error InvalidU2();
     error InvalidUcrit();
