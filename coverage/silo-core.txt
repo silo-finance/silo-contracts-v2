@@ -1,40 +1,76 @@
-| silo-core/contracts/Silo.sol                                                                                           | 100.00% (138/138)   | 99.43% (174/175)    | 90.91% (10/11)   | 100.00% (77/77)    |
-| silo-core/contracts/SiloConfig.sol                                                                                     | 99.25% (132/133)    | 99.38% (160/161)    | 95.83% (46/48)   | 100.00% (24/24)    |
-| silo-core/contracts/SiloDeployer.sol                                                                                   | 100.00% (47/47)     | 98.25% (56/57)      | 75.00% (3/4)     | 100.00% (8/8)      |
-| silo-core/contracts/SiloFactory.sol                                                                                    | 99.13% (114/115)    | 98.71% (153/155)    | 96.30% (26/27)   | 95.65% (22/23)     |
-| silo-core/contracts/SiloLens.sol                                                                                       | 70.59% (12/17)      | 66.67% (18/27)      | 50.00% (1/2)     | 60.00% (6/10)      |
-| silo-core/contracts/SiloRouter.sol                                                                                     | 78.00% (39/50)      | 76.39% (55/72)      | 52.63% (10/19)   | 85.71% (6/7)       |
-| silo-core/contracts/interestRateModel/InterestRateModelV2.sol                                                          | 99.04% (103/104)    | 99.22% (127/128)    | 85.71% (18/21)   | 100.00% (15/15)    |
-| silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol                                                    | 50.00% (8/16)       | 50.00% (8/16)       | 100.00% (0/0)    | 50.00% (1/2)       |
-| silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol                                                   | 100.00% (21/21)     | 100.00% (35/35)     | 100.00% (9/9)    | 100.00% (4/4)      |
-| silo-core/contracts/lib/Actions.sol                                                                                    | 100.00% (222/222)   | 99.33% (296/298)    | 93.55% (29/31)   | 100.00% (26/26)    |
-| silo-core/contracts/lib/CallBeforeQuoteLib.sol                                                                         | 100.00% (4/4)       | 100.00% (6/6)       | 100.00% (2/2)    | 100.00% (2/2)      |
-| silo-core/contracts/lib/CloneDeterministic.sol                                                                         | 100.00% (18/18)     | 100.00% (18/18)     | 100.00% (0/0)    | 100.00% (18/18)    |
-| silo-core/contracts/lib/Hook.sol                                                                                       | 100.00% (235/235)   | 100.00% (243/243)   | 100.00% (4/4)    | 100.00% (24/24)    |
-| silo-core/contracts/lib/IsContract.sol                                                                                 | 100.00% (1/1)       | 100.00% (2/2)       | 100.00% (0/0)    | 100.00% (1/1)      |
-| silo-core/contracts/lib/NonReentrantLib.sol                                                                            | 100.00% (1/1)       | 100.00% (2/2)       | 100.00% (1/1)    | 100.00% (1/1)      |
-| silo-core/contracts/lib/PRBMathCommon.sol                                                                              | 100.00% (95/95)     | 100.00% (225/225)   | 97.10% (67/69)   | 100.00% (2/2)      |
-| silo-core/contracts/lib/PRBMathSD59x18.sol                                                                             | 92.31% (12/13)      | 94.12% (16/17)      | 62.50% (5/8)     | 100.00% (2/2)      |
-| silo-core/contracts/lib/RevertBytes.sol                                                                                | 0.00% (0/3)         | 0.00% (0/3)         | 0.00% (0/1)      | 0.00% (0/1)        |
-| silo-core/contracts/lib/ShareCollateralTokenLib.sol                                                                    | 100.00% (8/8)       | 100.00% (11/11)     | 100.00% (1/1)    | 100.00% (2/2)      |
-| silo-core/contracts/lib/ShareDebtTokenLib.sol                                                                          | 100.00% (13/13)     | 100.00% (18/18)     | 100.00% (4/4)    | 100.00% (4/4)      |
-| silo-core/contracts/lib/ShareTokenLib.sol                                                                              | 100.00% (42/42)     | 100.00% (58/58)     | 100.00% (10/10)  | 100.00% (9/9)      |
-| silo-core/contracts/lib/SiloERC4626Lib.sol                                                                             | 100.00% (46/46)     | 98.36% (60/61)      | 91.67% (11/12)   | 100.00% (5/5)      |
-| silo-core/contracts/lib/SiloLendingLib.sol                                                                             | 100.00% (74/74)     | 98.00% (98/100)     | 88.24% (15/17)   | 100.00% (8/8)      |
-| silo-core/contracts/lib/SiloLensLib.sol                                                                                | 100.00% (7/7)       | 100.00% (8/8)       | 100.00% (1/1)    | 100.00% (4/4)      |
-| silo-core/contracts/lib/SiloMathLib.sol                                                                                | 98.33% (59/60)      | 98.73% (78/79)      | 100.00% (18/18)  | 100.00% (11/11)    |
-| silo-core/contracts/lib/SiloSolvencyLib.sol                                                                            | 100.00% (38/38)     | 100.00% (47/47)     | 100.00% (7/7)    | 100.00% (7/7)      |
-| silo-core/contracts/lib/SiloStdLib.sol                                                                                 | 100.00% (27/27)     | 100.00% (34/34)     | 100.00% (8/8)    | 100.00% (7/7)      |
-| silo-core/contracts/lib/SiloStorageLib.sol                                                                             | 100.00% (1/1)       | 100.00% (1/1)       | 100.00% (0/0)    | 100.00% (1/1)      |
-| silo-core/contracts/lib/TokenHelper.sol                                                                                | 95.24% (20/21)      | 96.55% (28/29)      | 85.71% (6/7)     | 100.00% (4/4)      |
-| silo-core/contracts/lib/Views.sol                                                                                      | 100.00% (57/57)     | 100.00% (72/72)     | 100.00% (0/0)    | 100.00% (14/14)    |
-| silo-core/contracts/utils/CrossReentrancyGuard.sol                                                                     | 100.00% (8/8)       | 100.00% (10/10)     | 100.00% (2/2)    | 80.00% (4/5)       |
-| silo-core/contracts/utils/ShareCollateralToken.sol                                                                     | 100.00% (8/8)       | 100.00% (13/13)     | 100.00% (2/2)    | 100.00% (4/4)      |
-| silo-core/contracts/utils/ShareDebtToken.sol                                                                           | 100.00% (27/27)     | 93.94% (31/33)      | 50.00% (2/4)     | 100.00% (11/11)    |
-| silo-core/contracts/utils/ShareProtectedCollateralToken.sol                                                            | 100.00% (1/1)       | 100.00% (1/1)       | 100.00% (0/0)    | 100.00% (1/1)      |
-| silo-core/contracts/utils/ShareToken.sol                                                                               | 100.00% (43/43)     | 100.00% (56/56)     | 100.00% (2/2)    | 100.00% (23/23)    |
-| silo-core/contracts/utils/hook-receivers/_common/SiloHookReceiver.sol                                                  | 87.50% (7/8)        | 87.50% (7/8)        | 100.00% (0/0)    | 75.00% (3/4)       |
-| silo-core/contracts/utils/hook-receivers/gauge/GaugeHookReceiver.sol                                                   | 100.00% (42/42)     | 96.55% (56/58)      | 71.43% (5/7)     | 100.00% (8/8)      |
-| silo-core/contracts/utils/hook-receivers/liquidation/PartialLiquidation.sol                                            | 100.00% (50/50)     | 93.65% (59/63)      | 73.33% (11/15)   | 77.78% (7/9)       |
-| silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationExecLib.sol                                 | 97.30% (36/37)      | 97.73% (43/44)      | 87.50% (7/8)     | 100.00% (3/3)      |
-| silo-core/contracts/utils/hook-receivers/liquidation/lib/PartialLiquidationLib.sol                                     | 100.00% (60/60)     | 98.55% (68/69)      | 90.91% (10/11)   | 100.00% (11/11)    |
+   --> silo-core/contracts/SiloFactory.sol:227:9:
+  --> silo-core/contracts/SiloFactory.sol:45:5:
+  --> silo-core/contracts/incentives/SiloIncentivesController.sol:31:52:
+   --> silo-core/contracts/incentives/SiloIncentivesController.sol:150:5:
+  --> silo-core/contracts/hooks/PendleRewardsClaimer.sol:86:27:
+  --> silo-core/contracts/hooks/PendleRewardsClaimer.sol:86:59:
+   --> silo-core/contracts/interestRateModel/InterestRateModelV2.sol:392:13:
+   --> silo-core/contracts/interestRateModel/InterestRateModelV2.sol:393:13:
+   --> silo-core/contracts/interestRateModel/InterestRateModelV2.sol:402:13:
+   --> silo-core/contracts/hooks/PendleRewardsClaimer.sol:204:5:
+| silo-core/contracts/Silo.sol                                                                                           | 100.00% (215/215)    | 100.00% (172/172)    | 92.31% (12/13)     | 100.00% (78/78)    |
+| silo-core/contracts/SiloConfig.sol                                                                                     | 100.00% (158/158)    | 100.00% (150/150)    | 100.00% (55/55)    | 100.00% (25/25)    |
+| silo-core/contracts/SiloDeployer.sol                                                                                   | 100.00% (63/63)      | 98.41% (62/63)       | 83.33% (10/12)     | 100.00% (9/9)      |
+| silo-core/contracts/SiloFactory.sol                                                                                    | 100.00% (122/122)    | 100.00% (111/111)    | 96.97% (32/33)     | 100.00% (26/26)    |
+| silo-core/contracts/SiloLens.sol                                                                                       | 86.49% (96/111)      | 88.39% (99/112)      | 88.89% (8/9)       | 83.78% (31/37)     |
+| silo-core/contracts/hooks/PendleRewardsClaimer.sol                                                                     | 100.00% (63/63)      | 100.00% (75/75)      | 100.00% (12/12)    | 100.00% (9/9)      |
+| silo-core/contracts/hooks/SiloHookV1.sol                                                                               | 87.50% (7/8)         | 83.33% (5/6)         | 100.00% (0/0)      | 100.00% (3/3)      |
+| silo-core/contracts/hooks/_common/BaseHookReceiver.sol                                                                 | 100.00% (37/37)      | 94.59% (35/37)       | 63.64% (7/11)      | 100.00% (11/11)    |
+| silo-core/contracts/hooks/_common/TransientReentrancy.sol                                                              | 66.67% (4/6)         | 75.00% (3/4)         | 100.00% (2/2)      | 50.00% (1/2)       |
+| silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol                                                                  | 100.00% (35/35)      | 97.44% (38/39)       | 80.00% (12/15)     | 100.00% (6/6)      |
+| silo-core/contracts/hooks/liquidation/PartialLiquidation.sol                                                           | 100.00% (45/45)      | 97.73% (43/44)       | 90.48% (19/21)     | 100.00% (4/4)      |
+| silo-core/contracts/hooks/liquidation/lib/PartialLiquidationExecLib.sol                                                | 97.06% (33/34)       | 95.56% (43/45)       | 75.00% (6/8)       | 100.00% (3/3)      |
+| silo-core/contracts/hooks/liquidation/lib/PartialLiquidationLib.sol                                                    | 100.00% (67/67)      | 98.61% (71/72)       | 89.47% (17/19)     | 100.00% (10/10)    |
+| silo-core/contracts/incentives/SiloIncentivesController.sol                                                            | 100.00% (50/50)      | 100.00% (53/53)      | 91.67% (11/12)     | 100.00% (6/6)      |
+| silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol                                                     | 100.00% (4/4)        | 100.00% (3/3)        | 100.00% (0/0)      | 100.00% (1/1)      |
+| silo-core/contracts/incentives/base/BaseIncentivesController.sol                                                       | 100.00% (99/99)      | 97.17% (103/106)     | 90.91% (30/33)     | 100.00% (19/19)    |
+| silo-core/contracts/incentives/base/DistributionManager.sol                                                            | 94.90% (93/98)       | 94.06% (95/101)      | 88.89% (16/18)     | 85.71% (18/21)     |
+| silo-core/contracts/interestRateModel/InterestRateModelV2.sol                                                          | 100.00% (132/132)    | 100.00% (173/173)    | 100.00% (26/26)    | 100.00% (16/16)    |
+| silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol                                                    | 100.00% (22/22)      | 100.00% (20/20)      | 100.00% (0/0)      | 100.00% (2/2)      |
+| silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol                                                   | 100.00% (29/29)      | 100.00% (26/26)      | 100.00% (21/21)    | 100.00% (4/4)      |
+| silo-core/contracts/interestRateModel/kink/DynamicKinkModel.sol                                                        | 100.00% (151/151)    | 99.33% (148/149)     | 91.01% (81/89)     | 100.00% (22/22)    |
+| silo-core/contracts/interestRateModel/kink/DynamicKinkModelConfig.sol                                                  | 100.00% (32/32)      | 100.00% (30/30)      | 100.00% (0/0)      | 100.00% (2/2)      |
+| silo-core/contracts/interestRateModel/kink/DynamicKinkModelFactory.sol                                                 | 100.00% (59/59)      | 100.00% (59/59)      | 54.55% (12/22)     | 100.00% (7/7)      |
+| silo-core/contracts/leverage/LeverageRouter.sol                                                                        | 100.00% (37/37)      | 97.22% (35/36)       | 66.67% (2/3)       | 100.00% (10/10)    |
+| silo-core/contracts/leverage/LeverageUsingSiloFlashloan.sol                                                            | 98.85% (86/87)       | 100.00% (91/91)      | 81.48% (22/27)     | 93.75% (15/16)     |
+| silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol                                             | 100.00% (7/7)        | 100.00% (7/7)        | 100.00% (0/0)      | 100.00% (2/2)      |
+| silo-core/contracts/leverage/modules/GeneralSwapModule.sol                                                             | 100.00% (12/12)      | 85.71% (12/14)       | 50.00% (2/4)       | 100.00% (2/2)      |
+| silo-core/contracts/leverage/modules/LeverageTxState.sol                                                               | 100.00% (9/9)        | 100.00% (8/8)        | 100.00% (0/0)      | 100.00% (1/1)      |
+| silo-core/contracts/leverage/modules/RescueModule.sol                                                                  | 66.67% (12/18)       | 53.33% (8/15)        | 60.00% (6/10)      | 100.00% (5/5)      |
+| silo-core/contracts/leverage/modules/RevenueModule.sol                                                                 | 100.00% (11/11)      | 100.00% (9/9)        | 80.00% (8/10)      | 100.00% (2/2)      |
+| silo-core/contracts/lib/Actions.sol                                                                                    | 100.00% (223/223)    | 99.61% (257/258)     | 94.12% (48/51)     | 100.00% (23/23)    |
+| silo-core/contracts/lib/AddressUtilsLib.sol                                                                            | 93.33% (14/15)       | 95.65% (22/23)       | 77.78% (7/9)       | 100.00% (2/2)      |
+| silo-core/contracts/lib/CallBeforeQuoteLib.sol                                                                         | 100.00% (6/6)        | 100.00% (6/6)        | 100.00% (2/2)      | 100.00% (2/2)      |
+| silo-core/contracts/lib/CloneDeterministic.sol                                                                         | 100.00% (36/36)      | 100.00% (18/18)      | 100.00% (0/0)      | 100.00% (18/18)    |
+| silo-core/contracts/lib/ERC20RStorageLib.sol                                                                           | 100.00% (2/2)        | 100.00% (1/1)        | 100.00% (0/0)      | 100.00% (1/1)      |
+| silo-core/contracts/lib/Hook.sol                                                                                       | 100.00% (232/232)    | 100.00% (217/217)    | 100.00% (6/6)      | 100.00% (22/22)    |
+| silo-core/contracts/lib/IsContract.sol                                                                                 | 100.00% (2/2)        | 100.00% (2/2)        | 100.00% (0/0)      | 100.00% (1/1)      |
+| silo-core/contracts/lib/KinkMath.sol                                                                                   | 100.00% (10/10)      | 100.00% (6/6)        | 100.00% (0/0)      | 100.00% (5/5)      |
+| silo-core/contracts/lib/NonReentrantLib.sol                                                                            | 100.00% (2/2)        | 100.00% (1/1)        | 100.00% (2/2)      | 100.00% (1/1)      |
+| silo-core/contracts/lib/PRBMathCommon.sol                                                                              | 100.00% (97/97)      | 100.00% (225/225)    | 97.10% (67/69)     | 100.00% (2/2)      |
+| silo-core/contracts/lib/PRBMathSD59x18.sol                                                                             | 100.00% (15/15)      | 100.00% (17/17)      | 75.00% (6/8)       | 100.00% (2/2)      |
+| silo-core/contracts/lib/RevertLib.sol                                                                                  | 92.86% (13/14)       | 91.67% (11/12)       | 100.00% (3/3)      | 100.00% (4/4)      |
+| silo-core/contracts/lib/ShareCollateralTokenLib.sol                                                                    | 100.00% (9/9)        | 100.00% (10/10)      | 100.00% (1/1)      | 100.00% (1/1)      |
+| silo-core/contracts/lib/ShareTokenLib.sol                                                                              | 98.18% (54/55)       | 98.36% (60/61)       | 91.67% (11/12)     | 100.00% (10/10)    |
+| silo-core/contracts/lib/SiloERC4626Lib.sol                                                                             | 100.00% (56/56)      | 100.00% (63/63)      | 100.00% (18/18)    | 100.00% (4/4)      |
+| silo-core/contracts/lib/SiloLendingLib.sol                                                                             | 98.15% (106/108)     | 99.15% (117/118)     | 91.67% (22/24)     | 100.00% (10/10)    |
+| silo-core/contracts/lib/SiloLensLib.sol                                                                                | 89.71% (61/68)       | 78.05% (64/82)       | 46.15% (6/13)      | 100.00% (15/15)    |
+| silo-core/contracts/lib/SiloMathLib.sol                                                                                | 97.70% (85/87)       | 98.02% (99/101)      | 97.06% (33/34)     | 100.00% (13/13)    |
+| silo-core/contracts/lib/SiloSolvencyLib.sol                                                                            | 100.00% (45/45)      | 94.12% (48/51)       | 72.73% (8/11)      | 100.00% (7/7)      |
+| silo-core/contracts/lib/SiloStdLib.sol                                                                                 | 100.00% (36/36)      | 100.00% (35/35)      | 93.33% (14/15)     | 100.00% (6/6)      |
+| silo-core/contracts/lib/SiloStorageLib.sol                                                                             | 100.00% (2/2)        | 100.00% (1/1)        | 100.00% (0/0)      | 100.00% (1/1)      |
+| silo-core/contracts/lib/TokenHelper.sol                                                                                | 100.00% (25/25)      | 100.00% (29/29)      | 100.00% (9/9)      | 100.00% (4/4)      |
+| silo-core/contracts/lib/Views.sol                                                                                      | 100.00% (111/111)    | 100.00% (114/114)    | 94.34% (50/53)     | 100.00% (16/16)    |
+| silo-core/contracts/silo-router/SiloRouterV2.sol                                                                       | 90.91% (10/11)       | 88.89% (8/9)         | 100.00% (0/0)      | 100.00% (4/4)      |
+| silo-core/contracts/silo-router/SiloRouterV2Implementation.sol                                                         | 92.86% (52/56)       | 90.70% (39/43)       | 50.00% (1/2)       | 95.00% (19/20)     |
+| silo-core/contracts/utils/CrossReentrancyGuard.sol                                                                     | 100.00% (11/11)      | 100.00% (7/7)        | 100.00% (4/4)      | 100.00% (4/4)      |
+| silo-core/contracts/utils/GlobalPause.sol                                                                              | 100.00% (62/62)      | 100.00% (58/58)      | 100.00% (19/19)    | 100.00% (18/18)    |
+| silo-core/contracts/utils/ShareCollateralToken.sol                                                                     | 100.00% (11/11)      | 100.00% (12/12)      | 100.00% (4/4)      | 100.00% (3/3)      |
+| silo-core/contracts/utils/ShareDebtToken.sol                                                                           | 100.00% (51/51)      | 100.00% (48/48)      | 83.33% (10/12)     | 100.00% (13/13)    |
+| silo-core/contracts/utils/ShareProtectedCollateralToken.sol                                                            | 100.00% (4/4)        | 100.00% (2/2)        | 100.00% (0/0)      | 100.00% (2/2)      |
+| silo-core/contracts/utils/ShareToken.sol                                                                               | 100.00% (67/67)      | 100.00% (55/55)      | 100.00% (7/7)      | 100.00% (24/24)    |
+| silo-core/contracts/utils/TokenRescuer.sol                                                                             | 0.00% (0/5)          | 0.00% (0/6)          | 0.00% (0/1)        | 0.00% (0/1)        |
+| silo-core/contracts/utils/Tower.sol                                                                                    | 30.43% (7/23)        | 30.77% (8/26)        | 0.00% (0/5)        | 16.67% (1/6)       |
+| silo-core/contracts/utils/liquidationHelper/DexSwap.sol                                                                | 37.50% (3/8)         | 22.22% (2/9)         | 0.00% (0/2)        | 50.00% (1/2)       |
+| silo-core/contracts/utils/liquidationHelper/LiquidationHelper.sol                                                      | 86.67% (39/45)       | 86.36% (38/44)       | 55.56% (10/18)     | 85.71% (6/7)       |
+| silo-core/contracts/utils/liquidationHelper/ManualLiquidationHelper.sol                                                | 77.14% (27/35)       | 83.33% (25/30)       | 66.67% (6/9)       | 62.50% (5/8)       |
