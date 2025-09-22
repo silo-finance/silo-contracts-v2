@@ -22,6 +22,9 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     /// @dev DP in 18 decimal points used for integer calculations
     int256 public constant DP = int256(1e18);
 
+    /// @dev seconds per year used in interest calculations.
+    int256 public constant ONE_YEAR = 365 days;
+
     /// @dev IRM contract implementation address to clone
     DynamicKinkModel public immutable IRM;
 
@@ -34,7 +37,8 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
     /// @inheritdoc IDynamicKinkModelFactory
     function create(
         IDynamicKinkModel.Config calldata _config,
-        IDynamicKinkModel.ImmutableConfig calldata _immutableConfig,
+        uint32 _timelock,
+        int96 _rcompCap,
         address _initialOwner,
         address _silo,
         bytes32 _externalSalt
@@ -43,7 +47,12 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         virtual
         returns (IInterestRateModel irm)
     {
-        return _create(_config, _immutableConfig, _initialOwner, _silo, _externalSalt);
+        IDynamicKinkModel.ImmutableConfig memory immutableConfig = IDynamicKinkModel.ImmutableConfig({
+            timelock: _timelock,
+            rcompCapPerSecond: _rcompCap / ONE_YEAR
+        });
+
+        return _create(_config, immutableConfig, _initialOwner, _silo, _externalSalt);
     }
 
     /// @inheritdoc IDynamicKinkModelFactory
