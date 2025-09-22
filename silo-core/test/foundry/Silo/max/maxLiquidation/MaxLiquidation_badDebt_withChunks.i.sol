@@ -7,7 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MaxLiquidationBadDebtTest} from "./MaxLiquidation_badDebt.i.sol";
 
 /*
-    forge test -vv --ffi --mc MaxLiquidationBadDebtWithChunksTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc MaxLiquidationBadDebtWithChunksTest
 
     same as MaxLiquidationBadDebtTest but with chunks
 */
@@ -17,14 +17,14 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
     bool private constant _BAD_DEBT = true;
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_partial_1token_sTokens_issue
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxLiquidation_partial_1token_sTokens_investigateCase
     */
     function test_maxLiquidation_partial_1token_sTokens_investigateCase() public {
         uint128 _collateral = 9222;
         _maxLiquidation_partial_1token(_collateral, _RECEIVE_STOKENS);
     }
 
-    function _maxLiquidation_partial_1token(uint128 _collateral, bool _receiveSToken) internal override {
+    function _maxLiquidation_partial_1token(uint128 _collateral, bool _receiveSToken) internal virtual override {
         bool sameAsset = true;
 
         _createDebtForBorrower(_collateral, sameAsset);
@@ -42,7 +42,7 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
         // so there is no more checks we can do
     }
 
-    function _maxLiquidation_partial_2tokens(uint128 _collateral, bool _receiveSToken) internal override {
+    function _maxLiquidation_partial_2tokens(uint128 _collateral, bool _receiveSToken) internal virtual override {
         bool sameAsset = false;
 
         _createDebtForBorrower(_collateral, sameAsset);
@@ -63,6 +63,7 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
     function _executeLiquidation(bool _sameToken, bool _receiveSToken)
         internal
+        virtual
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
@@ -139,7 +140,7 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
         */
     }
 
-    function _withChunks() internal pure override returns (bool) {
+    function _withChunks() internal pure virtual override returns (bool) {
         return true;
     }
 }
