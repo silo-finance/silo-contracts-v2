@@ -250,6 +250,9 @@ contract DynamicKinkModelTest is KinkCommonTest {
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRate_revert_whenInvalidSilo -vv
     */
     function test_kink_getCompoundInterestRate_revert_whenInvalidSilo() public {
+        ISilo.UtilizationData memory utilizationData;
+        vm.mockCall(address(1), abi.encodeWithSelector(ISilo.utilizationData.selector), abi.encode(utilizationData));
+
         vm.expectRevert(IDynamicKinkModel.InvalidSilo.selector);
         irm.getCompoundInterestRate(address(1), block.timestamp);
     }
