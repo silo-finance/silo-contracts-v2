@@ -42,8 +42,6 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
 
     uint256 constant DP = 1e18;
 
-    DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModel());
-
     IDynamicKinkModel.ImmutableArgs immutableArgs = _defaultImmutableArgs();
 
     function setUp() public {

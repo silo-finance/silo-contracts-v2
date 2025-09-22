@@ -17,12 +17,6 @@ import {KinkCommon} from "./KinkCommon.sol";
 FOUNDRY_PROFILE=core_test forge test -vv --mc DynamicKinkModelFactoryJsonTest
 */
 contract DynamicKinkModelFactoryJsonTest is KinkDefaultConfigTestData, KinkCommon {
-    DynamicKinkModelFactory immutable FACTORY;
-
-    constructor() {
-        FACTORY = new DynamicKinkModelFactory(new DynamicKinkModel());
-    }
-
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_generateConfig_json -vv
     */

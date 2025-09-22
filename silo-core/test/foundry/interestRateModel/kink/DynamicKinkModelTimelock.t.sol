@@ -16,8 +16,6 @@ FOUNDRY_PROFILE=core_test forge test --mc DynamicKinkModelTimelockTest -vv
 contract DynamicKinkModelTimelockTest is KinkCommonTest {
     address silo = address(this);
 
-    DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModelMock());
-
     function setUp() public {
         vm.warp(100);
 

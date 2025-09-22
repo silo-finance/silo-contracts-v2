@@ -16,8 +16,8 @@ contract KinkCommonTest is Test, KinkCommon {
     }
 
     modifier whenValidImmutableArgs(IDynamicKinkModel.ImmutableArgs memory _immutableArgs) {
-        _immutableArgs.timelock = _immutableArgs.timelock % (FACTORY.IRM().MAX_TIMELOCK() + 1);
-        _immutableArgs.rcompCap = _immutableArgs.rcompCap % FACTORY.IRM().RCUR_CAP();
+        _immutableArgs.timelock = uint32(_immutableArgs.timelock % (FACTORY.IRM().MAX_TIMELOCK() + 1));
+        _immutableArgs.rcompCap = int96(_immutableArgs.rcompCap % FACTORY.IRM().RCUR_CAP());
         vm.assume(_immutableArgs.rcompCap > 0);
 
         _;

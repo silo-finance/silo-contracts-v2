@@ -7,6 +7,8 @@ import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {SignedMath} from "openzeppelin5/utils/math/SignedMath.sol";
 
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
+import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
+import {DynamicKinkModelMock} from "./DynamicKinkModelMock.sol";
 
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 
@@ -32,6 +34,7 @@ abstract contract KinkCommon {
     int256 constant _DP = 10 ** 18;
     int256 public constant UNIVERSAL_LIMIT = 1e9 * _DP;
 
+    DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModelMock());
     DynamicKinkModel irm;
     ISilo.UtilizationData internal _utilizationData;
 

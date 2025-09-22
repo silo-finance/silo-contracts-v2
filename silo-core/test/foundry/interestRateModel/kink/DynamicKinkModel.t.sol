@@ -22,8 +22,6 @@ FOUNDRY_PROFILE=core_test forge test --mc Kink -vv
 contract DynamicKinkModelTest is KinkCommonTest {
     using KinkMath for int256;
 
-    DynamicKinkModelFactory immutable FACTORY = new DynamicKinkModelFactory(new DynamicKinkModelMock());
-
     mapping(bytes32 => bool) private seen;
 
     function setUp() public {
