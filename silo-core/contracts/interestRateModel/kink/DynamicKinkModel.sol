@@ -86,7 +86,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
         modelState.silo = _silo;
 
-        _updateConfiguration(_config, immutableConfig);
+        _updateConfiguration({_config: _config, _immutableConfig: immutableConfig, _init: true});
 
         _transferOwnership(_initialOwner);
 
@@ -353,16 +353,17 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     function _updateConfiguration(IDynamicKinkModel.Config memory _config) internal virtual {
         // even if _irmConfig is pending timelock, immutable config can be pulled from it
         (, IDynamicKinkModel.ImmutableConfig memory immutableConfig) = _irmConfig.getConfig();
-        _updateConfiguration(_config, immutableConfig);
+        _updateConfiguration({_config: _config, _immutableConfig: immutableConfig, _init: false});
     }
 
     function _updateConfiguration(
         IDynamicKinkModel.Config memory _config,
-        IDynamicKinkModel.ImmutableConfig memory _immutableConfig
+        IDynamicKinkModel.ImmutableConfig memory _immutableConfig,
+        bool _init
     ) internal virtual {
         require(activateConfigAt <= block.timestamp, PendingUpdate());
 
-        activateConfigAt = block.timestamp + _immutableConfig.timelock;
+        activateConfigAt = _init ? block.timestamp : block.timestamp + _immutableConfig.timelock;
 
         verifyConfig(_config);
 
