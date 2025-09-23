@@ -51,7 +51,7 @@ contract KinkRcompTestData is Test {
         string memory path = string.concat(root, "/silo-core/test/foundry/data/KinkRcomptest.json");
         string memory json = vm.readFile(path);
 
-        data = abi.decode(vm.parseJson(json, string(abi.encodePacked("."))), (RcompData[]));
+        data = abi.decode(vm.parseJson(json, string(abi.encodePacked(".tests"))), (RcompData[]));
 
         // for (uint i; i < data.length; i++) {
         //     _printRcomp(data[i]);
@@ -59,7 +59,7 @@ contract KinkRcompTestData is Test {
     }
 
     function _printRcomp(RcompData memory _data) internal {
-        emit log_named_uint("ID#", _data.id);
+        emit log_named_uint("\n------------------- ID#", _data.id);
 
         emit log_string("INPUT");
         emit log_named_int("currentTime", _data.input.currentTime);
