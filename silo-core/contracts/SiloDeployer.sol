@@ -207,6 +207,7 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
 
         IInterestRateModel interestRateModel = DYNAMIC_KINK_MODEL_FACTORY.create(
             dkink.config,
+            dkink.immutableArgs,
             dkink.initialOwner,
             _silo,
             _salt

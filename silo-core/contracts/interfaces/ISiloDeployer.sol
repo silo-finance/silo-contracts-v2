@@ -32,6 +32,7 @@ interface ISiloDeployer {
     /// @dev DKinkIRM config to be created during the Silo creation.
     struct DKinkIRMConfig {
         IDynamicKinkModel.Config config;
+        IDynamicKinkModel.ImmutableArgs immutableArgs;
         address initialOwner;
     }
 
