@@ -34,7 +34,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     int256 public constant UNIVERSAL_LIMIT = 1e9 * _DP;
 
     /// @dev maximum value of current interest rate the model will return. This is 1,000% APR in 18-decimals.
-    int256 public constant RCUR_CAP = 10 * _DP; // TODO update json rcomp file to new cap 1000%
+    int256 public constant RCUR_CAP = 10 * _DP;
 
     /// @dev seconds per year used in interest calculations.
     int256 public constant ONE_YEAR = 365 days;
@@ -196,7 +196,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         (config, immutableConfig) = irmConfigToUse.getConfig();
     }
 
-    // TODO update whitepapaer witn <= DP
     /// @inheritdoc IDynamicKinkModel
     function verifyConfig(IDynamicKinkModel.Config memory _config) public view virtual {
         require(_config.ulow.inClosedInterval(0, _DP), InvalidUlow());
@@ -345,8 +344,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
             // k should be set to min only on overflow or cap
             k = _cfg.kmin;
         }
-
-        // TODO update whitepaper and remove oveflow check that we not using
     }
 
     function _updateConfiguration(IDynamicKinkModel.Config memory _config) internal virtual {

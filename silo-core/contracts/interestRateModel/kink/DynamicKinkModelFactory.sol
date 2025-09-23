@@ -80,7 +80,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
         int256 s = 365 days;
 
-        // 0 < tMin <= tcrit <= t2 < 100y // TODO update whitepaper with tcrit, tlow
+        // 0 < tMin <= tcrit <= t2 < 100y
         require(defaultInt.tMin != 0, IDynamicKinkModel.InvalidTMin());
         require(defaultInt.tcrit.inClosedInterval(defaultInt.tMin, defaultInt.t2), IDynamicKinkModel.InvalidTCrit());
         require(defaultInt.t2.inOpenIntervalLowIncluded(defaultInt.tcrit, 100 * s), IDynamicKinkModel.InvalidT2());
@@ -102,7 +102,6 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         config.kmax =
             SafeCast.toInt96((defaultInt.rcritMax - defaultInt.rmin) * DP / (defaultInt.ucrit - defaultInt.ulow) / s);
 
-        // TODO update whitepaper with alpha
         config.alpha =
             (rCheckHi * (defaultInt.ucrit - defaultInt.ulow) - (DP - defaultInt.ulow) * DP) / (DP - defaultInt.ucrit);
 
@@ -117,7 +116,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
 
         config.c1 /= DP;
         config.c2 /= DP;
-        
+
         config.dmax = (config.kmax - config.kmin) / defaultInt.tMin;
 
         IDynamicKinkModel(address(IRM)).verifyConfig(config);
