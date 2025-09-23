@@ -51,8 +51,9 @@ silo-core/deploy/input/_importFromCsv/
 !silo-core/deploy/input/_importFromCsv/marketImport.py
 
 **/broadcast/
+!**/run-latest.json
 **/broadcast/*
-!silo-core/broadcast/SiloDeployerDeploy.s.sol/**/run-latest.json
+!**/**/run-latest.json
 
 # certora
 .certora_internal
