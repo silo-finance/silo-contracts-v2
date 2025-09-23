@@ -27,8 +27,14 @@ contract DKinkIRMConfigData {
         int256 ulow;
     }
 
+    struct ImmutableArgs {
+        int96 rcompCap;
+        uint32 timelock;
+    }
+
     struct ConfigData {
         ModelConfig config;
+        ImmutableArgs immutableArgs;
         string name;
     }
 
@@ -48,8 +54,13 @@ contract DKinkIRMConfigData {
         return _readDataFromJson();
     }
 
-    function getConfigData(string memory _name) public view returns (IDynamicKinkModel.Config memory modelConfig) {
+    function getConfigData(string memory _name) 
+        public 
+        view 
+        returns (IDynamicKinkModel.Config memory modelConfig, IDynamicKinkModel.ImmutableArgs memory immutableArgs) 
+    {
         ConfigData[] memory configs = _readDataFromJson();
+        bool found = false;
 
         for (uint256 index = 0; index < configs.length; index++) {
             if (keccak256(bytes(configs[index].name)) == keccak256(bytes(_name))) {
@@ -67,11 +78,16 @@ contract DKinkIRMConfigData {
                 modelConfig.c2 = configs[index].config.c2;
                 modelConfig.dmax = configs[index].config.dmax;
 
-                return modelConfig;
+                immutableArgs.timelock = configs[index].immutableArgs.timelock;
+                immutableArgs.rcompCap = configs[index].immutableArgs.rcompCap;
+
+                found = true;
+
+                break;
             }
         }
 
-        revert ConfigNotFound();
+        require(found, ConfigNotFound());
     }
 
     function print(IDynamicKinkModel.Config memory _configData) public pure {

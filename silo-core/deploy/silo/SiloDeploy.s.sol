@@ -317,29 +317,41 @@ abstract contract SiloDeploy is CommonDeploy {
         address dkinkIRMConfigFactory = _resolveDeployedContract(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY);
 
         if (_siloInitData.interestRateModel0 == irmConfigFactory) {
+            console2.log("\tIRM model #0: InterestRateModelV2");
             irmConfigData0 = abi.encode(irmModelData.getConfigData(_config.interestRateModelConfig0));
         } else if (_siloInitData.interestRateModel0 == dkinkIRMConfigFactory) {
+            console2.log("\tIRM model #0: DynamicKinkModel");
             irmConfigData0 = _prepareDKinkIRMConfig(_config.interestRateModelConfig0);
         } else {
             revert UnknownInterestRateModelFactory();
         }
 
+        console2.log("\tIRM config#0: ", _config.interestRateModelConfig0);
+
         if (_siloInitData.interestRateModel1 == irmConfigFactory) {
+            console2.log("\tIRM model #1: InterestRateModelV2");
             irmConfigData1 = abi.encode(irmModelData.getConfigData(_config.interestRateModelConfig1));
         } else if (_siloInitData.interestRateModel1 == dkinkIRMConfigFactory) {
+            console2.log("\tIRM model #1: DynamicKinkModel");
             irmConfigData1 = _prepareDKinkIRMConfig(_config.interestRateModelConfig1);
         } else {
             revert UnknownInterestRateModelFactory();
         }
+
+        console2.log("\tIRM config#1: ", _config.interestRateModelConfig1);
     }
 
     function _prepareDKinkIRMConfig(string memory _configName) internal returns (bytes memory irmConfigData) {
         DKinkIRMConfigData dkinkIRMModelData = new DKinkIRMConfigData();
 
-        IDynamicKinkModel.Config memory dkinkIRMConfigData = dkinkIRMModelData.getConfigData(_configName);
+        (
+            IDynamicKinkModel.Config memory dkinkIRMConfigData, 
+            IDynamicKinkModel.ImmutableArgs memory immutableArgs
+        ) = dkinkIRMModelData.getConfigData(_configName);
 
         ISiloDeployer.DKinkIRMConfig memory dkinkIRMConfig = ISiloDeployer.DKinkIRMConfig({
             config: dkinkIRMConfigData,
+            immutableArgs: immutableArgs,
             initialOwner: _getDKinkIRMInitialOwner()
         });
 

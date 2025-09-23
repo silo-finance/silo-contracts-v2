@@ -28,7 +28,9 @@ import {
 
 import {DIAOracleFactoryMock} from "silo-core/test/foundry/_mocks/oracles-factories/DIAOracleFactoryMock.sol";
 
-// AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloDeployTest
+/*
+AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloDeployTest
+*/
 contract SiloDeployTest is IntegrationTest {
    uint256 internal constant _FORKING_BLOCK_NUMBER = 19780370;
 
@@ -40,7 +42,7 @@ contract SiloDeployTest is IntegrationTest {
    ChainlinkV3OracleFactoryMock internal _chainlinkV3OracleFactoryMock;
    DIAOracleFactoryMock internal _diaOracleFactoryMock;
 
-   function setUp() public {
+   function _setUp() public {
         vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
 
         _uniV3OracleFactoryMock = new UniswapV3OracleFactoryMock();
@@ -64,8 +66,11 @@ contract SiloDeployTest is IntegrationTest {
         _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST).run();
     }
 
-    // AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_hooks_are_initialized
-    function test_hooks_are_initialized() public view {
+    /*
+    AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_hooks_are_initialized
+    */
+    function test_hooks_are_initialized() public {
+        _setUp();
         (address silo0, address silo1) = _siloConfig.getSilos();
 
          _verifyHookReceiversForSilo(silo0);
