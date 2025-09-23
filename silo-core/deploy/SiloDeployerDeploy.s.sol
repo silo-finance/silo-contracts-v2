@@ -85,6 +85,7 @@ contract SiloDeployerDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
+        // TODO do not use new! use existing, unless something changed! 
         address siloImpl = address(new Silo(siloFactory));
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
