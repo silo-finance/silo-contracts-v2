@@ -44,28 +44,28 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
             DynamicKinkModelMock(address(FACTORY.create(cfg, immutableArgs, address(this), address(this), bytes32(0))));
 
         // 1e18 is 100%
-        _rcompDiffPercent[19] = 22872736801;
-        _rcompDiffPercent[28] = 12374540229;
-        _rcompDiffPercent[43] = 19274329796;
-        _rcompDiffPercent[44] = 168883855185;
-        _rcompDiffPercent[50] = 13846907445;
-        _rcompDiffPercent[51] = 10855909671;
-        _rcompDiffPercent[54] = 35914205060;
-        _rcompDiffPercent[62] = 10519955101;
-        _rcompDiffPercent[71] = 45445460982;
-        _rcompDiffPercent[74] = 15544865743;
-        _rcompDiffPercent[98] = 26976031665;
-        _rcompDiffPercent[114] = 12081262091;
-        _rcompDiffPercent[115] = 84615802266;
-        _rcompDiffPercent[140] = 29832348581;
-        _rcompDiffPercent[166] = 76697467726;
-        _rcompDiffPercent[169] = 12756017220;
-        _rcompDiffPercent[194] = 32667389684;
-        _rcompDiffPercent[197] = 63694885413;
-        _rcompDiffPercent[231] = 32481920192;
-        _rcompDiffPercent[264] = 8449010067;
-        _rcompDiffPercent[294] = 14946966269;
-        _rcompDiffPercent[299] = 11559641605;
+        // _rcompDiffPercent[19] = 22872736801;
+        // _rcompDiffPercent[28] = 12374540229;
+        // _rcompDiffPercent[43] = 19274329796;
+        // _rcompDiffPercent[44] = 168883855185;
+        // _rcompDiffPercent[50] = 13846907445;
+        // _rcompDiffPercent[51] = 10855909671;
+        // _rcompDiffPercent[54] = 35914205060;
+        // _rcompDiffPercent[62] = 10519955101;
+        // _rcompDiffPercent[71] = 45445460982;
+        // _rcompDiffPercent[74] = 15544865743;
+        // _rcompDiffPercent[98] = 26976031665;
+        // _rcompDiffPercent[114] = 12081262091;
+        // _rcompDiffPercent[115] = 84615802266;
+        // _rcompDiffPercent[140] = 29832348581;
+        // _rcompDiffPercent[166] = 76697467726;
+        // _rcompDiffPercent[169] = 12756017220;
+        // _rcompDiffPercent[194] = 32667389684;
+        // _rcompDiffPercent[197] = 63694885413;
+        // _rcompDiffPercent[231] = 32481920192;
+        // _rcompDiffPercent[264] = 8449010067;
+        // _rcompDiffPercent[294] = 14946966269;
+        // _rcompDiffPercent[299] = 11559641605;
     }
 
     /* 
@@ -80,12 +80,12 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
     /* 
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_rcur_json
     */
-    function test_kink_rcur_json() public {
+    function test_kink_rcur_json() public view {
         RcurData[] memory data = _readDataFromJsonRcur();
 
         for (uint256 i = 0; i < data.length; i++) {
             (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c) = _toSetupRcur(data[i]);
-            _printRcur(data[i]);
+            // _printRcur(data[i]);
 
             try IRM.currentInterestRate(
                 c,
@@ -154,12 +154,12 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
     /* 
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_rcomp_json
     */
-    function test_skip_kink_rcomp_json() public view { // TODO unskip when json is updated
+    function test_kink_rcomp_json() public {
         RcompData[] memory data = _readDataFromJsonRcomp();
 
         for (uint256 i; i < data.length; i++) {
             (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c) = _toSetupRcomp(data[i]);
-            // _printRcomp(data[i]);
+            _printRcomp(data[i]);
 
             try IRM.compoundInterestRate(
                 c,
@@ -177,6 +177,12 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
 
                 uint256 acceptableDiffPercent = _getAcceptableDiffPercent(data[i].id, _rcompDiffPercent);
 
+                console2.log("rcomp expected", data[i].expected.compoundInterest);
+                console2.log("     rcomp got", rcomp);
+
+                console2.log("k expected", data[i].expected.newSlope);
+                console2.log("     k got", k);
+
                 _assertCloseTo(
                     rcomp,
                     data[i].expected.compoundInterest,
@@ -184,6 +190,7 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
                     "rcomp is not close to expected value",
                     acceptableDiffPercent
                 );
+
                 _assertCloseTo(k, data[i].expected.newSlope, data[i].id, "k is not close to expected value");
 
                 assertEq(data[i].expected.didOverflow, 0, "didOverflow expect overflow");
@@ -266,7 +273,11 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
             " relative error: ",
             vm.toString(diffPercent),
             " [%] larger than acceptable diff: ",
-            vm.toString(_acceptableDiffPercent)
+            vm.toString(_acceptableDiffPercent),
+            " got: ",
+            vm.toString(_got),
+            " expected: ",
+            vm.toString(_expected)
         );
 
         if (!satisfied) {
