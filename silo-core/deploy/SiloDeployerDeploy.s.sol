@@ -17,7 +17,7 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloDeployerDeploy.s.sol \
-        --ffi --rpc-url $RPC_INK --broadcast --verify
+        --ffi --rpc-url $RPC_SONIC --broadcast --verify
 
     Resume verification:
     FOUNDRY_PROFILE=core \
