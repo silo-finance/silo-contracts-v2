@@ -42,7 +42,7 @@ contract SiloDeployTest is IntegrationTest {
    ChainlinkV3OracleFactoryMock internal _chainlinkV3OracleFactoryMock;
    DIAOracleFactoryMock internal _diaOracleFactoryMock;
 
-   function _setUp() public {
+   function setUp() public {
         vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
 
         _uniV3OracleFactoryMock = new UniswapV3OracleFactoryMock();
@@ -69,8 +69,7 @@ contract SiloDeployTest is IntegrationTest {
     /*
     AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_hooks_are_initialized
     */
-    function test_hooks_are_initialized() public {
-        _setUp();
+    function test_hooks_are_initialized() public view {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
          _verifyHookReceiversForSilo(silo0);
