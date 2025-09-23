@@ -40,10 +40,8 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
 
         IDynamicKinkModel.Config memory cfg;
 
-        IDynamicKinkModel.ImmutableArgs memory immutableArgs = IDynamicKinkModel.ImmutableArgs({
-            timelock: _TIMELOCK, 
-            rcompCap: int96(tmp.RCUR_CAP())
-        });
+        IDynamicKinkModel.ImmutableArgs memory immutableArgs =
+            IDynamicKinkModel.ImmutableArgs({timelock: _TIMELOCK, rcompCap: int96(tmp.RCUR_CAP())});
 
         IRM =
             DynamicKinkModelMock(address(FACTORY.create(cfg, immutableArgs, address(this), address(this), bytes32(0))));

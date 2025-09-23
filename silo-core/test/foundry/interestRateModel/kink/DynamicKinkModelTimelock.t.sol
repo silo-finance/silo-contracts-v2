@@ -20,11 +20,10 @@ contract DynamicKinkModelTimelockTest is KinkCommonTest {
         vm.warp(100);
 
         IDynamicKinkModel.Config memory emptyConfig;
-        IDynamicKinkModel.ImmutableArgs memory immutableArgs = IDynamicKinkModel.ImmutableArgs({timelock: 1 days, rcompCap: 1});
+        IDynamicKinkModel.ImmutableArgs memory immutableArgs =
+            IDynamicKinkModel.ImmutableArgs({timelock: 1 days, rcompCap: 1});
 
-        irm = DynamicKinkModel(
-            address(FACTORY.create(emptyConfig, immutableArgs, address(this), silo, bytes32(0)))
-        );
+        irm = DynamicKinkModel(address(FACTORY.create(emptyConfig, immutableArgs, address(this), silo, bytes32(0))));
     }
 
     /*
@@ -46,7 +45,8 @@ contract DynamicKinkModelTimelockTest is KinkCommonTest {
     */
     function test_kink_timelock_revert() public {
         IDynamicKinkModel.Config memory config;
-        IDynamicKinkModel.ImmutableArgs memory immutableArgs = IDynamicKinkModel.ImmutableArgs({timelock: 7 days + 1, rcompCap: 1});
+        IDynamicKinkModel.ImmutableArgs memory immutableArgs =
+            IDynamicKinkModel.ImmutableArgs({timelock: 7 days + 1, rcompCap: 1});
 
         vm.expectRevert(IDynamicKinkModel.InvalidTimelock.selector);
         FACTORY.create(config, immutableArgs, address(this), silo, bytes32(0));
@@ -82,7 +82,7 @@ contract DynamicKinkModelTimelockTest is KinkCommonTest {
         vm.expectCall(pendingIrmConfig, abi.encodeWithSelector(IDynamicKinkModelConfig.getConfig.selector));
         irm.getPendingCompoundInterestRate(silo, block.timestamp);
     }
-    
+
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_pendingConfig_isActivatedAtTimelock -vv
     */

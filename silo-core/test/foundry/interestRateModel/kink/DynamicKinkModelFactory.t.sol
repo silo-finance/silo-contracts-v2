@@ -141,7 +141,7 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
         userCfg.ucrit = userCfg.u2;
         vm.expectRevert(IDynamicKinkModel.InvalidU2.selector);
         FACTORY.generateConfig(userCfg);
-        
+
         userCfg.ucrit = uint64(DP);
         vm.expectRevert(IDynamicKinkModel.InvalidUcrit.selector);
         FACTORY.generateConfig(userCfg);

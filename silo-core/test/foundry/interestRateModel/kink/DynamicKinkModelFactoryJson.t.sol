@@ -27,13 +27,25 @@ contract DynamicKinkModelFactoryJsonTest is KinkDefaultConfigTestData, KinkCommo
             try FACTORY.generateConfig(data[i].input) returns (IDynamicKinkModel.Config memory c) {
                 _compareConfigs(data[i].id, data[i].config, c);
 
-                assertEq(c.ulow, data[i].config.ulow, _makeMsg("ulow mismatch", data[i].id, c.ulow, data[i].config.ulow));
+                assertEq(
+                    c.ulow, data[i].config.ulow, _makeMsg("ulow mismatch", data[i].id, c.ulow, data[i].config.ulow)
+                );
                 assertEq(c.u1, data[i].config.u1, _makeMsg("u1 mismatch", data[i].id, c.u1, data[i].config.u1));
                 assertEq(c.u2, data[i].config.u2, _makeMsg("u2 mismatch", data[i].id, c.u2, data[i].config.u2));
-                assertEq(c.ucrit, data[i].config.ucrit, _makeMsg("ucrit mismatch", data[i].id, c.ucrit, data[i].config.ucrit));
-                assertEq(c.rmin, data[i].config.rmin, _makeMsg("rmin mismatch", data[i].id, c.rmin, data[i].config.rmin));
-                assertEq(c.kmin, data[i].config.kmin, _makeMsg("kmin mismatch", data[i].id, c.kmin, data[i].config.kmin));
-                assertEq(c.kmax, data[i].config.kmax, _makeMsg("kmax mismatch", data[i].id, c.kmax, data[i].config.kmax));
+                assertEq(
+                    c.ucrit,
+                    data[i].config.ucrit,
+                    _makeMsg("ucrit mismatch", data[i].id, c.ucrit, data[i].config.ucrit)
+                );
+                assertEq(
+                    c.rmin, data[i].config.rmin, _makeMsg("rmin mismatch", data[i].id, c.rmin, data[i].config.rmin)
+                );
+                assertEq(
+                    c.kmin, data[i].config.kmin, _makeMsg("kmin mismatch", data[i].id, c.kmin, data[i].config.kmin)
+                );
+                assertEq(
+                    c.kmax, data[i].config.kmax, _makeMsg("kmax mismatch", data[i].id, c.kmax, data[i].config.kmax)
+                );
 
                 _assertCloseTo(c.alpha, data[i].config.alpha, data[i].id, "alpha mismatch ID ", 33525423);
 
@@ -67,7 +79,9 @@ contract DynamicKinkModelFactoryJsonTest is KinkDefaultConfigTestData, KinkCommo
 
                 assertEq(c.c1, data[i].config.c1, _makeMsg("c1 mismatch", data[i].id, c.c1, data[i].config.c1));
                 assertEq(c.c2, data[i].config.c2, _makeMsg("c2 mismatch", data[i].id, c.c2, data[i].config.c2));
-                assertEq(c.dmax, data[i].config.dmax, _makeMsg("dmax mismatch", data[i].id, c.dmax, data[i].config.dmax));
+                assertEq(
+                    c.dmax, data[i].config.dmax, _makeMsg("dmax mismatch", data[i].id, c.dmax, data[i].config.dmax)
+                );
             } catch {
                 if (data[i].success) {
                     revert(
@@ -132,10 +146,11 @@ contract DynamicKinkModelFactoryJsonTest is KinkDefaultConfigTestData, KinkCommo
         assertTrue(satisfied, errorMessage);
     }
 
-    function _compareConfigs(uint256 _id, IDynamicKinkModel.Config memory _config1, IDynamicKinkModel.Config memory _config2)
-        internal
-        pure
-    {
+    function _compareConfigs(
+        uint256 _id,
+        IDynamicKinkModel.Config memory _config1,
+        IDynamicKinkModel.Config memory _config2
+    ) internal pure {
         console2.log("--------------------------------");
         console2.log("config1 vs config2 for ID#", _id);
         console2.log("ulow #1", _config1.ulow);
@@ -196,7 +211,13 @@ contract DynamicKinkModelFactoryJsonTest is KinkDefaultConfigTestData, KinkCommo
         }
     }
 
-    function _makeMsg(string memory _msg, uint256 _id, int256 _got, int256 _expected) internal pure returns (string memory) {
-        return string.concat(_msg, "[", vm.toString(_id), "] got: ", vm.toString(_got), " expected: ", vm.toString(_expected));
+    function _makeMsg(string memory _msg, uint256 _id, int256 _got, int256 _expected)
+        internal
+        pure
+        returns (string memory)
+    {
+        return string.concat(
+            _msg, "[", vm.toString(_id), "] got: ", vm.toString(_got), " expected: ", vm.toString(_expected)
+        );
     }
 }
