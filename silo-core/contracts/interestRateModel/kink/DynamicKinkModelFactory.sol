@@ -66,7 +66,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         config.u2 = defaultInt.u2;
         config.ucrit = defaultInt.ucrit;
 
-        // 0 <= rmin < rcritMin <= rcritMax <= r100
+        // 0 <= rmin < rcritMin <= rcritMax < r100
 
         require(
             defaultInt.rcritMin.inOpenIntervalTopIncluded(defaultInt.rmin, defaultInt.rcritMax),
@@ -74,7 +74,7 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         );
 
         require(
-            defaultInt.rcritMax.inClosedInterval(defaultInt.rcritMin, defaultInt.r100),
+            defaultInt.rcritMax.inOpenIntervalLowIncluded(defaultInt.rcritMin, defaultInt.r100),
             IDynamicKinkModel.InvalidRcritMax()
         );
 

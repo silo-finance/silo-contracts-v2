@@ -154,6 +154,10 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
         vm.expectRevert(IDynamicKinkModel.InvalidRcritMin.selector);
         FACTORY.generateConfig(userCfg);
 
+        userCfg.rcritMin = 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidRcritMin.selector);
+        FACTORY.generateConfig(userCfg);
+
         userCfg.rcritMin = 2;
         vm.expectRevert(IDynamicKinkModel.InvalidRcritMin.selector);
         FACTORY.generateConfig(userCfg);
@@ -163,6 +167,10 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
         FACTORY.generateConfig(userCfg);
 
         userCfg.r100 = 2;
+        vm.expectRevert(IDynamicKinkModel.InvalidRcritMax.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.r100 = 3;
         vm.expectRevert(IDynamicKinkModel.InvalidTMin.selector);
         FACTORY.generateConfig(userCfg);
 
@@ -191,7 +199,7 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
         FACTORY.generateConfig(userCfg);
 
         userCfg.t1 = 365 days * 100 - 1;
-        vm.expectRevert(IDynamicKinkModel.InvalidDefaultConfig.selector);
+        vm.expectRevert(IDynamicKinkModel.InvalidAlpha.selector);
         FACTORY.generateConfig(userCfg);
     }
 
