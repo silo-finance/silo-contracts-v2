@@ -49,7 +49,7 @@ contract KinkRcurTestData is Test {
         string memory path = string.concat(root, "/silo-core/test/foundry/data/KinkRcurtest.json");
         string memory json = vm.readFile(path);
 
-        data = abi.decode(vm.parseJson(json, string(abi.encodePacked("."))), (RcurData[]));
+        data = abi.decode(vm.parseJson(json, string(abi.encodePacked(".tests"))), (RcurData[]));
     }
 
     function _printRcur(RcurData memory _data) internal {
