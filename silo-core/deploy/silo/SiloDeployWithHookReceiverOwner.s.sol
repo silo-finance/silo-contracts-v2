@@ -6,14 +6,14 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
 
 /**
-FOUNDRY_PROFILE=core CONFIG=Silo_savETH_ETH HOOK_RECEIVER_OWNER=DAO \
+FOUNDRY_PROFILE=core CONFIG=Test_Silo_smsUSD_USDC.e_KinkIRM HOOK_RECEIVER_OWNER=MULTISIG_C04f \
     forge script silo-core/deploy/silo/SiloDeployWithHookReceiverOwner.s.sol \
-    --ffi --rpc-url $RPC_MAINNET --broadcast --verify
+    --ffi --rpc-url $RPC_SONIC --broadcast --verify
 
 Resume verification:
-    FOUNDRY_PROFILE=core CONFIG=Silo_WAVAX_USDC HOOK_RECEIVER_OWNER=DAO \
+    FOUNDRY_PROFILE=core CONFIG=Silo_WAVAX_USDC HOOK_RECEIVER_OWNER=MULTISIG_C04f \
     forge script silo-core/deploy/silo/SiloDeployWithHookReceiverOwner.s.sol \
-        --ffi --rpc-url $RPC_AVALANCHE \
+        --ffi --rpc-url $RPC_SONIC \
         --verify \
         --private-key $PRIVATE_KEY \
         --resume
