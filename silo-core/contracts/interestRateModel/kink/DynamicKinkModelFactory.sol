@@ -106,15 +106,18 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
         config.alpha =
             (rCheckHi * (defaultInt.ucrit - defaultInt.ulow) - (DP - defaultInt.ulow) * DP) / (DP - defaultInt.ucrit);
 
-        config.c1 = (config.kmax - config.kmin) / defaultInt.t1;
-        config.c2 = (config.kmax - config.kmin) / defaultInt.t2;
+        config.c1 = (config.kmax - config.kmin) * DP / defaultInt.t1;
+        config.c2 = (config.kmax - config.kmin) * DP / defaultInt.t2;
 
         config.cminus =
-            ((config.kmax - config.kmin) / defaultInt.tlow - config.c1) * DP / (defaultInt.u1 - defaultInt.ulow);
+            ((config.kmax - config.kmin) * DP / defaultInt.tlow - config.c1) / (defaultInt.u1 - defaultInt.ulow);
 
         config.cplus =
-            ((config.kmax - config.kmin) / defaultInt.tcrit - config.c2) * DP / (defaultInt.ucrit - defaultInt.u2);
+            ((config.kmax - config.kmin) * DP / defaultInt.tcrit - config.c2) / (defaultInt.ucrit - defaultInt.u2);
 
+        config.c1 /= DP;
+        config.c2 /= DP;
+        
         config.dmax = (config.kmax - config.kmin) / defaultInt.tMin;
 
         IDynamicKinkModel(address(IRM)).verifyConfig(config);
