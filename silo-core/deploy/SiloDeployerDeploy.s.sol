@@ -15,7 +15,7 @@ import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloDeployerDeploy.s.sol \
-        --ffi --rpc-url $RPC_SONIC --broadcast --verify
+        --ffi --rpc-url $RPC_INK --broadcast --verify
 
     Resume verification:
     FOUNDRY_PROFILE=core \
