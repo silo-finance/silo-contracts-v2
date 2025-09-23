@@ -78,19 +78,21 @@ contract DynamicKinkModelFactory is Create2Factory, IDynamicKinkModelFactory {
             IDynamicKinkModel.InvalidRcritMax()
         );
 
-        int256 rCheckHi = (defaultInt.r100 - defaultInt.rmin) * DP / (defaultInt.rcritMax - defaultInt.rmin);
-        int256 rCheckLo = (DP - defaultInt.ulow) * DP / (defaultInt.ucrit - defaultInt.ulow);
-        require(rCheckHi >= rCheckLo, IDynamicKinkModel.InvalidDefaultConfig());
-
         int256 s = 365 days;
 
         // 0 < tMin <= tcrit <= t2 < 100y // TODO update whitepaper with tcrit, tlow
+        require(defaultInt.tMin != 0, IDynamicKinkModel.InvalidTMin());
         require(defaultInt.tcrit.inClosedInterval(defaultInt.tMin, defaultInt.t2), IDynamicKinkModel.InvalidTCrit());
         require(defaultInt.t2.inOpenIntervalLowIncluded(defaultInt.tcrit, 100 * s), IDynamicKinkModel.InvalidT2());
 
         // 0 < tlow <= t1 < 100y
         require(defaultInt.tlow != 0, IDynamicKinkModel.InvalidTLow());
         require(defaultInt.t1.inOpenIntervalLowIncluded(defaultInt.tlow, 100 * s), IDynamicKinkModel.InvalidT1());
+
+        // r check is move to the last, so it will be easier to detect issues with scallar values
+        int256 rCheckHi = (defaultInt.r100 - defaultInt.rmin) * DP / (defaultInt.rcritMax - defaultInt.rmin);
+        int256 rCheckLo = (DP - defaultInt.ulow) * DP / (defaultInt.ucrit - defaultInt.ulow);
+        require(rCheckHi >= rCheckLo, IDynamicKinkModel.InvalidDefaultConfig());
 
         config.rmin = defaultInt.rmin / s;
 

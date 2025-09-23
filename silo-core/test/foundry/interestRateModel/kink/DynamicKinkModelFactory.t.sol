@@ -123,6 +123,79 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_generateConfig_reverts -vv
+    */
+    function test_kink_generateConfig_reverts() public {
+        IDynamicKinkModel.UserFriendlyConfig memory userCfg;
+
+        userCfg.u1 = uint64(DP);
+        vm.expectRevert(IDynamicKinkModel.InvalidU1.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.u1 = 1;
+        userCfg.u2 = userCfg.u1;
+        vm.expectRevert(IDynamicKinkModel.InvalidU1.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.u2 = 2;
+        userCfg.ucrit = userCfg.u2;
+        vm.expectRevert(IDynamicKinkModel.InvalidU2.selector);
+        FACTORY.generateConfig(userCfg);
+        
+        userCfg.ucrit = uint64(DP);
+        vm.expectRevert(IDynamicKinkModel.InvalidUcrit.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.ucrit = uint64(DP - 1);
+        vm.expectRevert(IDynamicKinkModel.InvalidRcritMin.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.rmin = 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidRcritMin.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.rcritMin = 2;
+        vm.expectRevert(IDynamicKinkModel.InvalidRcritMin.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.rcritMax = 2;
+        vm.expectRevert(IDynamicKinkModel.InvalidRcritMax.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.r100 = 2;
+        vm.expectRevert(IDynamicKinkModel.InvalidTMin.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.tMin = 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidTCrit.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.tcrit = 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidTCrit.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.t2 = 365 days * 100;
+        vm.expectRevert(IDynamicKinkModel.InvalidT2.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.t2 = 365 days * 100 - 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidTLow.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.tlow = 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidT1.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.t1 = 365 days * 100;
+        vm.expectRevert(IDynamicKinkModel.InvalidT1.selector);
+        FACTORY.generateConfig(userCfg);
+
+        userCfg.t1 = 365 days * 100 - 1;
+        vm.expectRevert(IDynamicKinkModel.InvalidDefaultConfig.selector);
+        FACTORY.generateConfig(userCfg);
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_castConfig -vv
     */
     function test_kink_castConfig(IDynamicKinkModel.UserFriendlyConfig memory _in) public {
@@ -166,15 +239,14 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
         _in.rcritMax = uint72(_in.rcritMax.randomAbove(_in.rcritMin, _in.r100));
 
         uint256 y = 365 days; // for purpose of fuzzing, 1y is a limit for time values
-        uint256 d = 1 days;
 
         // 0 < tMin <= tcrit <= t2 < 100y
-        _in.tMin = uint32(_in.tMin.randomBetween(d, y));
+        _in.tMin = uint32(_in.tMin.randomBetween(1, y));
         _in.tcrit = uint32(_in.tcrit.randomBetween(_in.tMin, y));
         _in.t2 = uint32(_in.t2.randomBetween(_in.tcrit, y));
 
         // 0 < tlow <= t1 < 100y
-        _in.tlow = uint32(_in.tlow.randomBetween(d, y));
+        _in.tlow = uint32(_in.tlow.randomBetween(1, y));
         _in.t1 = uint32(_in.t1.randomBetween(_in.tlow, y));
     }
 }
