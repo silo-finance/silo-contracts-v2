@@ -6,8 +6,10 @@ import {DynamicKinkModelConfig} from "../../../../contracts/interestRateModel/ki
 
 contract DynamicKinkModelMock is DynamicKinkModel {
     function mockState(IDynamicKinkModel.Config memory _c, int96 _k) external {
-        IDynamicKinkModel.ImmutableConfig memory immutableConfig =
-            IDynamicKinkModel.ImmutableConfig({timelock: 0 days, rcompCapPerSecond: 1});
+        IDynamicKinkModel.ImmutableConfig memory immutableConfig = IDynamicKinkModel.ImmutableConfig({
+            timelock: 0 days, 
+            rcompCapPerSecond: int96(RCOMP_CAP_PER_SECOND)
+        });
 
         _irmConfig = new DynamicKinkModelConfig(_c, immutableConfig);
         modelState.k = _k;

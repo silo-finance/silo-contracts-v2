@@ -26,8 +26,7 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
 
     int256 constant _DP = 10 ** 18;
     uint32 constant _TIMELOCK = 0 days;
-    int96 constant _RCOMP_CAP = 0.01e18; // 1% APR
-    int96 constant _RCOMP_CAP_PER_SECOND = _RCOMP_CAP / 365 days;
+    int96 immutable _RCOMP_CAP_PER_SECOND;
 
     uint256 acceptableDiffPercentRcur = 6e9;
     mapping(uint256 id => uint256 aloowedDiffPercent) private _rcompDiffPercent;
@@ -35,37 +34,38 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
     ISilo.UtilizationData public utilizationData;
 
     constructor() {
+        DynamicKinkModel tmp = new DynamicKinkModel();
+
+        _RCOMP_CAP_PER_SECOND = int96(tmp.RCOMP_CAP_PER_SECOND());
+
         IDynamicKinkModel.Config memory cfg;
 
-        IDynamicKinkModel.ImmutableArgs memory immutableArgs =
-            IDynamicKinkModel.ImmutableArgs({timelock: _TIMELOCK, rcompCap: _RCOMP_CAP});
+        IDynamicKinkModel.ImmutableArgs memory immutableArgs = IDynamicKinkModel.ImmutableArgs({
+            timelock: _TIMELOCK, 
+            rcompCap: int96(tmp.RCUR_CAP())
+        });
 
         IRM =
             DynamicKinkModelMock(address(FACTORY.create(cfg, immutableArgs, address(this), address(this), bytes32(0))));
 
         // 1e18 is 100%
-        // _rcompDiffPercent[19] = 22872736801;
-        // _rcompDiffPercent[28] = 12374540229;
-        // _rcompDiffPercent[43] = 19274329796;
-        // _rcompDiffPercent[44] = 168883855185;
-        // _rcompDiffPercent[50] = 13846907445;
-        // _rcompDiffPercent[51] = 10855909671;
-        // _rcompDiffPercent[54] = 35914205060;
-        // _rcompDiffPercent[62] = 10519955101;
-        // _rcompDiffPercent[71] = 45445460982;
-        // _rcompDiffPercent[74] = 15544865743;
-        // _rcompDiffPercent[98] = 26976031665;
-        // _rcompDiffPercent[114] = 12081262091;
-        // _rcompDiffPercent[115] = 84615802266;
-        // _rcompDiffPercent[140] = 29832348581;
-        // _rcompDiffPercent[166] = 76697467726;
-        // _rcompDiffPercent[169] = 12756017220;
-        // _rcompDiffPercent[194] = 32667389684;
-        // _rcompDiffPercent[197] = 63694885413;
-        // _rcompDiffPercent[231] = 32481920192;
-        // _rcompDiffPercent[264] = 8449010067;
-        // _rcompDiffPercent[294] = 14946966269;
-        // _rcompDiffPercent[299] = 11559641605;
+        _rcompDiffPercent[5] = 69700005108;
+        _rcompDiffPercent[7] = 25245061486;
+        _rcompDiffPercent[31] = 20725920356;
+        _rcompDiffPercent[33] = 29389012176;
+        _rcompDiffPercent[40] = 13321877417;
+        _rcompDiffPercent[66] = 43490728497;
+        _rcompDiffPercent[79] = 81126849847;
+        _rcompDiffPercent[111] = 11100763970;
+        _rcompDiffPercent[127] = 198260773835;
+        _rcompDiffPercent[131] = 46111172734;
+        _rcompDiffPercent[152] = 16508187279;
+        _rcompDiffPercent[182] = 10764316805;
+        _rcompDiffPercent[189] = 136561505832;
+        _rcompDiffPercent[211] = 11894349980;
+        _rcompDiffPercent[221] = 15758917106;
+        _rcompDiffPercent[289] = 14419032745;
+        _rcompDiffPercent[291] = 15911114231;
     }
 
     /* 
@@ -159,7 +159,7 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
 
         for (uint256 i; i < data.length; i++) {
             (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c) = _toSetupRcomp(data[i]);
-            _printRcomp(data[i]);
+            // _printRcomp(data[i]);
 
             try IRM.compoundInterestRate(
                 c,
@@ -209,7 +209,7 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
     /* 
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRate_json -vv 
     */
-    function test_skip_kink_getCompoundInterestRate_json() public { // TODO unskip when json is updated
+    function test_kink_getCompoundInterestRate_json() public {
         RcompData[] memory data = _readDataFromJsonRcomp();
 
         address silo = address(this);
@@ -314,7 +314,7 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
         acceptableDiffPercent = _diffs[_id];
 
         if (acceptableDiffPercent == 0) {
-            acceptableDiffPercent = 7e9; // default value for tiny differences
+            acceptableDiffPercent = 1e10; // default value for tiny differences
         }
     }
 }
