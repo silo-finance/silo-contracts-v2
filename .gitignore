@@ -50,10 +50,10 @@ emv*
 silo-core/deploy/input/_importFromCsv/
 !silo-core/deploy/input/_importFromCsv/marketImport.py
 
-**/broadcast/
-!**/run-latest.json
-**/broadcast/*
-!**/**/run-latest.json
+
+**/broadcast/**/run-*
+**/broadcast/**/dry-run/
+!**/broadcast/**/run-latest.json
 
 # certora
 .certora_internal
