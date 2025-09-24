@@ -84,44 +84,56 @@ contract SiloDeployerDeploy is CommonDeploy {
             _deployNewSiloImplementation(ISiloFactory(siloFactory));
         }
 
-        address irmConfigFactory = SiloCoreDeployments.get(
-            SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY,
-            chainAlias
+        address irmConfigFactory =
+            SiloCoreDeployments.get(SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY, chainAlias);
+
+        require(
+            irmConfigFactory != address(0),
+            string.concat(SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY, " not deployed")
         );
 
-        require(irmConfigFactory != address(0), string.concat(SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY, " not deployed"));
         console2.log("irmConfigFactory", irmConfigFactory);
 
-        address dkinkIRMConfigFactory = SiloCoreDeployments.get(
-            SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY,
-            chainAlias
-        );
+        address dkinkIRMConfigFactory =
+            SiloCoreDeployments.get(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, chainAlias);
 
-        require(dkinkIRMConfigFactory != address(0), string.concat(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, " not deployed"));
+        require(
+            dkinkIRMConfigFactory != address(0),
+            string.concat(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, " not deployed")
+        );
+        
         console2.log("dkinkIRMConfigFactory", dkinkIRMConfigFactory);
 
         address siloImpl = SiloCoreDeployments.get(SiloCoreContracts.SILO, chainAlias);
         require(siloImpl != address(0), string.concat(SiloCoreContracts.SILO, " not deployed"));
         console2.log("siloImpl", siloImpl);
-        
-        address shareProtectedCollateralTokenImpl = SiloCoreDeployments.get(SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN, chainAlias);
-        require(shareProtectedCollateralTokenImpl != address(0), string.concat(SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN, " not deployed"));
+
+        address shareProtectedCollateralTokenImpl =
+            SiloCoreDeployments.get(SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN, chainAlias);
+        require(
+            shareProtectedCollateralTokenImpl != address(0),
+            string.concat(SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN, " not deployed")
+        );
         console2.log("shareProtectedCollateralTokenImpl", shareProtectedCollateralTokenImpl);
 
         address shareDebtTokenImpl = SiloCoreDeployments.get(SiloCoreContracts.SHARE_DEBT_TOKEN, chainAlias);
         require(shareDebtTokenImpl != address(0), string.concat(SiloCoreContracts.SHARE_DEBT_TOKEN, " not deployed"));
         console2.log("shareDebtTokenImpl", shareDebtTokenImpl);
-        
+
         vm.startBroadcast(deployerPrivateKey);
 
-        siloDeployer = ISiloDeployer(address(new SiloDeployer(
-            IInterestRateModelV2Factory(irmConfigFactory),
-            IDynamicKinkModelFactory(dkinkIRMConfigFactory),
-            ISiloFactory(siloFactory),
-            siloImpl,
-            shareProtectedCollateralTokenImpl,
-            shareDebtTokenImpl
-        )));
+        siloDeployer = ISiloDeployer(
+            address(
+                new SiloDeployer(
+                    IInterestRateModelV2Factory(irmConfigFactory),
+                    IDynamicKinkModelFactory(dkinkIRMConfigFactory),
+                    ISiloFactory(siloFactory),
+                    siloImpl,
+                    shareProtectedCollateralTokenImpl,
+                    shareDebtTokenImpl
+                )
+            )
+        );
 
         vm.stopBroadcast();
 
@@ -130,20 +142,17 @@ contract SiloDeployerDeploy is CommonDeploy {
         console2.log("[SiloDeployerDeploy] done, siloDeployer", address(siloDeployer));
     }
 
-    function _deployNewSiloImplementation(ISiloFactory _siloFactory) internal returns (address) {
+    function _deployNewSiloImplementation(ISiloFactory _siloFactory) internal {
         console2.log("\n[SiloDeployerDeploy] deploying new SiloImplementation\n");
 
         address siloImpl = address(new Silo(_siloFactory));
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
-        _registerDeployment(address(siloImpl), SiloCoreContracts.SILO);
+        _registerDeployment(siloImpl, SiloCoreContracts.SILO);
 
-        _registerDeployment(
-            address(shareProtectedCollateralTokenImpl),
-            SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN
-        );
+        _registerDeployment(shareProtectedCollateralTokenImpl, SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN);
 
-        _registerDeployment(address(shareDebtTokenImpl), SiloCoreContracts.SHARE_DEBT_TOKEN);
+        _registerDeployment(shareDebtTokenImpl, SiloCoreContracts.SHARE_DEBT_TOKEN);
     }
 }
