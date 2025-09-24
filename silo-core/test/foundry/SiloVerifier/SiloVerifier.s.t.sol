@@ -327,6 +327,9 @@ contract SiloVerifierScriptTest is Test {
         assertEq(verifier.verify(), 2, "2 errors after breaking IRM config in both Silos");
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_CheckPriceDoesNotReturnZero -vv 
+    */
     function test_CheckPriceDoesNotReturnZero() public {
         SiloVerifier verifier = new SiloVerifier(WS_USDC_CONFIG, false, EXTERNAL_PRICE_0, EXTERNAL_PRICE_1);
         assertEq(verifier.verify(), 0, "no errors before mock");

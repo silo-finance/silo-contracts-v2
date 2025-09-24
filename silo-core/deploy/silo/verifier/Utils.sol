@@ -48,12 +48,12 @@ library Utils {
         uint256 i;
 
         for (; i < allModels.length; i++) {
-            IDynamicKinkModel.ImmutableConfig memory immutableConfig = IDynamicKinkModel.ImmutableConfig({
+            IDynamicKinkModel.ImmutableConfig memory immutableCfg = IDynamicKinkModel.ImmutableConfig({
                 timelock: allModels[i].immutableArgs.timelock,
                 rcompCapPerSecond: allModels[i].immutableArgs.rcompCap / 365 days
             });
 
-            bytes32 cfgHash = keccak256(abi.encode(allModels[i].config, immutableConfig));
+            bytes32 cfgHash = keccak256(abi.encode(allModels[i].config, immutableCfg));
 
             if (cfgHash == deployedHash) {
                 return (allModels[i].name, true);
