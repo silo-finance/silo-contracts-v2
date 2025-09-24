@@ -50,12 +50,21 @@ on:
             - .github/workflows/silo-core.yml
 
 jobs:
-    silo-size:
+    silo-core-cache:
         runs-on: ubuntu-latest
         steps:
             -   uses: actions/checkout@v3
                 with:
                     submodules: recursive
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                    restore-keys: |
+                        silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                        silo-core-contracts-cache-
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
@@ -72,6 +81,9 @@ jobs:
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
 
+            -   name: Run single test to build cache for contracts
+                run: FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloStoragePointer
+
             -   name: Run Forge build
                 run: |
                     git submodule
@@ -79,6 +91,7 @@ jobs:
                     FOUNDRY_PROFILE=core forge build --sizes
 
     linters:
+        needs: silo-core-cache
         runs-on: ubuntu-latest
 
         steps:
@@ -97,10 +110,17 @@ jobs:
                 run: yarn workspace silo-core lint:sol
 
     fast-tests:
+        needs: silo-core-cache
         runs-on: ubuntu-latest
 
         steps:
             -   uses: actions/checkout@v3
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
@@ -129,9 +149,16 @@ jobs:
                     PreviewMintTest
                ]
 
+        needs: silo-core-cache
         runs-on: ubuntu-latest
         steps:
             -   uses: actions/checkout@v3
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
@@ -159,9 +186,16 @@ jobs:
                     test_maxLiquidation_partial_2tokens_tokens
                ]
 
+        needs: silo-core-cache
         runs-on: ubuntu-latest
         steps:
             -   uses: actions/checkout@v3
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
@@ -183,9 +217,16 @@ jobs:
             matrix:
                 match-contract: [ SiloLensCompatibilityTest ]
 
+        needs: silo-core-cache
         runs-on: ubuntu-latest
         steps:
             -   uses: actions/checkout@v3
+
+            -   name: Cache silo-core contracts
+                uses: actions/cache@v3
+                with:
+                    path: ./cache/
+                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
