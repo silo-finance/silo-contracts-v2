@@ -33,8 +33,9 @@ contract LiquidationHelper1TokenTest is LiquidationHelperCommon {
     }
 
     /*
-    forge test --ffi --mt test_executeLiquidation_1_token -vvv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_executeLiquidation_1_token -vvv
     */
+    /// forge-config: core_test.fuzz.runs = 200
     function test_executeLiquidation_1_token(
         uint32 _addTimestamp
     ) public {
