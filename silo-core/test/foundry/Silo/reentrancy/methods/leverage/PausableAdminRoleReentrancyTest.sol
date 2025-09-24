@@ -18,7 +18,7 @@ contract PausableAdminRoleReentrancyTest is MethodReentrancyTest {
         description = "PAUSER_ADMIN_ROLE()";
     }
 
-    function _ensureItWillNotRevert() internal {
+    function _ensureItWillNotRevert() internal view {
         LeverageRouter router = _getLeverageRouter();
         router.PAUSER_ADMIN_ROLE();
     }

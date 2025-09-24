@@ -1319,9 +1319,6 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     function test_rescueTokens_singleToken_emptyBalance_fuzz(address _rescuer) public {
         _openLeverageExample();
 
-        // Get user's leverage contract
-        address userLeverageContract = leverageRouter.predictUserLeverageContract(wallet.addr);
-        
         if (_rescuer == wallet.addr) {
             vm.expectRevert(abi.encodeWithSelector(RescueModule.EmptyBalance.selector, address(token0)));
         } else {
