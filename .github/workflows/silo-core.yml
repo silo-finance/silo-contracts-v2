@@ -53,21 +53,9 @@ jobs:
     silo-core-cache:
         runs-on: ubuntu-latest
         steps:
-            -   name: Cache (home/runner/work)
-                uses: actions/cache@v3
-                with:
-                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-                    key: home-runner-work-silo-contracts-v2-gitmodules
-
             -   uses: actions/checkout@v3
                 with:
                     submodules: recursive
-
-            -   name: Cache gitmodules
-                uses: actions/cache@v3
-                with:
-                    path: ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
@@ -126,19 +114,7 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            -   name: Cache (home/runner/work)
-                uses: actions/cache@v3
-                with:
-                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-                    key: home-runner-work-silo-contracts-v2-gitmodules
-
             -   uses: actions/checkout@v3
-
-            -   name: Cache gitmodules
-                uses: actions/cache@v3
-                with:
-                    path: ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
@@ -176,19 +152,7 @@ jobs:
         needs: silo-core-cache
         runs-on: ubuntu-latest
         steps:
-            -   name: Cache (home/runner/work)
-                uses: actions/cache@v3
-                with:
-                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-                    key: home-runner-work-silo-contracts-v2-gitmodules
-
             -   uses: actions/checkout@v3
-
-            -   name: Cache gitmodules
-                uses: actions/cache@v3
-                with:
-                    path: ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
@@ -225,19 +189,7 @@ jobs:
         needs: silo-core-cache
         runs-on: ubuntu-latest
         steps:
-            -   name: Cache (home/runner/work)
-                uses: actions/cache@v3
-                with:
-                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-                    key: home-runner-work-silo-contracts-v2-gitmodules
-
             -   uses: actions/checkout@v3
-
-            -   name: Cache gitmodules
-                uses: actions/cache@v3
-                with:
-                    path: ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
@@ -268,19 +220,7 @@ jobs:
         needs: silo-core-cache
         runs-on: ubuntu-latest
         steps:
-            -   name: Cache (home/runner/work)
-                uses: actions/cache@v3
-                with:
-                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-                    key: home-runner-work-silo-contracts-v2-gitmodules
-
             -   uses: actions/checkout@v3
-
-            -   name: Cache gitmodules
-                uses: actions/cache@v3
-                with:
-                    path: ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
 
             -   name: Cache silo-core contracts
                 uses: actions/cache@v3
