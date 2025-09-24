@@ -152,7 +152,7 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
     /* 
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_kink_rcomp_json
     */
-    function test_kink_rcomp_json() public {
+    function test_kink_rcomp_json() public view {
         RcompData[] memory data = _readDataFromJsonRcomp();
 
         for (uint256 i; i < data.length; i++) {

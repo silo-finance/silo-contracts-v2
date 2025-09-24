@@ -20,12 +20,12 @@ library RandomLib {
     /// @dev _min <= _n <= _max
     function randomBetween(uint256 _n, uint256 _min, uint256 _max) internal pure returns (uint256) {
         require(
-            _min <= _max, 
+            _min <= _max,
             string.concat("invalid range for randomBetween:", Strings.toString(_min), " <= ", Strings.toString(_max))
         );
 
         uint256 diff = _max - _min;
-        
+
         if (diff == 0) return _min;
         if (diff == type(uint256).max) return _n;
         if (_min <= _n && _n <= _max) return _n;
@@ -37,7 +37,7 @@ library RandomLib {
     /// @dev _min < _n <= _max
     function randomAbove(uint256 _n, uint256 _min, uint256 _max) internal pure returns (uint256) {
         require(
-            _min < _max, 
+            _min < _max,
             string.concat("invalid range for randomAbove:", Strings.toString(_min), " < ", Strings.toString(_max))
         );
 
@@ -51,7 +51,7 @@ library RandomLib {
     /// @dev _min <= _n < _max
     function randomBelow(uint256 _n, uint256 _min, uint256 _max) internal pure returns (uint256) {
         require(
-            _min < _max, 
+            _min < _max,
             string.concat("invalid range for randomBelow:", Strings.toString(_min), " < ", Strings.toString(_max))
         );
 

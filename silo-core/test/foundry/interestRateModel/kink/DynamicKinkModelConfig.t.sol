@@ -12,7 +12,7 @@ contract DynamicKinkModelConfigTest is KinkCommonTest {
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_config_getConfig -vv
     */
-    function test_kink_config_getConfig(
+    function test_kink_config_getConfig_fuzz(
         IDynamicKinkModel.Config memory _config,
         IDynamicKinkModel.ImmutableConfig memory _immutableConfig
     ) public {

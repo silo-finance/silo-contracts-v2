@@ -84,7 +84,6 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_create_pass_fuzz -vv
     */
-    // forge-config: core_test.fuzz.runs = 1000
     function test_kink_create_pass_fuzz(
         RandomKinkConfig memory _config,
         IDynamicKinkModel.ImmutableArgs memory _immutableArgs
@@ -100,10 +99,9 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --mt test_kink_generateConfig_alwaysWorks -vv
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_generateConfig_works -vv
     */
-    // forge-config: core_test.fuzz.runs = 1000
-    function test_kink_generateConfig_alwaysWorks_fuzz(IDynamicKinkModel.UserFriendlyConfig memory _in) public {
+    function test_kink_generateConfig_works_fuzz(IDynamicKinkModel.UserFriendlyConfig memory _in) public {
         // _printUserFriendlyConfig(_in);
 
         // start help fuzzing ----------------------------
