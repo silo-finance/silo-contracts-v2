@@ -17,7 +17,8 @@ import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
 import {KinkMath} from "../../lib/KinkMath.sol";
 
 /// @title DynamicKinkModel
-/// @notice Refer to Silo DynamicKinkModel paper for more details.
+/// @notice Refer to Silo DynamicKinkModel paper for more details:
+/// silo-core/docs/Kink_Interest_Rate_Model_V2_2025_09_23.pdf
 /// @dev it follows `IInterestRateModel` interface except `initialize` method
 /// @custom:security-contact security@silo.finance
 contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable {

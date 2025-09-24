@@ -63,6 +63,6 @@ library KinkMath {
     /// @param _value The uint256 value to check
     /// @return wouldOverflow true if casting would cause overflow
     function wouldOverflowOnCastToInt256(uint256 _value) internal pure returns (bool wouldOverflow) {
-        return _value > uint256(type(int256).max); // TODO check openzeppelin SafeCast.sol
+        return _value > uint256(type(int256).max);
     }
 }
