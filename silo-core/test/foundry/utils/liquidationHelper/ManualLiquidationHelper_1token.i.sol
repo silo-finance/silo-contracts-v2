@@ -31,6 +31,7 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
     /*
     forge test --ffi --mt test_executeLiquidation_1_token -vvv
     */
+    /// forge-config: core_test.fuzz.runs = 200
     function test_executeLiquidation_1_token_woBadDebt(
         uint32 _addTimestamp
     ) public {
