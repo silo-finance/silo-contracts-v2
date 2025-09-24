@@ -62,10 +62,8 @@ contract CheckSiloImplementation is ICheck, Test {
         bytes memory chainData = vm.parseJson(json, string(abi.encodePacked(".", chainAlias)));
 
         for (uint256 i = 0; i < chainData.length; i++) {
-            bytes memory implementationData = vm.parseJson(
-                json,
-                string(abi.encodePacked(".", chainAlias, "[", vm.toString(i), "].implementation"))
-            );
+            bytes memory implementationData =
+                vm.parseJson(json, string(abi.encodePacked(".", chainAlias, "[", vm.toString(i), "].implementation")));
 
             address implementationAddress = abi.decode(implementationData, (address));
 

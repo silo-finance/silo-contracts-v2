@@ -9,7 +9,9 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/InterestRateModelConfigData.sol";
 import {DKinkIRMConfigData} from "silo-core/deploy/input-readers/DKinkIRMConfigData.sol";
-import {InterestRateModelV2, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {
+    InterestRateModelV2, IInterestRateModelV2
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {IPendleLPWrapperLike} from "silo-oracles/contracts/pendle/interfaces/IPendleLPWrapperLike.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
@@ -27,7 +29,7 @@ interface IPTLinearAggregatorLike {
 }
 
 library Utils {
-    address constant internal _OLD_SILO_VIRTUAL_ASSET_8 = 0xad525F341368AA80093672278234ad364EFcAf0A;
+    address internal constant _OLD_SILO_VIRTUAL_ASSET_8 = 0xad525F341368AA80093672278234ad364EFcAf0A;
     uint256 internal constant _NEW_CHAINLINK_CONFIG_DATA_LEN = 320;
 
     function findKinkIrmName(ISiloConfig.ConfigData memory _configData)
@@ -38,11 +40,12 @@ library Utils {
 
         IDynamicKinkModelConfig irmConfig = IDynamicKinkModel(_configData.interestRateModel).irmConfig();
 
-        (IDynamicKinkModel.Config memory config, IDynamicKinkModel.ImmutableConfig memory immutableConfig) = irmConfig.getConfig();
+        (IDynamicKinkModel.Config memory config, IDynamicKinkModel.ImmutableConfig memory immutableConfig) =
+            irmConfig.getConfig();
 
         bytes32 deployedHash = keccak256(abi.encode(config, immutableConfig));
 
-        uint i;
+        uint256 i;
 
         for (; i < allModels.length; i++) {
             IDynamicKinkModel.ImmutableConfig memory immutableConfig = IDynamicKinkModel.ImmutableConfig({
@@ -62,27 +65,21 @@ library Utils {
         internal
         returns (string memory configName, bool success)
     {
-        InterestRateModelConfigData.ConfigData[] memory allModels =
-            (new InterestRateModelConfigData()).getAllConfigs();
+        InterestRateModelConfigData.ConfigData[] memory allModels = (new InterestRateModelConfigData()).getAllConfigs();
 
-        IInterestRateModelV2Config irmV2Config =
-            InterestRateModelV2(_configData.interestRateModel).irmConfig();
+        IInterestRateModelV2Config irmV2Config = InterestRateModelV2(_configData.interestRateModel).irmConfig();
 
         IInterestRateModelV2.Config memory irmConfig = irmV2Config.getConfig();
 
-        uint i;
+        uint256 i;
 
         for (; i < allModels.length; i++) {
-            bool configIsMatching = allModels[i].config.uopt == irmConfig.uopt &&
-                allModels[i].config.ucrit == irmConfig.ucrit &&
-                allModels[i].config.ulow == irmConfig.ulow &&
-                allModels[i].config.ki == irmConfig.ki &&
-                allModels[i].config.kcrit == irmConfig.kcrit &&
-                allModels[i].config.klow == irmConfig.klow &&
-                allModels[i].config.klin == irmConfig.klin &&
-                allModels[i].config.beta == irmConfig.beta &&
-                allModels[i].config.ri == irmConfig.ri &&
-                allModels[i].config.Tcrit == irmConfig.Tcrit;
+            bool configIsMatching = allModels[i].config.uopt == irmConfig.uopt
+                && allModels[i].config.ucrit == irmConfig.ucrit && allModels[i].config.ulow == irmConfig.ulow
+                && allModels[i].config.ki == irmConfig.ki && allModels[i].config.kcrit == irmConfig.kcrit
+                && allModels[i].config.klow == irmConfig.klow && allModels[i].config.klin == irmConfig.klin
+                && allModels[i].config.beta == irmConfig.beta && allModels[i].config.ri == irmConfig.ri
+                && allModels[i].config.Tcrit == irmConfig.Tcrit;
 
             if (configIsMatching) {
                 break;
@@ -163,9 +160,8 @@ library Utils {
         }
 
         try ChainlinkV3Oracle(address(_oracle)).oracleConfig() returns (ChainlinkV3OracleConfig oracleConfig) {
-            (, bytes memory data) = address(oracleConfig).staticcall(abi.encodeWithSelector(
-                ChainlinkV3OracleConfig.getConfig.selector
-            ));
+            (, bytes memory data) =
+                address(oracleConfig).staticcall(abi.encodeWithSelector(ChainlinkV3OracleConfig.getConfig.selector));
 
             if (data.length != _NEW_CHAINLINK_CONFIG_DATA_LEN) {
                 return (address(0), address(0));
@@ -211,7 +207,7 @@ library Utils {
                 return false;
             }
 
-            for (uint i; i < bytes(prefix).length; i++) {
+            for (uint256 i; i < bytes(prefix).length; i++) {
                 if (bytes(prefix)[i] != bytes(symbol)[i]) {
                     return false;
                 }

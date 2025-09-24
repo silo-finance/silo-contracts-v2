@@ -21,8 +21,10 @@ import {CheckIncentivesOwner} from "silo-core/deploy/silo/verifier/checks/silo/C
 import {CheckShareTokensInGauge} from "silo-core/deploy/silo/verifier/checks/silo/CheckShareTokensInGauge.sol";
 import {CheckSiloImplementation} from "silo-core/deploy/silo/verifier/checks/silo/CheckSiloImplementation.sol";
 
-import {CheckPriceDoesNotReturnZero} from "silo-core/deploy/silo/verifier/checks/behavior/CheckPriceDoesNotReturnZero.sol";
-import {CheckQuoteIsLinearFunction} from "silo-core/deploy/silo/verifier/checks/behavior/CheckQuoteIsLinearFunction.sol";
+import {CheckPriceDoesNotReturnZero} from
+    "silo-core/deploy/silo/verifier/checks/behavior/CheckPriceDoesNotReturnZero.sol";
+import {CheckQuoteIsLinearFunction} from
+    "silo-core/deploy/silo/verifier/checks/behavior/CheckQuoteIsLinearFunction.sol";
 import {CheckQuoteLargeAmounts} from "silo-core/deploy/silo/verifier/checks/behavior/CheckQuoteLargeAmounts.sol";
 import {CheckExternalPrices} from "silo-core/deploy/silo/verifier/checks/behavior/CheckExternalPrices.sol";
 
@@ -53,7 +55,7 @@ contract SiloVerifier {
             console2.log("Total checks:", _checks.length);
         }
 
-        for (uint i; i < _checks.length; i++) {
+        for (uint256 i; i < _checks.length; i++) {
             bool success = _checks[i].execute();
 
             if (!success) {
@@ -119,27 +121,23 @@ contract SiloVerifier {
             _buildSingleOracleChecks(_configData1.maxLtvOracle, _configData1.token, "maxLtvOracle1");
         }
 
-        _checks.push(new CheckExternalPrices({
-            _solvencyOracle0: _configData0.solvencyOracle,
-            _token0: _configData0.token,
-            _externalPrice0: EXTERNAL_PRICE_0,
-            _solvencyOracle1: _configData1.solvencyOracle,
-            _token1: _configData1.token,
-            _externalPrice1: EXTERNAL_PRICE_1
-        }));
+        _checks.push(
+            new CheckExternalPrices({
+                _solvencyOracle0: _configData0.solvencyOracle,
+                _token0: _configData0.token,
+                _externalPrice0: EXTERNAL_PRICE_0,
+                _solvencyOracle1: _configData1.solvencyOracle,
+                _token1: _configData1.token,
+                _externalPrice1: EXTERNAL_PRICE_1
+            })
+        );
     }
 
     function _buildSingleOracleChecks(address _oracle, address _token, string memory _oracleName) internal {
-        _checks.push(
-            new CheckPriceDoesNotReturnZero(_oracle, _token, _oracleName)
-        );
+        _checks.push(new CheckPriceDoesNotReturnZero(_oracle, _token, _oracleName));
 
-        _checks.push(
-            new CheckQuoteIsLinearFunction(_oracle, _token, _oracleName)
-        );
+        _checks.push(new CheckQuoteIsLinearFunction(_oracle, _token, _oracleName));
 
-        _checks.push(
-            new CheckQuoteLargeAmounts(_oracle, _token, _oracleName)
-        );
+        _checks.push(new CheckQuoteLargeAmounts(_oracle, _token, _oracleName));
     }
 }
