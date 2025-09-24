@@ -16,7 +16,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc LiquidationCall1TokenTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc LiquidationCall1TokenTest
 */
 contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
@@ -57,7 +57,7 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidationCall_UnexpectedDebtToken
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_UnexpectedDebtToken
     */
     function test_liquidationCall_UnexpectedDebtToken_1token() public {
         uint256 maxDebtToCover = 1;
