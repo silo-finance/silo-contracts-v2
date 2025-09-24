@@ -7,7 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MaxLiquidationCommon} from "./MaxLiquidationCommon.sol";
 
 /*
-    forge test -vv --ffi --mc MaxLiquidationDustTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc MaxLiquidationDustTest
 
     cases where when user become insolvent, we do full liquidation because of "dust"
 */
@@ -52,7 +52,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_dust_2tokens_sTokens_fuzz
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxLiquidation_dust_2tokens_sTokens_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 100
     function test_maxLiquidation_dust_2tokens_sTokens_fuzz(uint8 _collateral) public {
