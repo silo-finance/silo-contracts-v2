@@ -18,7 +18,7 @@ contract SupportsInterfaceReentrancyTest is MethodReentrancyTest {
         description = "supportsInterface(bytes4)";
     }
 
-    function _ensureItWillNotRevert() internal {
+    function _ensureItWillNotRevert() internal view {
         LeverageRouter router = _getLeverageRouter();
         router.supportsInterface(0x00000000);
     }

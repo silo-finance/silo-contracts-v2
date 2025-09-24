@@ -19,7 +19,7 @@ contract RevenueReceiverReentrancyTest is MethodReentrancyTest {
         description = "revenueReceiver()";
     }
 
-    function _ensureItWillNotRevert() internal {
+    function _ensureItWillNotRevert() internal view {
         LeverageRouter router = _getLeverageRouter();
         router.revenueReceiver();
     }

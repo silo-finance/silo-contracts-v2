@@ -18,7 +18,7 @@ contract PauserRoleReentrancyTest is MethodReentrancyTest {
         description = "PAUSER_ROLE()";
     }
 
-    function _ensureItWillNotRevert() internal {
+    function _ensureItWillNotRevert() internal view {
         LeverageRouter router = _getLeverageRouter();
         router.PAUSER_ROLE();
     }
