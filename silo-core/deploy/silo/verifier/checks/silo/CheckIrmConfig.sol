@@ -12,17 +12,20 @@ contract CheckIrmConfig is ICheck {
 
     string internal irmName;
 
+    bool internal isKinkIrm;
+
     constructor(ISiloConfig.ConfigData memory _configData, bool _isSiloZero) {
         configData = _configData;
         siloName = _isSiloZero ? "silo0" : "silo1";
     }
 
     function checkName() external view override returns (string memory name) {
-        name = string.concat(siloName, " IRM config is known");
+        name = string.concat(siloName, " IRM config should be known");
     }
 
     function successMessage() external view override returns (string memory message) {
-        message = string.concat("IRM is ", irmName);
+        string memory oldIrm = string.concat(unicode"🚨", " OLD IRM ");
+        message = string.concat("IRM is `", irmName, "`", isKinkIrm ? " (KINK)" : oldIrm);
     }
 
     function errorMessage() external pure override returns (string memory message) {
@@ -30,6 +33,12 @@ contract CheckIrmConfig is ICheck {
     }
 
     function execute() external override returns (bool result) {
-        (irmName, result) = Utils.findIrmName(configData);
+        (irmName, result) = Utils.findKinkIrmName(configData);
+
+        if (!result) {
+            (irmName, result) = Utils.findIrmName(configData);
+        } else {
+            isKinkIrm = true;
+        }
     }
 }

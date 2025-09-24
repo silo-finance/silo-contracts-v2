@@ -8,6 +8,7 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/InterestRateModelConfigData.sol";
+import {DKinkIRMConfigData} from "silo-core/deploy/input-readers/DKinkIRMConfigData.sol";
 import {InterestRateModelV2, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {IPendleLPWrapperLike} from "silo-oracles/contracts/pendle/interfaces/IPendleLPWrapperLike.sol";
@@ -17,6 +18,9 @@ import {ChainlinkV3Oracle} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3O
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
 
+import {IDynamicKinkModelConfig} from "silo-core/contracts/interfaces/IDynamicKinkModelConfig.sol";
+import {IDynamicKinkModel} from "silo-core/contracts/interfaces/IDynamicKinkModel.sol";
+
 interface IPTLinearAggregatorLike {
     function PT() external view returns (address);
     function baseDiscountPerYear() external view returns (uint256);
@@ -25,6 +29,34 @@ interface IPTLinearAggregatorLike {
 library Utils {
     address constant internal _OLD_SILO_VIRTUAL_ASSET_8 = 0xad525F341368AA80093672278234ad364EFcAf0A;
     uint256 internal constant _NEW_CHAINLINK_CONFIG_DATA_LEN = 320;
+
+    function findKinkIrmName(ISiloConfig.ConfigData memory _configData)
+        internal
+        returns (string memory configName, bool success)
+    {
+        DKinkIRMConfigData.ConfigData[] memory allModels = (new DKinkIRMConfigData()).getAllConfigs();
+
+        IDynamicKinkModelConfig irmConfig = IDynamicKinkModel(_configData.interestRateModel).irmConfig();
+
+        (IDynamicKinkModel.Config memory config, IDynamicKinkModel.ImmutableConfig memory immutableConfig) = irmConfig.getConfig();
+
+        bytes32 deployedHash = keccak256(abi.encode(config, immutableConfig));
+
+        uint i;
+
+        for (; i < allModels.length; i++) {
+            IDynamicKinkModel.ImmutableConfig memory immutableConfig = IDynamicKinkModel.ImmutableConfig({
+                timelock: allModels[i].immutableArgs.timelock,
+                rcompCapPerSecond: allModels[i].immutableArgs.rcompCap / 365 days
+            });
+
+            bytes32 cfgHash = keccak256(abi.encode(allModels[i].config, immutableConfig));
+
+            if (cfgHash == deployedHash) {
+                return (allModels[i].name, true);
+            }
+        }
+    }
 
     function findIrmName(ISiloConfig.ConfigData memory _configData)
         internal
