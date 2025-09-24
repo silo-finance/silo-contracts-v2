@@ -13,7 +13,7 @@ contract CalculateDebtReceiveApprovalReentrancyTest is MethodReentrancyTest {
         _ensureItWillNotRevert();
     }
 
-    function verifyReentrancy() external {
+    function verifyReentrancy() external view {
         _ensureItWillNotRevert();
     }
 
@@ -21,7 +21,7 @@ contract CalculateDebtReceiveApprovalReentrancyTest is MethodReentrancyTest {
         description = "calculateDebtReceiveApproval(address,uint256)";
     }
 
-    function _ensureItWillNotRevert() internal {
+    function _ensureItWillNotRevert() internal view {
         ILeverageRouter leverage = _getLeverage();
         ISilo silo = TestStateLib.silo0();
         leverage.calculateDebtReceiveApproval(silo, 1000e18);

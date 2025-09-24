@@ -6,11 +6,11 @@ import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
 contract DefaultAdminRoleReentrancyTest is MethodReentrancyTest {
-    function callMethod() external {
+    function callMethod() external view {
         _ensureItWillNotRevert();
     }
 
-    function verifyReentrancy() external {
+    function verifyReentrancy() external view {
         _ensureItWillNotRevert();
     }
 

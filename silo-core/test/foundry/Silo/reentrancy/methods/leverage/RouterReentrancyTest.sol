@@ -15,7 +15,7 @@ contract RouterReentrancyTest is MethodReentrancyTest {
         _ensureItWillNotRevert();
     }
 
-    function verifyReentrancy() external {
+    function verifyReentrancy() external view {
         _ensureItWillNotRevert();
     }
 
@@ -23,7 +23,7 @@ contract RouterReentrancyTest is MethodReentrancyTest {
         description = "ROUTER()";
     }
 
-    function _ensureItWillNotRevert() internal {
+    function _ensureItWillNotRevert() internal view {
         LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
         // ROUTER is a public immutable variable, not a function
         ILeverageRouter router = leverage.ROUTER();

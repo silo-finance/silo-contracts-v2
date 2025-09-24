@@ -15,7 +15,7 @@ contract DescriptionReentrancyTest is MethodReentrancyTest {
         _ensureItWillNotRevert();
     }
 
-    function verifyReentrancy() external {
+    function verifyReentrancy() external view {
         _ensureItWillNotRevert();
     }
 
@@ -23,7 +23,7 @@ contract DescriptionReentrancyTest is MethodReentrancyTest {
         description = "DESCRIPTION()";
     }
 
-    function _ensureItWillNotRevert() internal {
+    function _ensureItWillNotRevert() internal view {
         LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
         leverage.DESCRIPTION();
     }
