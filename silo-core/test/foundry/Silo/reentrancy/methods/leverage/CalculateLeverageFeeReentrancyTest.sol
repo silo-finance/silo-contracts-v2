@@ -23,12 +23,12 @@ contract CalculateLeverageFeeReentrancyTest is MethodReentrancyTest {
         description = "calculateLeverageFee(uint256)";
     }
 
-    function _ensureItWillNotRevert() internal view {
+    function _ensureItWillNotRevert() internal {
         LeverageRouter leverage = _getLeverage();
         leverage.calculateLeverageFee(1000e18);
     }
 
-    function _getLeverage() internal view returns (LeverageRouter) {
+    function _getLeverage() internal returns (LeverageRouter) {
         return LeverageRouter(TestStateLib.leverageRouter());
     }
 }

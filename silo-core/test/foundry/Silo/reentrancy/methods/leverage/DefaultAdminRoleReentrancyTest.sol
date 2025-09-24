@@ -18,7 +18,7 @@ contract DefaultAdminRoleReentrancyTest is MethodReentrancyTest {
         description = "DEFAULT_ADMIN_ROLE()";
     }
 
-    function _ensureItWillNotRevert() internal view {
+    function _ensureItWillNotRevert() internal {
         LeverageRouter router = _getLeverageRouter();
         router.DEFAULT_ADMIN_ROLE();
     }

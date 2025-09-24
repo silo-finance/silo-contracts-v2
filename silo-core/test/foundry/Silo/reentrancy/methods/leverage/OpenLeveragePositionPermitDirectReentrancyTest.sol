@@ -61,7 +61,7 @@ contract OpenLeveragePositionPermitDirectReentrancyTest is MethodReentrancyTest 
         );
     }
 
-    function _getLeverage() internal view returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
+    function _getLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
         return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION());
     }

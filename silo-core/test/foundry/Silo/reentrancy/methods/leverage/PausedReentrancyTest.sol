@@ -22,7 +22,7 @@ contract PausedReentrancyTest is MethodReentrancyTest {
         description = "paused()";
     }
 
-    function _ensureItWillNotRevert() internal view {
+    function _ensureItWillNotRevert() internal {
         LeverageRouter router = _getLeverageRouter();
         router.paused();
     }

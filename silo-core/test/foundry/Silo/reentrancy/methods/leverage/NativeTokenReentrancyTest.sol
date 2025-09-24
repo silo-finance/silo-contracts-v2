@@ -23,12 +23,12 @@ contract NativeTokenReentrancyTest is MethodReentrancyTest {
         description = "NATIVE_TOKEN()";
     }
 
-    function _ensureItWillNotRevert() internal view {
+    function _ensureItWillNotRevert() internal {
         LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
         leverage.NATIVE_TOKEN();
     }
 
-    function _getLeverage() internal view returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
+    function _getLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
         return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION());
     }

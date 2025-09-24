@@ -18,7 +18,7 @@ contract OwnerRoleReentrancyTest is MethodReentrancyTest {
         description = "OWNER_ROLE()";
     }
 
-    function _ensureItWillNotRevert() internal view {
+    function _ensureItWillNotRevert() internal {
         LeverageRouter router = _getLeverageRouter();
         router.OWNER_ROLE();
     }

@@ -18,7 +18,7 @@ contract GetRoleAdminReentrancyTest is MethodReentrancyTest {
         description = "getRoleAdmin(bytes32)";
     }
 
-    function _ensureItWillNotRevert() internal view {
+    function _ensureItWillNotRevert() internal {
         LeverageRouter router = _getLeverageRouter();
         router.getRoleAdmin(router.PAUSER_ROLE());
     }

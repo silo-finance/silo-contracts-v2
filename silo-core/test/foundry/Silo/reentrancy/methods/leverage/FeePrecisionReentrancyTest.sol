@@ -23,12 +23,12 @@ contract FeePrecisionReentrancyTest is MethodReentrancyTest {
         description = "FEE_PRECISION()";
     }
 
-    function _ensureItWillNotRevert() internal view {
+    function _ensureItWillNotRevert() internal {
         LeverageRouter leverage = _getLeverage();
         leverage.FEE_PRECISION();
     }
 
-    function _getLeverage() internal view returns (LeverageRouter) {
+    function _getLeverage() internal returns (LeverageRouter) {
         return LeverageRouter(TestStateLib.leverageRouter());
     }
 }

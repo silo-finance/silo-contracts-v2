@@ -18,7 +18,7 @@ contract HasRoleReentrancyTest is MethodReentrancyTest {
         description = "hasRole(bytes32,address)";
     }
 
-    function _ensureItWillNotRevert() internal view {
+    function _ensureItWillNotRevert() internal {
         LeverageRouter router = _getLeverageRouter();
         router.hasRole(router.PAUSER_ROLE(), address(this));
     }

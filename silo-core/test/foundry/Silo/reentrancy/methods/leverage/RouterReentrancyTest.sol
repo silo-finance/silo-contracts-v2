@@ -30,7 +30,7 @@ contract RouterReentrancyTest is MethodReentrancyTest {
         require(address(router) != address(0), "Router should not be zero");
     }
 
-    function _getLeverage() internal view returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
+    function _getLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
         return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION());
     }

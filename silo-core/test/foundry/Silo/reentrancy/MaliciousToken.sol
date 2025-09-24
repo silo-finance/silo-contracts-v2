@@ -58,7 +58,7 @@ contract MaliciousToken is MintableToken, Test {
         }
 
         if (TestStateLib.leverageReenter()) {
-            // address leverageRouter = TestStateLib.leverageRouter();
+            address leverageRouter = TestStateLib.leverageRouter();
 
             // bool entered = TransientReentrancy(leverage).reentrancyGuardEntered();
             // assertTrue(entered, "Reentrancy is not enabled on a token transfer when leverage");
