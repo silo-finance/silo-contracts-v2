@@ -16,6 +16,7 @@ import {CheckIrmConfig} from "silo-core/deploy/silo/verifier/checks/silo/CheckIr
 import {CheckMaxLtvLtLiquidationFee} from "silo-core/deploy/silo/verifier/checks/silo/CheckMaxLtvLtLiquidationFee.sol";
 import {CheckNonBorrowableAsset} from "silo-core/deploy/silo/verifier/checks/silo/CheckNonBorrowableAsset.sol";
 import {CheckHookOwner} from "silo-core/deploy/silo/verifier/checks/silo/CheckHookOwner.sol";
+import {CheckIrmOwner} from "silo-core/deploy/silo/verifier/checks/silo/CheckIrmOwner.sol";
 import {CheckIncentivesOwner} from "silo-core/deploy/silo/verifier/checks/silo/CheckIncentivesOwner.sol";
 import {CheckShareTokensInGauge} from "silo-core/deploy/silo/verifier/checks/silo/CheckShareTokensInGauge.sol";
 import {CheckSiloImplementation} from "silo-core/deploy/silo/verifier/checks/silo/CheckSiloImplementation.sol";
@@ -89,6 +90,7 @@ contract SiloVerifier {
         _checks.push(new CheckLiquidationFee(_configData, _isSiloZero));
         _checks.push(new CheckFlashloanFee(_configData, _isSiloZero));
         _checks.push(new CheckIrmConfig(_configData, _isSiloZero));
+        _checks.push(new CheckIrmOwner(_configData, _isSiloZero));
         _checks.push(new CheckMaxLtvLtLiquidationFee(_configData, _isSiloZero));
         _checks.push(new CheckHookOwner(_configData, _isSiloZero));
         _checks.push(new CheckIncentivesOwner(_configData, _isSiloZero));
