@@ -71,6 +71,23 @@ contract InterestRateModelConfigData {
         revert ConfigNotFound();
     }
 
+    function modelConfigToConfig(ModelConfig memory _modelConfig)
+        public
+        pure
+        returns (IInterestRateModelV2.Config memory config)
+    {
+        config.beta = _modelConfig.beta;
+        config.ki = _modelConfig.ki;
+        config.kcrit = _modelConfig.kcrit;
+        config.klin = _modelConfig.klin;
+        config.klow = _modelConfig.klow;
+        config.ucrit = _modelConfig.ucrit;
+        config.ulow = _modelConfig.ulow;
+        config.uopt = _modelConfig.uopt;
+        config.ri = int112(_modelConfig.ri);
+        config.Tcrit = int112(_modelConfig.Tcrit);
+    }
+
     function print(IInterestRateModelV2.Config memory _configData) public pure {
         console2.log("Tcrit", _configData.Tcrit);
         console2.log("beta", _configData.beta);

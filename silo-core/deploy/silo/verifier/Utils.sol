@@ -65,7 +65,8 @@ library Utils {
         internal
         returns (string memory configName, bool success)
     {
-        InterestRateModelConfigData.ConfigData[] memory allModels = (new InterestRateModelConfigData()).getAllConfigs();
+        InterestRateModelConfigData irmData = new InterestRateModelConfigData();
+        InterestRateModelConfigData.ConfigData[] memory allModels = irmData.getAllConfigs();
 
         IInterestRateModelV2Config irmV2Config = InterestRateModelV2(_configData.interestRateModel).irmConfig();
 
@@ -75,10 +76,9 @@ library Utils {
 
         bytes32 deployedCfgHash = keccak256(abi.encode(irmConfig));
 
-        uint256 i;
+        for (uint256 i; i < allModels.length; i++) {
+            bytes32 cfgHash = keccak256(abi.encode(irmData.modelConfigToConfig(allModels[i].config)));
 
-        for (; i < allModels.length; i++) {
-            bytes32 cfgHash = keccak256(abi.encode(allModels[i].config));
             if (cfgHash == deployedCfgHash) {
                 return (allModels[i].name, true);
             }
