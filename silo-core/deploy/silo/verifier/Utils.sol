@@ -71,24 +71,17 @@ library Utils {
 
         IInterestRateModelV2.Config memory irmConfig = irmV2Config.getConfig();
 
+        // ri and Tcrit can be changed over time, but this test is done just after deployment, so they should match
+
+        bytes32 deployedCfgHash = keccak256(abi.encode(irmConfig));
+
         uint256 i;
 
         for (; i < allModels.length; i++) {
-            bool configIsMatching = allModels[i].config.uopt == irmConfig.uopt
-                && allModels[i].config.ucrit == irmConfig.ucrit && allModels[i].config.ulow == irmConfig.ulow
-                && allModels[i].config.ki == irmConfig.ki && allModels[i].config.kcrit == irmConfig.kcrit
-                && allModels[i].config.klow == irmConfig.klow && allModels[i].config.klin == irmConfig.klin
-                && allModels[i].config.beta == irmConfig.beta && allModels[i].config.ri == irmConfig.ri
-                && allModels[i].config.Tcrit == irmConfig.Tcrit;
-
-            if (configIsMatching) {
-                break;
+            bytes32 cfgHash = keccak256(abi.encode(allModels[i].config));
+            if (cfgHash == deployedCfgHash) {
+                return (allModels[i].name, true);
             }
-        }
-
-        if (i != allModels.length) {
-            configName = allModels[i].name;
-            success = true;
         }
     }
 
