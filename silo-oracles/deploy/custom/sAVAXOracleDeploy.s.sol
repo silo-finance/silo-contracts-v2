@@ -6,15 +6,16 @@ import {console2} from "forge-std/console2.sol";
 
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
-import {sAVAXOracle} from "silo-oracles/contracts/custom/sAVAX/sAVAXOracle.sol";
-import {CommonDeploy} from "../CommonDeploy.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+
+import {sAVAXOracle} from "../../contracts/custom/sAVAX/sAVAXOracle.sol";
+import {CommonDeploy} from "../CommonDeploy.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
 
 /**
 FOUNDRY_PROFILE=oracles \
-    forge script silo-oracles/deploy/erc4626/sAVAXOracleDeploy.s.sol \
+    forge script silo-oracles/deploy/custom/sAVAXOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify
  */
 contract sAVAXOracleDeploy is CommonDeploy {
@@ -36,8 +37,9 @@ contract sAVAXOracleDeploy is CommonDeploy {
 
     function _qa(ISiloOracle oracle) internal view {
         address vault = address(sAVAXOracle(address(oracle)).S_AVAX());
+        address baseToken = sAVAXOracle(address(oracle)).IAU_sAVAX();
 
-        console2.log("fetch price for: %s/%s", IERC20Metadata(vault).symbol(), IERC20Metadata(oracle.quoteToken()).symbol());
-        printQuote(oracle, address(vault), uint256(10 ** IERC20Metadata(vault).decimals()));
+        console2.log("fetch price for: %s/%s\n", IERC20Metadata(vault).symbol(), IERC20Metadata(oracle.quoteToken()).symbol());
+        printQuote(oracle, baseToken, uint256(10 ** IERC20Metadata(baseToken).decimals()));
     }
 }
