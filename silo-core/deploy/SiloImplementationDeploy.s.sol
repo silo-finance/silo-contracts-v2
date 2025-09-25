@@ -6,17 +6,13 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
-import {SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
-import {IInterestRateModelV2Factory} from "silo-core/contracts/interfaces/IInterestRateModelV2Factory.sol";
-import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
-import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloImplementationDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
@@ -67,9 +63,9 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
         --compiler-version 0.8.28 \
         --num-of-optimizations 200 \
         --watch
- */
+*/
 contract SiloImplementationDeploy is CommonDeploy {
-    function run() public returns (ISiloDeployer siloDeployer) {
+    function run() public {
         string memory chainAlias = ChainsLib.chainAlias();
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
@@ -91,8 +87,13 @@ contract SiloImplementationDeploy is CommonDeploy {
         console2.log("\n[SiloImplementationDeploy] deploying new SiloImplementation\n");
 
         address siloImpl = address(new Silo(_siloFactory));
+        console2.log("New SiloImplementation deployed", siloImpl);
+
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
+        console2.log("New ShareProtectedCollateralToken deployed", shareProtectedCollateralTokenImpl);
+        
         address shareDebtTokenImpl = address(new ShareDebtToken());
+        console2.log("New ShareDebtToken deployed", shareDebtTokenImpl);
 
         _registerDeployment(siloImpl, SiloCoreContracts.SILO);
 
