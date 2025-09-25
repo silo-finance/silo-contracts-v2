@@ -73,9 +73,6 @@ contract LiquidationHelperDeploy is CommonDeploy {
     function _resolveExchangeProxyAddress() internal returns (address) {
         uint256 chainId = getChainId();
 
-        console2.log("\t @@@@ [LiquidationHelperDeploy] _resolveExchangeProxyAddress: chainId: ", chainId);
-        console2.log("\t @@@@ [LiquidationHelperDeploy] _envAggregator: ", _envAggregator());
-
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return address(2);
 
         if (_isRequestedAggregator(AGGREGATOR_1INCH)) return AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_1INCH);
