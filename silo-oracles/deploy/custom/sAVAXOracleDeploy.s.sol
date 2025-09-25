@@ -12,7 +12,6 @@ import {sAVAXOracle} from "../../contracts/custom/sAVAX/sAVAXOracle.sol";
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
-
 /**
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/custom/sAVAXOracleDeploy.s.sol \
@@ -37,9 +36,11 @@ contract sAVAXOracleDeploy is CommonDeploy {
 
     function _qa(ISiloOracle oracle) internal view {
         address vault = address(sAVAXOracle(address(oracle)).S_AVAX());
-        address baseToken = sAVAXOracle(address(oracle)).IAU_sAVAX();
+        address baseToken = sAVAXOracle(address(oracle)).IAU_SAVAX();
 
-        console2.log("fetch price for: %s/%s\n", IERC20Metadata(vault).symbol(), IERC20Metadata(oracle.quoteToken()).symbol());
+        console2.log(
+            "fetch price for: %s/%s\n", IERC20Metadata(vault).symbol(), IERC20Metadata(oracle.quoteToken()).symbol()
+        );
         printQuote(oracle, baseToken, uint256(10 ** IERC20Metadata(baseToken).decimals()));
     }
 }
