@@ -15,7 +15,7 @@
     "liquidationFee0": 350,
     "flashloanFee0": 0,
     "callBeforeQuote0": false,
-    "token1": "wAVAX",
+    "token1": "WAVAX",
     "solvencyOracle1": "NO_ORACLE",
     "maxLtvOracle1": "NO_ORACLE",
     "interestRateModel1": "InterestRateModelV2Factory.sol",
