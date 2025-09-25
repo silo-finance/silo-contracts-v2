@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {console2} from "forge-std/console2.sol";
-
 import {Test} from "forge-std/Test.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
@@ -37,9 +35,10 @@ import {
 import {
     PendleRewardsClaimerHarness
 } from "silo-core/test/foundry/utils/hook-receivers/pendle-rewards-claimer/PendleRewardsClaimerHarness.sol";
+import {SiloImplementationDeploy} from "silo-core/deploy/SiloImplementationDeploy.s.sol";
 
 /*
-FOUNDRY_PROFILE=core_test forge test --ffi --mc PendleRewardsClaimerTest -vv
+AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test --ffi --mc PendleRewardsClaimerTest -vv
 */
 contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     uint256 internal constant _BLOCK_TO_FORK = 22518257;
@@ -61,28 +60,24 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     function setUp() public virtual {
         vm.createSelectFork(vm.envString("RPC_MAINNET"), _BLOCK_TO_FORK);
 
-        console2.log("setup #0 debug");
+        // we need specyfic block for this test, but silo implementation might be changed (not available),
+        // so we deploy new silo implementation
+        SiloImplementationDeploy siloImplementationDeploy = new SiloImplementationDeploy();
+        siloImplementationDeploy.disableDeploymentsSync();
+        siloImplementationDeploy.run();
 
         PendleRewardsClaimerDeploy pendleRewardsClaimerDeploy = new PendleRewardsClaimerDeploy();
         pendleRewardsClaimerDeploy.disableDeploymentsSync();
         pendleRewardsClaimerDeploy.run();
 
-        console2.log("setup #1 debug");
-
         _siloConfig = _setUpLocalFixtureNoOverrides(SiloConfigsNames.SILO_PENDLE_REWARDS_TEST);
 
-        console2.log("setup #2 debug");
-
         _hookReceiver = IPendleRewardsClaimer(address(IShareToken(address(silo0)).hookSetup().hookReceiver));
-
-        console2.log("setup #3 debug");
 
         _factory = ISiloIncentivesControllerFactory(SiloCoreDeployments.get(
             SiloCoreContracts.INCENTIVES_CONTROLLER_FACTORY,
             ChainsLib.chainAlias()
         ));
-
-        console2.log("setup #4 debug");
 
         _dao = AddrLib.getAddress(AddrKey.DAO);
 
