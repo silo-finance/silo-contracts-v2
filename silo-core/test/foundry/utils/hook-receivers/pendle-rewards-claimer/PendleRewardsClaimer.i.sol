@@ -35,8 +35,11 @@ import {
 import {
     PendleRewardsClaimerHarness
 } from "silo-core/test/foundry/utils/hook-receivers/pendle-rewards-claimer/PendleRewardsClaimerHarness.sol";
+import {SiloImplementationDeploy} from "silo-core/deploy/SiloImplementationDeploy.s.sol";
 
-// FOUNDRY_PROFILE=core_test forge test --ffi --mc PendleRewardsClaimerTest -vv
+/*
+AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test --ffi --mc PendleRewardsClaimerTest -vv
+*/
 contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     uint256 internal constant _BLOCK_TO_FORK = 22518257;
 
@@ -56,6 +59,12 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
     function setUp() public virtual {
         vm.createSelectFork(vm.envString("RPC_MAINNET"), _BLOCK_TO_FORK);
+
+        // we need specyfic block for this test, but silo implementation might be changed (not available),
+        // so we deploy new silo implementation
+        SiloImplementationDeploy siloImplementationDeploy = new SiloImplementationDeploy();
+        siloImplementationDeploy.disableDeploymentsSync();
+        siloImplementationDeploy.run();
 
         PendleRewardsClaimerDeploy pendleRewardsClaimerDeploy = new PendleRewardsClaimerDeploy();
         pendleRewardsClaimerDeploy.disableDeploymentsSync();

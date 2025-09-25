@@ -27,7 +27,7 @@ contract CheckMaxLtvLtLiquidationFee is ICheck {
     }
 
     function execute() external view override returns (bool result) {
-        result = configData.maxLtv == 0 && configData.lt == 0 && configData.liquidationFee == 0 ||
-            configData.maxLtv != 0 && configData.lt != 0 && configData.liquidationFee != 0;
+        result = configData.maxLtv == 0 && configData.lt == 0 && configData.liquidationFee == 0
+            || configData.maxLtv != 0 && configData.lt != 0 && configData.liquidationFee != 0;
     }
 }

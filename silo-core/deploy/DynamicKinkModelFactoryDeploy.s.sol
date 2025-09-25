@@ -9,6 +9,8 @@ import {
     IDynamicKinkModelFactory
 } from "silo-core/contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 
+import {DynamicKinkModel} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModel.sol";
+
 /*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/DynamicKinkModelFactoryDeploy.s.sol:DynamicKinkModelFactoryDeploy \
@@ -29,7 +31,7 @@ contract DynamicKinkModelFactoryDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        irmFactory = IDynamicKinkModelFactory(address(new DynamicKinkModelFactory()));
+        irmFactory = IDynamicKinkModelFactory(address(new DynamicKinkModelFactory(new DynamicKinkModel())));
 
         vm.stopBroadcast();
 

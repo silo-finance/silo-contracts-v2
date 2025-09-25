@@ -23,4 +23,9 @@ contract SiloDeployWithDeployerOwner is SiloDeploy {
             initializationData: abi.encode(owner)
         });
     }
+
+    function _getDKinkIRMInitialOwner() internal view override returns (address owner) {
+        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        owner = vm.addr(deployerPrivateKey);
+    }
 }

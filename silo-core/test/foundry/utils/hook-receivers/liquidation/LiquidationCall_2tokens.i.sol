@@ -647,7 +647,6 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
             uint256 collateralToLiquidateLens,
             uint256 debtToRepayLens,
             bool sTokenRequiredLens,
-            bool fullLiquidationLens
         ) = siloLens.maxLiquidation(silo1, partialLiquidation, protectedBorrower);
 
         // Verify the bug: Hook says sTokenRequired=true because liquidity is 0

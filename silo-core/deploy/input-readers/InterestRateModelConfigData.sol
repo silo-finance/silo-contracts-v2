@@ -45,30 +45,38 @@ contract InterestRateModelConfigData {
         return _readDataFromJson();
     }
 
-    function getConfigData(string memory _name) public view returns (IInterestRateModelV2.Config memory modelConfig) {
+    function getConfigData(string memory _name) public view returns (IInterestRateModelV2.Config memory cfg) {
         ConfigData[] memory configs = _readDataFromJson();
 
         for (uint256 index = 0; index < configs.length; index++) {
             if (keccak256(bytes(configs[index].name)) == keccak256(bytes(_name))) {
-                modelConfig.beta = configs[index].config.beta;
-                modelConfig.ki = configs[index].config.ki;
-                modelConfig.kcrit = configs[index].config.kcrit;
-                modelConfig.klin = configs[index].config.klin;
-                modelConfig.klow = configs[index].config.klow;
-                modelConfig.ucrit = configs[index].config.ucrit;
-                modelConfig.ulow = configs[index].config.ulow;
-                modelConfig.uopt = configs[index].config.uopt;
-                modelConfig.ri = int112(configs[index].config.ri);
-                modelConfig.Tcrit = int112(configs[index].config.Tcrit);
+                cfg = modelConfigToConfig(configs[index].config);
 
-                require(modelConfig.ri == configs[index].config.ri, "ri overflow");
-                require(modelConfig.Tcrit == configs[index].config.Tcrit, "Tcrit overflow");
+                require(cfg.ri == configs[index].config.ri, "ri overflow");
+                require(cfg.Tcrit == configs[index].config.Tcrit, "Tcrit overflow");
 
-                return modelConfig;
+                return cfg;
             }
         }
 
         revert ConfigNotFound();
+    }
+
+    function modelConfigToConfig(ModelConfig memory _modelConfig)
+        public
+        pure
+        returns (IInterestRateModelV2.Config memory config)
+    {
+        config.beta = _modelConfig.beta;
+        config.ki = _modelConfig.ki;
+        config.kcrit = _modelConfig.kcrit;
+        config.klin = _modelConfig.klin;
+        config.klow = _modelConfig.klow;
+        config.ucrit = _modelConfig.ucrit;
+        config.ulow = _modelConfig.ulow;
+        config.uopt = _modelConfig.uopt;
+        config.ri = int112(_modelConfig.ri);
+        config.Tcrit = int112(_modelConfig.Tcrit);
     }
 
     function print(IInterestRateModelV2.Config memory _configData) public pure {

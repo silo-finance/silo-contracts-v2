@@ -15,7 +15,7 @@ contract NativeTokenReentrancyTest is MethodReentrancyTest {
         _ensureItWillNotRevert();
     }
 
-    function verifyReentrancy() external {
+    function verifyReentrancy() external view {
         _ensureItWillNotRevert();
     }
 
@@ -23,12 +23,12 @@ contract NativeTokenReentrancyTest is MethodReentrancyTest {
         description = "NATIVE_TOKEN()";
     }
 
-    function _ensureItWillNotRevert() internal {
+    function _ensureItWillNotRevert() internal view {
         LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
         leverage.NATIVE_TOKEN();
     }
 
-    function _getLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
+    function _getLeverage() internal view returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
         return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION());
     }

@@ -6,11 +6,11 @@ import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
 contract OwnerRoleReentrancyTest is MethodReentrancyTest {
-    function callMethod() external {
+    function callMethod() external view {
         _ensureItWillNotRevert();
     }
 
-    function verifyReentrancy() external {
+    function verifyReentrancy() external view {
         _ensureItWillNotRevert();
     }
 
@@ -18,7 +18,7 @@ contract OwnerRoleReentrancyTest is MethodReentrancyTest {
         description = "OWNER_ROLE()";
     }
 
-    function _ensureItWillNotRevert() internal {
+    function _ensureItWillNotRevert() internal view {
         LeverageRouter router = _getLeverageRouter();
         router.OWNER_ROLE();
     }

@@ -63,14 +63,14 @@ contract CheckExternalPrices is ICheck {
             message = "external price is not provided";
         } else if (reverted) {
             message = "oracles revert";
-        } else if (oracleReturnsZero){
+        } else if (oracleReturnsZero) {
             message = "oracle returns zero";
         } else if (wrongDecimalsForNoOracleCase) {
             message = "no oracles case: decimals of tokens are not equal";
         } else if (noOracleCase) {
             message = "external prices are not equal for no oracles case, prices must be 1:1";
         } else {
-           message = string.concat(
+            message = string.concat(
                 "Price1/Price2 from contracts ",
                 Strings.toString(contractsRatio),
                 " is NOT close to external source ",
@@ -84,7 +84,7 @@ contract CheckExternalPrices is ICheck {
     }
 
     function _checkExternalPrice() internal returns (bool success) {
-        uint256 precisionDecimals = 10**18;
+        uint256 precisionDecimals = 10 ** 18;
 
         uint256 token0Decimals = uint256(IERC20Metadata(token0).decimals());
         uint256 token1Decimals = uint256(IERC20Metadata(token1).decimals());
@@ -119,8 +119,7 @@ contract CheckExternalPrices is ICheck {
                 (success0, price0) = Utils.quote(ISiloOracle(solvencyOracle0), token0, oneToken0);
             }
 
-            (bool success1, uint256 price1) =
-                Utils.quote(ISiloOracle(solvencyOracle1), token1, oneToken1);
+            (bool success1, uint256 price1) = Utils.quote(ISiloOracle(solvencyOracle1), token1, oneToken1);
 
             if (!success0 || !success1) {
                 reverted = true;

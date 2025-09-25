@@ -58,7 +58,7 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         description = "openLeveragePosition((address,uint256),bytes,(address,uint256,uint8))";
     }
 
-    function _getLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
+    function _getLeverage() internal view returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
         return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION());
     }
@@ -120,7 +120,7 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         address _user,
         uint256 _depositAmount,
         uint256 _flashloanAmount,
-        SwapRouterMock _swap,
+        SwapRouterMock /*_swap*/,
         bool _approveAssets
     ) internal {
         // Get user's leverage contract from router

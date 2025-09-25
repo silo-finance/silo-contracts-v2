@@ -23,10 +23,7 @@ contract CheckDeployerFee is ICheck {
     }
 
     function errorMessage() external view override returns (string memory message) {
-        message = string.concat(
-            Strings.toString(configData.deployerFee),
-            " deployer fee is NOT zero"
-        );
+        message = string.concat(Strings.toString(configData.deployerFee), " deployer fee is NOT zero");
     }
 
     function execute() external view override returns (bool result) {

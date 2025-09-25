@@ -16,12 +16,15 @@ import {CheckIrmConfig} from "silo-core/deploy/silo/verifier/checks/silo/CheckIr
 import {CheckMaxLtvLtLiquidationFee} from "silo-core/deploy/silo/verifier/checks/silo/CheckMaxLtvLtLiquidationFee.sol";
 import {CheckNonBorrowableAsset} from "silo-core/deploy/silo/verifier/checks/silo/CheckNonBorrowableAsset.sol";
 import {CheckHookOwner} from "silo-core/deploy/silo/verifier/checks/silo/CheckHookOwner.sol";
+import {CheckIrmOwner} from "silo-core/deploy/silo/verifier/checks/silo/CheckIrmOwner.sol";
 import {CheckIncentivesOwner} from "silo-core/deploy/silo/verifier/checks/silo/CheckIncentivesOwner.sol";
 import {CheckShareTokensInGauge} from "silo-core/deploy/silo/verifier/checks/silo/CheckShareTokensInGauge.sol";
 import {CheckSiloImplementation} from "silo-core/deploy/silo/verifier/checks/silo/CheckSiloImplementation.sol";
 
-import {CheckPriceDoesNotReturnZero} from "silo-core/deploy/silo/verifier/checks/behavior/CheckPriceDoesNotReturnZero.sol";
-import {CheckQuoteIsLinearFunction} from "silo-core/deploy/silo/verifier/checks/behavior/CheckQuoteIsLinearFunction.sol";
+import {CheckPriceDoesNotReturnZero} from
+    "silo-core/deploy/silo/verifier/checks/behavior/CheckPriceDoesNotReturnZero.sol";
+import {CheckQuoteIsLinearFunction} from
+    "silo-core/deploy/silo/verifier/checks/behavior/CheckQuoteIsLinearFunction.sol";
 import {CheckQuoteLargeAmounts} from "silo-core/deploy/silo/verifier/checks/behavior/CheckQuoteLargeAmounts.sol";
 import {CheckExternalPrices} from "silo-core/deploy/silo/verifier/checks/behavior/CheckExternalPrices.sol";
 
@@ -52,7 +55,7 @@ contract SiloVerifier {
             console2.log("Total checks:", _checks.length);
         }
 
-        for (uint i; i < _checks.length; i++) {
+        for (uint256 i; i < _checks.length; i++) {
             bool success = _checks[i].execute();
 
             if (!success) {
@@ -89,6 +92,7 @@ contract SiloVerifier {
         _checks.push(new CheckLiquidationFee(_configData, _isSiloZero));
         _checks.push(new CheckFlashloanFee(_configData, _isSiloZero));
         _checks.push(new CheckIrmConfig(_configData, _isSiloZero));
+        _checks.push(new CheckIrmOwner(_configData, _isSiloZero));
         _checks.push(new CheckMaxLtvLtLiquidationFee(_configData, _isSiloZero));
         _checks.push(new CheckHookOwner(_configData, _isSiloZero));
         _checks.push(new CheckIncentivesOwner(_configData, _isSiloZero));
@@ -117,27 +121,23 @@ contract SiloVerifier {
             _buildSingleOracleChecks(_configData1.maxLtvOracle, _configData1.token, "maxLtvOracle1");
         }
 
-        _checks.push(new CheckExternalPrices({
-            _solvencyOracle0: _configData0.solvencyOracle,
-            _token0: _configData0.token,
-            _externalPrice0: EXTERNAL_PRICE_0,
-            _solvencyOracle1: _configData1.solvencyOracle,
-            _token1: _configData1.token,
-            _externalPrice1: EXTERNAL_PRICE_1
-        }));
+        _checks.push(
+            new CheckExternalPrices({
+                _solvencyOracle0: _configData0.solvencyOracle,
+                _token0: _configData0.token,
+                _externalPrice0: EXTERNAL_PRICE_0,
+                _solvencyOracle1: _configData1.solvencyOracle,
+                _token1: _configData1.token,
+                _externalPrice1: EXTERNAL_PRICE_1
+            })
+        );
     }
 
     function _buildSingleOracleChecks(address _oracle, address _token, string memory _oracleName) internal {
-        _checks.push(
-            new CheckPriceDoesNotReturnZero(_oracle, _token, _oracleName)
-        );
+        _checks.push(new CheckPriceDoesNotReturnZero(_oracle, _token, _oracleName));
 
-        _checks.push(
-            new CheckQuoteIsLinearFunction(_oracle, _token, _oracleName)
-        );
+        _checks.push(new CheckQuoteIsLinearFunction(_oracle, _token, _oracleName));
 
-        _checks.push(
-            new CheckQuoteLargeAmounts(_oracle, _token, _oracleName)
-        );
+        _checks.push(new CheckQuoteLargeAmounts(_oracle, _token, _oracleName));
     }
 }

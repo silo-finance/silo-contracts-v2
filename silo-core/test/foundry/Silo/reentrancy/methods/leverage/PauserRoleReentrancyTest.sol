@@ -6,11 +6,11 @@ import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
 contract PauserRoleReentrancyTest is MethodReentrancyTest {
-    function callMethod() external {
+    function callMethod() external view {
         _ensureItWillNotRevert();
     }
 
-    function verifyReentrancy() external {
+    function verifyReentrancy() external view {
         _ensureItWillNotRevert();
     }
 
@@ -18,7 +18,7 @@ contract PauserRoleReentrancyTest is MethodReentrancyTest {
         description = "PAUSER_ROLE()";
     }
 
-    function _ensureItWillNotRevert() internal {
+    function _ensureItWillNotRevert() internal view {
         LeverageRouter router = _getLeverageRouter();
         router.PAUSER_ROLE();
     }

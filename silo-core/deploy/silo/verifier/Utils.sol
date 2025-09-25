@@ -8,7 +8,10 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/InterestRateModelConfigData.sol";
-import {InterestRateModelV2, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {DKinkIRMConfigData} from "silo-core/deploy/input-readers/DKinkIRMConfigData.sol";
+import {
+    InterestRateModelV2, IInterestRateModelV2
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {IPendleLPWrapperLike} from "silo-oracles/contracts/pendle/interfaces/IPendleLPWrapperLike.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
@@ -17,49 +20,68 @@ import {ChainlinkV3Oracle} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3O
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
 
+import {IDynamicKinkModelConfig} from "silo-core/contracts/interfaces/IDynamicKinkModelConfig.sol";
+import {IDynamicKinkModel} from "silo-core/contracts/interfaces/IDynamicKinkModel.sol";
+
 interface IPTLinearAggregatorLike {
     function PT() external view returns (address);
     function baseDiscountPerYear() external view returns (uint256);
 }
 
 library Utils {
-    address constant internal _OLD_SILO_VIRTUAL_ASSET_8 = 0xad525F341368AA80093672278234ad364EFcAf0A;
+    address internal constant _OLD_SILO_VIRTUAL_ASSET_8 = 0xad525F341368AA80093672278234ad364EFcAf0A;
     uint256 internal constant _NEW_CHAINLINK_CONFIG_DATA_LEN = 320;
+
+    function findKinkIrmName(ISiloConfig.ConfigData memory _configData)
+        internal
+        returns (string memory configName, bool success)
+    {
+        DKinkIRMConfigData.ConfigData[] memory allModels = (new DKinkIRMConfigData()).getAllConfigs();
+
+        IDynamicKinkModelConfig irmConfig = IDynamicKinkModel(_configData.interestRateModel).irmConfig();
+
+        (IDynamicKinkModel.Config memory config, IDynamicKinkModel.ImmutableConfig memory immutableConfig) =
+            irmConfig.getConfig();
+
+        bytes32 deployedHash = keccak256(abi.encode(config, immutableConfig));
+
+        uint256 i;
+
+        for (; i < allModels.length; i++) {
+            IDynamicKinkModel.ImmutableConfig memory immutableCfg = IDynamicKinkModel.ImmutableConfig({
+                timelock: allModels[i].immutableArgs.timelock,
+                rcompCapPerSecond: allModels[i].immutableArgs.rcompCap / 365 days
+            });
+
+            bytes32 cfgHash = keccak256(abi.encode(allModels[i].config, immutableCfg));
+
+            if (cfgHash == deployedHash) {
+                return (allModels[i].name, true);
+            }
+        }
+    }
 
     function findIrmName(ISiloConfig.ConfigData memory _configData)
         internal
         returns (string memory configName, bool success)
     {
-        InterestRateModelConfigData.ConfigData[] memory allModels =
-            (new InterestRateModelConfigData()).getAllConfigs();
+        InterestRateModelConfigData irmData = new InterestRateModelConfigData();
+        InterestRateModelConfigData.ConfigData[] memory allModels = irmData.getAllConfigs();
 
-        IInterestRateModelV2Config irmV2Config =
-            InterestRateModelV2(_configData.interestRateModel).irmConfig();
+        IInterestRateModelV2Config irmV2Config = InterestRateModelV2(_configData.interestRateModel).irmConfig();
 
         IInterestRateModelV2.Config memory irmConfig = irmV2Config.getConfig();
 
-        uint i;
+        // ri and Tcrit can be changed over time, but this test is done just after deployment, so they should match
 
-        for (; i < allModels.length; i++) {
-            bool configIsMatching = allModels[i].config.uopt == irmConfig.uopt &&
-                allModels[i].config.ucrit == irmConfig.ucrit &&
-                allModels[i].config.ulow == irmConfig.ulow &&
-                allModels[i].config.ki == irmConfig.ki &&
-                allModels[i].config.kcrit == irmConfig.kcrit &&
-                allModels[i].config.klow == irmConfig.klow &&
-                allModels[i].config.klin == irmConfig.klin &&
-                allModels[i].config.beta == irmConfig.beta &&
-                allModels[i].config.ri == irmConfig.ri &&
-                allModels[i].config.Tcrit == irmConfig.Tcrit;
+        bytes32 deployedCfgHash = keccak256(abi.encode(irmConfig));
 
-            if (configIsMatching) {
-                break;
+        for (uint256 i; i < allModels.length; i++) {
+            bytes32 cfgHash = keccak256(abi.encode(irmData.modelConfigToConfig(allModels[i].config)));
+
+            if (cfgHash == deployedCfgHash) {
+                return (allModels[i].name, true);
             }
-        }
-
-        if (i != allModels.length) {
-            configName = allModels[i].name;
-            success = true;
         }
     }
 
@@ -131,9 +153,8 @@ library Utils {
         }
 
         try ChainlinkV3Oracle(address(_oracle)).oracleConfig() returns (ChainlinkV3OracleConfig oracleConfig) {
-            (, bytes memory data) = address(oracleConfig).staticcall(abi.encodeWithSelector(
-                ChainlinkV3OracleConfig.getConfig.selector
-            ));
+            (, bytes memory data) =
+                address(oracleConfig).staticcall(abi.encodeWithSelector(ChainlinkV3OracleConfig.getConfig.selector));
 
             if (data.length != _NEW_CHAINLINK_CONFIG_DATA_LEN) {
                 return (address(0), address(0));
@@ -179,7 +200,7 @@ library Utils {
                 return false;
             }
 
-            for (uint i; i < bytes(prefix).length; i++) {
+            for (uint256 i; i < bytes(prefix).length; i++) {
                 if (bytes(prefix)[i] != bytes(symbol)[i]) {
                     return false;
                 }
