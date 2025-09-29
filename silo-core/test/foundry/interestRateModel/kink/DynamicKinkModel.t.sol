@@ -233,6 +233,9 @@ contract DynamicKinkModelTest is KinkCommonTest {
         vm.expectRevert(IDynamicKinkModel.InvalidSilo.selector);
         vm.prank(address(1));
         irm.getCompoundInterestRateAndUpdate(1, 1, 1);
+
+        // counterexample
+        irm.getCompoundInterestRateAndUpdate(1, 1, 1);
     }
 
     /*
