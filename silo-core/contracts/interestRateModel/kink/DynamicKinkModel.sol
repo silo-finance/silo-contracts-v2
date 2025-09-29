@@ -101,7 +101,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
     /// @inheritdoc IDynamicKinkModel
     function cancelPendingUpdateConfig() external virtual onlyOwner {
-        require(!pendingConfigExists(), NoPendingUpdateToCancel());
+        require(pendingConfigExists(), NoPendingUpdateToCancel());
 
         IDynamicKinkModelConfig pendingConfig = _irmConfig;
         History memory currentState = configsHistory[pendingConfig];
