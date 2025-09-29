@@ -227,6 +227,15 @@ contract DynamicKinkModelTest is KinkCommonTest {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRateAndUpdate_onlySilo -vv
+    */
+    function test_kink_getCompoundInterestRateAndUpdate_onlySilo() public {
+        vm.expectRevert(IDynamicKinkModel.InvalidSilo.selector);
+        vm.prank(address(1));
+        irm.getCompoundInterestRateAndUpdate(1, 1, 1);
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRate_neverRevert -vv
     */
     function test_kink_getCompoundInterestRate_neverRevert_fuzz(
