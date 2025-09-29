@@ -193,7 +193,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
     /// @inheritdoc IDynamicKinkModel
     function modelState() public view returns (ModelState memory state) {
         if (!pendingConfigExists()) return _modelState;
-        
+
         // in case of pending config, we need to read k from history
         state.silo = _modelState.silo;
         state.k = configsHistory[_irmConfig].k;
