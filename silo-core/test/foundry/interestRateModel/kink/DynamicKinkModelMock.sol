@@ -12,4 +12,12 @@ contract DynamicKinkModelMock is DynamicKinkModel {
         _irmConfig = new DynamicKinkModelConfig(_c, immutableConfig);
         _modelState.k = _k;
     }
+
+    function mockStateK(int96 _k) external {
+        _modelState.k = _k;
+    }
+
+    function mockHistoryK(int96 _k) external {
+        configsHistory[_irmConfig].k = _k;
+    }
 }

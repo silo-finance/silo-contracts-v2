@@ -12,7 +12,6 @@ import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/k
 
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 import {KinkCommonTest} from "./KinkCommon.t.sol";
-import {DynamicKinkModelMock} from "./DynamicKinkModelMock.sol";
 import {KinkMath} from "../../../../contracts/lib/KinkMath.sol";
 
 /* 
