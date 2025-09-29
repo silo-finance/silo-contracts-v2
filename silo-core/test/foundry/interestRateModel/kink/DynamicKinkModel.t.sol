@@ -12,7 +12,6 @@ import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/k
 
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 import {KinkCommonTest} from "./KinkCommon.t.sol";
-import {DynamicKinkModelMock} from "./DynamicKinkModelMock.sol";
 import {KinkMath} from "../../../../contracts/lib/KinkMath.sol";
 
 /* 
@@ -332,7 +331,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
         _assertConfigEq(_config, _getIRMConfig(irm), "updateConfig_pass");
         console2.log("config addr %s", address(irm.irmConfig()));
 
-        assertEq(address(irm.configsHistory(irm.irmConfig())), address(prevConfig), "history is wrong");
+        _assertCorrectHistory(irm.irmConfig(), prevConfig);
         assertEq(newImmutable.timelock, prevImmutable.timelock, "timelock is not the same");
         assertEq(newImmutable.rcompCapPerSecond, prevImmutable.rcompCapPerSecond, "rcompCapPerSecond is not the same");
     }

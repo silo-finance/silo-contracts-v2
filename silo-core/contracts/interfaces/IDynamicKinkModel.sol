@@ -154,6 +154,11 @@ interface IDynamicKinkModel {
         address silo;
     }
 
+    struct History {
+        int96 k;
+        IDynamicKinkModelConfig irmConfig;
+    }
+
     /// @notice Emitted when the model is initialized with a new configuration
     /// @param owner Address that will own this model instance
     /// @param silo Address of the Silo contract this model is associated with
@@ -259,9 +264,17 @@ interface IDynamicKinkModel {
         external
         returns (uint256 rcomp);
     
+    function configsHistory(IDynamicKinkModelConfig _irmConfig) 
+        external 
+        view 
+        returns (int96 k, IDynamicKinkModelConfig irmConfig);
+
     /// @notice Get the current (active) configuration contract for this model
     /// @return config The IDynamicKinkModelConfig contract containing the model parameters
     function irmConfig() external view returns (IDynamicKinkModelConfig config);
+
+    /// @notice Get the current (active) model state
+    function modelState() external view returns (ModelState memory state);
     
     /// @notice Get both the current model state and configuration
     /// @param _usePending Whether to use the pending configuration to pull config from
