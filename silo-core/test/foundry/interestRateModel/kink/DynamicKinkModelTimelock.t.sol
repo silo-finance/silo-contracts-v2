@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
@@ -248,6 +249,6 @@ contract DynamicKinkModelTimelockTest is KinkCommonTest {
         assertTrue(irm.pendingConfigExists(), "pendingConfigExists should be true before timelock");
 
         vm.warp(block.timestamp + 1);
-        assertTrue(irm.pendingConfigExists(), "pendingConfigExists should be FALSE after timelock");
+        assertFalse(irm.pendingConfigExists(), "pendingConfigExists should be FALSE after timelock");
     }
 }
