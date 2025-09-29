@@ -36,13 +36,19 @@ contract KinkModalInternalTest is Test {
         assertEq(irm.calculateUtiliation({_collateralAssets: 1e18, _debtAssets: 0}), 0, "no debt, no utilization");
         // no collateral, no utilization - this is logic from SiloMathLib
         // assertEq(irm.calculateUtiliation({_collateralAssets: 0, _debtAssets: 1}), _DP, "if only debt, utilization is 100%");
-        assertEq(irm.calculateUtiliation({_collateralAssets: 1, _debtAssets: 2}), _DP, "if bad debt, utilization is 100%");
+        assertEq(
+            irm.calculateUtiliation({_collateralAssets: 1, _debtAssets: 2}), _DP, "if bad debt, utilization is 100%"
+        );
 
         assertEq(irm.calculateUtiliation({_collateralAssets: 1e18, _debtAssets: 1e18}), _DP, "1/1");
         assertEq(irm.calculateUtiliation({_collateralAssets: 1e18, _debtAssets: 0.5e18}), _DP / 2, "1/2");
         assertEq(irm.calculateUtiliation({_collateralAssets: 100, _debtAssets: 33}), 0.33e18, "1/3");
         assertEq(irm.calculateUtiliation({_collateralAssets: 1e18, _debtAssets: 33}), 33, "33");
-        assertEq(irm.calculateUtiliation({_collateralAssets: 1e18 - 2, _debtAssets: 333333333333333333}), 33, "3(3) rounding up");
+        assertEq(
+            irm.calculateUtiliation({_collateralAssets: 1e18 - 2, _debtAssets: 333333333333333333}),
+            333333333333333333,
+            "3(3) rounding up"
+        );
     }
 
     /*
