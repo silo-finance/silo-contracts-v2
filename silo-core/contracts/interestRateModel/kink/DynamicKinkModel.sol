@@ -123,7 +123,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         returns (uint256 rcomp) 
     {
         (rcomp, modelState.k) = _getCompoundInterestRate(CompoundInterestRateArgs({
-            silo: modelState.silo,
+            silo: msg.sender,
             collateralAssets: _collateralAssets,
             debtAssets: _debtAssets,
             interestRateTimestamp: _interestRateTimestamp,
