@@ -48,13 +48,14 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
     uint32 public constant MAX_TIMELOCK = 7 days;
 
-    ModelState public modelState;
+    /// @dev this is used for storing the current or pending model state
+    ModelState internal _modelState;
 
     /// @inheritdoc IDynamicKinkModel
     uint256 public activateConfigAt;
 
     /// @dev Map of all configs for the model, used for restoring to last state
-    mapping(IDynamicKinkModelConfig current => IDynamicKinkModelConfig prev) public configsHistory;
+    mapping(IDynamicKinkModelConfig current => History prev) public configsHistory;
 
     IDynamicKinkModelConfig internal _irmConfig;
 
@@ -84,7 +85,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
             rcompCapPerSecond: int96(_immutableArgs.rcompCap / ONE_YEAR) // forge-lint: disable-line(unsafe-typecast)
         });
 
-        modelState.silo = _silo;
+        _modelState.silo = _silo;
 
         _updateConfiguration({_config: _config, _immutableConfig: immutableConfig, _init: true});
 
@@ -100,12 +101,15 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
     /// @inheritdoc IDynamicKinkModel
     function cancelPendingUpdateConfig() external virtual onlyOwner {
-        require(activateConfigAt > block.timestamp, NoPendingUpdateToCancel());
+        require(!_pendingConfigExists(), NoPendingUpdateToCancel());
 
         IDynamicKinkModelConfig pendingConfig = _irmConfig;
+        History memory currentState = configsHistory[pendingConfig];
 
-        _irmConfig = configsHistory[pendingConfig];
-        configsHistory[pendingConfig] = IDynamicKinkModelConfig(address(0));
+        _irmConfig = currentState.irmConfig;
+        _modelState.k = currentState.k;
+
+        configsHistory[pendingConfig] = History(0, IDynamicKinkModelConfig(address(0)));
 
         activateConfigAt = 0;
 
@@ -122,7 +126,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (uint256 rcomp) 
     {
-        (rcomp, modelState.k) = _getCompoundInterestRate(CompoundInterestRateArgs({
+        int96 newK;
+        uint256 result; 
+
+        (result, newK) = _getCompoundInterestRate(CompoundInterestRateArgs({
             silo: msg.sender,
             collateralAssets: _collateralAssets,
             debtAssets: _debtAssets,
@@ -130,6 +137,14 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
             blockTimestamp: block.timestamp,
             usePending: false
         }));
+
+        rcomp = result;
+
+        if (_pendingConfigExists()) {
+            configsHistory[_irmConfig].k = newK;
+        } else {
+            _modelState.k = newK;
+        }
     }
 
     /// @inheritdoc IDynamicKinkModel
@@ -172,12 +187,21 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
     /// @inheritdoc IDynamicKinkModel
     function irmConfig() public view returns (IDynamicKinkModelConfig config) {
-        config = activateConfigAt > block.timestamp ? configsHistory[_irmConfig] : _irmConfig;
+        config = _pendingConfigExists() ? configsHistory[_irmConfig].irmConfig : _irmConfig;
+    }
+
+    /// @inheritdoc IDynamicKinkModel
+    function modelState() public view returns (ModelState memory state) {
+        if (!_pendingConfigExists()) return _modelState;
+        
+        // in case of pending config, we need to read k from history
+        state.silo = _modelState.silo;
+        state.k = configsHistory[_irmConfig].k;
     }
 
     /// @inheritdoc IDynamicKinkModel
     function pendingIrmConfig() public view returns (address config) {
-        config = activateConfigAt > block.timestamp ? address(_irmConfig) : address(0);
+        config = _pendingConfigExists() ? address(_irmConfig) : address(0);
     }
 
     /// @inheritdoc IDynamicKinkModel
@@ -187,13 +211,18 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (ModelState memory state, Config memory config, ImmutableConfig memory immutableConfig)
     {
-        IDynamicKinkModelConfig irmConfigToUse = _usePending 
-            ? IDynamicKinkModelConfig(pendingIrmConfig()) 
-            : irmConfig();
+        IDynamicKinkModelConfig irmConfigToUse;
 
-        require(address(irmConfigToUse) != address(0), NoPendingConfig());
+        if (_usePending) {
+            irmConfigToUse = IDynamicKinkModelConfig(pendingIrmConfig());
+            require(address(irmConfigToUse) != address(0), NoPendingConfig());
 
-        state = modelState;
+            state = _modelState;
+        } else {
+            irmConfigToUse = irmConfig();
+            state = modelState();
+        }
+
         (config, immutableConfig) = irmConfigToUse.getConfig();
     }
 
@@ -358,7 +387,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         IDynamicKinkModel.ImmutableConfig memory _immutableConfig,
         bool _init
     ) internal virtual {
-        require(activateConfigAt <= block.timestamp, PendingUpdate());
+        require(!_pendingConfigExists(), PendingUpdate());
 
         activateConfigAt = _init ? block.timestamp : block.timestamp + _immutableConfig.timelock;
 
@@ -366,11 +395,15 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
         IDynamicKinkModelConfig newCfg = IDynamicKinkModelConfig(new DynamicKinkModelConfig(_config, _immutableConfig));
 
-        configsHistory[newCfg] = _irmConfig;
-        modelState.k = _config.kmin;
+        configsHistory[newCfg] = History({k: _modelState.k, irmConfig: _irmConfig});
+        _modelState.k = _config.kmin;
         _irmConfig = newCfg;
 
         emit NewConfig(newCfg, activateConfigAt);
+    }
+
+    function _pendingConfigExists() internal view returns (bool) {
+        return activateConfigAt > block.timestamp;
     }
 
     function _getCompoundInterestRate(
