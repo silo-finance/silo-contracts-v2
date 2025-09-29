@@ -101,7 +101,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
     /// @inheritdoc IDynamicKinkModel
     function cancelPendingUpdateConfig() external virtual onlyOwner {
-        require(!_pendingConfigExists(), NoPendingUpdateToCancel());
+        require(!pendingConfigExists(), NoPendingUpdateToCancel());
 
         IDynamicKinkModelConfig pendingConfig = _irmConfig;
         History memory currentState = configsHistory[pendingConfig];
@@ -140,7 +140,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
         rcomp = result;
 
-        if (_pendingConfigExists()) {
+        if (pendingConfigExists()) {
             configsHistory[_irmConfig].k = newK;
         } else {
             _modelState.k = newK;
@@ -187,12 +187,12 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
     /// @inheritdoc IDynamicKinkModel
     function irmConfig() public view returns (IDynamicKinkModelConfig config) {
-        config = _pendingConfigExists() ? configsHistory[_irmConfig].irmConfig : _irmConfig;
+        config = pendingConfigExists() ? configsHistory[_irmConfig].irmConfig : _irmConfig;
     }
 
     /// @inheritdoc IDynamicKinkModel
     function modelState() public view returns (ModelState memory state) {
-        if (!_pendingConfigExists()) return _modelState;
+        if (!pendingConfigExists()) return _modelState;
         
         // in case of pending config, we need to read k from history
         state.silo = _modelState.silo;
@@ -201,7 +201,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
     /// @inheritdoc IDynamicKinkModel
     function pendingIrmConfig() public view returns (address config) {
-        config = _pendingConfigExists() ? address(_irmConfig) : address(0);
+        config = pendingConfigExists() ? address(_irmConfig) : address(0);
     }
 
     /// @inheritdoc IDynamicKinkModel
@@ -252,6 +252,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         require(_config.c2.inClosedInterval(0, UNIVERSAL_LIMIT), InvalidC2());
 
         require(_config.dmax.inClosedInterval(_config.c2, UNIVERSAL_LIMIT), InvalidDmax());
+    }
+
+    function pendingConfigExists() public view returns (bool) {
+        return activateConfigAt > block.timestamp;
     }
 
     /// @inheritdoc IDynamicKinkModel
@@ -387,7 +391,7 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         IDynamicKinkModel.ImmutableConfig memory _immutableConfig,
         bool _init
     ) internal virtual {
-        require(!_pendingConfigExists(), PendingUpdate());
+        require(!pendingConfigExists(), PendingUpdate());
 
         activateConfigAt = _init ? block.timestamp : block.timestamp + _immutableConfig.timelock;
 
@@ -400,10 +404,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         _irmConfig = newCfg;
 
         emit NewConfig(newCfg, activateConfigAt);
-    }
-
-    function _pendingConfigExists() internal view returns (bool) {
-        return activateConfigAt > block.timestamp;
     }
 
     function _getCompoundInterestRate(
