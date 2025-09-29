@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {SignedMath} from "openzeppelin5/utils/math/SignedMath.sol";
 import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
+import {IDynamicKinkModelConfig} from "../../../../contracts/interfaces/IDynamicKinkModelConfig.sol";
 
 import {KinkCommon} from "./KinkCommon.sol";
 
@@ -54,5 +55,10 @@ contract KinkCommonTest is Test, KinkCommon {
         assertEq(_config1.c1, _config2.c1, string.concat("[", _name, "] c1 does not match"));
         assertEq(_config1.c2, _config2.c2, string.concat("[", _name, "] c2 does not match"));
         assertEq(_config1.dmax, _config2.dmax, string.concat("[", _name, "] dmax does not match"));
+    }
+
+    function _assertCorrectHistory(IDynamicKinkModelConfig _in, IDynamicKinkModelConfig _out) internal view {
+        (, IDynamicKinkModelConfig irmConfig) = irm.configsHistory(_in);
+        assertEq(address(irmConfig), address(_out), "history should point from _in => _out");
     }
 }

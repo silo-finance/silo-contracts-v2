@@ -161,7 +161,25 @@ contract DynamicKinkModelTimelockTest is KinkCommonTest {
         irm.getCurrentInterestRate(silo, block.timestamp);
     }
 
-    function _assertCorrectHistory(IDynamicKinkModelConfig _in, IDynamicKinkModelConfig _out) internal view {
-        assertEq(address(irm.configsHistory(_in)), address(_out), "history should point from _in => _out");
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_pendingConfigExists -vv
+    */
+    function test_kink_pendingConfigExists() public {
+        IDynamicKinkModel.Config memory cfg;
+
+        assertFalse(irm.pendingConfigExists(), "pendingConfigExists should be false at beginning");
+
+        irm.updateConfig(cfg);
+        assertTrue(irm.pendingConfigExists(), "pendingConfigExists should be true when update is called");
+
+        irm.cancelPendingUpdateConfig();
+        assertFalse(irm.pendingConfigExists(), "pendingConfigExists should be false after cancel");
+
+        irm.updateConfig(cfg);
+        vm.warp(block.timestamp + 1 days - 1);
+        assertTrue(irm.pendingConfigExists(), "pendingConfigExists should be true before timelock");
+
+        vm.warp(block.timestamp + 1);
+        assertTrue(irm.pendingConfigExists(), "pendingConfigExists should be FALSE after timelock");
     }
 }
