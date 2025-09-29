@@ -15,6 +15,7 @@ import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.
 
 import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
 import {KinkMath} from "../../lib/KinkMath.sol";
+import {SiloMathLib} from "../../lib/SiloMathLib.sol";
 
 /// @title DynamicKinkModel
 /// @notice Refer to Silo DynamicKinkModel paper for more details:
@@ -461,13 +462,10 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         internal
         pure
         virtual
-        returns (int256)
+        returns (int256 u)
     {
-        if (_debtAssets == 0) return 0;
-        if (_collateralAssets == 0 || _debtAssets >= _collateralAssets) return _DP;
-
         // forge-lint: disable-next-line(unsafe-typecast)
-        return int256(Math.mulDiv(_debtAssets, uint256(_DP), _collateralAssets, Math.Rounding.Floor));
+        u = int256(SiloMathLib.calculateUtilization(uint256(_DP), _collateralAssets, _debtAssets));
     }
 
     /// @dev we expect _kmin and _kmax to be in the range of int96

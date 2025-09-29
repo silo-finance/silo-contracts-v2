@@ -30,17 +30,19 @@ contract KinkModalInternalTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --mt test_kink_calculateUtiliation_partial -vv
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_calculateUtiliation_pass -vv
     */
     function test_kink_calculateUtiliation_pass() public view {
         assertEq(irm.calculateUtiliation({_collateralAssets: 1e18, _debtAssets: 0}), 0, "no debt, no utilization");
-        assertEq(irm.calculateUtiliation(0, 1e18), _DP, "if only debt, utilization is 100%");
-        assertEq(irm.calculateUtiliation(1, 1e18), _DP, "if bad debt, utilization is 100%");
+        // no collateral, no utilization - this is logic from SiloMathLib
+        // assertEq(irm.calculateUtiliation({_collateralAssets: 0, _debtAssets: 1}), _DP, "if only debt, utilization is 100%");
+        assertEq(irm.calculateUtiliation({_collateralAssets: 1, _debtAssets: 2}), _DP, "if bad debt, utilization is 100%");
 
-        assertEq(irm.calculateUtiliation(1e18, 1e18), _DP, "1/1");
-        assertEq(irm.calculateUtiliation(1e18, 0.5e18), _DP / 2, "1/2");
-        assertEq(irm.calculateUtiliation(100, 33), 0.33e18, "1/3");
-        assertEq(irm.calculateUtiliation(1e18, 33), 33, "33");
+        assertEq(irm.calculateUtiliation({_collateralAssets: 1e18, _debtAssets: 1e18}), _DP, "1/1");
+        assertEq(irm.calculateUtiliation({_collateralAssets: 1e18, _debtAssets: 0.5e18}), _DP / 2, "1/2");
+        assertEq(irm.calculateUtiliation({_collateralAssets: 100, _debtAssets: 33}), 0.33e18, "1/3");
+        assertEq(irm.calculateUtiliation({_collateralAssets: 1e18, _debtAssets: 33}), 33, "33");
+        assertEq(irm.calculateUtiliation({_collateralAssets: 1e18 - 2, _debtAssets: 333333333333333333}), 33, "3(3) rounding up");
     }
 
     /*
