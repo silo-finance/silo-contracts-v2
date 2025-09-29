@@ -16,6 +16,14 @@ import {OraclesDeployments} from "../OraclesDeployments.sol";
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/custom/sAVAXOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify
+
+    Resume verification:
+    FOUNDRY_PROFILE=oracles \
+    forge script silo-oracles/deploy/custom/sAVAXOracleDeploy.s.sol \
+        --ffi --rpc-url $RPC_AVALANCHE \
+        --verify \
+        --private-key $PRIVATE_KEY \
+        --resume
  */
 contract sAVAXOracleDeploy is CommonDeploy {
     function run() public returns (ISiloOracle oracle) {
