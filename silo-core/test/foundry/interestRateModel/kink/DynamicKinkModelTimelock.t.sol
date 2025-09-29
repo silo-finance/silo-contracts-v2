@@ -10,7 +10,6 @@ import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/k
 import {DynamicKinkModelMock} from "./DynamicKinkModelMock.sol";
 import {KinkCommonTest} from "./KinkCommon.t.sol";
 
-
 /* 
 FOUNDRY_PROFILE=core_test forge test --mc DynamicKinkModelTimelockTest -vv
 */
@@ -104,7 +103,7 @@ contract DynamicKinkModelTimelockTest is KinkCommonTest {
         DynamicKinkModelFactory f = new DynamicKinkModelFactory(new DynamicKinkModelMock());
 
         vm.warp(1000 days);
-       
+
         IDynamicKinkModel.Config memory cfg = _defaultConfig();
         IDynamicKinkModel.ImmutableArgs memory immutableArgs = _defaultImmutableArgs();
         immutableArgs.timelock = 1 days;
@@ -123,7 +122,7 @@ contract DynamicKinkModelTimelockTest is KinkCommonTest {
         (state,,) = irm.getModelStateAndConfig(false);
         assertEq(state.k, cfg.kmin, "(getModelStateAndConfig(false)) returns active k");
 
-        // modify K in history and state to verify modification 
+        // modify K in history and state to verify modification
         int96 mockedK = 321;
         DynamicKinkModelMock(address(irm)).mockHistoryK(mockedK);
         DynamicKinkModelMock(address(irm)).mockStateK(mockedK);
