@@ -5,8 +5,99 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+
+## [3.10.0] - 2025-09-30
 ### Added
+- silo-oracles: wstETH adapter
+- silo-core: debt share token approvals issue with leverage documented (#1457)
 - add `getOracleAddresses` to SiloLens 
+- silo-core: Leverage router (#1479)
+- silo-core: SiloLens `maxLiquidation` fn (#1488)
+- common: global pause (#1455)
+- silo-core: Two watchlists in Hypernative (#1502)
+- silo-oracles: PT AMM Oracle (#1586)
+
+#### Markets
+- silo-core: tETH/WETH new market on Mainnet (#1459)
+- silo-core: PT-tETH-8JAN2026/WETH new market on Mainnet (#1460)
+- silo-core: RLP/USDC V2 new market on Mainnet (#1465)
+- silo-core: savUSD/USDC v2 on Avalanche (#1469)
+- silo-core: xUSD/USDC new market on Mainnet (#1471)
+- silo-core: xETH/scETH new market on Sonic (#1475)
+- silo-core: xBTC/scBTC new market on Sonic (#1476)
+- silo-core: scBTC/scUSD V2 new market on Sonic (#1478)
+- silo-core: slvlUSD/USDC new market on Mainnet (#1485)
+- silo-core: PT-slvlUSD-25SEP2025/USDC new market on Mainnet (#1486)
+- silo-core: xUSD/USDC new market on Avalanche (#1489)
+- silo-core: xBTC/BTC.b new market on Avalanche (#1491)
+- silo-core: yUTY/USDC new market on Avalanche (#1527)
+- silo-core: wstETH/WETH new market on mainnet (#1534)
+- silo-core: weETH/WETH V2 new market on Mainnet (#1535)
+- silo-core: yUTY/USDT new market on Avalanche (#1528)
+- silo-core: xUSD/USDT new market on Avalanche (#1532)
+- silo-core: savUSD/USDT new market on Avalanche (#1533)
+- silo-core: xUSD/AUSD new market on Avalanche (#1529)
+- silo-core: savUSD/AUSD new market on Avalanche (#1531)
+- silo-core: smsUSD/USDC.e new market on Sonic (#1538)
+- silo-core: ETH+/WETH new market on mainnet (#1557)
+- silo-core: PT-tUSDe-25SEP2025/USDC new market on mainnet (#1556)
+- silo-core: ARM-WETH-stETH/WETH new market on mainnet (#1555)
+- silo-core: yUSD/USDC new market on Avalanche (#1558)
+- silo-core: wOS wS new market on Sonic (#1564)
+- silo-core: reUSD/USDC new market on Avalanche (#1579)
+- silo-core: savUSD/USDC new market on Avalanche (#1581)
+- silo-core: sAVAX/WAVAX (borrowable sAVAX) new market on Avalanche (#1583)
+- silo-core: market PT-USDe-25SEP2025 (cross-chain) / USDC on Avalanche (#1575)
+- silo-core: sUSDS/USDC market arbitrum (#1592)
+- silo-core: sUSDe/USDC market arbitrum (#1594)
+- silo-core: weETH/ETH market on Arbitrum (#1591)
+- silo-core: wstETH-WETH market on Arbitrum (#1585)
+- silo-core: deploy liquidator helper (#1595)
+- silo-core: rsETH/ETH market on Arbitrum (#1593)
+- silo-core: syrupUSDC/USDC market arbitrum (#1597)
+- silo-core: PTsUSDai 19nov25 / USDC Arbitrum market (#1596)
+- silo-core: siUSD/USDC Ethereum market (#1614)
+- silo-core: PT-siUSD (9 OCT 25)/USDC on Ethereum (#1615)
+- silo-core: xUSD/USDC on Arbitrum (#1616)
+- silo-core: wstUSR/USDC market on Arbitrum (#1617)
+- silo-core: USDC/USDai on Arbitrum (#1619)
+- silo-core: `sUSDe / USDC` on Avalanche (#1623)
+- silo-core: `PT_sw_esdeUSD_3_deUSD_2026_02_06 / USDC` on Avalanche (#1624)
+- silo-core: `PT_Ethena_USDe_27Nov2025 / USDC` Avalanche market (#1622)
+- silo-core: `PT-USDf-29JAN2026 / USDC` mainnet market (#1628)
+- silo-core: `PT-sUSDf29Jan26 / USDC` mainnet market (#1627)
+- silo-core: `savETH / ETH` mainnet market (#1629)
+
+### Changed
+- fix SiloLens and tests warnings
+- silo-core: add reentrancy check for rescue tokens in leverage (#1470)
+- silo-core: approve exact amount in leverage
+- silo-core: resetting leverage transient variables
+- silo-oracles: Revert for zero price in OracleScaler (#1496)
+- silo-core: make fee be less or equal the MAX_LEVERAGE_FEE (leverage)
+- silo-core: ensure closing leverage with permit supports protected token
+- silo-oracles: optional underlying asset in ERC4626OracleHardcodeQuote (#1547)
+- certora: disable failing check for router
+
+### Fixed
+- silo-core: backwards compatible SiloIncentivesController (#1550)
+
+### Removed
+- silo-core: Removed deprecated silo router (#1543)
+
+### Updated
+- silo-core: re-deploy SiloLens (#1466)
+- silo-core: LeverageRouter deploy mainnet, sonic (#1493)
+- silo-core: LeverageRouter deployment avalance (#1495)
+- silo-core: leverage deployment
+- silo-core: USDC gauge for savUSD Silo on Avalanche (#1513)
+- silo-core: Global pause deployment (#1521)
+- silo-core: gauge for BTC.b in savBTC market on Avalanche (#1526)
+- silo-oracles: ERC4626OracleHardcodeQuoteFactory redeploy (#1554)
+- liquidator helper for enso and odos on arbitrum (#1574)
+- silo-core: incentive controller for xSilo (#1600)
+- silo-core: new gauge for xSilo
 
 ## [3.9.0] - 2025-07-03
 ### Added

@@ -5,6 +5,9 @@ on:
     # Trigger only when the deployments file is changed
     paths:
       - 'silo-core/deploy/silo/_siloDeployments.json'
+    # Exclude PRs targeting master branch
+    branches-ignore:
+      - master
 
 jobs:
   verify:
