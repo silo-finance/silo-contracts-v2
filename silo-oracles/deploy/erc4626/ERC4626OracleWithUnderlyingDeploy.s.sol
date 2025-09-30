@@ -21,9 +21,9 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
 /**
-FOUNDRY_PROFILE=oracles VAULT=wstUSR ORACLE=CHAINLINK_USR_USD  \
+FOUNDRY_PROFILE=oracles VAULT=tAVAX ORACLE=sAVAX_wAVAX_ORACLE  \
     forge script silo-oracles/deploy/erc4626/ERC4626OracleWithUnderlyingDeploy.s.sol \
-    --ffi --rpc-url $RPC_MAINNET --broadcast --verify
+    --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify
  */
 contract ERC4626OracleWithUnderlyingDeploy is CommonDeploy {
     string private _useOracle;
