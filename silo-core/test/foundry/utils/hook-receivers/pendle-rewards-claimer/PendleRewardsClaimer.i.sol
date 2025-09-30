@@ -24,6 +24,7 @@ import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
+import {PendleRewardsClaimerDeploy} from "silo-core/deploy/PendleRewardsClaimerDeploy.s.sol";
 import {PendleMarketThatReverts} from "../../../_mocks/PendleMarketThatReverts.sol";
 import {PendleMarketGasWaster} from "../../../_mocks/PendleMarketGasWaster.sol";
 import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
@@ -55,6 +56,10 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
     function setUp() public virtual {
         vm.createSelectFork(vm.envString("RPC_MAINNET"), _BLOCK_TO_FORK);
+
+        PendleRewardsClaimerDeploy pendleRewardsClaimerDeploy = new PendleRewardsClaimerDeploy();
+        pendleRewardsClaimerDeploy.disableDeploymentsSync();
+        pendleRewardsClaimerDeploy.run();
 
         _siloConfig = _setUpLocalFixtureNoOverrides(SiloConfigsNames.SILO_PENDLE_REWARDS_TEST);
 
@@ -342,7 +347,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     }
 
     // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_hookConfigurationDuringInit -vv
-    function test_hookConfigurationDuringInit() public {
+    function test_hookConfigurationDuringInit() public view {
         (uint24 hooksBefore, uint24 hooksAfter) = _hookReceiver.hookReceiverConfig(address(silo0));
         
         // All before actions should be configured (type(uint24).max)

@@ -1,4 +1,15 @@
 {
+    "CHAINLINK_USDC_USD_V1": {
+        "baseToken": "USDC",
+        "quoteToken": "SILO_VIRTUAL_USD_8_OLD",
+        "primaryAggregator": "CHAINLINK_USDC_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
+        "invertSecondPrice": false
+    },
     "CHAINLINK_USDC_USD": {
         "baseToken": "USDC",
         "quoteToken": "SILO_VIRTUAL_USD_8",
@@ -119,5 +130,103 @@
         "normalizationDivider": 1e18,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "CHAINLINK_sUSDe_USDe_HARDCODE_USDC": {
+        "baseToken": "sUSDe",
+        "quoteToken": "USDC",
+        "primaryAggregator": "CHAINLINK_sUSDe_USDe_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "CHAINLINK_sUSDS_USDC": {
+        "baseToken": "sUSDS",
+        "quoteToken": "USDC",
+        "primaryAggregator": "CHAINLINK_sUSDS_USDS_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "REDSTONE_weETH_eETH": {
+        "baseToken": "weETH",
+        "quoteToken": "WETH",
+        "primaryAggregator": "REDSTONE_weETH_ETH_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "CHAINLINK_rsETH_WETH": {
+        "baseToken": "rsETH",
+        "quoteToken": "WETH",
+        "primaryAggregator": "CHAINLINK_rsETH_ETH_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "CHAINLINK_syrupUSDC_USDC": {
+        "baseToken": "syrupUSDC",
+        "quoteToken": "USDC",
+        "primaryAggregator": "CHAINLINK_syrupUSDC_USDC_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e6,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "LINEAR_ORACLE_PT_sUSDai_19NOV25_USDai_HARDCODED_USDC": {
+        "baseToken": "PT_sUSDai_19NOV25",
+        "quoteToken": "USDC",
+        "primaryAggregator": "LINEAR_ORACLE_PT_sUSDai_19NOV25_USDai_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "EORACLE_xUSD_USD": {
+        "baseToken": "xUSD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "EORACLE_xUSD_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
+        "invertSecondPrice": false
+    },
+    "CHAINLINK_HARDCODED_wstUSR_stUSR": {
+        "baseToken": "wstUSR",
+        "quoteToken": "USDC",
+        "primaryAggregator": "CHAINLINK_wstUSR_stUSR_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "CHAINLINK_RYT_USDC": {
+        "baseToken": "RYT",
+        "quoteToken": "USDC",
+        "primaryAggregator": "CHAINLINK_RYT_USDC_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
     }
 }

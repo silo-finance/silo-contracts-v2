@@ -40,6 +40,10 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
         uint256 interestRate;
         uint256 borrowCap;
         uint192 daoAndDeployerFees;
+        // CollateralShares
+        uint256 protectedShares;
+        uint256 collateralShares;
+
         // Borrowing
         uint256 userDebtShares;
         uint256 userDebt;
@@ -70,11 +74,13 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
 
     function _defaultHooksBefore(address silo) internal {
         _setSiloValues(silo, defaultVarsBefore[silo]);
+        _setSharesValues(silo, defaultVarsBefore[silo]);
         _setBorrowingValues(silo, defaultVarsBefore[silo]);
     }
 
     function _defaultHooksAfter(address silo) internal {
         _setSiloValues(silo, defaultVarsAfter[silo]);
+        _setSharesValues(silo, defaultVarsAfter[silo]);
         _setBorrowingValues(silo, defaultVarsAfter[silo]);
     }
 
@@ -88,6 +94,13 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
         _defaultVars.debtAssets = ISilo(silo).getDebtAssets();
         _defaultVars.collateralAssets = ISilo(silo).getCollateralAssets();
         (_defaultVars.daoAndDeployerFees,,,,) = ISilo(silo).getSiloStorage();
+    }
+
+    function _setSharesValues(address silo, DefaultVars storage _defaultVars) internal {
+        (address protected, address collateral,) = siloConfig.getShareTokens(silo);
+
+        _defaultVars.protectedShares = IERC20(protected).balanceOf(targetActor);
+        _defaultVars.collateralShares = IERC20(collateral).balanceOf(targetActor);
     }
 
     function _setBorrowingValues(address silo, DefaultVars storage _defaultVars) internal {

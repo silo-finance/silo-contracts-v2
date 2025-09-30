@@ -5,6 +5,9 @@ on:
     # Trigger only when the deployments file is changed
     paths:
       - 'silo-core/deploy/silo/_siloDeployments.json'
+    # Exclude PRs targeting master branch
+    branches-ignore:
+      - master
 
 jobs:
   verify:
@@ -23,7 +26,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: stable
+          version: v1.2.3
 
       - name: Run submodule update
         run: git submodule update --init --recursive
@@ -85,15 +88,30 @@ jobs:
       - name: Extract optional price arguments from PR body
         id: price
         run: |
+          # Fetch the current PR body using GitHub API
+          CURRENT_BODY=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.number }}" \
+            | jq -r '.body')
+          
           # Replace \r with newlines to handle copy-paste from Windows
-          CLEANED_BODY=$(echo "${{ github.event.pull_request.body }}" | sed 's/\r/\n/g')
+          CLEANED_BODY=$(echo "$CURRENT_BODY" | sed 's/\r/\n/g')
       
           # Extract prices using pattern match
           PRICE_0=$(echo "$CLEANED_BODY" | grep -i 'EXTERNAL_PRICE_0' | head -n1 | sed 's/ //g' | cut -d= -f2)
           PRICE_1=$(echo "$CLEANED_BODY" | grep -i 'EXTERNAL_PRICE_1' | head -n1 | sed 's/ //g' | cut -d= -f2)
           
-          PRICE_0=${PRICE_0:-99999}
-          PRICE_1=${PRICE_1:-100000}
+          # Check if prices are missing and fail with error
+          if [[ -z "$PRICE_0" ]]; then
+            echo "::error title=Missing Price::EXTERNAL_PRICE_0 not found in PR body. Please add EXTERNAL_PRICE_0=<value> to the PR description."
+            exit 1
+          fi
+          
+          if [[ -z "$PRICE_1" ]]; then
+            echo "::error title=Missing Price::EXTERNAL_PRICE_1 not found in PR body. Please add EXTERNAL_PRICE_1=<value> to the PR description."
+            exit 1
+          fi
           
           echo "$PRICE_0"
           echo "$PRICE_1"
@@ -130,3 +148,14 @@ jobs:
         with:
           header: verify-silo
           path: result.txt
+
+      - name: Run LIVE MARKET QA
+        id: live-market-qa
+        run: |
+          echo "Running LIVE MARKET QA for ${{ steps.extract.outputs.CONFIG_NAME }} (${{ steps.extract.outputs.CONFIG }}) on ${{ steps.extract.outputs.CHAIN }}"
+          FOUNDRY_PROFILE=core_test CONFIG=${{ steps.extract.outputs.CONFIG }} \
+          EXTERNAL_PRICE_0=${{ steps.price.outputs.EXTERNAL_PRICE_0 }} EXTERNAL_PRICE_1=${{ steps.price.outputs.EXTERNAL_PRICE_1 }} \
+          RPC_URL=${{ steps.extract.outputs.RPC_URL }} \
+          forge test --mc "NewMarketTest" --ffi -vv
+  
+        

@@ -178,8 +178,6 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
     forge test -vv --ffi --mt test_createSilo_invalidReceiver
     */
     function test_createSilo_invalidReceiver() public {
-        (, ISiloConfig.InitData memory initData,) = siloData.getConfigData(SILO_TO_DEPLOY);
-
         address siloImpl = address(new Silo(siloFactory));
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());

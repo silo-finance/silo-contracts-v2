@@ -7,14 +7,12 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 contract ERC4626Oracle is ISiloOracle {
     IERC4626 public immutable VAULT;
-    address public immutable UNDERLYING;
 
     error AssetNotSupported();
     error ZeroPrice();
 
     constructor(IERC4626 _vault) {
         VAULT = _vault;
-        UNDERLYING = _vault.asset();
     }
 
     /// @inheritdoc ISiloOracle
@@ -33,6 +31,6 @@ contract ERC4626Oracle is ISiloOracle {
 
     /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
-        return UNDERLYING;
+        return VAULT.asset();
     }
 }

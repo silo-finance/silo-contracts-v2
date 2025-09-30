@@ -92,6 +92,13 @@ contract OracleScalerTest is Test {
         assertEq(scaler.quote(bigAmountToScale, USDC) / bigAmountToScale, 10 ** 12, "scaling multiplies by factor");
     }
 
+    function test_OracleScaler_quote_reverts_ZeroPrice() public {
+        ISiloOracle scaler = factory.createOracleScaler(USDC, bytes32(0));
+
+        vm.expectRevert(OracleScaler.ZeroPrice.selector);
+        scaler.quote(0, USDC);
+    }
+
     function test_OracleScaler_quoteReverts() public {
         ISiloOracle scaler = factory.createOracleScaler(USDC, bytes32(0));
 

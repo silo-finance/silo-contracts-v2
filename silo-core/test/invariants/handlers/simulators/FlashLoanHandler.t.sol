@@ -29,7 +29,7 @@ contract FlashLoanHandler is BaseHandler {
     //                                          ACTIONS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function flashLoan(uint256 _amount, uint256 _amountToRepay, uint8 i, uint8 j) external setup {
+    function flashLoan(uint256 _amount, uint256 _amountToRepay, uint8 i, uint8 j) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
 
@@ -57,7 +57,7 @@ contract FlashLoanHandler is BaseHandler {
 
         // POST-CONDITIONS
 
-        if ((_amountToRepay > _amount + flashFee && maxFlashLoanAmount >= _amount) && _amount != 0) {
+        if ((_amountToRepay >= _amount + flashFee && maxFlashLoanAmount >= _amount) && _amount != 0) {
             assertTrue(success, BORROWING_HSPOST_U1);
         } else {
             assertFalse(success, BORROWING_HSPOST_U2);
@@ -66,9 +66,9 @@ contract FlashLoanHandler is BaseHandler {
         if (success) {
             _after();
 
-            assertEq(
-                defaultVarsAfter[target].balance, defaultVarsBefore[target].balance + flashFee, BORROWING_HSPOST_T
-            );
+           assertEq(
+               defaultVarsAfter[target].balance, defaultVarsBefore[target].balance + flashFee, BORROWING_HSPOST_T
+           );
         }
     }
 

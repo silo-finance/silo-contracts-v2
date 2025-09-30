@@ -32,7 +32,7 @@ contract SiloIncentivesControllerCreateAndConfigure is CommonDeploy {
         address incentivesController = createIncentivesController.run();
 
         address hookReceiver = createIncentivesController.hookReceiver();
-        address shareToken = createIncentivesController.incentivizedAsset();
+        address shareToken = createIncentivesController.shareToken();
 
         require(Ownable(hookReceiver).owner() == deployer, NotHookReceiverOwner());
 

@@ -32,6 +32,7 @@ import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
+import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 
 /// @dev use `SiloDeployWithDeployerOwner` or `SiloDeployWithHookReceiverOwner`
 abstract contract SiloDeploy is CommonDeploy {
@@ -115,13 +116,21 @@ abstract contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] deploy done");
 
-        SiloDeployments.save(ChainsLib.chainAlias(), configName, address(siloConfig));
+        _saveSilo(siloConfig, configName);
 
         _saveOracles(siloConfig, config, siloData.NO_ORACLE_KEY());
 
         console2.log("[SiloCommonDeploy] run() finished.");
 
         _printAndValidateDetails(siloConfig, siloInitData);
+    }
+
+    function _saveSilo(ISiloConfig _siloConfig, string memory _configName) internal {
+        SiloDeployments.save({
+            _chain: ChainsLib.chainAlias(),
+            _name: string.concat(_configName, "_id_", vm.toString(_siloConfig.SILO_ID())),
+            _deployed: address(_siloConfig)
+        });
     }
 
     function _saveOracles(
@@ -466,7 +475,7 @@ abstract contract SiloDeploy is CommonDeploy {
 
         if (assetDecimals != 0) {
             uint256 quoteTokenPrice = oracle.quote(10 ** assetDecimals, _asset);
-            console2.log("\t\tquote", quoteTokenPrice);
+            console2.log("\t\tquote %s\n", PriceFormatter.formatPriceInE18(quoteTokenPrice));
         }
     }
 

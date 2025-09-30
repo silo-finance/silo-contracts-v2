@@ -26,7 +26,7 @@ import {ChainlinkV3Oracle} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3O
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
-import {Utils} from "silo-core/deploy/silo/verifier/Utils.sol";
+import {Utils, IPTLinearAggregatorLike} from "silo-core/deploy/silo/verifier/Utils.sol";
 import {PendlePTOracle} from "silo-oracles/contracts/pendle/PendlePTOracle.sol";
 import {PendleLPTOracle} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTOracle.sol";
 import {PendlePTToAssetOracle} from "silo-oracles/contracts/pendle/PendlePTToAssetOracle.sol";
@@ -43,6 +43,7 @@ contract Logger is Test {
         uint256 amount;
         string name;
         bool logExponentialNotation; // will log 1e123 instead of 1000...0000
+        bool quoteForOneToken; // if we checking price for one token (10 ^ decimals)
     }
 
     struct OldChainlinkV3Config {
@@ -218,7 +219,7 @@ contract Logger is Test {
 
 
         console2.log("\n\tQuotes for different amounts:");
-        (QuoteNamedAmount[] memory amountsToQuote) = _getAmountsToQuote(baseTokenDecimals);
+        QuoteNamedAmount[] memory amountsToQuote = _getAmountsToQuote(baseTokenDecimals);
 
         for (uint i; i < amountsToQuote.length; i++) {
             _printPrice(_oracle, _baseToken, amountsToQuote[i]);
@@ -427,13 +428,15 @@ contract Logger is Test {
         console2.log("\n\tChainlinkV3 underlying feed setup:");
         console2.log("\tOracle config: ", _oracleConfig);
         console2.log("\tPrimary aggregator: ", _primaryAggregator);
-        console2.log("\tPrimary aggregator name: ", AggregatorV3Interface(_primaryAggregator).description());
+        console2.log("\tPrimary aggregator name: ", Utils.tryGetAggregatorDescription(_primaryAggregator));
+        _tryLogPTLinearAggregator(_primaryAggregator);
         console2.log("\tPrimary aggregator decimals: ", AggregatorV3Interface(_primaryAggregator).decimals());
         console2.log("\tSecondary aggregator: ", _secondaryAggregator);
 
         if (_secondaryAggregator != address(0)) {
-            console2.log("\tSecondary aggregator name: ", AggregatorV3Interface(_secondaryAggregator).description());
+            console2.log("\tSecondary aggregator name: ", Utils.tryGetAggregatorDescription(_secondaryAggregator));
             console2.log("\tSecondary aggregator decimals: ", AggregatorV3Interface(_secondaryAggregator).decimals());
+            _tryLogPTLinearAggregator(_primaryAggregator);
         }
 
         console2.log("\tPrimary heartbeat: ", _primaryHeartbeat);
@@ -449,6 +452,17 @@ contract Logger is Test {
          } catch {}
     }
 
+    function _tryLogPTLinearAggregator(address _aggregator) internal view {
+        if (Utils.tryGetPT(_aggregator) == address(0)) return;
+
+        console2.log(
+            "\tPrimary aggregator is Pendle PT linear aggregator for",
+            IERC20Metadata(Utils.tryGetPT(_aggregator)).symbol(),
+            "with base discount equal to",
+            PriceFormatter.formatPriceInE18(IPTLinearAggregatorLike(_aggregator).baseDiscountPerYear())
+        );
+    }
+
     function _printPrice(ISiloOracle _oracle, address _baseToken, QuoteNamedAmount memory _quoteNamedAmount)
         internal
         view
@@ -460,6 +474,14 @@ contract Logger is Test {
                 console2.log("\tPrice for %s = %s", _quoteNamedAmount.name, PriceFormatter.formatPriceInE18(price));
             } else {
                 console2.log("\tPrice for %s = %s", _quoteNamedAmount.name, price);
+            }
+
+            if (_quoteNamedAmount.quoteForOneToken && (price < 0.0001e18 || price > 200_000e18)) {
+                console2.log(
+                    "\t", 
+                    WARNING_SYMBOL, 
+                    "Price looks odd, check normalization, we expect 18 decimals for price \n"
+                );
             }
         } else {
             console2.log("\t", WARNING_SYMBOL, "Price reverts for", _quoteNamedAmount.name);
@@ -477,61 +499,71 @@ contract Logger is Test {
         amountsToQuote[0] = QuoteNamedAmount({
             amount: 1,
             name: "1 wei (lowest amount)",
-            logExponentialNotation: false
+            logExponentialNotation: false,
+            quoteForOneToken: false
         });
 
         amountsToQuote[1] = QuoteNamedAmount({
             amount: 10,
             name: "10 wei",
-            logExponentialNotation: false
+            logExponentialNotation: false,
+            quoteForOneToken: false
         });
 
         amountsToQuote[2] = QuoteNamedAmount({
             amount: oneToken / 10,
             name: "0.1 token",
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: false
         });
 
         amountsToQuote[3] = QuoteNamedAmount({
             amount: oneToken / 2,
             name: "0.5 token",
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: false
         });
 
         amountsToQuote[4] = QuoteNamedAmount({
             amount: oneToken,
             name: string.concat("1 token in own decimals (10^", Strings.toString(_baseTokenDecimals), ")"),
-            logExponentialNotation: false
+            logExponentialNotation: false,
+            quoteForOneToken: true
         });
 
         amountsToQuote[5] = QuoteNamedAmount({
             amount: oneToken,
             name: string.concat("1 token in own decimals (10^", Strings.toString(_baseTokenDecimals), ") exp format"),
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: true
         });
 
         amountsToQuote[6] = QuoteNamedAmount({
             amount: 100 * oneToken,
             name: "100 tokens",
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: false
         });
 
         amountsToQuote[7] = QuoteNamedAmount({
             amount: 10_000 * oneToken,
             name: "10,000 tokens",
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: false
         });
 
         amountsToQuote[8] = QuoteNamedAmount({
             amount: 10**36,
             name: "10**36 wei",
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: false
         });
 
         amountsToQuote[9] = QuoteNamedAmount({
             amount: 10**20 * oneToken,
             name: "10**20 tokens (More than USA GDP if the token worth at least 0.001 cent)",
-            logExponentialNotation: true
+            logExponentialNotation: true,
+            quoteForOneToken: false
         });
     }
 }

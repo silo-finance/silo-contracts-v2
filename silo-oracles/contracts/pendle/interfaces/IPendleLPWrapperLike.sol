@@ -2,5 +2,5 @@
 pragma solidity 0.8.28;
 
 interface IPendleLPWrapperLike {
-    function LP() external view returns (address);
+    function LP() external view returns (address); // solhint-disable-line func-name-mixedcase
 }

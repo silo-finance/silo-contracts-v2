@@ -9,6 +9,7 @@ env:
     RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
     RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
     RPC_SONIC: ${{ secrets.RPC_SONIC }}
+    RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
     PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
     VERIFIER_URL_SONIC: ${{ secrets.VERIFIER_URL_SONIC }}
     VERIFIER_API_KEY_SONIC: ${{ secrets.VERIFIER_API_KEY_SONIC }}
@@ -49,38 +50,17 @@ on:
             - .github/workflows/silo-core.yml
 
 jobs:
-    silo-core-cache:
+    silo-size:
         runs-on: ubuntu-latest
         steps:
-            -   name: Cache (home/runner/work)
-                uses: actions/cache@v3
-                with:
-                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-                    key: home-runner-work-silo-contracts-v2-gitmodules
-
             -   uses: actions/checkout@v3
                 with:
                     submodules: recursive
 
-            -   name: Cache gitmodules
-                uses: actions/cache@v3
-                with:
-                    path: ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
-
-            -   name: Cache silo-core contracts
-                uses: actions/cache@v3
-                with:
-                    path: ./cache/
-                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
-                    restore-keys: |
-                        silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
-                        silo-core-contracts-cache-
-
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: stable
+                    version: v1.2.3
 
             -   name: Run submodule update
                 run: git submodule update --init --recursive
@@ -92,9 +72,6 @@ jobs:
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
 
-            -   name: Run single test to build cache for contracts
-                run: FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloStoragePointer
-
             -   name: Run Forge build
                 run: |
                     git submodule
@@ -102,12 +79,13 @@ jobs:
                     FOUNDRY_PROFILE=core forge build --sizes
 
     linters:
-        needs: silo-core-cache
         runs-on: ubuntu-latest
 
         steps:
             -   name: Checkout sources
                 uses: actions/checkout@v3
+                with:
+                    submodules: recursive
 
             -   name: Set up Node.js
                 uses: actions/setup-node@v3
@@ -121,34 +99,17 @@ jobs:
                 run: yarn workspace silo-core lint:sol
 
     fast-tests:
-        needs: silo-core-cache
         runs-on: ubuntu-latest
 
         steps:
-            -   name: Cache (home/runner/work)
-                uses: actions/cache@v3
-                with:
-                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-                    key: home-runner-work-silo-contracts-v2-gitmodules
-
             -   uses: actions/checkout@v3
-
-            -   name: Cache gitmodules
-                uses: actions/cache@v3
                 with:
-                    path: ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
-
-            -   name: Cache silo-core contracts
-                uses: actions/cache@v3
-                with:
-                    path: ./cache/
-                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                    submodules: recursive
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: stable
+                    version: v1.2.3
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
@@ -158,7 +119,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: all fast test
-                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest" --ffi -vv
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest|NewMarketTest" --ffi -vv
 
     slow-contracts-tests:
         strategy:
@@ -172,33 +133,16 @@ jobs:
                     PreviewMintTest
                ]
 
-        needs: silo-core-cache
         runs-on: ubuntu-latest
         steps:
-            -   name: Cache (home/runner/work)
-                uses: actions/cache@v3
-                with:
-                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-                    key: home-runner-work-silo-contracts-v2-gitmodules
-
             -   uses: actions/checkout@v3
-
-            -   name: Cache gitmodules
-                uses: actions/cache@v3
                 with:
-                    path: ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
-
-            -   name: Cache silo-core contracts
-                uses: actions/cache@v3
-                with:
-                    path: ./cache/
-                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                    submodules: recursive
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: stable
+                    version: v1.2.3
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
@@ -221,33 +165,16 @@ jobs:
                     test_maxLiquidation_partial_2tokens_tokens
                ]
 
-        needs: silo-core-cache
         runs-on: ubuntu-latest
         steps:
-            -   name: Cache (home/runner/work)
-                uses: actions/cache@v3
-                with:
-                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-                    key: home-runner-work-silo-contracts-v2-gitmodules
-
             -   uses: actions/checkout@v3
-
-            -   name: Cache gitmodules
-                uses: actions/cache@v3
                 with:
-                    path: ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
-
-            -   name: Cache silo-core contracts
-                uses: actions/cache@v3
-                with:
-                    path: ./cache/
-                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                    submodules: recursive
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: stable
+                    version: v1.2.3
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils
@@ -264,33 +191,16 @@ jobs:
             matrix:
                 match-contract: [ SiloLensCompatibilityTest ]
 
-        needs: silo-core-cache
         runs-on: ubuntu-latest
         steps:
-            -   name: Cache (home/runner/work)
-                uses: actions/cache@v3
-                with:
-                    path: /home/runner/work/silo-contracts-v2/silo-contracts-v2/gitmodules
-                    key: home-runner-work-silo-contracts-v2-gitmodules
-
             -   uses: actions/checkout@v3
-
-            -   name: Cache gitmodules
-                uses: actions/cache@v3
                 with:
-                    path: ./gitmodules/
-                    key: silo-core-submodules-${{ hashFiles('./.gitmodules') }}
-
-            -   name: Cache silo-core contracts
-                uses: actions/cache@v3
-                with:
-                    path: ./cache/
-                    key: silo-core-contracts-cache-${{ hashFiles('./silo-core/**/*.sol') }}
+                    submodules: recursive
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
-                    version: stable
+                    version: v1.2.3
 
             -   name: Build silo foundry utils
                 working-directory: ./gitmodules/silo-foundry-utils

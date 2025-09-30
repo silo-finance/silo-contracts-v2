@@ -24,12 +24,22 @@ abstract contract LeverageTxState {
     /// @dev it will inform that we dealing with native token
     uint256 internal transient _txMsgValue;
 
-    modifier setupTxState(ISilo _silo, ILeverageUsingSiloFlashloan.LeverageAction _action, address _flashloanTarget) {
+    modifier setupTxState(
+        address _msgSender,
+        ISilo _silo,
+        ILeverageUsingSiloFlashloan.LeverageAction _action,
+        address _flashloanTarget
+    ) {
         _txFlashloanTarget = _flashloanTarget;
         _txAction = _action;
-        _txMsgSender = msg.sender;
+        _txMsgSender = _msgSender;
         _txSiloConfig = _silo.config();
 
         _;
+
+        _txFlashloanTarget = address(0);
+        _txAction = ILeverageUsingSiloFlashloan.LeverageAction.Undefined;
+        _txMsgSender = address(0);
+        _txSiloConfig = ISiloConfig(address(0));
     }
 }

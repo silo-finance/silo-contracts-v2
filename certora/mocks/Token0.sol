@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.21;
 
-import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
+import {SimpleERC20} from "./SimpleERC20.sol";
 
-contract Token0 is ERC20 {
-   constructor() ERC20("Token0", "TOK0") {}
+contract Token0 is SimpleERC20 {
 }

@@ -32,8 +32,8 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function getRawLiquidity(ISilo _silo) external view virtual returns (uint256 liquidity) {
-        return SiloLensLib.getRawLiquidity(_silo);
+    function getRawLiquidity(ISilo _silo) external view virtual returns (uint256 rawLiquidity) {
+        rawLiquidity = SiloLensLib.getRawLiquidity(_silo);
     }
 
     /// @inheritdoc ISiloLens
@@ -127,11 +127,32 @@ contract SiloLens is ISiloLens {
 
         uint256 maxRepay = _silo.maxRepay(_borrower);
         fullLiquidation = maxRepay == debtToRepay;
+
+        if (!sTokenRequired) return (collateralToLiquidate, debtToRepay, sTokenRequired, fullLiquidation);
+
+        ISiloConfig siloConfig = _silo.config();
+
+        (ISiloConfig.ConfigData memory collateralConfig,) = siloConfig.getConfigsForSolvency(_borrower);
+
+        uint256 protectedShares = IERC20(collateralConfig.protectedShareToken).balanceOf(_borrower);
+
+        if (protectedShares == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired, fullLiquidation);
+
+        uint256 protectedAssets = ISilo(collateralConfig.silo).convertToAssets(
+            protectedShares,
+            ISilo.AssetType.Protected
+        );
+
+        if (protectedAssets == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired, fullLiquidation);
+
+        uint256 availableLiquidity = ISilo(collateralConfig.silo).getLiquidity();
+
+        sTokenRequired = availableLiquidity + protectedAssets < collateralToLiquidate;
     }
 
     /// @inheritdoc ISiloLens
-    function totalDeposits(ISilo _silo) external view returns (uint256 totalDeposits) {
-        totalDeposits = _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
+    function totalDeposits(ISilo _silo) external view returns (uint256 totalDepositsAmount) {
+        totalDepositsAmount = _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
     }
 
     /// @inheritdoc ISiloLens
@@ -205,11 +226,11 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
-    function getUtilization(ISilo _silo) external view returns (uint256) {
+    function getUtilization(ISilo _silo) external view returns (uint256 utilization) {
         ISilo.UtilizationData memory data = _silo.utilizationData();
 
         if (data.collateralAssets != 0) {
-            return data.debtAssets * _PRECISION_DECIMALS / data.collateralAssets;
+            utilization = data.debtAssets * _PRECISION_DECIMALS / data.collateralAssets;
         }
     }
 
@@ -257,7 +278,7 @@ contract SiloLens is ISiloLens {
         for (uint256 i; i < originalProgramsNames.length; i++) {
             bytes memory originalProgramName = bytes(originalProgramsNames[i]);
 
-            if (isTokenAddress(originalProgramName)) {
+            if (_isTokenAddress(originalProgramName)) {
                 address token = address(bytes20(originalProgramName));
                 programsNames[i] = Strings.toHexString(token);
             } else {
@@ -266,7 +287,14 @@ contract SiloLens is ISiloLens {
         }
     }
 
-    function isTokenAddress(bytes memory _name) private view returns (bool isToken) {
+    function getOracleAddresses(ISilo _silo) external view returns (address solvencyOracle, address maxLtvOracle) {
+        ISiloConfig.ConfigData memory config = _silo.config().getConfig(address(_silo));
+
+        solvencyOracle = config.solvencyOracle;
+        maxLtvOracle = config.maxLtvOracle;
+    }
+
+    function _isTokenAddress(bytes memory _name) private view returns (bool isToken) {
         if (_name.length != 20) return false;
 
         address token = address(bytes20(_name));

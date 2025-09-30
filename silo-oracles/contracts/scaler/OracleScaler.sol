@@ -24,6 +24,9 @@ contract OracleScaler is ISiloOracle {
     /// @dev revert if the baseToken to quote is not equal to QUOTE_TOKEN
     error AssetNotSupported();
 
+    /// @dev revert for zero price
+    error ZeroPrice();
+
     constructor(address _quoteToken) {
         uint8 quoteTokenDecimals = uint8(TokenHelper.assertAndGetDecimals(_quoteToken));
         require(quoteTokenDecimals < DECIMALS_TO_SCALE, TokenDecimalsTooLarge());
@@ -41,6 +44,8 @@ contract OracleScaler is ISiloOracle {
         require(_baseToken == QUOTE_TOKEN, AssetNotSupported());
 
         quoteAmount = _baseAmount * SCALE_FACTOR;
+
+        require(quoteAmount != 0, ZeroPrice());
     }
 
     // @inheritdoc ISiloOracle

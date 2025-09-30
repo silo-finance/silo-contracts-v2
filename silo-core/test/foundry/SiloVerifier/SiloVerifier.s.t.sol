@@ -14,6 +14,7 @@ import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/hooks/g
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {CheckNonBorrowableAsset} from "silo-core/deploy/silo/verifier/checks/silo/CheckNonBorrowableAsset.sol";
 
 /*
     FOUNDRY_PROFILE=core_test forge test -vv --match-contract SiloVerifierScriptTest --ffi
@@ -416,5 +417,58 @@ contract SiloVerifierScriptTest is Test {
             3,
             "3 errors after making oracles revert for large amounts. 2 for quote large amounts, 1 for external price check"
         );
+    }
+
+    function test_CheckNonBorrowableAsset_nonBorrowableSiloConfigs() public {
+        vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_MAINNET"))), 22875029);
+
+        ISiloConfig lptConfig = ISiloConfig(0xAA5ED72b3Ca4aE7dA178e7BEff838F31e5c63342);
+        ISiloConfig ptConfig = ISiloConfig(0x8332F03C0EcFB5b6BcF50484A2e9C048b79aC352);
+        ISiloConfig erc4626Config = ISiloConfig(0x88A79276734EeEA55831d03730e71023d6891b09);
+
+        ISiloConfig[] memory nonBorrowableSiloConfigs = new ISiloConfig[](3);
+        nonBorrowableSiloConfigs[0] = lptConfig;
+        nonBorrowableSiloConfigs[1] = ptConfig;
+        nonBorrowableSiloConfigs[2] = erc4626Config;
+
+        for (uint i; i < nonBorrowableSiloConfigs.length; i++) {
+            ISiloConfig nonBorrowableSiloConfig = nonBorrowableSiloConfigs[i];
+            (address silo0, address silo1) = nonBorrowableSiloConfig.getSilos();
+            ISiloConfig.ConfigData memory configData1 = nonBorrowableSiloConfig.getConfig(silo1);
+            address token0 = nonBorrowableSiloConfig.getConfig(silo0).token;
+
+            CheckNonBorrowableAsset check = new CheckNonBorrowableAsset(token0, configData1);
+            assertEq(configData1.maxLtv, 0, "max ltv is 0");
+            assertEq(configData1.lt, 0, "lt is 0");
+            assertTrue(check.execute(), "check passes for existing PT/LPT/ERC4626 silos");
+
+            configData1.maxLtv = 1;
+            check = new CheckNonBorrowableAsset(token0, configData1);
+            assertFalse(check.execute(), "check must fail if max ltv is not zero for other asset");
+
+            configData1.maxLtv = 0;
+            configData1.lt = 1;
+            check = new CheckNonBorrowableAsset(token0, configData1);
+            assertFalse(check.execute(), "check must fail if lt is not zero for other asset");
+        }
+    }
+
+    function test_CheckNonBorrowableAsset_regularSiloConfig() public {
+        vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_MAINNET"))), 22875029);
+
+        ISiloConfig regularConfig = ISiloConfig(0x8689611D9A74BCc9837261872262009F89965ECc);
+        (address silo0, address silo1) = regularConfig.getSilos();
+        ISiloConfig.ConfigData memory configData1 = regularConfig.getConfig(silo1);
+        address token0 = regularConfig.getConfig(silo0).token;
+
+        CheckNonBorrowableAsset check = new CheckNonBorrowableAsset(token0, configData1);
+        assertTrue(configData1.maxLtv != 0, "max ltv!=0");
+        assertTrue(configData1.lt != 0, "max ltv!=0");
+        assertTrue(check.execute(), "check passes for regular config, maxLTV!=0 and LT!=0");
+
+        configData1.maxLtv = 0;
+        configData1.lt = 0;
+        check = new CheckNonBorrowableAsset(token0, configData1);
+        assertTrue(check.execute(), "check passes for regular config, maxLTV=0 and LT=0");
     }
 }

@@ -291,6 +291,28 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
+    "EORACLE_HARDCODED_yUSD_dUSD": {
+        "baseToken": "yUSD",
+        "quoteToken": "dUSD",
+        "primaryAggregator": "EORACLE_yUSD_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "EORACLE_HARDCODE_xETH_scETH": {
+        "baseToken": "xETH",
+        "quoteToken": "scETH",
+        "primaryAggregator": "EORACLE_xETH_ETH_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "CHAINLINK_OS_USD": {
         "baseToken": "OS",
         "quoteToken": "SILO_VIRTUAL_USD_8",
@@ -346,6 +368,17 @@
         "normalizationMultiplier": 1e4,
         "invertSecondPrice": false
     },
+    "EORACLE_HARDCODED_xUSD_dUSD": {
+        "baseToken": "xUSD",
+        "quoteToken": "dUSD",
+        "primaryAggregator": "EORACLE_xUSD_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4,
+        "invertSecondPrice": false
+    },
     "CHAINLINK_stS_S": {
         "baseToken": "stS",
         "quoteToken": "wS",
@@ -355,6 +388,17 @@
         "secondaryHeartbeat": 0,
         "normalizationDivider": 1e18,
         "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "CHAINLINK_HARDCODE_scBTC_scUSD": {
+        "baseToken": "scBTC",
+        "quoteToken": "scUSD",
+        "primaryAggregator": "CHAINLINK_BTC_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e2,
         "invertSecondPrice": false
     },
     "CHAINLINK_HARDCODE_woS_wS": {
@@ -401,6 +445,17 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
+    "EORACLE_HARDCODE_xBTC_scBTC": {
+        "baseToken": "xBTC",
+        "quoteToken": "scBTC",
+        "primaryAggregator": "EORACLE_xBTC_BTC_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e2,
+        "invertSecondPrice": false
+    },
     "EORACLE_wsrUSD_USD": {
         "baseToken": "wsrUSD",
         "quoteToken": "SILO_VIRTUAL_USD_8",
@@ -411,5 +466,28 @@
         "normalizationDivider": 1e8,
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
+    },
+    "EORACLE_HARDCODE_smsUSD_USDC": {
+        "baseToken": "smsUSD",
+        "quoteToken": "USDC.e",
+        "primaryAggregator": "EORACLE_smsUSD_msUSD_aggregator",
+        "primaryHeartbeat": 0,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "EORACLE_HARDCODE_PT_smsUSD_USDC": {
+        "baseToken": "PT-smsUSD-30OCT2025",
+        "quoteToken": "USDC.e",
+        "primaryAggregator": "EORACLE_PT-smsUSD-30OCT2025-aggregator",
+        "primaryHeartbeat": 0,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }
+

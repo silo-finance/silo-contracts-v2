@@ -39,6 +39,16 @@
         "normalizationDivider": 0,
         "normalizationMultiplier": 1e4
     },
+    "REDSTONE_sUSDe_USD": {
+        "baseToken": "sUSDe",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "REDSTONE_sUSDe_USD_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0
+    },
     "CHAINLINK_USDC_USD": {
         "baseToken": "USDC",
         "quoteToken": "SILO_VIRTUAL_USD_8",
@@ -49,10 +59,81 @@
         "normalizationDivider": 0,
         "normalizationMultiplier": 1e4
     },
+    "EORACLE_PT_sw_esdeUSD_3_deUSD_2026_02_06_HARDCODE_USDC": {
+        "baseToken": "PT_sw_esdeUSD_3_deUSD_2026_02_06",
+        "quoteToken": "USDC",
+        "primaryAggregator": "PT_sw_esdeUSD_3_deUSD_2026_02_06_deUSD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0
+    },
+    "EORACLE_HARDCODE_xBTC_BTC.b": {
+        "baseToken": "xBTC",
+        "quoteToken": "BTC.b",
+        "primaryAggregator": "EORACLE_xBTC_BTC_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e2
+    },
+    "EORACLE_xUSD_USDC": {
+        "baseToken": "xUSD",
+        "quoteToken": "USDC",
+        "primaryAggregator": "EORACLE_xUSD_USDC_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e6,
+        "normalizationMultiplier": 0
+    },
+    "EORACLE_HARDCODE_xUSD_AUSD": {
+        "baseToken": "xUSD",
+        "quoteToken": "AUSD",
+        "primaryAggregator": "EORACLE_xUSD_USDC_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e6,
+        "normalizationMultiplier": 0
+    },
+    "EORACLE_CHAINLINK_xUSD_USD": {
+        "baseToken": "xUSD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "EORACLE_xUSD_USDC_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_USDC_USD_AGGREGATOR",
+        "secondaryHeartbeat": 87001,
+        "normalizationDivider": 1e14,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "CHAINLINK_sAVAX_USD": {
         "baseToken": "sAVAX",
         "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "CHAINLINK_sAVAX_USD_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0
+    },
+    "CHAINLINK_USDT_USD": {
+        "baseToken": "USDT",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_USDT_USD_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4
+    },
+    "RE_reUSD_USD": {
+        "baseToken": "reUSD",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "RE_reUSD_USD_AGGREGATOR",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
@@ -68,5 +149,15 @@
         "secondaryHeartbeat": 0,
         "normalizationDivider": 0,
         "normalizationMultiplier": 1e2
+    },
+    "PENDLE_LINEAR_PT_Ethena_USDe_27Nov2025_HARDCODE_USDC": {
+        "baseToken": "PT_Ethena_USDe_27Nov2025",
+        "quoteToken": "USDC",
+        "primaryAggregator": "PT_Ethena_USDe_27Nov2025_linear_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0
     }
 }
