@@ -42,5 +42,11 @@
             "implementation": "0x2C7E816323B2E3894EB98d53B2cbec659aE26441",
             "description": "original implementation"
         }
+    ],
+    "xdc": [
+        {
+            "implementation": "0x72aab20582612d1E29C545074BD24295c4E56495",
+            "description": "XDC initial implementation"
+        }
     ]
 }

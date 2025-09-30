@@ -15,7 +15,26 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 /*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloImplementationDeploy.s.sol \
-        --ffi --rpc-url $RPC_SONIC --broadcast --verify
+        --ffi --rpc-url $RPC_XDC --broadcast --verify
+
+    XDC chain deployment:
+
+    FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/SiloImplementationDeploy.s.sol \
+        --ffi --rpc-url $RPC_XDC --legacy --broadcast --verify
+
+
+    FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/SiloImplementationDeploy.s.sol \
+        --verifier-url $VERIFIER_URL_ETHERSCAN_V2 \
+        --verifier etherscan \
+        --chain 50 \
+        --ffi --rpc-url $RPC_XDC \
+        --etherscan-api-key $ETHERSCAN_API_KEY \
+        --verify \
+        --private-key $PRIVATE_KEY \
+        --legacy \
+        --resume
 
     Resume verification:
     FOUNDRY_PROFILE=core \
