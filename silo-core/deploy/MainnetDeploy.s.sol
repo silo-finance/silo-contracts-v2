@@ -24,6 +24,12 @@ import {DKinkIRMFactoryDeploy} from "silo-core/deploy/DKinkIRMFactoryDeploy.s.so
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/MainnetDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --verify --broadcast
+
+    XDC chain deployment:
+
+    FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/MainnetDeploy.s.sol \
+        --ffi --rpc-url $RPC_XDC --legacy --broadcast --verify
  */
 contract MainnetDeploy is CommonDeploy {
     function run() public {
