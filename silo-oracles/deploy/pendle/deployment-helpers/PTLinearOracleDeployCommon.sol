@@ -106,7 +106,7 @@ abstract contract PTLinearOracleDeployCommon is CommonDeploy {
        (IPendleSYTokenLike.AssetType assetType, address assetAddress, uint8 assetDecimals) = IPendleSYTokenLike(syToken).assetInfo();
 
         console2.log("assetType:", assetType == IPendleSYTokenLike.AssetType.TOKEN ? "TOKEN" : "LIQUIDITY");
-        console2.log("assetAddress:", assetAddress);
+        console2.log("assetAddress (%s): %s", IERC20Metadata(assetAddress).symbol(), assetAddress);
         console2.log("assetDecimals:", assetDecimals);
         console2.log("expectedUnderlyingToken:", _expectedUnderlyingToken);
         console2.log("--------------------------------");
