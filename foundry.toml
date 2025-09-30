@@ -87,7 +87,7 @@ line_length=119
 [profile.vaults]
 src = 'silo-vaults/contracts'
 out = 'cache/foundry/out/silo-vaults'
-broadcast = 'silo-core/broadcast'
+broadcast = 'silo-vaults/broadcast'
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
