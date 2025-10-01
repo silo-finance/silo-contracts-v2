@@ -241,5 +241,15 @@
         "secondaryHeartbeat": 0,
         "normalizationDivider": 1e18,
         "normalizationMultiplier": 0
+    },
+    "LINEAR_ORACLE_PT_iUSD_4DEC2025_iUSD_HARDCODED_USDC": {
+        "baseToken": "PT-iUSD-4DEC2025",
+        "quoteToken": "iUSD",
+        "primaryAggregator": "LINEAR_ORACLE_PT-iUSD-4DEC2025_iUSD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0
     }
 }
