@@ -72,7 +72,7 @@ contract NewMarketTest is Test {
         _;
     }
 
-    function setUp() public {
+    function setUp() public virtual {
         AddrLib.init();
 
         address _siloConfig = vm.envAddress("CONFIG");
@@ -81,6 +81,8 @@ contract NewMarketTest is Test {
         string memory _rpc = vm.envString("RPC_URL");
 
         vm.createSelectFork(_rpc);
+
+        _beforeSetupHook();
 
         SILO_CONFIG = SiloConfig(_siloConfig);
         EXTERNAL_PRICE0 = _externalPrice0;
@@ -347,4 +349,6 @@ contract NewMarketTest is Test {
         console2.log("3. Repaid everything");
         console2.log("4. Withdrawn all collateral");
     }
+
+    function _beforeSetupHook() internal virtual {}
 }
