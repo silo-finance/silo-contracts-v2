@@ -10,7 +10,7 @@ import {DynamicKinkModel} from "silo-core/contracts/interestRateModel/kink/Dynam
 
 /*
 FOUNDRY_PROFILE=core forge script silo-core/deploy/DKinkIRMFactoryDeploy.s.sol \
-    --ffi --rpc-url $RPC_SONIC --broadcast --verify
+    --ffi --rpc-url $RPC_MAINNET --broadcast --verify
  */
 contract DKinkIRMFactoryDeploy is CommonDeploy {
     function run() public virtual returns (IDynamicKinkModelFactory factory) {
