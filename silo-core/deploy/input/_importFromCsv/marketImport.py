@@ -84,7 +84,7 @@ with open(input_file, "r", newline="", encoding="utf-8") as csvfile:
         data.append({keys[i]: row[i] for i in range(len(keys))})
 
 json_structure = {
-    "deployer": "",
+    "deployer": "0xAaD2F138Eb20fb60C34ac70624339ccbaC2320fa",
     "hookReceiver": "CLONE_IMPLEMENTATION",
     "hookReceiverImplementation": "SiloHookV1.sol",
     "daoFee": to_percent(data[0]["daoFee"]),
