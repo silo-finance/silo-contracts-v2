@@ -79,6 +79,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (_isRequestedAggregator(AGGREGATOR_ODOS)) return AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_ODOS);
         if (_isRequestedAggregator(AGGREGATOR_ENSO)) return AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_ENSO);
         if (_isRequestedAggregator(AGGREGATOR_0X)) return AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_0X);
+        if (_isRequestedAggregator(AGGREGATOR_0X)) return AddrLib.getAddress(AddrKey.EXCHANGE_AGGREGATOR_LI_FI);
 
         return address(0);
     }
@@ -107,7 +108,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         aggregator = vm.envOr(string("AGGREGATOR"), string(""));
     }
 
-    function _tokenReceiver() internal view returns (address payable) {
+    function _tokenReceiver() internal returns (address payable) {
         uint256 chainId = getChainId();
 
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return payable(address(3));
@@ -117,7 +118,9 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.INK_CHAIN_ID) return GNOSIS_SAFE_INK;
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) return GNOSIS_SAFE_MAINNET;
         if (chainId == ChainsLib.AVALANCHE_CHAIN_ID) return GNOSIS_SAFE_AVALANCHE;
+        if (chainId == ChainsLib.XDC_CHAIN_ID) return payable(AddrLib.getAddress(AddrKey.DAO));
+        if (chainId == ChainsLib.XDC_APOTHEM_CHAIN_ID) return payable(AddrLib.getAddress(AddrKey.DAO));
 
-        revert(string.concat("tokenReceiver not set for ", ChainsLib.chainAlias()));
+        revert(string.concat("[LiquidationHelperDeploy] tokenReceiver not set for ", ChainsLib.chainAlias()));
     }
 }

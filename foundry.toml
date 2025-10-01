@@ -87,7 +87,7 @@ line_length=119
 [profile.vaults]
 src = 'silo-vaults/contracts'
 out = 'cache/foundry/out/silo-vaults'
-broadcast = 'silo-core/broadcast'
+broadcast = 'silo-vaults/broadcast'
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
@@ -157,9 +157,13 @@ optimism = "${RPC_OPTIMISM}"
 anvil = "${RPC_ANVIL}"
 sonic = "${RPC_SONIC}"
 ink = "${RPC_INK}"
+xdc = "${RPC_XDC}"
 
 [etherscan]
 sonic = { key = "${VERIFIER_API_KEY_SONIC}", chain = 146, url = "${VERIFIER_URL_SONIC}" }
 ink = { key = "", chain = 57073, url = "https://explorer.inkonchain.com/api/", verifier = "blockscout" }
+
+# TODO on XDC depoyment this line prevents it, it must be set only one resume for verification
+# xdc = { key = "${ETHERSCAN_API_KEY}", chain = 50, url = "${VERIFIER_URL_ETHERSCAN_V2}", verifier = "etherscan" }
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

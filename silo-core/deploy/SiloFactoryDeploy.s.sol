@@ -15,7 +15,7 @@ import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 /**
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloFactoryDeploy.s.sol \
-        --ffi --rpc-url $RPC_SONIC --verify --broadcast
+        --ffi --rpc-url $RPC_XDC_APOTHEM --verify --broadcast
  */
 contract SiloFactoryDeploy is CommonDeploy {
     function run() public returns (ISiloFactory siloFactory) {

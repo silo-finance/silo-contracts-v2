@@ -13,6 +13,7 @@ library AddrKey {
     string constant public EXCHANGE_AGGREGATOR_1INCH = "EXCHANGE_AGGREGATOR_1INCH";
     string constant public EXCHANGE_AGGREGATOR_ENSO = "EXCHANGE_AGGREGATOR_ENSO";
     string constant public EXCHANGE_AGGREGATOR_ODOS = "EXCHANGE_AGGREGATOR_ODOS";
+    string constant public EXCHANGE_AGGREGATOR_LI_FI = "EXCHANGE_AGGREGATOR_LI_FI";
     string constant public GROWTH_MULTISIG = "GROWTH_MULTISIG";
     string constant public L2_MULTISIG = "L2_MULTISIG";
     string constant public LINK = "LINK";
@@ -39,4 +40,7 @@ library AddrKey {
     string constant public WRAPPER_LPT_eUSDe_14AUG25 = "Wrapper-LPT-sUSDe-25SEP25";
     string constant public wS = "wS";
     string constant public XSilo = "XSilo";
+    string constant public XDC = "XDC";
+    string constant public TXDC = "TXDC";
+    string constant public FXD = "FXD";
 }
