@@ -244,7 +244,7 @@
     },
     "LINEAR_ORACLE_PT_iUSD_4DEC2025_iUSD_HARDCODED_USDC": {
         "baseToken": "PT-iUSD-4DEC2025",
-        "quoteToken": "iUSD",
+        "quoteToken": "USDC",
         "primaryAggregator": "LINEAR_ORACLE_PT-iUSD-4DEC2025_iUSD_aggregator",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
