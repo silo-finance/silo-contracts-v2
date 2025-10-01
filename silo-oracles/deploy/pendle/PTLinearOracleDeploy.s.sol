@@ -8,12 +8,12 @@ import {PTLinearOracleDeployCommon} from "./deployment-helpers/PTLinearOracleDep
 
 /**
 FOUNDRY_PROFILE=oracles \
-PT_TOKEN=PT-iUSD-4-NOV-25 \
-PT_UNDERLYING_TOKEN=iUSD \
-PT_MARKET_ADDRESS=0x6524421041a33a559831a6d305936361b6e4d217 \
-BASE_DISCOUNT_PER_YEAR=0.19e18 \
+PT_TOKEN=PT-wstUSR-26JAN2026 \
+PT_UNDERLYING_TOKEN=wstUSR \
+PT_MARKET_ADDRESS=0x39c3f8e0e7c6f44dc8f0397feb124517ba82e26e \
+BASE_DISCOUNT_PER_YEAR=0.25e18 \
     forge script silo-oracles/deploy/pendle/PTLinearOracleDeploy.s.sol \
-    --ffi --rpc-url $RPC_MAINNET --broadcast --verify
+    --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
  */
 contract PTLinearOracleDeploy is PTLinearOracleDeployCommon {
     function run() public {
