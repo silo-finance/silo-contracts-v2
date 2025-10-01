@@ -41,4 +41,5 @@ library AddrKey {
     string constant public wS = "wS";
     string constant public XSilo = "XSilo";
     string constant public XDC = "XDC";
+    string constant public TXDC = "TXDC";
 }
