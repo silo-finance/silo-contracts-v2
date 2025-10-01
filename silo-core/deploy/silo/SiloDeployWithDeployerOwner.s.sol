@@ -7,6 +7,12 @@ import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
 FOUNDRY_PROFILE=core CONFIG=solvBTC.BBN_solvBTC \
     forge script silo-core/deploy/silo/SiloDeployWithDeployerOwner.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
+
+    XDC deployment:
+
+    FOUNDRY_PROFILE=core CONFIG=Silo_wXDC_USDC \
+    forge script silo-core/deploy/silo/SiloDeployWithDeployerOwner.s.sol \
+    --ffi --rpc-url $RPC_XDC --broadcast --legacy
  */
 contract SiloDeployWithDeployerOwner is SiloDeploy {
     function _getClonableHookReceiverConfig(address _implementation)

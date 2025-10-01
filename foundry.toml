@@ -164,6 +164,6 @@ sonic = { key = "${VERIFIER_API_KEY_SONIC}", chain = 146, url = "${VERIFIER_URL_
 ink = { key = "", chain = 57073, url = "https://explorer.inkonchain.com/api/", verifier = "blockscout" }
 
 # TODO on XDC depoyment this line prevents it, it must be set only one resume for verification
-xdc = { key = "${ETHERSCAN_API_KEY}", chain = 50, url = "${VERIFIER_URL_ETHERSCAN_V2}", verifier = "etherscan" }
+# xdc = { key = "${ETHERSCAN_API_KEY}", chain = 50, url = "${VERIFIER_URL_ETHERSCAN_V2}", verifier = "etherscan" }
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

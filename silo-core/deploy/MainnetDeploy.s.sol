@@ -68,7 +68,7 @@ contract MainnetDeploy is CommonDeploy {
         interestRateModelV2Deploy.run();
         siloHookV1Deploy.run();
         siloDeployerDeploy.run();
-        liquidationHelperDeploy.run();
+        // liquidationHelperDeploy.run();
         siloLensDeploy.run();
         towerDeploy.run();
         siloRouterV2Deploy.run();
