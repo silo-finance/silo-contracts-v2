@@ -27,9 +27,9 @@ interface OldGauge {
 The test is designed to be run right after the silo lending market deployment.
 It is excluded from the general tests CI pipeline and has separate workflow.
 
-FOUNDRY_PROFILE=core_test CONFIG=0x6Fb80aFD7DCa6e91ac196C3F3aDA3115E186ed11 \
-    EXTERNAL_PRICE_0=112 EXTERNAL_PRICE_1=100 \
-    RPC_URL=https://arb1.arbitrum.io/rpc \
+FOUNDRY_PROFILE=core_test CONFIG=0x9693D162Ee6254a7e27500D96Eeffe60DCe615E3 \
+    EXTERNAL_PRICE_0=100 EXTERNAL_PRICE_1=100 \
+    RPC_URL=$RPC_XDC_APOTHEM \
     forge test --mc "NewMarketTest" --ffi -vv
  */
 // solhint-disable var-name-mixedcase
