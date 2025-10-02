@@ -61,7 +61,8 @@ contract Logger is Test {
     string public constant FAIL_SYMBOL = unicode"❌";
     string public constant WARNING_SYMBOL = unicode"🚨";
 
-    string public constant DELIMITER = "\n----------------------------------------------------------------------------";
+    string public constant DELIMITER =
+        "\n----------------------------------------------------------------------------";
 
     uint256 internal constant _OLD_CHAINLINK_CONFIG_DATA_LEN = 288;
     uint256 internal constant _NEW_CHAINLINK_CONFIG_DATA_LEN = 320;
@@ -224,7 +225,8 @@ contract Logger is Test {
         console2.log("\tMarket:", market);
 
         console2.log(
-            "\tPendle oracle (Pendle protocol deployments):", address(PendlePTOracle(address(_oracle)).PENDLE_ORACLE())
+            "\tPendle oracle (Pendle protocol deployments):",
+            address(PendlePTOracle(address(_oracle)).PENDLE_ORACLE())
         );
 
         if (!isLPTWrapper) {

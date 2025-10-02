@@ -6,7 +6,7 @@ import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 
 import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol \
         --ffi --rpc-url $RPC_INK --broadcast --verify

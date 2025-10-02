@@ -23,14 +23,13 @@ import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3
 import {IChainlinkV3Factory} from "silo-oracles/contracts/interfaces/IChainlinkV3Factory.sol";
 import {IDIAOracle} from "silo-oracles/contracts/interfaces/IDIAOracle.sol";
 import {IDIAOracleFactory} from "silo-oracles/contracts/interfaces/IDIAOracleFactory.sol";
-import {
-    ChainlinkV3OraclesConfigsParser
-} from "silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OraclesConfigsParser.sol";
+import {ChainlinkV3OraclesConfigsParser} from
+    "silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OraclesConfigsParser.sol";
 import {
     SiloOraclesFactoriesContracts,
     SiloOraclesFactoriesDeployments
 } from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
-import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol"; 
+import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
@@ -81,7 +80,7 @@ abstract contract SiloDeploy is CommonDeploy {
         (irmConfigData0, irmConfigData1) = _getIRMConfigData(config, siloInitData);
 
         console2.log("[SiloCommonDeploy] IRM configs prepared");
-        
+
         ISiloDeployer.Oracles memory oracles = _getOracles(config, siloData);
         siloInitData.solvencyOracle0 = oracles.solvencyOracle0.deployed;
         siloInitData.maxLtvOracle0 = oracles.maxLtvOracle0.deployed;
@@ -137,11 +136,9 @@ abstract contract SiloDeploy is CommonDeploy {
         });
     }
 
-    function _saveOracles(
-        ISiloConfig _siloConfig,
-        SiloConfigData.ConfigData memory _config,
-        bytes32 _noOracleKey
-    ) internal {
+    function _saveOracles(ISiloConfig _siloConfig, SiloConfigData.ConfigData memory _config, bytes32 _noOracleKey)
+        internal
+    {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
         ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
@@ -306,10 +303,7 @@ abstract contract SiloDeploy is CommonDeploy {
 
     function _getIRMConfigData(SiloConfigData.ConfigData memory _config, ISiloConfig.InitData memory _siloInitData)
         internal
-        returns (
-            bytes memory irmConfigData0,
-            bytes memory irmConfigData1
-        )
+        returns (bytes memory irmConfigData0, bytes memory irmConfigData1)
     {
         InterestRateModelConfigData irmModelData = new InterestRateModelConfigData();
 
@@ -364,11 +358,7 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     function _isUniswapOracle(string memory _oracleConfigName) internal returns (bool isUniswapOracle) {
-        address pool = KV.getAddress(
-            UniswapV3OraclesConfigsParser.configFile(),
-            _oracleConfigName,
-            "pool"
-        );
+        address pool = KV.getAddress(UniswapV3OraclesConfigsParser.configFile(), _oracleConfigName, "pool");
 
         isUniswapOracle = pool != address(0);
     }
@@ -384,19 +374,16 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     function _isDiaOracle(string memory _oracleConfigName) internal returns (bool isDiaOracle) {
-        address diaOracle = KV.getAddress(
-            DIAOraclesConfigsParser.configFile(),
-            _oracleConfigName,
-            "diaOracle"
-        );
+        address diaOracle = KV.getAddress(DIAOraclesConfigsParser.configFile(), _oracleConfigName, "diaOracle");
 
         isDiaOracle = diaOracle != address(0);
     }
 
-    function beforeCreateSilo(
-        ISiloConfig.InitData memory,
-        address _hookReceiverImplementation
-    ) internal virtual returns (address hookImplementation) {
+    function beforeCreateSilo(ISiloConfig.InitData memory, address _hookReceiverImplementation)
+        internal
+        virtual
+        returns (address hookImplementation)
+    {
         hookImplementation = _hookReceiverImplementation;
     }
 
@@ -407,10 +394,10 @@ abstract contract SiloDeploy is CommonDeploy {
 
     function _getDKinkIRMInitialOwner() internal virtual returns (address);
 
-    function _printAndValidateDetails(
-        ISiloConfig _siloConfig,
-        ISiloConfig.InitData memory siloInitData
-    ) internal view {
+    function _printAndValidateDetails(ISiloConfig _siloConfig, ISiloConfig.InitData memory siloInitData)
+        internal
+        view
+    {
         string memory chainAlias = ChainsLib.chainAlias();
 
         if (keccak256(bytes(chainAlias)) == keccak256(bytes(ChainsLib.ANVIL_ALIAS))) return;
@@ -446,8 +433,7 @@ abstract contract SiloDeploy is CommonDeploy {
         console2.log("\n");
 
         console2.log(
-            "\tasset",
-            string.concat(tokenStr, " (", tokenSymbol, ", ", vm.toString(tokenDecimals), " decimals)")
+            "\tasset", string.concat(tokenStr, " (", tokenSymbol, ", ", vm.toString(tokenDecimals), " decimals)")
         );
 
         console2.log("\n");
@@ -460,7 +446,7 @@ abstract contract SiloDeploy is CommonDeploy {
         console2.log("\tdaoFee        ", _representAsPercent(_siloConfig.daoFee), icon);
 
         configValueUint256 = _siloInitData.deployerFee;
-        icon = _siloConfig.deployerFee != configValueUint256 ? _x_() : _ok_();   
+        icon = _siloConfig.deployerFee != configValueUint256 ? _x_() : _ok_();
 
         console2.log("\tdeployerFee   ", _representAsPercent(_siloConfig.deployerFee), icon);
 
@@ -492,11 +478,7 @@ abstract contract SiloDeploy is CommonDeploy {
             icon = string.concat(_warn_(), "!!! WARNING !!!");
         }
 
-        console2.log(
-            "\tliquidationTargetLtv",
-            _representAsPercent(_siloConfig.liquidationTargetLtv),
-            icon
-        );
+        console2.log("\tliquidationTargetLtv", _representAsPercent(_siloConfig.liquidationTargetLtv), icon);
 
         console2.log("\n");
         console2.log("\tsolvencyOracle", _siloConfig.solvencyOracle);
@@ -522,12 +504,7 @@ abstract contract SiloDeploy is CommonDeploy {
         console2.log(
             "\t\tquoteToken",
             string.concat(
-                vm.toString(quoteToken),
-                " (",
-                quoteTokenSymbol,
-                ", ",
-                vm.toString(quoteTokenDecimals),
-                " decimals)"
+                vm.toString(quoteToken), " (", quoteTokenSymbol, ", ", vm.toString(quoteTokenDecimals), " decimals)"
             )
         );
 
@@ -599,8 +576,7 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     function _symbol(address _token) internal view returns (string memory assetSymbol) {
-        (bool hasMetadata, bytes memory data) =
-            _tokenMetadataCall(_token, abi.encodeCall(IERC20Metadata.symbol, ()));
+        (bool hasMetadata, bytes memory data) = _tokenMetadataCall(_token, abi.encodeCall(IERC20Metadata.symbol, ()));
 
         if (!hasMetadata || data.length == 0) {
             return "?";
@@ -610,11 +586,11 @@ abstract contract SiloDeploy is CommonDeploy {
             return abi.decode(data, (string));
         }
     }
-    
+
     function _x_() internal pure virtual returns (string memory) {
         return string.concat(unicode"❌", " ");
     }
-    
+
     function _ok_() internal pure virtual returns (string memory) {
         return string.concat(unicode"✅", " ");
     }

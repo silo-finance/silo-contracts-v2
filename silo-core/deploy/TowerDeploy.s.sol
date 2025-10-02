@@ -9,7 +9,7 @@ import {Tower} from "silo-core/contracts/utils/Tower.sol";
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
     forge script silo-core/deploy/TowerDeploy.s.sol:TowerDeploy \
     --ffi --rpc-url $RPC_INK --broadcast --verify

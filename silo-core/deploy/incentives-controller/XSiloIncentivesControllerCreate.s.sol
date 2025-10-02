@@ -15,9 +15,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy} from "../_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 
-import {
-    SiloIncentivesControllerFactory
-} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
+import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
 
 import {SiloDeployments} from "silo-core/deploy/silo/SiloDeployments.sol";
 
@@ -30,7 +28,7 @@ import {DistributionTypes} from "silo-core/contracts/incentives/lib/Distribution
 
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 
-/**
+/*
     INCENTIVES_OWNER=GROWTH_MULTISIG FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/incentives-controller/XSiloIncentivesControllerCreate.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
@@ -124,7 +122,9 @@ contract XSiloIncentivesControllerCreate is CommonDeploy {
         _makeXSiloMoves();
     }
 
-    function _usexSiloMethodsToMakeSureAreWorking(ISiloIncentivesController _incentivesController, address _holder) internal {
+    function _usexSiloMethodsToMakeSureAreWorking(ISiloIncentivesController _incentivesController, address _holder)
+        internal
+    {
         _getTokensFromWhale(_holder);
 
         _makeXSiloMoves();
@@ -136,14 +136,16 @@ contract XSiloIncentivesControllerCreate is CommonDeploy {
         vm.deal(address(_incentivesController), 1 ether);
 
         address owner = Ownable(address(_incentivesController)).owner();
-        
+
         vm.prank(owner);
-        _incentivesController.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: programNames[0],
-            rewardToken: address(rewardToken),
-            distributionEnd: uint40(block.timestamp + 1 days),
-            emissionPerSecond: 0.0001e18
-        }));
+        _incentivesController.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: programNames[0],
+                rewardToken: address(rewardToken),
+                distributionEnd: uint40(block.timestamp + 1 days),
+                emissionPerSecond: 0.0001e18
+            })
+        );
 
         uint256 claimable = _printClaimable(_incentivesController);
         require(claimable == 0, "expect no claimable rewards yet");
@@ -157,15 +159,19 @@ contract XSiloIncentivesControllerCreate is CommonDeploy {
 
         claimable = _printClaimable(_incentivesController);
 
-
         rewardToken.mint(address(_incentivesController), 100e18);
 
         vm.prank(qaUser);
-        ISiloIncentivesController.AccruedRewards[] memory accruedRewards = _incentivesController.claimRewards(qaUser, programNames);
+        ISiloIncentivesController.AccruedRewards[] memory accruedRewards =
+            _incentivesController.claimRewards(qaUser, programNames);
         console2.log("rewards", accruedRewards[0].amount);
     }
 
-    function _printClaimable(ISiloIncentivesController _incentivesController) internal view returns(uint256 claimable) {
+    function _printClaimable(ISiloIncentivesController _incentivesController)
+        internal
+        view
+        returns (uint256 claimable)
+    {
         string[] memory programNames = new string[](1);
         programNames[0] = "USDC-for-xSilo";
 
@@ -196,8 +202,8 @@ contract XSiloIncentivesControllerCreate is CommonDeploy {
         siloToken.approve(address(xSilo), siloBalance);
         uint256 shares = xSilo.deposit(siloBalance / 2, qaUser);
         console2.log("shares after deposit", shares);
-        require(shares > 0, "failed to deposit silo tokens");        
-        
+        require(shares > 0, "failed to deposit silo tokens");
+
         vm.warp(block.timestamp + 1 hours);
 
         uint256 assets = xSilo.redeem(shares, qaUser, qaUser);
@@ -217,7 +223,7 @@ contract XSiloIncentivesControllerCreate is CommonDeploy {
         siloToken.transfer(qaUser, siloToken.balanceOf(_whale));
         vm.stopPrank();
 
-        uint256 xBalance = xSilo.balanceOf(qaUser);   
+        uint256 xBalance = xSilo.balanceOf(qaUser);
         uint256 siloBalance = siloToken.balanceOf(qaUser);
 
         console2.log("qaUser xSilo balance", xBalance);

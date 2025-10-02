@@ -16,7 +16,7 @@ import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncent
 import {ManualLiquidationHelperDeploy} from "silo-core/deploy/ManualLiquidationHelperDeploy.s.sol";
 import {DKinkIRMFactoryDeploy} from "silo-core/deploy/DKinkIRMFactoryDeploy.s.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/MainnetDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --verify --broadcast

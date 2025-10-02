@@ -9,7 +9,7 @@ import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloLensDeploy.s.sol \
         --ffi --rpc-url $RPC_MAINNET --broadcast --verify

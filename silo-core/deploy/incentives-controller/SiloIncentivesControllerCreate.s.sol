@@ -11,14 +11,12 @@ import {CommonDeploy} from "../_CommonDeploy.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 
-import {
-    SiloIncentivesControllerFactory
-} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
+import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
 
 import {SiloDeployments} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloIncentivesControllerDeployments} from "./SiloIncentivesControllerDeployments.sol";
 
-/**
+/*
     INCENTIVES_OWNER=DAO SILO=Silo_woS_wS_borrowable INCENTIVIZED_ASSET=wS \
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/incentives-controller/SiloIncentivesControllerCreate.s.sol \
@@ -31,10 +29,10 @@ import {SiloIncentivesControllerDeployments} from "./SiloIncentivesControllerDep
 
  */
 contract SiloIncentivesControllerCreate is CommonDeploy {
-    string constant public SHARE_TOKEN_TYPE_KEY = "SHARE_TOKEN_TYPE";
-    string constant public SHARE_TOKEN_TYPE_COLLATERAL = "COLLATERAL";
-    string constant public SHARE_TOKEN_TYPE_COLLATERAL_ONLY = "COLLATERAL_ONLY";
-    string constant public SHARE_TOKEN_TYPE_DEBT = "DEBT";
+    string public constant SHARE_TOKEN_TYPE_KEY = "SHARE_TOKEN_TYPE";
+    string public constant SHARE_TOKEN_TYPE_COLLATERAL = "COLLATERAL";
+    string public constant SHARE_TOKEN_TYPE_COLLATERAL_ONLY = "COLLATERAL_ONLY";
+    string public constant SHARE_TOKEN_TYPE_DEBT = "DEBT";
 
     error OwnerNotFound();
     error SiloNotFound();
