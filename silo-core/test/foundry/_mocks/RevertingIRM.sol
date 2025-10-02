@@ -23,14 +23,17 @@ contract RevertingIRM is IInterestRateModel, Overflows {
 
     function getCompoundInterestRateAndUpdate(uint256, uint256, uint256) external view returns (uint256) {
         _revert();
+        return 0;
     }
 
     function getCompoundInterestRate(address, uint256) external view returns (uint256) {
         _revert();
+        return 0;
     }
 
     function getCurrentInterestRate(address, uint256) external view returns (uint256) {
         _revert();
+        return 0;
     }
 
     function decimals() external pure returns (uint256) {

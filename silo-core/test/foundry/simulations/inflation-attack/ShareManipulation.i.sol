@@ -161,7 +161,8 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
         }
 
         _borrow1wei();
-        return;
+        // return;
+
         assertGt(silo1.previewBorrowShares(precision * offset), precision, "require not to have 1:1 ratio");
 
         uint256 ratioBefore = silo1.previewBorrowShares(precision * offset);
