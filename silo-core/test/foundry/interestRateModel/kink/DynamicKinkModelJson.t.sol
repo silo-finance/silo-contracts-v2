@@ -6,7 +6,9 @@ import {console2} from "forge-std/console2.sol";
 
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
-import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
+import {
+    DynamicKinkModel, IDynamicKinkModel
+} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {DynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
 import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 
@@ -43,8 +45,9 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
         IDynamicKinkModel.ImmutableArgs memory immutableArgs =
             IDynamicKinkModel.ImmutableArgs({timelock: _TIMELOCK, rcompCap: int96(tmp.RCUR_CAP())});
 
-        IRM =
-            DynamicKinkModelMock(address(FACTORY.create(cfg, immutableArgs, address(this), address(this), bytes32(0))));
+        IRM = DynamicKinkModelMock(
+            address(FACTORY.create(cfg, immutableArgs, address(this), address(this), bytes32(0)))
+        );
 
         // 1e18 is 100%
         _rcompDiffPercent[5] = 69700005108;

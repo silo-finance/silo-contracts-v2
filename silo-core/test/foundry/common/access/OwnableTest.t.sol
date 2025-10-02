@@ -40,10 +40,7 @@ contract OwnableTest is Test {
 
     function testTransferOwnership1StepToZeroAddress() public {
         // Transfer to zero address should revert with OwnableInvalidOwner error
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableInvalidOwner.selector,
-            address(0)
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableInvalidOwner.selector, address(0)));
 
         vm.prank(owner);
         ownableContract.transferOwnership1Step(address(0));
@@ -54,10 +51,7 @@ contract OwnableTest is Test {
 
     function testTransferOwnership1StepUnauthorized() public {
         // Non-owner should not be able to transfer ownership
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            randomUser
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, randomUser));
 
         vm.prank(randomUser);
         ownableContract.transferOwnership1Step(newOwner);

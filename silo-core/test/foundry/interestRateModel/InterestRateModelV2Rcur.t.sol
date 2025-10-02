@@ -70,11 +70,18 @@ contract InterestRateModelV2RcurTest is RcurTestData, InterestRateModelConfigs {
             assertEq(mockedRcur, rcur, _concatMsg(i, "getCurrentInterestRate()"));
 
             bool overflow = IRMv2Impl.overflowDetected(silo, testCase.input.currentTime);
-            assertEq(overflow, testCase.expected.didOverflow == 1, _concatMsg(i, "expect overflowDetected() = expected.didOverflow"));
+            assertEq(
+                overflow,
+                testCase.expected.didOverflow == 1,
+                _concatMsg(i, "expect overflowDetected() = expected.didOverflow")
+            );
         }
     }
 
-    function _createIRM(address _silo, RcurData memory _testCase) internal returns (InterestRateModelV2Impl IRMv2Impl) {
+    function _createIRM(address _silo, RcurData memory _testCase)
+        internal
+        returns (InterestRateModelV2Impl IRMv2Impl)
+    {
         IRMv2Impl = InterestRateModelV2Impl(Clones.clone(address(INTEREST_RATE_MODEL)));
 
         IInterestRateModelV2Config configAddress = new InterestRateModelV2Config(_toConfigStruct(_testCase));

@@ -14,7 +14,7 @@ import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiv
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 
-import {SiloLittleHelper} from  "../../_common/SiloLittleHelper.sol";
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
@@ -108,9 +108,8 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         vm.prank(borrower);
         silo1.borrowSameAsset(1, borrower, borrower);
 
-        (
-            address protectedShareToken, address collateralShareToken, address debtShareToken
-        ) = siloConfig.getShareTokens(address(silo1));
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            siloConfig.getShareTokens(address(silo1));
 
         emit log("-- protectedShareToken.transfer --");
         vm.prank(borrower);
@@ -134,7 +133,7 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
 
         emit log("-- flashLoan --");
         silo0.flashLoan(this, address(token0), silo0.maxFlashLoan(address(token0)), "");
-        
+
         // liquidation
         emit log("-- liquidationCall --");
 

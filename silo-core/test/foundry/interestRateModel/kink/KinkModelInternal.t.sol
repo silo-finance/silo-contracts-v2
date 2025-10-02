@@ -3,7 +3,9 @@ pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 
-import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
+import {
+    DynamicKinkModel, IDynamicKinkModel
+} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 
 contract KinkInternalMock is DynamicKinkModel {
     function calculateUtiliation(uint256 _collateralAssets, uint256 _debtAssets) external pure returns (int256) {
@@ -55,10 +57,10 @@ contract KinkModalInternalTest is Test {
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_calculateUtiliation_neverRevert_neverOverDP_fuzz -vv
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_kink_calculateUtiliation_neverRevert_neverOverDP_fuzz(uint256 _collateralAssets, uint256 _debtAssets)
-        public
-        view
-    {
+    function test_kink_calculateUtiliation_neverRevert_neverOverDP_fuzz(
+        uint256 _collateralAssets,
+        uint256 _debtAssets
+    ) public view {
         int256 u = irm.calculateUtiliation(_collateralAssets, _debtAssets);
         assertLe(u, _DP, "neverRevert_neverOverDP <= 100%");
         assertGe(u, 0, "neverRevert_neverOverDP >= 0");

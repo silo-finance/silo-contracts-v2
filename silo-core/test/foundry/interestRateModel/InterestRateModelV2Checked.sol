@@ -45,7 +45,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
     uint256 public constant _DP = 1e18;
 
     /// @dev maximum value of compound interest the model will return
-    uint256 public constant RCOMP_MAX = (2**16) * 1e18;
+    uint256 public constant RCOMP_MAX = (2 ** 16) * 1e18;
 
     /// @dev maximum value of X for which, RCOMP_MAX should be returned. If x > X_MAX => exp(x) > RCOMP_MAX.
     /// X_MAX = ln(RCOMP_MAX + 1)
@@ -61,7 +61,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
 
     /// @dev Each Silo setup is stored separately in mapping. We will write to this mapping based on the msg.sender.
     /// Silo => IInterestRateModelV2.Setup
-    mapping (address silo => Setup) public getSetup;
+    mapping(address silo => Setup) public getSetup;
 
     /// @dev Config for the model
     IInterestRateModelV2Config public irmConfig;
@@ -85,12 +85,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         uint256 _collateralAssets,
         uint256 _debtAssets,
         uint256 _interestRateTimestamp
-    )
-        external
-        virtual
-        override
-        returns (uint256 rcomp)
-    {
+    ) external virtual override returns (uint256 rcomp) {
         // assume that caller is Silo
         address silo = msg.sender;
 
@@ -100,18 +95,13 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         int256 Tcrit;
 
         (rcomp, ri, Tcrit) = calculateCompoundInterestRate(
-            getConfig(silo),
-            _collateralAssets,
-            _debtAssets,
-            _interestRateTimestamp,
-            block.timestamp
+            getConfig(silo), _collateralAssets, _debtAssets, _interestRateTimestamp, block.timestamp
         );
 
         currentSetup.initialized = true;
 
-        currentSetup.ri = ri > type(int112).max
-            ? type(int112).max
-            : ri < type(int112).min ? type(int112).min : int112(ri);
+        currentSetup.ri =
+            ri > type(int112).max ? type(int112).max : ri < type(int112).min ? type(int112).min : int112(ri);
 
         currentSetup.Tcrit = Tcrit > type(int112).max
             ? type(int112).max
@@ -134,11 +124,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
         (rcomp,,) = calculateCompoundInterestRate(
-            getConfig(_silo),
-            data.collateralAssets,
-            data.debtAssets,
-            data.interestRateTimestamp,
-            _blockTimestamp
+            getConfig(_silo), data.collateralAssets, data.debtAssets, data.interestRateTimestamp, _blockTimestamp
         );
     }
 
@@ -152,12 +138,8 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
     {
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
-        (,,,overflow) = calculateCompoundInterestRateWithOverflowDetection(
-            getConfig(_silo),
-            data.collateralAssets,
-            data.debtAssets,
-            data.interestRateTimestamp,
-            _blockTimestamp
+        (,,, overflow) = calculateCompoundInterestRateWithOverflowDetection(
+            getConfig(_silo), data.collateralAssets, data.debtAssets, data.interestRateTimestamp, _blockTimestamp
         );
     }
 
@@ -172,11 +154,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         ISilo.UtilizationData memory data = ISilo(_silo).utilizationData();
 
         rcur = calculateCurrentInterestRate(
-            getConfig(_silo),
-            data.collateralAssets,
-            data.debtAssets,
-            data.interestRateTimestamp,
-            _blockTimestamp
+            getConfig(_silo), data.collateralAssets, data.debtAssets, data.interestRateTimestamp, _blockTimestamp
         );
     }
 
@@ -200,14 +178,10 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
     ) public pure virtual returns (uint256 rcur) {
         if (_interestRateTimestamp > _blockTimestamp) revert InvalidTimestamps();
 
-        LocalVarsRCur memory _l = LocalVarsRCur(0,0,0,0,0,0,false); // struct for local vars to avoid "Stack too deep"
+        LocalVarsRCur memory _l = LocalVarsRCur(0, 0, 0, 0, 0, 0, false); // struct for local vars to avoid "Stack too deep"
 
-        (,,,_l.overflow) = calculateCompoundInterestRateWithOverflowDetection(
-            _c,
-            _totalDeposits,
-            _totalBorrowAmount,
-            _interestRateTimestamp,
-            _blockTimestamp
+        (,,, _l.overflow) = calculateCompoundInterestRateWithOverflowDetection(
+            _c, _totalDeposits, _totalBorrowAmount, _interestRateTimestamp, _blockTimestamp
         );
 
         if (_l.overflow) {
@@ -215,7 +189,8 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         }
 
         // There can't be an underflow in the subtraction because of the previous check
-        /* unchecked */ {
+        /* unchecked */
+        {
             // T := t1 - t0 # length of time period in seconds
             _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();
         }
@@ -251,17 +226,9 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
         uint256 _blockTimestamp
-    ) public pure virtual override returns (
-        uint256 rcomp,
-        int256 ri,
-        int256 Tcrit
-    ) {
+    ) public pure virtual override returns (uint256 rcomp, int256 ri, int256 Tcrit) {
         (rcomp, ri, Tcrit,) = calculateCompoundInterestRateWithOverflowDetection(
-            _c,
-            _totalDeposits,
-            _totalBorrowAmount,
-            _interestRateTimestamp,
-            _blockTimestamp
+            _c, _totalDeposits, _totalBorrowAmount, _interestRateTimestamp, _blockTimestamp
         );
     }
 
@@ -272,22 +239,18 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         uint256 _totalBorrowAmount,
         uint256 _interestRateTimestamp,
         uint256 _blockTimestamp
-    ) public pure virtual returns (
-        uint256 rcomp,
-        int256 ri,
-        int256 Tcrit,
-        bool overflow
-    ) {
+    ) public pure virtual returns (uint256 rcomp, int256 ri, int256 Tcrit, bool overflow) {
         ri = _c.ri;
         Tcrit = _c.Tcrit;
 
         // struct for local vars to avoid "Stack too deep"
-        LocalVarsRComp memory _l = LocalVarsRComp(0,0,0,0,0,0,0,0,0,0);
+        LocalVarsRComp memory _l = LocalVarsRComp(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
         if (_interestRateTimestamp > _blockTimestamp) revert InvalidTimestamps();
 
         // There can't be an underflow in the subtraction because of the previous check
-        /* unchecked */ {
+        /* unchecked */
+        {
             // length of time period in seconds
             _l.T = (_blockTimestamp - _interestRateTimestamp).toInt256();
         }
@@ -318,7 +281,7 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         // rlin := klin * u0 # lower bound between t0 and t1
         _l.rlin = _c.klin * _l.u / decimalPoints;
         // ri := max(ri , rlin )
-        ri = _max(ri , _l.rlin);
+        ri = _max(ri, _l.rlin);
         // r0 := ri + rp # interest rate at t0 ignoring lower bound
         _l.r0 = ri + _l.rp;
         // r1 := r0 + slope *T # what interest rate would be at t1 ignoring lower bound
@@ -337,11 +300,11 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
         } else if (_l.r0 >= _l.rlin && _l.r1 < _l.rlin) {
             // lower bound is active after some time
             // rcomp := exp( rlin *T - (r0 - rlin )^2/ slope /2) - 1
-            _l.x = _l.rlin * _l.T - (_l.r0 - _l.rlin)**2 / _l.slope / 2;
+            _l.x = _l.rlin * _l.T - (_l.r0 - _l.rlin) ** 2 / _l.slope / 2;
         } else {
             // lower bound is active before some time
             // rcomp := exp( rlin *T + (r1 - rlin )^2/ slope /2) - 1
-            _l.x = _l.rlin * _l.T + (_l.r1 - _l.rlin)**2 / _l.slope / 2;
+            _l.x = _l.rlin * _l.T + (_l.r1 - _l.rlin) ** 2 / _l.slope / 2;
         }
 
         // ri := max(ri + slopei * T, rlin )
@@ -367,11 +330,12 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
 
     /// @dev checks for the overflow in rcomp calculations, accruedInterest, totalDeposits and totalBorrowedAmount.
     /// In case of the overflow, rcomp is reduced to make totalDeposits and totalBorrowedAmount <= 2**196.
-    function _calculateRComp(
-        uint256 _totalDeposits,
-        uint256 _totalBorrowAmount,
-        int256 _x
-    ) public pure virtual returns (uint256 rcomp, bool overflow) {
+    function _calculateRComp(uint256 _totalDeposits, uint256 _totalBorrowAmount, int256 _x)
+        public
+        pure
+        virtual
+        returns (uint256 rcomp, bool overflow)
+    {
         int256 rcompSigned;
 
         if (_x >= X_MAX) {
@@ -384,7 +348,8 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
             rcomp = rcompSigned > 0 ? rcompSigned.toUint256() : 0;
         }
 
-        /* unchecked */ {
+        /* unchecked */
+        {
             // maxAmount = max(_totalDeposits, _totalBorrowAmount) to see
             // if any of this variables overflow in result.
             uint256 maxAmount = _totalDeposits > _totalBorrowAmount ? _totalDeposits : _totalBorrowAmount;
@@ -400,8 +365,8 @@ contract InterestRateModelV2Checked is IInterestRateModel, IInterestRateModelV2 
             }
 
             if (
-                rcompMulTBA / rcomp != _totalBorrowAmount ||
-                rcompMulTBA / _DP > ASSET_DATA_OVERFLOW_LIMIT - maxAmount
+                rcompMulTBA / rcomp != _totalBorrowAmount
+                    || rcompMulTBA / _DP > ASSET_DATA_OVERFLOW_LIMIT - maxAmount
             ) {
                 rcomp = (ASSET_DATA_OVERFLOW_LIMIT - maxAmount) * _DP / _totalBorrowAmount;
 

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {
-    LeverageUsingSiloFlashloanWithGeneralSwap
-} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from
+    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";

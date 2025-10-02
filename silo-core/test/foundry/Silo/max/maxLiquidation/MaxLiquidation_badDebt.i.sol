@@ -12,11 +12,7 @@ import {MaxLiquidationTest} from "./MaxLiquidation.i.sol";
 contract MaxLiquidationBadDebtTest is MaxLiquidationTest {
     bool private constant _BAD_DEBT = true;
 
-    function _maxLiquidation_partial_1token(uint128 _collateral, bool _receiveSToken)
-        internal
-        virtual
-        override
-    {
+    function _maxLiquidation_partial_1token(uint128 _collateral, bool _receiveSToken) internal virtual override {
         bool sameAsset = true;
 
         _createDebtForBorrower(_collateral, sameAsset);
@@ -33,11 +29,7 @@ contract MaxLiquidationBadDebtTest is MaxLiquidationTest {
         _ensureBorrowerHasNoDebt();
     }
 
-    function _maxLiquidation_partial_2tokens(uint128 _collateral, bool _receiveSToken)
-        internal
-        virtual
-        override
-    {
+    function _maxLiquidation_partial_2tokens(uint128 _collateral, bool _receiveSToken) internal virtual override {
         bool sameAsset = false;
 
         _createDebtForBorrower(_collateral, sameAsset);

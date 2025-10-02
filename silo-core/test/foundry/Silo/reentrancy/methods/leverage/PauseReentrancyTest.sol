@@ -30,11 +30,9 @@ contract PauseReentrancyTest is MethodReentrancyTest {
         LeverageRouter router = _getLeverageRouter();
         bytes32 pauserRole = router.PAUSER_ROLE();
 
-        vm.expectRevert(abi.encodeWithSelector(
-            IAccessControl.AccessControlUnauthorizedAccount.selector,
-            anyAccount,
-            pauserRole
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, anyAccount, pauserRole)
+        );
 
         vm.prank(anyAccount);
         router.pause();

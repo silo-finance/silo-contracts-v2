@@ -81,11 +81,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     /// and we adding interest and then liquidity might be not enough to cover debt + interest and we can not
     /// borrow anymore
     /// @param _moveForwardSec do not use mre than a day, because interest will be too high and we can not borrow
-    function _dustPropagation_deposit_borrow(
-        uint256 _assets,
-        uint16 _borrowers,
-        uint24 _moveForwardSec
-    ) private {
+    function _dustPropagation_deposit_borrow(uint256 _assets, uint16 _borrowers, uint24 _moveForwardSec) private {
         for (uint256 b = 1; b <= _borrowers; b++) {
             address borrower = makeAddr(string.concat("borrower", b.toString()));
             address depositor = makeAddr(string.concat("depositor", b.toString()));

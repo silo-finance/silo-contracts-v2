@@ -71,18 +71,16 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
         emit log_named_decimal_uint("token1.balanceOf(TOKENS_RECEIVER)", token1.balanceOf(TOKENS_RECEIVER), 18);
 
         assertLe(
-            token0.balanceOf(TOKENS_RECEIVER),
-            LIQUIDATION_UNDERESTIMATION,
-            "expect full collateral to be swapped"
+            token0.balanceOf(TOKENS_RECEIVER), LIQUIDATION_UNDERESTIMATION, "expect full collateral to be swapped"
         );
 
         // because we are not swapping anything, we are not transferring debt token
         // this assertion can be turn on once we add swap to it
-//        assertEq(
-//            token1.balanceOf(TOKENS_RECEIVER),
-//            withdrawCollateral - repayDebtAssets - flashFee + LIQUIDATION_UNDERESTIMATION,
-//            "expect debt to be transfer (price is 1:1)"
-//        );
+        //        assertEq(
+        //            token1.balanceOf(TOKENS_RECEIVER),
+        //            withdrawCollateral - repayDebtAssets - flashFee + LIQUIDATION_UNDERESTIMATION,
+        //            "expect debt to be transfer (price is 1:1)"
+        //        );
 
         // because we are not swapping anything, we are not transferring debt token
         // so contract will have debt, this assertion can be turn on once we add swap to the test

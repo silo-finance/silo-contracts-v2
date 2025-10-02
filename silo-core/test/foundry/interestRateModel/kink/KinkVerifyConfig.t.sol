@@ -3,7 +3,9 @@ pragma solidity ^0.8.0;
 
 import {console2} from "forge-std/console2.sol";
 
-import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
+import {
+    DynamicKinkModel, IDynamicKinkModel
+} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {KinkCommonTest} from "./KinkCommon.t.sol";
 
 /*

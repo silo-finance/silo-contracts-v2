@@ -74,7 +74,7 @@ contract MaliciousToken is MintableToken, Test {
 
         uint256 stateBeforeReentrancyTest = vm.snapshotState();
 
-        for (uint j = 0; j < _methodRegistries.length; j++) {
+        for (uint256 j = 0; j < _methodRegistries.length; j++) {
             if (Strings.equal(_methodRegistries[j].abiFile(), _leverageMethodsRegistry.abiFile())) continue;
 
             uint256 totalMethods = _methodRegistries[j].supportedMethodsLength();

@@ -22,10 +22,7 @@ contract HackProtected is Test {
         }
     }
 
-    function onFlashLoan(address, address _token, uint256, uint256, bytes calldata)
-        external
-        returns (bytes32)
-    {
+    function onFlashLoan(address, address _token, uint256, uint256, bytes calldata) external returns (bytes32) {
         ISilo silo = ISilo(msg.sender);
 
         assertGe(IERC20(_token).balanceOf(address(silo)), 1e18, "protected deposit left in silo");

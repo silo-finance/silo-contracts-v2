@@ -6,7 +6,9 @@ import {console2} from "forge-std/console2.sol";
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {SignedMath} from "openzeppelin5/utils/math/SignedMath.sol";
 
-import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
+import {
+    DynamicKinkModel, IDynamicKinkModel
+} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 import {DynamicKinkModelMock} from "./DynamicKinkModelMock.sol";
 

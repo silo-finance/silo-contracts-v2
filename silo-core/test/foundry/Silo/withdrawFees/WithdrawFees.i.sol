@@ -69,7 +69,6 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         silo1.withdrawFees();
     }
 
-
     /*
     forge test -vv --ffi --mt test_fee_oneToken_18
     */
@@ -146,7 +145,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
         uint64 prevRevenueFraction;
         uint256 interest;
 
-        for (uint t = 1; t < 24 hours; t++) {
+        for (uint256 t = 1; t < 24 hours; t++) {
             vm.warp(block.timestamp + 1);
             interest = silo1.accrueInterest();
 
@@ -203,7 +202,7 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
 
         assertGt(interest, 0, "expect some interest at this point");
 
-        (ISilo.Fractions memory fractions_, ) = _printFractions(interest);
+        (ISilo.Fractions memory fractions_,) = _printFractions(interest);
 
         assertLt(
             fractions_.interest,
@@ -266,8 +265,8 @@ contract WithdrawFeesIntegrationTest is SiloLittleHelper, Test {
     }
 
     function _fragmentedAmount(uint256 _amount, uint8 _decimals) internal pure returns (uint256) {
-        for (uint i; i < _decimals; i++) {
-            _amount +=  10 ** i;
+        for (uint256 i; i < _decimals; i++) {
+            _amount += 10 ** i;
         }
 
         return _amount;

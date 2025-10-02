@@ -138,12 +138,13 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         (, address collateral,) = silo1.config().getShareTokens(address(silo1));
 
         solvencyOracle0.setExpectBeforeQuote(true);
-        vm.expectCall(address(solvencyOracle0), abi.encodeWithSelector(ISiloOracle.beforeQuote.selector, address(token0)));
+        vm.expectCall(
+            address(solvencyOracle0), abi.encodeWithSelector(ISiloOracle.beforeQuote.selector, address(token0))
+        );
 
         vm.prank(borrower);
         vm.expectRevert(IShareToken.SenderNotSolventAfterTransfer.selector);
         IShareToken(collateral).transfer(depositor, depositAssets * SiloMathLib._DECIMALS_OFFSET_POW);
-
     }
 
     /*
@@ -159,7 +160,9 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
         (, address collateral,) = silo1.config().getShareTokens(address(silo1));
 
         solvencyOracle0.setExpectBeforeQuote(true);
-        vm.expectCall(address(solvencyOracle0), abi.encodeWithSelector(ISiloOracle.beforeQuote.selector, address(token0)));
+        vm.expectCall(
+            address(solvencyOracle0), abi.encodeWithSelector(ISiloOracle.beforeQuote.selector, address(token0))
+        );
 
         uint256 transferAmount = depositAssets / 2;
 
@@ -226,9 +229,14 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
 
         // we DO expect beforeQuote/quote for token0 even if we borrowing token1
         // because LTV calculations needs both values, so if we have setup for oracle0, we doing a call
-        vm.expectCall(address(maxLtvOracle0), abi.encodeWithSelector(ISiloOracle.beforeQuote.selector, address(token0)));
+        vm.expectCall(
+            address(maxLtvOracle0), abi.encodeWithSelector(ISiloOracle.beforeQuote.selector, address(token0))
+        );
         // notice: we calling oracle0 with `depositAssets` because we borrow token1 and depositAssets is our collateral
-        vm.expectCall(address(maxLtvOracle0), abi.encodeWithSelector(ISiloOracle.quote.selector, _quoteAmount, address(token0)));
+        vm.expectCall(
+            address(maxLtvOracle0),
+            abi.encodeWithSelector(ISiloOracle.quote.selector, _quoteAmount, address(token0))
+        );
     }
 
     function _expectCallsToSolvencyOracle(uint256 _quoteAmount) internal {
@@ -236,8 +244,13 @@ contract BeforeQuoteTest is SiloLittleHelper, Test {
 
         // we DO expect beforeQuote/quote for token0 even if we borrowing token1
         // because LTV calculations needs both values, so if we have setup for oracle0, we doing a call
-        vm.expectCall(address(solvencyOracle0), abi.encodeWithSelector(ISiloOracle.beforeQuote.selector, address(token0)));
+        vm.expectCall(
+            address(solvencyOracle0), abi.encodeWithSelector(ISiloOracle.beforeQuote.selector, address(token0))
+        );
         // notice: we calling oracle0 with `depositAssets` because we borrow token1 and depositAssets is our collateral
-        vm.expectCall(address(solvencyOracle0), abi.encodeWithSelector(ISiloOracle.quote.selector, _quoteAmount, address(token0)));
+        vm.expectCall(
+            address(solvencyOracle0),
+            abi.encodeWithSelector(ISiloOracle.quote.selector, _quoteAmount, address(token0))
+        );
     }
 }

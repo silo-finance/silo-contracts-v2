@@ -12,13 +12,13 @@ import {MethodReentrancyTest} from "../MethodReentrancyTest.sol";
 import {TestStateLib} from "../../TestState.sol";
 
 contract PermitReentrancyTest is MethodReentrancyTest {
-    bytes32 constant internal _PERMIT_TYPEHASH =
+    bytes32 internal constant _PERMIT_TYPEHASH =
         keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
-    bytes32 constant internal _TYPE_HASH =
+    bytes32 internal constant _TYPE_HASH =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
-    bytes32 constant internal _HASHED_VERSION = keccak256(bytes("1"));
+    bytes32 internal constant _HASHED_VERSION = keccak256(bytes("1"));
 
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
@@ -37,11 +37,11 @@ contract PermitReentrancyTest is MethodReentrancyTest {
     function _ensureItWillRevertWithCrossReentrantCall() internal {
         address silo0 = address(TestStateLib.silo0());
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        IERC20Permit(silo0).permit(address(1),address(1),1,2,3,bytes32(0),bytes32(0));
+        IERC20Permit(silo0).permit(address(1), address(1), 1, 2, 3, bytes32(0), bytes32(0));
 
         address silo1 = address(TestStateLib.silo1());
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        IERC20Permit(silo1).permit(address(1),address(1),1,2,3,bytes32(0),bytes32(0));
+        IERC20Permit(silo1).permit(address(1), address(1), 1, 2, 3, bytes32(0), bytes32(0));
     }
 
     function _ensureItWillNotRevert(address _token) internal {
@@ -51,8 +51,7 @@ contract PermitReentrancyTest is MethodReentrancyTest {
         uint256 nonce = ShareToken(_token).nonces(signer.addr);
         uint256 deadline = block.timestamp + 1000;
 
-        (uint8 v, bytes32 r, bytes32 s) =
-            _createPermit(signer, spender, value, nonce, deadline, address(_token));
+        (uint8 v, bytes32 r, bytes32 s) = _createPermit(signer, spender, value, nonce, deadline, address(_token));
 
         ShareToken(_token).permit(signer.addr, spender, value, deadline, v, r, s);
     }

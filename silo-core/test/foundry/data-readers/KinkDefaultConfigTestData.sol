@@ -61,11 +61,12 @@ contract KinkDefaultConfigTestData is Test {
         string memory path = string.concat(root, "/silo-core/test/foundry/data/KinkDefaultConfigTests.json");
         string memory json = vm.readFile(path);
 
-        UserInputDataJson[] memory dataJson = abi.decode(vm.parseJson(json, string(abi.encodePacked("."))), (UserInputDataJson[]));
+        UserInputDataJson[] memory dataJson =
+            abi.decode(vm.parseJson(json, string(abi.encodePacked("."))), (UserInputDataJson[]));
         require(dataJson.length > 0, "No data found");
         data = new UserInputData[](dataJson.length);
 
-        for (uint i; i < dataJson.length; i++) {
+        for (uint256 i; i < dataJson.length; i++) {
             // console2.log("dataJson[i].id", dataJson[i].id);
             data[i] = _toConfigStruct(dataJson[i]);
         }
@@ -91,7 +92,7 @@ contract KinkDefaultConfigTestData is Test {
         console2.log("T2", _data.input.T2);
         console2.log("Tcrit", _data.input.Tcrit);
         console2.log("Tmin", _data.input.Tmin);
-        
+
         console2.log("config:");
         console2.log("alpha", _data.config.alpha);
         console2.log("c1", _data.config.c1);

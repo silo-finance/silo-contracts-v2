@@ -30,11 +30,9 @@ contract SetLeverageFeeReentrancyTest is MethodReentrancyTest {
         LeverageRouter router = _getLeverageRouter();
         bytes32 adminRole = router.DEFAULT_ADMIN_ROLE();
 
-        vm.expectRevert(abi.encodeWithSelector(
-            IAccessControl.AccessControlUnauthorizedAccount.selector,
-            anyAccount,
-            adminRole
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, anyAccount, adminRole)
+        );
 
         vm.prank(anyAccount);
         router.setLeverageFee(0.01e18);

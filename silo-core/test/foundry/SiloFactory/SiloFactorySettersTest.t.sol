@@ -147,23 +147,11 @@ contract SiloFactorySettersTest is Test {
         address asset = makeAddr("asset");
         address config = makeAddr("SiloConfig");
 
-        vm.mockCall(
-            silo,
-            abi.encodeWithSelector(IERC4626.asset.selector),
-            abi.encode(asset)
-        );
+        vm.mockCall(silo, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(asset));
 
-        vm.mockCall(
-            silo,
-            abi.encodeWithSelector(ISilo.config.selector),
-            abi.encode(config)
-        );
+        vm.mockCall(silo, abi.encodeWithSelector(ISilo.config.selector), abi.encode(config));
 
-        vm.mockCall(
-            config,
-            abi.encodeWithSelector(ISiloConfig.SILO_ID.selector),
-            abi.encode(1)
-        );
+        vm.mockCall(config, abi.encodeWithSelector(ISiloConfig.SILO_ID.selector), abi.encode(1));
 
         (address dao, address deployer) = siloFactory.getFeeReceivers(silo);
 
@@ -266,23 +254,11 @@ contract SiloFactorySettersTest is Test {
         address config = makeAddr("SiloConfig");
         address asset = makeAddr("siloAsset");
 
-        vm.mockCall(
-            _silo,
-            abi.encodeWithSelector(ISilo.config.selector),
-            abi.encode(config)
-        );
+        vm.mockCall(_silo, abi.encodeWithSelector(ISilo.config.selector), abi.encode(config));
 
-        vm.mockCall(
-            _silo,
-            abi.encodeWithSelector(IERC4626.asset.selector),
-            abi.encode(asset)
-        );
+        vm.mockCall(_silo, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(asset));
 
-        vm.mockCall(
-            config,
-            abi.encodeWithSelector(ISiloConfig.SILO_ID.selector),
-            abi.encode(1)
-        );
+        vm.mockCall(config, abi.encodeWithSelector(ISiloConfig.SILO_ID.selector), abi.encode(1));
 
         (address dao,) = siloFactory.getFeeReceivers(_silo);
 

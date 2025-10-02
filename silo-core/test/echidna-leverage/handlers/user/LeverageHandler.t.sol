@@ -39,7 +39,9 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         _after();
 
-        assertEq(_token.balanceOf(address(rescueModule)), 0, "after rescue (success of fail) there should be 0 tokens");
+        assertEq(
+            _token.balanceOf(address(rescueModule)), 0, "after rescue (success of fail) there should be 0 tokens"
+        );
     }
 
     function swapModuleDonation(uint256 _t) external {
@@ -65,7 +67,9 @@ contract LeverageHandler is BaseHandlerLeverage {
         uint256 cap = leverageRouter.MAX_LEVERAGE_FEE();
         uint256 fee = leverageRouter.leverageFee();
 
-        (bool success,) = actor.proxy(address(leverageRouter), abi.encodeWithSelector(ILeverageRouter.setLeverageFee.selector, _fee % cap));
+        (bool success,) = actor.proxy(
+            address(leverageRouter), abi.encodeWithSelector(ILeverageRouter.setLeverageFee.selector, _fee % cap)
+        );
 
         if (!success) assertEq(fee, leverageRouter.leverageFee(), "when fail, fee is not changed");
     }
@@ -73,7 +77,8 @@ contract LeverageHandler is BaseHandlerLeverage {
     function togglePauseRouter() external setupRandomActor(0) {
         bool paused = leverageRouter.paused();
 
-        bytes4 selector = paused ? PausableWithAccessControl.unpause.selector : PausableWithAccessControl.pause.selector;
+        bytes4 selector =
+            paused ? PausableWithAccessControl.unpause.selector : PausableWithAccessControl.pause.selector;
         actor.proxy(address(leverageRouter), abi.encodeWithSelector(selector));
 
         assertTrue(paused != leverageRouter.paused(), "pause/unpause should toggle state");
@@ -107,11 +112,11 @@ contract LeverageHandler is BaseHandlerLeverage {
         assertFalse(success, "[onFlashLoan] direct call on onFlashLoan should always revert");
     }
 
-    function openLeveragePosition(uint64 _depositPercent, uint64 _flashloanPercent, RandomGenerator calldata _random)
-        external
-        payable
-        setupRandomActor(_random.i)
-    {
+    function openLeveragePosition(
+        uint64 _depositPercent,
+        uint64 _flashloanPercent,
+        RandomGenerator calldata _random
+    ) external payable setupRandomActor(_random.i) {
         if (_userWhoOnlyApprove() == targetActor) {
             return;
         }
@@ -161,7 +166,7 @@ contract LeverageHandler is BaseHandlerLeverage {
         swapRouterMock.setSwap(swapArgs.sellToken, flashArgs.amount, swapArgs.buyToken, amountOut);
 
         uint256 beforeDebt = ISilo(flashArgs.flashloanTarget).maxRepay(targetActor);
-        
+
         _before();
 
         (bool success,) = actor.proxy(
@@ -217,9 +222,10 @@ contract LeverageHandler is BaseHandlerLeverage {
 
         // we need to count for slippage, so we have to take higher amount in
         uint256 amountIn = flashAmount * (100 + (_random.j % 5)) / 100;
-        
+
         // omount out with some random slippage
-        uint256 amountOut = _quote(amountIn, ISilo(closeArgs.flashloanTarget).asset()) * (1000 - (_random.k % 50)) / 1000;
+        uint256 amountOut =
+            _quote(amountIn, ISilo(closeArgs.flashloanTarget).asset()) * (1000 - (_random.k % 50)) / 1000;
 
         swapArgs = IGeneralSwapModule.SwapArgs({
             buyToken: ISilo(closeArgs.flashloanTarget).asset(),
@@ -308,13 +314,11 @@ contract LeverageHandler is BaseHandlerLeverage {
         address actorBPredictLeverageContract = address(leverageRouter.predictUserLeverageContract(_actorB));
 
         assertTrue(
-            actorAPredictLeverageContract != address(0),
-            "predictUserLeverageContract(actorA) != 0, sanity check"
+            actorAPredictLeverageContract != address(0), "predictUserLeverageContract(actorA) != 0, sanity check"
         );
 
         assertTrue(
-            actorBPredictLeverageContract != address(0),
-            "predictUserLeverageContract(actorB) != 0, sanity check"
+            actorBPredictLeverageContract != address(0), "predictUserLeverageContract(actorB) != 0, sanity check"
         );
 
         assertTrue(
@@ -379,7 +383,11 @@ contract LeverageHandler is BaseHandlerLeverage {
         }
     }
 
-    function _userLeverageContract(address _user) internal view returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
+    function _userLeverageContract(address _user)
+        internal
+        view
+        returns (LeverageUsingSiloFlashloanWithGeneralSwap)
+    {
         return LeverageUsingSiloFlashloanWithGeneralSwap(address(leverageRouter.userLeverageContract(_user)));
     }
 

@@ -16,9 +16,8 @@ import {IAccessControl} from "openzeppelin5/access/IAccessControl.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 
-import {
-    LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy
-} from "silo-core/deploy/LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
+import {LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy} from
+    "silo-core/deploy/LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
 
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -26,7 +25,8 @@ import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapMod
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
-import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from
+    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {RescueModule} from "silo-core/contracts/leverage/modules/RescueModule.sol";
 
@@ -39,14 +39,13 @@ import {SiloFixture, SiloConfigOverride} from "../_common/fixtures/SiloFixture.s
 import {RevertingReceiver} from "../_mocks/RevertingReceiver.sol";
 import {LeverageUsingSiloFlashloanHarness} from "../_mocks/LeverageUsingSiloFlashloanHarness.sol";
 
-
 /*
     FOUNDRY_PROFILE=core_test  forge test -vv --ffi --mc LeverageUsingSiloFlashloanWithGeneralSwapTest
 */
 contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test {
     using SafeERC20 for IERC20;
 
-    bytes32 constant internal _PERMIT_TYPEHASH =
+    bytes32 internal constant _PERMIT_TYPEHASH =
         keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
     uint256 constant _PRECISION = 1e18;
@@ -79,9 +78,10 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         leverageRouter = _deployLeverage();
 
         siloLeverageImpl = LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION());
-        
+
         // Get the user's leverage contract
-        siloLeverage = LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.predictUserLeverageContract(wallet.addr));
+        siloLeverage =
+            LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.predictUserLeverageContract(wallet.addr));
 
         address nativeTokenForLocalTesting = address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
         leverageRouter.setRevenueReceiver(makeAddr("RevenueReceiver"));
@@ -100,7 +100,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         leverageRouter.grantRole(leverageRouter.PAUSER_ROLE(), pauser);
     }
-    
+
     function _deployLeverage() internal returns (LeverageRouter) {
         AddrLib.init();
         AddrLib.setAddress(AddrKey.DAO, address(this));
@@ -132,16 +132,12 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     function test_leverage_alwaysRevert_UnknownAction() public {
         address nativeTokenForLocalTesting = address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
-        LeverageUsingSiloFlashloanHarness harness = new LeverageUsingSiloFlashloanHarness(
-            address(leverageRouter),
-            nativeTokenForLocalTesting
-        );
+        LeverageUsingSiloFlashloanHarness harness =
+            new LeverageUsingSiloFlashloanHarness(address(leverageRouter), nativeTokenForLocalTesting);
 
         harness.setTxData(address(0), cfg, ILeverageUsingSiloFlashloan.LeverageAction.Undefined, address(this), 0);
 
-        vm.expectRevert(abi.encodeWithSelector(
-            ILeverageUsingSiloFlashloan.UnknownAction.selector
-        ));
+        vm.expectRevert(abi.encodeWithSelector(ILeverageUsingSiloFlashloan.UnknownAction.selector));
 
         harness.onFlashLoan(address(0), address(0), 0, 0, "Any data");
     }
@@ -197,7 +193,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         vm.warp(block.timestamp + 1000 days);
 
-        assertLt(siloLens.getUserLTV(silo1, user), 0.90e18, "we want case when there is no bad debt");
+        assertLt(siloLens.getUserLTV(silo1, user), 0.9e18, "we want case when there is no bad debt");
         assertFalse(silo1.isSolvent(user), "we want example with inSolvent user");
 
         _closeLeverageExample();
@@ -218,7 +214,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         overrides.token1 = address(token1);
         overrides.configName = "Silo_Local_noOracle";
 
-        (, , ISilo siloFlashloan,,,) = siloFixture.deploy_local(overrides);
+        (,, ISilo siloFlashloan,,,) = siloFixture.deploy_local(overrides);
 
         vm.label(address(siloFlashloan), "siloFlashloan");
 
@@ -250,7 +246,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs;
 
-        (closeArgs, swapArgs) = _defaultCloseArgs( address(siloFlashloan));
+        (closeArgs, swapArgs) = _defaultCloseArgs(address(siloFlashloan));
 
         _closeLeverage(user, closeArgs, swapArgs);
 
@@ -340,14 +336,12 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     */
     function test_leverage_pausable_nonPauserCannotPause() public {
         address notPauser = makeAddr("notPauser");
-        
+
         bytes32 pauserRole = leverageRouter.PAUSER_ROLE();
 
-        vm.expectRevert(abi.encodeWithSelector(
-            IAccessControl.AccessControlUnauthorizedAccount.selector,
-            notPauser,
-            pauserRole
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, notPauser, pauserRole)
+        );
 
         vm.prank(notPauser);
         leverageRouter.pause();
@@ -362,14 +356,12 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertTrue(leverageRouter.paused(), "should be paused");
 
         address notPauser = makeAddr("notPauser");
-        
+
         bytes32 pauserRole = leverageRouter.PAUSER_ROLE();
 
-        vm.expectRevert(abi.encodeWithSelector(
-            IAccessControl.AccessControlUnauthorizedAccount.selector,
-            notPauser,
-            pauserRole
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, notPauser, pauserRole)
+        );
 
         vm.prank(notPauser);
         leverageRouter.unpause();
@@ -380,12 +372,17 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     */
     function test_leverage_pausable_adminCanGrantPauserRole() public {
         address newPauser = makeAddr("newPauser");
-        assertFalse(leverageRouter.hasRole(leverageRouter.PAUSER_ROLE(), newPauser), "should not have pauser role initially");
+        assertFalse(
+            leverageRouter.hasRole(leverageRouter.PAUSER_ROLE(), newPauser), "should not have pauser role initially"
+        );
 
         // address(this) has DEFAULT_ADMIN_ROLE from deployment
         leverageRouter.grantRole(leverageRouter.PAUSER_ROLE(), newPauser);
 
-        assertTrue(leverageRouter.hasRole(leverageRouter.PAUSER_ROLE(), newPauser), "should have pauser role after granting");
+        assertTrue(
+            leverageRouter.hasRole(leverageRouter.PAUSER_ROLE(), newPauser),
+            "should have pauser role after granting"
+        );
     }
 
     /*
@@ -393,12 +390,17 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     */
     function test_leverage_pausable_adminCanRevokePauserRole() public {
         leverageRouter.grantRole(leverageRouter.PAUSER_ROLE(), pauser);
-        assertTrue(leverageRouter.hasRole(leverageRouter.PAUSER_ROLE(), pauser), "should have pauser role initially");
+        assertTrue(
+            leverageRouter.hasRole(leverageRouter.PAUSER_ROLE(), pauser), "should have pauser role initially"
+        );
 
         // address(this) has DEFAULT_ADMIN_ROLE from deployment
         leverageRouter.revokeRole(leverageRouter.PAUSER_ROLE(), pauser);
 
-        assertFalse(leverageRouter.hasRole(leverageRouter.PAUSER_ROLE(), pauser), "should not have pauser role after revoking");
+        assertFalse(
+            leverageRouter.hasRole(leverageRouter.PAUSER_ROLE(), pauser),
+            "should not have pauser role after revoking"
+        );
     }
 
     /*
@@ -411,11 +413,9 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         bytes32 pauserRole = leverageRouter.PAUSER_ROLE();
         bytes32 adminRole = leverageRouter.PAUSER_ADMIN_ROLE();
 
-        vm.expectRevert(abi.encodeWithSelector(
-            IAccessControl.AccessControlUnauthorizedAccount.selector,
-            anyAccount,
-            adminRole
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, anyAccount, adminRole)
+        );
 
         vm.prank(anyAccount);
         leverageRouter.grantRole(pauserRole, newPauser);
@@ -432,11 +432,9 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         leverageRouter.grantRole(pauserRole, pauser);
         assertTrue(leverageRouter.hasRole(pauserRole, pauser));
 
-        vm.expectRevert(abi.encodeWithSelector(
-            IAccessControl.AccessControlUnauthorizedAccount.selector,
-            anyAccount,
-            adminRole
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, anyAccount, adminRole)
+        );
 
         vm.prank(anyAccount);
         leverageRouter.revokeRole(pauserRole, pauser);
@@ -448,7 +446,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     function test_leverage_almostMax() public {
         address user = wallet.addr;
         uint256 depositAmount = 0.1e18;
-        uint256 multiplier = 2.80e18;
+        uint256 multiplier = 2.8e18;
 
         _depositForBorrow(1000e18, address(3));
 
@@ -540,7 +538,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         vm.stopPrank();
 
-        assertEq(siloLens.getUserLTV(silo0, user), 0.677920141007389330e18, "user has leverage position");
+        assertEq(siloLens.getUserLTV(silo0, user), 0.67792014100738933e18, "user has leverage position");
 
         _assertThereIsNoDebtApprovals(user);
         _assertNoApprovalsFromLeverage({_checkSwap: true});
@@ -554,8 +552,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         _open_leverage_native_pass(ISilo.CollateralType.Collateral);
 
         assertEq(
-            siloLens.getUserLTV(silo0, wallet.addr), 
-            0.677920141007389330e18, 
+            siloLens.getUserLTV(silo0, wallet.addr),
+            0.67792014100738933e18,
             "sanity check: user has leverage position"
         );
 
@@ -569,8 +567,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         _open_leverage_native_pass(ISilo.CollateralType.Protected);
 
         assertEq(
-            siloLens.getUserLTV(silo0, wallet.addr), 
-            0.677920141007389330e18, 
+            siloLens.getUserLTV(silo0, wallet.addr),
+            0.67792014100738933e18,
             "sanity check: user has leverage position"
         );
 
@@ -610,7 +608,6 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             _swapArgs: abi.encode(swapArgs),
             _depositArgs: depositArgs
         });
-
 
         _assertThereIsNoDebtApprovals(user);
         _assertNoApprovalsFromLeverage({_checkSwap: true});
@@ -671,7 +668,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         vm.stopPrank();
 
-        assertEq(siloLens.getUserLTV(silo0, user), 0.677920141007389330e18, "user has leverage position");
+        assertEq(siloLens.getUserLTV(silo0, user), 0.67792014100738933e18, "user has leverage position");
 
         _assertThereIsNoDebtApprovals(user);
         _assertNoApprovalsFromLeverage({_checkSwap: true});
@@ -695,7 +692,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     function _leverage_closeWithPermit(ISilo.CollateralType _collateralType) internal {
         _openLeverageExample(_collateralType);
 
-        address shareCollateral = _collateralType == ISilo.CollateralType.Protected ? protectedShareToken : collateralShareToken;
+        address shareCollateral =
+            _collateralType == ISilo.CollateralType.Protected ? protectedShareToken : collateralShareToken;
         assertGt(IERC20(shareCollateral).balanceOf(wallet.addr), 0, "user has collateral share token");
 
         address user = wallet.addr;
@@ -727,8 +725,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         (
             ILeverageUsingSiloFlashloan.CloseLeverageArgs memory _closeArgs,
             IGeneralSwapModule.SwapArgs memory _swapArgs
-        ) = _defaultCloseArgs( address(silo1));
-
+        ) = _defaultCloseArgs(address(silo1));
 
         ILeverageUsingSiloFlashloan.Permit memory permit = _generatePermit(collateralShareToken);
         // frontrun
@@ -821,9 +818,9 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         uint256 userBalanceBefore = token0.balanceOf(user);
         emit log_named_address("leverage", address(siloLeverage));
 
-        address swapModule = address(LeverageUsingSiloFlashloanWithGeneralSwap(
-            leverageRouter.LEVERAGE_IMPLEMENTATION()
-        ).SWAP_MODULE());
+        address swapModule = address(
+            LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION()).SWAP_MODULE()
+        );
 
         _leverage_approvalAbuse(
             address(silo0.asset()),
@@ -867,7 +864,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         // Get attacker's leverage contract address
         address attackerLeverageContract = leverageRouter.predictUserLeverageContract(attacker);
-        
+
         // this will bypass ZeroAmountOutError
         token0.mint(attackerLeverageContract, 1e18);
 
@@ -914,29 +911,26 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         depositArgs.collateralType = _collateralType;
 
-        (uint256 totalDeposited, ) = _openLeverage(user, flashArgs, depositArgs, swapArgs);
+        (uint256 totalDeposited,) = _openLeverage(user, flashArgs, depositArgs, swapArgs);
 
         emit log_named_uint("totalDeposited", totalDeposited);
         uint256 finalMultiplier = totalDeposited * _PRECISION / depositArgs.amount;
 
         assertEq(finalMultiplier, 2.06899308e18, "finalMultiplier");
 
-        address shareCollateral = _collateralType == ISilo.CollateralType.Collateral
-            ? collateralShareToken
-            : protectedShareToken;
+        address shareCollateral =
+            _collateralType == ISilo.CollateralType.Collateral ? collateralShareToken : protectedShareToken;
 
         assertEq(
-            silo0.previewRedeem(IERC20(shareCollateral).balanceOf(user), _collateralType), 
-            0.206899308e18, 
+            silo0.previewRedeem(IERC20(shareCollateral).balanceOf(user), _collateralType),
+            0.206899308e18,
             "users collateral"
         );
 
         uint256 flashFee = _flashFee(silo1, flashArgs.amount);
 
         assertEq(
-            silo1.maxRepay(user),
-            flashArgs.amount + flashFee,
-            "user has debt equal to flashloan + flashloan fee"
+            silo1.maxRepay(user), flashArgs.amount + flashFee, "user has debt equal to flashloan + flashloan fee"
         );
 
         assertEq(silo1.maxRepay(user), 0.10908e18, "users debt");
@@ -968,9 +962,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
             IERC20(_depositArgs.silo.asset()).forceApprove(userLeverage, _depositArgs.amount);
         }
 
-        uint256 debtReceiveApproval = leverageRouter.calculateDebtReceiveApproval(
-            ISilo(_flashArgs.flashloanTarget), _flashArgs.amount
-        );
+        uint256 debtReceiveApproval =
+            leverageRouter.calculateDebtReceiveApproval(ISilo(_flashArgs.flashloanTarget), _flashArgs.amount);
 
         // user must set receive approval for debt share token
         IERC20R(debtShareToken).setReceiveApproval(userLeverage, debtReceiveApproval);
@@ -1029,7 +1022,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
     function _closeLeverageExample() internal {
         _closeLeverageExample(ISilo.CollateralType.Collateral);
-    }   
+    }
 
     function _closeLeverageExample(ISilo.CollateralType _collateralType) internal {
         address user = wallet.addr;
@@ -1071,7 +1064,8 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         // we need swap bit more, so we can count for fee or slippage, here we simulate +11%
         uint256 flashAmount = silo1.maxRepay(_user);
 
-        { // to deep
+        {
+            // to deep
             uint256 amountIn = flashAmount * 111 / 100;
             swap.setSwap(_swapArgs.sellToken, amountIn, _swapArgs.buyToken, amountIn * 99 / 100);
         }
@@ -1081,20 +1075,22 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         // Get user's leverage contract
         address userLeverageContract = leverageRouter.predictUserLeverageContract(_user);
 
-        address shareCollateral = _closeArgs.collateralType == ISilo.CollateralType.Protected
-                ? protectedShareToken
-                : collateralShareToken;
+        address shareCollateral =
+            _closeArgs.collateralType == ISilo.CollateralType.Protected ? protectedShareToken : collateralShareToken;
 
         if (_withdrawPermit.value == 0) {
             // uint256 collateralSharesApproval = IERC20(collateralShareToken).balanceOf(_user);
             IERC20(shareCollateral).forceApprove(userLeverageContract, type(uint256).max);
         }
 
-        { // to deep
+        {
+            // to deep
             vm.expectEmit(userLeverageContract);
 
             emit ILeverageUsingSiloFlashloan.CloseLeverage({
-                depositWithdrawn: silo0.previewRedeem(IERC20(shareCollateral).balanceOf(_user), _closeArgs.collateralType),
+                depositWithdrawn: silo0.previewRedeem(
+                    IERC20(shareCollateral).balanceOf(_user), _closeArgs.collateralType
+                ),
                 swapAmountOut: (flashAmount * 111 / 100) * 99 / 100,
                 flashloanAmount: flashAmount,
                 flashloanFee: _flashFee(ISilo(_closeArgs.flashloanTarget), flashAmount),
@@ -1113,14 +1109,10 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         _assertThereIsNoDebtApprovals(_user);
     }
 
-    function _defaultOpenArgs(
-        uint256 _depositAmount,
-        uint256 _multiplier,
-        address _flashloanTarget
-    )
+    function _defaultOpenArgs(uint256 _depositAmount, uint256 _multiplier, address _flashloanTarget)
         internal
         view
-        returns(
+        returns (
             ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
             ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
             IGeneralSwapModule.SwapArgs memory swapArgs
@@ -1178,7 +1170,11 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
     }
 
     function _assertThereIsNoDebtApprovals(address _user) internal view {
-        assertEq(IERC20R(debtShareToken).receiveAllowance(_user, address(siloLeverage)), 0, "[NoDebtApprovals] for siloLeverage");
+        assertEq(
+            IERC20R(debtShareToken).receiveAllowance(_user, address(siloLeverage)),
+            0,
+            "[NoDebtApprovals] for siloLeverage"
+        );
         assertEq(IERC20R(debtShareToken).receiveAllowance(_user, address(swap)), 0, "[NoDebtApprovals] for swap");
         assertEq(IERC20R(debtShareToken).receiveAllowance(_user, address(swap)), 0, "[NoDebtApprovals] for swap");
         assertEq(IERC20R(debtShareToken).receiveAllowance(_user, address(silo0)), 0, "[NoDebtApprovals] for silo0");
@@ -1194,38 +1190,34 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         assertEq(token1.balanceOf(address(siloLeverage)), 0, "siloLeverage has no  token1");
 
         if (_customToken != address(0)) {
-            assertEq(
-                IERC20(_customToken).balanceOf(address(siloLeverage)),
-                0,
-                "siloLeverage has no custom tokens"
-            );
+            assertEq(IERC20(_customToken).balanceOf(address(siloLeverage)), 0, "siloLeverage has no custom tokens");
         }
     }
 
     // we not always checking swap, because eg on closing, we not using whole approval
     function _assertNoApprovalsFromLeverage(bool _checkSwap) internal view {
-        assertEq(token0.allowance(address(siloLeverage), address(silo0)), 0, "[_assertNoApprovals] token0 for silo0");
-        assertEq(token0.allowance(address(siloLeverage), address(silo1)), 0, "[_assertNoApprovals] token0 for silo1");
+        assertEq(
+            token0.allowance(address(siloLeverage), address(silo0)), 0, "[_assertNoApprovals] token0 for silo0"
+        );
+        assertEq(
+            token0.allowance(address(siloLeverage), address(silo1)), 0, "[_assertNoApprovals] token0 for silo1"
+        );
 
-        assertEq(token1.allowance(address(siloLeverage), address(silo0)), 0, "[_assertNoApprovals] token1 for silo0");
-        assertEq(token1.allowance(address(siloLeverage), address(silo1)), 0, "[_assertNoApprovals] token1 for silo1");
+        assertEq(
+            token1.allowance(address(siloLeverage), address(silo0)), 0, "[_assertNoApprovals] token1 for silo0"
+        );
+        assertEq(
+            token1.allowance(address(siloLeverage), address(silo1)), 0, "[_assertNoApprovals] token1 for silo1"
+        );
 
         if (_checkSwap) {
-            address swapModule = address(LeverageUsingSiloFlashloanWithGeneralSwap(
-                leverageRouter.LEVERAGE_IMPLEMENTATION()
-            ).SWAP_MODULE());
-
-            assertEq(
-                token0.allowance(swapModule, address(swap)),
-                0,
-                "[_assertNoApprovals] token0 for swap router"
+            address swapModule = address(
+                LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION()).SWAP_MODULE()
             );
 
-            assertEq(
-                token1.allowance(swapModule, address(swap)),
-                0,
-                "[_assertNoApprovals] token1 for swap router"
-            );
+            assertEq(token0.allowance(swapModule, address(swap)), 0, "[_assertNoApprovals] token0 for swap router");
+
+            assertEq(token1.allowance(swapModule, address(swap)), 0, "[_assertNoApprovals] token1 for swap router");
         }
     }
 
@@ -1308,7 +1300,9 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         if (expectSuccess) {
             // Verify tokens were transferred to user
-            assertEq(token0.balanceOf(_rescuer), userBalanceBefore + rescueAmount, "User should receive rescued tokens");
+            assertEq(
+                token0.balanceOf(_rescuer), userBalanceBefore + rescueAmount, "User should receive rescued tokens"
+            );
             assertEq(token0.balanceOf(userLeverageContract), 0, "Leverage contract should have no tokens");
         }
     }
@@ -1344,7 +1338,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         uint256 userBalanceBefore = _rescuer.balance;
         uint256 contractBalanceBefore = userLeverageContract.balance;
-        
+
         assertEq(contractBalanceBefore, rescueAmount, "Contract should have native tokens");
 
         bool expectSuccess = wallet.addr == _rescuer;
@@ -1361,7 +1355,9 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
 
         if (expectSuccess) {
             // Verify native tokens were transferred to user
-            assertEq(_rescuer.balance, userBalanceBefore + rescueAmount, "User should receive rescued native tokens");
+            assertEq(
+                _rescuer.balance, userBalanceBefore + rescueAmount, "User should receive rescued native tokens"
+            );
             assertEq(userLeverageContract.balance, 0, "Leverage contract should have no native tokens");
         }
     }
@@ -1402,7 +1398,7 @@ contract LeverageUsingSiloFlashloanWithGeneralSwapTest is SiloLittleHelper, Test
         // Use vm.deal to set native token balance on the leverage contract
         uint256 rescueAmount = 1e18;
         vm.deal(userLeverageContract, rescueAmount);
-        
+
         // Deploy reverting receiver and get its bytecode
         RevertingReceiver revertingReceiver = new RevertingReceiver();
         bytes memory revertingCode = address(revertingReceiver).code;

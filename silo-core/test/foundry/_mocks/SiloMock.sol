@@ -33,7 +33,8 @@ contract SiloMock is Test {
     }
 
     function getProtectedAssetsMock(uint256 _totalProtectedAssets) external {
-        bytes memory data = abi.encodeWithSelector(ISilo.getTotalAssetsStorage.selector, ISilo.CollateralType.Protected);
+        bytes memory data =
+            abi.encodeWithSelector(ISilo.getTotalAssetsStorage.selector, ISilo.CollateralType.Protected);
         vm.mockCall(ADDRESS, data, abi.encode(_totalProtectedAssets));
         vm.expectCall(ADDRESS, data);
     }
@@ -47,9 +48,7 @@ contract SiloMock is Test {
         vm.expectCall(ADDRESS, data);
     }
 
-    function utilizationDataMock(uint256 _collateral, uint256 _debt, uint256 _timestamp)
-        external
-    {
+    function utilizationDataMock(uint256 _collateral, uint256 _debt, uint256 _timestamp) external {
         bytes memory data = abi.encodeWithSelector(ISilo.utilizationData.selector);
         vm.mockCall(ADDRESS, data, abi.encode(_collateral, _debt, _timestamp));
         vm.expectCall(ADDRESS, data);

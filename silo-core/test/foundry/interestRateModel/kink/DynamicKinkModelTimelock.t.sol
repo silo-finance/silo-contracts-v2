@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {console2} from "forge-std/console2.sol";
 
-import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
+import {
+    DynamicKinkModel, IDynamicKinkModel
+} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
 import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 

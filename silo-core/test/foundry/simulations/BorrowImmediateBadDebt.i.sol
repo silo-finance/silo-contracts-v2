@@ -78,14 +78,14 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
 
         assertTrue(
             !silo1.isSolvent(borrower),
-            string.concat("it takes over ", (solvencyTime / 60 / 60 / 24).toString()," days to be insolvent")
+            string.concat("it takes over ", (solvencyTime / 60 / 60 / 24).toString(), " days to be insolvent")
         );
 
         vm.warp(block.timestamp + 365 days - insolventTime);
 
         emit log_named_decimal_uint("[1y] LTV after 1y", silo1.getLtv(borrower), 18);
         emit log_named_uint("[1y] current debt", silo1.previewRepayShares(borrowShares));
-        (uint256 collateralToLiquidate, uint256 debtToRepay, ) = partialLiquidation.maxLiquidation(borrower);
+        (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_uint("[1y] collateralToLiquidate", collateralToLiquidate);
         emit log_named_uint("[1y] debtToRepay", debtToRepay);
@@ -137,7 +137,7 @@ contract BorrowImmediateBadDebtTest is SiloLittleHelper, Test {
 
         assertTrue(
             !silo1.isSolvent(borrower),
-            string.concat("it takes over ", (solvencyTime / 60 / 60 / 24).toString()," days to be insolvent")
+            string.concat("it takes over ", (solvencyTime / 60 / 60 / 24).toString(), " days to be insolvent")
         );
 
         vm.warp(block.timestamp + 365 days - insolventTime);

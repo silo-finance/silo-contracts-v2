@@ -4,15 +4,11 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 
-import {
-    LeverageUsingSiloFlashloanWithGeneralSwap
-} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from
+    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 
 contract LeverageUsingSiloFlashloanHarness is LeverageUsingSiloFlashloanWithGeneralSwap {
-    constructor(
-        address _router,
-        address _native
-    ) LeverageUsingSiloFlashloanWithGeneralSwap(_router,_native) {}
+    constructor(address _router, address _native) LeverageUsingSiloFlashloanWithGeneralSwap(_router, _native) {}
 
     function setTxData(
         address _msgSender,

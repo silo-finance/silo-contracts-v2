@@ -6,7 +6,7 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
-contract MockTokenNoMetadata { }
+contract MockTokenNoMetadata {}
 
 contract MockTokenWithMetadata {
     string public symbol;
@@ -20,12 +20,11 @@ contract MockTokenWithMetadata {
 
 // forge test -vv --mc TokenHelperTest
 contract TokenHelperTest is Test {
-    string constant public SYMBOL = "SILO_TOKEN";
-    bytes32 constant public SYMBOL_BYTES_LEFT = 0x53494c4f5f544f4b454e00000000000000000000000000000000000000000000;
-    bytes32 constant public SYMBOL_BYTES_RIGHT = 0x0000000000000000000000000000000000000000000053494c4f5f544f4b454e;
+    string public constant SYMBOL = "SILO_TOKEN";
+    bytes32 public constant SYMBOL_BYTES_LEFT = 0x53494c4f5f544f4b454e00000000000000000000000000000000000000000000;
+    bytes32 public constant SYMBOL_BYTES_RIGHT = 0x0000000000000000000000000000000000000000000053494c4f5f544f4b454e;
 
-    function setUp() public {
-    }
+    function setUp() public {}
 
     function test_NoContract() public {
         address empty = address(1);
@@ -64,7 +63,7 @@ contract TokenHelperTest is Test {
     }
 
     /**
-        forge test -vv --mt test_TokenHelper_symbolBytes32
+     * forge test -vv --mt test_TokenHelper_symbolBytes32
      */
     function test_TokenHelper_symbolBytes32() public {
         address token = makeAddr("Token");

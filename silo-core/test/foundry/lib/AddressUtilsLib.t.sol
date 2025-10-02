@@ -8,7 +8,6 @@ import {AddressUtilsLib} from "silo-core/contracts/lib/AddressUtilsLib.sol";
 
 // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mc AddressUtilsLibTest
 contract AddressUtilsLibTest is Test {
-
     // FOUNDRY_PROFILE=core-test forge test -vv --ffi --mt test_fromHexString_invalidAddressString
     function test_fromHexString_invalidAddressString() public {
         vm.expectRevert(abi.encodeWithSelector(AddressUtilsLib.InvalidAddressString.selector));

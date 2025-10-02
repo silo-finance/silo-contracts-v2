@@ -23,9 +23,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         ISiloOracle noOracle;
 
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
-            noOracle, noOracle, zero, zero, zero
-        );
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(noOracle, noOracle, zero, zero, zero);
 
         address any = address(1);
 
@@ -43,9 +41,7 @@ contract CalculateLtvTest is Test, OraclesHelper {
 
         ISiloOracle noOracle;
 
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
-            noOracle, noOracle, zero, zero, debtAssets
-        );
+        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(noOracle, noOracle, zero, zero, debtAssets);
 
         address any = address(1);
 
@@ -67,9 +63,8 @@ contract CalculateLtvTest is Test, OraclesHelper {
         // because this is the same token, we assume the sum can not be higher than uint128
         vm.assume(sumOfCollateralAssets < type(uint256).max / DECIMALS_POINTS);
 
-        SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
-            noOracle, noOracle, _collateralAssets, _protectedAssets, _debtAssets
-        );
+        SiloSolvencyLib.LtvData memory ltvData =
+            SiloSolvencyLib.LtvData(noOracle, noOracle, _collateralAssets, _protectedAssets, _debtAssets);
 
         address any = address(1);
 
@@ -82,7 +77,8 @@ contract CalculateLtvTest is Test, OraclesHelper {
         } else if (sumOfCollateralAssets == 0) {
             expectedLtv = SiloSolvencyLib._INFINITY;
         } else {
-            expectedLtv = Math.mulDiv(_debtAssets, DECIMALS_POINTS, sumOfCollateralAssets, Math.Rounding(Rounding.LTV));
+            expectedLtv =
+                Math.mulDiv(_debtAssets, DECIMALS_POINTS, sumOfCollateralAssets, Math.Rounding(Rounding.LTV));
         }
 
         assertEq(ltv, expectedLtv, "ltv");
@@ -103,7 +99,11 @@ contract CalculateLtvTest is Test, OraclesHelper {
         vm.assume(sumOfCollateralAssets != 0);
 
         SiloSolvencyLib.LtvData memory ltvData = SiloSolvencyLib.LtvData(
-            ISiloOracle(COLLATERAL_ORACLE), ISiloOracle(DEBT_ORACLE), _protectedAssets, _collateralAssets, _debtAssets
+            ISiloOracle(COLLATERAL_ORACLE),
+            ISiloOracle(DEBT_ORACLE),
+            _protectedAssets,
+            _collateralAssets,
+            _debtAssets
         );
 
         uint256 collateralSum = ltvData.borrowerCollateralAssets + ltvData.borrowerProtectedAssets;

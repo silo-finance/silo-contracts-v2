@@ -9,12 +9,12 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationLib.sol";
 
 import {PartialLiquidationLibChecked} from "./PartialLiquidationLibChecked.sol";
-import {CalculateCollateralToLiquidateTestData} from "../../../../../data-readers/CalculateCollateralToLiquidateTestData.sol";
+import {CalculateCollateralToLiquidateTestData} from
+    "../../../../../data-readers/CalculateCollateralToLiquidateTestData.sol";
 import {LiquidationPreviewTestData} from "../../../../../data-readers/LiquidationPreviewTestData.sol";
 import {MaxLiquidationPreviewTestData} from "../../../../../data-readers/MaxLiquidationPreviewTestData.sol";
 import {EstimateMaxRepayValueTestData} from "../../../../../data-readers/EstimateMaxRepayValueTestData.sol";
 import {MaxRepayRawMath} from "./MaxRepayRawMath.sol";
-
 
 // forge test -vv --mc PartialLiquidationLibTest
 contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
@@ -44,10 +44,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         assertGe(data.length, 4, "expect to have tests");
 
         for (uint256 i; i < data.length; i++) {
-            (
-                uint256 collateralAssets,
-                uint256 collateralValue
-            ) = PartialLiquidationLib.calculateCollateralsToLiquidate(
+            (uint256 collateralAssets, uint256 collateralValue) = PartialLiquidationLib
+                .calculateCollateralsToLiquidate(
                 data[i].input.debtValueToCover,
                 data[i].input.totalBorrowerCollateralValue,
                 data[i].input.totalBorrowerCollateralAssets,
@@ -73,7 +71,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
                 ? 0
                 : data[i].input.totalBorrowerDebtValue * 1e18 / data[i].input.totalBorrowerCollateralValue;
 
-            PartialLiquidationLib.LiquidationPreviewParams memory params = PartialLiquidationLib.LiquidationPreviewParams({
+            PartialLiquidationLib.LiquidationPreviewParams memory params = PartialLiquidationLib
+                .LiquidationPreviewParams({
                 collateralLt: data[i].input.lt,
                 collateralConfigAsset: address(0),
                 debtConfigAsset: address(0),
@@ -82,11 +81,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
                 liquidationTargetLtv: data[i].input.liquidationTargetLtv
             });
 
-            (
-                uint256 collateralAssetsToLiquidate,
-                uint256 debtAssetsToRepay,
-                uint256 ltvAfterLiquidation
-            ) = PartialLiquidationLib.liquidationPreview(
+            (uint256 collateralAssetsToLiquidate, uint256 debtAssetsToRepay, uint256 ltvAfterLiquidation) =
+            PartialLiquidationLib.liquidationPreview(
                 ltvBefore,
                 data[i].input.totalBorrowerCollateralAssets,
                 data[i].input.totalBorrowerCollateralValue,
@@ -96,10 +92,13 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
             );
 
             assertEq(
-                ltvAfterLiquidation, data[i].output.ltvAfterLiquidation, _concatMsg(i, "] expect ltvAfterLiquidation")
+                ltvAfterLiquidation,
+                data[i].output.ltvAfterLiquidation,
+                _concatMsg(i, "] expect ltvAfterLiquidation")
             );
             assertEq(
-                collateralAssetsToLiquidate, data[i].output.collateralAssetsToLiquidate,
+                collateralAssetsToLiquidate,
+                data[i].output.collateralAssetsToLiquidate,
                 _concatMsg(i, "] output.collateralAssetsToLiquidate")
             );
             assertEq(
@@ -136,8 +135,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     function test_PartialLiquidationLib_estimateMaxRepayValue_raw() public pure {
         // debtValue, CollateralValue, ltv, fee
         assertEq(
-            PartialLiquidationLib.estimateMaxRepayValue(1e18, 1e18, 0.0080e18, 0.0010e18),
-            _estimateMaxRepayValueRaw(1e18, 1e18, 0.0080e18, 0.0010e18),
+            PartialLiquidationLib.estimateMaxRepayValue(1e18, 1e18, 0.008e18, 0.001e18),
+            _estimateMaxRepayValueRaw(1e18, 1e18, 0.008e18, 0.001e18),
             "expect raw == estimateMaxRepayValue (1)"
         );
 
@@ -166,9 +165,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         assertGe(data.length, 1, "expect to have tests");
 
         for (uint256 i; i < data.length; i++) {
-            (
-                uint256 collateralValueToLiquidate, uint256 repayValue
-            ) = PartialLiquidationLib.maxLiquidationPreview(
+            (uint256 collateralValueToLiquidate, uint256 repayValue) = PartialLiquidationLib.maxLiquidationPreview(
                 data[i].input.totalBorrowerCollateralValue,
                 data[i].input.totalBorrowerDebtValue,
                 data[i].input.ltvAfterLiquidation,
@@ -176,7 +173,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
             );
 
             assertEq(
-                collateralValueToLiquidate, data[i].output.collateralValueToLiquidate,
+                collateralValueToLiquidate,
+                data[i].output.collateralValueToLiquidate,
                 _concatMsg(i, "invalid value for collateralValueToLiquidate")
             );
 
@@ -190,7 +188,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
             uint256 totalBorrowerDebtAssets = data[i].input.totalBorrowerDebtValue * 2;
             uint256 totalBorrowerCollateralAssets = data[i].input.totalBorrowerCollateralValue * 3;
 
-            PartialLiquidationLib.LiquidationPreviewParams memory params = PartialLiquidationLib.LiquidationPreviewParams({
+            PartialLiquidationLib.LiquidationPreviewParams memory params = PartialLiquidationLib
+                .LiquidationPreviewParams({
                 collateralLt: data[i].input.lt,
                 collateralConfigAsset: address(0),
                 debtConfigAsset: address(0),
@@ -199,11 +198,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
                 liquidationTargetLtv: data[i].input.ltvAfterLiquidation
             });
 
-            (
-                uint256 collateralAssetsToLiquidate,
-                uint256 debtAssetsToRepay,
-                uint256 ltvAfterLiquidation
-            ) = PartialLiquidationLib.liquidationPreview(
+            (uint256 collateralAssetsToLiquidate, uint256 debtAssetsToRepay, uint256 ltvAfterLiquidation) =
+            PartialLiquidationLib.liquidationPreview(
                 // ltvBefore:
                 data[i].input.totalBorrowerCollateralValue == 0
                     ? 0
@@ -220,13 +216,15 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
             if (data[i].output.targetLtvPossible) {
                 if (ltvAfterLiquidation != data[i].input.ltvAfterLiquidation) {
                     uint256 diff = ltvAfterLiquidation > data[i].input.ltvAfterLiquidation
-                        ? ltvAfterLiquidation -  data[i].input.ltvAfterLiquidation
-                    :  data[i].input.ltvAfterLiquidation - ltvAfterLiquidation;
+                        ? ltvAfterLiquidation - data[i].input.ltvAfterLiquidation
+                        : data[i].input.ltvAfterLiquidation - ltvAfterLiquidation;
 
                     assertLe(diff, 1, _concatMsg(i, "ltvAfterLiquidation cross check"));
                 }
             } else {
-                assertEq(ltvAfterLiquidation, 0, _concatMsg(i, "[!targetLtvPossible] ltvAfterLiquidation cross check"));
+                assertEq(
+                    ltvAfterLiquidation, 0, _concatMsg(i, "[!targetLtvPossible] ltvAfterLiquidation cross check")
+                );
             }
 
             // liquidationPreview VS maxLiquidationPreview
@@ -272,7 +270,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         vm.assume(totalBorrowerDebtValue * _DECIMALS_POINTS / totalBorrowerCollateralValue <= _DECIMALS_POINTS);
         vm.assume(_liquidationTargetLtv < 0.8e18);
 
-        PartialLiquidationLib.LiquidationPreviewParams memory params = PartialLiquidationLib.LiquidationPreviewParams({
+        PartialLiquidationLib.LiquidationPreviewParams memory params = PartialLiquidationLib
+            .LiquidationPreviewParams({
             collateralLt: 0.8e18,
             collateralConfigAsset: address(0),
             debtConfigAsset: address(0),
@@ -281,9 +280,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
             liquidationTargetLtv: _liquidationTargetLtv
         });
 
-        (
-            uint256 collateralAssetsToLiquidate, uint256 debtAssetsToRepay,
-        ) = PartialLiquidationLib.liquidationPreview(
+        (uint256 collateralAssetsToLiquidate, uint256 debtAssetsToRepay,) = PartialLiquidationLib.liquidationPreview(
             totalBorrowerDebtValue * _DECIMALS_POINTS / totalBorrowerCollateralValue,
             _totalBorrowerCollateralAssets,
             totalBorrowerCollateralValue,
@@ -292,9 +289,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
             params
         );
 
-        (
-            uint256 collateralAssetsToLiquidate2, uint256 debtAssetsToRepay2,
-        ) = PartialLiquidationLibChecked.liquidationPreview(
+        (uint256 collateralAssetsToLiquidate2, uint256 debtAssetsToRepay2,) = PartialLiquidationLibChecked
+            .liquidationPreview(
             totalBorrowerDebtValue * _DECIMALS_POINTS / totalBorrowerCollateralValue,
             _totalBorrowerCollateralAssets,
             totalBorrowerCollateralValue,
@@ -344,10 +340,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         );
 
         // counter example without zero
-        (
-            uint256 collateralAssetsToLiquidate,
-            uint256 collateralValueToLiquidate
-        ) = PartialLiquidationLib.calculateCollateralsToLiquidate(
+        (uint256 collateralAssetsToLiquidate, uint256 collateralValueToLiquidate) = PartialLiquidationLib
+            .calculateCollateralsToLiquidate(
             debtValueToCover, totalBorrowerCollateralValue, totalBorrowerCollateralAssets, liquidationFee
         );
 
@@ -377,7 +371,8 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
     forge test -vv --mt test_PartialLiquidationLib_splitReceiveCollateralToLiquidate
     */
     function test_PartialLiquidationLib_splitReceiveCollateralToLiquidate() public pure {
-        (uint256 fromCollateral, uint256 fromProtected) = PartialLiquidationLib.splitReceiveCollateralToLiquidate(0, 0);
+        (uint256 fromCollateral, uint256 fromProtected) =
+            PartialLiquidationLib.splitReceiveCollateralToLiquidate(0, 0);
         assertEq(fromCollateral, 0, "fromCollateral (0,0) => 0");
         assertEq(fromProtected, 0, "fromProtected (0,0) => 0");
 
@@ -427,17 +422,12 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         uint256 collateralValue = uint256(_collateralAmount) * 80_000;
 
         (uint256 repayValue, uint256 receiveCollateral) = PartialLiquidationLib.maxLiquidationPreview(
-            collateralValue,
-            debtValue,
-            uint256(_targetLT),
-            uint256(_liquidationFee)
+            collateralValue, debtValue, uint256(_targetLT), uint256(_liquidationFee)
         );
 
         emit log_string("PartialLiquidationLib.calculateLiquidationValues PASS");
 
-        (
-            uint256 repayValue2, uint256 receiveCollateral2
-        ) = PartialLiquidationLibChecked.maxLiquidationPreview(
+        (uint256 repayValue2, uint256 receiveCollateral2) = PartialLiquidationLibChecked.maxLiquidationPreview(
             collateralValue, debtValue, _targetLT, _liquidationFee
         );
 
@@ -455,25 +445,39 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
 
         assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 0);
 
-        value; totalAssets = 1; totalValue = 1;
+        value;
+        totalAssets = 1;
+        totalValue = 1;
         assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 0);
 
-        value = 1; totalAssets = 1; totalValue = 1;
+        value = 1;
+        totalAssets = 1;
+        totalValue = 1;
         assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 1);
 
-        value = 1; totalAssets = 100; totalValue = 1;
+        value = 1;
+        totalAssets = 100;
+        totalValue = 1;
         assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 100);
 
-        value = 1; totalAssets = 100; totalValue = 10;
+        value = 1;
+        totalAssets = 100;
+        totalValue = 10;
         assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 10);
 
-        value = 1; totalAssets = 100; totalValue = 100;
+        value = 1;
+        totalAssets = 100;
+        totalValue = 100;
         assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 1);
 
-        value = 2; totalAssets = 10; totalValue = 100;
+        value = 2;
+        totalAssets = 10;
+        totalValue = 100;
         assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 0);
 
-        value = 2; totalAssets = 1000; totalValue = 100;
+        value = 2;
+        totalAssets = 1000;
+        totalValue = 100;
         assertEq(PartialLiquidationLib.valueToAssetsByRatio(value, totalAssets, totalValue), 20);
     }
 
@@ -485,7 +489,9 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         if (_totalValue == 0) return 0;
 
         _chunkAssets = _chunkValue * _totalAssets;
-        unchecked { _chunkAssets /= _totalValue; }
+        unchecked {
+            _chunkAssets /= _totalValue;
+        }
     }
 
     function _concatMsg(uint256 _i, string memory _msg) internal pure returns (string memory) {

@@ -43,7 +43,7 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
         // when there are other users, results to change ratio is MUCH harder
         // I'm over gas limit with execution when I add this one user
         // because % are growing much much slower, I changes moving time in days, and after years I dog 1 wei diff.
-//        _depositForBorrow(100e18, makeAddr("any"));
+        //        _depositForBorrow(100e18, makeAddr("any"));
         _borrow(0.75e18, borrower);
 
         uint256 precision = 1e18;
@@ -51,13 +51,13 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
         uint256 offset = 10 ** 0;
 
         // the higher number you check the faster we get result
-//        while (silo1.convertToAssets(precision * offset) == precision) {
-//            vm.warp(block.timestamp + 1);
-//        }
+        //        while (silo1.convertToAssets(precision * offset) == precision) {
+        //            vm.warp(block.timestamp + 1);
+        //        }
 
         // let's wait until user insolvent
         while (silo1.isSolvent(borrower)) {
-//            vm.warp(block.timestamp + 1 days);
+            //            vm.warp(block.timestamp + 1 days);
             vm.warp(block.timestamp + 1 hours);
             silo1.accrueInterest(); // to boost %
         }
@@ -82,11 +82,11 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("maxWithdraw(depositor)", withdrawBefore, 18);
         emit log_named_decimal_uint("maxRepay(borrower)", repayBefore, 18);
 
-        for(uint256 i; i < 1000; i++) {
+        for (uint256 i; i < 1000; i++) {
             // time helps increase ratio because there are interests involve
             // if attacker will wait 1sec between iterations, attack will take ~2days
             // HOWEVER: with time ratio grows MOSTLY because of interest, not the tx
-//            vm.warp(block.timestamp + 1);
+            //            vm.warp(block.timestamp + 1);
 
             // emit log_named_uint("#i", i);
             // emit log_named_decimal_uint("_initial", _initial, 18);
@@ -119,7 +119,9 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("maxWithdraw(depositor3)", silo1.maxWithdraw(depositor3), 18);
 
         emit log_named_decimal_uint("maxWithdraw(depositor)", silo1.maxWithdraw(depositor), 18);
-        emit log_named_decimal_uint("maxWithdraw(depositor) diff", silo1.maxWithdraw(depositor) - withdrawBefore, 18);
+        emit log_named_decimal_uint(
+            "maxWithdraw(depositor) diff", silo1.maxWithdraw(depositor) - withdrawBefore, 18
+        );
     }
 
     /*
@@ -142,9 +144,9 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
         uint256 offset = 10 ** 0;
 
         // the higher number you check the faster we get result
-//        while(silo1.previewBorrowShares(precision * offset) == precision) {
-//            vm.warp(block.timestamp + 1);
-//        }
+        //        while(silo1.previewBorrowShares(precision * offset) == precision) {
+        //            vm.warp(block.timestamp + 1);
+        //        }
 
         while (silo1.isSolvent(makeAddr("borrower2"))) {
             vm.warp(block.timestamp + 1 hours);
@@ -153,13 +155,13 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
             // 850003201235761988 = 32573,
             // 32573 / 3201235794561 => 0.000001%
             // simply not worth it
-//            _borrowRepay();
+            //            _borrowRepay();
 
-             silo1.accrueInterest(); // to boost %
+            silo1.accrueInterest(); // to boost %
         }
 
         _borrow1wei();
-return;
+        return;
         assertGt(silo1.previewBorrowShares(precision * offset), precision, "require not to have 1:1 ratio");
 
         uint256 ratioBefore = silo1.previewBorrowShares(precision * offset);
@@ -184,10 +186,10 @@ return;
 
         // _repay(silo1.maxRepay(borrower), borrower);
 
-        for(uint256 i; i < 30; i++) {
+        for (uint256 i; i < 30; i++) {
             // vm.warp(block.timestamp + 1);
 
-             emit log_named_uint("#i", i);
+            emit log_named_uint("#i", i);
             // emit log_named_decimal_uint("_initial", _initial, 18);
 
             _borrowRepay();
@@ -201,9 +203,8 @@ return;
         // we repay MORE because of rounding, so every time attacker do this, he repay more
         // and this "more" is what other borrowers will not pay
         //
-
         emit log_named_decimal_uint("ratio DECREASED?? by", ratioDiff, 18);
-//        emit log_named_decimal_uint("moneySpend", moneySpend, 18);
+        //        emit log_named_decimal_uint("moneySpend", moneySpend, 18);
 
         emit log_named_decimal_uint("BEFORE maxRepay(borrower)", repayBefore, 18);
         emit log_named_decimal_uint("AFTER maxRepay(borrower)", silo1.maxRepay(makeAddr("borrower")), 18);
@@ -214,7 +215,9 @@ return;
         _printBorrowRatio();
 
         emit log_named_decimal_uint("maxWithdraw(depositor)", silo1.maxWithdraw(makeAddr("depositor")), 18);
-        emit log_named_decimal_uint("maxWithdraw(depositor) diff", silo1.maxWithdraw(makeAddr("depositor")) - withdrawBefore, 18);
+        emit log_named_decimal_uint(
+            "maxWithdraw(depositor) diff", silo1.maxWithdraw(makeAddr("depositor")) - withdrawBefore, 18
+        );
     }
 
     function _borrow1wei() internal {
@@ -247,8 +250,8 @@ return;
 
         (,, address debtShare) = siloConfig.getShareTokens(address(silo1));
         emit log_named_decimal_uint("toRepay shares #1", IShareToken(debtShare).balanceOf(makeAddr("borrower")), 18);
-//        _repay(2, makeAddr("borrower"));
-//        emit log_named_decimal_uint("toRepay shares #2", IShareToken(debtShare).balanceOf(makeAddr("borrower")), 18);
+        //        _repay(2, makeAddr("borrower"));
+        //        emit log_named_decimal_uint("toRepay shares #2", IShareToken(debtShare).balanceOf(makeAddr("borrower")), 18);
 
         _printBorrowRatio();
     }
@@ -258,11 +261,17 @@ return;
         emit log("---------");
         emit log_named_uint("[silo1] debt share totalSupply ", IShareToken(debtShare).totalSupply());
         emit log_named_uint("[silo1] debt asset total ", silo1.getDebtAssets());
-        emit log_named_uint("[silo1] share balanceOf(borrower) ", IShareToken(debtShare).balanceOf(makeAddr("borrower")));
+        emit log_named_uint(
+            "[silo1] share balanceOf(borrower) ", IShareToken(debtShare).balanceOf(makeAddr("borrower"))
+        );
         emit log_named_uint("[silo1] silo1.maxRepay(borrower) ", silo1.maxRepay(makeAddr("borrower")));
-        emit log_named_uint("[silo1] share balanceOf(borrower2) ", IShareToken(debtShare).balanceOf(makeAddr("borrower2")));
+        emit log_named_uint(
+            "[silo1] share balanceOf(borrower2) ", IShareToken(debtShare).balanceOf(makeAddr("borrower2"))
+        );
         emit log_named_uint("[silo1] silo1.maxRepay(borrower2) ", silo1.maxRepay(makeAddr("borrower2")));
-        emit log_named_uint("[silo1] share balanceOf(borrower3) ", IShareToken(debtShare).balanceOf(makeAddr("borrower3")));
+        emit log_named_uint(
+            "[silo1] share balanceOf(borrower3) ", IShareToken(debtShare).balanceOf(makeAddr("borrower3"))
+        );
         emit log_named_uint("[silo1] silo1.maxRepay(borrower3) ", silo1.maxRepay(makeAddr("borrower3")));
 
         emit log_named_decimal_uint("[silo1] 1e18 share =", silo1.previewBorrowShares(1e18), 18);

@@ -8,16 +8,15 @@ import {DomainSeparatorReentrancyTest} from "../methods/share-token/DomainSepara
 import {AllowanceReentrancyTest} from "../methods/share-token/AllowanceReentrancyTest.sol";
 import {ApproveReentrancyTest} from "../methods/share-token/ApproveReentrancyTest.sol";
 import {BalanceOfReentrancyTest} from "../methods/share-token/BalanceOfReentrancyTest.sol";
-import {BalanceOfAndTotalSupplyReentrancyTest} from "../methods/share-token/BalanceOfAndTotalSupplyReentrancyTest.sol";
+import {BalanceOfAndTotalSupplyReentrancyTest} from
+    "../methods/share-token/BalanceOfAndTotalSupplyReentrancyTest.sol";
 import {BurnReentrancyTest} from "../methods/share-token/BurnReentrancyTest.sol";
-import {
-    CallOnBehalfOfShareTokenReentrancyTest
-} from "../methods/share-token/CallOnBehalfOfShareTokenReentrancyTest.sol";
+import {CallOnBehalfOfShareTokenReentrancyTest} from
+    "../methods/share-token/CallOnBehalfOfShareTokenReentrancyTest.sol";
 import {DecimalsReentrancyTest} from "../methods/share-token/DecimalsReentrancyTest.sol";
 import {Eip712DomainReentrancyTest} from "../methods/share-token/Eip712DomainReentrancyTest.sol";
-import {
-    ForwardTransferFromNoChecksReentrancyTest
-} from "../methods/share-token/ForwardTransferFromNoChecksReentrancyTest.sol";
+import {ForwardTransferFromNoChecksReentrancyTest} from
+    "../methods/share-token/ForwardTransferFromNoChecksReentrancyTest.sol";
 import {HookReceiverReentrancyTest} from "../methods/share-token/HookReceiverReentrancyTest.sol";
 import {HookSetupReentrancyTest} from "../methods/share-token/HookSetupReentrancyTest.sol";
 import {InitializeReentrancyTest} from "../methods/share-token/InitializeReentrancyTest.sol";

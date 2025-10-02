@@ -22,6 +22,7 @@ contract IsBelowMaxLtv {
 /*
 forge test --ffi -vv --mc IsBelowMaxLtvTest
 */
+
 contract IsBelowMaxLtvTest is Test, SiloLittleHelper {
     ISiloConfig siloConfig;
 
@@ -54,9 +55,8 @@ contract IsBelowMaxLtvTest is Test, SiloLittleHelper {
     function test_isBelowMax_noDebt() public {
         address borrower;
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigsForSolvency(borrower);
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+            siloConfig.getConfigsForSolvency(borrower);
 
         vm.expectRevert(); // because configs are empty
         impl.isBelowMaxLtv(collateralConfig, debtConfig, borrower, ISilo.AccrueInterestInMemory.Yes);
@@ -80,9 +80,8 @@ contract IsBelowMaxLtvTest is Test, SiloLittleHelper {
         _depositForBorrow(100, address(1));
         _borrow(_sameAsset ? silo1.maxBorrowSameAsset(borrower) : silo1.maxBorrow(borrower), borrower, _sameAsset);
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigsForSolvency(borrower);
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+            siloConfig.getConfigsForSolvency(borrower);
 
         assertTrue(
             impl.isBelowMaxLtv(collateralConfig, debtConfig, borrower, ISilo.AccrueInterestInMemory.Yes),
@@ -116,9 +115,8 @@ contract IsBelowMaxLtvTest is Test, SiloLittleHelper {
         vm.prank(borrower);
         (_sameAsset ? silo1 : silo0).withdraw(2, borrower, borrower);
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigsForSolvency(borrower);
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+            siloConfig.getConfigsForSolvency(borrower);
 
         assertFalse(
             impl.isBelowMaxLtv(collateralConfig, debtConfig, borrower, ISilo.AccrueInterestInMemory.Yes),
@@ -143,9 +141,8 @@ contract IsBelowMaxLtvTest is Test, SiloLittleHelper {
 
         vm.warp(100 days);
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigsForSolvency(borrower);
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+            siloConfig.getConfigsForSolvency(borrower);
 
         assertTrue(
             impl.isBelowMaxLtv(collateralConfig, debtConfig, borrower, ISilo.AccrueInterestInMemory.No),

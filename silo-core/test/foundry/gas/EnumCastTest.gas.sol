@@ -66,7 +66,7 @@ contract EnumCastGasTest is Test {
         _acceptUintReturnEnum(4);
     }
 
-    function _acceptUintReturnEnum(uint256 _enum) internal pure returns(SomeType2) {
+    function _acceptUintReturnEnum(uint256 _enum) internal pure returns (SomeType2) {
         return SomeType2(_enum);
     }
 }

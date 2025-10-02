@@ -12,11 +12,7 @@ abstract contract TransferOwnership is Test {
         vm.prank(_currentOwner);
         Ownable2Step(_contract).transferOwnership(newOwner);
 
-        assertEq(
-            _currentOwner,
-            Ownable2Step(_contract).owner(),
-            "owner should be dao before 2step is completed"
-        );
+        assertEq(_currentOwner, Ownable2Step(_contract).owner(), "owner should be dao before 2step is completed");
 
         vm.prank(newOwner);
         Ownable2Step(_contract).acceptOwnership();

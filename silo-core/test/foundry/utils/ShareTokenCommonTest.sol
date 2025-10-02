@@ -30,10 +30,10 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     bytes32 private constant _TYPE_HASH =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
     bytes32 public constant TRANSFER_EVENT = keccak256(bytes("Transfer(address,address,uint256)"));
-        bytes32 constant internal _PERMIT_TYPEHASH =
+    bytes32 internal constant _PERMIT_TYPEHASH =
         keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
-    bytes32 constant internal _HASHED_NAME = keccak256(bytes(_NAME));
-    bytes32 constant internal _HASHED_VERSION = keccak256(bytes(_VERSION));
+    bytes32 internal constant _HASHED_NAME = keccak256(bytes(_NAME));
+    bytes32 internal constant _HASHED_VERSION = keccak256(bytes(_VERSION));
 
     ISiloConfig public siloConfig;
     address public hookReceiver;
@@ -182,13 +182,11 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
     }
 
     function _domainSeparator(IShareToken _shareToken) internal view {
-        bytes32 expectedDomainSeparator = keccak256(abi.encode(
-            _TYPE_HASH,
-            keccak256(bytes(_NAME)),
-            keccak256(bytes(_VERSION)),
-            block.chainid,
-            address(_shareToken)
-        ));
+        bytes32 expectedDomainSeparator = keccak256(
+            abi.encode(
+                _TYPE_HASH, keccak256(bytes(_NAME)), keccak256(bytes(_VERSION)), block.chainid, address(_shareToken)
+            )
+        );
 
         bytes32 domainSeparator = ERC20PermitUpgradeable(address(_shareToken)).DOMAIN_SEPARATOR();
 
@@ -466,8 +464,7 @@ contract ShareTokenCommonTest is SiloLittleHelper, Test, ERC20PermitUpgradeable 
         uint256 _deadline,
         address _shareToken
     ) internal view returns (uint8 v, bytes32 r, bytes32 s) {
-        bytes32 structHash =
-            keccak256(abi.encode(_PERMIT_TYPEHASH, _signer, _spender, _value, _nonce, _deadline));
+        bytes32 structHash = keccak256(abi.encode(_PERMIT_TYPEHASH, _signer, _spender, _value, _nonce, _deadline));
 
         bytes32 domainSeparator = ERC20PermitUpgradeable(_shareToken).DOMAIN_SEPARATOR();
         bytes32 digest = MessageHashUtils.toTypedDataHash(domainSeparator, structHash);

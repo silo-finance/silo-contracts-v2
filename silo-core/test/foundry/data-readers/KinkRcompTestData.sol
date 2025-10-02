@@ -69,7 +69,6 @@ contract KinkRcompTestData is Test {
         emit log_named_int("totalBorrowAmount", _data.input.totalBorrowAmount);
         emit log_named_int("totalDeposits", _data.input.totalDeposits);
 
-
         emit log_string("Constants");
         emit log_named_int("alpha", _data.constants.alpha);
         emit log_named_int("c1", _data.constants.c1);
@@ -96,7 +95,6 @@ contract KinkRcompTestData is Test {
         pure
         returns (IDynamicKinkModel.ModelState memory state, IDynamicKinkModel.Config memory c)
     {
-
         c.alpha = _data.constants.alpha;
         c.c1 = _data.constants.c1;
         c.c2 = _data.constants.c2;

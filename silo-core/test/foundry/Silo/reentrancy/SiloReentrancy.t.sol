@@ -10,23 +10,22 @@ import {Registries} from "./registries/Registries.sol";
 import {IMethodsRegistry} from "./interfaces/IMethodsRegistry.sol";
 import {MaliciousToken} from "./MaliciousToken.sol";
 import {TestStateLib} from "./TestState.sol";
-import {IMethodReentrancyTest} from "./interfaces/IMethodReentrancyTest.sol"; 
+import {IMethodReentrancyTest} from "./interfaces/IMethodReentrancyTest.sol";
 import {SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
-import {
-    LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy
-} from "silo-core/deploy/LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
+import {LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy} from
+    "silo-core/deploy/LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
 
 /*
 FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloReentrancyTest
 */
 contract SiloReentrancyTest is Test {
     ISiloConfig public siloConfig;
-    
+
     // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_coverage_for_reentrancy
     function test_coverage_for_reentrancy() public {
         Registries registries = new Registries();
@@ -35,7 +34,7 @@ contract SiloReentrancyTest is Test {
         bool allCovered = true;
         string memory root = vm.projectRoot();
 
-        for (uint j = 0; j < methodRegistries.length; j++) {
+        for (uint256 j = 0; j < methodRegistries.length; j++) {
             string memory abiPath = string.concat(root, methodRegistries[j].abiFile());
             string memory json = vm.readFile(abiPath);
 
@@ -67,10 +66,10 @@ contract SiloReentrancyTest is Test {
 
         uint256 stateBeforeTest = vm.snapshotState();
 
-        for (uint j = 0; j < methodRegistries.length; j++) {
+        for (uint256 j = 0; j < methodRegistries.length; j++) {
             uint256 totalMethods = methodRegistries[j].supportedMethodsLength();
 
-            emit log_string(string.concat("\nVerifying ",methodRegistries[j].abiFile()));
+            emit log_string(string.concat("\nVerifying ", methodRegistries[j].abiFile()));
 
             for (uint256 i = 0; i < totalMethods; i++) {
                 bytes4 methodSig = methodRegistries[j].supportedMethods(i);

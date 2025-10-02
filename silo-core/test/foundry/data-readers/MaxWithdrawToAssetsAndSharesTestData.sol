@@ -55,7 +55,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].output.shares = 500;
 
         i = _init("[protected] maxAssets=10 but cap=1");
-        _clone(allData[i-1], allData[i]);
+        _clone(allData[i - 1], allData[i]);
         allData[i].input.maxAssets = 10;
 
         i = _init("[protected] when below borrowerProtectedAssets");
@@ -87,7 +87,6 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].input.totalAssets = 1;
         allData[i].input.assetTypeShareTokenTotalSupply = 1;
 
-
         i = _init("[collateral] 1s, with liquidity");
         allData[i].input.assetType = ISilo.CollateralType.Collateral;
         allData[i].input.maxAssets = 1;
@@ -100,11 +99,11 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].output.shares = 500;
 
         i = _init("[collateral] maxAssets=10 but cap=1");
-        _clone(allData[i-1], allData[i]);
+        _clone(allData[i - 1], allData[i]);
         allData[i].input.maxAssets = 10;
 
         i = _init("[collateral] 1s, without borrowerCollateralAssets");
-        _clone(allData[i-1], allData[i]);
+        _clone(allData[i - 1], allData[i]);
         allData[i].input.borrowerCollateralAssets = 0;
 
         allData[i].output.assets = 0;
@@ -122,14 +121,14 @@ contract MaxWithdrawToAssetsAndSharesTestData {
         allData[i].output.shares = 100000000000000099;
 
         i = _init("[collateral] when borrowerCollateralAssets < MAX < liquidity");
-        _clone(allData[i-1], allData[i]);
+        _clone(allData[i - 1], allData[i]);
         allData[i].input.maxAssets = 0.8e18;
 
         allData[i].output.assets = 0.5e18;
         allData[i].output.shares = 500000000000000499;
 
         i = _init("[collateral] when liquidity < borrowerCollateralAssets < X");
-        _clone(allData[i-1], allData[i]);
+        _clone(allData[i - 1], allData[i]);
         allData[i].input.maxAssets = 200.8e18;
         allData[i].input.borrowerCollateralAssets = 150e18;
 
@@ -156,10 +155,7 @@ contract MaxWithdrawToAssetsAndSharesTestData {
             assetTypeShareTokenTotalSupply: _src.input.assetTypeShareTokenTotalSupply,
             liquidity: _src.input.liquidity
         });
-        _dst.output = Output({
-            assets: _src.output.assets,
-            shares: _src.output.shares
-        });
+        _dst.output = Output({assets: _src.output.assets, shares: _src.output.shares});
     }
 
     function toString(uint256 _i) internal pure returns (string memory str) {

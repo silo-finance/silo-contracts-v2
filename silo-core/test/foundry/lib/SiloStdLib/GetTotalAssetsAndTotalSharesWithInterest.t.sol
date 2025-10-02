@@ -146,9 +146,10 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
     /*
     forge test -vv --mt test_getTotalAssetsAndTotalSharesWithInterest_protected_fuzz
     */
-    function test_getTotalAssetsAndTotalSharesWithInterest_protected_fuzz(uint256 _totalSupply, uint256 _protectedAssets)
-        public
-    {
+    function test_getTotalAssetsAndTotalSharesWithInterest_protected_fuzz(
+        uint256 _totalSupply,
+        uint256 _protectedAssets
+    ) public {
         uint256 totalAssets;
         uint256 totalShares;
 
@@ -171,7 +172,8 @@ contract GetTotalAssetsAndTotalSharesWithInterestTest is Test {
         debtTestCases[debtTestCasesIndex++] = DebtTestCases({rcomp: 10e18, debtAssets: 1e18, totalAssets: 11e18});
         debtTestCases[debtTestCasesIndex++] = DebtTestCases({rcomp: 0, debtAssets: 1e18, totalAssets: 1e18});
         debtTestCases[debtTestCasesIndex++] = DebtTestCases({rcomp: 0.1e18, debtAssets: 0, totalAssets: 0});
-        debtTestCases[debtTestCasesIndex++] = DebtTestCases({rcomp: 0.05e18, debtAssets: 100e18, totalAssets: 105e18});
+        debtTestCases[debtTestCasesIndex++] =
+            DebtTestCases({rcomp: 0.05e18, debtAssets: 100e18, totalAssets: 105e18});
 
         address silo = SILO.ADDRESS();
 

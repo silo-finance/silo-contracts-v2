@@ -46,7 +46,8 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
             uint256 cachedShareDebtBalance
         )
     {
-        { // stack too deep
+        {
+            // stack too deep
             ISiloConfig.InitData memory initData;
 
             initData.deployer = makeAddr("deployer");
@@ -90,10 +91,10 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
 
             (collateralConfig, debtConfig) = Views.copySiloConfig({
                 _initData: initData,
-                _daoFeeRange: ISiloFactory.Range(0.05e18, 0.50e18),
+                _daoFeeRange: ISiloFactory.Range(0.05e18, 0.5e18),
                 _maxDeployerFee: 0.15e18,
                 _maxFlashloanFee: 0.15e18,
-                _maxLiquidationFee: 0.30e18
+                _maxLiquidationFee: 0.3e18
             });
         }
 
@@ -107,9 +108,8 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
         debtConfig.silo = silo1;
         debtConfig.token = makeAddr("debt.token");
 
-        accrueInMemory = scenario.input.accrueInMemory
-            ? ISilo.AccrueInterestInMemory.Yes
-            : ISilo.AccrueInterestInMemory.No;
+        accrueInMemory =
+            scenario.input.accrueInMemory ? ISilo.AccrueInterestInMemory.Yes : ISilo.AccrueInterestInMemory.No;
 
         borrower = borrowerAddr;
 
@@ -131,7 +131,6 @@ contract GetAssetsDataForLtvCalculationsTest is Test {
             borrowerAddr,
             scenario.input.collateralConfig.collateralShareBalanceOf,
             scenario.input.collateralConfig.collateralShareTotalSupply
-        
         );
 
         if (scenario.input.accrueInMemory) {

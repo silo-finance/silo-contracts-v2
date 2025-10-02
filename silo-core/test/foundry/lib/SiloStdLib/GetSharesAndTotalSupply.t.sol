@@ -6,12 +6,11 @@ import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 
 import {TokenMock} from "../../_mocks/TokenMock.sol";
 
-
 // forge test -vv --mc GetSharesAndTotalSupplyTest
 contract GetSharesAndTotalSupplyTest is Test {
     TokenMock immutable SHARE_TOKEN;
 
-    constructor () {
+    constructor() {
         SHARE_TOKEN = new TokenMock(address(0));
     }
 

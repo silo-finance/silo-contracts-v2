@@ -19,7 +19,7 @@ contract TutorialCheckPosition is Test {
     // WETH Silo
     ISilo public constant SILO1 = ISilo(0x58A31D1f2Be10Bf2b48C6eCfFbb27D1f3194e547);
     // wstETH/WETH market config for both Silos
-    ISiloConfig public constant SILO_CONFIG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7d64f2597CFb74bAB); 
+    ISiloConfig public constant SILO_CONFIG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7d64f2597CFb74bAB);
     // helper to read the data from Silo protocol
     ISiloLens public SILO_LENS;
     // example user address
@@ -35,15 +35,15 @@ contract TutorialCheckPosition is Test {
     }
 
     // Get an amount of user's deposited assets. ERC4626 shares represent regular deposits, which can be borrowed by
-    // other users and generate interest. 
+    // other users and generate interest.
     function test_getMyRegularDepositAmount() public view {
         uint256 userShares = SILO1.balanceOf(EXAMPLE_USER);
         uint256 userAssets = SILO1.previewRedeem(userShares);
 
-        assertEq(userAssets, 2 * 10**16, "User has 0.02 WETH deposited in the lending market");
+        assertEq(userAssets, 2 * 10 ** 16, "User has 0.02 WETH deposited in the lending market");
     }
 
-    // Get deposit APR. 10**18 current interest rate is equal to 100%/year. 
+    // Get deposit APR. 10**18 current interest rate is equal to 100%/year.
     function test_getDepositAPR() public view {
         uint256 currentDepositInterestRate = SILO_LENS.getDepositAPR(SILO0);
 
@@ -60,7 +60,7 @@ contract TutorialCheckPosition is Test {
         uint256 userProtectedShares = IShareToken(protectedShareToken).balanceOf(EXAMPLE_USER);
         uint256 userProtectedAssets = SILO1.previewRedeem(userProtectedShares, ISilo.CollateralType.Protected);
 
-        assertEq(userProtectedAssets, 12345 * 10**11, "User has 0.0012345 WETH protected deposit");
+        assertEq(userProtectedAssets, 12345 * 10 ** 11, "User has 0.0012345 WETH protected deposit");
     }
 
     // SiloLens contracts can be used to get the total of regular + protected deposits per user.
@@ -69,7 +69,7 @@ contract TutorialCheckPosition is Test {
 
         assertEq(
             userRegularAndProtectedAssets,
-            212345 * 10**11,
+            212345 * 10 ** 11,
             "User has ~0.0212345 WETH in regular and protected deposits"
         );
     }
@@ -83,7 +83,7 @@ contract TutorialCheckPosition is Test {
         assertEq(userBorrowedAmount, SILO0.maxRepay(EXAMPLE_USER), "Same way to read the debt amount");
     }
 
-    // Get borrow APR. 10**18 current interest rate is equal to 100%/year. 
+    // Get borrow APR. 10**18 current interest rate is equal to 100%/year.
     function test_getBorrowAPR() public view {
         uint256 currentBorrowInterestRate = SILO_LENS.getBorrowAPR(SILO0);
 

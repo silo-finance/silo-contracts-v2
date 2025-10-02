@@ -56,21 +56,21 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
         vm.expectRevert(ISiloFactory.InvalidMaxLtv.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.lt0 = 8.50e18;
-        initData.lt1 = 7.50e18;
+        initData.lt0 = 8.5e18;
+        initData.lt1 = 7.5e18;
 
         vm.expectRevert(ISiloFactory.InvalidLt.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.lt0 = 0.950e18;
-        initData.liquidationFee0 = 0.10e18;
+        initData.lt0 = 0.95e18;
+        initData.liquidationFee0 = 0.1e18;
 
         vm.expectRevert(ISiloFactory.InvalidLt.selector);
         siloFactory.validateSiloInitData(initData);
 
-        initData.lt0 = 0.900e18;
-        initData.liquidationFee0 = 0.10e18;
-        initData.lt1 = 0.990e18;
+        initData.lt0 = 0.9e18;
+        initData.liquidationFee0 = 0.1e18;
+        initData.lt1 = 0.99e18;
         initData.liquidationFee1 = 0.05e18;
 
         vm.expectRevert(ISiloFactory.InvalidLt.selector);
@@ -215,7 +215,6 @@ contract SiloFactoryValidateSiloInitDataTest is Test {
 
         // verify we have valid config as begin
         assertTrue(siloFactory.validateSiloInitData(initData), "#0");
-
 
         OracleMock solvencyOracle0 = new OracleMock(makeAddr("solvencyOracle0"));
         solvencyOracle0.quoteTokenMock(makeAddr("quoteToken"));

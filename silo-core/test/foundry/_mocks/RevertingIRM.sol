@@ -15,7 +15,7 @@ contract RevertingIRM is IInterestRateModel, Overflows {
 
     RevertReasons public revertReason;
 
-    constructor (RevertReasons _revertReason) {
+    constructor(RevertReasons _revertReason) {
         revertReason = _revertReason;
     }
 
@@ -33,7 +33,7 @@ contract RevertingIRM is IInterestRateModel, Overflows {
         _revert();
     }
 
-    function decimals() external pure returns (uint256) { 
+    function decimals() external pure returns (uint256) {
         return 18;
     }
 

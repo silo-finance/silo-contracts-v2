@@ -73,8 +73,8 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
         uint256 attackerDeposits = _messWithRatio();
 
-        for (uint i = 0; i < 15; i++) {
-            string memory user = vm.toString(i+1);
+        for (uint256 i = 0; i < 15; i++) {
+            string memory user = vm.toString(i + 1);
             address depositor = makeAddr(user);
 
             uint256 toDeposit = silo0.getCollateralAssets();
@@ -88,7 +88,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         uint256 receivedAmount = silo0.redeem(redeemShares, attacker, attacker);
 
         assertEq(attackerDeposits, 1073741823);
-        assertEq(receivedAmount,   1073741824); // 1 wei more?
+        assertEq(receivedAmount, 1073741824); // 1 wei more?
 
         // The following is true only if SiloMathLib._DECIMALS_OFFSET_POW = 10 ** 0
 
@@ -111,8 +111,8 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         address[] memory depositors = new address[](numberOfDepositors);
         uint256[] memory depositsAmounts = new uint256[](numberOfDepositors);
 
-        for (uint i = 0; i < numberOfDepositors; i++) {
-            string memory user = vm.toString(i+1);
+        for (uint256 i = 0; i < numberOfDepositors; i++) {
+            string memory user = vm.toString(i + 1);
             address _depositor = makeAddr(user);
             depositors[i] = _depositor;
 
@@ -131,7 +131,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
         // The following is true only if SiloMathLib._DECIMALS_OFFSET_POW = 10 ** 0
         // because of that the the following code is commented.
-        
+
         // (, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
         // uint256 sharesBalance = IShareToken(collateralShareToken).balanceOf(depositor);
 
@@ -175,7 +175,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         // emit log_named_uint("depositAmount: ", depositsAmounts[anyDepositor]);
     }
 
-    function _messWithRatio() internal returns (uint256 depositedForAttack) { 
+    function _messWithRatio() internal returns (uint256 depositedForAttack) {
         address attacker = makeAddr("Attacker");
         address borrower = makeAddr("Attacker Borrower");
 
@@ -192,8 +192,8 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
         silo0.accrueInterest();
 
-        for (uint i = 0; i < 30; i++) {
-            uint toDeposit = silo0.getCollateralAssets();
+        for (uint256 i = 0; i < 30; i++) {
+            uint256 toDeposit = silo0.getCollateralAssets();
             _makeDeposit(silo0, token0, toDeposit, attacker, ISilo.CollateralType.Collateral);
 
             vm.prank(attacker);
@@ -205,12 +205,12 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         emit log_named_uint("[_doAttack] gas used: ", gasStart - gasleft());
     }
 
-    function _borrowAndRepay(address _borrower, uint _toBorrow) internal {
+    function _borrowAndRepay(address _borrower, uint256 _toBorrow) internal {
         uint256 depositAmount = _toBorrow * 12 / 8;
-        
+
         _makeDeposit(silo0, token0, depositAmount, _borrower, ISilo.CollateralType.Collateral);
         vm.prank(_borrower);
-        uint shares = silo0.borrowSameAsset(_toBorrow, _borrower, _borrower);
+        uint256 shares = silo0.borrowSameAsset(_toBorrow, _borrower, _borrower);
 
         vm.warp(block.timestamp + 70 days);
 

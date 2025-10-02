@@ -8,7 +8,9 @@ library RandomLib {
     function randomInside(uint256 _n, uint256 _min, uint256 _max) internal pure returns (uint256) {
         require(
             _min + 1 < _max,
-            string.concat("invalid range for randomInside:", Strings.toString(_min), " + 1 < ", Strings.toString(_max))
+            string.concat(
+                "invalid range for randomInside:", Strings.toString(_min), " + 1 < ", Strings.toString(_max)
+            )
         );
 
         if (_min < _n && _n < _max) return _n;
@@ -21,7 +23,9 @@ library RandomLib {
     function randomBetween(uint256 _n, uint256 _min, uint256 _max) internal pure returns (uint256) {
         require(
             _min <= _max,
-            string.concat("invalid range for randomBetween:", Strings.toString(_min), " <= ", Strings.toString(_max))
+            string.concat(
+                "invalid range for randomBetween:", Strings.toString(_min), " <= ", Strings.toString(_max)
+            )
         );
 
         uint256 diff = _max - _min;

@@ -22,14 +22,7 @@ contract EncodeDecodePackedTest is Test {
 
         bytes memory packed = abi.encodePacked(a, b, c, d, e, f);
 
-        (
-            address aa,
-            address bb,
-            uint256 cc,
-            uint24 dd,
-            bool ee,
-            address ff
-        ) = decodePacked(packed);
+        (address aa, address bb, uint256 cc, uint24 dd, bool ee, address ff) = decodePacked(packed);
 
         assertEq(a, aa, "a");
         assertEq(b, bb, "b");

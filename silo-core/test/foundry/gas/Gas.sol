@@ -87,20 +87,26 @@ contract Gas is SiloLittleHelper {
             string memory diffSign = gas < _expectedGas ? "less" : "more";
 
             if (diff < _errorThreshold) {
-                console2.log(string(abi.encodePacked("[GAS] ", _msg, ": %s (got bit ", diffSign, " by %s)")), gas, diff);
+                console2.log(
+                    string(abi.encodePacked("[GAS] ", _msg, ": %s (got bit ", diffSign, " by %s)")), gas, diff
+                );
             } else {
-                revert(string(abi.encodePacked(
-                    "[GAS] invalid gas for ",
-                    _msg,
-                    ": expected ",
-                    Strings.toString(_expectedGas),
-                    " got ",
-                    Strings.toString(gas),
-                    " it is ",
-                    diffSign,
-                    " by ",
-                    Strings.toString(diff)
-                )));
+                revert(
+                    string(
+                        abi.encodePacked(
+                            "[GAS] invalid gas for ",
+                            _msg,
+                            ": expected ",
+                            Strings.toString(_expectedGas),
+                            " got ",
+                            Strings.toString(gas),
+                            " it is ",
+                            diffSign,
+                            " by ",
+                            Strings.toString(diff)
+                        )
+                    )
+                );
             }
         } else {
             console2.log("[GAS] %s: %s", _msg, gas);

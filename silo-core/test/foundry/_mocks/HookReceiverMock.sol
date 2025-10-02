@@ -16,11 +16,7 @@ contract HookReceiverMock is CommonBase, StdCheats {
     function hookReceiverConfigMock(uint24 _hooksBefore, uint24 _hooksAfter) public {
         bytes memory data = abi.encodeWithSelector(IHookReceiver.hookReceiverConfig.selector);
 
-        vm.mockCall(
-            ADDRESS,
-            data,
-            abi.encode(_hooksBefore, _hooksAfter)
-        );
+        vm.mockCall(ADDRESS, data, abi.encode(_hooksBefore, _hooksAfter));
 
         vm.expectCall(ADDRESS, data);
     }
@@ -35,21 +31,11 @@ contract HookReceiverMock is CommonBase, StdCheats {
         uint256 _totalSupply,
         uint256 _amount
     ) public {
-        bytes memory inputAndOutput = abi.encodePacked(
-            _sender,
-            _recipient,
-            _amount,
-            _senderBalance,
-            _recipientBalance,
-            _totalSupply
-        );
+        bytes memory inputAndOutput =
+            abi.encodePacked(_sender, _recipient, _amount, _senderBalance, _recipientBalance, _totalSupply);
 
-        bytes memory data = abi.encodeWithSelector(
-            IHookReceiver.afterAction.selector,
-            _silo,
-            _action,
-            inputAndOutput
-        );
+        bytes memory data =
+            abi.encodeWithSelector(IHookReceiver.afterAction.selector, _silo, _action, inputAndOutput);
 
         vm.mockCall(ADDRESS, data, abi.encode(0));
         vm.expectCall(ADDRESS, data);

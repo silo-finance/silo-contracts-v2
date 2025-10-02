@@ -82,7 +82,7 @@ contract GlobalPauseTest is Test {
     function test_onlyAuthorized_allowsOwner() public {
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(address(gnosisSafeMock));
         globalPause.acceptOwnership(address(pausableMock1));
 
@@ -99,7 +99,7 @@ contract GlobalPauseTest is Test {
     function test_onlyAuthorized_allowsSigners() public {
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
 
@@ -119,7 +119,7 @@ contract GlobalPauseTest is Test {
 
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(authorizedAccount);
         globalPause.acceptOwnership(address(pausableMock1));
 
@@ -143,10 +143,7 @@ contract GlobalPauseTest is Test {
     FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_onlyOwner_revertsForNonOwner
     */
     function test_onlyOwner_revertsForNonOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            unauthorizedAccount
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, unauthorizedAccount));
         vm.prank(unauthorizedAccount);
         globalPause.grantAuthorization(authorizedAccount);
     }
@@ -174,7 +171,7 @@ contract GlobalPauseTest is Test {
         Ownable2Step(address(globalPause)).transferOwnership(newOwner);
 
         assertEq(Ownable(address(globalPause)).owner(), address(gnosisSafeMock));
-        
+
         vm.prank(newOwner);
         Ownable2Step(address(globalPause)).acceptOwnership();
 
@@ -215,7 +212,7 @@ contract GlobalPauseTest is Test {
     function test_transferOwnershipFrom_transfersContractOwnership() public {
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
 
@@ -234,14 +231,13 @@ contract GlobalPauseTest is Test {
         assertEq(pausableMock1.owner(), newOwner);
     }
 
-
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_transferOwnershipFrom_onlyOwner
     */
     function test_transferOwnershipFrom_onlyOwner() public {
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
 
@@ -249,33 +245,23 @@ contract GlobalPauseTest is Test {
         globalPause.addContract(address(pausableMock1));
 
         // Test that unauthorized account cannot call transferOwnershipFrom
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            unauthorizedAccount
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, unauthorizedAccount));
         vm.prank(unauthorizedAccount);
         globalPause.transferOwnershipFrom(address(pausableMock1), newOwner);
 
         // Test that signer cannot call transferOwnershipFrom (only owner can)
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            signer1
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, signer1));
         vm.prank(signer1);
         globalPause.transferOwnershipFrom(address(pausableMock1), newOwner);
 
         // Test that authorized account cannot call transferOwnershipFrom (only owner can)
         vm.prank(address(gnosisSafeMock));
         globalPause.grantAuthorization(authorizedAccount);
-        
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            authorizedAccount
-        ));
+
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, authorizedAccount));
         vm.prank(authorizedAccount);
         globalPause.transferOwnershipFrom(address(pausableMock1), newOwner);
     }
-
 
     /*//////////////////////////////////////////////////////////////
                   AUTHORIZED ACCOUNTS MANAGEMENT TESTS
@@ -317,10 +303,7 @@ contract GlobalPauseTest is Test {
     FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_grantAuthorization_onlyOwner
     */
     function test_grantAuthorization_onlyOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            unauthorizedAccount
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, unauthorizedAccount));
         vm.prank(unauthorizedAccount);
         globalPause.grantAuthorization(authorizedAccount);
     }
@@ -332,10 +315,7 @@ contract GlobalPauseTest is Test {
         vm.prank(address(gnosisSafeMock));
         globalPause.grantAuthorization(authorizedAccount);
 
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            unauthorizedAccount
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, unauthorizedAccount));
         vm.prank(unauthorizedAccount);
         globalPause.revokeAuthorization(authorizedAccount);
     }
@@ -365,7 +345,7 @@ contract GlobalPauseTest is Test {
     function test_addContract_addsToList() public {
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
 
@@ -402,7 +382,7 @@ contract GlobalPauseTest is Test {
     function test_removeContract_removesFromList() public {
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
 
@@ -431,7 +411,7 @@ contract GlobalPauseTest is Test {
     function test_removeContract_allowsRemovalEvenIfStillOwner() public {
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
 
@@ -453,10 +433,7 @@ contract GlobalPauseTest is Test {
     FOUNDRY_PROFILE=core_test forge test --ffi -vv --mt test_removeContract_onlyOwner
     */
     function test_removeContract_onlyOwner() public {
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            unauthorizedAccount
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, unauthorizedAccount));
         vm.prank(unauthorizedAccount);
         globalPause.removeContract(address(pausableMock1));
     }
@@ -471,7 +448,7 @@ contract GlobalPauseTest is Test {
     function test_pause_pausesSingleContract() public {
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
 
@@ -495,7 +472,7 @@ contract GlobalPauseTest is Test {
     function test_unpause_unpausesSingleContract() public {
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
 
@@ -524,7 +501,7 @@ contract GlobalPauseTest is Test {
         pausableMock1.transferOwnership(address(globalPause));
         vm.prank(pausableMock2.owner());
         pausableMock2.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
         vm.prank(signer1);
@@ -599,10 +576,10 @@ contract GlobalPauseTest is Test {
 
         vm.prank(address(gnosisSafeMock));
         globalPause.addContract(address(pausableMock1));
-        
+
         vm.prank(address(gnosisSafeMock));
         globalPause.transferOwnershipFrom(address(pausableMock1), newOwner);
-        
+
         vm.prank(newOwner);
         pausableMock1.acceptOwnership();
 
@@ -655,7 +632,7 @@ contract GlobalPauseTest is Test {
         // Transfer ownership to GlobalPause for pausableMock1 only
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
 
@@ -687,7 +664,7 @@ contract GlobalPauseTest is Test {
         // Transfer ownership to GlobalPause for pausableMock1 only
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
 
@@ -726,31 +703,31 @@ contract GlobalPauseTest is Test {
         // Should emit FailedToUnpause because GlobalPause doesn't own the contract
         vm.expectEmit(true, false, false, false);
         emit FailedToUnpause(address(pausableMock1));
-        
+
         vm.prank(address(gnosisSafeMock));
         globalPause.unpause(address(pausableMock1)); // Should not revert, just emit FailedToUnpause
 
         // Test 2: Unpause from signer - contract not owned by GlobalPause
         vm.expectEmit(true, false, false, false);
         emit FailedToUnpause(address(pausableMock1));
-        
+
         vm.prank(signer1);
         globalPause.unpause(address(pausableMock1)); // Should not revert, just emit FailedToUnpause
 
         // Test 3: Unpause from authorized account
         vm.prank(address(gnosisSafeMock));
         globalPause.grantAuthorization(authorizedAccount);
-        
+
         vm.expectEmit(true, false, false, false);
         emit FailedToUnpause(address(pausableMock1));
-        
+
         vm.prank(authorizedAccount);
         globalPause.unpause(address(pausableMock1)); // Should not revert, just emit FailedToUnpause
 
         // Test 4: Unpause a contract that's not owned by GlobalPause
         vm.expectEmit(true, false, false, false);
         emit FailedToUnpause(address(pausableMock2));
-        
+
         vm.prank(signer1);
         globalPause.unpause(address(pausableMock2)); // Should not revert, just emit FailedToUnpause
 
@@ -758,24 +735,24 @@ contract GlobalPauseTest is Test {
         address nonPausableContract = address(gnosisSafeMock);
         vm.expectEmit(true, false, false, false);
         emit FailedToUnpause(nonPausableContract);
-        
+
         vm.prank(signer1);
         globalPause.unpause(nonPausableContract); // Should not revert, just emit FailedToUnpause
 
         // Test 6: Add contract to list and unpause when GlobalPause owns it
         vm.prank(pausableMock1.owner());
         pausableMock1.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
-        
+
         vm.prank(address(gnosisSafeMock));
         globalPause.addContract(address(pausableMock1));
 
         // First pause it
         vm.expectEmit(true, false, false, false);
         emit Paused(address(pausableMock1));
-        
+
         vm.prank(signer1);
         globalPause.pause(address(pausableMock1));
         assertTrue(pausableMock1.paused());
@@ -783,7 +760,7 @@ contract GlobalPauseTest is Test {
         // Now unpause - should succeed
         vm.expectEmit(true, false, false, false);
         emit Unpaused(address(pausableMock1));
-        
+
         vm.prank(signer1);
         globalPause.unpause(address(pausableMock1)); // Should not revert and should emit Unpaused
         assertFalse(pausableMock1.paused());
@@ -792,7 +769,7 @@ contract GlobalPauseTest is Test {
         // The mock contract will revert with ExpectedPause() when trying to unpause an unpaused contract
         vm.expectEmit(true, false, false, false);
         emit FailedToUnpause(address(pausableMock1));
-        
+
         vm.prank(signer1);
         globalPause.unpause(address(pausableMock1)); // Should not revert, just emit FailedToUnpause
         assertFalse(pausableMock1.paused());
@@ -829,7 +806,7 @@ contract GlobalPauseTest is Test {
     function test_removeContract_revertsWhenAlreadyRemoved() public {
         vm.prank(address(gnosisSafeMock));
         globalPause.addContract(address(pausableMock1));
-        
+
         vm.prank(address(gnosisSafeMock));
         globalPause.removeContract(address(pausableMock1));
 
@@ -866,7 +843,7 @@ contract GlobalPauseTest is Test {
         // Grant and then revoke authorization
         vm.prank(address(gnosisSafeMock));
         globalPause.grantAuthorization(authorizedAccount);
-        
+
         vm.prank(address(gnosisSafeMock));
         globalPause.revokeAuthorization(authorizedAccount);
 
@@ -910,7 +887,7 @@ contract GlobalPauseTest is Test {
     function test_renounceOwnership_revertsWhenBothNotEmpty() public {
         vm.prank(address(gnosisSafeMock));
         globalPause.addContract(address(pausableMock1));
-        
+
         vm.prank(address(gnosisSafeMock));
         globalPause.grantAuthorization(authorizedAccount);
 
@@ -935,7 +912,7 @@ contract GlobalPauseTest is Test {
     function test_renounceOwnership_succeedsAfterRemovingAll() public {
         vm.prank(address(gnosisSafeMock));
         globalPause.addContract(address(pausableMock1));
-        
+
         vm.prank(address(gnosisSafeMock));
         globalPause.grantAuthorization(authorizedAccount);
 
@@ -956,18 +933,12 @@ contract GlobalPauseTest is Test {
     */
     function test_renounceOwnership_onlyOwner() public {
         // Test that unauthorized account cannot renounce ownership
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            unauthorizedAccount
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, unauthorizedAccount));
         vm.prank(unauthorizedAccount);
         GlobalPause(address(globalPause)).renounceOwnership();
 
         // Test that signer cannot renounce ownership (only owner can)
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            signer1
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, signer1));
         vm.prank(signer1);
         GlobalPause(address(globalPause)).renounceOwnership();
 
@@ -976,7 +947,7 @@ contract GlobalPauseTest is Test {
         // before checking the onlyOwner modifier
         vm.prank(address(gnosisSafeMock));
         globalPause.grantAuthorization(authorizedAccount);
-        
+
         vm.expectRevert(IGlobalPause.AuthorizedToPauseNotEmpty.selector);
         vm.prank(authorizedAccount);
         GlobalPause(address(globalPause)).renounceOwnership();
@@ -986,10 +957,7 @@ contract GlobalPauseTest is Test {
         globalPause.revokeAuthorization(authorizedAccount);
 
         // Now it should revert with OwnableUnauthorizedAccount
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            authorizedAccount
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, authorizedAccount));
         vm.prank(authorizedAccount);
         GlobalPause(address(globalPause)).renounceOwnership();
 
@@ -1012,7 +980,7 @@ contract GlobalPauseTest is Test {
         pausableMock1.transferOwnership(address(globalPause));
         vm.prank(pausableMock2.owner());
         pausableMock2.transferOwnership(address(globalPause));
-        
+
         vm.prank(signer1);
         globalPause.acceptOwnership(address(pausableMock1));
         vm.prank(signer1);
@@ -1027,7 +995,7 @@ contract GlobalPauseTest is Test {
         globalPause.pause(address(pausableMock1));
 
         IGlobalPause.ContractPauseStatus[] memory statuses = globalPause.getAllContractsPauseStatus();
-        
+
         assertEq(statuses.length, 2);
         assertEq(statuses[0].contractAddress, address(pausableMock1));
         assertTrue(statuses[0].isPaused);

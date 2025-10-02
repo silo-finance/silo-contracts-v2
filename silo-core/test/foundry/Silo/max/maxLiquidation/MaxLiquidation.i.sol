@@ -124,8 +124,9 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         _assertBorrowerIsSolvent();
 
         // 12 case allow for full liquidation and when done with chunks it stays at LTV 100 till the end
-        if (_collateral == 12) _ensureBorrowerHasNoDebt();
-        else {
+        if (_collateral == 12) {
+            _ensureBorrowerHasNoDebt();
+        } else {
             assertFalse(fullLiquidation, "[MaxLiquidation] fullLiquidation flag is DOWN on partial liquidation");
             _ensureBorrowerHasDebt();
         }
@@ -147,11 +148,7 @@ contract MaxLiquidationTest is MaxLiquidationCommon {
         emit log_named_decimal_uint("[MaxLiquidation] ltv before", silo0.getLtv(borrower), 16);
 
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
-            address(_sameToken ? token1 : token0),
-            address(token1),
-            borrower,
-            maxDebtToCover,
-            _receiveSToken
+            address(_sameToken ? token1 : token0), address(token1), borrower, maxDebtToCover, _receiveSToken
         );
 
         emit log_named_decimal_uint("[MaxLiquidation] ltv after", silo0.getLtv(borrower), 16);

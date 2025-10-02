@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {
-    LeverageUsingSiloFlashloanWithGeneralSwap
-} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from
+    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {ICrossReentrancyGuard} from "silo-core/contracts/interfaces/ICrossReentrancyGuard.sol";
@@ -31,13 +30,7 @@ contract OnFlashLoanReentrancyTest is MethodReentrancyTest {
 
         vm.expectRevert(ILeverageUsingSiloFlashloan.InvalidFlashloanLender.selector);
 
-        leverage.onFlashLoan(
-            address(this),
-            address(0),
-            100e18,
-            1e18,
-            ""
-        );
+        leverage.onFlashLoan(address(this), address(0), 100e18, 1e18, "");
     }
 
     function _getLeverage() internal view returns (LeverageUsingSiloFlashloanWithGeneralSwap) {

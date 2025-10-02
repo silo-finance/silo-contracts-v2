@@ -15,7 +15,6 @@ contract DexSwapEnsoSonicTest is IntegrationTest {
     DexSwap dex; // solhint-disable-line var-name-mixedcase
 
     function _setUp() public {
-
         uint256 blockToFork = 36036102;
         vm.createSelectFork(vm.envString("RPC_SONIC"), blockToFork);
         dex = new DexSwap(getAddress(AddrKey.ENSO_ROUTER));
@@ -29,7 +28,7 @@ contract DexSwapEnsoSonicTest is IntegrationTest {
 
         IERC20 sellToken = IERC20(0xBe27993204Ec64238F71A527B4c4D5F4949034C3); // PT
         vm.prank(whale);
-        sellToken.transfer(address(dex),186688269);
+        sellToken.transfer(address(dex), 186688269);
 
         IERC20 buyToken = IERC20(0x29219dd400f2Bf60E5a23d13Be72B486D4038894); // USDC
         address allowanceTarget = getAddress(AddrKey.ENSO_ROUTER);

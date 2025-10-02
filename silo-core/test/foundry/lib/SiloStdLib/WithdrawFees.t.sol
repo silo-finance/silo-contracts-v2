@@ -19,7 +19,7 @@ import {TokenMock} from "../../_mocks/TokenMock.sol";
 FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc WithdrawFeesTest
 */
 contract WithdrawFeesTest is Test {
-    uint256 constant public NO_PROTECTED_ASSETS = 0;
+    uint256 public constant NO_PROTECTED_ASSETS = 0;
 
     ISiloConfig public config;
     ISiloFactory public factory;
@@ -33,7 +33,7 @@ contract WithdrawFeesTest is Test {
     }
 
     function setUp() public {
-        siloConfig = new SiloConfigMock( makeAddr("siloConfig"));
+        siloConfig = new SiloConfigMock(makeAddr("siloConfig"));
 
         ShareTokenLib.getShareTokenStorage().siloConfig = ISiloConfig(siloConfig.ADDRESS());
         config = ISiloConfig(siloConfig.ADDRESS());
@@ -131,19 +131,19 @@ contract WithdrawFeesTest is Test {
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_withdrawFees_pass
     */
     function test_withdrawFees_pass() external {
-        uint256 daoFee = 0.20e18;
-        uint256 deployerFee = 0.20e18;
+        uint256 daoFee = 0.2e18;
+        uint256 deployerFee = 0.2e18;
         uint256 daoAndDeployerRevenue = 1e18;
         uint256 daoFees = daoAndDeployerRevenue / 2;
 
         _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerRevenue - daoFees);
 
-        daoFee = 0.20e18;
-        deployerFee = 0.10e18;
+        daoFee = 0.2e18;
+        deployerFee = 0.1e18;
         daoFees = Math.mulDiv(daoAndDeployerRevenue, 2, 3, Math.Rounding.Ceil);
         _withdrawFees_pass(daoFee, deployerFee, daoFees, daoAndDeployerRevenue - daoFees);
 
-        daoFee = 0.20e18;
+        daoFee = 0.2e18;
         deployerFee = 0.01e18;
         daoFees = Math.mulDiv(daoAndDeployerRevenue, 20, 21, Math.Rounding.Ceil);
 
@@ -214,9 +214,7 @@ contract WithdrawFeesTest is Test {
         uint256 _deployerFee,
         uint256 _transferDao,
         uint256 _transferDeployer
-    )
-        internal
-    {
+    ) internal {
         uint256 flashloanFeeInBp;
         address asset = token.ADDRESS();
 

@@ -12,7 +12,6 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
    FOUNDRY_PROFILE=core_test forge test -vv --mc ApplyFraction2
 */
 contract ApplyFraction2 is Test {
-
     function setUp() public {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
@@ -27,9 +26,9 @@ contract ApplyFraction2 is Test {
     FOUNDRY_PROFILE=core_test forge test -vv --mt test_applyFractions_
     */
     /// forge-config: core_test.fuzz.runs = 10000
-    function test_applyFractions_shouldNeverRevert_fuzz(
-        uint256 _rcomp, uint256 _daoFee, uint256 _deployerFee
-    ) public {
+    function test_applyFractions_shouldNeverRevert_fuzz(uint256 _rcomp, uint256 _daoFee, uint256 _deployerFee)
+        public
+    {
         vm.assume(_rcomp > 0 && _rcomp < 1e18);
         vm.assume(_daoFee > 0 && _daoFee < 1e18);
         vm.assume(_deployerFee > 0 && _deployerFee < 1e18);
@@ -63,9 +62,8 @@ contract ApplyFraction2 is Test {
             revert("we need test with interest");
         }
 
-        (
-            $.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest
-        ) = SiloMathLib.getCollateralAmountsWithInterest({
+        ($.totalAssets[ISilo.AssetType.Collateral], $.totalAssets[ISilo.AssetType.Debt], totalFees, accruedInterest)
+        = SiloMathLib.getCollateralAmountsWithInterest({
             _collateralAssets: totalCollateralAssets,
             _debtAssets: totalDebtAssets,
             _rcomp: _rcomp,
@@ -86,6 +84,8 @@ contract ApplyFraction2 is Test {
 
         // we operating on chunks (fees) of real tokens, so overflow should not happen
         // fee is simply too small to overflow on cast to uint192, even if, we will get lower fee
-        unchecked { $.daoAndDeployerRevenue += uint192(totalFees); }
+        unchecked {
+            $.daoAndDeployerRevenue += uint192(totalFees);
+        }
     }
 }

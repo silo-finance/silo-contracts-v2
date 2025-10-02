@@ -20,9 +20,9 @@ library PartialLiquidationLibChecked {
     /// this two conversions are rounding down and can create 2 wai difference
     uint256 internal constant _UNDERESTIMATION = 2;
 
-    /// @dev If the ratio of the repay value to the total debt value during liquidation exceeds the 
+    /// @dev If the ratio of the repay value to the total debt value during liquidation exceeds the
     /// _FULL_LIQUIDATION_THRESHOLD threshold, a full liquidation is triggered.
-    /// For example, if the total debt value is 51 and the dust level is set at 98%, 
+    /// For example, if the total debt value is 51 and the dust level is set at 98%,
     /// then we are unable to liquidate 50, we must proceed to liquidate the entire 51.
     uint256 internal constant _FULL_LIQUIDATION_THRESHOLD = 0.9e18; // 90%
 
@@ -36,25 +36,12 @@ library PartialLiquidationLibChecked {
         uint256 _borrowerDebtValue,
         uint256 _liquidationTargetLTV,
         uint256 _liquidationFee
-    )
-        internal
-        pure
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay)
-    {
-        (
-            uint256 collateralValueToLiquidate, uint256 repayValue
-        ) = maxLiquidationPreview(
-            _sumOfCollateralValue,
-            _borrowerDebtValue,
-            _liquidationTargetLTV,
-            _liquidationFee
-        );
+    ) internal pure returns (uint256 collateralToLiquidate, uint256 debtToRepay) {
+        (uint256 collateralValueToLiquidate, uint256 repayValue) =
+            maxLiquidationPreview(_sumOfCollateralValue, _borrowerDebtValue, _liquidationTargetLTV, _liquidationFee);
 
-        collateralToLiquidate = valueToAssetsByRatio(
-            collateralValueToLiquidate,
-            _sumOfCollateralAssets,
-            _sumOfCollateralValue
-        );
+        collateralToLiquidate =
+            valueToAssetsByRatio(collateralValueToLiquidate, _sumOfCollateralAssets, _sumOfCollateralValue);
 
         if (collateralToLiquidate > _UNDERESTIMATION) {
             // -_UNDERESTIMATION here is to underestimate collateral that user gets on liquidation
@@ -62,7 +49,10 @@ library PartialLiquidationLibChecked {
             // this two conversions are rounding down and can create 2 wei difference
 
             // we will not underflow on -_UNDERESTIMATION because collateralToLiquidate is >= _UNDERESTIMATION
-            /* unchecked */ { collateralToLiquidate -= _UNDERESTIMATION; }
+            /* unchecked */
+            {
+                collateralToLiquidate -= _UNDERESTIMATION;
+            }
         } else {
             collateralToLiquidate = 0;
         }
@@ -80,24 +70,18 @@ library PartialLiquidationLibChecked {
         uint256 _borrowerDebtAssets,
         uint256 _borrowerDebtValue,
         PartialLiquidationLib.LiquidationPreviewParams memory _params
-    )
-        internal
-        pure
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter)
-    {
+    ) internal pure returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) {
         uint256 collateralValueToLiquidate;
         uint256 debtValueToRepay;
 
         if (_ltvBefore >= _BAD_DEBT) {
             // in case of bad debt, we allow for any amount
-            debtToRepay = _params.maxDebtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.maxDebtToCover;
+            debtToRepay =
+                _params.maxDebtToCover > _borrowerDebtAssets ? _borrowerDebtAssets : _params.maxDebtToCover;
             debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
         } else {
             uint256 maxRepayValue = estimateMaxRepayValue(
-                _borrowerDebtValue,
-                _sumOfCollateralValue,
-                _params.liquidationTargetLtv,
-                _params.liquidationFee
+                _borrowerDebtValue, _sumOfCollateralValue, _params.liquidationTargetLtv, _params.liquidationFee
             );
 
             if (maxRepayValue == _borrowerDebtValue) {
@@ -106,21 +90,18 @@ library PartialLiquidationLibChecked {
                 debtValueToRepay = _borrowerDebtValue;
             } else {
                 // partial liquidation
-                uint256 maxDebtToRepay = valueToAssetsByRatio(maxRepayValue, _borrowerDebtAssets, _borrowerDebtValue);
+                uint256 maxDebtToRepay =
+                    valueToAssetsByRatio(maxRepayValue, _borrowerDebtAssets, _borrowerDebtValue);
                 debtToRepay = _params.maxDebtToCover > maxDebtToRepay ? maxDebtToRepay : _params.maxDebtToCover;
                 debtValueToRepay = valueToAssetsByRatio(debtToRepay, _borrowerDebtValue, _borrowerDebtAssets);
             }
         }
 
-        collateralValueToLiquidate = calculateCollateralToLiquidate(
-            debtValueToRepay, _sumOfCollateralValue, _params.liquidationFee
-        );
+        collateralValueToLiquidate =
+            calculateCollateralToLiquidate(debtValueToRepay, _sumOfCollateralValue, _params.liquidationFee);
 
-        collateralToLiquidate = valueToAssetsByRatio(
-            collateralValueToLiquidate,
-            _sumOfCollateralAssets,
-            _sumOfCollateralValue
-        );
+        collateralToLiquidate =
+            valueToAssetsByRatio(collateralValueToLiquidate, _sumOfCollateralAssets, _sumOfCollateralValue);
 
         ltvAfter = _calculateLtvAfter(
             _sumOfCollateralValue, _borrowerDebtValue, collateralValueToLiquidate, debtValueToRepay
@@ -149,9 +130,8 @@ library PartialLiquidationLibChecked {
         uint256 _totalBorrowerCollateralAssets,
         uint256 _liquidationFee
     ) internal pure returns (uint256 collateralAssetsToLiquidate, uint256 collateralValueToLiquidate) {
-        collateralValueToLiquidate = calculateCollateralToLiquidate(
-            _debtValueToCover, _totalBorrowerCollateralValue, _liquidationFee
-        );
+        collateralValueToLiquidate =
+            calculateCollateralToLiquidate(_debtValueToCover, _totalBorrowerCollateralValue, _liquidationFee);
 
         // this is also true if _totalBorrowerCollateralValue == 0, so div below will not revert
         if (collateralValueToLiquidate == _totalBorrowerCollateralValue) {
@@ -181,19 +161,18 @@ library PartialLiquidationLibChecked {
             _totalBorrowerDebtValue, _totalBorrowerCollateralValue, _ltvAfterLiquidation, _liquidationFee
         );
 
-        collateralValueToLiquidate = calculateCollateralToLiquidate(
-            repayValue, _totalBorrowerCollateralValue, _liquidationFee
-        );
+        collateralValueToLiquidate =
+            calculateCollateralToLiquidate(repayValue, _totalBorrowerCollateralValue, _liquidationFee);
     }
 
     /// @param _maxDebtToCover assets or value, but must be in sync with `_totalCollateral`
     /// @param _sumOfCollateral assets or value, but must be in sync with `_maxDebtToCover`
     /// @return toLiquidate depends on inputs, it might be collateral value or collateral assets
-    function calculateCollateralToLiquidate(uint256 _maxDebtToCover, uint256 _sumOfCollateral, uint256 _liquidationFee)
-        internal
-        pure
-        returns (uint256 toLiquidate)
-    {
+    function calculateCollateralToLiquidate(
+        uint256 _maxDebtToCover,
+        uint256 _sumOfCollateral,
+        uint256 _liquidationFee
+    ) internal pure returns (uint256 toLiquidate) {
         uint256 fee = _maxDebtToCover * _liquidationFee / _PRECISION_DECIMALS;
 
         toLiquidate = _maxDebtToCover + fee;
@@ -236,7 +215,8 @@ library PartialLiquidationLibChecked {
 
         uint256 dividerR; // LT + LT * f
 
-        /* unchecked */ {
+        /* unchecked */
+        {
             // safe because of above `LTCv >= _totalBorrowerDebtValue`
             repayValue = _totalBorrowerDebtValue - ltCv;
             // we checked at begin `_liquidationFee >= _PRECISION_DECIMALS`
@@ -245,14 +225,20 @@ library PartialLiquidationLibChecked {
         }
 
         // now we can go back to proper precision
-        /* unchecked */ { _totalBorrowerDebtValue /= _PRECISION_DECIMALS; }
+        /* unchecked */
+        {
+            _totalBorrowerDebtValue /= _PRECISION_DECIMALS;
+        }
 
         // if dividerR is more than 100%, means it is impossible to go down to _ltvAfterLiquidation, return all
         if (dividerR >= _PRECISION_DECIMALS) {
             return _totalBorrowerDebtValue;
         }
 
-        /* unchecked */ { repayValue /= (_PRECISION_DECIMALS - dividerR); }
+        /* unchecked */
+        {
+            repayValue /= (_PRECISION_DECIMALS - dividerR);
+        }
 
         // early return so we do not have to check for dust
         if (repayValue > _totalBorrowerDebtValue) return _totalBorrowerDebtValue;
@@ -274,10 +260,10 @@ library PartialLiquidationLibChecked {
     {
         if (_collateralToLiquidate == 0) return (0, 0);
 
-        /* unchecked */ {
-            (
-                withdrawAssetsFromCollateral, withdrawAssetsFromProtected
-            ) = _collateralToLiquidate > _borrowerProtectedAssets
+        /* unchecked */
+        {
+            (withdrawAssetsFromCollateral, withdrawAssetsFromProtected) = _collateralToLiquidate
+                > _borrowerProtectedAssets
                 // safe to uncheck because of above condition
                 ? (_collateralToLiquidate - _borrowerProtectedAssets, _borrowerProtectedAssets)
                 : (0, _collateralToLiquidate);
@@ -290,20 +276,16 @@ library PartialLiquidationLibChecked {
         uint256 _totalDebtValue,
         uint256 _collateralValueToLiquidate,
         uint256 _debtValueToCover
-    )
-        private
-        pure
-        returns (uint256 ltvAfterLiquidation)
-    {
+    ) private pure returns (uint256 ltvAfterLiquidation) {
         if (_sumOfCollateralValue <= _collateralValueToLiquidate || _totalDebtValue <= _debtValueToCover) {
             return 0;
         }
 
-        /* unchecked */ { // all subs are safe because these values are chunks of total, so we will not underflow
-            ltvAfterLiquidation = _ltvAfter(
-                _sumOfCollateralValue - _collateralValueToLiquidate,
-                _totalDebtValue - _debtValueToCover
-            );
+        /* unchecked */
+        {
+            // all subs are safe because these values are chunks of total, so we will not underflow
+            ltvAfterLiquidation =
+                _ltvAfter(_sumOfCollateralValue - _collateralValueToLiquidate, _totalDebtValue - _debtValueToCover);
         }
     }
 
@@ -314,4 +296,3 @@ library PartialLiquidationLibChecked {
         ltv = Math.ceilDiv(ltv, _collateral); // Rounding.LTV is up/ceil
     }
 }
-

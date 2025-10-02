@@ -66,7 +66,8 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        (uint256 totalCollateralToLiquidate, uint256 totalDebtToCover,) = partialLiquidation.maxLiquidation(borrower);
+        (uint256 totalCollateralToLiquidate, uint256 totalDebtToCover,) =
+            partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_decimal_uint("[BadDebtWithChunks] ltv before", silo0.getLtv(borrower), 16);
         emit log_named_uint("[BadDebtWithChunks] totalCollateralToLiquidate", totalCollateralToLiquidate);
@@ -78,14 +79,17 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
 
             if (silo0.getLtv(borrower) <= 1e18) break; // not bad debt anymore
 
-            { // too deep
+            {
+                // too deep
                 bool isSolvent = silo0.isSolvent(borrower);
                 emit log_named_string("isSolvent", isSolvent ? "YES" : "NO");
 
                 if (isSolvent) break;
             }
 
-            emit log_named_uint("collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, borrower));
+            emit log_named_uint(
+                "collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, borrower)
+            );
             emit log_named_uint("debtBalanceOfUnderlying", siloLens.debtBalanceOfUnderlying(silo1, borrower));
             emit log_named_uint("total(collateral).assets", silo1.getTotalAssetsStorage(ISilo.AssetType.Collateral));
             emit log_named_uint("getCollateralAssets()", silo1.getCollateralAssets());
@@ -105,9 +109,8 @@ contract MaxLiquidationBadDebtWithChunksTest is MaxLiquidationBadDebtTest {
             uint256 testDebtToCover = _calculateChunk(maxDebtToCover, i);
             emit log_named_uint("[BadDebtWithChunks] testDebtToCover", testDebtToCover);
 
-            (
-                uint256 partialCollateral, uint256 partialDebt
-            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
+            (uint256 partialCollateral, uint256 partialDebt) =
+                _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
 
             emit log_named_uint("[BadDebtWithChunks] partialCollateral", partialCollateral);
             emit log_named_uint("[BadDebtWithChunks] partialDebt", partialDebt);

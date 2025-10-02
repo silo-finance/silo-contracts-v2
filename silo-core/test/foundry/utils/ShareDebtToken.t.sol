@@ -11,7 +11,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
-import {SiloLittleHelper} from  "../_common/SiloLittleHelper.sol";
+import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
 FOUNDRY_PROFILE=core_test forge test --ffi -vv --mc ShareDebtTokenTest
@@ -243,7 +243,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         vm.prank(receiver);
         shareDebtToken.setReceiveApproval(address(this), 1);
 
-        (address collateralSenderBefore, ) = _getCollateralState();
+        (address collateralSenderBefore,) = _getCollateralState();
 
         shareDebtToken.transfer(receiver, 1);
 
@@ -273,7 +273,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         vm.prank(receiver);
         shareDebtToken.setReceiveApproval(address(this), 1);
 
-        (address collateralSenderBefore, ) = _getCollateralState();
+        (address collateralSenderBefore,) = _getCollateralState();
 
         shareDebtToken.transfer(receiver, 1);
 
@@ -453,7 +453,7 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         _depositCollateral(amount, depositor, _sameAsset, ISilo.CollateralType.Collateral);
         _depositCollateral(amount, depositor, _sameAsset, ISilo.CollateralType.Protected);
 
-        _depositCollateral(amount * 2, makeAddr("any"), true /* toSilo1 */, ISilo.CollateralType.Collateral);
+        _depositCollateral(amount * 2, makeAddr("any"), true, /* toSilo1 */ ISilo.CollateralType.Collateral);
 
         uint256 borrowAmount = 150e18;
         address borrower = depositor;
@@ -488,9 +488,9 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         collateralReceiver = siloConfig.borrowerCollateralSilo(makeAddr("receiver"));
     }
 
-    function _assertCollateralSiloDidNotChanged(
-        address _collateralSenderBefore, address _collateralReceiverBefore
-    ) private {
+    function _assertCollateralSiloDidNotChanged(address _collateralSenderBefore, address _collateralReceiverBefore)
+        private
+    {
         (address collateralSenderAfter, address collateralReceiverAfter) = _getCollateralState();
 
         assertEq(_collateralSenderBefore, collateralSenderAfter, "[a] does not change the sender state");

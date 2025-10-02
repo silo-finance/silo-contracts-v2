@@ -123,10 +123,7 @@ contract MaxBorrowValueToAssetsAndSharesTestData {
             totalDebtAssets: _src.input.totalDebtAssets,
             totalDebtShares: _src.input.totalDebtShares
         });
-        dst.output = Output({
-            assets: _src.output.assets,
-            shares: _src.output.shares
-        });
+        dst.output = Output({assets: _src.output.assets, shares: _src.output.shares});
     }
 
     function toString(uint256 _i) internal pure returns (string memory str) {

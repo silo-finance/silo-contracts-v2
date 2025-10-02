@@ -16,11 +16,9 @@ contract GetExactLiquidationAmountsTestData {
         uint256 protectedUserSharesBalanceOf;
         uint256 protectedSharesTotalSupply;
         uint256 siloTotalProtectedAssets;
-
         uint256 collateralUserSharesBalanceOf;
         uint256 collateralSharesTotalSupply;
         uint256 siloTotalCollateralAssets;
-
         uint256 debtUserSharesBalanceOf;
         uint256 debtSharesTotalSupply;
         uint256 siloTotalDebtAssets;
@@ -78,7 +76,7 @@ contract GetExactLiquidationAmountsTestData {
         data[i].mocks.siloTotalDebtAssets = 10e18;
 
         i++;
-        data[i] = _clone(data[i-1]);
+        data[i] = _clone(data[i - 1]);
         data[i].name = "expect zero when user solvent, protected + collateral";
 
         data[i].mocks.collateralUserSharesBalanceOf = 1e18 * SHARES_OFFSET;

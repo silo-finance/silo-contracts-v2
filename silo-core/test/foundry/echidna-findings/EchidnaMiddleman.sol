@@ -84,7 +84,10 @@ contract EchidnaMiddleman is EchidnaSetup {
         silo.mint(_shares, actor);
     }
 
-    function __maxBorrowShares_correctReturnValue(uint8 _actor) internal returns (uint256 maxBorrow, uint256 shares) {
+    function __maxBorrowShares_correctReturnValue(uint8 _actor)
+        internal
+        returns (uint256 maxBorrow, uint256 shares)
+    {
         emit log_named_string("    function", "__maxBorrowShares_correctReturnValue");
 
         address actor = _chooseActor(_actor);
@@ -111,7 +114,7 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         address actor = _chooseActor(_actor);
 
-        (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
+        (bool isSolvent, ISilo siloWithDebt,) = _invariant_insolventHasDebt(actor);
         assertFalse(isSolvent, "expect not solvent user");
 
         (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(actor);
@@ -136,10 +139,8 @@ contract EchidnaMiddleman is EchidnaSetup {
         emit log_named_decimal_uint("maxWithdraw", maxAssets, 18);
 
         if (maxAssets == 0) {
-            (
-                ISiloConfig.ConfigData memory collateralConfig,
-                ISiloConfig.ConfigData memory debtConfig
-            ) = siloConfig.getConfigsForSolvency(actor);
+            (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+                siloConfig.getConfigsForSolvency(actor);
 
             uint256 shareBalance = IERC20(collateralConfig.collateralShareToken).balanceOf(address(actor));
             uint256 debtShareBalance = IERC20(debtConfig.debtShareToken).balanceOf(address(actor));
@@ -189,14 +190,15 @@ contract EchidnaMiddleman is EchidnaSetup {
         ISilo vault = __chooseSilo(_siloZero);
         _invariant_checkForInterest(vault);
 
-        (address protected, address collateral, ) = siloConfig.getShareTokens(address(vault));
+        (address protected, address collateral,) = siloConfig.getShareTokens(address(vault));
 
         uint256 maxWithdrawSumBefore;
 
         uint256 protBalanceBefore = IShareToken(protected).balanceOf(address(actor));
         uint256 collBalanceBefore = IShareToken(collateral).balanceOf(address(actor));
 
-        { // too deep
+        {
+            // too deep
             uint256 maxCollateralBefore = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
             uint256 maxProtectedBefore = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
             maxWithdrawSumBefore = maxCollateralBefore + maxProtectedBefore;
@@ -213,7 +215,8 @@ contract EchidnaMiddleman is EchidnaSetup {
         uint256 protBalanceAfter = IShareToken(protected).balanceOf(address(actor));
         uint256 collBalanceAfter = IShareToken(collateral).balanceOf(address(actor));
 
-        { // too deep
+        {
+            // too deep
             uint256 maxCollateralAfter = vault.maxWithdraw(address(actor), ISilo.CollateralType.Collateral);
             uint256 maxProtectedAfter = vault.maxWithdraw(address(actor), ISilo.CollateralType.Protected);
             uint256 maxAssetsSumAfter = maxCollateralAfter + maxProtectedAfter;
@@ -233,7 +236,8 @@ contract EchidnaMiddleman is EchidnaSetup {
             assertLe(maxWithdrawSumBefore - maxAssetsSumAfter, 1, "we accept 1 wei diff");
         }
 
-        { // too deep
+        {
+            // too deep
             // note: this could result in false positives due to interest calculation, and differences between
             // protected and unprotected shares/balances. Another way to check this property would be to
             // transitionCollateral in one direction, and then in the opposite direction, and only check shares/assets
@@ -241,10 +245,10 @@ contract EchidnaMiddleman is EchidnaSetup {
 
             emit log("transition back");
 
-            (uint256 sharesTransitioned, ISilo.CollateralType _withdrawType) =
-                _type == uint8(ISilo.CollateralType.Collateral)
-                    ? (protBalanceAfter - protBalanceBefore, ISilo.CollateralType.Protected)
-                    : (collBalanceAfter - collBalanceBefore, ISilo.CollateralType.Collateral);
+            (uint256 sharesTransitioned, ISilo.CollateralType _withdrawType) = _type
+                == uint8(ISilo.CollateralType.Collateral)
+                ? (protBalanceAfter - protBalanceBefore, ISilo.CollateralType.Protected)
+                : (collBalanceAfter - collBalanceBefore, ISilo.CollateralType.Collateral);
 
             emit log_named_uint("sharesTransitioned", sharesTransitioned);
 
@@ -314,8 +318,8 @@ contract EchidnaMiddleman is EchidnaSetup {
         uint256 debt0 = silo0.getDebtAssets();
         uint256 debt1 = silo1.getDebtAssets();
 
-        (, , address debtShareToken0) = siloConfig.getShareTokens(address(silo0));
-        (, , address debtShareToken1) = siloConfig.getShareTokens(address(silo1));
+        (,, address debtShareToken0) = siloConfig.getShareTokens(address(silo0));
+        (,, address debtShareToken1) = siloConfig.getShareTokens(address(silo1));
 
         uint256 debtShareBalance0 = IShareToken(debtShareToken0).totalSupply();
         uint256 debtShareBalance1 = IShareToken(debtShareToken1).totalSupply();
@@ -353,7 +357,8 @@ contract EchidnaMiddleman is EchidnaSetup {
     }
 
     function __mintAssetType(uint8 _actorIndex, bool _vaultZero, uint256 _shares, uint8 _collateralType)
-        public returns (uint256 assets)
+        public
+        returns (uint256 assets)
     {
         emit log_named_string("    function", "__mintAssetType");
 
@@ -401,13 +406,9 @@ contract EchidnaMiddleman is EchidnaSetup {
         silo.accrueInterest();
     }
 
-    function __depositAssetType(
-        uint8 _actorIndex,
-        bool _vaultZero,
-        uint256 _amount,
-        uint8 _collateralType
-    )
-        public returns (uint256 shares)
+    function __depositAssetType(uint8 _actorIndex, bool _vaultZero, uint256 _amount, uint8 _collateralType)
+        public
+        returns (uint256 shares)
     {
         emit log_named_string("    function", "__depositAssetType");
 
@@ -424,7 +425,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         emit log_named_string("    function", "__cannotLiquidateASolventUser");
 
         address actor = _chooseActor(_actorIndex);
-        (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
+        (bool isSolvent, ISilo siloWithDebt,) = _invariant_insolventHasDebt(actor);
 
         assertFalse(isSolvent, "expect user to be solvent, not solvent should be ignored by echidna");
 
@@ -470,7 +471,8 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         assertTrue(siloWithDebt.isSolvent(address(actor)), "expect user to be solvent (isSolvent)");
 
-        if (debtToRepay < maxPartialRepayValue) { // if (partial)
+        if (debtToRepay < maxPartialRepayValue) {
+            // if (partial)
             assertLt(ltvAfter, ltvBefore, "we expect LTV to go down after partial liquidation");
             assertGt(ltvAfter, 0, "ltvAfter > 0");
             assertLt(ltvAfter, lt, "ltvAfter < LT");
@@ -483,7 +485,7 @@ contract EchidnaMiddleman is EchidnaSetup {
         emit log_named_string("    function", "__cannotLiquidateUserUnderLt");
 
         address actor = _chooseActor(_actorIndex);
-        (bool isSolvent, ISilo siloWithDebt, ) = _invariant_insolventHasDebt(actor);
+        (bool isSolvent, ISilo siloWithDebt,) = _invariant_insolventHasDebt(actor);
 
         assertTrue(isSolvent, "expect not solvent user");
 
@@ -503,10 +505,8 @@ contract EchidnaMiddleman is EchidnaSetup {
             assertLe(ltv, lt, "ltv <= lt");
 
             emit log_named_string(
-                "it is expected liquidationCall to throw, because user is solvent",
-                isSolvent ? "YES" : "NO?!"
+                "it is expected liquidationCall to throw, because user is solvent", isSolvent ? "YES" : "NO?!"
             );
-
         }
     }
 

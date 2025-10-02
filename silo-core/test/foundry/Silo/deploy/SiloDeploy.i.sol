@@ -18,13 +18,11 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {MainnetDeploy} from "silo-core/deploy/MainnetDeploy.s.sol";
 import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 
-import {
-   UniswapV3OracleFactoryMock
-} from "silo-core/test/foundry/_mocks/oracles-factories/UniswapV3OracleFactoryMock.sol";
+import {UniswapV3OracleFactoryMock} from
+    "silo-core/test/foundry/_mocks/oracles-factories/UniswapV3OracleFactoryMock.sol";
 
-import {
-   ChainlinkV3OracleFactoryMock
-} from "silo-core/test/foundry/_mocks/oracles-factories/ChainlinkV3OracleFactoryMock.sol";
+import {ChainlinkV3OracleFactoryMock} from
+    "silo-core/test/foundry/_mocks/oracles-factories/ChainlinkV3OracleFactoryMock.sol";
 
 import {DIAOracleFactoryMock} from "silo-core/test/foundry/_mocks/oracles-factories/DIAOracleFactoryMock.sol";
 
@@ -33,17 +31,17 @@ AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloDeployT
 */
 contract SiloDeployTest is IntegrationTest {
     // in case of new silo implementation, block number should be updated
-   uint256 internal constant _FORKING_BLOCK_NUMBER = 22616413;
+    uint256 internal constant _FORKING_BLOCK_NUMBER = 22616413;
 
-   ISiloConfig internal _siloConfig;
-   ISiloDeployer internal _siloDeployer;
-   SiloDeployWithDeployerOwner internal _siloDeploy;
+    ISiloConfig internal _siloConfig;
+    ISiloDeployer internal _siloDeployer;
+    SiloDeployWithDeployerOwner internal _siloDeploy;
 
-   UniswapV3OracleFactoryMock internal _uniV3OracleFactoryMock;
-   ChainlinkV3OracleFactoryMock internal _chainlinkV3OracleFactoryMock;
-   DIAOracleFactoryMock internal _diaOracleFactoryMock;
+    UniswapV3OracleFactoryMock internal _uniV3OracleFactoryMock;
+    ChainlinkV3OracleFactoryMock internal _chainlinkV3OracleFactoryMock;
+    DIAOracleFactoryMock internal _diaOracleFactoryMock;
 
-   function setUp() public {
+    function setUp() public {
         vm.createSelectFork(getChainRpcUrl(MAINNET_ALIAS), _FORKING_BLOCK_NUMBER);
 
         _uniV3OracleFactoryMock = new UniswapV3OracleFactoryMock();
@@ -73,12 +71,13 @@ contract SiloDeployTest is IntegrationTest {
     function test_hooks_are_initialized() public view {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
-         _verifyHookReceiversForSilo(silo0);
-         _verifyHookReceiversForSilo(silo1);
+        _verifyHookReceiversForSilo(silo0);
+        _verifyHookReceiversForSilo(silo1);
     }
 
     // AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi -mt test_oracles_deploy
-    function test_oracles_deploy() public view { // solhint-disable-line func-name-mixedcase
+    function test_oracles_deploy() public view {
+        // solhint-disable-line func-name-mixedcase
         (, address silo1) = _siloConfig.getSilos();
 
         ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
@@ -117,10 +116,8 @@ contract SiloDeployTest is IntegrationTest {
 
         uint256 snapshot = vm.snapshotState();
 
-        ISiloConfig siloConfig1 = _siloDeploy
-            .useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST)
-            .usePrivateKey(wallet1.privateKey)
-            .run();
+        ISiloConfig siloConfig1 =
+            _siloDeploy.useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST).usePrivateKey(wallet1.privateKey).run();
 
         (address silo0,) = siloConfig1.getSilos();
 
@@ -128,10 +125,8 @@ contract SiloDeployTest is IntegrationTest {
 
         vm.revertToState(snapshot);
 
-        ISiloConfig siloConfig2 = _siloDeploy
-            .useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST)
-            .usePrivateKey(wallet2.privateKey)
-            .run();
+        ISiloConfig siloConfig2 =
+            _siloDeploy.useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST).usePrivateKey(wallet2.privateKey).run();
 
         (silo0,) = siloConfig2.getSilos();
 
@@ -165,8 +160,7 @@ contract SiloDeployTest is IntegrationTest {
 
     function _mockOraclesFactories() internal {
         AddrLib.setAddress(
-            SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY,
-            address(_uniV3OracleFactoryMock)
+            SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY, address(_uniV3OracleFactoryMock)
         );
     }
 }

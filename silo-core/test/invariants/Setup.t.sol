@@ -10,7 +10,8 @@ import {Silo} from "silo-core/contracts/Silo.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {
-    IInterestRateModelV2, InterestRateModelV2
+    IInterestRateModelV2,
+    InterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";

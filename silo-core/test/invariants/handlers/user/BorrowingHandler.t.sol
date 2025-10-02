@@ -56,7 +56,9 @@ contract BorrowingHandler is BaseHandler {
                 BORROWING_HSPOST_M
             );
 
-            assertEq(defaultVarsAfter[target].balance + _assets, defaultVarsBefore[target].balance, BORROWING_HSPOST_O);
+            assertEq(
+                defaultVarsAfter[target].balance + _assets, defaultVarsBefore[target].balance, BORROWING_HSPOST_O
+            );
         }
     }
 
@@ -84,7 +86,9 @@ contract BorrowingHandler is BaseHandler {
                 BORROWING_HSPOST_M
             );
 
-            assertEq(defaultVarsAfter[target].balance + _assets, defaultVarsBefore[target].balance, BORROWING_HSPOST_O);
+            assertEq(
+                defaultVarsAfter[target].balance + _assets, defaultVarsBefore[target].balance, BORROWING_HSPOST_O
+            );
         }
     }
 
@@ -98,17 +102,22 @@ contract BorrowingHandler is BaseHandler {
         address target = _getRandomSilo(j);
 
         _before();
-        (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(ISilo.borrowShares.selector, _shares, receiver, address(actor)));
+        (success, returnData) = actor.proxy(
+            target, abi.encodeWithSelector(ISilo.borrowShares.selector, _shares, receiver, address(actor))
+        );
 
         if (success) {
             _after();
 
             assertGe(
-                defaultVarsAfter[target].userDebtShares, defaultVarsBefore[target].userDebtShares, BORROWING_HSPOST_Q
+                defaultVarsAfter[target].userDebtShares,
+                defaultVarsBefore[target].userDebtShares,
+                BORROWING_HSPOST_Q
             );
 
-            assertGe(defaultVarsAfter[target].userBalance, defaultVarsBefore[target].userBalance, BORROWING_HSPOST_R);
+            assertGe(
+                defaultVarsAfter[target].userBalance, defaultVarsBefore[target].userBalance, BORROWING_HSPOST_R
+            );
         }
     }
 
@@ -172,7 +181,8 @@ contract BorrowingHandler is BaseHandler {
         address target = _getRandomSilo(i);
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(ISilo.switchCollateralToThisSilo.selector));
+        (success, returnData) =
+            actor.proxy(target, abi.encodeWithSelector(ISilo.switchCollateralToThisSilo.selector));
 
         if (success) {
             _after();

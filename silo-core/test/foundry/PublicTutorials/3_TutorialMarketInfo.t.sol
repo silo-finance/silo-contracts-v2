@@ -19,7 +19,7 @@ contract TutorialMarketInfo is Test {
     // WETH Silo
     ISilo public constant SILO1 = ISilo(0x58A31D1f2Be10Bf2b48C6eCfFbb27D1f3194e547);
     // wstETH/WETH market config for both Silos
-    ISiloConfig public constant SILO_CONFIG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7d64f2597CFb74bAB); 
+    ISiloConfig public constant SILO_CONFIG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7d64f2597CFb74bAB);
     // helper to read the data from Silo protocol, you can get the latest address from V2 protocol deployments
     ISiloLens public SILO_LENS;
     // example user address
@@ -35,7 +35,7 @@ contract TutorialMarketInfo is Test {
 
     // Every market consists of two ERC4626 vaults unified by one setup represented by SiloConfig. In the following
     // example there are two vaults: wstETH vault and WETH vault. This test will show the relation between SiloConfig
-    // and vaults (Silos) addresses. 
+    // and vaults (Silos) addresses.
     function test_getVaultAddresses() public view {
         (address silo0, address silo1) = SILO_CONFIG.getSilos();
 
@@ -50,8 +50,8 @@ contract TutorialMarketInfo is Test {
     }
 
     // SiloConfig is a setup for silo0 and silo1. SiloConfig stores ConfigData, which is an individual setup of
-    // each Silo. Interest rate models, LTs and oracles can be different for Silos in one market. For example, 
-    // wstETH/WETH market is represented by wstETH and WETH Silos. wstETH Silo can have kinked interest rate 
+    // each Silo. Interest rate models, LTs and oracles can be different for Silos in one market. For example,
+    // wstETH/WETH market is represented by wstETH and WETH Silos. wstETH Silo can have kinked interest rate
     // model, WETH can have dynamic interest rate model. You can set 80% as LT for wstETH Silo on deployment and
     // 99% as LT for WETH Silo. Silo V2 is permissionless, anyone can deploy Silos with any market parameters.
     function test_getMarketParams() public view {
@@ -80,16 +80,16 @@ contract TutorialMarketInfo is Test {
         assertTrue(silo0Setup.solvencyOracle != address(0), "SolvencyOracle is not zero address");
 
         assertTrue(
-            ISiloOracle(silo0Setup.solvencyOracle).quote(10**18, 0x5979D7b546E38E414F7E9822514be443A4800529) > 0,
+            ISiloOracle(silo0Setup.solvencyOracle).quote(10 ** 18, 0x5979D7b546E38E414F7E9822514be443A4800529) > 0,
             "solvencyOracle can provide a price for wstETH"
         );
 
         assertTrue(silo0Setup.maxLtvOracle != address(0), "maxLtvOracle is not zero address");
-        assertEq(silo0Setup.maxLtv, 92 * 10**16, "MaxLtv is 92%");
-        assertEq(silo0Setup.lt, 96 * 10**16, "Lt is 96%");
-        assertEq(silo0Setup.liquidationTargetLtv, 95 * 10**16, "LiquidationTargetLtv is 95%");
-        assertEq(silo0Setup.liquidationFee, 15 * 10**15, "LiquidationFee is 1.5%");
-        assertEq(silo0Setup.flashloanFee, 1 * 10**15, "LiquidationFee is 1%");
+        assertEq(silo0Setup.maxLtv, 92 * 10 ** 16, "MaxLtv is 92%");
+        assertEq(silo0Setup.lt, 96 * 10 ** 16, "Lt is 96%");
+        assertEq(silo0Setup.liquidationTargetLtv, 95 * 10 ** 16, "LiquidationTargetLtv is 95%");
+        assertEq(silo0Setup.liquidationFee, 15 * 10 ** 15, "LiquidationFee is 1.5%");
+        assertEq(silo0Setup.flashloanFee, 1 * 10 ** 15, "LiquidationFee is 1%");
 
         assertTrue(silo0Setup.hookReceiver != address(0), "HookReceiver is not zero address");
         assertFalse(silo0Setup.callBeforeQuote, "CallBeforeQuote is false");

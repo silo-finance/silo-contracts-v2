@@ -21,11 +21,7 @@ contract SiloHookReceiverTest is Test {
     function setUp() public {
         hookReceiver = new SiloHookReceiverHarness();
 
-        vm.mockCall(
-            silo,
-            abi.encodeWithSelector(ISilo.updateHooks.selector),
-            abi.encode(true)
-        );
+        vm.mockCall(silo, abi.encodeWithSelector(ISilo.updateHooks.selector), abi.encode(true));
     }
 
     /*

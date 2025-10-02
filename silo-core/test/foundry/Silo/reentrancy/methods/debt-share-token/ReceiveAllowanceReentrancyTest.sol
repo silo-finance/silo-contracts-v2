@@ -29,7 +29,7 @@ contract ReceiveAllowanceReentrancyTest is MethodReentrancyTest {
         address borrower = makeAddr("Borrower");
         address receiver = makeAddr("Receiver");
 
-        (,,address debtToken) = config.getShareTokens(address(silo0));
+        (,, address debtToken) = config.getShareTokens(address(silo0));
         ShareDebtToken(debtToken).receiveAllowance(borrower, receiver);
 
         (,, debtToken) = config.getShareTokens(address(silo1));

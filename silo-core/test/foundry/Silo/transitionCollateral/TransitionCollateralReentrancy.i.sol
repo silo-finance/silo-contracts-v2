@@ -44,21 +44,28 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
         silo0.updateHooks();
     }
 
-    function initialize(ISiloConfig, bytes calldata) public override {
-    }
+    function initialize(ISiloConfig, bytes calldata) public override {}
 
-    function hookReceiverConfig(address _silo) external view override returns (uint24 hooksBefore, uint24 hooksAfter) {
+    function hookReceiverConfig(address _silo)
+        external
+        view
+        override
+        returns (uint24 hooksBefore, uint24 hooksAfter)
+    {
         hooksBefore = 0;
         hooksAfter = _silo == address(silo0) ? uint24(Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER) : 0;
     }
 
-    function beforeAction(address, uint256, bytes calldata) external override pure {
+    function beforeAction(address, uint256, bytes calldata) external pure override {
         revert("not in use");
     }
 
     function afterAction(address _silo, uint256 _action, bytes calldata _input) external override {
         assertEq(_silo, address(silo0), "hook setup is only for silo0");
-        assertTrue(_action.matchAction(Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER), "hook setup is only for share transfer");
+        assertTrue(
+            _action.matchAction(Hook.COLLATERAL_TOKEN | Hook.SHARE_TOKEN_TRANSFER),
+            "hook setup is only for share transfer"
+        );
 
         Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_input);
         address borrower = input.sender;
@@ -70,21 +77,13 @@ contract TransitionCollateralReentrancyTest is SiloLittleHelper, Test, PartialLi
 
         afterActionExecuted = true;
 
-        (
-            uint256 collateralToLiquidate, uint256 debtToRepay,
-        ) = partialLiquidation.maxLiquidation(borrower);
+        (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
 
         assertEq(collateralToLiquidate, 3, "collateralToLiquidate (5 - 2 underestimation)");
         assertEq(debtToRepay, 5, "debtToRepay");
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        partialLiquidation.liquidationCall(
-            address(token0),
-            address(token1),
-            borrower,
-            debtToRepay,
-            false
-        );
+        partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debtToRepay, false);
     }
 
     /*

@@ -13,7 +13,6 @@ library TestLib {
     }
 }
 
-
 // forge test -vv --mc FuncAsParamTest
 contract FuncAsParamTest is Test {
     // just to makes sure this is not consume more than a flag
@@ -23,7 +22,6 @@ contract FuncAsParamTest is Test {
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas with flag", gasStart - gasEnd);
-
 
         gasStart = gasleft();
         _operation(100, 50, TestLib.add);
