@@ -6,7 +6,7 @@ import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloRouterV2} from "silo-core/contracts/silo-router/SiloRouterV2.sol";
 import {SiloRouterV2Implementation} from "silo-core/contracts/silo-router/SiloRouterV2Implementation.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloRouterV2Deploy.s.sol \
         --ffi --rpc-url $RPC_INK --broadcast --verify

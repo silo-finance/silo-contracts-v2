@@ -37,7 +37,8 @@ contract InterestRateModelConfigData {
 
     function _readDataFromJson() internal view returns (ConfigData[] memory) {
         return abi.decode(
-            VmLib.vm().parseJson(_readInput("InterestRateModelConfigs"), string(abi.encodePacked("."))), (ConfigData[])
+            VmLib.vm().parseJson(_readInput("InterestRateModelConfigs"), string(abi.encodePacked("."))),
+            (ConfigData[])
         );
     }
 

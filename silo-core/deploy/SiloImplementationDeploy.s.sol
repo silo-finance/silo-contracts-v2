@@ -91,7 +91,7 @@ contract SiloImplementationDeploy is CommonDeploy {
 
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         console2.log("New ShareProtectedCollateralToken deployed", shareProtectedCollateralTokenImpl);
-        
+
         address shareDebtTokenImpl = address(new ShareDebtToken());
         console2.log("New ShareDebtToken deployed", shareDebtTokenImpl);
 

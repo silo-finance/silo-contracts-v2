@@ -20,19 +20,10 @@ library SiloConfigsNames {
 }
 
 library SiloDeployments {
-    string constant public DEPLOYMENTS_FILE = "silo-core/deploy/silo/_siloDeployments.json";
+    string public constant DEPLOYMENTS_FILE = "silo-core/deploy/silo/_siloDeployments.json";
 
-    function save(
-        string memory _chain,
-        string memory _name,
-        address _deployed
-    ) internal {
-        KeyValueStorage.setAddress(
-            DEPLOYMENTS_FILE,
-            _chain,
-            _name,
-            _deployed
-        );
+    function save(string memory _chain, string memory _name, address _deployed) internal {
+        KeyValueStorage.setAddress(DEPLOYMENTS_FILE, _chain, _name, _deployed);
     }
 
     function get(string memory _chain, string memory _name) internal returns (address) {
@@ -42,10 +33,6 @@ library SiloDeployments {
             return shared;
         }
 
-        return KeyValueStorage.getAddress(
-            DEPLOYMENTS_FILE,
-            _chain,
-            _name
-        );
+        return KeyValueStorage.getAddress(DEPLOYMENTS_FILE, _chain, _name);
     }
 }

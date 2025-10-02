@@ -10,7 +10,6 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
 import {SiloCoreDeployments, SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 
-
 contract CheckIrmConfig is ICheck {
     ISiloConfig.ConfigData internal configData;
     string internal siloName;
@@ -49,7 +48,7 @@ contract CheckIrmConfig is ICheck {
     function _isKinkIrm(address _irm) internal returns (bool isKinkIrm) {
         address factory = AddrLib.getAddress(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY);
         if (factory == address(0)) return false;
-        
+
         return IDynamicKinkModelFactory(factory).createdByFactory(_irm);
     }
 }

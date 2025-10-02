@@ -9,7 +9,9 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 
-import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/LiquidationHelper.sol";
+import {
+    LiquidationHelper, ILiquidationHelper
+} from "silo-core/contracts/utils/liquidationHelper/LiquidationHelper.sol";
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 

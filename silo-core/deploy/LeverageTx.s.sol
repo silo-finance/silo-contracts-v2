@@ -12,7 +12,8 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
-import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from
+    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 
 import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -21,7 +22,7 @@ import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapMod
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/LeverageTx.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast
@@ -116,10 +117,11 @@ contract LeverageTx is CommonDeploy {
         _displayBorrowerState();
     }
 
-    function _calculateDebtReceiveApproval(
-        uint256 _flashAmount,
-        ISilo _flashFrom
-    ) internal view returns (uint256 debtReceiveApproval) {
+    function _calculateDebtReceiveApproval(uint256 _flashAmount, ISilo _flashFrom)
+        internal
+        view
+        returns (uint256 debtReceiveApproval)
+    {
         uint256 borrowAssets = _flashAmount + _flashFrom.flashFee(_flashFrom.asset(), _flashAmount);
         debtReceiveApproval = _flashFrom.convertToShares(borrowAssets, ISilo.AssetType.Debt);
     }

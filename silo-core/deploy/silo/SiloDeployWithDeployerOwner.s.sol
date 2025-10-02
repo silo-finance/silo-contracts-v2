@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=core CONFIG=solvBTC.BBN_solvBTC \
     forge script silo-core/deploy/silo/SiloDeployWithDeployerOwner.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify

@@ -11,23 +11,15 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 library SiloIncentivesControllerDeployments {
-    string constant public DEPLOYMENTS_FILE = "silo-core/deploy/incentives-controller/_siloIncentivesControllerDeployments.json";
+    string public constant DEPLOYMENTS_FILE =
+        "silo-core/deploy/incentives-controller/_siloIncentivesControllerDeployments.json";
 
     error InvalidShareToken();
 
-    function save(
-        string memory _chain,
-        address _shareToken,
-        address _deployed
-    ) internal {
+    function save(string memory _chain, address _shareToken, address _deployed) internal {
         string memory _name = _constructName(_shareToken);
 
-        KeyValueStorage.setAddress(
-            DEPLOYMENTS_FILE,
-            _chain,
-            _name,
-            _deployed
-        );
+        KeyValueStorage.setAddress(DEPLOYMENTS_FILE, _chain, _name, _deployed);
     }
 
     function get(string memory _chain, address _shareToken) internal returns (address) {
@@ -39,11 +31,7 @@ library SiloIncentivesControllerDeployments {
             return shared;
         }
 
-        return KeyValueStorage.getAddress(
-            DEPLOYMENTS_FILE,
-            _chain,
-            _name
-        );
+        return KeyValueStorage.getAddress(DEPLOYMENTS_FILE, _chain, _name);
     }
 
     function _constructName(address _shareToken) internal view returns (string memory name) {
@@ -61,7 +49,6 @@ library SiloIncentivesControllerDeployments {
             silo0AssetSymbol = TokenHelper.symbol(silo0Asset);
             silo1AssetSymbol = TokenHelper.symbol(silo1Asset);
         }
-        
 
         uint256 silo0Id = siloConfig.SILO_ID();
 
@@ -91,31 +78,26 @@ library SiloIncentivesControllerDeployments {
 
         (protectedShareToken, collateralShareToken, debtShareToken) = _siloConfig.getShareTokens(silo0);
 
-        isSilo0 = _shareToken == protectedShareToken ||
-            _shareToken == collateralShareToken ||
-            _shareToken == debtShareToken;
+        isSilo0 =
+            _shareToken == protectedShareToken || _shareToken == collateralShareToken || _shareToken == debtShareToken;
 
         if (!isSilo0) {
             (protectedShareToken, collateralShareToken, debtShareToken) = _siloConfig.getShareTokens(silo1);
 
-            bool isSilo1 = _shareToken == protectedShareToken ||
-                _shareToken == collateralShareToken ||
-                _shareToken == debtShareToken;
+            bool isSilo1 = _shareToken == protectedShareToken || _shareToken == collateralShareToken
+                || _shareToken == debtShareToken;
 
             require(isSilo1, InvalidShareToken());
         }
     }
 
-    function _getTokenType(
-        ISiloConfig _siloConfig,
-        address _silo,
-        address _shareToken
-    ) internal view returns (string memory tokenType) {
-        (
-            address protectedShareToken,
-            address collateralShareToken,
-            address debtShareToken
-        ) = _siloConfig.getShareTokens(_silo);
+    function _getTokenType(ISiloConfig _siloConfig, address _silo, address _shareToken)
+        internal
+        view
+        returns (string memory tokenType)
+    {
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            _siloConfig.getShareTokens(_silo);
 
         if (_shareToken == collateralShareToken) return "Collateral";
         if (_shareToken == protectedShareToken) return "Protected";

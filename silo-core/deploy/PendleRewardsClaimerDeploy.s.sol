@@ -8,7 +8,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {PendleRewardsClaimer} from "silo-core/contracts/hooks/PendleRewardsClaimer.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/PendleRewardsClaimerDeploy.s.sol \
         --ffi --rpc-url $RPC_MAINNET --broadcast --verify

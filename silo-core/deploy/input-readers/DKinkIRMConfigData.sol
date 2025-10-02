@@ -54,10 +54,10 @@ contract DKinkIRMConfigData {
         return _readDataFromJson();
     }
 
-    function getConfigData(string memory _name) 
-        public 
-        view 
-        returns (IDynamicKinkModel.Config memory modelConfig, IDynamicKinkModel.ImmutableArgs memory immutableArgs) 
+    function getConfigData(string memory _name)
+        public
+        view
+        returns (IDynamicKinkModel.Config memory modelConfig, IDynamicKinkModel.ImmutableArgs memory immutableArgs)
     {
         ConfigData[] memory configs = _readDataFromJson();
         bool found = false;

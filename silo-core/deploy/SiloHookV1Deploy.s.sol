@@ -6,7 +6,7 @@ import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";
 import {ISiloHookV1} from "silo-core/contracts/interfaces/ISiloHookV1.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloHookV1Deploy.s.sol \
         --ffi --rpc-url $RPC_INK --broadcast --verify

@@ -50,13 +50,13 @@ library PriceFormatter {
 
         if (integerPart == 0) {
             return string.concat("0.", fractionalStr, "e18");
-        } if (fractionalPart == 0) {
+        }
+        if (fractionalPart == 0) {
             return string.concat(integerStr, "e18");
         } else {
             return string.concat(integerStr, ".", fractionalStr, "e18");
         }
     }
-
 
     function formatPriceInE(uint256 _in, uint256 _e) internal pure returns (string memory) {
         uint256 base = 10 ** _e;
@@ -78,7 +78,8 @@ library PriceFormatter {
 
         if (integerPart == 0) {
             return string.concat("0.", fractionalStr, "e", vm.toString(_e));
-        } if (fractionalPart == 0) {
+        }
+        if (fractionalPart == 0) {
             return string.concat(integerStr, "e", vm.toString(_e));
         } else {
             return string.concat(integerStr, ".", fractionalStr, "e", vm.toString(_e));
@@ -89,6 +90,6 @@ library PriceFormatter {
         uint256 l = bytes(vm.toString(_in)).length;
         if (l < 6) return "";
 
-        return string.concat(" [", vm.toString(l) ," digits]");
+        return string.concat(" [", vm.toString(l), " digits]");
     }
 }

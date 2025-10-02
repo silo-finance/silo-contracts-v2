@@ -3,9 +3,11 @@ pragma solidity 0.8.28;
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
-import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {
+    IInterestRateModelV2, InterestRateModelV2
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/InterestRateModelV2Deploy.s.sol:InterestRateModelV2Deploy \
         --ffi --rpc-url $RPC_INK --broadcast --verify

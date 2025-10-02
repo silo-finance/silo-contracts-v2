@@ -39,4 +39,3 @@ contract SiloDeployWithHookReceiverOwner is SiloDeploy {
         owner = AddrLib.getAddress(hookReceiverOwnerKey);
     }
 }
-

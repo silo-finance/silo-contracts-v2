@@ -14,7 +14,7 @@ import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
 
 import {SiloImplementationDeploy} from "./SiloImplementationDeploy.s.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloDeployerDeploy.s.sol \
         --ffi --rpc-url $RPC_MAINNET --broadcast --verify
@@ -99,7 +99,7 @@ contract SiloDeployerDeploy is CommonDeploy {
             dkinkIRMConfigFactory != address(0),
             string.concat(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, " not deployed")
         );
-        
+
         console2.log("dkinkIRMConfigFactory", dkinkIRMConfigFactory);
 
         address siloImpl = SiloCoreDeployments.get(SiloCoreContracts.SILO, chainAlias);
