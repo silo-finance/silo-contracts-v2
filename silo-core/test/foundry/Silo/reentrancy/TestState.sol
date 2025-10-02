@@ -38,7 +38,7 @@ contract ReentrancyTestState {
 
     function setReenter(bool _status) external {
         reenter = _status;
-    } 
+    }
 
     function setReenterViaLiquidationCall(bool _status) external {
         reenterViaLiquidationCall = _status;
@@ -63,7 +63,7 @@ library TestStateLib {
     ) internal {
         bytes memory code = Utils.getCodeAt(_ADDRESS);
 
-        if (code.length !=0) return;
+        if (code.length != 0) return;
 
         ReentrancyTestState state = new ReentrancyTestState();
 
@@ -71,7 +71,9 @@ library TestStateLib {
 
         VmLib.vm().etch(_ADDRESS, deployedCode);
 
-        ReentrancyTestState(_ADDRESS).set(_siloConfig, _silo0, _silo1, _token0, _token1, _hookReceiver, _leverageRouter);
+        ReentrancyTestState(_ADDRESS).set(
+            _siloConfig, _silo0, _silo1, _token0, _token1, _hookReceiver, _leverageRouter
+        );
         ReentrancyTestState(_ADDRESS).setReenter(true);
         ReentrancyTestState(_ADDRESS).setLeverageReenter(false);
     }

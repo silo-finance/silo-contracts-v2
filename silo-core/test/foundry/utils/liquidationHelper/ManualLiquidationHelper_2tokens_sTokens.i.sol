@@ -25,7 +25,7 @@ contract ManualLiquidationHelper2TokensSTokensTest is ManualLiquidationHelperCom
 
         assertEq(collateralConfig.liquidationFee, 0.05e18, "liquidationFee");
 
-       _debtAsset = address(token1);
+        _debtAsset = address(token1);
     }
 
     function _executeLiquidation() internal override {

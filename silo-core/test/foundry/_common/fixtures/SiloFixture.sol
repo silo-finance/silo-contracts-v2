@@ -34,10 +34,12 @@ contract SiloDeploy_Local is SiloDeployWithDeployerOwner {
         siloConfigOverride = _override;
     }
 
-    function beforeCreateSilo(
-        ISiloConfig.InitData memory _config,
-        address _hookReceiverImplementation
-    ) internal view override returns (address hookImplementation) {
+    function beforeCreateSilo(ISiloConfig.InitData memory _config, address _hookReceiverImplementation)
+        internal
+        view
+        override
+        returns (address hookImplementation)
+    {
         // Override the default values if overrides are provided
         if (siloConfigOverride.token0 != address(0)) {
             console2.log("[override] token0 %s -> %s", _config.token0, siloConfigOverride.token0);
@@ -58,13 +60,16 @@ contract SiloDeploy_Local is SiloDeployWithDeployerOwner {
         }
 
         if (siloConfigOverride.maxLtvOracle0 != address(0)) {
-            console2.log("[override] maxLtvOracle0 %s -> %s", _config.maxLtvOracle0, siloConfigOverride.maxLtvOracle0);
+            console2.log(
+                "[override] maxLtvOracle0 %s -> %s", _config.maxLtvOracle0, siloConfigOverride.maxLtvOracle0
+            );
 
             _config.maxLtvOracle0 = siloConfigOverride.maxLtvOracle0;
         }
 
-        if(siloConfigOverride.hookReceiver != address(0) ||
-            siloConfigOverride.hookReceiverImplementation != address(0)
+        if (
+            siloConfigOverride.hookReceiver != address(0)
+                || siloConfigOverride.hookReceiverImplementation != address(0)
         ) {
             console2.log("[override] hookReceiver %s -> %s", _config.hookReceiver, siloConfigOverride.hookReceiver);
             console2.log("[override] hookImplementation -> %s", siloConfigOverride.hookReceiverImplementation);
@@ -84,14 +89,7 @@ contract SiloFixture is StdCheats, CommonBase {
 
     function deploy_ETH_USDC()
         external
-        returns (
-            ISiloConfig siloConfig,
-            ISilo silo0,
-            ISilo silo1,
-            address weth,
-            address usdc,
-            address hookReceiver
-        )
+        returns (ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc, address hookReceiver)
     {
         return _deploy(new SiloDeployWithDeployerOwner(), SiloConfigsNames.SILO_ETH_USDC_UNI_V3);
     }
@@ -124,7 +122,9 @@ contract SiloFixture is StdCheats, CommonBase {
     {
         return _deploy(
             new SiloDeploy_Local(_override),
-            bytes(_override.configName).length == 0 ? SiloConfigsNames.SILO_LOCAL_NO_ORACLE_SILO : _override.configName
+            bytes(_override.configName).length == 0
+                ? SiloConfigsNames.SILO_LOCAL_NO_ORACLE_SILO
+                : _override.configName
         );
     }
 

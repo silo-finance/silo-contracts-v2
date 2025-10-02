@@ -16,7 +16,6 @@ contract MintTest is SiloLittleHelper, Test {
     event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
     event DepositProtected(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
-
     function setUp() public {
         siloConfig = _setUpLocalFixture();
     }

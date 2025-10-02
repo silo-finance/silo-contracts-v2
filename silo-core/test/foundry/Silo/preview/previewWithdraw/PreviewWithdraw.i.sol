@@ -18,7 +18,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
     address immutable depositor;
     address immutable borrower;
-    
+
     constructor() {
         depositor = makeAddr("Depositor");
         borrower = makeAddr("Borrower");
@@ -32,10 +32,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewWithdraw_noInterestNoDebt_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_previewWithdraw_noInterestNoDebt_fuzz(
-        uint128 _assetsOrShares,
-        bool _partial
-    ) public {
+    function test_previewWithdraw_noInterestNoDebt_fuzz(uint128 _assetsOrShares, bool _partial) public {
         uint256 amountIn = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
         vm.assume(amountIn > 0);
 
@@ -54,11 +51,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     two assets: we need to borrow on silo0 in addition
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_previewWithdraw_debt_fuzz(
-        uint128 _assetsOrShares,
-        bool _interest,
-        bool _partial
-    ) public {
+    function test_previewWithdraw_debt_fuzz(uint128 _assetsOrShares, bool _interest, bool _partial) public {
         vm.assume(_assetsOrShares > 1); // can not create debt with 1 collateral
         uint128 amountToUse = _partial ? uint128(uint256(_assetsOrShares) * 37 / 100) : _assetsOrShares;
         vm.assume(amountToUse > 0);
@@ -113,12 +106,12 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
 
         if (_interest) _applyInterest();
 
-        uint256 minInput = _useRedeem() ? silo1.convertToShares(1) : silo1.convertToAssets(SiloMathLib._DECIMALS_OFFSET_POW);
+        uint256 minInput =
+            _useRedeem() ? silo1.convertToShares(1) : silo1.convertToAssets(SiloMathLib._DECIMALS_OFFSET_POW);
         uint256 minPreview = _getPreview(minInput);
 
         if (!_interest || _collateralType() == ISilo.CollateralType.Protected) {
             _assertEqPrevAmountInSharesWhenNoInterest(minPreview, minInput);
-
         }
 
         _assertPreviewWithdraw(minPreview, minInput);
@@ -206,7 +199,7 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     }
 
     function _getShareToken() internal view virtual returns (IShareToken shareToken) {
-        (address protectedShareToken, address collateralShareToken, ) = siloConfig.getShareTokens(address(silo1));
+        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo1));
         shareToken = _collateralType() == ISilo.CollateralType.Collateral
             ? IShareToken(collateralShareToken)
             : IShareToken(protectedShareToken);
@@ -231,7 +224,18 @@ contract PreviewWithdrawTest is SiloLittleHelper, Test {
     }
 
     function _assertEqPrevAmountInSharesWhenNoInterest(uint256 _preview, uint256 _amountIn) private pure {
-        if (_useRedeem()) assertEq(_preview, _amountIn / SiloMathLib._DECIMALS_OFFSET_POW, "previewWithdraw == assets == shares, when no interest");
-        else assertEq(_preview, _amountIn * SiloMathLib._DECIMALS_OFFSET_POW, "previewWithdraw == assets == shares, when no interest");
+        if (_useRedeem()) {
+            assertEq(
+                _preview,
+                _amountIn / SiloMathLib._DECIMALS_OFFSET_POW,
+                "previewWithdraw == assets == shares, when no interest"
+            );
+        } else {
+            assertEq(
+                _preview,
+                _amountIn * SiloMathLib._DECIMALS_OFFSET_POW,
+                "previewWithdraw == assets == shares, when no interest"
+            );
+        }
     }
 }

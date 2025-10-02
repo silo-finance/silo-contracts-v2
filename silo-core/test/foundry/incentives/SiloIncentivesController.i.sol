@@ -13,7 +13,6 @@ import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/ID
 import {Hook} from "silo-core/contracts/lib/Hook.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
-
 import {SiloConfigOverride} from "../_common/fixtures/SiloFixture.sol";
 import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
 
@@ -24,10 +23,7 @@ contract HookContract {
     SiloIncentivesController controller;
     MintableToken notifierToken;
 
-    function setup(
-        SiloIncentivesController _controller,
-        MintableToken _notifierToken
-    ) public {
+    function setup(SiloIncentivesController _controller, MintableToken _notifierToken) public {
         controller = _controller;
         notifierToken = _notifierToken;
     }
@@ -47,11 +43,16 @@ contract HookContract {
         hooksAfter = uint24(Hook.SHARE_TOKEN_TRANSFER | Hook.COLLATERAL_TOKEN);
     }
 
-    function afterAction(address /* _silo */, uint256 /* _action */, bytes calldata _inputAndOutput) external {
+    function afterAction(address, /* _silo */ uint256, /* _action */ bytes calldata _inputAndOutput) external {
         Hook.AfterTokenTransfer memory input = Hook.afterTokenTransferDecode(_inputAndOutput);
 
         controller.afterTokenTransfer(
-            input.sender, input.senderBalance, input.recipient, input.recipientBalance, input.totalSupply, input.amount
+            input.sender,
+            input.senderBalance,
+            input.recipient,
+            input.recipientBalance,
+            input.totalSupply,
+            input.amount
         );
     }
 }
@@ -130,12 +131,14 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         // it will not distribute less than 1e3, most likely because of decimals offset
         uint256 emissionPerSecond = 1e6;
 
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: address(_rewardToken),
-            distributionEnd: uint40(block.timestamp + 100),
-            emissionPerSecond: uint104(emissionPerSecond)
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: address(_rewardToken),
+                distributionEnd: uint40(block.timestamp + 100),
+                emissionPerSecond: uint104(emissionPerSecond)
+            })
+        );
 
         assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "[user1] no rewards without deposit");
         assertEq(_controller.getRewardsBalance(user2, _PROGRAM_NAME), 0, "[user2] no rewards without deposit");
@@ -235,12 +238,14 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         uint256 user1Deposit = 1e18;
         uint256 user2Deposit = _user2Deposit ? user1Deposit : 0;
 
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: address(_rewardToken),
-            distributionEnd: uint40(block.timestamp + 100),
-            emissionPerSecond: uint104(emissionPerSecond) // it will not distribute less than 1e3, most likely because of offset
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: address(_rewardToken),
+                distributionEnd: uint40(block.timestamp + 100),
+                emissionPerSecond: uint104(emissionPerSecond) // it will not distribute less than 1e3, most likely because of offset
+            })
+        );
 
         assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "[user1] no rewards without deposit");
         assertEq(_controller.getRewardsBalance(user2, _PROGRAM_NAME), 0, "[user2] no rewards without deposit");
@@ -260,7 +265,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         );
         assertEq(
             _controller.getRewardsBalance(user2, _PROGRAM_NAME),
-            _user2Deposit ? emissionPerSecond * 50 / 2: 0,
+            _user2Deposit ? emissionPerSecond * 50 / 2 : 0,
             "[user2] full rewards"
         );
 
@@ -286,9 +291,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         names[1] = Strings.toHexString(address(_rewardToken));
 
         assertEq(
-            _controller.getRewardsBalance(user1, _PROGRAM_NAME),
-            0,
-            "[user1] user1 claimed all from regular program"
+            _controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "[user1] user1 claimed all from regular program"
         );
 
         assertEq(
@@ -330,11 +333,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         vm.prank(user2);
         _controller.claimRewards(user2);
 
-        assertEq(
-            _rewardToken.balanceOf(user2),
-            _user2Deposit ? totalRewards / 2 : 0,
-            "[user2] rewards at the end"
-        );
+        assertEq(_rewardToken.balanceOf(user2), _user2Deposit ? totalRewards / 2 : 0, "[user2] rewards at the end");
     }
 
     /*
@@ -356,12 +355,14 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         uint256 user1Deposit = 1e18;
         uint256 user2Deposit = _user2Deposit ? user1Deposit : 0;
 
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: address(_rewardToken),
-            distributionEnd: uint40(block.timestamp + 100),
-            emissionPerSecond: uint104(emissionPerSecond) // it will not distribute less than 1e3, most likely because of offset
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: address(_rewardToken),
+                distributionEnd: uint40(block.timestamp + 100),
+                emissionPerSecond: uint104(emissionPerSecond) // it will not distribute less than 1e3, most likely because of offset
+            })
+        );
 
         assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "[user1] no rewards without deposit");
         assertEq(_controller.getRewardsBalance(user2, _PROGRAM_NAME), 0, "[user2] no rewards without deposit");
@@ -405,9 +406,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         vm.stopPrank();
 
         assertEq(
-            _controller.getRewardsBalance(user1, _PROGRAM_NAME),
-            0,
-            "[user1] no rewards, because it was claimed"
+            _controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "[user1] no rewards, because it was claimed"
         );
 
         assertEq(
@@ -465,12 +464,14 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_scenario_single_program -vvv
     */
     function test_scenario_single_program() public {
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: address(_rewardToken),
-            distributionEnd: uint40(block.timestamp + 100),
-            emissionPerSecond: uint104(0)
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: address(_rewardToken),
+                distributionEnd: uint40(block.timestamp + 100),
+                emissionPerSecond: uint104(0)
+            })
+        );
 
         assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "no rewards without deposit");
 

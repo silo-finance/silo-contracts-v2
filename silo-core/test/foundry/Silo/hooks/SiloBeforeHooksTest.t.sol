@@ -12,7 +12,6 @@ import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {SiloConfigOverride} from "../../_common/fixtures/SiloFixture.sol";
 
-
 contract HookReceiver is IHookReceiver, Test {
     bool imIn;
 
@@ -25,7 +24,7 @@ contract HookReceiver is IHookReceiver, Test {
     }
 
     /// @notice state of Silo before action, can be also without interest, if you need them, call silo.accrueInterest()
-    function beforeAction(address /* _silo */, uint256 _action, bytes calldata _input) external {
+    function beforeAction(address, /* _silo */ uint256 _action, bytes calldata _input) external {
         // return to not create infinite loop
         if (imIn) return;
 

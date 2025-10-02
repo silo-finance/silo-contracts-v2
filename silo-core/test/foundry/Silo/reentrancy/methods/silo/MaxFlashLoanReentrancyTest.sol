@@ -19,7 +19,7 @@ contract MaxFlashLoanReentrancyTest is MethodReentrancyTest {
         description = "maxFlashLoan(address)";
     }
 
-    function _ensureItWillNotRevert() view internal {
+    function _ensureItWillNotRevert() internal view {
         address token0 = TestStateLib.token0();
         address token1 = TestStateLib.token1();
 

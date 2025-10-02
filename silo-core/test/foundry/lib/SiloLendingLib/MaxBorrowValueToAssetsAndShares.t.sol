@@ -8,7 +8,8 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {TokenMock} from "silo-core/test/foundry/_mocks/TokenMock.sol";
 import {OracleMock} from "silo-core/test/foundry/_mocks/OracleMock.sol";
-import {MaxBorrowValueToAssetsAndSharesTestData} from "../../data-readers/MaxBorrowValueToAssetsAndSharesTestData.sol";
+import {MaxBorrowValueToAssetsAndSharesTestData} from
+    "../../data-readers/MaxBorrowValueToAssetsAndSharesTestData.sol";
 
 /*
     forge test -vv --mc MaxBorrowValueToAssetsAndSharesTest
@@ -49,8 +50,12 @@ contract MaxBorrowValueToAssetsAndSharesTest is Test {
                 testDatas[i].input.totalDebtShares
             );
 
-            assertEq(maxAssets, testDatas[i].output.assets, string(abi.encodePacked(testDatas[i].name, " > assets")));
-            assertEq(maxShares, testDatas[i].output.shares, string(abi.encodePacked(testDatas[i].name, " > shares")));
+            assertEq(
+                maxAssets, testDatas[i].output.assets, string(abi.encodePacked(testDatas[i].name, " > assets"))
+            );
+            assertEq(
+                maxShares, testDatas[i].output.shares, string(abi.encodePacked(testDatas[i].name, " > shares"))
+            );
         }
     }
 }

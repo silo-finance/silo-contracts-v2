@@ -21,8 +21,8 @@ import {ERC20UpgradableMock} from "../_mocks/ERC20UpgradableMock.sol";
 // solhint-disable func-name-mixedcase
 // FOUNDRY_PROFILE=core_test forge test -vv --mc ShareTokenTest
 contract ShareTokenTest is Test {
-    uint256 constant internal _DEBT_TOKE_BEFORE_ACTION = 0;
-    uint256 constant internal _DEBT_TOKE_AFTER_ACTION = Hook.DEBT_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
+    uint256 internal constant _DEBT_TOKE_BEFORE_ACTION = 0;
+    uint256 internal constant _DEBT_TOKE_AFTER_ACTION = Hook.DEBT_TOKEN | Hook.SHARE_TOKEN_TRANSFER;
 
     ShareDebtToken public sToken;
     SiloMock public silo;
@@ -74,10 +74,7 @@ contract ShareTokenTest is Test {
         sToken.initialize(ISilo(siloAddr), hookAddr, uint24(Hook.DEBT_TOKEN));
 
         vm.prank(siloAddr);
-        sToken.synchronizeHooks(
-            uint24(_DEBT_TOKE_BEFORE_ACTION),
-            uint24(_DEBT_TOKE_AFTER_ACTION)
-        );
+        sToken.synchronizeHooks(uint24(_DEBT_TOKE_BEFORE_ACTION), uint24(_DEBT_TOKE_AFTER_ACTION));
 
         uint256 amount = 1;
 
@@ -124,9 +121,8 @@ contract ShareTokenTest is Test {
 
         protectedShareToken.initialize(ISilo(siloAddr), hookAddr, uint24(Hook.PROTECTED_TOKEN));
 
-        IShareTokenInitializable debtShareToken = IShareTokenInitializable(
-            ShareDebtToken(Clones.clone(address(new ShareDebtToken())))
-        );
+        IShareTokenInitializable debtShareToken =
+            IShareTokenInitializable(ShareDebtToken(Clones.clone(address(new ShareDebtToken()))));
 
         debtShareToken.initialize(ISilo(siloAddr), hookAddr, uint24(Hook.DEBT_TOKEN));
 
@@ -167,14 +163,14 @@ contract ShareTokenTest is Test {
         uint256 balance = sToken.balanceOf(owner);
 
         hookReceiverMock.afterTokenTransferMock( // solhint-disable-line func-named-parameters
-                silo.ADDRESS(),
-                _DEBT_TOKE_AFTER_ACTION,
-                address(0), // zero address for mint
-                0, // initial total supply 0
-                owner,
-                balance + _amount, // owner balance after
-                sToken.totalSupply() + _amount, // total supply after mint
-                _amount
+            silo.ADDRESS(),
+            _DEBT_TOKE_AFTER_ACTION,
+            address(0), // zero address for mint
+            0, // initial total supply 0
+            owner,
+            balance + _amount, // owner balance after
+            sToken.totalSupply() + _amount, // total supply after mint
+            _amount
         );
     }
 }

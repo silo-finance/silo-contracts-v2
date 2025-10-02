@@ -14,7 +14,7 @@ contract BurnReentrancyTest is ShareTokenMethodReentrancyTest {
     }
 
     function verifyReentrancy() external {
-         ISiloConfig config = TestStateLib.siloConfig();
+        ISiloConfig config = TestStateLib.siloConfig();
 
         bool entered = config.reentrancyGuardEntered();
         assertTrue(entered, "Reentrancy is not enabled on a burn");

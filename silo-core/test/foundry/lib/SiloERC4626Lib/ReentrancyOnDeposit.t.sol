@@ -7,13 +7,11 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {TokenWithReentrancy} from "silo-core/test/foundry/_mocks/SiloERC4626Lib/TokenWithReentrancy.sol";
 
-import {
-    SiloERC4626LibConsumerVulnerable
-} from "silo-core/test/foundry/_mocks/SiloERC4626Lib/SiloERC4626LibConsumerVulnerable.sol";
+import {SiloERC4626LibConsumerVulnerable} from
+    "silo-core/test/foundry/_mocks/SiloERC4626Lib/SiloERC4626LibConsumerVulnerable.sol";
 
-import {
-    SiloERC4626LibConsumerNonVulnerable
-} from "silo-core/test/foundry/_mocks/SiloERC4626Lib/SiloERC4626LibConsumerNonVulnerable.sol";
+import {SiloERC4626LibConsumerNonVulnerable} from
+    "silo-core/test/foundry/_mocks/SiloERC4626Lib/SiloERC4626LibConsumerNonVulnerable.sol";
 
 // FOUNDRY_PROFILE=core_test forge test -vv --mc ReentrancyOnDepositTest --ffi
 contract ReentrancyOnDepositTest is Test {
@@ -57,14 +55,7 @@ contract ReentrancyOnDepositTest is Test {
         vm.expectEmit(false, false, false, true);
         emit TokenWithReentrancy.SiloAssetState(expectedCollateral);
 
-        _vulnerable.deposit(
-            _token,
-            _depositor,
-            0 /* assets */,
-            _SHARES,
-            _receiver,
-            _shareCollateralToken
-        );
+        _vulnerable.deposit(_token, _depositor, 0, /* assets */ _SHARES, _receiver, _shareCollateralToken);
     }
 
     // solhint-disable-next-line func-name-mixedcase
@@ -85,22 +76,11 @@ contract ReentrancyOnDepositTest is Test {
         vm.expectEmit(false, false, false, true);
         emit TokenWithReentrancy.SiloAssetState(expectedCollateral);
 
-        _nonVulnerable.deposit(
-            _token,
-            _depositor,
-            _ASSETS,
-            0 /* shares */,
-            _receiver,
-            _shareCollateralToken
-        );
+        _nonVulnerable.deposit(_token, _depositor, _ASSETS, 0, /* shares */ _receiver, _shareCollateralToken);
     }
 
     function _mockCalls() internal {
-        vm.mockCall(
-            address(_shareCollateralToken),
-            abi.encodePacked(IERC20.totalSupply.selector),
-            abi.encode(1000)
-        );
+        vm.mockCall(address(_shareCollateralToken), abi.encodePacked(IERC20.totalSupply.selector), abi.encode(1000));
 
         vm.mockCall(
             address(_shareCollateralToken),

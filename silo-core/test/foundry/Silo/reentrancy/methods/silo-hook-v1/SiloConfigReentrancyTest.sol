@@ -9,7 +9,6 @@ contract SiloConfigReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert");
         _ensureItWillNotRevert();
-        
     }
 
     function verifyReentrancy() external view {

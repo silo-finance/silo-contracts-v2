@@ -30,10 +30,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     forge test -vv --ffi --mt test_maxWithdraw_deposit_
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxWithdraw_deposit_fuzz(
-        uint112 _assets,
-        uint16 _assets2
-    ) public {
+    function test_maxWithdraw_deposit_fuzz(uint112 _assets, uint16 _assets2) public {
         vm.assume(_assets > 0);
         vm.assume(_assets2 > 0);
 
@@ -51,10 +48,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     forge test -vv --ffi --mt test_maxWithdraw_withDebt_
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxWithdraw_withDebt_1token_fuzz(
-        uint128 _collateral,
-        uint128 _toBorrow
-    ) public {
+    function test_maxWithdraw_withDebt_1token_fuzz(uint128 _collateral, uint128 _toBorrow) public {
         _maxWithdraw_withDebt(_collateral, _toBorrow);
     }
 
@@ -82,7 +76,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         uint64 _percentToBorrowOnSilo0
     ) public {
         // (uint128 _collateral, uint128 _toBorrow, uint64 _percentToBorrowOnSilo0) = (27114386650, 1, 18440395);
-        
+
         vm.assume(_percentToBorrowOnSilo0 <= 1e18);
 
         _createDebtOnSilo1(_collateral, _toBorrow);
@@ -96,7 +90,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
 
         if (borrowOnSilo0 > 0) {
             address any = makeAddr("yet another user");
-            _depositCollateral(borrowOnSilo0 * 2, any, true /* to silo 1 */);
+            _depositCollateral(borrowOnSilo0 * 2, any, true /* to silo 1 */ );
             vm.prank(any);
             collateralSilo.borrow(borrowOnSilo0, any, any);
             emit log_named_decimal_uint("LTV any", silo1.getLtv(any), 16);
@@ -115,10 +109,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     forge test -vv --ffi --mt test_maxWithdraw_whenInterest_
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxWithdraw_whenInterest_1token_fuzz(
-        uint128 _collateral,
-        uint128 _toBorrow
-    ) public {
+    function test_maxWithdraw_whenInterest_1token_fuzz(uint128 _collateral, uint128 _toBorrow) public {
         _maxWithdraw_whenInterest(_collateral, _toBorrow);
     }
 
@@ -142,12 +133,9 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     forge test -vv --ffi --mt test_maxWithdraw_bothSilosWithInterest_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxWithdraw_bothSilosWithInterest_fuzz(
-        uint128 _collateral,
-        uint128 _toBorrow
-    ) public {
+    function test_maxWithdraw_bothSilosWithInterest_fuzz(uint128 _collateral, uint128 _toBorrow) public {
         // (uint128 _collateral, uint128 _toBorrow) = (13637, 380);
-        
+
         _createDebtOnSilo0(_collateral, _toBorrow);
         _createDebtOnSilo1(_collateral, _toBorrow);
 
@@ -165,7 +153,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     }
 
     function _assertBorrowerHasNothingToWithdraw() internal view {
-        (, address collateralShareToken, ) = silo0.config().getShareTokens(address(silo0));
+        (, address collateralShareToken,) = silo0.config().getShareTokens(address(silo0));
 
         assertEq(silo0.maxWithdraw(borrower), 0, "expect maxWithdraw to be 0");
         assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 0, "expect share balance to be 0");
@@ -196,7 +184,9 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         }
 
         uint256 counterExample = isSolvent ? _underestimate : 1;
-        emit log_named_uint("=========== [counterexample] testing counterexample for maxWithdraw with", counterExample);
+        emit log_named_uint(
+            "=========== [counterexample] testing counterexample for maxWithdraw with", counterExample
+        );
 
         vm.prank(borrower);
         vm.expectRevert();
@@ -208,7 +198,9 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     }
 
     function _assertMaxWithdrawIsZeroAtTheEnd(uint256 _underestimate) internal {
-        emit log_named_uint("================= _assertMaxWithdrawIsZeroAtTheEnd ================= +/-", _underestimate);
+        emit log_named_uint(
+            "================= _assertMaxWithdrawIsZeroAtTheEnd ================= +/-", _underestimate
+        );
 
         ISilo collateralSilo = silo0;
         uint256 maxWithdraw = collateralSilo.maxWithdraw(borrower);

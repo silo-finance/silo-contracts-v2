@@ -8,13 +8,11 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {TokenWithReentrancy} from "silo-core/test/foundry/_mocks/SiloLendingLib/TokenWithReentrancy.sol";
 
-import {
-    SiloLendingLibConsumerVulnerable
-} from "silo-core/test/foundry/_mocks/SiloLendingLib/SiloLendingLibConsumerVulnerable.sol";
+import {SiloLendingLibConsumerVulnerable} from
+    "silo-core/test/foundry/_mocks/SiloLendingLib/SiloLendingLibConsumerVulnerable.sol";
 
-import {
-    SiloLendingLibConsumerNonVulnerable
-} from "silo-core/test/foundry/_mocks/SiloLendingLib/SiloLendingLibConsumerNonVulnerable.sol";
+import {SiloLendingLibConsumerNonVulnerable} from
+    "silo-core/test/foundry/_mocks/SiloLendingLib/SiloLendingLibConsumerNonVulnerable.sol";
 
 // FOUNDRY_PROFILE=core_test forge test -vv --mc ReentrancyOnRepayTest --ffi
 contract ReentrancyOnRepayTest is Test {
@@ -54,13 +52,7 @@ contract ReentrancyOnRepayTest is Test {
         vm.expectEmit(false, false, false, true);
         emit TokenWithReentrancy.SiloAssetState(expectedDebt);
 
-        _vulnerable.repay(
-            _getConfigData(),
-            0 /* assets */,
-            _SHARES,
-            _borrower,
-            _repayer
-        );
+        _vulnerable.repay(_getConfigData(), 0, /* assets */ _SHARES, _borrower, _repayer);
     }
 
     // solhint-disable-next-line func-name-mixedcase
@@ -81,13 +73,7 @@ contract ReentrancyOnRepayTest is Test {
         vm.expectEmit(false, false, false, true);
         emit TokenWithReentrancy.SiloAssetState(expectedDebt);
 
-        _nonVulnerable.repay(
-            _getConfigData(),
-            _ASSETS,
-            0 /* shares */,
-            _borrower,
-            _repayer
-        );
+        _nonVulnerable.repay(_getConfigData(), _ASSETS, 0, /* shares */ _borrower, _repayer);
     }
 
     // config data fn
@@ -97,11 +83,7 @@ contract ReentrancyOnRepayTest is Test {
     }
 
     function _mockCalls() internal {
-        vm.mockCall(
-            address(_debtShareToken),
-            abi.encodePacked(IERC20.totalSupply.selector),
-            abi.encode(1000)
-        );
+        vm.mockCall(address(_debtShareToken), abi.encodePacked(IERC20.totalSupply.selector), abi.encode(1000));
 
         vm.mockCall(
             address(_debtShareToken),
@@ -110,9 +92,7 @@ contract ReentrancyOnRepayTest is Test {
         );
 
         vm.mockCall(
-            address(_debtShareToken),
-            abi.encodeCall(IShareToken.burn, (_borrower, _repayer, 991)),
-            abi.encode(true)
+            address(_debtShareToken), abi.encodeCall(IShareToken.burn, (_borrower, _repayer, 991)), abi.encode(true)
         );
     }
 }

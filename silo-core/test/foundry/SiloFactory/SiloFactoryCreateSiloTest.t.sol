@@ -164,9 +164,7 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         );
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector); // shareProtectedCollateralTokenImpl empty
-        siloFactory.createSilo(
-            config, siloImpl, address(0), shareDebtTokenImpl, initData.deployer, msg.sender
-        );
+        siloFactory.createSilo(config, siloImpl, address(0), shareDebtTokenImpl, initData.deployer, msg.sender);
 
         vm.expectRevert(ISiloFactory.ZeroAddress.selector); // shareDebtTokenImpl empty
         siloFactory.createSilo(
@@ -184,15 +182,12 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
 
         ISiloConfig config = ISiloConfig(makeAddr("siloConfig"));
 
-        _createSiloNewSiloEventMockCalls(
-            siloImpl,
-            shareProtectedCollateralTokenImpl,
-            shareDebtTokenImpl,
-            config
-        );
+        _createSiloNewSiloEventMockCalls(siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, config);
 
         vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721InvalidReceiver.selector, address(this)));
-        siloFactory.createSilo(config, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, address(this), msg.sender);
+        siloFactory.createSilo(
+            config, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, address(this), msg.sender
+        );
     }
 
     /*
@@ -208,22 +203,12 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         ISiloConfig config = ISiloConfig(makeAddr("siloConfig"));
 
         (address silo0, address silo1) = _createSiloNewSiloEventMockCalls(
-            siloImpl,
-            shareProtectedCollateralTokenImpl,
-            shareDebtTokenImpl,
-            config
+            siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, config
         );
 
         vm.expectEmit(true, true, true, false);
 
-        emit NewSilo(
-            siloImpl,
-            makeAddr("token0"),
-            makeAddr("token1"),
-            silo0,
-            silo1,
-            address(config)
-        );
+        emit NewSilo(siloImpl, makeAddr("token0"), makeAddr("token1"), silo0, silo1, address(config));
 
         siloFactory.createSilo(
             config, siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl, initData.deployer, msg.sender
@@ -250,31 +235,19 @@ contract SiloFactoryCreateSiloTest is SiloLittleHelper, IntegrationTest {
         vm.label(silo1, "silo1");
 
         address protectedShareToken0 = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
-            _shareProtectedCollateralTokenImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
+            _shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         address protectedShareToken1 = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
-            _shareProtectedCollateralTokenImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
+            _shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         address debtShareToken0 = CloneDeterministic.predictShareDebtToken0Addr(
-            _shareDebtTokenImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
+            _shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         address debtShareToken1 = CloneDeterministic.predictShareDebtToken1Addr(
-            _shareDebtTokenImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
+            _shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         configData0.collateralShareToken = silo0;

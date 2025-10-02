@@ -6,10 +6,10 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract PendleMarketThatReverts is ERC20 {
     constructor() ERC20("PendleMarketThatReverts", "PendleMarketThatReverts") {}
 
-    function redeemRewards(address /* user */)
+    function redeemRewards(address /* user */ )
         external
         pure
-        returns (address[] memory /* rewardTokens */, uint256[] memory /* rewards */)
+        returns (address[] memory, /* rewardTokens */ uint256[] memory /* rewards */ )
     {
         revert("PendleMarketThatReverts");
     }

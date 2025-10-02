@@ -67,7 +67,8 @@ contract BorrowAllowanceTest is SiloLittleHelper, Test {
         assertEq(token1.balanceOf(RECEIVER), ASSETS / 2, "RECEIVER got tokens after");
 
         assertEq(
-            ShareDebtToken(debtShareToken).receiveAllowance(address(this), BORROWER), ASSETS / 2,
+            ShareDebtToken(debtShareToken).receiveAllowance(address(this), BORROWER),
+            ASSETS / 2,
             "allowance reduced"
         );
     }

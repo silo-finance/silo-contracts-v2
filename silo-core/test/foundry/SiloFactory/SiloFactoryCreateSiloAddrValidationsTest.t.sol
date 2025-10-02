@@ -252,40 +252,26 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
     {
         uint256 creatorSiloCounter = siloFactory.creatorSiloCounter(msg.sender);
 
-        createdSilo0 = CloneDeterministic.predictSilo0Addr(
-            siloImpl, creatorSiloCounter, address(siloFactory), msg.sender
-        );
+        createdSilo0 =
+            CloneDeterministic.predictSilo0Addr(siloImpl, creatorSiloCounter, address(siloFactory), msg.sender);
 
-        createdSilo1 = CloneDeterministic.predictSilo1Addr(
-            siloImpl, creatorSiloCounter, address(siloFactory), msg.sender
-        );
+        createdSilo1 =
+            CloneDeterministic.predictSilo1Addr(siloImpl, creatorSiloCounter, address(siloFactory), msg.sender);
 
         createdProtectedShareToken0 = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
-            shareProtectedCollateralTokenImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
+            shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         createdProtectedShareToken1 = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
-            shareProtectedCollateralTokenImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
+            shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         createdDebtShareToken0 = CloneDeterministic.predictShareDebtToken0Addr(
-            shareDebtTokenImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
+            shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         createdDebtShareToken1 = CloneDeterministic.predictShareDebtToken1Addr(
-            shareDebtTokenImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
+            shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         vm.label(createdSilo0, "silo0");
@@ -327,13 +313,17 @@ contract SiloFactoryCreateSiloAddrValidationsTest is IntegrationTest {
         if (_expectedRevertPlace == ExpectedRevertPlaces.siloValidation) return;
 
         data = abi.encodeWithSelector(ISiloConfig.getShareTokens.selector, _silo0);
-        vm.mockCall(address(siloConfig), data, abi.encode(_protectedShareToken0, _collateralShareToken0, _debtShareToken0));
+        vm.mockCall(
+            address(siloConfig), data, abi.encode(_protectedShareToken0, _collateralShareToken0, _debtShareToken0)
+        );
         vm.expectCall(address(siloConfig), data);
 
         if (_expectedRevertPlace == ExpectedRevertPlaces.shareTokenSilo0) return;
 
         data = abi.encodeWithSelector(ISiloConfig.getShareTokens.selector, _silo1);
-        vm.mockCall(address(siloConfig), data, abi.encode(_protectedShareToken1, _collateralShareToken1, _debtShareToken1));
+        vm.mockCall(
+            address(siloConfig), data, abi.encode(_protectedShareToken1, _collateralShareToken1, _debtShareToken1)
+        );
         vm.expectCall(address(siloConfig), data);
 
         if (_expectedRevertPlace == ExpectedRevertPlaces.shareTokenSilo1) return;

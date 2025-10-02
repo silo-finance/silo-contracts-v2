@@ -42,13 +42,13 @@ contract SiloCoreDeploymentsTest is SiloLittleHelper, Test {
     }
 
     function test_get_contractNotExists() public {
-       address addr = SiloCoreDeployments.get("not.exist", ChainsLib.OPTIMISM_ALIAS);
-       assertEq(addr, address(0), "expect to return 0");
+        address addr = SiloCoreDeployments.get("not.exist", ChainsLib.OPTIMISM_ALIAS);
+        assertEq(addr, address(0), "expect to return 0");
     }
 
     function test_get_invalidNetwork() public {
-       address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, "abcd");
-       assertEq(addr, address(0), "expect to return 0");
+        address addr = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, "abcd");
+        assertEq(addr, address(0), "expect to return 0");
     }
 
     /*

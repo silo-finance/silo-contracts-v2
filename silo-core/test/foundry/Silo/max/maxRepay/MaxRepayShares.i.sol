@@ -14,7 +14,7 @@ import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 */
 contract MaxRepaySharesTest is SiloLittleHelper, Test {
     uint256 internal constant _REAL_ASSETS_LIMIT = type(uint128).max;
-    
+
     ISiloConfig siloConfig;
     address immutable depositor;
     address immutable borrower;

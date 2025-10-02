@@ -141,20 +141,14 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
         vault.switchCollateralToThisSilo();
     }
 
-    function flashLoan(bool _vaultZero, uint256 _amount)
-        public
-        returns (bool success)
-    {
+    function flashLoan(bool _vaultZero, uint256 _amount) public returns (bool success) {
         Silo vault = _vaultZero ? vault0 : vault1;
         return vault.flashLoan(this, address(_vaultZero ? token0 : token1), _amount, "");
     }
 
-    function liquidationCall(
-        address borrower,
-        uint256 debtToCover,
-        bool receiveSToken,
-        ISiloConfig config
-    ) public {
+    function liquidationCall(address borrower, uint256 debtToCover, bool receiveSToken, ISiloConfig config)
+        public
+    {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             config.getConfigsForSolvency(borrower);
 
@@ -169,10 +163,7 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
         uint256 _amount,
         uint256 _fee,
         bytes calldata // _data
-    )
-        external
-        returns (bytes32)
-    {
+    ) external returns (bytes32) {
         _requireTotalCap(_token == address(token0), _amount + _fee);
 
         assert(_initiator == address(this));
@@ -206,17 +197,15 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
         debtMinted[vault] += _sharesMinted;
     }
 
-    function _accountForClosedDebt(
-        bool _vaultZero,
-        uint256 /* _tokensReceived */,
-        uint256 /* _sharesBurned */
-    ) internal pure {
-    }
+    function _accountForClosedDebt(bool _vaultZero, uint256, /* _tokensReceived */ uint256 /* _sharesBurned */ )
+        internal
+        pure
+    {}
 
     function _accountForClosedPosition(
-        ISilo.CollateralType /* _assetType */,
+        ISilo.CollateralType, /* _assetType */
         bool _vaultZero,
-        uint256 /* _tokensReceived */,
+        uint256, /* _tokensReceived */
         uint256 /* _sharesBurned */
     ) internal pure {
         // address vault = _vaultZero ? address(vault0) : address(vault1);
@@ -224,7 +213,7 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
         // note: The below code can lead to false positives since it does not account for interest.
         // In order to properly check these properties it needs to be modified so the accounting is correct.
 
-/*         if (_assetType == ISilo.CollateralType.Collateral) {
+        /*         if (_assetType == ISilo.CollateralType.Collateral) {
             assertLte(_sharesBurned, collateralMinted[vault],  "Actor has burned more shares than they ever minted. Implies a rounding or accounting error");
             assertLte(_tokensReceived, tokensDepositedCollateral[vault],  "Actor has withdrawn more tokens than they ever deposited. Implies a rounding or accounting error");
             tokensDepositedCollateral[vault] -= _tokensReceived;
@@ -258,7 +247,10 @@ contract Actor is PropertiesAsserts, IERC3156FlashBorrower {
         _prepareForDeposit(_vaultZero, amount);
     }
 
-    function _prepareForRepayShares(bool _vaultZero, uint256 _shares) internal returns (Silo vault, uint256 amount) {
+    function _prepareForRepayShares(bool _vaultZero, uint256 _shares)
+        internal
+        returns (Silo vault, uint256 amount)
+    {
         vault = _vaultZero ? vault0 : vault1;
         amount = vault.previewRepayShares(_shares);
 

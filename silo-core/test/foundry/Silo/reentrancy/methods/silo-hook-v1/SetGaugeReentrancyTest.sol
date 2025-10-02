@@ -27,14 +27,10 @@ contract SetGaugeReentrancyTest is MethodReentrancyTest {
     function _ensureItWillRevert() internal {
         address hookReceiver = TestStateLib.hookReceiver();
 
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            address(this)
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
 
         IGaugeHookReceiver(hookReceiver).setGauge(
-            ISiloIncentivesController(address(this)),
-            IShareToken(address(this))
+            ISiloIncentivesController(address(this)), IShareToken(address(this))
         );
     }
 }

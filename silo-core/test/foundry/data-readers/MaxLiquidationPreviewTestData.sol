@@ -34,11 +34,7 @@ contract MaxLiquidationPreviewTestData {
                 ltvAfterLiquidation: 0.7e18,
                 liquidationFee: 0.05e18
             }),
-            output: Output({
-                collateralValueToLiquidate: 0,
-                repayValue: 0,
-                targetLtvPossible: false
-            })
+            output: Output({collateralValueToLiquidate: 0, repayValue: 0, targetLtvPossible: false})
         });
 
         // when bad debt
@@ -50,11 +46,7 @@ contract MaxLiquidationPreviewTestData {
                 ltvAfterLiquidation: 0,
                 liquidationFee: 0.05e18
             }),
-                output: Output({
-                collateralValueToLiquidate: 100e18,
-                repayValue: 180e18,
-                targetLtvPossible: true
-            })
+            output: Output({collateralValueToLiquidate: 100e18, repayValue: 180e18, targetLtvPossible: true})
         });
 
         // if we expect ltv to be 0, we need full liquidation
@@ -82,11 +74,7 @@ contract MaxLiquidationPreviewTestData {
                 ltvAfterLiquidation: 0.97e18,
                 liquidationFee: 0.031e18
             }),
-            output: Output({
-                collateralValueToLiquidate: 100e18,
-                repayValue: 98e18,
-                targetLtvPossible: false
-            })
+            output: Output({collateralValueToLiquidate: 100e18, repayValue: 98e18, targetLtvPossible: false})
         });
 
         // "if we over 100% with fee, then we return all" - COUNTEREXAMPLE to above case

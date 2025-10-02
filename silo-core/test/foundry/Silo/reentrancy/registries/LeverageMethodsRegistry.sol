@@ -7,15 +7,22 @@ import {IMethodsRegistry} from "../interfaces/IMethodsRegistry.sol";
 import {DescriptionReentrancyTest} from "../methods/leverage/DescriptionReentrancyTest.sol";
 import {SwapModuleReentrancyTest} from "../methods/leverage/SwapModuleReentrancyTest.sol";
 import {RouterReentrancyTest} from "../methods/leverage/RouterReentrancyTest.sol";
-import {CalculateDebtReceiveApprovalReentrancyTest} from "../methods/leverage/CalculateDebtReceiveApprovalReentrancyTest.sol";
-import {OpenLeveragePositionPermitReentrancyTest} from "../methods/leverage/OpenLeveragePositionPermitReentrancyTest.sol";
+import {CalculateDebtReceiveApprovalReentrancyTest} from
+    "../methods/leverage/CalculateDebtReceiveApprovalReentrancyTest.sol";
+import {OpenLeveragePositionPermitReentrancyTest} from
+    "../methods/leverage/OpenLeveragePositionPermitReentrancyTest.sol";
 import {OpenLeveragePositionReentrancyTest} from "../methods/leverage/OpenLeveragePositionReentrancyTest.sol";
-import {OpenLeveragePositionDirectReentrancyTest} from "../methods/leverage/OpenLeveragePositionDirectReentrancyTest.sol";
-import {OpenLeveragePositionPermitDirectReentrancyTest} from "../methods/leverage/OpenLeveragePositionPermitDirectReentrancyTest.sol";
-import {CloseLeveragePositionPermitReentrancyTest} from "../methods/leverage/CloseLeveragePositionPermitReentrancyTest.sol";
+import {OpenLeveragePositionDirectReentrancyTest} from
+    "../methods/leverage/OpenLeveragePositionDirectReentrancyTest.sol";
+import {OpenLeveragePositionPermitDirectReentrancyTest} from
+    "../methods/leverage/OpenLeveragePositionPermitDirectReentrancyTest.sol";
+import {CloseLeveragePositionPermitReentrancyTest} from
+    "../methods/leverage/CloseLeveragePositionPermitReentrancyTest.sol";
 import {CloseLeveragePositionReentrancyTest} from "../methods/leverage/CloseLeveragePositionReentrancyTest.sol";
-import {CloseLeveragePositionDirectReentrancyTest} from "../methods/leverage/CloseLeveragePositionDirectReentrancyTest.sol";
-import {CloseLeveragePositionPermitDirectReentrancyTest} from "../methods/leverage/CloseLeveragePositionPermitDirectReentrancyTest.sol";
+import {CloseLeveragePositionDirectReentrancyTest} from
+    "../methods/leverage/CloseLeveragePositionDirectReentrancyTest.sol";
+import {CloseLeveragePositionPermitDirectReentrancyTest} from
+    "../methods/leverage/CloseLeveragePositionPermitDirectReentrancyTest.sol";
 import {OnFlashLoanReentrancyTest} from "../methods/leverage/OnFlashLoanReentrancyTest.sol";
 import {NativeTokenReentrancyTest} from "../methods/leverage/NativeTokenReentrancyTest.sol";
 import {FeePrecisionReentrancyTest} from "../methods/leverage/FeePrecisionReentrancyTest.sol";
@@ -88,7 +95,8 @@ contract LeverageMethodsRegistry is IMethodsRegistry {
 
     function abiFile() external pure returns (string memory) {
         // solhint-disable-next-line max-line-length
-        return "/cache/foundry/out/silo-core/LeverageUsingSiloFlashloanWithGeneralSwap.sol/LeverageUsingSiloFlashloanWithGeneralSwap.json";
+        return
+        "/cache/foundry/out/silo-core/LeverageUsingSiloFlashloanWithGeneralSwap.sol/LeverageUsingSiloFlashloanWithGeneralSwap.json";
     }
 
     function _registerMethod(IMethodReentrancyTest method) internal {

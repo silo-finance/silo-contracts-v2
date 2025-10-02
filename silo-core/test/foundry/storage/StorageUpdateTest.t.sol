@@ -26,9 +26,9 @@ contract ConfigContract {
     this test is to test obvious, that storage accessed by pointer can return modified value
 */
 contract StorageUpdateTest is ISomeSilo, Test {
-    uint256 constant internal _INDEX = 1;
+    uint256 internal constant _INDEX = 1;
 
-    mapping (uint256 => uint256) internal _total;
+    mapping(uint256 => uint256) internal _total;
     ConfigContract internal _config;
 
     function setUp() external {
@@ -50,7 +50,9 @@ contract StorageUpdateTest is ISomeSilo, Test {
 
         bytes32 currentPointer;
 
-        assembly { currentPointer := siloStorage.slot }
+        assembly {
+            currentPointer := siloStorage.slot
+        }
 
         bytes32 expectedPointer = _getStoragePointerHash(pointerSalt);
 
@@ -69,7 +71,9 @@ contract StorageUpdateTest is ISomeSilo, Test {
 
         bytes32 currentPointer;
 
-        assembly { currentPointer := siloStorage.slot }
+        assembly {
+            currentPointer := siloStorage.slot
+        }
 
         bytes32 expectedPointer = _getStoragePointerHash(pointerSalt);
 
@@ -88,7 +92,9 @@ contract StorageUpdateTest is ISomeSilo, Test {
 
         bytes32 currentPointer;
 
-        assembly { currentPointer := debtTokenStorage.slot }
+        assembly {
+            currentPointer := debtTokenStorage.slot
+        }
 
         bytes32 expectedPointer = _getStoragePointerHash(pointerSalt);
 

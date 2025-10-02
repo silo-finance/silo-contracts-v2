@@ -32,22 +32,14 @@ contract CallOnBehalfOfSiloReentrancyTest is MethodReentrancyTest {
         bytes memory payload = abi.encodeWithSelector(IShareToken.balanceOfAndTotalSupply.selector, anyAddress);
 
         vm.prank(address(config0.hookReceiver));
-        (bool success,) = silo0.callOnBehalfOfSilo(
-            config0.protectedShareToken,
-            0 /* eth value */,
-            ISilo.CallType.Call,
-            payload
-        );
+        (bool success,) =
+            silo0.callOnBehalfOfSilo(config0.protectedShareToken, 0, /* eth value */ ISilo.CallType.Call, payload);
 
         if (!success) revert();
 
         vm.prank(address(config0.hookReceiver));
-        (success,) = silo1.callOnBehalfOfSilo(
-            config0.protectedShareToken,
-            0 /* eth value */,
-            ISilo.CallType.Call,
-            payload
-        );
+        (success,) =
+            silo1.callOnBehalfOfSilo(config0.protectedShareToken, 0, /* eth value */ ISilo.CallType.Call, payload);
 
         if (!success) revert();
     }

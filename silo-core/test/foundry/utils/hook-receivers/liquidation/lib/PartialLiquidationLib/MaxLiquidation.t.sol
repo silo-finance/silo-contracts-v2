@@ -3,9 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
-import {
-    PartialLiquidationLib
-} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationLib.sol";
+import {PartialLiquidationLib} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationLib.sol";
 
 import {MaxRepayRawMath} from "./MaxRepayRawMath.sol";
 
@@ -30,7 +28,11 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint64 _liquidationTargetLtv
     ) public {
         _test_maxLiquidation(
-            _sumOfCollateralAssets, _sumOfCollateralValue, _borrowerDebtAssets, _liquidationFee, _liquidationTargetLtv
+            _sumOfCollateralAssets,
+            _sumOfCollateralValue,
+            _borrowerDebtAssets,
+            _liquidationFee,
+            _liquidationTargetLtv
         );
     }
 
@@ -239,7 +241,7 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         uint64 _liquidationTargetLtv
     ) internal returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter) {
         emit log("vm.assume(_liquidationFee < 0.40e18)");
-        vm.assume(_liquidationFee < 0.40e18); // some reasonable fee
+        vm.assume(_liquidationFee < 0.4e18); // some reasonable fee
         emit log("vm.assume(_sumOfCollateralAssets > 0)");
         vm.assume(_sumOfCollateralAssets > 0);
         // for tiny assets we doing full liquidation because it is to small to get down to expected minimal LTV
@@ -262,9 +264,7 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         emit log("vm.assume(ltvBefore >= _LT)");
         vm.assume(ltvBefore >= _LT);
 
-        (
-            collateralToLiquidate, debtToRepay
-        ) = PartialLiquidationLib.maxLiquidation(
+        (collateralToLiquidate, debtToRepay) = PartialLiquidationLib.maxLiquidation(
             _sumOfCollateralAssets,
             _sumOfCollateralValue,
             _borrowerDebtAssets,
@@ -279,12 +279,13 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         emit log_named_decimal_uint("minExpectedLtv", _liquidationTargetLtv, 16);
         emit log_named_decimal_uint("ltvBefore", ltvBefore, 16);
 
-        uint256 raw = _estimateMaxRepayValueRaw(borrowerDebtValue, _sumOfCollateralValue, _liquidationTargetLtv, _liquidationFee);
+        uint256 raw = _estimateMaxRepayValueRaw(
+            borrowerDebtValue, _sumOfCollateralValue, _liquidationTargetLtv, _liquidationFee
+        );
         emit log_named_decimal_uint("raw", raw, 18);
 
-        uint256 deviation = raw > debtToRepay
-            ? raw * _DECIMALS_POINTS / debtToRepay
-            : debtToRepay * _DECIMALS_POINTS / raw;
+        uint256 deviation =
+            raw > debtToRepay ? raw * _DECIMALS_POINTS / debtToRepay : debtToRepay * _DECIMALS_POINTS / raw;
 
         emit log_named_decimal_uint("deviation on raw calculation", deviation, 18);
 
@@ -299,11 +300,7 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         }
 
         ltvAfter = _ltv(
-            _sumOfCollateralAssets,
-            _sumOfCollateralValue,
-            _borrowerDebtAssets,
-            collateralToLiquidate,
-            debtToRepay
+            _sumOfCollateralAssets, _sumOfCollateralValue, _borrowerDebtAssets, collateralToLiquidate, debtToRepay
         );
 
         emit log_named_decimal_uint("ltvAfter", ltvAfter, 16);
@@ -314,11 +311,7 @@ contract MaxLiquidationTest is Test, MaxRepayRawMath {
         } else {
             emit log("partial liquidation");
 
-            assertLt(
-                ltvAfter,
-                _LT,
-                "we can not expect to be wei precise. as long as we below LT, it is OK"
-            );
+            assertLt(ltvAfter, _LT, "we can not expect to be wei precise. as long as we below LT, it is OK");
         }
     }
 

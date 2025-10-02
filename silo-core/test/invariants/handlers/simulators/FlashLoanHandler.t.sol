@@ -66,9 +66,9 @@ contract FlashLoanHandler is BaseHandler {
         if (success) {
             _after();
 
-           assertEq(
-               defaultVarsAfter[target].balance, defaultVarsBefore[target].balance + flashFee, BORROWING_HSPOST_T
-           );
+            assertEq(
+                defaultVarsAfter[target].balance, defaultVarsBefore[target].balance + flashFee, BORROWING_HSPOST_T
+            );
         }
     }
 

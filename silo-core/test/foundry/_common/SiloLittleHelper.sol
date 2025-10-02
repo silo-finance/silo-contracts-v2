@@ -75,7 +75,9 @@ abstract contract SiloLittleHelper is CommonBase {
         _depositForBorrowRevert(_assets, _depositor, _error);
     }
 
-    function _depositForBorrowRevert(uint256 _assets, address _depositor, ISilo.CollateralType _type, bytes4 _error) internal {
+    function _depositForBorrowRevert(uint256 _assets, address _depositor, ISilo.CollateralType _type, bytes4 _error)
+        internal
+    {
         _mintTokens(token1, _assets, _depositor);
 
         vm.startPrank(_depositor);
@@ -115,10 +117,7 @@ abstract contract SiloLittleHelper is CommonBase {
         address _depositor,
         bool _toSilo1,
         ISilo.CollateralType _collateralType
-    )
-        internal
-        returns (uint256 shares)
-    {
+    ) internal returns (uint256 shares) {
         return _toSilo1
             ? _makeDeposit(silo1, token1, _assets, _depositor, _collateralType)
             : _makeDeposit(silo0, token0, _assets, _depositor, _collateralType);
@@ -137,7 +136,10 @@ abstract contract SiloLittleHelper is CommonBase {
             : _makeMint(_approve, silo0, token0, _shares, _depositor, ISilo.CollateralType.Collateral);
     }
 
-    function _mintForBorrow(uint256 _approve, uint256 _shares, address _depositor) internal returns (uint256 assets) {
+    function _mintForBorrow(uint256 _approve, uint256 _shares, address _depositor)
+        internal
+        returns (uint256 assets)
+    {
         return _makeMint(_approve, silo1, token1, _shares, _depositor, ISilo.CollateralType.Collateral);
     }
 
@@ -206,7 +208,10 @@ abstract contract SiloLittleHelper is CommonBase {
         return silo1.withdraw(_amount, _depositor, _depositor);
     }
 
-    function _withdraw(uint256 _amount, address _depositor, ISilo.CollateralType _type) internal returns (uint256 assets){
+    function _withdraw(uint256 _amount, address _depositor, ISilo.CollateralType _type)
+        internal
+        returns (uint256 assets)
+    {
         vm.prank(_depositor);
         return silo0.withdraw(_amount, _depositor, _depositor, _type);
     }
@@ -217,10 +222,7 @@ abstract contract SiloLittleHelper is CommonBase {
         uint256 _assets,
         address _depositor,
         ISilo.CollateralType _type
-    )
-        internal
-        returns (uint256 shares)
-    {
+    ) internal returns (uint256 shares) {
         _mintTokens(_token, _assets, _depositor);
 
         vm.startPrank(_depositor);
@@ -236,10 +238,7 @@ abstract contract SiloLittleHelper is CommonBase {
         uint256 _shares,
         address _depositor,
         ISilo.CollateralType _type
-    )
-        internal
-        returns (uint256 assets)
-    {
+    ) internal returns (uint256 assets) {
         _mintTokens(_token, _approve, _depositor);
 
         vm.startPrank(_depositor);
@@ -259,7 +258,7 @@ abstract contract SiloLittleHelper is CommonBase {
         }
     }
 
-    function _createDebt(uint128 _amount, address _borrower) internal returns (uint256 debtShares){
+    function _createDebt(uint128 _amount, address _borrower) internal returns (uint256 debtShares) {
         _depositForBorrow(_amount, address(0x987654321));
         _deposit(uint256(_amount) * 2 + (_amount % 2), _borrower);
         debtShares = _borrow(_amount, _borrower);
@@ -311,7 +310,11 @@ abstract contract SiloLittleHelper is CommonBase {
         console.log("[silo0] debtBalanceOfUnderlying", siloLens.debtBalanceOfUnderlying(silo0, _borrower));
         console.log("[silo1] debtBalanceOfUnderlying", siloLens.debtBalanceOfUnderlying(silo1, _borrower));
 
-        console.log("[silo0] collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo0, _borrower));
-        console.log("[silo1] collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, _borrower));
+        console.log(
+            "[silo0] collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo0, _borrower)
+        );
+        console.log(
+            "[silo1] collateralBalanceOfUnderlying", siloLens.collateralBalanceOfUnderlying(silo1, _borrower)
+        );
     }
 }

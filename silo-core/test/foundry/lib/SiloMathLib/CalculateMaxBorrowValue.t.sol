@@ -16,7 +16,8 @@ contract CalculateMaxBorrowValueTest is Test {
 
         assertEq(
             SiloMathLib.calculateMaxBorrowValue(configMaxLtv, sumOfBorrowerCollateralValue, borrowerDebtValue),
-            0, "when all zeros"
+            0,
+            "when all zeros"
         );
 
         configMaxLtv = 0.5e18;
@@ -25,9 +26,9 @@ contract CalculateMaxBorrowValueTest is Test {
 
         assertEq(
             SiloMathLib.calculateMaxBorrowValue(configMaxLtv, sumOfBorrowerCollateralValue, borrowerDebtValue),
-            0, "when ltv == limit -> zeros"
+            0,
+            "when ltv == limit -> zeros"
         );
-
 
         configMaxLtv = 0.5e18;
         sumOfBorrowerCollateralValue = 1e18;
@@ -35,7 +36,8 @@ contract CalculateMaxBorrowValueTest is Test {
 
         assertEq(
             SiloMathLib.calculateMaxBorrowValue(configMaxLtv, sumOfBorrowerCollateralValue, borrowerDebtValue),
-            0, "when ltv over limit -> zeros"
+            0,
+            "when ltv over limit -> zeros"
         );
 
         configMaxLtv = 0.5e18;
@@ -44,7 +46,8 @@ contract CalculateMaxBorrowValueTest is Test {
 
         assertEq(
             SiloMathLib.calculateMaxBorrowValue(configMaxLtv, sumOfBorrowerCollateralValue, borrowerDebtValue),
-            0.5e18, "when no debt"
+            0.5e18,
+            "when no debt"
         );
 
         configMaxLtv = 0.5e18;
@@ -53,7 +56,8 @@ contract CalculateMaxBorrowValueTest is Test {
 
         assertEq(
             SiloMathLib.calculateMaxBorrowValue(configMaxLtv, sumOfBorrowerCollateralValue, borrowerDebtValue),
-            0.4e18, "when below lTV limit"
+            0.4e18,
+            "when below lTV limit"
         );
     }
 }

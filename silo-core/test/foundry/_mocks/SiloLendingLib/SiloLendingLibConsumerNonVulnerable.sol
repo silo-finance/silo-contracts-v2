@@ -22,12 +22,7 @@ contract SiloLendingLibConsumerNonVulnerable {
         address _repayer
     ) external {
         SiloLendingLib.repay(
-            IShareToken(_configData.debtShareToken),
-            _configData.token,
-            _assets,
-            _shares,
-            _borrower,
-            _repayer
+            IShareToken(_configData.debtShareToken), _configData.token, _assets, _shares, _borrower, _repayer
         );
     }
 

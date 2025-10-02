@@ -26,46 +26,37 @@ contract CalculateCollateralToLiquidateTestData {
 
         data[i++] = CCTLData({
             input: Input({
-                debtValueToCover:  0,
+                debtValueToCover: 0,
                 totalBorrowerCollateralValue: 1,
-                totalBorrowerCollateralAssets:  1,
+                totalBorrowerCollateralAssets: 1,
                 liquidationFee: 0
             }),
-            output: Output({
-                collateralAssets: 0,
-                collateralValue: 0
-            })
+            output: Output({collateralAssets: 0, collateralValue: 0})
         });
 
         data[i++] = CCTLData({
             input: Input({
-                debtValueToCover:  1,
+                debtValueToCover: 1,
                 totalBorrowerCollateralValue: 1,
-                totalBorrowerCollateralAssets:  1,
+                totalBorrowerCollateralAssets: 1,
                 liquidationFee: 1
             }),
-            output: Output({
-                collateralAssets: 1,
-                collateralValue: 1
-            })
+            output: Output({collateralAssets: 1, collateralValue: 1})
         });
 
         data[i++] = CCTLData({
             input: Input({
-                debtValueToCover:  2e18,
+                debtValueToCover: 2e18,
                 totalBorrowerCollateralAssets: 10e18,
                 totalBorrowerCollateralValue: 2e18,
                 liquidationFee: 0.01e18
             }),
-            output: Output({
-                collateralValue: 2e18,
-                collateralAssets: 10e18
-            })
+            output: Output({collateralValue: 2e18, collateralAssets: 10e18})
         });
 
         data[i++] = CCTLData({
             input: Input({
-                debtValueToCover:  2e18,
+                debtValueToCover: 2e18,
                 totalBorrowerCollateralAssets: 10e18,
                 totalBorrowerCollateralValue: 40e18, // 1token has value of 4e18
                 liquidationFee: 0.01e18
@@ -78,7 +69,7 @@ contract CalculateCollateralToLiquidateTestData {
 
         data[i++] = CCTLData({
             input: Input({
-                debtValueToCover:  1e18,
+                debtValueToCover: 1e18,
                 totalBorrowerCollateralAssets: 100e18,
                 totalBorrowerCollateralValue: 20e18, // 1token has value of 20 / 100 => 0.2e18
                 liquidationFee: 0.5e18
@@ -91,7 +82,7 @@ contract CalculateCollateralToLiquidateTestData {
 
         data[i++] = CCTLData({
             input: Input({
-                debtValueToCover:  2e18,
+                debtValueToCover: 2e18,
                 totalBorrowerCollateralAssets: 10e18,
                 totalBorrowerCollateralValue: 1e18, // 1token has value of 0.1e18
                 liquidationFee: 0.01e18

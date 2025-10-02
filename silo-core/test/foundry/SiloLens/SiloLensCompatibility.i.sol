@@ -99,19 +99,14 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         _testFn(_calculateBorrowValue, _siloConfig, _borrower);
     }
 
-    function _testFn(
-        function(ISilo,address) internal view returns (bytes4) func,
-        ISilo _silo,
-        address _user
-    ) internal {
+    function _testFn(function(ISilo,address) internal view returns (bytes4) func, ISilo _silo, address _user)
+        internal
+    {
         bytes4 sig = func(_silo, _user);
         _testedFunctions[sig] = true;
     }
 
-    function _testFn(
-        function(ISilo) internal view returns (bytes4) func,
-        ISilo _silo
-    ) internal {
+    function _testFn(function(ISilo) internal view returns (bytes4) func, ISilo _silo) internal {
         bytes4 sig = func(_silo);
         _testedFunctions[sig] = true;
     }
@@ -125,9 +120,7 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         _testedFunctions[sig] = true;
     }
 
-    function _testFn(
-        function() internal view returns (bytes4) func
-    ) internal {
+    function _testFn(function() internal view returns (bytes4) func) internal {
         bytes4 sig = func();
         _testedFunctions[sig] = true;
     }
@@ -195,7 +188,7 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         _lens.getLtv(_silo, _user);
         sig = ISiloLens.getLtv.selector;
     }
-    
+
     function _hasPosition(ISiloConfig _siloConfig, address _user) internal view returns (bytes4 sig) {
         // expect do not revert
         _lens.hasPosition(_siloConfig, _user);

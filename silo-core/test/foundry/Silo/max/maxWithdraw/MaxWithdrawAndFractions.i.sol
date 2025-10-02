@@ -105,7 +105,8 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
         if (_redeem) {
             uint256 maxRedeem = silo0.maxRedeem(borrower);
 
-            if (silo0.getDebtAssets() != 0) { // no debt - no interest
+            if (silo0.getDebtAssets() != 0) {
+                // no debt - no interest
                 SiloHarness(payable(address(silo0))).increaseTotalDebtAssets(1);
             }
 
@@ -114,7 +115,8 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
         } else {
             uint256 maxWithdraw = silo0.maxWithdraw(borrower);
 
-            if (silo0.getDebtAssets() != 0) { // no debt - no interest
+            if (silo0.getDebtAssets() != 0) {
+                // no debt - no interest
                 SiloHarness(payable(address(silo0))).increaseTotalDebtAssets(1);
             }
 
@@ -224,7 +226,8 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
         if (_redeem) {
             uint256 maxRedeem = silo0.maxRedeem(borrower);
 
-            if (silo0.getDebtAssets() != 0) { // no debt - no interest  
+            if (silo0.getDebtAssets() != 0) {
+                // no debt - no interest
                 SiloHarness(payable(address(silo0))).decreaseTotalCollateralAssets(1);
             }
 
@@ -233,7 +236,8 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
         } else {
             uint256 maxWithdraw = silo0.maxWithdraw(borrower);
 
-            if (silo0.getDebtAssets() != 0) { // no debt - no interest
+            if (silo0.getDebtAssets() != 0) {
+                // no debt - no interest
                 SiloHarness(payable(address(silo0))).decreaseTotalCollateralAssets(1);
             }
 

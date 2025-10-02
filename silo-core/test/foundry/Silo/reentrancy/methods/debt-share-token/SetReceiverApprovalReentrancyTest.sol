@@ -11,7 +11,7 @@ import {TestStateLib} from "../../TestState.sol";
 contract SetReceiverApprovalReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will not revert)");
-        
+
         ISiloConfig config = TestStateLib.siloConfig();
         ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
@@ -19,7 +19,7 @@ contract SetReceiverApprovalReentrancyTest is MethodReentrancyTest {
         address borrower = makeAddr("Borrower");
         address receiver = makeAddr("Receiver");
 
-        (,,address debtToken) = config.getShareTokens(address(silo0));
+        (,, address debtToken) = config.getShareTokens(address(silo0));
 
         vm.prank(receiver);
         ShareDebtToken(debtToken).setReceiveApproval(borrower, 0);
@@ -35,7 +35,7 @@ contract SetReceiverApprovalReentrancyTest is MethodReentrancyTest {
         ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
 
-        (,,address debtToken) = config.getShareTokens(address(silo0));
+        (,, address debtToken) = config.getShareTokens(address(silo0));
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareDebtToken(debtToken).setReceiveApproval(address(0), 0);

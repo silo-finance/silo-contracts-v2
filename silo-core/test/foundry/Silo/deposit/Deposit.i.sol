@@ -144,9 +144,7 @@ contract DepositTest is SiloLittleHelper, Test {
         vm.prank(depositor);
         token1.approve(address(silo0), assets);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, silo0, 0, assets)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, silo0, 0, assets));
         vm.prank(depositor);
         silo0.deposit(assets, depositor, ISilo.CollateralType.Collateral);
     }
@@ -191,12 +189,7 @@ contract DepositTest is SiloLittleHelper, Test {
         vm.prank(depositor);
 
         (bool success,) = address(silo0).call(
-            abi.encodeWithSelector(
-                ISilo.deposit.selector,
-                assets,
-                depositor,
-                invalidCollateralType
-            )
+            abi.encodeWithSelector(ISilo.deposit.selector, assets, depositor, invalidCollateralType)
         );
 
         assertFalse(success, "Expect deposit to fail");
@@ -209,15 +202,9 @@ contract DepositTest is SiloLittleHelper, Test {
         emit Deposit(depositor, depositor, assets, assets.decimalsOffsetPow());
 
         vm.prank(depositor);
-        
-        (success,) = address(silo0).call(
-            abi.encodeWithSelector(
-                ISilo.deposit.selector,
-                assets,
-                depositor,
-                collateralType
-            )
-        );
+
+        (success,) =
+            address(silo0).call(abi.encodeWithSelector(ISilo.deposit.selector, assets, depositor, collateralType));
 
         assertTrue(success, "Expect deposit to succeed");
     }

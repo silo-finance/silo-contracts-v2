@@ -17,25 +17,29 @@ contract ConversionsTest is Test {
         uint256 _totalShares;
         Math.Rounding _rounding = Rounding.DOWN;
 
-        uint256 shares = SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
+        uint256 shares =
+            SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(shares, 1 * SiloMathLib._DECIMALS_OFFSET_POW, "#1");
 
         _totalAssets += _assets;
         _totalShares += shares;
 
         _assets = 1000;
-        shares = SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
+        shares =
+            SiloMathLib.convertToShares(_assets, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(shares, 1000 * SiloMathLib._DECIMALS_OFFSET_POW, "#2");
 
         _totalAssets += _assets;
         _totalShares += shares;
 
         shares = 1 * SiloMathLib._DECIMALS_OFFSET_POW;
-        _assets = SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
+        _assets =
+            SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(_assets, 1, "#3");
 
         shares = 1000 * SiloMathLib._DECIMALS_OFFSET_POW;
-        _assets = SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
+        _assets =
+            SiloMathLib.convertToAssets(shares, _totalAssets, _totalShares, _rounding, ISilo.AssetType.Collateral);
         assertEq(_assets, 1000, "#4");
     }
 
@@ -43,9 +47,10 @@ contract ConversionsTest is Test {
     forge test -vv --mt test_SiloMathLib_conversions
     */
     /// forge-config: core_test.fuzz.runs = 5000
-    function test_SiloMathLib_conversions_fuzz(
-        uint256 _totalAssets, uint256 _totalShares, uint256 _assetsIn
-    ) public pure {
+    function test_SiloMathLib_conversions_fuzz(uint256 _totalAssets, uint256 _totalShares, uint256 _assetsIn)
+        public
+        pure
+    {
         vm.assume(_totalAssets >= _totalShares); // we allow for dust and/or interest
 
         if (_totalShares > 0) {
@@ -76,7 +81,9 @@ contract ConversionsTest is Test {
             // this is where silo is empty and we have dust
             assertLe(assetsOut - _assetsIn, 1 + _totalAssets, "dust: allow for 1 rounding err + dust distribution");
         } else {
-            assertLe(_assetsIn - assetsOut, 9, "assets: this diff is caused by rounding and it will be locked in silo");
+            assertLe(
+                _assetsIn - assetsOut, 9, "assets: this diff is caused by rounding and it will be locked in silo"
+            );
         }
     }
 }

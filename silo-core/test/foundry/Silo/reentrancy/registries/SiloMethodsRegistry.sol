@@ -30,9 +30,10 @@ import {FactoryReentrancyTest} from "../methods/silo/FactoryReentrancyTest.sol";
 import {FlashFeeReentrancyTest} from "../methods/silo/FlashFeeReentrancyTest.sol";
 import {FlashLoanReentrancyTest} from "../methods/silo/FlashLoanReentrancyTest.sol";
 import {ForwardTransferFromNoChecksTest} from "../methods/silo/ForwardTransferFromNoChecksTest.sol";
-import {GetCollateralAndDebtTotalsStorageReentrancyTest} from "../methods/silo/GetCollateralAndDebtTotalsStorageReentrancyTest.sol";
-import {GetCollateralAndProtectedTotalsStorageReentrancyTest}
-    from "../methods/silo/GetCollateralAndProtectedTotalsStorageReentrancyTest.sol";
+import {GetCollateralAndDebtTotalsStorageReentrancyTest} from
+    "../methods/silo/GetCollateralAndDebtTotalsStorageReentrancyTest.sol";
+import {GetCollateralAndProtectedTotalsStorageReentrancyTest} from
+    "../methods/silo/GetCollateralAndProtectedTotalsStorageReentrancyTest.sol";
 import {GetCollateralAssetsReentrancyTest} from "../methods/silo/GetCollateralAssetsReentrancyTest.sol";
 import {GetDebtAssetsReentrancyTest} from "../methods/silo/GetDebtAssetsReentrancyTest.sol";
 import {GetLiquidityReentrancyTest} from "../methods/silo/GetLiquidityReentrancyTest.sol";
@@ -81,7 +82,8 @@ import {SiloConfigReentrancyTest} from "../methods/silo/SiloConfigReentrancyTest
 import {GetSiloStorageReentrancyTest} from "../methods/silo/GetSiloStorageReentrancyTest.sol";
 import {SiloReentrancyTest} from "../methods/share-token/SiloReentrancyTest.sol";
 import {SiloTokenReentrancyTest} from "../methods/silo/SiloTokenReentrancyTest.sol";
-import {SwitchCollateralToThisSiloReentrancyTest} from "../methods/silo/SwitchCollateralToThisSiloReentrancyTest.sol";
+import {SwitchCollateralToThisSiloReentrancyTest} from
+    "../methods/silo/SwitchCollateralToThisSiloReentrancyTest.sol";
 import {SymbolReentrancyTest} from "../methods/silo/SymbolReentrancyTest.sol";
 import {SynchronizeHooksReentrancyTest} from "../methods/share-token/SynchronizeHooksReentrancyTest.sol";
 import {SynchronizeHooksTokenReentrancyTest} from "../methods/silo/SynchronizeHooksTokenReentrancyTest.sol";

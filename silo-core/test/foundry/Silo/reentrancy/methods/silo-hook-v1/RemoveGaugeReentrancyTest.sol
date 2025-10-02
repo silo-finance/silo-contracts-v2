@@ -25,10 +25,7 @@ contract RemoveGaugeReentrancyTest is MethodReentrancyTest {
     function _ensureItWillRevert() internal {
         address hookReceiver = TestStateLib.hookReceiver();
 
-         vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            address(this)
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
 
         IGaugeHookReceiver(hookReceiver).removeGauge(IShareToken(address(this)));
     }

@@ -24,14 +24,14 @@ interface OldGauge {
 }
 
 /**
-The test is designed to be run right after the silo lending market deployment.
-It is excluded from the general tests CI pipeline and has separate workflow.
-
-FOUNDRY_PROFILE=core_test CONFIG=0x94387Bb763ee94D53a9828EFCCa2C2A3A7dA5428 \
-    EXTERNAL_PRICE_0=9187 \
-    EXTERNAL_PRICE_1=9997 \
-    RPC_URL=$RPC_MAINNET \
-    forge test --mc "NewMarketTest" --ffi -vv
+ * The test is designed to be run right after the silo lending market deployment.
+ * It is excluded from the general tests CI pipeline and has separate workflow.
+ *
+ * FOUNDRY_PROFILE=core_test CONFIG=0x94387Bb763ee94D53a9828EFCCa2C2A3A7dA5428 \
+ *     EXTERNAL_PRICE_0=9187 \
+ *     EXTERNAL_PRICE_1=9997 \
+ *     RPC_URL=$RPC_MAINNET \
+ *     forge test --mc "NewMarketTest" --ffi -vv
  */
 // solhint-disable var-name-mixedcase
 contract NewMarketTest is Test {
@@ -100,51 +100,59 @@ contract NewMarketTest is Test {
     }
 
     function test_newMarketTest_borrowSilo0ToSilo1() public logSiloConfigName {
-        _borrowScenario(BorrowScenario({
-            collateralSilo: SILO0,
-            collateralToken: TOKEN0,
-            debtSilo: SILO1,
-            debtToken: TOKEN1,
-            collateralPrice: EXTERNAL_PRICE0,
-            debtPrice: EXTERNAL_PRICE1,
-            ltv: MAX_LTV0,
-            warpTime: 0
-        }));
+        _borrowScenario(
+            BorrowScenario({
+                collateralSilo: SILO0,
+                collateralToken: TOKEN0,
+                debtSilo: SILO1,
+                debtToken: TOKEN1,
+                collateralPrice: EXTERNAL_PRICE0,
+                debtPrice: EXTERNAL_PRICE1,
+                ltv: MAX_LTV0,
+                warpTime: 0
+            })
+        );
 
-        _borrowScenario(BorrowScenario({
-            collateralSilo: SILO0,
-            collateralToken: TOKEN0,
-            debtSilo: SILO1,
-            debtToken: TOKEN1,
-            collateralPrice: EXTERNAL_PRICE0,
-            debtPrice: EXTERNAL_PRICE1,
-            ltv: MAX_LTV0,
-            warpTime: 1 days
-        }));
+        _borrowScenario(
+            BorrowScenario({
+                collateralSilo: SILO0,
+                collateralToken: TOKEN0,
+                debtSilo: SILO1,
+                debtToken: TOKEN1,
+                collateralPrice: EXTERNAL_PRICE0,
+                debtPrice: EXTERNAL_PRICE1,
+                ltv: MAX_LTV0,
+                warpTime: 1 days
+            })
+        );
     }
 
     function test_newMarketTest_borrowSilo1ToSilo0() public logSiloConfigName {
-        _borrowScenario(BorrowScenario({
-            collateralSilo: SILO1,
-            collateralToken: TOKEN1,
-            debtSilo: SILO0,
-            debtToken: TOKEN0,
-            collateralPrice: EXTERNAL_PRICE1,
-            debtPrice: EXTERNAL_PRICE0,
-            ltv: MAX_LTV1,
-            warpTime: 0
-        }));
+        _borrowScenario(
+            BorrowScenario({
+                collateralSilo: SILO1,
+                collateralToken: TOKEN1,
+                debtSilo: SILO0,
+                debtToken: TOKEN0,
+                collateralPrice: EXTERNAL_PRICE1,
+                debtPrice: EXTERNAL_PRICE0,
+                ltv: MAX_LTV1,
+                warpTime: 0
+            })
+        );
 
-        _borrowScenario(BorrowScenario({
-            collateralSilo: SILO1,
-            collateralToken: TOKEN1,
-            debtSilo: SILO0,
-            debtToken: TOKEN0,
-            collateralPrice: EXTERNAL_PRICE1,
-            debtPrice: EXTERNAL_PRICE0,
-            ltv: MAX_LTV1,
-            warpTime: 1 days
-        }));
+        _borrowScenario(
+            BorrowScenario({
+                collateralSilo: SILO1,
+                collateralToken: TOKEN1,
+                debtSilo: SILO0,
+                debtToken: TOKEN0,
+                collateralPrice: EXTERNAL_PRICE1,
+                debtPrice: EXTERNAL_PRICE0,
+                ltv: MAX_LTV1,
+                warpTime: 1 days
+            })
+        );
     }
 
     function test_checkGauges() public logSiloConfigName {
@@ -186,7 +194,8 @@ contract NewMarketTest is Test {
             calculatedTokensToBorrow * 10 ** TokenHelper.assertAndGetDecimals(address(_scenario.debtToken));
 
         assertTrue(
-            _scenario.ltv == 0 || calculatedMaxBorrow > 10 ** TokenHelper.assertAndGetDecimals(address(_scenario.debtToken)),
+            _scenario.ltv == 0
+                || calculatedMaxBorrow > 10 ** TokenHelper.assertAndGetDecimals(address(_scenario.debtToken)),
             "at least one token for precision or LTV is zero"
         );
 

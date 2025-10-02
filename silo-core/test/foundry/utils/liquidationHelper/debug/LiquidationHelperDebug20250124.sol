@@ -50,11 +50,11 @@ contract LiquidationHelperDebug20250124 is Test {
     function test_skip_debug_liquidationCall() public {
         LiquidationHelper liquidationHelper = LiquidationHelper(payable(0xf363C6d369888F5367e9f1aD7b6a7dAe133e8740));
 
-//        liquidationHelper = new LiquidationHelper(
-//            0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38,
-//            0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D,
-//            payable(makeAddr("TOKENS_RECEIVER"))
-//        );
+        //        liquidationHelper = new LiquidationHelper(
+        //            0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38,
+        //            0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D,
+        //            payable(makeAddr("TOKENS_RECEIVER"))
+        //        );
 
         address hookReceiver = 0xB01e62Ba9BEc9Cfa24b2Ee321392b8Ce726D2A09;
         address borrower = 0x748e6AC25025758612507CEFeeD7987Db2dBDd8b;
@@ -64,10 +64,8 @@ contract LiquidationHelperDebug20250124 is Test {
 
         vm.label(address(liquidationHelper), "LiquidationHelper");
         ISiloConfig siloConfig = liquidation.siloConfig();
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig
-        ) = siloConfig.getConfigsForSolvency(borrower);
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+            siloConfig.getConfigsForSolvency(borrower);
 
         emit log_named_string("solvent?", ISilo(debtConfig.silo).isSolvent(borrower) ? "yes" : "NO");
         uint256 ltv = lens.getLtv(ISilo(debtConfig.silo), borrower);
@@ -81,7 +79,7 @@ contract LiquidationHelperDebug20250124 is Test {
 
         assertGt(ltv, 1e18, "expect bad debt scenario");
 
-//        uint256 collateralToLiquidate = 639935999999999999491;
+        //        uint256 collateralToLiquidate = 639935999999999999491;
         /*
         83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000129219dd400f2bf60e5a23d13be72b486d403889408
         22b0e56179485ffe03
@@ -115,17 +113,13 @@ contract LiquidationHelperDebug20250124 is Test {
             address debtToken = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894;
             vm.label(debtToken, "debtToken");
             vm.label(liquidationData.collateralAsset, "collateralAsset");
-    //        uint256 debtToCover = 1447204;
-//            uint256 debtToCover = debtToRepay * 0.95e18 / ltv;
-//            uint256 debtToCover = debtToRepay * (1e18 - flashFee - liquidationFee) / ltv;
+            //        uint256 debtToCover = 1447204;
+            //            uint256 debtToCover = debtToRepay * 0.95e18 / ltv;
+            //            uint256 debtToCover = debtToRepay * (1e18 - flashFee - liquidationFee) / ltv;
             uint256 debtToCover = debtToRepay * (1e18 - collateralConfig.liquidationFee) / ltv;
 
             liquidationHelper.executeLiquidation(
-                flashLoanFrom,
-                debtToken,
-                debtToCover,
-                liquidationData,
-                swapsInputs0x
+                flashLoanFrom, debtToken, debtToCover, liquidationData, swapsInputs0x
             );
         }
     }

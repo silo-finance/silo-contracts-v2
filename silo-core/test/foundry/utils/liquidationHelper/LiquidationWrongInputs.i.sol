@@ -15,7 +15,7 @@ contract LiquidationWrongInputsTest is SiloLittleHelper, Test {
     ISiloConfig internal _siloConfig;
 
     function setUp() public {
-       _siloConfig = _setUpLocalFixture();
+        _siloConfig = _setUpLocalFixture();
     }
 
     /*
@@ -24,12 +24,6 @@ contract LiquidationWrongInputsTest is SiloLittleHelper, Test {
     function test_liquidationInput_NoDebtToCover() public {
         vm.expectRevert(IPartialLiquidation.NoDebtToCover.selector);
 
-        partialLiquidation.liquidationCall(
-            address(0),
-            address(0),
-            address(0),
-            0,
-            false
-        );
+        partialLiquidation.liquidationCall(address(0), address(0), address(0), 0, false);
     }
 }

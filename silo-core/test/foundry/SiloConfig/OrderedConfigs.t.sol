@@ -23,7 +23,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 //
 // FOUNDRY_PROFILE=core_test forge test -vv --mc OrderedConfigsTest
 contract OrderedConfigsTest is Test {
-    bool constant internal _SAME_ASSET = true;
+    bool internal constant _SAME_ASSET = true;
 
     address internal _siloUser = makeAddr("siloUser");
     address internal _wrongSilo = makeAddr("wrongSilo");
@@ -69,7 +69,7 @@ contract OrderedConfigsTest is Test {
         vm.assume(_configDataInput0.deployerFee < 0.5e18);
 
         // when using assume, it reject too many inputs
-        _configDataInput0.hookReceiver = _configDataInput1.hookReceiver; 
+        _configDataInput0.hookReceiver = _configDataInput1.hookReceiver;
         _configDataInput0.hookReceiver = _configDataInput1.hookReceiver;
 
         _configDataInput1.daoFee = _configDataInput0.daoFee;
@@ -133,7 +133,7 @@ contract OrderedConfigsTest is Test {
         ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        
+
         (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo0, _siloUser);
 
         assertEq(depositConfig.silo, _silo0);
@@ -159,7 +159,7 @@ contract OrderedConfigsTest is Test {
         ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        
+
         (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo0, _siloUser);
 
         assertEq(depositConfig.silo, _silo0);
@@ -185,7 +185,7 @@ contract OrderedConfigsTest is Test {
         ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        
+
         (depositConfig, collateralConfig, debtConfig) = _siloConfig.getConfigsForWithdraw(_silo0, _siloUser);
 
         assertEq(depositConfig.silo, _silo0);
@@ -203,7 +203,7 @@ contract OrderedConfigsTest is Test {
     function testOrderedConfigsBorrowNoDebtNotSameAsset() public view {
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
-        
+
         (collateralConfig, debtConfig) = _siloConfig.getConfigsForBorrow({_debtSilo: _silo0});
 
         assertEq(collateralConfig.silo, _silo1);
@@ -293,10 +293,7 @@ contract OrderedConfigsTest is Test {
     function _assertForSilo0DebtSilo1NotSameAsset(
         ISiloConfig.ConfigData memory collateral,
         ISiloConfig.ConfigData memory debt
-    )
-        internal
-        view
-    {
+    ) internal view {
         assertTrue(debt.silo != address(0), "debtPresent true");
         assertTrue(debt.silo != collateral.silo, "sameAsset false");
         assertTrue(debt.silo != _silo0, "debtInSilo0 false");
@@ -305,20 +302,14 @@ contract OrderedConfigsTest is Test {
     function _assertForSilo1DebtSilo1NotSameAsset(
         ISiloConfig.ConfigData memory collateral,
         ISiloConfig.ConfigData memory debt
-    )
-        internal
-        view
-    {
+    ) internal view {
         _assertForSilo0DebtSilo1NotSameAsset(collateral, debt);
     }
 
     function _assertForSilo0DebtSilo0SameAsset(
         ISiloConfig.ConfigData memory collateral,
         ISiloConfig.ConfigData memory debt
-    )
-        internal
-        view
-    {
+    ) internal view {
         assertTrue(debt.silo != address(0), "debtPresent true");
         assertTrue(debt.silo == collateral.silo, "sameAsset true");
         assertTrue(debt.silo == _silo0, "debtInSilo0 true");
@@ -327,20 +318,14 @@ contract OrderedConfigsTest is Test {
     function _assertForSilo1DebtSilo0SameAsset(
         ISiloConfig.ConfigData memory collateral,
         ISiloConfig.ConfigData memory debt
-    )
-        internal
-        view
-    {
+    ) internal view {
         _assertForSilo0DebtSilo0SameAsset(collateral, debt);
     }
 
     function _assertForSilo0DebtSilo0NotSameAsset(
         ISiloConfig.ConfigData memory collateral,
         ISiloConfig.ConfigData memory debt
-    )
-        internal
-        view
-    {
+    ) internal view {
         assertTrue(debt.silo != address(0), "debtPresent true");
         assertTrue(debt.silo != collateral.silo, "sameAsset false");
         assertTrue(debt.silo == _silo0, "debtInSilo0 true");
@@ -349,11 +334,8 @@ contract OrderedConfigsTest is Test {
     function _assertForSilo1DebtSilo0NotSameAsset(
         ISiloConfig.ConfigData memory collateral,
         ISiloConfig.ConfigData memory debt
-    )
-        internal
-        view
-    {
-       _assertForSilo0DebtSilo0NotSameAsset(collateral, debt);
+    ) internal view {
+        _assertForSilo0DebtSilo0NotSameAsset(collateral, debt);
     }
 
     function _mockAccrueInterestCalls(
@@ -380,16 +362,8 @@ contract OrderedConfigsTest is Test {
     }
 
     function _mockShareTokensBalances(address _user, uint256 _balance0, uint256 _balance1) internal {
-        vm.mockCall(
-            _configData0.debtShareToken,
-            abi.encodeCall(IERC20.balanceOf, _user),
-            abi.encode(_balance0)
-        );
+        vm.mockCall(_configData0.debtShareToken, abi.encodeCall(IERC20.balanceOf, _user), abi.encode(_balance0));
 
-        vm.mockCall(
-            _configData1.debtShareToken,
-            abi.encodeCall(IERC20.balanceOf, _user),
-            abi.encode(_balance1)
-        );
+        vm.mockCall(_configData1.debtShareToken, abi.encodeCall(IERC20.balanceOf, _user), abi.encode(_balance1));
     }
 }

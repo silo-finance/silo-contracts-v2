@@ -90,9 +90,8 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        (
-            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
-        ) = partialLiquidation.maxLiquidation(borrower);
+        (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired) =
+            partialLiquidation.maxLiquidation(borrower);
 
         assertTrue(!sTokenRequired, "sTokenRequired not required");
 
@@ -105,11 +104,7 @@ contract MaxLiquidationDustTest is MaxLiquidationCommon {
         uint256 maxDebtToCover = debtToRepay % 2 == 0 ? type(uint256).max : debtToRepay;
 
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
-            address(_sameToken ? token1 : token0),
-            address(token1),
-            borrower,
-            maxDebtToCover,
-            _receiveSToken
+            address(_sameToken ? token1 : token0), address(token1), borrower, maxDebtToCover, _receiveSToken
         );
 
         emit log_named_uint("[DustLiquidation] withdrawCollateral", withdrawCollateral);

@@ -6,7 +6,9 @@ import {console2} from "forge-std/console2.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 
-import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
+import {
+    DynamicKinkModel, IDynamicKinkModel
+} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
 import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 
@@ -310,8 +312,11 @@ contract DynamicKinkModelTest is KinkCommonTest {
 
         console2.log("rcur %s", rcur);
 
-        if (_utilizationData.debtAssets == 0) assertEq(rcur, 0, "[getCurrentInterestRate] rcur is not 0 when no debt");
-        else assertTrue(rcur >= 0 && rcur <= uint256(irm.RCUR_CAP()), "[getCurrentInterestRate] rcur out of range");
+        if (_utilizationData.debtAssets == 0) {
+            assertEq(rcur, 0, "[getCurrentInterestRate] rcur is not 0 when no debt");
+        } else {
+            assertTrue(rcur >= 0 && rcur <= uint256(irm.RCUR_CAP()), "[getCurrentInterestRate] rcur out of range");
+        }
     }
 
     function _kink_updateConfig_pass(IDynamicKinkModel.Config memory _config) internal {
@@ -333,7 +338,9 @@ contract DynamicKinkModelTest is KinkCommonTest {
 
         _assertCorrectHistory(irm.irmConfig(), prevConfig);
         assertEq(newImmutable.timelock, prevImmutable.timelock, "timelock is not the same");
-        assertEq(newImmutable.rcompCapPerSecond, prevImmutable.rcompCapPerSecond, "rcompCapPerSecond is not the same");
+        assertEq(
+            newImmutable.rcompCapPerSecond, prevImmutable.rcompCapPerSecond, "rcompCapPerSecond is not the same"
+        );
     }
 
     /*
@@ -363,7 +370,9 @@ contract DynamicKinkModelTest is KinkCommonTest {
 
         irm.updateConfig(config);
 
-        _setUtilizationData(ISilo.UtilizationData({interestRateTimestamp: 1, collateralAssets: 1e18, debtAssets: _u}));
+        _setUtilizationData(
+            ISilo.UtilizationData({interestRateTimestamp: 1, collateralAssets: 1e18, debtAssets: _u})
+        );
 
         uint256 blockTimestamp = 365 days;
 
@@ -418,7 +427,9 @@ contract DynamicKinkModelTest is KinkCommonTest {
     }
 
     function _kink_zeroRateAlways_u(uint256 _u) public {
-        _setUtilizationData(ISilo.UtilizationData({interestRateTimestamp: 1, collateralAssets: 1e18, debtAssets: _u}));
+        _setUtilizationData(
+            ISilo.UtilizationData({interestRateTimestamp: 1, collateralAssets: 1e18, debtAssets: _u})
+        );
 
         IDynamicKinkModel.Config memory config;
         irm.updateConfig(config);

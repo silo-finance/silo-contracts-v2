@@ -38,7 +38,8 @@ contract ActionsInitializeTest is Test, SiloLittleHelper {
         // we have to mock it, so it will not throw with WrongSilo()
         vm.mockCall(
             address(siloConfig),
-            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(this)), abi.encode(mockedCfg)
+            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(this)),
+            abi.encode(mockedCfg)
         );
 
         address hook = Actions.initialize(siloConfig);
@@ -56,7 +57,8 @@ contract ActionsInitializeTest is Test, SiloLittleHelper {
         // we have to mock it, so it will not throw with WrongSilo()
         vm.mockCall(
             address(siloConfig),
-            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(this)), abi.encode(mockedCfg)
+            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(this)),
+            abi.encode(mockedCfg)
         );
 
         Actions.initialize(siloConfig);

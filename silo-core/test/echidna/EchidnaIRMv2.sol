@@ -99,7 +99,11 @@ contract EchidnaIRMv2 is PropertiesAsserts {
         });
     }
 
-    function _fetchConfigAndUtilization() internal view returns (IInterestRateModelV2.Config memory config, int256 utilization) {
+    function _fetchConfigAndUtilization()
+        internal
+        view
+        returns (IInterestRateModelV2.Config memory config, int256 utilization)
+    {
         config = IRMv2.getConfig(address(this));
         utilization = SiloMathLib.calculateUtilization(_DP, totalCollateral, totalDebt).toInt256();
     }
@@ -126,9 +130,11 @@ contract EchidnaIRMv2 is PropertiesAsserts {
         uint256 rcomp;
         int256 ri;
         int256 Tcrit;
-        
+
         if (utilization > config.ucrit && config.beta != 0) {
-            (rcomp, ri, Tcrit) = IRMv2.calculateCompoundInterestRate(config, totalCollateral, totalDebt, interestRateTimestamp, block.timestamp);
+            (rcomp, ri, Tcrit) = IRMv2.calculateCompoundInterestRate(
+                config, totalCollateral, totalDebt, interestRateTimestamp, block.timestamp
+            );
             require(Tcrit != 0, "Tcrit overflow");
             assertGt(Tcrit, config.Tcrit, "Tcrit does not grow");
         }
@@ -141,14 +147,18 @@ contract EchidnaIRMv2 is PropertiesAsserts {
         uint256 rcomp;
         int256 ri;
         int256 Tcrit;
-        
+
         if (utilization > config.uopt && config.beta != 0) {
-            (rcomp, ri, Tcrit) = IRMv2.calculateCompoundInterestRate(config, totalCollateral, totalDebt, interestRateTimestamp, block.timestamp);
+            (rcomp, ri, Tcrit) = IRMv2.calculateCompoundInterestRate(
+                config, totalCollateral, totalDebt, interestRateTimestamp, block.timestamp
+            );
             assertGte(ri, config.ri, "Tcrit does not grow");
         }
     }
 
-    function checkOperatorPrecedance(int256 kcrit, int256 Tcrit, int256 beta, int256 T, int256 u, int256 ucrit) public {
+    function checkOperatorPrecedance(int256 kcrit, int256 Tcrit, int256 beta, int256 T, int256 u, int256 ucrit)
+        public
+    {
         int256 DP = 1e18;
         Tcrit = clampGte(Tcrit, 0);
         kcrit = clampGte(kcrit, 0);
@@ -161,5 +171,4 @@ contract EchidnaIRMv2 is PropertiesAsserts {
 
         assertEq(result, expected, "Incorrect operator precedence");
     }
-
 }

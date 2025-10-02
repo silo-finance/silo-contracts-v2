@@ -8,7 +8,7 @@ import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateMo
 contract InterestRateModelMock is Test {
     address public immutable ADDRESS;
 
-    constructor () {
+    constructor() {
         ADDRESS = makeAddr("InterestRateModelMock");
     }
 

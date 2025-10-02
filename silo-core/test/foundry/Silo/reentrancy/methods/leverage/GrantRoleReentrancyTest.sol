@@ -31,11 +31,9 @@ contract GrantRoleReentrancyTest is MethodReentrancyTest {
         bytes32 adminRole = router.PAUSER_ADMIN_ROLE();
         bytes32 pauserRole = router.PAUSER_ROLE();
 
-        vm.expectRevert(abi.encodeWithSelector(
-            IAccessControl.AccessControlUnauthorizedAccount.selector,
-            anyAccount,
-            adminRole
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, anyAccount, adminRole)
+        );
 
         vm.prank(anyAccount);
         router.grantRole(pauserRole, address(this));

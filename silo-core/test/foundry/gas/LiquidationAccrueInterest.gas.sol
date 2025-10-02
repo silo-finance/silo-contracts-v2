@@ -36,8 +36,7 @@ contract LiquidationAccrueInterestGasTest is Gas, Test {
             DEPOSITOR,
             address(partialLiquidation),
             abi.encodeCall(
-                IPartialLiquidation.liquidationCall,
-                (address(token0), address(token1), BORROWER, ASSETS / 2, false)
+                IPartialLiquidation.liquidationCall, (address(token0), address(token1), BORROWER, ASSETS / 2, false)
             ),
             "LiquidationCall with accrue interest",
             465787,

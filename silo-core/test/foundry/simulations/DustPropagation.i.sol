@@ -75,23 +75,11 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         assertEq(IShareToken(configData.protectedShareToken).totalSupply(), 0, "expected protectedShareToken 0");
         assertEq(silo0.getDebtAssets(), 0, "total debt == 0");
 
-        assertEq(
-            token0.balanceOf(address(silo0)),
-            DUST_LEFT,
-            "no balance after withdraw fees (except dust!)"
-        );
+        assertEq(token0.balanceOf(address(silo0)), DUST_LEFT, "no balance after withdraw fees (except dust!)");
 
-        assertEq(
-            silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral),
-            DUST_LEFT,
-            "storage AssetType.Collateral"
-        );
+        assertEq(silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral), DUST_LEFT, "storage AssetType.Collateral");
 
-        assertEq(
-            silo0.getCollateralAssets(),
-            DUST_LEFT,
-            "total collateral == 4, dust!"
-        );
+        assertEq(silo0.getCollateralAssets(), DUST_LEFT, "total collateral == 4, dust!");
 
         assertEq(silo0.getLiquidity(), DUST_LEFT, "getLiquidity == 4, dust!");
 
@@ -171,10 +159,8 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_dustPropagation_noInterest_twoUsers_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_dustPropagation_noInterest_twoUsers_fuzz(
-        uint128 deposit1, uint128 deposit2
-    ) public {
-//        (uint128 deposit1, uint128 deposit2) = (13181, 49673014963301);
+    function test_dustPropagation_noInterest_twoUsers_fuzz(uint128 deposit1, uint128 deposit2) public {
+        //        (uint128 deposit1, uint128 deposit2) = (13181, 49673014963301);
         vm.assume(deposit1 > DUST_LEFT);
         vm.assume(deposit2 > DUST_LEFT);
 
@@ -196,7 +182,8 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         assertLe(
             silo0.getLiquidity() - DUST_LEFT,
             1,
-            "no interest, so expecting no dust on deposit-withdraw, only rounding down is expected");
+            "no interest, so expecting no dust on deposit-withdraw, only rounding down is expected"
+        );
     }
 
     function _withdrawFromSilo(address _user, uint256 _deposited, uint256 _shares) internal {
@@ -218,7 +205,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
         bool userGotMore = withdrawn > _deposited;
 
-        uint256 diff = userGotMore ? withdrawn - _deposited: _deposited - withdrawn;
+        uint256 diff = userGotMore ? withdrawn - _deposited : _deposited - withdrawn;
 
         emit log_named_uint("diff", diff);
 
@@ -233,9 +220,15 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         emit log_named_string("================ ", _title);
 
         emit log_named_decimal_uint("[silo0] borrower LTV ", silo0.getLtv(BORROWER), 16);
-        emit log_named_decimal_uint("[silo0] borrower collateral shares ", IShareToken(collateralConfig.collateralShareToken).balanceOf(BORROWER), 18);
+        emit log_named_decimal_uint(
+            "[silo0] borrower collateral shares ",
+            IShareToken(collateralConfig.collateralShareToken).balanceOf(BORROWER),
+            18
+        );
         emit log_named_decimal_uint("[silo0] borrower debt (max repay)", silo0.maxRepay(BORROWER), 18);
-        emit log_named_decimal_uint("[silo0] collateral assets RAW (storage)", silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral), 18);
+        emit log_named_decimal_uint(
+            "[silo0] collateral assets RAW (storage)", silo0.getTotalAssetsStorage(ISilo.AssetType.Collateral), 18
+        );
         emit log_named_decimal_uint("[silo0] collateral assets with interest", silo0.getCollateralAssets(), 18);
         emit log_named_decimal_uint("[silo0] liquidity", silo0.getLiquidity(), 18);
         emit log_named_decimal_uint("[silo0] balanceOf(silo)", token0.balanceOf(address(silo0)), 18);
@@ -243,7 +236,9 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         (uint256 collateralToWithdraw, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
 
         if (debtToRepay != 0) {
-            emit log_named_decimal_uint("[silo0] liquidation possible, collateralToWithdraw", collateralToWithdraw, 18);
+            emit log_named_decimal_uint(
+                "[silo0] liquidation possible, collateralToWithdraw", collateralToWithdraw, 18
+            );
             emit log_named_decimal_uint("[silo0] liquidation possible, debtToRepay", debtToRepay, 18);
         }
 

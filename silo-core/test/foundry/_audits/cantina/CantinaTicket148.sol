@@ -63,9 +63,9 @@ contract CantinaTicket148 is CantinaTicket {
 
         //oracle price for WETH
         /* SILO: this mock doing nothing, can be commented out */
-//        address oracle = siloConfig.getConfig(address(silo0)).maxLtvOracle;
-//        vm.mockCall(oracle, abi.encodeWithSignature("getPrice()"), abi.encode(2000e18)); // WETH = $2000
-//        console.log("Oracle price: WETH = $2000");
+        //        address oracle = siloConfig.getConfig(address(silo0)).maxLtvOracle;
+        //        vm.mockCall(oracle, abi.encodeWithSignature("getPrice()"), abi.encode(2000e18)); // WETH = $2000
+        //        console.log("Oracle price: WETH = $2000");
 
         console.log("\n=== Step 4: Alice's Borrow ===");
         uint256 aliceBorrow = 150_000e6; // 150k USDC
@@ -88,14 +88,14 @@ contract CantinaTicket148 is CantinaTicket {
         console.log("Bob deposited:", bobDeposit, "WETH");
         console.log("Bob's WETH shares in Silo0:", silo0.balanceOf(bob));
 
-//        console.log("\n=== Step 6: Market Crash ===");
-//        vm.mockCall(
-//            oracle,
-//            abi.encodeWithSignature("getPrice()"),
-//            abi.encode(1000e18)
-//        );
+        //        console.log("\n=== Step 6: Market Crash ===");
+        //        vm.mockCall(
+        //            oracle,
+        //            abi.encodeWithSignature("getPrice()"),
+        //            abi.encode(1000e18)
+        //        );
 
-//        console.log("Oracle price updated: WETH = $1000");
+        //        console.log("Oracle price updated: WETH = $1000");
 
         // Print detailed state
         console.log("\n=== Detailed State After Market Crash ===");
@@ -115,7 +115,7 @@ contract CantinaTicket148 is CantinaTicket {
 
         //Bob's loss
         /* SILO: assets mismatch with shared */
-//        uint256 bobFinalWETH = silo0.balanceOf(bob);
+        //        uint256 bobFinalWETH = silo0.balanceOf(bob);
         uint256 bobFinalWETH = silo0.convertToAssets(silo0.balanceOf(bob));
         uint256 bobLoss = bobDeposit - bobFinalWETH;
 
@@ -126,7 +126,7 @@ contract CantinaTicket148 is CantinaTicket {
         assertTrue(bobLoss == 0, "Bob NOT lost WETH");
         assertTrue(silo1.balanceOf(alice) == 0, "Alice debt");
         /* SILO: convertToAsset to asset were missing */
-//        assertTrue(silo0.balanceOf(bob) < bobDeposit, "Bob WETH shares lost");
+        //        assertTrue(silo0.balanceOf(bob) < bobDeposit, "Bob WETH shares lost");
         assertTrue(silo0.convertToAssets(silo0.balanceOf(bob)) == bobDeposit, "Bob WETH shares NOT lost");
     }
 }

@@ -53,7 +53,8 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         _deposit(address(this), 2e18, ISilo.CollateralType.Collateral);
         _deposit(address(this), 1e18, ISilo.CollateralType.Protected);
 
-        (address protectedShareToken, address collateralShareToken, address debtShareToken) = siloConfig.getShareTokens(address(silo0));
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            siloConfig.getShareTokens(address(silo0));
         uint256 sharesBefore = IShareToken(collateralShareToken).balanceOf(address(this));
 
         assertEq(silo0.maxWithdraw(address(this)), 2e18 - 1, "available collateral");
@@ -61,7 +62,11 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         uint256 gotShares = _withdraw(address(this), 2e18, ISilo.CollateralType.Collateral);
 
         assertEq(IShareToken(debtShareToken).balanceOf(address(this)), 0, "debtShareToken");
-        assertEq(IShareToken(protectedShareToken).balanceOf(address(this)), 1e18 * SiloMathLib._DECIMALS_OFFSET_POW, "protectedShareToken stays the same");
+        assertEq(
+            IShareToken(protectedShareToken).balanceOf(address(this)),
+            1e18 * SiloMathLib._DECIMALS_OFFSET_POW,
+            "protectedShareToken stays the same"
+        );
         assertEq(IShareToken(collateralShareToken).balanceOf(address(this)), 0, "collateral burned");
         assertEq(gotShares, sharesBefore, "withdraw all shares");
 
@@ -75,7 +80,8 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         _deposit(address(this), 2e18, ISilo.CollateralType.Collateral);
         _deposit(address(this), 1e18, ISilo.CollateralType.Protected);
 
-        (address protectedShareToken, address collateralShareToken, address debtShareToken) = siloConfig.getShareTokens(address(silo0));
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            siloConfig.getShareTokens(address(silo0));
         uint256 sharesBefore = IShareToken(protectedShareToken).balanceOf(address(this));
 
         assertEq(silo0.maxWithdraw(address(this)), 2e18 - 1, "available collateral");
@@ -86,7 +92,11 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
 
         assertEq(IShareToken(debtShareToken).balanceOf(address(this)), 0, "debtShareToken");
         assertEq(IShareToken(protectedShareToken).balanceOf(address(this)), 0, "protectedShareToken stays the same");
-        assertEq(IShareToken(collateralShareToken).balanceOf(address(this)), 2e18 * SiloMathLib._DECIMALS_OFFSET_POW, "collateral burned");
+        assertEq(
+            IShareToken(collateralShareToken).balanceOf(address(this)),
+            2e18 * SiloMathLib._DECIMALS_OFFSET_POW,
+            "collateral burned"
+        );
         assertEq(gotShares, sharesBefore, "withdraw all shares");
 
         assertEq(silo0.getTotalAssetsStorage(ISilo.AssetType.Protected), 0, "protected Assets should be withdrawn");
@@ -122,7 +132,11 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
 
         _userWithdrawing();
 
-        assertEq(silo0.getTotalAssetsStorage(ISilo.AssetType.Protected), 11e18 + 1, "protected Assets should be withdrawn");
+        assertEq(
+            silo0.getTotalAssetsStorage(ISilo.AssetType.Protected),
+            11e18 + 1,
+            "protected Assets should be withdrawn"
+        );
         assertEq(silo0.getCollateralAssets(), 22e18 + 1, "protected Assets should be withdrawn");
     }
 
@@ -160,7 +174,8 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
     }
 
     function _userWithdrawing() internal {
-        (address protectedShareToken, address collateralShareToken, address debtShareToken) = siloConfig.getShareTokens(address(silo0));
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            siloConfig.getShareTokens(address(silo0));
 
         assertEq(silo0.maxWithdraw(address(this)), 2e18, "available collateral #1");
 
@@ -193,7 +208,8 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
     }
 
     function _userWithdrawing_oneUser() internal {
-        (address protectedShareToken, address collateralShareToken, address debtShareToken) = siloConfig.getShareTokens(address(silo0));
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            siloConfig.getShareTokens(address(silo0));
 
         assertEq(silo0.maxWithdraw(address(this)), 2e18 - 1, "available collateral #1");
 
@@ -233,7 +249,10 @@ contract WithdrawWhenNoDebtTest is SiloLittleHelper, Test {
         silo0.deposit(_amount, _depositor, _type);
     }
 
-    function _withdraw(address _depositor, uint256 _amount, ISilo.CollateralType _type) internal returns (uint256 assets){
+    function _withdraw(address _depositor, uint256 _amount, ISilo.CollateralType _type)
+        internal
+        returns (uint256 assets)
+    {
         vm.prank(_depositor);
         return silo0.withdraw(_amount, _depositor, _depositor, _type);
     }

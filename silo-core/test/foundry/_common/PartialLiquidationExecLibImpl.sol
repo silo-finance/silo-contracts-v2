@@ -9,11 +9,7 @@ contract PartialLiquidationExecLibImpl {
     function liquidationPreview(
         SiloSolvencyLib.LtvData memory _ltvData,
         PartialLiquidationLib.LiquidationPreviewParams memory _params
-    )
-        external
-        view
-        returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets, bytes4 customError)
-    {
+    ) external view returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets, bytes4 customError) {
         return PartialLiquidationExecLib.liquidationPreview(_ltvData, _params);
     }
 }

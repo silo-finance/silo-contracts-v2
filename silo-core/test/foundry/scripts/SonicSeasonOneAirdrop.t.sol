@@ -19,7 +19,7 @@ contract SonicSeasonOneAirdropTest is Test {
         vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 40727841);
         airdropWallet = vm.createWallet(uint256(keccak256(bytes("1"))));
         vm.setEnv("AIRDROP_PRIVATE_KEY", Strings.toHexString(airdropWallet.privateKey));
-        deal(airdropWallet.addr, 10**18 * 10**18);
+        deal(airdropWallet.addr, 10 ** 18 * 10 ** 18);
     }
 
     function test_CheckQAWalletBalance() public view {

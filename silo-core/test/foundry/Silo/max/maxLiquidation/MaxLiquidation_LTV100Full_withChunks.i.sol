@@ -19,9 +19,8 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        (
-            uint256 totalCollateralToLiquidate, uint256 totalDebtToCover,
-        ) = partialLiquidation.maxLiquidation(borrower);
+        (uint256 totalCollateralToLiquidate, uint256 totalDebtToCover,) =
+            partialLiquidation.maxLiquidation(borrower);
 
         emit log_named_decimal_uint("[LTV100FullWithChunks] ltv before", silo0.getLtv(borrower), 16);
 
@@ -42,7 +41,8 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
                 continue;
             }
 
-            { // too deep
+            {
+                // too deep
                 bool isSolvent = silo0.isSolvent(borrower);
 
                 if (isSolvent && maxDebtToCover != 0) revert("if we solvent there should be no liquidation");
@@ -54,9 +54,8 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
             uint256 testDebtToCover = _calculateChunk(maxDebtToCover, i);
             emit log_named_uint("[LTV100FullWithChunks] testDebtToCover", testDebtToCover);
 
-            (
-                uint256 partialCollateral, uint256 partialDebt
-            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
+            (uint256 partialCollateral, uint256 partialDebt) =
+                _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
 
             _assertLeDiff(partialCollateral, collateralToLiquidate, "partialCollateral");
 
@@ -69,9 +68,7 @@ contract MaxLiquidationLTV100FullWithChunksTest is MaxLiquidationLTV100FullTest 
         assertLe(repayDebtAssets, totalDebtToCover, "chunks(debt) can not be bigger than total/max");
 
         _assertLeDiff(
-            withdrawCollateral,
-            totalCollateralToLiquidate,
-            "chunks(collateral) can not be bigger than total/max"
+            withdrawCollateral, totalCollateralToLiquidate, "chunks(collateral) can not be bigger than total/max"
         );
     }
 

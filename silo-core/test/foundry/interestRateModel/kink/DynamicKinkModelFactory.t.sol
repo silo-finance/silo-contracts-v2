@@ -8,7 +8,9 @@ import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
 import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
-import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
+import {
+    DynamicKinkModel, IDynamicKinkModel
+} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
 import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 import {IDynamicKinkModelFactory} from "../../../../contracts/interfaces/IDynamicKinkModelFactory.sol";
@@ -64,10 +66,11 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_predictAddress_pass -vv
     */
-    function test_kink_predictAddress_pass(RandomKinkConfig memory _config, address _deployer, bytes32 _externalSalt)
-        public
-        whenValidConfig(_config)
-    {
+    function test_kink_predictAddress_pass(
+        RandomKinkConfig memory _config,
+        address _deployer,
+        bytes32 _externalSalt
+    ) public whenValidConfig(_config) {
         vm.assume(_deployer != address(0));
 
         address predictedAddress = FACTORY.predictAddress(_deployer, _externalSalt);
@@ -78,7 +81,9 @@ contract DynamicKinkModelFactoryTest is KinkCommonTest {
         IInterestRateModel deployedIrm =
             FACTORY.create(config, immutableArgs, address(this), address(this), _externalSalt);
 
-        assertEq(predictedAddress, address(deployedIrm), "predicted address is not the same as the deployed address");
+        assertEq(
+            predictedAddress, address(deployedIrm), "predicted address is not the same as the deployed address"
+        );
     }
 
     /*

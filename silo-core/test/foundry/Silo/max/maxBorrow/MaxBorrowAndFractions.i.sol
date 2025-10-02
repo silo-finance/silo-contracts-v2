@@ -71,10 +71,10 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxBorrow_WithFractions_any_scenario_fuzz(
-       uint256 _firstBorrowAmount,
-       uint256 _depositAmount,
-       bool _borrowShares,
-       uint8 _scenario
+        uint256 _firstBorrowAmount,
+        uint256 _depositAmount,
+        bool _borrowShares,
+        uint8 _scenario
     ) public {
         // (uint256 _firstBorrowAmount,
         //     uint256 _depositAmount,
@@ -88,7 +88,7 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
 
         // We need to create a debt before testing, because of that `_firstBorrowAmount` should be < `maxBorrow`.
         // Otherwise, the test will fail because we will not be able to borrow a second time.
-    uint256 randomChunk = _firstBorrowAmount % 900;
+        uint256 randomChunk = _firstBorrowAmount % 900;
         vm.assume(_firstBorrowAmount != 0 && _firstBorrowAmount <= maxBorrow * randomChunk / 1000);
         vm.assume(_scenario == 1 || _scenario == 2 || _scenario == 3);
 
@@ -144,7 +144,8 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         if (_borrowShares) {
             uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
 
-            if (silo1.getDebtAssets() != 0) { // no debt - no interest
+            if (silo1.getDebtAssets() != 0) {
+                // no debt - no interest
                 SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
             }
 
@@ -153,7 +154,8 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         } else {
             uint256 maxBorrow = silo1.maxBorrow(borrower);
 
-            if (silo1.getDebtAssets() != 0) { // no debt - no interest
+            if (silo1.getDebtAssets() != 0) {
+                // no debt - no interest
                 SiloHarness(payable(address(silo1))).increaseTotalDebtAssets(1);
             }
 
@@ -265,7 +267,8 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         if (_borrowShares) {
             uint256 maxBorrowShares = silo1.maxBorrowShares(borrower);
 
-            if (silo1.getDebtAssets() != 0) { // no debt - no interest  
+            if (silo1.getDebtAssets() != 0) {
+                // no debt - no interest
                 SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1);
             }
 
@@ -274,7 +277,8 @@ contract MaxBorrowAndFractions is SiloLittleHelper, Test {
         } else {
             uint256 maxBorrow = silo1.maxBorrow(borrower);
 
-            if (silo1.getDebtAssets() != 0) { // no debt - no interest
+            if (silo1.getDebtAssets() != 0) {
+                // no debt - no interest
                 SiloHarness(payable(address(silo1))).decreaseTotalCollateralAssets(1);
             }
 

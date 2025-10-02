@@ -19,7 +19,8 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
         override
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
-        (uint256 totalCollateralToLiquidate, uint256 totalDebtToCover,) = partialLiquidation.maxLiquidation(borrower);
+        (uint256 totalCollateralToLiquidate, uint256 totalDebtToCover,) =
+            partialLiquidation.maxLiquidation(borrower);
 
         for (uint256 i; i < 5; i++) {
             emit log_named_uint("[MaxLiquidationWithChunks] case ------------------------", i);
@@ -39,9 +40,8 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
 
             uint256 testDebtToCover = _calculateChunk(maxDebtToCover, i);
 
-            (
-                uint256 partialCollateral, uint256 partialDebt
-            ) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
+            (uint256 partialCollateral, uint256 partialDebt) =
+                _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
 
             withdrawCollateral += partialCollateral;
             repayDebtAssets += partialDebt;
@@ -54,9 +54,7 @@ contract MaxLiquidationWithChunksTest is MaxLiquidationTest {
         assertLe(repayDebtAssets, totalDebtToCover, "chunks(debt) can not be bigger than total/max");
 
         _assertLeDiff(
-            withdrawCollateral,
-            totalCollateralToLiquidate,
-            "chunks(collateral) can not be bigger than total/max"
+            withdrawCollateral, totalCollateralToLiquidate, "chunks(collateral) can not be bigger than total/max"
         );
     }
 

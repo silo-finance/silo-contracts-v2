@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 import {Test} from "forge-std/Test.sol";
 
 import {SignedMath} from "openzeppelin5/utils/math/SignedMath.sol";
-import {DynamicKinkModel, IDynamicKinkModel} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
+import {
+    DynamicKinkModel, IDynamicKinkModel
+} from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../../../contracts/interfaces/IDynamicKinkModelConfig.sol";
 
 import {KinkCommon} from "./KinkCommon.sol";

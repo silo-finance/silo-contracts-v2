@@ -43,10 +43,7 @@ contract CalculateMaxAssetsToWithdrawTestData {
 
         ourMax = 999099909990999099;
         _add(10e18, 8e18, 0.8888e18, 5e18, 5e18, ourMax, "LTV after => 88,88% (1)");
-        _add(
-            10e18 - ourMax, 8e18, 0.8888e18, 10e18 - ourMax, 0, 0,
-            "based on above, we should expect 0"
-        );
+        _add(10e18 - ourMax, 8e18, 0.8888e18, 10e18 - ourMax, 0, 0, "based on above, we should expect 0");
 
         ourMax = uint256(999099909990999099) / 5;
         _add(10e18, 8e18, 0.8888e18, 1e18, 1e18, ourMax, "LTV after => 88,88% (2)");

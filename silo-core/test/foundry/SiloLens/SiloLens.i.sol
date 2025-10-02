@@ -40,14 +40,16 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_siloLens_utilization_75 -vv
     */
     function test_siloLens_utilization_75() public {
-
         uint256 deposit0 = 33e18;
         uint256 deposit1 = 11e18;
         uint256 collateral = 11e18;
 
         _deposit(deposit0, depositor);
         assertTrue(siloLens.hasPosition(siloConfig, depositor), "hasPosition");
-        assertTrue(siloLens.hasPosition(siloConfig, depositor), "depositor has position in silo0 but we checking whole market");
+        assertTrue(
+            siloLens.hasPosition(siloConfig, depositor),
+            "depositor has position in silo0 but we checking whole market"
+        );
 
         _depositForBorrow(deposit1, depositor);
 
@@ -101,9 +103,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         );
 
         assertEq(
-            siloLens.calculateBorrowValue(siloConfig, borrower),
-            toBorrow,
-            "calculateBorrowValue (price is 1:1)"
+            siloLens.calculateBorrowValue(siloConfig, borrower), toBorrow, "calculateBorrowValue (price is 1:1)"
         );
 
         assertEq(
@@ -112,17 +112,9 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
             "collateralBalanceOfUnderlying after borrow"
         );
 
-        assertEq(
-            siloLens.debtBalanceOfUnderlying(silo0, borrower),
-            0,
-            "[debtBalanceOfUnderlying] no debt in silo0"
-        );
+        assertEq(siloLens.debtBalanceOfUnderlying(silo0, borrower), 0, "[debtBalanceOfUnderlying] no debt in silo0");
 
-        assertEq(
-            siloLens.debtBalanceOfUnderlying(silo1, borrower),
-            toBorrow,
-            "collateralBalanceOfUnderlying"
-        );
+        assertEq(siloLens.debtBalanceOfUnderlying(silo1, borrower), toBorrow, "collateralBalanceOfUnderlying");
 
         assertEq(siloLens.totalDeposits(silo1), deposit1, "totalDeposits after borrow are the same");
 
@@ -141,7 +133,9 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(aprs[0].borrowAPR, 6_605018041879152000, "apr.getBorrowAPR after 65 days #1");
         assertEq(aprs[0].depositAPR, 4_625564840789060382, "aps.getDepositAPR after 65 days #1");
 
-        assertLt(siloLens.getDepositAPR(silo1), siloLens.getBorrowAPR(silo1), "deposit APR should be less than borrow");
+        assertLt(
+            siloLens.getDepositAPR(silo1), siloLens.getBorrowAPR(silo1), "deposit APR should be less than borrow"
+        );
 
         assertFalse(siloLens.isSolvent(silo0, borrower), "borrower is NOT solvent @0");
         assertFalse(siloLens.isSolvent(silo1, borrower), "borrower is NOT solvent @1");
@@ -158,11 +152,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
             "totalDepositsWithInterest after borrow + time + interest"
         );
 
-        assertEq(
-            siloLens.totalBorrowAmount(silo1),
-            toBorrow,
-            "totalBorrowAmount = toBorrow (no interest)"
-        );
+        assertEq(siloLens.totalBorrowAmount(silo1), toBorrow, "totalBorrowAmount = toBorrow (no interest)");
 
         assertGt(
             siloLens.totalBorrowAmountWithInterest(silo1),
@@ -170,17 +160,9 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
             "totalBorrowAmountWithInterest = toBorrow + interest on the fly"
         );
 
-        assertEq(
-            siloLens.borrowShare(silo1, borrower),
-            toBorrow,
-            "borrowShare = toBorrow  (no offset)"
-        );
+        assertEq(siloLens.borrowShare(silo1, borrower), toBorrow, "borrowShare = toBorrow  (no offset)");
 
-        assertEq(
-            siloLens.totalBorrowShare(silo1),
-            toBorrow,
-            "totalBorrowShare = toBorrow  (no offset)"
-        );
+        assertEq(siloLens.totalBorrowShare(silo1), toBorrow, "totalBorrowShare = toBorrow  (no offset)");
 
         assertEq(siloLens.liquidity(silo0), deposit0 + collateral, "liquidity in silo0 after borrow + time");
 
@@ -194,9 +176,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(siloLens.getRawLiquidity(silo1), deposit1 - toBorrow, "getRawLiquidity 1 after borrow + time");
 
         assertEq(
-            siloLens.collateralBalanceOfUnderlying(silo0, borrower),
-            collateral,
-            "collateralBalanceOfUnderlying"
+            siloLens.collateralBalanceOfUnderlying(silo0, borrower), collateral, "collateralBalanceOfUnderlying"
         );
 
         assertGt(
@@ -213,11 +193,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(siloLens.getDepositAPR(silo0), 0, "getDepositAPR after accrueInterest #0");
         assertEq(siloLens.getDepositAPR(silo1), 4_861871934669203484, "getDepositAPR after accrueInterest #1");
 
-        assertGt(
-            siloLens.totalDeposits(silo1),
-            deposit1,
-            "totalDeposits after borrow + interest"
-        );
+        assertGt(siloLens.totalDeposits(silo1), deposit1, "totalDeposits after borrow + interest");
 
         uint256 maxRepayBefore = silo1.maxRepay(borrower);
         assertEq(maxRepayBefore, 14.994397297218850135e18, "maxRepayBefore");
@@ -232,7 +208,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(siloLens.getDepositAPR(silo1), 0, "getDepositAPR after long time #1");
 
         uint256 maxRepayAfter = silo1.maxRepay(borrower);
-        assertEq(maxRepayAfter, 1247.410613506809097700e18, "maxRepayAfter");
+        assertEq(maxRepayAfter, 1247.4106135068090977e18, "maxRepayAfter");
 
         assertTrue(siloLens.hasPosition(siloConfig, borrower), "hasPosition");
     }
@@ -268,7 +244,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     function _assertInterest(uint256 _toBorrow) internal {
         vm.warp(block.timestamp + 5 days);
 
-        uint256 getBorrowAPR =siloLens.getBorrowAPR(silo1);
+        uint256 getBorrowAPR = siloLens.getBorrowAPR(silo1);
         emit log_named_decimal_uint("utilization [%]", siloLens.getUtilization(silo1), 16);
         emit log_named_decimal_uint("borrow APR (CurrentInterestRate) [%]", siloLens.getBorrowAPR(silo1), 16);
 

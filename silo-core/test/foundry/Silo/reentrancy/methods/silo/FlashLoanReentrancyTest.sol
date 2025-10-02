@@ -10,7 +10,7 @@ import {TestStateLib} from "../../TestState.sol";
 import {MaliciousToken} from "../../MaliciousToken.sol";
 
 contract FlashLoanReentrancyTest is MethodReentrancyTest {
-    bytes32 constant public FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
+    bytes32 public constant FLASHLOAN_CALLBACK = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     // For the flash loan tests
     function onFlashLoan(address, address _token, uint256 _amount, uint256 _fee, bytes calldata)

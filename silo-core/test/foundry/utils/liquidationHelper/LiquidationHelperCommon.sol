@@ -30,14 +30,13 @@ abstract contract LiquidationHelperCommon is SiloLittleHelper, Test {
     address _debtAsset;
 
     constructor() {
-        LIQUIDATION_HELPER = new LiquidationHelper(
-            makeAddr("nativeToken"), makeAddr("DEXSWAP"), TOKENS_RECEIVER
-        );
+        LIQUIDATION_HELPER = new LiquidationHelper(makeAddr("nativeToken"), makeAddr("DEXSWAP"), TOKENS_RECEIVER);
     }
 
-    function _executeLiquidation(
-        uint256 _maxDebtToCover
-    ) internal returns (uint256 withdrawCollateral, uint256 repayDebtAssets) {
+    function _executeLiquidation(uint256 _maxDebtToCover)
+        internal
+        returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
+    {
         return LIQUIDATION_HELPER.executeLiquidation(
             _flashLoanFrom, _debtAsset, _maxDebtToCover, liquidationData, dexSwapInput
         );
@@ -61,9 +60,8 @@ abstract contract LiquidationHelperCommon is SiloLittleHelper, Test {
     }
 
     function _assertAddressHasNoSTokens(ISilo _silo, address _address) internal view {
-        (
-            address protectedShareToken, address collateralShareToken, address debtShareToken
-        ) = siloConfig.getShareTokens(address(_silo));
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            siloConfig.getShareTokens(address(_silo));
 
         uint256 pBalance = IERC20(protectedShareToken).balanceOf(_address);
         uint256 cBalance = IERC20(collateralShareToken).balanceOf(_address);

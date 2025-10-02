@@ -19,7 +19,7 @@ contract IncreaseReceiveAllowanceReentrancyTest is MethodReentrancyTest {
         address borrower = makeAddr("Borrower");
         address receiver = makeAddr("Receiver");
 
-        (,,address debtToken) = config.getShareTokens(address(silo0));
+        (,, address debtToken) = config.getShareTokens(address(silo0));
 
         uint256 allowance = 1000_0000e18;
 
@@ -43,7 +43,7 @@ contract IncreaseReceiveAllowanceReentrancyTest is MethodReentrancyTest {
         ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
 
-        (,,address debtToken) = config.getShareTokens(address(silo0));
+        (,, address debtToken) = config.getShareTokens(address(silo0));
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareDebtToken(debtToken).increaseReceiveAllowance(address(0), 0);

@@ -9,13 +9,13 @@ import {ShareToken} from "silo-core/contracts/utils/ShareToken.sol";
 import {ShareTokenMethodReentrancyTest} from "./_ShareTokenMethodReentrancyTest.sol";
 
 contract PermitReentrancyTest is ShareTokenMethodReentrancyTest {
-    bytes32 constant internal _PERMIT_TYPEHASH =
+    bytes32 internal constant _PERMIT_TYPEHASH =
         keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
-    bytes32 constant internal _TYPE_HASH =
+    bytes32 internal constant _TYPE_HASH =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
-    bytes32 constant internal _HASHED_VERSION = keccak256(bytes("1"));
+    bytes32 internal constant _HASHED_VERSION = keccak256(bytes("1"));
 
     function callMethod() external {
         emit log_string("\tEnsure it will not revert (all share tokens)");
@@ -33,8 +33,7 @@ contract PermitReentrancyTest is ShareTokenMethodReentrancyTest {
         uint256 nonce = ShareToken(_token).nonces(signer.addr);
         uint256 deadline = block.timestamp + 1000;
 
-        (uint8 v, bytes32 r, bytes32 s) =
-            _createPermit(signer, spender, value, nonce, deadline, address(_token));
+        (uint8 v, bytes32 r, bytes32 s) = _createPermit(signer, spender, value, nonce, deadline, address(_token));
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareToken(_token).permit(signer.addr, spender, value, deadline, v, r, s);
@@ -51,8 +50,7 @@ contract PermitReentrancyTest is ShareTokenMethodReentrancyTest {
         uint256 nonce = ShareToken(_token).nonces(signer.addr);
         uint256 deadline = block.timestamp + 1000;
 
-        (uint8 v, bytes32 r, bytes32 s) =
-            _createPermit(signer, spender, value, nonce, deadline, address(_token));
+        (uint8 v, bytes32 r, bytes32 s) = _createPermit(signer, spender, value, nonce, deadline, address(_token));
 
         ShareToken(_token).permit(signer.addr, spender, value, deadline, v, r, s);
     }

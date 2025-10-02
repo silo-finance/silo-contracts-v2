@@ -21,7 +21,6 @@ import {MintableToken} from "../../_common/MintableToken.sol";
 
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 
-
 /*
  forge test --ffi --mc LiquidationHelperOdosTest -vv
 */
@@ -44,7 +43,7 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, IntegrationTest {
         configOverride.token1 = AddrLib.getAddress(AddrKey.wS);
         configOverride.configName = "stS_S_Silo";
 
-        (, silo0, silo1,,,hookReceiver ) = siloFixture.deploy_local(configOverride);
+        (, silo0, silo1,,, hookReceiver) = siloFixture.deploy_local(configOverride);
 
         token0 = MintableToken(AddrLib.getAddress(AddrKey.stS));
         token1 = MintableToken(AddrLib.getAddress(AddrKey.wS));
@@ -150,22 +149,13 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, IntegrationTest {
         liquidation.user = borrower;
 
         liquidationHelper.executeLiquidation(
-            flashLoanFrom,
-            AddrLib.getAddress(AddrKey.wS),
-            silo1.maxRepay(borrower),
-            liquidation,
-            swapsInputs0x
+            flashLoanFrom, AddrLib.getAddress(AddrKey.wS), silo1.maxRepay(borrower), liquidation, swapsInputs0x
         );
     }
 
     function _mockOracleCall(bool _priceCrash) internal {
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = AggregatorV3Interface(0x65d0F14f7809CdC4f90c3978c753C4671b6B815b).latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            AggregatorV3Interface(0x65d0F14f7809CdC4f90c3978c753C4671b6B815b).latestRoundData();
 
         answer = _priceCrash ? answer * 9700001 / 10000000 : answer * 9995 / 10000;
 
@@ -189,10 +179,10 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, IntegrationTest {
         uint256 deposit = 37.5e18;
 
         vm.prank(stsWhale);
-        IERC20(AddrLib.getAddress(AddrKey.stS)).transfer(borrower,assets);
+        IERC20(AddrLib.getAddress(AddrKey.stS)).transfer(borrower, assets);
 
         vm.prank(wsWhale);
-        IERC20(AddrLib.getAddress(AddrKey.wS)).transfer(depositor,deposit);
+        IERC20(AddrLib.getAddress(AddrKey.wS)).transfer(depositor, deposit);
 
         vm.startPrank(depositor);
         IERC20(AddrLib.getAddress(AddrKey.wS)).approve(address(silo1), deposit);
@@ -214,11 +204,11 @@ contract LiquidationHelperOdosTest is SiloLittleHelper, IntegrationTest {
         emit log_named_decimal_uint("repay + flash fee", amountToRepay, 18);
 
         vm.prank(wsWhale);
-        IERC20(AddrLib.getAddress(AddrKey.wS)).transfer(depositor,amountToRepay);
+        IERC20(AddrLib.getAddress(AddrKey.wS)).transfer(depositor, amountToRepay);
 
         vm.startPrank(depositor);
         IERC20(AddrLib.getAddress(AddrKey.wS)).approve(address(flashLoanFrom), amountToRepay);
-        flashLoanFrom.deposit(amountToRepay , depositor, ISilo.CollateralType.Collateral);
+        flashLoanFrom.deposit(amountToRepay, depositor, ISilo.CollateralType.Collateral);
         vm.stopPrank();
     }
 }

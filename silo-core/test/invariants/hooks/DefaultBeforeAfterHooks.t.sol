@@ -43,7 +43,6 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
         // CollateralShares
         uint256 protectedShares;
         uint256 collateralShares;
-
         // Borrowing
         uint256 userDebtShares;
         uint256 userDebt;
@@ -157,7 +156,9 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
             (uint256 daoFee, uint256 deployerFee,,) = siloConfig.getFeesWithAsset(silo);
             if (daoFee != 0 && deployerFee != 0) {
                 assertGe(
-                    defaultVarsAfter[silo].daoAndDeployerFees, defaultVarsBefore[silo].daoAndDeployerFees, BASE_GPOST_B
+                    defaultVarsAfter[silo].daoAndDeployerFees,
+                    defaultVarsBefore[silo].daoAndDeployerFees,
+                    BASE_GPOST_B
                 );
             }
         }
@@ -173,7 +174,8 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
                     BASE_GPOST_D
                 );
             } else if (
-                msg.sig == IBorrowingHandler.borrow.selector || msg.sig == IBorrowingHandler.borrowSameAsset.selector
+                msg.sig == IBorrowingHandler.borrow.selector
+                    || msg.sig == IBorrowingHandler.borrowSameAsset.selector
                     || msg.sig == IBorrowingHandler.borrowShares.selector
             ) {
                 assertTrue(defaultVarsAfter[silo].isSolvent, BASE_GPOST_D);
@@ -182,7 +184,9 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
 
         address borrowerCollateralSilo = siloConfig.borrowerCollateralSilo(targetActor);
 
-        if (!defaultVarsBefore[silo].isSolvent && borrowerCollateralSilo == Actor(payable(targetActor)).lastTarget()) {
+        if (
+            !defaultVarsBefore[silo].isSolvent && borrowerCollateralSilo == Actor(payable(targetActor)).lastTarget()
+        ) {
             assertFalse(
                 msg.sig == IVaultHandler.withdraw.selector || msg.sig == IVaultHandler.redeem.selector, BASE_GPOST_D
             );

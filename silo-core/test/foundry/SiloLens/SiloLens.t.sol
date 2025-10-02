@@ -17,9 +17,9 @@ import {SiloLens} from "silo-core/contracts/SiloLens.sol";
     forge test -vv --ffi --mc SiloLensTest
 */
 contract SiloLensTest is SiloLittleHelper, Test {
-    uint256 constant internal _AMOUNT_COLLATERAL = 1000e18;
-    uint256 constant internal _AMOUNT_PROTECTED = 1000e18;
-    uint256 constant internal _AMOUNT_BORROW = 500e18;
+    uint256 internal constant _AMOUNT_COLLATERAL = 1000e18;
+    uint256 internal constant _AMOUNT_PROTECTED = 1000e18;
+    uint256 internal constant _AMOUNT_BORROW = 500e18;
 
     address internal _depositor = makeAddr("Depositor");
     address internal _borrower = makeAddr("Borrower");
@@ -29,17 +29,11 @@ contract SiloLensTest is SiloLittleHelper, Test {
     function setUp() public {
         _siloConfig = _setUpLocalFixture();
 
-        _makeDeposit(
-            silo1, token1, _AMOUNT_COLLATERAL, _depositor, ISilo.CollateralType.Collateral
-        );
+        _makeDeposit(silo1, token1, _AMOUNT_COLLATERAL, _depositor, ISilo.CollateralType.Collateral);
 
-        _makeDeposit(
-            silo1, token1, _AMOUNT_PROTECTED, _depositor, ISilo.CollateralType.Protected
-        );
+        _makeDeposit(silo1, token1, _AMOUNT_PROTECTED, _depositor, ISilo.CollateralType.Protected);
 
-        _makeDeposit(
-            silo0, token0, _AMOUNT_COLLATERAL, _borrower, ISilo.CollateralType.Collateral
-        );
+        _makeDeposit(silo0, token0, _AMOUNT_COLLATERAL, _borrower, ISilo.CollateralType.Collateral);
 
         vm.prank(_borrower);
         silo1.borrow(_AMOUNT_BORROW, _borrower, _borrower);
@@ -72,12 +66,11 @@ contract SiloLensTest is SiloLittleHelper, Test {
     function test_SiloLens_getDepositAPR() public view {
         assertEq(siloLens.getDepositAPR(silo0), 0, "Deposit APR in silo0 equal to 0 because there is no debt");
 
-        (,, uint256 daoFee, uint256 deployerFee) = 
-            siloLens.getFeesAndFeeReceivers(silo1);
-        
+        (,, uint256 daoFee, uint256 deployerFee) = siloLens.getFeesAndFeeReceivers(silo1);
+
         assertTrue(daoFee > 0, "daoFee > 0");
         assertTrue(deployerFee > 0, "deployerFee > 0");
-        
+
         uint256 depositAPR = siloLens.getDepositAPR(silo1);
         uint256 borrowAPR = siloLens.getBorrowAPR(silo1);
         assertTrue(depositAPR < borrowAPR, "depositAPR < borrowAPR because of fees");
@@ -87,7 +80,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
 
         assertEq(
             depositAPR,
-            (borrowAPR * debtAssets / collateralAssets) * (10**18 - daoFee - deployerFee) / 10**18,
+            (borrowAPR * debtAssets / collateralAssets) * (10 ** 18 - daoFee - deployerFee) / 10 ** 18,
             "Deposit APR is borrow APR multiplied by debt/deposits minus fees"
         );
     }
@@ -228,11 +221,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
     function test_SiloLens_getSiloIncentivesControllerProgramsNames() public {
         address token = 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f;
 
-        vm.mockCall(
-            token,
-            abi.encodeWithSelector(IERC20.balanceOf.selector, address(siloLens)),
-            abi.encode(0)
-        );
+        vm.mockCall(token, abi.encodeWithSelector(IERC20.balanceOf.selector, address(siloLens)), abi.encode(0));
 
         string memory expectedString = "0x5615deb798bb3e4dfa0139dfa1b3d433cc23b72f";
         bytes32 programId = bytes32(hex"5615deb798bb3e4dfa0139dfa1b3d433cc23b72f");
@@ -273,6 +262,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test \
         forge test --ffi --mt test_SiloLens_20BytesName_getSiloIncentivesControllerProgramsNames -vvv
     */
+
     function test_SiloLens_20BytesName_getSiloIncentivesControllerProgramsNames() public {
         string memory expectedString = "ssssssssssssssssssss";
         address siloIncentivesController = makeAddr("SiloIncentivesController");
@@ -282,9 +272,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
         address token = address(bytes20(nameBytes));
 
         vm.mockCallRevert(
-            token,
-            abi.encodeWithSelector(IERC20.balanceOf.selector, address(siloLens)),
-            abi.encode(0)
+            token, abi.encodeWithSelector(IERC20.balanceOf.selector, address(siloLens)), abi.encode(0)
         );
 
         // to simulate what we have in the DistributionManager

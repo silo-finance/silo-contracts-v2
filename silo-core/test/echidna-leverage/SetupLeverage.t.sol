@@ -8,7 +8,8 @@ import {ActorLeverage} from "./utils/ActorLeverage.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {
-    IInterestRateModelV2, InterestRateModelV2
+    IInterestRateModelV2,
+    InterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {SwapRouterMock} from "silo-core/test/foundry/leverage/mocks/SwapRouterMock.sol";

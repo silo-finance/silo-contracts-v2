@@ -57,11 +57,7 @@ contract LiquidationPreviewTestData {
                 totalBorrowerCollateralAssets: 1,
                 liquidationFee: 0.1e18
             }),
-            output: Output({
-                collateralAssetsToLiquidate: 0,
-                debtAssetsToRepay: 0,
-                ltvAfterLiquidation: 1e18
-            })
+            output: Output({collateralAssetsToLiquidate: 0, debtAssetsToRepay: 0, ltvAfterLiquidation: 1e18})
         });
 
         data[i++] = CELAData({ // #2
@@ -75,11 +71,7 @@ contract LiquidationPreviewTestData {
                 totalBorrowerCollateralAssets: 100e18,
                 liquidationFee: 0.1e18
             }),
-            output: Output({
-                collateralAssetsToLiquidate: 0,
-                debtAssetsToRepay: 0,
-                ltvAfterLiquidation: 0.01e18
-            })
+            output: Output({collateralAssetsToLiquidate: 0, debtAssetsToRepay: 0, ltvAfterLiquidation: 0.01e18})
         });
 
         data[i++] = CELAData({ // #3
@@ -121,14 +113,14 @@ contract LiquidationPreviewTestData {
 
         data[i++] = CELAData({ // #5
             input: Input({
-                lt: 0.80e18,
-                liquidationTargetLtv: 0.80e18 * 0.9e18 / 1e18,
+                lt: 0.8e18,
+                liquidationTargetLtv: 0.8e18 * 0.9e18 / 1e18,
                 maxDebtToCover: 0.5e18, // the value is 40e18 + fee => 44e18 in value
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerDebtAssets: 1e18,
                 totalBorrowerCollateralValue: 100e18,
                 totalBorrowerCollateralAssets: 10e18,
-                liquidationFee: 0.10e18
+                liquidationFee: 0.1e18
             }),
             output: Output({
                 collateralAssetsToLiquidate: 4230769230769230767,
@@ -143,7 +135,7 @@ contract LiquidationPreviewTestData {
             input: Input({
                 lt: 0.001e18,
                 liquidationTargetLtv: 0.001e18 * 0.9e18 / 1e18,
-                maxDebtToCover: 0.90e18, // the value is 72e18 + fee => 79.2e18 in value
+                maxDebtToCover: 0.9e18, // the value is 72e18 + fee => 79.2e18 in value
                 totalBorrowerDebtValue: 80e18,
                 totalBorrowerDebtAssets: 1e18,
                 totalBorrowerCollateralValue: 9_000e18,
@@ -247,11 +239,7 @@ contract LiquidationPreviewTestData {
                 totalBorrowerCollateralAssets: 10e18,
                 liquidationFee: 0.1e18
             }),
-            output: Output({
-                collateralAssetsToLiquidate: 10e18,
-                debtAssetsToRepay: 12e18,
-                ltvAfterLiquidation: 0
-            })
+            output: Output({collateralAssetsToLiquidate: 10e18, debtAssetsToRepay: 12e18, ltvAfterLiquidation: 0})
         });
 
         // we have bad debt and we will cover everything #2
@@ -266,11 +254,7 @@ contract LiquidationPreviewTestData {
                 totalBorrowerCollateralAssets: 30e18,
                 liquidationFee: 0.1e18
             }),
-            output: Output({
-                collateralAssetsToLiquidate: 30e18,
-                debtAssetsToRepay: 18e18,
-                ltvAfterLiquidation: 0
-            })
+            output: Output({collateralAssetsToLiquidate: 30e18, debtAssetsToRepay: 18e18, ltvAfterLiquidation: 0})
         });
 
         data[i++] = CELAData({ // #13

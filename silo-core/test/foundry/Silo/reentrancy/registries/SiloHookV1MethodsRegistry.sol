@@ -19,7 +19,8 @@ import {RenounceOwnershipReentrancyTest} from "../methods/silo-hook-v1/RenounceO
 import {SetGaugeReentrancyTest} from "../methods/silo-hook-v1/SetGaugeReentrancyTest.sol";
 import {SiloConfigReentrancyTest} from "../methods/silo-hook-v1/SiloConfigReentrancyTest.sol";
 import {TransferOwnershipReentrancyTest} from "../methods/silo-hook-v1/TransferOwnershipReentrancyTest.sol";
-import {TransferOwnership1StepReentrancyTest} from "../methods/silo-hook-v1/TransferOwnership1StepReentrancyTest.sol";
+import {TransferOwnership1StepReentrancyTest} from
+    "../methods/silo-hook-v1/TransferOwnership1StepReentrancyTest.sol";
 
 contract SiloHookV1MethodsRegistry is IMethodsRegistry {
     mapping(bytes4 methodSig => IMethodReentrancyTest) public methods;

@@ -16,12 +16,7 @@ contract SwapRouterMock {
     uint256 public amountIn;
     uint256 public amountOut;
 
-    function setSwap(
-        address _sellToken,
-        uint256 _amountIn,
-        address _buyToken,
-        uint256 _amountOut
-    ) external {
+    function setSwap(address _sellToken, uint256 _amountIn, address _buyToken, uint256 _amountOut) external {
         sellToken = _sellToken;
         buyToken = _buyToken;
 

@@ -3,9 +3,8 @@ pragma solidity ^0.8.28;
 
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
-import {
-    LeverageUsingSiloFlashloanWithGeneralSwap
-} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from
+    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
@@ -19,7 +18,7 @@ import {OpenLeveragePositionReentrancyTest} from "./OpenLeveragePositionReentran
 contract CloseLeveragePositionReentrancyTest is OpenLeveragePositionReentrancyTest {
     function callMethod() external virtual override {
         _openLeverage();
-        
+
         address user = wallet.addr;
 
         (
@@ -55,12 +54,12 @@ contract CloseLeveragePositionReentrancyTest is OpenLeveragePositionReentrancyTe
 
         bytes memory swapArgs = "";
 
-        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs =
-            ILeverageUsingSiloFlashloan.CloseLeverageArgs({
-                flashloanTarget: address(TestStateLib.silo1()),
-                siloWithCollateral: TestStateLib.silo0(),
-                collateralType: ISilo.CollateralType.Collateral
-            });
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs = ILeverageUsingSiloFlashloan
+            .CloseLeverageArgs({
+            flashloanTarget: address(TestStateLib.silo1()),
+            siloWithCollateral: TestStateLib.silo0(),
+            collateralType: ISilo.CollateralType.Collateral
+        });
 
         address user = wallet.addr;
         vm.prank(user);
@@ -72,10 +71,14 @@ contract CloseLeveragePositionReentrancyTest is OpenLeveragePositionReentrancyTe
         description = "closeLeveragePosition(bytes,(address,address,uint8))";
     }
 
-    function _closeLeverageArgs() internal view returns (
-        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs,
-        IGeneralSwapModule.SwapArgs memory swapArgs
-    ) {
+    function _closeLeverageArgs()
+        internal
+        view
+        returns (
+            ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs,
+            IGeneralSwapModule.SwapArgs memory swapArgs
+        )
+    {
         closeArgs = ILeverageUsingSiloFlashloan.CloseLeverageArgs({
             flashloanTarget: address(TestStateLib.silo1()),
             siloWithCollateral: TestStateLib.silo0(),

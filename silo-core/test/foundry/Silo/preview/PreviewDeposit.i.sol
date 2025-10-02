@@ -115,8 +115,16 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
         silo0.accrueInterest();
         silo1.accrueInterest();
 
-        assertEq(silo0.previewDeposit(_assets, cType), sharesBefore, "no interest in silo0, so preview should be the same");
-        assertEq(silo0.previewDeposit(_assets, cType), silo0.convertToShares(_assets, aType), "previewDeposit0 == convertToShares");
+        assertEq(
+            silo0.previewDeposit(_assets, cType),
+            sharesBefore,
+            "no interest in silo0, so preview should be the same"
+        );
+        assertEq(
+            silo0.previewDeposit(_assets, cType),
+            silo0.convertToShares(_assets, aType),
+            "previewDeposit0 == convertToShares"
+        );
 
         previewShares1 = silo1.previewDeposit(_assets, cType);
         assertEq(previewShares1, silo1.convertToShares(_assets, aType), "previewDeposit1 == convertToShares");
@@ -141,7 +149,7 @@ contract PreviewDepositTest is SiloLittleHelper, Test {
             );
         }
     }
-    
+
     function _castToTypes(bool _defaultType, uint8 _type)
         private
         pure

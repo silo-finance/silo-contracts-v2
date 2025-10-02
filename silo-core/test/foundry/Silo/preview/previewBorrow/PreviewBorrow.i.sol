@@ -15,7 +15,7 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
     address immutable depositor;
     address immutable borrower;
-    
+
     constructor() {
         depositor = makeAddr("Depositor");
         borrower = makeAddr("Borrower");
@@ -46,11 +46,7 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewBorrow_debt_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_previewBorrow_debt_fuzz(
-        uint112 _assetsOrShares,
-        bool _interest,
-        bool _partial
-    ) public {
+    function test_previewBorrow_debt_fuzz(uint112 _assetsOrShares, bool _interest, bool _partial) public {
         uint256 _amountIn = _partialAmount(_assetsOrShares, _partial);
         vm.assume(_amountIn > 0);
 
@@ -176,11 +172,10 @@ contract PreviewBorrowTest is SiloLittleHelper, Test {
     }
 
     function _getBorrowPreview(uint256 _assetsOrShares) internal view virtual returns (uint256 preview) {
-        preview = _borrowShares()
-            ? silo1.previewBorrowShares(_assetsOrShares)
-            : silo1.previewBorrow(_assetsOrShares);
+        preview =
+            _borrowShares() ? silo1.previewBorrowShares(_assetsOrShares) : silo1.previewBorrow(_assetsOrShares);
     }
-    
+
     function _partialAmount(uint256 _assetsOrShares, bool _partial) internal pure returns (uint256 partialAmount) {
         partialAmount = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
     }

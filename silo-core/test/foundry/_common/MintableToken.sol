@@ -5,7 +5,7 @@ import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {ERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol";
 
 contract MintableToken is ERC20, ERC20Permit {
-    uint8 immutable private _decimals;
+    uint8 private immutable _decimals;
 
     bool onDemand;
 
@@ -38,11 +38,12 @@ contract MintableToken is ERC20, ERC20Permit {
         _mint(_owner, _amount - balance);
     }
 
-    function transferFrom(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) public virtual override returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount)
+        public
+        virtual
+        override
+        returns (bool)
+    {
         if (!onDemand) {
             return super.transferFrom(sender, recipient, amount);
         }
@@ -58,10 +59,7 @@ contract MintableToken is ERC20, ERC20Permit {
         return true;
     }
 
-    function transfer(
-        address recipient,
-        uint256 amount
-    ) public virtual override returns (bool) {
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
         if (!onDemand) {
             return super.transfer(recipient, amount);
         }

@@ -24,10 +24,7 @@ contract TransferOwnership1StepReentrancyTest is MethodReentrancyTest {
     function _ensureItWillRevert() internal {
         address hookReceiver = TestStateLib.hookReceiver();
 
-        vm.expectRevert(abi.encodeWithSelector(
-            Ownable.OwnableUnauthorizedAccount.selector,
-            address(this)
-        ));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
 
         Ownable1and2Steps(hookReceiver).transferOwnership1Step(address(this));
     }

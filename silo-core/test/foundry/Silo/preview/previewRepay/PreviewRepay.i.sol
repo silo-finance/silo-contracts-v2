@@ -14,7 +14,7 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
     address immutable depositor;
     address immutable borrower;
-    
+
     constructor() {
         depositor = makeAddr("Depositor");
         borrower = makeAddr("Borrower");
@@ -28,10 +28,7 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewRepay_freshStart_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_previewRepay_freshStart_fuzz(
-        uint112 _assetsOrShares,
-        bool _partial
-    ) public {
+    function test_previewRepay_freshStart_fuzz(uint112 _assetsOrShares, bool _partial) public {
         uint256 _amountIn = _partialAmount(_assetsOrShares, _partial);
         vm.assume(_amountIn > 0);
 
@@ -49,11 +46,7 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_previewRepay_debt_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_previewRepay_debt_fuzz(
-        uint112 _assetsOrShares,
-        bool _interest,
-        bool _partial
-    ) public {
+    function test_previewRepay_debt_fuzz(uint112 _assetsOrShares, bool _interest, bool _partial) public {
         uint256 _amountIn = _partialAmount(_assetsOrShares, _partial);
         vm.assume(_amountIn > 0);
 
@@ -101,7 +94,7 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
         return _createScenario(type(uint112).max, _otherBorrower, _interest);
     }
 
-    function _createScenario(uint112 _borrowerInput, bool _otherBorrower,  bool _interest)
+    function _createScenario(uint112 _borrowerInput, bool _otherBorrower, bool _interest)
         internal
         returns (uint256 maxRepay)
     {
@@ -148,30 +141,25 @@ contract PreviewRepayTest is SiloLittleHelper, Test {
     function _assertPreviewRepay(uint256 _preview, uint256 _assetsOrShares) internal {
         vm.assume(_preview > 0);
 
-        uint256 results = _useShares()
-            ? _repayShares(_preview, _assetsOrShares, borrower)
-            : _repay(_assetsOrShares, borrower);
+        uint256 results =
+            _useShares() ? _repayShares(_preview, _assetsOrShares, borrower) : _repay(_assetsOrShares, borrower);
 
         assertGt(results, 0, "expect any borrow amount > 0");
         assertEq(_preview, results, "preview should give us exact result");
     }
 
     function _getMaxRepay() internal view virtual returns (uint256 max) {
-        max = _useShares()
-            ? silo1.maxRepayShares(borrower)
-            : silo1.maxRepay(borrower);
+        max = _useShares() ? silo1.maxRepayShares(borrower) : silo1.maxRepay(borrower);
     }
 
     function _getRepayPreview(uint256 _assetsOrShares) internal view virtual returns (uint256 preview) {
-        preview = _useShares()
-            ? silo1.previewRepayShares(_assetsOrShares)
-            : silo1.previewRepay(_assetsOrShares);
+        preview = _useShares() ? silo1.previewRepayShares(_assetsOrShares) : silo1.previewRepay(_assetsOrShares);
     }
 
     function _partialAmount(uint256 _assetsOrShares, bool _partial) internal pure returns (uint256 partialAmount) {
         partialAmount = _partial ? uint256(_assetsOrShares) * 37 / 100 : _assetsOrShares;
     }
-    
+
     function _useShares() internal pure virtual returns (bool) {
         return false;
     }

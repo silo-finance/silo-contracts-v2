@@ -15,6 +15,7 @@ SOLC_VERSION=0.8.24 echidna silo-core/test/echidna/EchidnaSiloERC4626.sol --cont
 */
 contract EchidnaSiloERC4626 is CryticERC4626PropertyTests, Deployers {
     ISiloConfig siloConfig;
+
     event AssertionFailed(string msg, bytes reason);
     event AssertionFailed(string msg, string reason);
 
@@ -30,12 +31,8 @@ contract EchidnaSiloERC4626 is CryticERC4626PropertyTests, Deployers {
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
         // deploy silo config
-        siloConfig = _deploySiloConfig(
-            siloData["MOCK"],
-            siloImpl,
-            shareProtectedCollateralTokenImpl,
-            shareDebtTokenImpl
-        );
+        siloConfig =
+            _deploySiloConfig(siloData["MOCK"], siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
 
         // deploy silo
         siloFactory.createSilo(
@@ -47,7 +44,7 @@ contract EchidnaSiloERC4626 is CryticERC4626PropertyTests, Deployers {
             msg.sender
         );
 
-        (address _vault0, /* address _vault1 */) = siloConfig.getSilos();
+        (address _vault0, /* address _vault1 */ ) = siloConfig.getSilos();
 
         initialize(address(_vault0), address(_asset0), false);
     }

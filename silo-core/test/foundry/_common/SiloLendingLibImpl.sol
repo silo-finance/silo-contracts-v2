@@ -26,12 +26,7 @@ contract SiloLendingLibImpl {
             _debtShareToken,
             _token,
             _spender,
-            ISilo.BorrowArgs({
-                assets: _assets,
-                shares: _shares,
-                receiver: _receiver,
-                borrower: _borrower
-            })
+            ISilo.BorrowArgs({assets: _assets, shares: _shares, receiver: _receiver, borrower: _borrower})
         );
     }
 }

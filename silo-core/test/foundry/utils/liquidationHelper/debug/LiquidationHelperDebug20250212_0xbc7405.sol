@@ -45,9 +45,7 @@ contract LiquidationHelperDebug20250113_0x0a25ac is Test {
     /*
     1. when was first attempt to liquidate this user?
     */
-    function setUp() public {
-
-    }
+    function setUp() public {}
 
     /*
          TODO this can must be skip because foundry do not support Sonic network yet
@@ -62,9 +60,9 @@ contract LiquidationHelperDebug20250113_0x0a25ac is Test {
         uint256 offset = 140;
 
         uint256 blockToFork = 7686558; // (Feb-13-2025 11:08:05 AM +UTC)
-//        uint256 blockToFork = 7686422;  // (Feb-13-2025 11:07:04 AM +UTC)
+        //        uint256 blockToFork = 7686422;  // (Feb-13-2025 11:07:04 AM +UTC)
 
-        for (uint i = offset; i < offset + 10; i++) {
+        for (uint256 i = offset; i < offset + 10; i++) {
             vm.createSelectFork(vm.envString("RPC_SONIC"), blockToFork - i);
 
             console.log("block %s [-%s]", block.number, i);
@@ -81,144 +79,144 @@ contract LiquidationHelperDebug20250113_0x0a25ac is Test {
             emit log_named_uint("notSolventBlock", notSolventBlock);
         }
         /*
-block -7686558 [0]
-  solvent?: yes
-  getLtv: 77.9999448987193596
-  block -7686558 [1]
-  solvent?: yes
-  getLtv: 77.9999448987193596
-  block -7686557 [2]
-  solvent?: yes
-  getLtv: 77.9999447742259131
-  block -7686556 [3]
-  solvent?: yes
-  getLtv: 77.9999447742259131
-  block -7686555 [4]
-  solvent?: yes
-  getLtv: 77.9999446497324666
-  block -7686554 [5]
-  solvent?: yes
-  getLtv: 77.9999446497324666
-  block -7686553 [6]
-  solvent?: yes
-  getLtv: 77.9999446497324666
-  block -7686552 [7]
-  solvent?: yes
-  getLtv: 77.9999445252390204
-  block -7686551 [8]
-  solvent?: yes
-  getLtv: 77.9999445252390204
-  block -7686550 [9]
-  solvent?: yes
-  getLtv: 77.9999445252390204
-block 7686558 [-10]
-  solvent?: yes
-  getLtv: 77.9999448987193596
-  block 7686548 [-11]
-  solvent?: yes
-  getLtv: 77.9999444007455744
-  block 7686547 [-12]
-  solvent?: yes
-  getLtv: 77.9999444007455744
-  block 7686546 [-13]
-  solvent?: yes
-  getLtv: 77.9999442762521286
-  block 7686545 [-14]
-  solvent?: yes
-  getLtv: 77.9999442762521286
-  block 7686544 [-15]
-  solvent?: yes
-  getLtv: 77.9999441517586830
-  block 7686543 [-16]
-  solvent?: yes
-  getLtv: 77.9999440272652375
-  block 7686542 [-17]
-  solvent?: yes
-  getLtv: 77.9999440272652375
-  block 7686541 [-18]
-  solvent?: yes
-  getLtv: 77.9999440272652375
-  block 7686540 [-19]
-  solvent?: yes
-  getLtv: 77.9999440272652375
-block 7686558 [-20]
-  solvent?: yes
-  getLtv: 77.9999448987193596
-  block 7686538 [-21]
-  solvent?: yes
-  getLtv: 77.9999437782783473
-  block 7686537 [-22]
-  solvent?: yes
-  getLtv: 77.9999437782783473
-  block 7686536 [-23]
-  solvent?: yes
-  getLtv: 77.9999436537849026
-  block 7686535 [-24]
-  solvent?: yes
-  getLtv: 77.9999436537849026
-  block 7686534 [-25]
-  solvent?: yes
-  getLtv: 77.9999435292914579
-  block 7686533 [-26]
-  solvent?: yes
-  getLtv: 77.9999435292914579
-  block 7686532 [-27]
-  solvent?: yes
-  getLtv: 77.9999434047980135
-  block 7686531 [-28]
-  solvent?: yes
-  getLtv: 77.9999434047980135
-  block 7686530 [-29]
-  solvent?: yes
-  getLtv: 77.9999432803045693
- block 7686558 [-30]
-  solvent?: yes
-  getLtv: 77.9999448987193596
-  block 7686528 [-31]
-  solvent?: yes
-  getLtv: 77.9999431558111252
-  block 7686527 [-32]
-  solvent?: yes
-  getLtv: 77.9999431558111252
-  block 7686526 [-33]
-  solvent?: yes
-  getLtv: 77.9999430313176815
-  block 7686525 [-34]
-  solvent?: yes
-  getLtv: 77.9999429068242378
-  block 7686524 [-35]
-  solvent?: yes
-  getLtv: 77.9999429068242378
-  block 7686523 [-36]
-  solvent?: yes
-  getLtv: 77.9999429068242378
-  block 7686522 [-37]
-  solvent?: yes
-  getLtv: 77.9999427823307945
-  block 7686521 [-38]
-  solvent?: yes
-  getLtv: 77.9999426578373512
-  block 7686520 [-39]
-  solvent?: yes
-  getLtv: 77.9999768738569969
+        block -7686558 [0]
+    solvent?: yes
+    getLtv: 77.9999448987193596
+    block -7686558 [1]
+    solvent?: yes
+    getLtv: 77.9999448987193596
+    block -7686557 [2]
+    solvent?: yes
+    getLtv: 77.9999447742259131
+    block -7686556 [3]
+    solvent?: yes
+    getLtv: 77.9999447742259131
+    block -7686555 [4]
+    solvent?: yes
+    getLtv: 77.9999446497324666
+    block -7686554 [5]
+    solvent?: yes
+    getLtv: 77.9999446497324666
+    block -7686553 [6]
+    solvent?: yes
+    getLtv: 77.9999446497324666
+    block -7686552 [7]
+    solvent?: yes
+    getLtv: 77.9999445252390204
+    block -7686551 [8]
+    solvent?: yes
+    getLtv: 77.9999445252390204
+    block -7686550 [9]
+    solvent?: yes
+    getLtv: 77.9999445252390204
+        block 7686558 [-10]
+    solvent?: yes
+    getLtv: 77.9999448987193596
+    block 7686548 [-11]
+    solvent?: yes
+    getLtv: 77.9999444007455744
+    block 7686547 [-12]
+    solvent?: yes
+    getLtv: 77.9999444007455744
+    block 7686546 [-13]
+    solvent?: yes
+    getLtv: 77.9999442762521286
+    block 7686545 [-14]
+    solvent?: yes
+    getLtv: 77.9999442762521286
+    block 7686544 [-15]
+    solvent?: yes
+    getLtv: 77.9999441517586830
+    block 7686543 [-16]
+    solvent?: yes
+    getLtv: 77.9999440272652375
+    block 7686542 [-17]
+    solvent?: yes
+    getLtv: 77.9999440272652375
+    block 7686541 [-18]
+    solvent?: yes
+    getLtv: 77.9999440272652375
+    block 7686540 [-19]
+    solvent?: yes
+    getLtv: 77.9999440272652375
+        block 7686558 [-20]
+    solvent?: yes
+    getLtv: 77.9999448987193596
+    block 7686538 [-21]
+    solvent?: yes
+    getLtv: 77.9999437782783473
+    block 7686537 [-22]
+    solvent?: yes
+    getLtv: 77.9999437782783473
+    block 7686536 [-23]
+    solvent?: yes
+    getLtv: 77.9999436537849026
+    block 7686535 [-24]
+    solvent?: yes
+    getLtv: 77.9999436537849026
+    block 7686534 [-25]
+    solvent?: yes
+    getLtv: 77.9999435292914579
+    block 7686533 [-26]
+    solvent?: yes
+    getLtv: 77.9999435292914579
+    block 7686532 [-27]
+    solvent?: yes
+    getLtv: 77.9999434047980135
+    block 7686531 [-28]
+    solvent?: yes
+    getLtv: 77.9999434047980135
+    block 7686530 [-29]
+    solvent?: yes
+    getLtv: 77.9999432803045693
+    block 7686558 [-30]
+    solvent?: yes
+    getLtv: 77.9999448987193596
+    block 7686528 [-31]
+    solvent?: yes
+    getLtv: 77.9999431558111252
+    block 7686527 [-32]
+    solvent?: yes
+    getLtv: 77.9999431558111252
+    block 7686526 [-33]
+    solvent?: yes
+    getLtv: 77.9999430313176815
+    block 7686525 [-34]
+    solvent?: yes
+    getLtv: 77.9999429068242378
+    block 7686524 [-35]
+    solvent?: yes
+    getLtv: 77.9999429068242378
+    block 7686523 [-36]
+    solvent?: yes
+    getLtv: 77.9999429068242378
+    block 7686522 [-37]
+    solvent?: yes
+    getLtv: 77.9999427823307945
+    block 7686521 [-38]
+    solvent?: yes
+    getLtv: 77.9999426578373512
+    block 7686520 [-39]
+    solvent?: yes
+    getLtv: 77.9999768738569969
 
-block 7686424 [-134]
-  solvent?: yes
-  getLtv: 77.9999717696237568
-  block 7686423 [-135]
-  solvent?: >>>>>>>>>>> NO <<<<<<<
-  getLtv: 80.2744996785704974
-  block 7686422 [-136]
-  solvent?: >>>>>>>>>>> NO <<<<<<<
-  getLtv: 80.2744996785704974
-  block 7686421 [-137]
-  solvent?: >>>>>>>>>>> NO <<<<<<<
-  getLtv: 80.2744995504466936
-  block 7686420 [-138]
-  solvent?: >>>>>>>>>>> NO <<<<<<<
-  getLtv: 80.2744995504466936
-  block 7686419 [-139]
-  solvent?: >>>>>>>>>>> NO <<<<<<<
+        block 7686424 [-134]
+    solvent?: yes
+    getLtv: 77.9999717696237568
+    block 7686423 [-135]
+    solvent?: >>>>>>>>>>> NO <<<<<<<
+    getLtv: 80.2744996785704974
+    block 7686422 [-136]
+    solvent?: >>>>>>>>>>> NO <<<<<<<
+    getLtv: 80.2744996785704974
+    block 7686421 [-137]
+    solvent?: >>>>>>>>>>> NO <<<<<<<
+    getLtv: 80.2744995504466936
+    block 7686420 [-138]
+    solvent?: >>>>>>>>>>> NO <<<<<<<
+    getLtv: 80.2744995504466936
+    block 7686419 [-139]
+    solvent?: >>>>>>>>>>> NO <<<<<<<
 
         */
     }

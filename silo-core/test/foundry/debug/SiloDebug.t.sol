@@ -24,17 +24,14 @@ interface IRMGetters {
 
 // FOUNDRY_PROFILE=core_test forge test --mc SiloDebugTest --ffi -vvv
 contract SiloDebugTest is IntegrationTest {
-    address constant internal _SILO_ADDR = 0x7abd3124E1e2F5f8aBF8b862d086647A5141bf4c;
-    address constant internal _IRM_ADDR = 0x9d33d45AA7E1B45c65EA4b36b0c586B58a4796cE;
+    address internal constant _SILO_ADDR = 0x7abd3124E1e2F5f8aBF8b862d086647A5141bf4c;
+    address internal constant _IRM_ADDR = 0x9d33d45AA7E1B45c65EA4b36b0c586B58a4796cE;
 
-    IInterestRateModelV2 constant internal _IRM = IInterestRateModelV2(_IRM_ADDR);
-    IRMGetters constant internal _IRM_GETTERS = IRMGetters(_IRM_ADDR);
+    IInterestRateModelV2 internal constant _IRM = IInterestRateModelV2(_IRM_ADDR);
+    IRMGetters internal constant _IRM_GETTERS = IRMGetters(_IRM_ADDR);
 
     function setUp() public {
-        vm.createSelectFork(
-            getChainRpcUrl(ARBITRUM_ONE_ALIAS),
-            279148740
-        );
+        vm.createSelectFork(getChainRpcUrl(ARBITRUM_ONE_ALIAS), 279148740);
 
         vm.label(address(_IRM), "irm");
         vm.label(_SILO_ADDR, "silo");
