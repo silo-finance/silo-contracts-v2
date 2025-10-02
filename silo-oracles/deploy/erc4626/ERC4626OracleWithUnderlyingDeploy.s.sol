@@ -12,7 +12,8 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {ERC4626OracleWithUnderlying} from "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlying.sol";
 import {IERC4626OracleWithUnderlying} from "silo-oracles/contracts/interfaces/IERC4626OracleWithUnderlying.sol";
-import {ERC4626OracleWithUnderlyingFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlyingFactory.sol";
+import {ERC4626OracleWithUnderlyingFactory} from
+    "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlyingFactory.sol";
 
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
@@ -33,7 +34,7 @@ contract ERC4626OracleWithUnderlyingDeploy is CommonDeploy {
         _useVault = _vaultName;
         _useOracle = _oracleName;
     }
-    
+
     function run() public returns (ERC4626OracleWithUnderlying oracle) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 

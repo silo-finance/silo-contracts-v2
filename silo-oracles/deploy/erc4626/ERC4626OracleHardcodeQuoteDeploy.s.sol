@@ -24,7 +24,7 @@ contract ERC4626OracleHardcodeQuoteDeploy is CommonDeploy {
     string public quoteTokenKey;
 
     function setVaultKey(string memory _vaultKey) public {
-        vaultKey = _vaultKey;   
+        vaultKey = _vaultKey;
     }
 
     function setQuoteTokenKey(string memory _quoteTokenKey) public {
@@ -65,7 +65,9 @@ contract ERC4626OracleHardcodeQuoteDeploy is CommonDeploy {
     }
 
     function _qa(ISiloOracle oracle, address baseToken, address quoteToken) internal view {
-        console2.log("fetch price for: %s/%s", IERC20Metadata(baseToken).symbol(), IERC20Metadata(quoteToken).symbol());
+        console2.log(
+            "fetch price for: %s/%s", IERC20Metadata(baseToken).symbol(), IERC20Metadata(quoteToken).symbol()
+        );
         printQuote(oracle, baseToken, uint256(10 ** IERC20Metadata(baseToken).decimals()));
     }
 }

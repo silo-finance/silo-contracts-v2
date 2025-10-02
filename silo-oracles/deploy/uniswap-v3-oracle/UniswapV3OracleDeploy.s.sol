@@ -23,10 +23,7 @@ contract UniswapV3OracleDeploy is CommonDeploy {
 
         string memory configName = vm.envString("CONFIG");
 
-        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = ConfigParser.getConfig(
-            getChainAlias(),
-            configName
-        );
+        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = ConfigParser.getConfig(getChainAlias(), configName);
 
         address factory = getDeployedAddress(SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY);
 

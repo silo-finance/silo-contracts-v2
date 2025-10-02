@@ -16,7 +16,8 @@ FOUNDRY_PROFILE=oracles \
  */
 contract Helper_PTLinearOracle_MAINNET_PT_siUSD_9oct2025 is PTLinearOracleDeployCommon {
     function run() public {
-        address pt_InfiniFi_siUSD_9OCT2025 = AddrLib.getAddress(ChainsLib.chainAlias(), "PT-PendleInfiniFi-siUSD-9OCT2025");
+        address pt_InfiniFi_siUSD_9OCT2025 =
+            AddrLib.getAddress(ChainsLib.chainAlias(), "PT-PendleInfiniFi-siUSD-9OCT2025");
         address market = 0x50700eEDdE7850B4bf83733C66b272C6CA46c663;
         uint256 baseDiscountPerYear = 0.28e18;
         address undelyingToken = AddrLib.getAddress(ChainsLib.chainAlias(), AddrKey.USDC);
@@ -26,4 +27,3 @@ contract Helper_PTLinearOracle_MAINNET_PT_siUSD_9oct2025 is PTLinearOracleDeploy
         _deployPTLinearOracle(pt_InfiniFi_siUSD_9OCT2025, baseDiscountPerYear);
     }
 }
-

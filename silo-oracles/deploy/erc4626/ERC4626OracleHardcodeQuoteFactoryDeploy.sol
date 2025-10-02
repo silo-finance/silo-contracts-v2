@@ -4,9 +4,7 @@ pragma solidity 0.8.28;
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 
-import {
-    ERC4626OracleHardcodeQuoteFactory
-} from "silo-oracles/contracts/erc4626/ERC4626OracleHardcodeQuoteFactory.sol";
+import {ERC4626OracleHardcodeQuoteFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleHardcodeQuoteFactory.sol";
 
 /**
     FOUNDRY_PROFILE=oracles \

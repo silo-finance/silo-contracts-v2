@@ -28,6 +28,8 @@ contract OracleForQADeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        OraclesDeployments.save(getChainAlias(), string.concat("OracleForQA_",bSymbol,"-",qSymbol), address(oracle));
+        OraclesDeployments.save(
+            getChainAlias(), string.concat("OracleForQA_", bSymbol, "-", qSymbol), address(oracle)
+        );
     }
 }

@@ -4,9 +4,8 @@ pragma solidity 0.8.28;
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 
-import {
-    PendleWrapperLPTToSyOracleFactory
-} from "silo-oracles/contracts/pendle/lp-tokens/wrappers/PendleWrapperLPTToSyOracleFactory.sol";
+import {PendleWrapperLPTToSyOracleFactory} from
+    "silo-oracles/contracts/pendle/lp-tokens/wrappers/PendleWrapperLPTToSyOracleFactory.sol";
 
 /**
 FOUNDRY_PROFILE=oracles \

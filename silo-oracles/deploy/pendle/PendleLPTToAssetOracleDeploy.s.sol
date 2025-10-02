@@ -7,7 +7,8 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts, SiloOraclesFactoriesDeployments} from "../SiloOraclesFactoriesContracts.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {PendleLPTToAssetOracleFactory} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTToAssetOracleFactory.sol";
+import {PendleLPTToAssetOracleFactory} from
+    "silo-oracles/contracts/pendle/lp-tokens/PendleLPTToAssetOracleFactory.sol";
 import {PendleLPTToAssetOracle} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTToAssetOracle.sol";
 import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
@@ -24,10 +25,11 @@ contract PendleLPTToAssetOracleDeploy is CommonDeploy {
     function run() public returns (ISiloOracle oracle) {
         string memory chainAlias = ChainsLib.chainAlias();
 
-        PendleLPTToAssetOracleFactory factory = PendleLPTToAssetOracleFactory(SiloOraclesFactoriesDeployments.get(
-            SiloOraclesFactoriesContracts.PENDLE_LPT_TO_ASSET_ORACLE_FACTORY,
-            chainAlias
-        ));
+        PendleLPTToAssetOracleFactory factory = PendleLPTToAssetOracleFactory(
+            SiloOraclesFactoriesDeployments.get(
+                SiloOraclesFactoriesContracts.PENDLE_LPT_TO_ASSET_ORACLE_FACTORY, chainAlias
+            )
+        );
 
         string memory underlyingOracleName;
 
@@ -40,22 +42,14 @@ contract PendleLPTToAssetOracleDeploy is CommonDeploy {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
 
-        oracle = factory.create({
-            _underlyingOracle: underlyingOracle,
-            _market: market,
-            _externalSalt: bytes32(0)
-        });
+        oracle = factory.create({_underlyingOracle: underlyingOracle, _market: market, _externalSalt: bytes32(0)});
 
         vm.stopBroadcast();
 
         (address syToken,,) = IPendleMarketV3Like(market).readTokens();
 
-        string memory oracleName = string.concat(
-            "PENDLE_LPT_TO_ASSET_ORACLE_",
-            IERC20Metadata(syToken).symbol(),
-            "_",
-            underlyingOracleName
-        );
+        string memory oracleName =
+            string.concat("PENDLE_LPT_TO_ASSET_ORACLE_", IERC20Metadata(syToken).symbol(), "_", underlyingOracleName);
 
         OraclesDeployments.save(chainAlias, oracleName, address(oracle));
     }

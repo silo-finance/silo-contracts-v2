@@ -11,19 +11,10 @@ library OracleConfig {
 }
 
 library OraclesDeployments {
-    string constant public DEPLOYMENTS_FILE = "silo-oracles/deploy/_oraclesDeployments.json";
+    string public constant DEPLOYMENTS_FILE = "silo-oracles/deploy/_oraclesDeployments.json";
 
-    function save(
-        string memory _chain,
-        string memory _name,
-        address _deployed
-    ) internal {
-        KeyValueStorage.setAddress(
-            DEPLOYMENTS_FILE,
-            _chain,
-            _name,
-            _deployed
-        );
+    function save(string memory _chain, string memory _name, address _deployed) internal {
+        KeyValueStorage.setAddress(DEPLOYMENTS_FILE, _chain, _name, _deployed);
     }
 
     function get(string memory _chain, string memory _name) internal returns (address) {
@@ -33,10 +24,6 @@ library OraclesDeployments {
             return shared;
         }
 
-        return KeyValueStorage.getAddress(
-            DEPLOYMENTS_FILE,
-            _chain,
-            _name
-        );
+        return KeyValueStorage.getAddress(DEPLOYMENTS_FILE, _chain, _name);
     }
 }

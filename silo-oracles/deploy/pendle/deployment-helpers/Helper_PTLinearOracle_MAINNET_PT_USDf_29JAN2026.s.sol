@@ -22,4 +22,3 @@ contract Helper_PTLinearOracle_MAINNET_PT_USDf_29JAN2026 is PTLinearOracleDeploy
         _pullExchangeFactor(oracle, market, pt_USDf_29JAN2026);
     }
 }
-

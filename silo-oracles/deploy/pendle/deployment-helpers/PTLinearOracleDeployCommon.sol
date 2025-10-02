@@ -12,19 +12,20 @@ import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
-import {SiloOraclesFactoriesContracts, SiloOraclesFactoriesDeployments} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
+import {
+    SiloOraclesFactoriesContracts,
+    SiloOraclesFactoriesDeployments
+} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtLpOracleLike.sol";
 import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
 import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPendleSYTokenLike.sol";
 import {IPendlePTLike} from "silo-oracles/contracts/pendle/interfaces/IPendlePTLike.sol";
-import {ISparkLinearDiscountOracleFactory} from "silo-oracles/contracts/pendle/interfaces/ISparkLinearDiscountOracleFactory.sol";
+import {ISparkLinearDiscountOracleFactory} from
+    "silo-oracles/contracts/pendle/interfaces/ISparkLinearDiscountOracleFactory.sol";
 
 abstract contract PTLinearOracleDeployCommon is CommonDeploy {
-    function _deployPTLinearOracle(
-        address _pt, 
-        uint256 _baseDiscountPerYear
-    )
-        internal 
+    function _deployPTLinearOracle(address _pt, uint256 _baseDiscountPerYear)
+        internal
         returns (AggregatorV3Interface oracle)
     {
         require(_pt != address(0), "pt is not set");
@@ -34,9 +35,8 @@ abstract contract PTLinearOracleDeployCommon is CommonDeploy {
 
         string memory chainAlias = ChainsLib.chainAlias();
 
-        ISparkLinearDiscountOracleFactory factory = ISparkLinearDiscountOracleFactory(
-            AddrLib.getAddress(chainAlias, AddrKey.PENDLE_LINEAR_ORACLE_FACTORY)
-        );
+        ISparkLinearDiscountOracleFactory factory =
+            ISparkLinearDiscountOracleFactory(AddrLib.getAddress(chainAlias, AddrKey.PENDLE_LINEAR_ORACLE_FACTORY));
 
         console2.log("factory: ", address(factory));
         require(address(factory) != address(0), "factory is not set");
@@ -48,8 +48,7 @@ abstract contract PTLinearOracleDeployCommon is CommonDeploy {
         console2.log("--------------------------------");
         console2.log("deployed oracle, set this address to the json file:");
         console2.log(
-            string.concat("LINEAR_ORACLE_", IERC20Metadata(_pt).symbol(), "_HARDCODED_USDC: "),
-            address(oracle)
+            string.concat("LINEAR_ORACLE_", IERC20Metadata(_pt).symbol(), "_HARDCODED_USDC: "), address(oracle)
         );
         console2.log("--------------------------------");
 
@@ -63,7 +62,9 @@ abstract contract PTLinearOracleDeployCommon is CommonDeploy {
         require(_printPrice(oracle, "current") < 1e18);
 
         vm.warp(maturityDate - 1);
-        require(_printPrice(oracle, "before maturity date") < 1e18, "before maturity date, price should be less than 1e18");
+        require(
+            _printPrice(oracle, "before maturity date") < 1e18, "before maturity date, price should be less than 1e18"
+        );
 
         vm.warp(maturityDate);
         require(_printPrice(oracle, "at maturity date") == 1e18, "after maturity date, price should be 1e18");
@@ -74,27 +75,20 @@ abstract contract PTLinearOracleDeployCommon is CommonDeploy {
         vm.warp(currentTime);
     }
 
-    function _printPrice(AggregatorV3Interface oracle, string memory _description) 
-        internal 
-        view 
-        returns (int256 price) 
+    function _printPrice(AggregatorV3Interface oracle, string memory _description)
+        internal
+        view
+        returns (int256 price)
     {
         (, price,,,) = oracle.latestRoundData();
 
         console2.log(
-            string.concat("sample price for 1e18 PT (", _description, "):"), 
+            string.concat("sample price for 1e18 PT (", _description, "):"),
             PriceFormatter.formatPriceInE18(uint256(price))
         );
     }
 
-    function _verifyMarket(
-        address _market,
-        address _ptToken,
-        address _expectedUnderlyingToken
-    ) 
-        internal 
-        view
-    {
+    function _verifyMarket(address _market, address _ptToken, address _expectedUnderlyingToken) internal view {
         require(_ptToken != address(0), "PT token is not set");
         require(_market != address(0), "Market is not set");
         require(_expectedUnderlyingToken != address(0), "Expected underlying token is not set");
@@ -103,7 +97,8 @@ abstract contract PTLinearOracleDeployCommon is CommonDeploy {
         (address syToken, address ptToken, address ytToken) = IPendleMarketV3Like(_market).readTokens();
         require(ptToken == _ptToken, "PT token does not match market");
 
-       (IPendleSYTokenLike.AssetType assetType, address assetAddress, uint8 assetDecimals) = IPendleSYTokenLike(syToken).assetInfo();
+        (IPendleSYTokenLike.AssetType assetType, address assetAddress, uint8 assetDecimals) =
+            IPendleSYTokenLike(syToken).assetInfo();
 
         console2.log("assetType:", assetType == IPendleSYTokenLike.AssetType.TOKEN ? "TOKEN" : "LIQUIDITY");
         console2.log("assetAddress (%s): %s", IERC20Metadata(assetAddress).symbol(), assetAddress);
