@@ -11,7 +11,7 @@ import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE_NAME=PYTH_REDSTONE_wstkscETH_ETH MARKET=0xd14117baf6EC5D12BE68CD06e763A4B82C9B6d1D \
     forge script silo-oracles/deploy/pendle/PendlePTToAssetOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify

@@ -12,7 +12,7 @@ import {OraclesDeployments} from "../OraclesDeployments.sol";
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_USDC_USD \
     forge script silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleDeploy.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify

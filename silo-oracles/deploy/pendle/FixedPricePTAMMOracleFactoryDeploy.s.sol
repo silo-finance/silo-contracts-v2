@@ -5,7 +5,7 @@ import {FixedPricePTAMMOracleFactory} from "silo-oracles/contracts/pendle/amm/Fi
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/pendle/FixedPricePTAMMOracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify

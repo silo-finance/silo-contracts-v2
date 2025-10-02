@@ -6,7 +6,7 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 
 import {ERC4626OracleHardcodeQuoteFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleHardcodeQuoteFactory.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=oracles \
         forge script silo-oracles/deploy/erc4626/ERC4626OracleHardcodeQuoteFactoryDeploy.sol \
         --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify

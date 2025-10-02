@@ -14,7 +14,7 @@ import {ERC4626OracleHardcodeQuoteFactory} from "silo-oracles/contracts/erc4626/
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles VAULT=savETH HARDCODE_QUOTE_TOKEN=WETH \
     forge script silo-oracles/deploy/erc4626/ERC4626OracleHardcodeQuoteDeploy.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify

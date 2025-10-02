@@ -8,7 +8,7 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {ERC4626OracleWithUnderlyingFactory} from
     "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlyingFactory.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/erc4626/ERC4626OracleWithUnderlyingFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify

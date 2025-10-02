@@ -6,7 +6,7 @@ import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Inter
 
 import {PTLinearOracleDeployCommon} from "./PTLinearOracleDeployCommon.s.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/pendle/deployment-helpers/Helper_PTLinearOracle_MAINNET_PT_USDf_29JAN2026.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify

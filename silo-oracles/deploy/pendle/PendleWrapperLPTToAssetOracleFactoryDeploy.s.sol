@@ -7,7 +7,7 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {PendleWrapperLPTToAssetOracleFactory} from
     "silo-oracles/contracts/pendle/lp-tokens/wrappers/PendleWrapperLPTToAssetOracleFactory.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/pendle/PendleWrapperLPTToAssetOracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify

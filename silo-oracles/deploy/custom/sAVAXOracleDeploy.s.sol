@@ -12,7 +12,7 @@ import {sAVAXOracle} from "../../contracts/custom/sAVAX/sAVAXOracle.sol";
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/custom/sAVAXOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify

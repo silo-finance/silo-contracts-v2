@@ -12,7 +12,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/pendle/PTLinearOracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify

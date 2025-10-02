@@ -7,7 +7,7 @@ import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {DIAOracleFactory} from "silo-oracles/contracts/dia/DIAOracleFactory.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/dia-oracle/DIAOracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify

@@ -12,7 +12,7 @@ import {PendleLPTToSyOracle} from "silo-oracles/contracts/pendle/lp-tokens/Pendl
 import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE_NAME=PYTH_REDSTONE_wstkscETH_ETH MARKET=0xd14117baf6EC5D12BE68CD06e763A4B82C9B6d1D \
     forge script silo-oracles/deploy/pendle/PendleLPTToSyOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify

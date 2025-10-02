@@ -21,7 +21,7 @@ import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles VAULT=tAVAX ORACLE=sAVAX_wAVAX_ORACLE  \
     forge script silo-oracles/deploy/erc4626/ERC4626OracleWithUnderlyingDeploy.s.sol \
     --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify

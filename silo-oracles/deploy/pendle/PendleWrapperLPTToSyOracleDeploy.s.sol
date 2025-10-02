@@ -15,7 +15,7 @@ import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
 import {IPendleLPWrapperLike} from "silo-oracles/contracts/pendle/interfaces/IPendleLPWrapperLike.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE_NAME=CHAINLINK_sUSDe_USD LPT_WRAPPER=0xaB025d7b57B0902A2797599F3eB07477400e62B0 \
     forge script silo-oracles/deploy/pendle/PendleWrapperLPTToSyOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify

@@ -5,7 +5,7 @@ import {CommonDeploy} from "./CommonDeploy.sol";
 import {OracleForwarderFactory} from "silo-oracles/contracts/forwarder/OracleForwarderFactory.sol";
 import {SiloOraclesFactoriesContracts} from "./SiloOraclesFactoriesContracts.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=oracles \
         forge script silo-oracles/deploy/OracleForwarderFactoryDeploy.sol \
         --ffi --broadcast --rpc-url http://127.0.0.1:8545

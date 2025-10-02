@@ -16,7 +16,7 @@ interface IPendleMarketV3 {
     function increaseObservationsCardinalityNext(uint16 cardinalityNext) external;
 }
 
-/**
+/*
 FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE_NAME=CHAINLINK_USDC_USD_aggregator MARKET=0x43023675c804A759cBf900Da83DBcc97ee2afbe7 \
     forge script silo-oracles/deploy/pendle/PendlePTOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify

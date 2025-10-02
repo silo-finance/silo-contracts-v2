@@ -8,7 +8,7 @@ import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=oracles \
         forge script silo-oracles/deploy/WstEthToStEthAdapterMainnetDeploy.sol \
         --ffi --rpc-url $RPC_MAINNET --broadcast --verify

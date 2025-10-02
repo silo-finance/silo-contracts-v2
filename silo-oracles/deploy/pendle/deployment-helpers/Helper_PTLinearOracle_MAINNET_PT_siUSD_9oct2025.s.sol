@@ -9,7 +9,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 
 import {PTLinearOracleDeployCommon} from "./PTLinearOracleDeployCommon.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/pendle/deployment-helpers/Helper_PTLinearOracle_MAINNET_PT_siUSD_9oct2025.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify

@@ -12,7 +12,7 @@ import {UniswapV3Oracle} from "silo-oracles/contracts/uniswapV3/UniswapV3Oracle.
 import {UniswapV3OracleFactory} from "silo-oracles/contracts/uniswapV3/UniswapV3OracleFactory.sol";
 import {IUniswapV3Oracle} from "silo-oracles/contracts/interfaces/IUniswapV3Oracle.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles CONFIG=UniV3-ETH-USDC-0.3 \
     forge script silo-oracles/deploy/uniswap-v3-oracle/UniswapV3OracleDeploy.s.sol \
     --ffi --broadcast --rpc-url http://127.0.0.1:8545
