@@ -4,8 +4,8 @@ pragma abicoder v2;
 
 import "forge-std/Test.sol";
 
-import {IUniswapV3PoolState} from  "uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
-import {IUniswapV3PoolImmutables} from  "uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolImmutables.sol";
+import {IUniswapV3PoolState} from "uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
+import {IUniswapV3PoolImmutables} from "uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolImmutables.sol";
 
 import "../../../constants/Ethereum.sol";
 import "../_common/UniswapPools.sol";
@@ -29,11 +29,7 @@ contract UniswapV3OracleFactoryReorgTest is UniswapPools {
         UNISWAPV3_ORACLE_FACTORY = new UniswapV3OracleFactory(IUniswapV3Factory(UNISWAPV3_FACTORY));
 
         creationConfig = IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            pools["USDC_WETH"],
-            address(tokens["WETH"]),
-            address(tokens["USDC"]),
-            1800,
-            120
+            pools["USDC_WETH"], address(tokens["WETH"]), address(tokens["USDC"]), 1800, 120
         );
     }
 

@@ -19,7 +19,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 fi
 
 # Run solhint and capture the output
-output=$(npx solhint "$LINT_PATH" --ignore-path .solhintignore --max-warnings="$MAX_WARNINGS" 2>&1)
+output=$(npx solhint "$LINT_PATH" --max-warnings="$MAX_WARNINGS" 2>&1)
 exit_code=$?
 
 # Extract the number of warnings from the output

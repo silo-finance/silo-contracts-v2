@@ -38,10 +38,7 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         address _deployer,
         bytes32 _externalSalt,
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config
-    ) 
-        public 
-        assumeValidConfig(_config) 
-    {
+    ) public assumeValidConfig(_config) {
         vm.assume(_deployer != address(0));
 
         address predictedAddress = factory.predictAddress(_config, _deployer, _externalSalt);
@@ -92,11 +89,7 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         address _deployer,
         bytes32 _externalSalt,
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config
-    ) 
-        public 
-        assumeValidConfig(_config) 
-    {
-
+    ) public assumeValidConfig(_config) {
         vm.prank(_deployer);
         address oracle1 = address(factory.create(_config, _externalSalt));
         address oracle2 = address(factory.create(_config, bytes32(0)));
@@ -112,11 +105,7 @@ contract FixedPricePTAMMOracleFactoryTest is Test {
         address _eoa2,
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config1,
         IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config2
-    ) 
-        public 
-        assumeValidConfig(_config1) 
-        assumeValidConfig(_config2) 
-    {
+    ) public assumeValidConfig(_config1) assumeValidConfig(_config2) {
         vm.assume(_eoa1 != address(0));
         vm.assume(_eoa2 != address(0));
         vm.assume(_eoa1 != _eoa2);

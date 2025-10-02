@@ -9,36 +9,31 @@ import {PendleLPTOracle} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPT
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IPendleLPWrapperLike} from "silo-oracles/contracts/pendle/interfaces/IPendleLPWrapperLike.sol";
 
-import {PendleWrapperLPTToSyOracle} from "silo-oracles/contracts/pendle/lp-tokens/wrappers/PendleWrapperLPTToSyOracle.sol";
+import {PendleWrapperLPTToSyOracle} from
+    "silo-oracles/contracts/pendle/lp-tokens/wrappers/PendleWrapperLPTToSyOracle.sol";
 import {ChainlinkV3OracleFactory} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleFactory.sol";
 import {SiloVirtualAsset8DecimalsDeploy} from "silo-oracles/deploy/SiloVirtualAsset8DecimalsDeploy.s.sol";
 import {SiloOraclesContracts} from "silo-oracles/deploy/SiloOraclesContracts.sol";
 import {OraclesDeployments, OracleConfig} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {ChainlinkV3OracleDeploy} from "silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleDeploy.s.sol";
 
-import {
-    PendleWrapperLPTToAssetOracle
-} from "silo-oracles/contracts/pendle/lp-tokens/wrappers/PendleWrapperLPTToAssetOracle.sol";
- 
-import {
-    PendleWrapperLPTToSyOracleFactory
-} from "silo-oracles/contracts/pendle/lp-tokens/wrappers/PendleWrapperLPTToSyOracleFactory.sol";
+import {PendleWrapperLPTToAssetOracle} from
+    "silo-oracles/contracts/pendle/lp-tokens/wrappers/PendleWrapperLPTToAssetOracle.sol";
 
-import {
-    PendleWrapperLPTToAssetOracleFactory
-} from "silo-oracles/contracts/pendle/lp-tokens/wrappers/PendleWrapperLPTToAssetOracleFactory.sol";
+import {PendleWrapperLPTToSyOracleFactory} from
+    "silo-oracles/contracts/pendle/lp-tokens/wrappers/PendleWrapperLPTToSyOracleFactory.sol";
 
-import {
-    PendleWrapperLPTToSyOracleFactoryDeploy
-} from "silo-oracles/deploy/pendle/PendleWrapperLPTToSyOracleFactoryDeploy.s.sol";
+import {PendleWrapperLPTToAssetOracleFactory} from
+    "silo-oracles/contracts/pendle/lp-tokens/wrappers/PendleWrapperLPTToAssetOracleFactory.sol";
 
-import {
-    PendleWrapperLPTToAssetOracleFactoryDeploy
-} from "silo-oracles/deploy/pendle/PendleWrapperLPTToAssetOracleFactoryDeploy.s.sol";
+import {PendleWrapperLPTToSyOracleFactoryDeploy} from
+    "silo-oracles/deploy/pendle/PendleWrapperLPTToSyOracleFactoryDeploy.s.sol";
 
-import {
-    ChainlinkV3OracleFactoryDeploy
-} from "silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleFactoryDeploy.s.sol";
+import {PendleWrapperLPTToAssetOracleFactoryDeploy} from
+    "silo-oracles/deploy/pendle/PendleWrapperLPTToAssetOracleFactoryDeploy.s.sol";
+
+import {ChainlinkV3OracleFactoryDeploy} from
+    "silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleFactoryDeploy.s.sol";
 
 /*
     FOUNDRY_PROFILE=oracles forge test --mc PendleWrapperLPTOracle --ffi -vv
@@ -68,7 +63,8 @@ contract PendleWrapperLPTOracle is Test {
         factorySyDeploy.disableDeploymentsSync();
         factoryToSy = PendleWrapperLPTToSyOracleFactory(factorySyDeploy.run());
 
-        PendleWrapperLPTToAssetOracleFactoryDeploy factoryAssetDeploy = new PendleWrapperLPTToAssetOracleFactoryDeploy();
+        PendleWrapperLPTToAssetOracleFactoryDeploy factoryAssetDeploy =
+            new PendleWrapperLPTToAssetOracleFactoryDeploy();
         factoryToAsset = PendleWrapperLPTToAssetOracleFactory(factoryAssetDeploy.run());
 
         ChainlinkV3OracleFactoryDeploy chainlinkV3FactoryDeploy = new ChainlinkV3OracleFactoryDeploy();

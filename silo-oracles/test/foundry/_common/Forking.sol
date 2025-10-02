@@ -19,7 +19,7 @@ contract Forking is IForking, Test {
     /// @dev arbitrum checkpoints to ethereum, so block.number on Arbitrum is actually ethereum block.
     /// To handle this case and be able to add unit tests for expected block we will be using mapping
     /// Arbitrum block number => ETH block number (checkpoint)
-    mapping (uint256 => uint256) public arbitrumToEthereumCheckout;
+    mapping(uint256 => uint256) public arbitrumToEthereumCheckout;
 
     constructor(BlockChain _chain) {
         ARBITRUM_RPC_URL = string(abi.encodePacked(vm.envString("RPC_ARBITRUM")));

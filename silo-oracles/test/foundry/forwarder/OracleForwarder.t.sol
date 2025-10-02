@@ -38,11 +38,7 @@ contract OracleForwarderTest is Test {
 
         _factory = IOracleForwarderFactory(factoryDeploy.run());
 
-        _oracleForwarder = _factory.createOracleForwarder(
-            ISiloOracle(address(_oracleMock1)),
-            _owner,
-            bytes32(0)
-        );
+        _oracleForwarder = _factory.createOracleForwarder(ISiloOracle(address(_oracleMock1)), _owner, bytes32(0));
     }
 
     // FOUNDRY_PROFILE=oracles forge test --mt test_OracleForwarder_setOracle
@@ -71,9 +67,7 @@ contract OracleForwarderTest is Test {
         address quoteToken = makeAddr("quoteToken");
 
         vm.mockCall(
-            address(_oracleMock2),
-            abi.encodeWithSelector(ISiloOracle.quoteToken.selector),
-            abi.encode(quoteToken)
+            address(_oracleMock2), abi.encodeWithSelector(ISiloOracle.quoteToken.selector), abi.encode(quoteToken)
         );
 
         vm.expectRevert(abi.encodeWithSelector(IOracleForwarder.QuoteTokenMustBeTheSame.selector));
@@ -134,20 +128,14 @@ contract OracleForwarderTest is Test {
         uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
-        IOracleForwarder oracle1 = _factory.createOracleForwarder(
-            ISiloOracle(address(_oracleMock1)),
-            _owner,
-            bytes32(0)
-        );
+        IOracleForwarder oracle1 =
+            _factory.createOracleForwarder(ISiloOracle(address(_oracleMock1)), _owner, bytes32(0));
 
         vm.revertToState(snapshot);
 
         vm.prank(eoa2);
-        IOracleForwarder oracle2 = _factory.createOracleForwarder(
-            ISiloOracle(address(_oracleMock2)),
-            _owner,
-            bytes32(0)
-        );
+        IOracleForwarder oracle2 =
+            _factory.createOracleForwarder(ISiloOracle(address(_oracleMock2)), _owner, bytes32(0));
 
         assertNotEq(address(oracle1), address(oracle2), "oracle1 == oracle2");
     }

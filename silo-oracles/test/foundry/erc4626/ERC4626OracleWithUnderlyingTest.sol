@@ -4,9 +4,11 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
-import {ERC4626OracleWithUnderlyingFactoryDeploy} from "../../../deploy/erc4626/ERC4626OracleWithUnderlyingFactoryDeploy.s.sol";
+import {ERC4626OracleWithUnderlyingFactoryDeploy} from
+    "../../../deploy/erc4626/ERC4626OracleWithUnderlyingFactoryDeploy.s.sol";
 import {ERC4626OracleWithUnderlyingDeploy} from "../../../deploy/erc4626/ERC4626OracleWithUnderlyingDeploy.s.sol";
-import {ERC4626OracleWithUnderlyingFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlyingFactory.sol";
+import {ERC4626OracleWithUnderlyingFactory} from
+    "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlyingFactory.sol";
 import {ERC4626OracleWithUnderlying} from "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlying.sol";
 import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 import {IERC4626OracleWithUnderlying} from "silo-oracles/contracts/interfaces/IERC4626OracleWithUnderlying.sol";
@@ -37,7 +39,6 @@ contract ERC4626OracleWithUnderlyingTest is Test {
 
         wstUSR = AddrLib.getAddress("wstUSR");
     }
-
 
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_wrappedVault_deploy --ffi -vv

@@ -30,13 +30,7 @@ contract MockAggregatorV3 is AggregatorV3Interface {
         view
         virtual
         override
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         roundId = 54321;
         answer = mockedAnswer;
@@ -50,13 +44,7 @@ contract MockAggregatorV3 is AggregatorV3Interface {
         view
         virtual
         override
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         roundId = 54321;
         answer = mockedAnswer;

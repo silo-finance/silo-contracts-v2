@@ -31,8 +31,8 @@ contract X33ToUsdAdapterTest is Forking {
         // https://www.pyth.network/price-feeds/crypto-shadow-usd
         assertEq(
             PythAggregatorV3(address(adapter.SHADOW_USD_FEED())).priceId(),
-            0x6f02ad2b8a307411fc3baedb9876e83efe9fa9f5b752aab8c99f4742c9e5f5d5)
-        ;
+            0x6f02ad2b8a307411fc3baedb9876e83efe9fa9f5b752aab8c99f4742c9e5f5d5
+        );
 
         assertEq(address(adapter.X33()), 0x3333111A391cC08fa51353E9195526A70b333333);
         assertEq(adapter.X33().symbol(), "x33");
@@ -79,13 +79,8 @@ contract X33ToUsdAdapterTest is Forking {
         assertEq(vaultRate, 1351829835613517529);
         assertTrue(vaultRate > 10 ** 18 && vaultRate < 15 * 10 ** 18 / 10, "rate is between 1..1.5");
 
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = adapter.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            adapter.latestRoundData();
 
         (
             uint80 underlyingRoundId,
