@@ -55,9 +55,8 @@ contract PTLinearOracleTest is PTLinearMocks {
 
         _mockDecimals();
 
-        (
-            uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-        ) = AggregatorV3Interface(address(oracle)).latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            AggregatorV3Interface(address(oracle)).latestRoundData();
 
         assertEq(roundId, 0);
         assertEq(uint256(answer), price, "latestRoundData reutrns same data as quote");
@@ -113,9 +112,8 @@ contract PTLinearOracleTest is PTLinearMocks {
         _mockLatestRoundData(0.9e18);
         _mockExchangeRate(0.8e18);
 
-        (
-            uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound
-        ) = oracle.getRoundData(0);
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            oracle.getRoundData(0);
 
         assertEq(roundId, 0);
         assertEq(answer, 0);

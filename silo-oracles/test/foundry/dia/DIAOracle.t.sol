@@ -37,11 +37,7 @@ contract DIAOracleTest is DIAConfigDefault {
         newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
 
         // does not revert
-        assertGt(
-            newOracle.quote(1e18, address(tokens["RDPX"])),
-            0,
-            "does not revert for old price"
-        );
+        assertGt(newOracle.quote(1e18, address(tokens["RDPX"])), 0, "does not revert for old price");
     }
 
     function test_DIAOracle_initialize_OldSecondaryPrice() public {
@@ -56,11 +52,7 @@ contract DIAOracleTest is DIAConfigDefault {
         DIAOracleConfig newConfig = new DIAOracleConfig(cfg);
         newOracle.initialize(newConfig, cfg.primaryKey, cfg.secondaryKey);
 
-        assertGt(
-            newOracle.quote(1e18, address(tokens["RDPX"])),
-            0,
-            "does not revert even for old secondary price"
-        );
+        assertGt(newOracle.quote(1e18, address(tokens["RDPX"])), 0, "does not revert even for old secondary price");
     }
 
     function test_DIAOracle_initialize_pass() public {
@@ -127,7 +119,7 @@ contract DIAOracleTest is DIAConfigDefault {
         assertEq(secondFeedValue / 1e8, 1651, "ETH ~1651$");
         assertEq(price, firstFeedValue * secondFeedValue * 10 ** baseTokenDecimals / divider);
         assertTrue(price / 1e18 > 28000 && price / 1e18 < 30000, "price is expected (17*1651)");
-        assertEq(price, 29550.923244141798603500e18, "price is expected");
+        assertEq(price, 29550.9232441417986035e18, "price is expected");
     }
 
     /*
@@ -149,14 +141,16 @@ contract DIAOracleTest is DIAConfigDefault {
         DIAOracle oracle = DIAOracle(Clones.clone(address(new DIAOracle())));
         oracle.initialize(oracleConfig, cfg.primaryKey, cfg.secondaryKey);
 
-        assertEq(oracle.quote(1e18, address(tokens["RDPX"])), 10 ** (IERC20Metadata(cfg.baseToken).decimals()) / divider);
+        assertEq(
+            oracle.quote(1e18, address(tokens["RDPX"])), 10 ** (IERC20Metadata(cfg.baseToken).decimals()) / divider
+        );
     }
 
     /*
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quote_ZeroPrice_oneFeed
     */
     function test_DIAOracle_quote_ZeroPrice_oneFeed() public {
-        uint256 dividerToZeroPrice = 10**36;
+        uint256 dividerToZeroPrice = 10 ** 36;
         IDIAOracle.DIADeploymentConfig memory cfgOneFeed = _defaultDIAConfig(dividerToZeroPrice, 0);
         DIAOracleConfig oracleConfigOneFeed = new DIAOracleConfig(cfgOneFeed);
         assertTrue(Strings.equal(cfgOneFeed.secondaryKey, ""), "Only one feed is used");
@@ -172,7 +166,7 @@ contract DIAOracleTest is DIAConfigDefault {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_DIAOracle_quote_ZeroPrice_twoFeeds
     */
     function test_DIAOracle_quote_ZeroPrice_twoFeeds() public {
-        uint256 dividerToZeroPrice = 10**36;
+        uint256 dividerToZeroPrice = 10 ** 36;
         IDIAOracle.DIADeploymentConfig memory cfgTwoFeeds = _defaultDIAConfig(dividerToZeroPrice, 0);
         cfgTwoFeeds.secondaryKey = "ETH/USD";
 

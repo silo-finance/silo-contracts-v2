@@ -7,9 +7,11 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
-import {ERC4626OracleWithUnderlyingFactoryDeploy} from "../../../deploy/erc4626/ERC4626OracleWithUnderlyingFactoryDeploy.s.sol";
+import {ERC4626OracleWithUnderlyingFactoryDeploy} from
+    "../../../deploy/erc4626/ERC4626OracleWithUnderlyingFactoryDeploy.s.sol";
 import {ERC4626OracleWithUnderlyingDeploy} from "../../../deploy/erc4626/ERC4626OracleWithUnderlyingDeploy.s.sol";
-import {ERC4626OracleWithUnderlyingFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlyingFactory.sol";
+import {ERC4626OracleWithUnderlyingFactory} from
+    "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlyingFactory.sol";
 import {ERC4626OracleWithUnderlying} from "silo-oracles/contracts/erc4626/ERC4626OracleWithUnderlying.sol";
 import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 import {IERC4626OracleWithUnderlying} from "silo-oracles/contracts/interfaces/IERC4626OracleWithUnderlying.sol";

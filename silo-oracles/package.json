@@ -13,6 +13,8 @@
     "solhint": "~3.4.1"
   },
   "scripts": {
-    "lint:sol": "../scripts/lint-sol.sh 7"
+    "lint:sol": "../scripts/lint-sol.sh 7",
+    "lint-tests:sol": "../scripts/lint-sol.sh 0 test/**/*.sol",
+    "lint-deploy:sol": "../scripts/lint-sol.sh 0 deploy/**/*.sol"
   }
 }

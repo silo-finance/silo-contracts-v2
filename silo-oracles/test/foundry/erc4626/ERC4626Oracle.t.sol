@@ -64,11 +64,7 @@ contract ERC4626OracleTest is Test {
         vm.expectRevert(ERC4626Oracle.ZeroPrice.selector);
         oracle.quote(0, address(vault));
 
-        vm.mockCall(
-            address(vault),
-            abi.encodeWithSelector(IERC4626.convertToAssets.selector),
-            abi.encode(0)
-        );
+        vm.mockCall(address(vault), abi.encodeWithSelector(IERC4626.convertToAssets.selector), abi.encode(0));
 
         vm.expectRevert(ERC4626Oracle.ZeroPrice.selector);
         oracle.quote(1 ether, address(vault));
@@ -102,18 +98,12 @@ contract ERC4626OracleTest is Test {
         uint256 snapshot = vm.snapshotState();
 
         vm.prank(eoa1);
-        ISiloOracle oracle1 = _factory.createERC4626Oracle(
-            IERC4626(_wosVault),
-            bytes32(0)
-        );
+        ISiloOracle oracle1 = _factory.createERC4626Oracle(IERC4626(_wosVault), bytes32(0));
 
         vm.revertToState(snapshot);
 
         vm.prank(eoa2);
-        ISiloOracle oracle2 = _factory.createERC4626Oracle(
-            IERC4626(_wosVault),
-            bytes32(0)
-        );
+        ISiloOracle oracle2 = _factory.createERC4626Oracle(IERC4626(_wosVault), bytes32(0));
 
         assertNotEq(address(oracle1), address(oracle2), "oracle1 == oracle2");
     }

@@ -102,9 +102,7 @@ contract PendlePTOracleTest is Forking {
 
     function test_PendlePTOracle_constructor_revertsInvalidUnderlyingOracle() public {
         vm.mockCall(
-            address(underlyingOracle),
-            abi.encodeWithSelector(ISiloOracle.quote.selector),
-            abi.encode(uint256(0))
+            address(underlyingOracle), abi.encodeWithSelector(ISiloOracle.quote.selector), abi.encode(uint256(0))
         );
 
         vm.expectRevert(PendlePTOracle.InvalidUnderlyingOracle.selector);
@@ -156,9 +154,7 @@ contract PendlePTOracleTest is Forking {
 
     function test_PendlePTOracle_constructor_revertsPendlePtToSyRateIsZero() public {
         vm.mockCall(
-            address(pendleOracle),
-            abi.encodeWithSelector(IPyYtLpOracleLike.getPtToSyRate.selector),
-            abi.encode(0)
+            address(pendleOracle), abi.encodeWithSelector(IPyYtLpOracleLike.getPtToSyRate.selector), abi.encode(0)
         );
 
         vm.expectRevert(PendlePTOracle.PendlePtToSyRateIsZero.selector);
@@ -187,11 +183,7 @@ contract PendlePTOracleTest is Forking {
     }
 
     function test_PendlePTOracle_quote_revertsZeroPrice() public {
-        vm.mockCall(
-            address(underlyingOracle),
-            abi.encodeWithSelector(ISiloOracle.quote.selector),
-            abi.encode(0)
-        );
+        vm.mockCall(address(underlyingOracle), abi.encodeWithSelector(ISiloOracle.quote.selector), abi.encode(0));
 
         vm.expectRevert(PendlePTOracle.ZeroPrice.selector);
         oracle.quote(0, ptToken);
@@ -256,7 +248,7 @@ contract PendlePTOracleTest is Forking {
         uint256 underlyingPrice = rlpUsdOracle.quote(10 ** 18, oracle.PT_UNDERLYING_TOKEN());
         assertEq(underlyingPrice, 1.19895478e18, "underlying is 1.20$");
 
-        uint256 ptPrice = oracle.quote(10**6, oracle.PT_TOKEN());
+        uint256 ptPrice = oracle.quote(10 ** 6, oracle.PT_TOKEN());
         assertEq(ptPrice, 0.973714918088968959e18, "PT is 0.97$");
 
         uint256 pendleRate = pendleOracle.getPtToSyRate(rlpMarket, 1800);
@@ -266,7 +258,7 @@ contract PendlePTOracleTest is Forking {
             "rate has 10**30 precision decimals, expected for 6 and 18 decimals difference"
         );
 
-        assertEq(ptPrice, pendleRate * underlyingPrice / 10**(18+(18-6)), "pt price is expected");
+        assertEq(ptPrice, pendleRate * underlyingPrice / 10 ** (18 + (18 - 6)), "pt price is expected");
     }
 
     function test_PendlePTOracle_quote_rateIsMoreThanPrecisionDecimals() public {
@@ -289,7 +281,7 @@ contract PendlePTOracleTest is Forking {
 
         // Rate is >100% now, it is a simulation of decimals diff
         rateFromPendleOracle = IPyYtLpOracleLike(pendleOracle).getPtToSyRate(market, 1800);
-        assertEq(rateFromPendleOracle, 9.671141344075454840e18); // 0.9671141344 * 10
+        assertEq(rateFromPendleOracle, 9.67114134407545484e18); // 0.9671141344 * 10
 
         assertEq(
             underlyingOracle.quote(quoteAmount, address(0)),
@@ -325,11 +317,7 @@ contract PendlePTOracleTest is Forking {
 
         assertEq(underlyingOracle.quote(quoteAmount, ptToken), 10 ** 18, "price NOT changed for other tokens");
 
-        assertEq(
-            underlyingOracle.quote(1, ptUnderlyingToken),
-            1,
-            "price NOT changed for other amounts to quote"
-        );
+        assertEq(underlyingOracle.quote(1, ptUnderlyingToken), 1, "price NOT changed for other amounts to quote");
 
         assertEq(
             underlyingOracle.quote(scaledAmountToQuote, ptUnderlyingToken),

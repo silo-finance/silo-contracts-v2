@@ -7,9 +7,8 @@ import {
     WrappedMetaVaultOracleAdapter,
     IWrappedMetaVaultOracle
 } from "silo-oracles/contracts/custom/wrappedMetaVaultOracle/WrappedMetaVaultOracleAdapter.sol";
-import {
-    IAggregatorInterfaceMinimal
-} from "silo-oracles/contracts/custom/wrappedMetaVaultOracle/interfaces/IAggregatorInterfaceMinimal.sol";
+import {IAggregatorInterfaceMinimal} from
+    "silo-oracles/contracts/custom/wrappedMetaVaultOracle/interfaces/IAggregatorInterfaceMinimal.sol";
 
 /*
     FOUNDRY_PROFILE=oracles forge test -vv --ffi --match-contract WrappedMetaVaultOracleAdapterTest
@@ -62,13 +61,8 @@ contract WrappedMetaVaultOracleAdapterTest is Test {
     }
 
     function test_WrappedMetaVaultOracleAdapter_latestRoundData_compareToOriginalRate() public view {
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = adapter.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            adapter.latestRoundData();
 
         assertEq(roundId, 1);
         assertEq(answer, adapter.FEED().latestAnswer());
@@ -78,8 +72,8 @@ contract WrappedMetaVaultOracleAdapterTest is Test {
     }
 
     function test_WrappedMetaVaultOracleAdapter_latestRoundData_sanityCheck() public view {
-        ( ,int256 answer,,,) = adapter.latestRoundData();
+        (, int256 answer,,,) = adapter.latestRoundData();
 
-        assertEq(answer, 1.00144500e8, "USD vault price is close to dollar");
+        assertEq(answer, 1.001445e8, "USD vault price is close to dollar");
     }
 }

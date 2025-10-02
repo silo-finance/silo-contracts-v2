@@ -2,7 +2,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import {IUniswapV3Factory} from  "uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
+import {IUniswapV3Factory} from "uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 
 import "../../../constants/Ethereum.sol";
 import "../../../contracts/uniswapV3/UniswapV3OracleConfig.sol";
@@ -32,11 +32,7 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
     */
     function test_UniswapV3OracleConfig_integration_constructor_pass() public {
         IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            pools["USDC_WETH"],
-            address(tokens["WETH"]),
-            address(tokens["USDC"]),
-            PERIOD_FOR_AVG_PRICE,
-            BLOCK_TIME
+            pools["USDC_WETH"], address(tokens["WETH"]), address(tokens["USDC"]), PERIOD_FOR_AVG_PRICE, BLOCK_TIME
         );
 
         UNISWAPV3_ORACLE_FACTORY.create(config, bytes32(0));
@@ -47,11 +43,7 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
     */
     function test_UniswapV3OracleConfig_integration_verifyPool_InvalidPoolForQuoteToken() public {
         IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            pools["UKY_WETH"],
-            address(tokens["WETH"]),
-            address(tokens["USDC"]),
-            PERIOD_FOR_AVG_PRICE,
-            BLOCK_TIME
+            pools["UKY_WETH"], address(tokens["WETH"]), address(tokens["USDC"]), PERIOD_FOR_AVG_PRICE, BLOCK_TIME
         );
 
         vm.expectRevert("InvalidPoolForQuoteToken");
@@ -63,11 +55,7 @@ contract UniswapV3OracleConfigIntegrationTest is UniswapPools {
     */
     function test_UniswapV3OracleConfig_integration_verifyPool_EmptyPool0() public {
         IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            pools["UKY_WETH"],
-            address(tokens["WETH"]),
-            address(tokens["UKY"]),
-            PERIOD_FOR_AVG_PRICE,
-            BLOCK_TIME
+            pools["UKY_WETH"], address(tokens["WETH"]), address(tokens["UKY"]), PERIOD_FOR_AVG_PRICE, BLOCK_TIME
         );
 
         vm.expectRevert("EmptyPool0");

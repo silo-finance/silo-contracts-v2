@@ -24,11 +24,7 @@ contract UniswapV3OracleTest is UniswapPools {
         ORACLE_FACTORY = factory;
 
         config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            pools["USDC_WETH"],
-            address(tokens["WETH"]),
-            address(tokens["USDC"]),
-            1800,
-            120
+            pools["USDC_WETH"], address(tokens["WETH"]), address(tokens["USDC"]), 1800, 120
         );
 
         PRICE_PROVIDER = factory.create(config, bytes32(0));
@@ -76,20 +72,23 @@ contract UniswapV3OracleTest is UniswapPools {
         // available period: 12
         // price: 4.983925969794450679
 
-        UniswapV3Oracle oracle = ORACLE_FACTORY.create(IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            pools["SP500_WETH"],
-            address(tokens["WETH"]),
-            address(tokens["WETH"]),
-            15,
-            120
-        ), bytes32(0));
+        UniswapV3Oracle oracle = ORACLE_FACTORY.create(
+            IUniswapV3Oracle.UniswapV3DeploymentConfig(
+                pools["SP500_WETH"], address(tokens["WETH"]), address(tokens["WETH"]), 15, 120
+            ),
+            bytes32(0)
+        );
 
         uint32[] memory secondAgos = new uint32[](2);
 
         secondAgos[0] = 15;
-        vm.expectCall(0x4532aC4F53871697CbFaE2d86517823c1E68B016, abi.encodeWithSignature("observe(uint32[])", secondAgos));
+        vm.expectCall(
+            0x4532aC4F53871697CbFaE2d86517823c1E68B016, abi.encodeWithSignature("observe(uint32[])", secondAgos)
+        );
         secondAgos[0] = 12;
-        vm.expectCall(0x4532aC4F53871697CbFaE2d86517823c1E68B016, abi.encodeWithSignature("observe(uint32[])", secondAgos));
+        vm.expectCall(
+            0x4532aC4F53871697CbFaE2d86517823c1E68B016, abi.encodeWithSignature("observe(uint32[])", secondAgos)
+        );
 
         oracle.quote(1e10, address(tokens["SP500"]));
     }
@@ -121,11 +120,7 @@ contract UniswapV3OracleTest is UniswapPools {
         UniswapV3OracleFactory factory = new UniswapV3OracleFactory(IUniswapV3Factory(UNISWAPV3_FACTORY));
 
         config = IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            pools["USDC_WETH"],
-            address(tokens["WETH"]),
-            address(tokens["USDC"]),
-            1800,
-            120
+            pools["USDC_WETH"], address(tokens["WETH"]), address(tokens["USDC"]), 1800, 120
         );
 
         UniswapV3Oracle oracle = factory.create(config, bytes32(0));

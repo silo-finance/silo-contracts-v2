@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.28;
 
-import {WstEthToStEthAdapterMainnet, IStEthLike} from "silo-oracles/contracts/custom/WstEthToStEthAdapterMainnet.sol";
+import {
+    WstEthToStEthAdapterMainnet, IStEthLike
+} from "silo-oracles/contracts/custom/WstEthToStEthAdapterMainnet.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 import {TokensGenerator} from "../_common/TokensGenerator.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
@@ -43,17 +45,12 @@ contract WstEthToStEthAdapterMainnetTest is TokensGenerator {
         AggregatorV3Interface aggregator = AggregatorV3Interface(new WstEthToStEthAdapterMainnet());
         int256 originalRate = int256(STETH.getPooledEthByShares(1 ether));
 
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = aggregator.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            aggregator.latestRoundData();
 
         assertEq(roundId, 1);
         assertEq(answer, originalRate);
-        assertEq(answer, 1.207274412695057650e18, "rate is ~1.2 in 18 decimals");
+        assertEq(answer, 1.20727441269505765e18, "rate is ~1.2 in 18 decimals");
         assertEq(startedAt, block.timestamp);
         assertEq(updatedAt, block.timestamp);
         assertEq(answeredInRound, 1);

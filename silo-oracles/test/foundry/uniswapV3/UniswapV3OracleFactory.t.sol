@@ -4,8 +4,8 @@ pragma abicoder v2;
 
 import "forge-std/Test.sol";
 
-import {IUniswapV3PoolState} from  "uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
-import {IUniswapV3PoolImmutables} from  "uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolImmutables.sol";
+import {IUniswapV3PoolState} from "uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolState.sol";
+import {IUniswapV3PoolImmutables} from "uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolImmutables.sol";
 
 import "../../../constants/Ethereum.sol";
 import "../_common/UniswapPools.sol";
@@ -38,11 +38,7 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         UNISWAPV3_ORACLE_FACTORY = new UniswapV3OracleFactory(IUniswapV3Factory(UNISWAPV3_FACTORY));
 
         creationConfig = IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            pools["USDC_WETH"],
-            address(tokens["WETH"]),
-            address(tokens["USDC"]),
-            1800,
-            120
+            pools["USDC_WETH"], address(tokens["WETH"]), address(tokens["USDC"]), 1800, 120
         );
     }
 
@@ -99,7 +95,11 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3OracleFactory_verifyPool_throws_InvalidPool
     */
     function test_UniswapV3OracleFactory_verifyPool_throws_InvalidPool() public {
-        vm.mockCall(UNISWAPV3_FACTORY, abi.encodeWithSelector(IUniswapV3Factory.getPool.selector, TOKEN_A, TOKEN_B, FEE), abi.encode(address(0)));
+        vm.mockCall(
+            UNISWAPV3_FACTORY,
+            abi.encodeWithSelector(IUniswapV3Factory.getPool.selector, TOKEN_A, TOKEN_B, FEE),
+            abi.encode(address(0))
+        );
 
         vm.expectRevert("InvalidPool");
 
@@ -135,21 +135,13 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         vm.mockCall(
             POOL,
             abi.encodeWithSelector(IUniswapV3PoolState.slot0.selector),
-            abi.encode(
-                0,
-                0,
-                0,
-                REQUIRED_CARDINALITY - 1,
-                0,
-                0,
-                0
-            )
+            abi.encode(0, 0, 0, REQUIRED_CARDINALITY - 1, 0, 0, 0)
         );
 
         vm.expectRevert("BufferNotFull");
         UNISWAPV3_ORACLE_FACTORY.verifyPool(IUniswapV3Pool(POOL), TOKEN_B, REQUIRED_CARDINALITY);
     }
-    
+
     /*
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3OracleFactory_revert_whenFactoryZero
     */
@@ -180,13 +172,12 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_UniswapV3OracleFactory_create_pass
     */
     function test_UniswapV3OracleFactory_create_pass() public {
-        UniswapV3Oracle oracle = UNISWAPV3_ORACLE_FACTORY.create(IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            pools["CRV_ETH"],
-            address(tokens["CRV"]),
-            address(tokens["WETH"]),
-            1800,
-            120
-        ), bytes32(0));
+        UniswapV3Oracle oracle = UNISWAPV3_ORACLE_FACTORY.create(
+            IUniswapV3Oracle.UniswapV3DeploymentConfig(
+                pools["CRV_ETH"], address(tokens["CRV"]), address(tokens["WETH"]), 1800, 120
+            ),
+            bytes32(0)
+        );
 
         assertEq(oracle.quote(3710e18, address(tokens["CRV"])), 1015110362648407264, "expect 3700@$.46 CRV => 1ETH");
     }
@@ -196,21 +187,17 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
     */
     function test_UniswapV3OracleFactory_create_reuseConfig() public {
         IUniswapV3Oracle.UniswapV3DeploymentConfig memory cfg = IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            pools["CRV_ETH"],
-            address(tokens["WETH"]),
-            address(tokens["CRV"]),
-            1800,
-            120
+            pools["CRV_ETH"], address(tokens["WETH"]), address(tokens["CRV"]), 1800, 120
         );
 
         uint256 gasStart = gasleft();
-        UniswapV3Oracle oracle1 =  UNISWAPV3_ORACLE_FACTORY.create(cfg, bytes32(0));
+        UniswapV3Oracle oracle1 = UNISWAPV3_ORACLE_FACTORY.create(cfg, bytes32(0));
         uint256 gasEnd = gasleft();
 
         emit log_named_uint("gas", gasStart - gasEnd);
         assertEq(gasStart - gasEnd, 254142, "optimise gas");
 
-        UniswapV3Oracle oracle2 =  UNISWAPV3_ORACLE_FACTORY.create(cfg, bytes32(0));
+        UniswapV3Oracle oracle2 = UNISWAPV3_ORACLE_FACTORY.create(cfg, bytes32(0));
 
         assertEq(address(oracle1.oracleConfig()), address(oracle2.oracleConfig()), "expect same config");
     }
@@ -225,13 +212,12 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         vm.expectRevert("Initializable: contract is already initialized");
         implementation.initialize(validConfig);
 
-        UniswapV3Oracle oracle = UNISWAPV3_ORACLE_FACTORY.create(IUniswapV3Oracle.UniswapV3DeploymentConfig(
-            pools["CRV_ETH"],
-            address(tokens["CRV"]),
-            address(tokens["WETH"]),
-            1800,
-            120
-        ), bytes32(0));
+        UniswapV3Oracle oracle = UNISWAPV3_ORACLE_FACTORY.create(
+            IUniswapV3Oracle.UniswapV3DeploymentConfig(
+                pools["CRV_ETH"], address(tokens["CRV"]), address(tokens["WETH"]), 1800, 120
+            ),
+            bytes32(0)
+        );
 
         assertEq(oracle.quote(3710e18, address(tokens["CRV"])), 1015110362648407264, "expect 3700@$.46 CRV => 1ETH");
     }
@@ -250,8 +236,14 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         UniswapV3OracleConfig configContract = PRICE_PROVIDER.oracleConfig();
         IUniswapV3Oracle.UniswapV3Config memory config = configContract.getConfig();
 
-        assertEq(uint256(config.periodForAvgPrice), uint256(creationConfig.periodForAvgPrice), "periodForAvgPrice match");
-        assertEq(uint256(config.requiredCardinality), uint256(creationConfig.periodForAvgPrice) * 10 / creationConfig.blockTime, "requiredCardinality = 30 min (1800) / 12sec => 150 blocks");
+        assertEq(
+            uint256(config.periodForAvgPrice), uint256(creationConfig.periodForAvgPrice), "periodForAvgPrice match"
+        );
+        assertEq(
+            uint256(config.requiredCardinality),
+            uint256(creationConfig.periodForAvgPrice) * 10 / creationConfig.blockTime,
+            "requiredCardinality = 30 min (1800) / 12sec => 150 blocks"
+        );
         assertEq(address(config.pool), address(creationConfig.pool), "pool match");
         assertEq(config.quoteToken, address(tokens["USDC"]), "quoteToken match");
     }
@@ -261,8 +253,16 @@ contract UniswapV3OracleFactoryTest is UniswapPools {
         vm.mockCall(POOL, abi.encodeWithSelector(IUniswapV3PoolImmutables.token1.selector), abi.encode(TOKEN_B));
         vm.mockCall(POOL, abi.encodeWithSelector(IUniswapV3PoolImmutables.fee.selector), abi.encode(FEE));
 
-        vm.mockCall(UNISWAPV3_FACTORY, abi.encodeWithSelector(IUniswapV3Factory.getPool.selector, TOKEN_A, TOKEN_B, FEE), abi.encode(POOL));
-        vm.mockCall(UNISWAPV3_FACTORY, abi.encodeWithSelector(IUniswapV3Factory.getPool.selector, TOKEN_B, TOKEN_A, FEE), abi.encode(POOL));
+        vm.mockCall(
+            UNISWAPV3_FACTORY,
+            abi.encodeWithSelector(IUniswapV3Factory.getPool.selector, TOKEN_A, TOKEN_B, FEE),
+            abi.encode(POOL)
+        );
+        vm.mockCall(
+            UNISWAPV3_FACTORY,
+            abi.encodeWithSelector(IUniswapV3Factory.getPool.selector, TOKEN_B, TOKEN_A, FEE),
+            abi.encode(POOL)
+        );
 
         vm.mockCall(TOKEN_A, abi.encodeWithSelector(IERC20BalanceOf.balanceOf.selector, POOL), abi.encode(1));
         vm.mockCall(TOKEN_B, abi.encodeWithSelector(IERC20BalanceOf.balanceOf.selector, POOL), abi.encode(1));
