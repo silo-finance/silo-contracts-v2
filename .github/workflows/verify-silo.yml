@@ -150,12 +150,18 @@ jobs:
         id: live-market-qa
         run: |
           echo "Running LIVE MARKET QA for ${{ steps.extract.outputs.CONFIG_NAME }} (${{ steps.extract.outputs.CONFIG }}) on ${{ steps.extract.outputs.CHAIN }}"
+          
+          # Run tests and capture exit code
+          set +e  # Don't exit on error
           FOUNDRY_PROFILE=core_test CONFIG=${{ steps.extract.outputs.CONFIG }} \
           EXTERNAL_PRICE_0=${{ steps.price.outputs.EXTERNAL_PRICE_0 }} EXTERNAL_PRICE_1=${{ steps.price.outputs.EXTERNAL_PRICE_1 }} \
           RPC_URL=${{ steps.extract.outputs.RPC_URL }} \
           forge test --mc "NewMarketTest" --ffi -vv \
-          > live_market_qa.log 2>&1 || true
-
+          > live_market_qa.log 2>&1
+          TEST_EXIT_CODE=$?
+          set -e  # Re-enable exit on error
+          
+          # Create result file
           echo '```' > live_market_qa_result.txt
           echo "LIVE MARKET QA Results" >> live_market_qa_result.txt
           echo "Time: $(date -u '+%Y-%m-%d %H:%M:%S') UTC" >> live_market_qa_result.txt
@@ -165,8 +171,20 @@ jobs:
           echo "EXTERNAL_PRICE_0=${{ steps.price.outputs.EXTERNAL_PRICE_0 }}" >> live_market_qa_result.txt
           echo "EXTERNAL_PRICE_1=${{ steps.price.outputs.EXTERNAL_PRICE_1 }}" >> live_market_qa_result.txt
           echo "" >> live_market_qa_result.txt
+          
+          # Add test results
+          if [ $TEST_EXIT_CODE -eq 0 ]; then
+            echo "✅ Tests PASSED" >> live_market_qa_result.txt
+          else
+            echo "❌ Tests FAILED (exit code: $TEST_EXIT_CODE)" >> live_market_qa_result.txt
+          fi
+          echo "" >> live_market_qa_result.txt
+          
           cat live_market_qa.log >> live_market_qa_result.txt
           echo '```' >> live_market_qa_result.txt
+          
+          # Set output for next step
+          echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
 
       # Post LIVE MARKET QA result as a separate sticky comment on the PR
       - name: Comment LIVE MARKET QA result on PR
@@ -174,5 +192,16 @@ jobs:
         with:
           header: live-market-qa
           path: live_market_qa_result.txt
+          
+      # Fail the CI if tests failed
+      - name: Check test results
+        run: |
+          if [ "${{ steps.live-market-qa.outputs.test_exit_code }}" != "0" ]; then
+            echo "❌ LIVE MARKET QA tests failed with exit code ${{ steps.live-market-qa.outputs.test_exit_code }}"
+            echo "Check the live-market-qa comment above for details"
+            exit 1
+          else
+            echo "✅ LIVE MARKET QA tests passed"
+          fi
   
         
