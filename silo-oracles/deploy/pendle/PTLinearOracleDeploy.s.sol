@@ -6,14 +6,14 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 import {PTLinearOracleDeployCommon} from "./deployment-helpers/PTLinearOracleDeployCommon.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
-PT_TOKEN=PT-wstUSR-26JAN2026 \
-PT_UNDERLYING_TOKEN=wstUSR \
+PT_TOKEN=PT-wstUSR-29JAN2026 \
+PT_UNDERLYING_TOKEN=USR \
 PT_MARKET_ADDRESS=0x39c3f8e0e7c6f44dc8f0397feb124517ba82e26e \
 BASE_DISCOUNT_PER_YEAR=0.25e18 \
     forge script silo-oracles/deploy/pendle/PTLinearOracleDeploy.s.sol \
-    --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
+    --ffi --rpc-url $RPC_MAINNET --broadcast --verify
  */
 contract PTLinearOracleDeploy is PTLinearOracleDeployCommon {
     function run() public {
