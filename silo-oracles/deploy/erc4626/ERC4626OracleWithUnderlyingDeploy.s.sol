@@ -57,15 +57,15 @@ contract ERC4626OracleWithUnderlyingDeploy is CommonDeploy {
         address baseToken = address(cfg.baseToken);
         _printMetadata(baseToken);
 
-        printQuote(oracle, baseToken, 1);
-        printQuote(oracle, baseToken, 10);
-        printQuote(oracle, baseToken, 1e6);
-        printQuote(oracle, baseToken, 1e8);
-        printQuote(oracle, baseToken, 1e18);
-        printQuote(oracle, baseToken, 1e36);
+        _printQuote(oracle, baseToken, 1);
+        _printQuote(oracle, baseToken, 10);
+        _printQuote(oracle, baseToken, 1e6);
+        _printQuote(oracle, baseToken, 1e8);
+        _printQuote(oracle, baseToken, 1e18);
+        _printQuote(oracle, baseToken, 1e36);
 
         console2.log("Using token decimals:");
-        uint256 price = printQuote(oracle, baseToken, uint256(10 ** cfg.baseToken.decimals()));
+        uint256 price = _printQuote(oracle, baseToken, uint256(10 ** cfg.baseToken.decimals()));
         console2.log("Price in quote token divided by 1e18: ", PriceFormatter.formatNumberInE(price / 1e18));
 
         console2.log("Oracle config:");

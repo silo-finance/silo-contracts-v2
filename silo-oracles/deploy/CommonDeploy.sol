@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.7.6;
 
+// solhint-disable no-console
 import {console2} from "forge-std/console2.sol";
 
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
@@ -10,8 +11,6 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 
 import {SiloOraclesFactoriesDeployments} from "./SiloOraclesFactoriesContracts.sol";
-
-// solhint-disable no-console
 
 contract CommonDeploy is Deployer {
     string internal constant _FORGE_OUT_DIR = "cache/foundry/out/silo-oracles";
@@ -28,7 +27,7 @@ contract CommonDeploy is Deployer {
         return SiloOraclesFactoriesDeployments.DEPLOYMENTS_DIR;
     }
 
-    function printQuote(ISiloOracle _oracle, address _baseToken, uint256 _baseAmount)
+    function _printQuote(ISiloOracle _oracle, address _baseToken, uint256 _baseAmount)
         internal
         view
         returns (uint256 quote)

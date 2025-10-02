@@ -49,6 +49,6 @@ contract sAVAXOracleDeploy is CommonDeploy {
         console2.log(
             "fetch price for: %s/%s\n", IERC20Metadata(vault).symbol(), IERC20Metadata(oracle.quoteToken()).symbol()
         );
-        printQuote(oracle, baseToken, uint256(10 ** IERC20Metadata(baseToken).decimals()));
+        _printQuote(oracle, baseToken, uint256(10 ** IERC20Metadata(baseToken).decimals()));
     }
 }

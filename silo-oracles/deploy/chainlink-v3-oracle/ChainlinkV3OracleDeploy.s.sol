@@ -67,15 +67,15 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
         console2.log("Token symbol:", config.baseToken.symbol());
         console2.log("Token decimals:", config.baseToken.decimals());
 
-        printQuote(oracle, config, 1);
-        printQuote(oracle, config, 10);
-        printQuote(oracle, config, 1e6);
-        printQuote(oracle, config, 1e8);
-        printQuote(oracle, config, 1e18);
-        printQuote(oracle, config, 1e36);
+        _printQuote(oracle, config, 1);
+        _printQuote(oracle, config, 10);
+        _printQuote(oracle, config, 1e6);
+        _printQuote(oracle, config, 1e8);
+        _printQuote(oracle, config, 1e18);
+        _printQuote(oracle, config, 1e36);
 
         console2.log("Using token decimals:");
-        uint256 price = printQuote(oracle, config, uint256(10 ** config.baseToken.decimals()));
+        uint256 price = _printQuote(oracle, config, uint256(10 ** config.baseToken.decimals()));
         console2.log("Price in quote token divided by 1e18: ", PriceFormatter.formatPriceInE18(price / 1e18));
 
         ChainlinkV3OracleConfig oracleConfig = oracle.oracleConfig();
@@ -101,7 +101,7 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
         );
     }
 
-    function printQuote(
+    function _printQuote(
         ChainlinkV3Oracle _oracle,
         IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config,
         uint256 _baseAmount

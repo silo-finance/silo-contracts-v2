@@ -53,6 +53,6 @@ contract ERC4626OracleDeploy is CommonDeploy {
 
     function _qa(ISiloOracle oracle, IERC4626 vault) internal view {
         console2.log("fetch price for: %s/%s", IERC20Metadata(vault).symbol(), IERC20Metadata(vault.asset()).symbol());
-        printQuote(oracle, address(vault), uint256(10 ** IERC20Metadata(vault).decimals()));
+        _printQuote(oracle, address(vault), uint256(10 ** IERC20Metadata(vault).decimals()));
     }
 }

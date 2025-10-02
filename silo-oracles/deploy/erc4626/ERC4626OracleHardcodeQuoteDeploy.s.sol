@@ -68,6 +68,6 @@ contract ERC4626OracleHardcodeQuoteDeploy is CommonDeploy {
         console2.log(
             "fetch price for: %s/%s", IERC20Metadata(baseToken).symbol(), IERC20Metadata(quoteToken).symbol()
         );
-        printQuote(oracle, baseToken, uint256(10 ** IERC20Metadata(baseToken).decimals()));
+        _printQuote(oracle, baseToken, uint256(10 ** IERC20Metadata(baseToken).decimals()));
     }
 }
