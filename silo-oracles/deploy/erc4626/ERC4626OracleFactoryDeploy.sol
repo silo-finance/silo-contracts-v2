@@ -5,7 +5,7 @@ import {ERC4626OracleFactory} from "silo-oracles/contracts/erc4626/ERC4626Oracle
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=oracles \
         forge script silo-oracles/deploy/erc4626/ERC4626OracleFactoryDeploy.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify

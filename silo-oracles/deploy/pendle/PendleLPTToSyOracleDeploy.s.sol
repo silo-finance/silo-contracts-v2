@@ -12,7 +12,7 @@ import {PendleLPTToSyOracle} from "silo-oracles/contracts/pendle/lp-tokens/Pendl
 import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE_NAME=PYTH_REDSTONE_wstkscETH_ETH MARKET=0xd14117baf6EC5D12BE68CD06e763A4B82C9B6d1D \
     forge script silo-oracles/deploy/pendle/PendleLPTToSyOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
@@ -24,10 +24,11 @@ contract PendleLPTToSyOracleDeploy is CommonDeploy {
     function run() public returns (ISiloOracle oracle) {
         string memory chainAlias = ChainsLib.chainAlias();
 
-        PendleLPTToSyOracleFactory factory = PendleLPTToSyOracleFactory(SiloOraclesFactoriesDeployments.get(
-            SiloOraclesFactoriesContracts.PENDLE_LPT_TO_SY_ORACLE_FACTORY,
-            chainAlias
-        ));
+        PendleLPTToSyOracleFactory factory = PendleLPTToSyOracleFactory(
+            SiloOraclesFactoriesDeployments.get(
+                SiloOraclesFactoriesContracts.PENDLE_LPT_TO_SY_ORACLE_FACTORY, chainAlias
+            )
+        );
 
         string memory underlyingOracleName;
 
@@ -40,22 +41,14 @@ contract PendleLPTToSyOracleDeploy is CommonDeploy {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         vm.startBroadcast(deployerPrivateKey);
 
-        oracle = factory.create({
-            _underlyingOracle: underlyingOracle,
-            _market: market,
-            _externalSalt: bytes32(0)
-        });
+        oracle = factory.create({_underlyingOracle: underlyingOracle, _market: market, _externalSalt: bytes32(0)});
 
         vm.stopBroadcast();
 
         (address syToken,,) = IPendleMarketV3Like(market).readTokens();
 
-        string memory oracleName = string.concat(
-            "PENDLE_LPT_ORACLE_",
-            IERC20Metadata(syToken).symbol(),
-            "_",
-            underlyingOracleName
-        );
+        string memory oracleName =
+            string.concat("PENDLE_LPT_ORACLE_", IERC20Metadata(syToken).symbol(), "_", underlyingOracleName);
 
         OraclesDeployments.save(chainAlias, oracleName, address(oracle));
     }

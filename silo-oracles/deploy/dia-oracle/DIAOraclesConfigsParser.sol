@@ -10,14 +10,11 @@ import {IDIAOracleV2} from "silo-oracles/contracts/external/dia/IDIAOracleV2.sol
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 library DIAOraclesConfigsParser {
-    string constant public CONFIGS_DIR = "silo-oracles/deploy/dia-oracle/configs/";
-    string constant internal _EXTENSION = ".json";
-    string constant internal _EMPTY_STR = "\"\"";
+    string public constant CONFIGS_DIR = "silo-oracles/deploy/dia-oracle/configs/";
+    string internal constant _EXTENSION = ".json";
+    string internal constant _EMPTY_STR = "\"\"";
 
-    function getConfig(
-        string memory _network,
-        string memory _name
-    )
+    function getConfig(string memory _network, string memory _name)
         internal
         returns (IDIAOracle.DIADeploymentConfig memory config)
     {

@@ -5,7 +5,7 @@ import {PendleLPTToSyOracleFactory} from "silo-oracles/contracts/pendle/lp-token
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/pendle/PendleLPTToSyOracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify

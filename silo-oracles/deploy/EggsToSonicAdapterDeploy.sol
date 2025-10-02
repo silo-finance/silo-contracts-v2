@@ -6,7 +6,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {EggsToSonicAdapter, IEggsLike} from "silo-oracles/contracts/custom/EggsToSonicAdapter.sol";
 import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=oracles \
         forge script silo-oracles/deploy/EggsToSonicAdapterDeploy.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify

@@ -11,7 +11,7 @@ import {
     IWrappedMetaVaultOracle
 } from "silo-oracles/contracts/custom/wrappedMetaVaultOracle/WrappedMetaVaultOracleAdapter.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=oracles FEED=wmetaUSD_USD_wMetaVault_aggregator \
         forge script silo-oracles/deploy/WrappedMetaVaultOracleAdapterDeploy.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify

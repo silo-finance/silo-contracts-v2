@@ -6,7 +6,7 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {PythAggregatorFactory} from "silo-oracles/contracts/pyth/PythAggregatorFactory.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=oracles \
         forge script silo-oracles/deploy/pyth/PythAggregatorFactoryDeploy.s.sol \
         --ffi --rpc-url $RPC_URL --broadcast --verify

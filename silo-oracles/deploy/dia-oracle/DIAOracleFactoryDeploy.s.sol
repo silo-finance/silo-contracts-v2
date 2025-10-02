@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {IUniswapV3Factory} from  "uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
+import {IUniswapV3Factory} from "uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {DIAOracleFactory} from "silo-oracles/contracts/dia/DIAOracleFactory.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/dia-oracle/DIAOracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
@@ -27,7 +27,7 @@ contract DIAOracleFactoryDeploy is CommonDeploy {
         vm.startBroadcast(deployerPrivateKey);
 
         factory = new DIAOracleFactory();
-        
+
         vm.stopBroadcast();
 
         _registerDeployment(address(factory), SiloOraclesFactoriesContracts.DIA_ORACLE_FACTORY);

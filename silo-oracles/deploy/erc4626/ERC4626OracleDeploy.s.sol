@@ -13,8 +13,7 @@ import {ERC4626OracleFactory} from "silo-oracles/contracts/erc4626/ERC4626Oracle
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
-
-/**
+/*
 FOUNDRY_PROFILE=oracles VAULT=tAVAX \
     forge script silo-oracles/deploy/erc4626/ERC4626OracleDeploy.s.sol \
     --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify
@@ -54,6 +53,6 @@ contract ERC4626OracleDeploy is CommonDeploy {
 
     function _qa(ISiloOracle oracle, IERC4626 vault) internal view {
         console2.log("fetch price for: %s/%s", IERC20Metadata(vault).symbol(), IERC20Metadata(vault.asset()).symbol());
-        printQuote(oracle, address(vault), uint256(10 ** IERC20Metadata(vault).decimals()));
+        _printQuote(oracle, address(vault), uint256(10 ** IERC20Metadata(vault).decimals()));
     }
 }

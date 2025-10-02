@@ -6,7 +6,7 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {WusdPlusUsdAdapter} from "silo-oracles/contracts/custom/WusdPlusUsdAdapter.sol";
 import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=oracles \
         forge script silo-oracles/deploy/WusdPlusUsdAdapterDeploy.s.sol \
         --ffi --broadcast --rpc-url http://127.0.0.1:8545

@@ -9,7 +9,7 @@ import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.so
 import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtLpOracleLike.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/pendle/PendlePTToAssetOracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.7.6;
 
+// solhint-disable no-console
 import {console2} from "forge-std/console2.sol";
 
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
@@ -14,26 +15,33 @@ import {SiloOraclesFactoriesDeployments} from "./SiloOraclesFactoriesContracts.s
 contract CommonDeploy is Deployer {
     string internal constant _FORGE_OUT_DIR = "cache/foundry/out/silo-oracles";
 
-    function _forgeOutDir() internal view override virtual returns (string memory) {
+    function _forgeOutDir() internal view virtual override returns (string memory) {
         return _FORGE_OUT_DIR;
     }
 
-    function _contractBaseDir() internal view override virtual returns (string memory baseDir) {
+    function _contractBaseDir() internal view virtual override returns (string memory baseDir) {
         baseDir = "";
     }
 
-    function _deploymentsSubDir() internal view override virtual returns (string memory) {
+    function _deploymentsSubDir() internal view virtual override returns (string memory) {
         return SiloOraclesFactoriesDeployments.DEPLOYMENTS_DIR;
     }
 
-    function printQuote(
-        ISiloOracle _oracle,
-        address _baseToken,
-        uint256 _baseAmount
-    ) internal view returns (uint256 quote) {
+    function _printQuote(ISiloOracle _oracle, address _baseToken, uint256 _baseAmount)
+        internal
+        view
+        returns (uint256 quote)
+    {
         try _oracle.quote(_baseAmount, _baseToken) returns (uint256 price) {
             require(price > 0, string.concat("Quote for ", PriceFormatter.formatPriceInE18(_baseAmount), " wei is 0"));
-            console2.log(string.concat("Quote for ", PriceFormatter.formatPriceInE18(_baseAmount), " wei is ", PriceFormatter.formatPriceInE18(price)));
+            console2.log(
+                string.concat(
+                    "Quote for ",
+                    PriceFormatter.formatPriceInE18(_baseAmount),
+                    " wei is ",
+                    PriceFormatter.formatPriceInE18(price)
+                )
+            );
             quote = price;
         } catch {
             console2.log(string.concat("Failed to quote", PriceFormatter.formatPriceInE18(_baseAmount), "wei"));

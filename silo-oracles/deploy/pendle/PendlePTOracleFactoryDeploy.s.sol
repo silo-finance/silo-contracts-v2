@@ -10,7 +10,7 @@ import {IPyYtLpOracleLike} from "silo-oracles/contracts/pendle/interfaces/IPyYtL
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {console2} from "forge-std/console2.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/pendle/PendlePTOracleFactoryDeploy.s.sol \
     --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify

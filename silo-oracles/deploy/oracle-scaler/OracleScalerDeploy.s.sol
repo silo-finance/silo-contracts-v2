@@ -11,7 +11,7 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {OracleScalerFactory} from "silo-oracles/contracts/scaler/OracleScalerFactory.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles QUOTE_TOKEN=woS \
     forge script silo-oracles/deploy/oracle-scaler/OracleScalerDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
