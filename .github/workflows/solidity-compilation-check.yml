@@ -94,13 +94,42 @@ jobs:
         set -e  # Re-enable exit on error
         
         # Check for warnings in the output (excluding known gitmodule warnings)
-        if grep -i "warning" oracles_compilation.log | grep -v "PythAggregatorV3.sol"; then
-          echo "❌ Found warnings in silo-oracles compilation"
-          echo "oracles_has_warnings=true" >> $GITHUB_OUTPUT
+        # Clean up the log: remove generic messages and PythAggregatorV3 warning pairs
+        grep -v "Compiler run successful with warnings:" oracles_compilation.log > temp_step1.log
+        
+        # Remove PythAggregatorV3 warning pairs (two consecutive lines)
+        awk '
+        /Warning.*Return value of low-level calls not used/ {
+            getline next_line
+            if (next_line ~ /gitmodules\/pyth-sdk-solidity/) {
+                # Skip both lines - this is a PythAggregatorV3 warning pair
+                next
+            } else {
+                # Not a PythAggregatorV3 warning, print both lines
+                print
+                print next_line
+            }
+            next
+        }
+        { print }
+        ' temp_step1.log > temp_clean.log
+        
+        # Check for actual warnings
+        if grep -i "warning" temp_clean.log > temp_warnings.log; then
+          if [ -s temp_warnings.log ]; then
+            echo "❌ Found warnings in silo-oracles compilation"
+            echo "oracles_has_warnings=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ No warnings in silo-oracles compilation (excluding known gitmodule warnings)"
+            echo "oracles_has_warnings=false" >> $GITHUB_OUTPUT
+          fi
         else
-          echo "✅ No warnings in silo-oracles compilation (excluding known gitmodule warnings)"
+          echo "✅ No warnings in silo-oracles compilation"
           echo "oracles_has_warnings=false" >> $GITHUB_OUTPUT
         fi
+        
+        # Clean up
+        rm -f temp_step1.log temp_clean.log temp_warnings.log
         
         echo "oracles_exit_code=$COMPILE_EXIT_CODE" >> $GITHUB_OUTPUT
         
