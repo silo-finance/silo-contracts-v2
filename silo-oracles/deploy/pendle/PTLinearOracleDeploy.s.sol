@@ -20,7 +20,7 @@ import {IPendlePTLike} from "silo-oracles/contracts/pendle/interfaces/IPendlePTL
 FOUNDRY_PROFILE=oracles \
 PT_TOKEN=PT_thBILL_27NOV25 \
 HARDCODED_QUOTE_TOKEN=USDC \
-PT_MARKET=0x39c3f8e0e7c6f44dc8f0397feb124517ba82e26e \
+PT_MARKET=0x4ed09847377c30aa4e74ad071e719c5814ad9ead \
 MAX_YIELD=0.25e18 \
     forge script silo-oracles/deploy/pendle/PTLinearOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
