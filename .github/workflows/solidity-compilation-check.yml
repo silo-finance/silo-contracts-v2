@@ -93,12 +93,12 @@ jobs:
         COMPILE_EXIT_CODE=$?
         set -e  # Re-enable exit on error
         
-        # Check for warnings in the output
-        if grep -i "warning" oracles_compilation.log; then
+        # Check for warnings in the output (excluding known gitmodule warnings)
+        if grep -i "warning" oracles_compilation.log | grep -v "PythAggregatorV3.sol"; then
           echo "❌ Found warnings in silo-oracles compilation"
           echo "oracles_has_warnings=true" >> $GITHUB_OUTPUT
         else
-          echo "✅ No warnings in silo-oracles compilation"
+          echo "✅ No warnings in silo-oracles compilation (excluding known gitmodule warnings)"
           echo "oracles_has_warnings=false" >> $GITHUB_OUTPUT
         fi
         
