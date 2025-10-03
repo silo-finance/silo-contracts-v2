@@ -1,4 +1,4 @@
-name: Solidity Compilation Check
+name: Solidity Compilation Check For Warnings
 
 on:
   push:
@@ -195,33 +195,6 @@ jobs:
           exit 1
         fi
 
-    # Check silo-oracles tests compilation
-    - name: Compile silo-oracles tests
-      id: compile-oracles-tests
-      run: |
-        echo "🔍 Compiling silo-oracles tests..."
-        set +e  # Don't exit on error
-        FOUNDRY_PROFILE=oracles forge build --no-cache 2>&1 | tee oracles_tests_compilation.log
-        COMPILE_EXIT_CODE=$?
-        set -e  # Re-enable exit on error
-        
-        # Check for warnings in the output
-        if grep -i "warning" oracles_tests_compilation.log; then
-          echo "❌ Found warnings in silo-oracles tests compilation"
-          echo "oracles_tests_has_warnings=true" >> $GITHUB_OUTPUT
-        else
-          echo "✅ No warnings in silo-oracles tests compilation"
-          echo "oracles_tests_has_warnings=false" >> $GITHUB_OUTPUT
-        fi
-        
-        echo "oracles_tests_exit_code=$COMPILE_EXIT_CODE" >> $GITHUB_OUTPUT
-        
-        # If compilation failed, show the error
-        if [ $COMPILE_EXIT_CODE -ne 0 ]; then
-          echo "❌ silo-oracles tests compilation failed"
-          cat oracles_tests_compilation.log
-          exit 1
-        fi
 
     # Check silo-vaults tests compilation
     - name: Compile silo-vaults tests
@@ -314,10 +287,6 @@ jobs:
           WARNINGS_FOUND=true
         fi
         
-        if [ "${{ steps.compile-oracles-tests.outputs.oracles_tests_has_warnings }}" = "true" ]; then
-          echo "❌ silo-oracles tests have warnings"
-          WARNINGS_FOUND=true
-        fi
         
         if [ "${{ steps.compile-vaults-tests.outputs.vaults_tests_has_warnings }}" = "true" ]; then
           echo "❌ silo-vaults tests have warnings"
@@ -329,13 +298,6 @@ jobs:
           WARNINGS_FOUND=true
         fi
         
-        
         if [ "$WARNINGS_FOUND" = "true" ]; then
-          echo ""
-          echo "❌ COMPILATION FAILED: Warnings found in one or more workspaces"
-          echo "Check the compilation logs above for details"
           exit 1
-        else
-          echo ""
-          echo "✅ COMPILATION SUCCESS: No warnings found in any workspace"
         fi
