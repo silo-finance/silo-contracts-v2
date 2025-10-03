@@ -153,6 +153,8 @@ contract PTLinearOracleFactoryTest is PTLinearMocks {
     FOUNDRY_PROFILE=oracles forge test --mt test_ptLinear_createAndVerifyConfig_fail --ffi -vv
     */
     function test_ptLinear_createAndVerifyConfig_fail() public {
+        vm.warp(100);
+
         IPTLinearOracleFactory.DeploymentConfig memory config;
 
         config.maxYield = 1e18;
@@ -164,20 +166,17 @@ contract PTLinearOracleFactoryTest is PTLinearMocks {
         vm.expectRevert(abi.encodeWithSelector(IPTLinearOracleFactory.AddressZero.selector));
         factory.createAndVerifyOracleConfig(config);
 
-        config.hardcodedQuoteToken = address(0);
         vm.expectRevert(abi.encodeWithSelector(IPTLinearOracleFactory.AddressZero.selector));
         factory.createAndVerifyOracleConfig(config);
 
         config.hardcodedQuoteToken = makeAddr("quoteToken");
-        
         config.ptToken = makeAddr("ptToken");
+        _mockExpiry(makeAddr("ptToken"), 0);
 
-        vm.warp(100);
         vm.expectRevert(abi.encodeWithSelector(IPTLinearOracleFactory.MaturityDateInvalid.selector));
         factory.createAndVerifyOracleConfig(config);
 
-        config.ptToken = makeAddr("ptToken");
-        _mockExpiry(makeAddr("ptToken"), block.timestamp);
+        _mockExpiry(makeAddr("ptToken"), block.timestamp - 1);
         vm.expectRevert(abi.encodeWithSelector(IPTLinearOracleFactory.MaturityDateIsInThePast.selector));
         factory.createAndVerifyOracleConfig(config);
 
