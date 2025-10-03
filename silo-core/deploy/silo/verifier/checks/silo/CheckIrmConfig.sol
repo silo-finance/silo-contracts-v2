@@ -45,7 +45,7 @@ contract CheckIrmConfig is ICheck {
         }
     }
 
-    function _isKinkIrm(address _irm) internal returns (bool isKinkIrm) {
+    function _isKinkIrm(address _irm) internal returns (bool) {
         address factory = AddrLib.getAddress(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY);
         if (factory == address(0)) return false;
 
