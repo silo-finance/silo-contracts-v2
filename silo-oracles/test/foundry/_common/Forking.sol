@@ -93,7 +93,7 @@ contract Forking is IForking, Test {
             id := chainid()
         }
         
-        console.log("getBlockChainID", id); // to silence warnigns about making this method pure
+        FORK_ID; // to silence warnings about making this method pure
     }
 
     function _createFork(string memory _rpc) internal returns (uint256) {
