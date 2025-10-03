@@ -13,6 +13,7 @@ import {PTLinearMocks} from "./_common/PTLinearMocks.sol";
 import {PTLinearOracle} from "silo-oracles/contracts/pendle/linear/PTLinearOracle.sol";
 
 import {SparkLinearDiscountOracleFactoryMock} from "./_common/SparkLinearDiscountOracleFactoryMock.sol";
+import {ISparkLinearDiscountOracle} from "silo-oracles/contracts/pendle/interfaces/ISparkLinearDiscountOracle.sol";
 
 contract Token is ERC20 {
     constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
@@ -173,6 +174,23 @@ contract PTLinearOracleTest is PTLinearMocks {
 
         vm.expectRevert(abi.encodeWithSelector(IPTLinearOracle.NotInitialized.selector));
         oracle.quote(1e18, makeAddr("ptToken"));
+    }
+
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_ptLinear_baseDiscountPerYear --ffi -vv
+    */
+    function test_ptLinear_baseDiscountPerYear() public {
+        IPTLinearOracle oracle = _createOracle();
+
+        ISparkLinearDiscountOracle sparkOracle = ISparkLinearDiscountOracle(oracle.oracleConfig().getConfig().linearOracle);
+
+        vm.mockCall(
+            address(sparkOracle),
+            abi.encodeWithSelector(ISparkLinearDiscountOracle.baseDiscountPerYear.selector),
+            abi.encode(0.25e18)
+        );
+
+        assertEq(oracle.baseDiscountPerYear(), 0.25e18, "Base discount per year should match");
     }
 
     function _createOracle(IPTLinearOracleFactory.DeploymentConfig memory _config)
