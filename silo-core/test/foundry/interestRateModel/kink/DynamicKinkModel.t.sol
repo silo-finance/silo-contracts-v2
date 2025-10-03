@@ -207,9 +207,9 @@ contract DynamicKinkModelTest is KinkCommonTest {
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRateAndUpdate_kOnOverflow -vv
     */
     function test_kink_getCompoundInterestRateAndUpdate_kOnOverflow() public {
-        _kink_getCompoundInterestRateAndUpdate_kOnOverflow(type(uint256).max, 1, 1);
-        _kink_getCompoundInterestRateAndUpdate_kOnOverflow(1, type(uint256).max, 1);
-        _kink_getCompoundInterestRateAndUpdate_kOnOverflow(1, 1, type(uint256).max);
+        _kink_getCompoundInterestRateAndUpdate_kOnOverflow(true, false, false);
+        _kink_getCompoundInterestRateAndUpdate_kOnOverflow(false, true, false);
+        _kink_getCompoundInterestRateAndUpdate_kOnOverflow(false, false, true);
     }
 
     /*
@@ -444,10 +444,15 @@ contract DynamicKinkModelTest is KinkCommonTest {
     }
 
     function _kink_getCompoundInterestRateAndUpdate_kOnOverflow(
-        uint256 _collateralAssets,
-        uint256 _debtAssets,
-        uint256 _interestRateTimestamp
+        bool _collateralAssetsOverflow,
+        bool _debtAssetsOverflow,
+        bool _interestRateTimestampOverflow
     ) internal {
+        assertTrue(
+            _collateralAssetsOverflow || _debtAssetsOverflow || _interestRateTimestampOverflow,
+            "expect at least one overflow"
+        );
+
         IDynamicKinkModel.Config memory cfg = _defaultConfig();
         assertGt(cfg.kmin, 0, "expect k > 0 for this test");
 
@@ -460,7 +465,11 @@ contract DynamicKinkModelTest is KinkCommonTest {
         assertGt(kBefore, 0, "expect k > 0 for this test");
         assertNotEq(kBefore, cfg.kmin, "expect k to not be kmin");
 
-        irm.getCompoundInterestRateAndUpdate(_collateralAssets, _debtAssets, _interestRateTimestamp);
+        irm.getCompoundInterestRateAndUpdate(
+            _collateralAssetsOverflow ? type(uint256).max : 1,
+            _debtAssetsOverflow ? type(uint256).max : 1,
+            _interestRateTimestampOverflow ? type(uint256).max : 1
+        );
 
         assertEq(irm.modelState().k, cfg.kmin, "k should be set to min on overflow");
     }
