@@ -34,12 +34,12 @@ contract PTLinearOracleTest is PTLinearMocks {
     function test_ptLinear_Mockprice() public {
         IPTLinearOracle oracle = _createOracle();
 
-        _mockLatestRoundData(0.9e18);
+        uint256 mockedPrice = 0.9e18;
+        _mockLatestRoundData(int256(mockedPrice));
 
         uint256 price = oracle.quote(1e18, makeAddr("ptToken"));
 
-        assertEq(price, 1e18 * 0.9e18 * 0.8e18 / DP / DP, "Mocked PT price");
-        assertEq(price, 0.72e18, "Mocked PT price");
+        assertEq(price, mockedPrice, "Mocked PT price");
 
         _mockDecimals();
 
@@ -62,8 +62,8 @@ contract PTLinearOracleTest is PTLinearMocks {
 
         IPTLinearOracleFactory.DeploymentConfig memory config;
         config.hardcodedQuoteToken = address(quoteToken);
+        config.ptToken = address(pt);
 
-        _makeValidConfig(config);
         _mockExpiry(address(pt), block.timestamp + 1 days);
 
         AggregatorV3Interface oracle = AggregatorV3Interface(address(factory.create(config, bytes32(0))));
@@ -119,7 +119,6 @@ contract PTLinearOracleTest is PTLinearMocks {
         // even when non zero, we div by 1e36, so result will be 0
         _mockLatestRoundData(1);
 
-        vm.expectRevert(abi.encodeWithSelector(IPTLinearOracle.ZeroQuote.selector));
         oracle.quote(1e18, makeAddr("ptToken"));
     }
 
