@@ -73,7 +73,7 @@ jobs:
       run: |
         echo "🔍 Compiling silo-core contracts..."
         set +e  # Don't exit on error
-        forge build --profile core --no-cache 2>&1 | tee core_compilation.log
+        FOUNDRY_PROFILE=core forge build --no-cache 2>&1 | tee core_compilation.log
         COMPILE_EXIT_CODE=$?
         set -e  # Re-enable exit on error
         
@@ -101,7 +101,7 @@ jobs:
       run: |
         echo "🔍 Compiling silo-oracles contracts..."
         set +e  # Don't exit on error
-        forge build --profile oracles --no-cache 2>&1 | tee oracles_compilation.log
+        FOUNDRY_PROFILE=oracles forge build --no-cache 2>&1 | tee oracles_compilation.log
         COMPILE_EXIT_CODE=$?
         set -e  # Re-enable exit on error
         
@@ -129,7 +129,7 @@ jobs:
       run: |
         echo "🔍 Compiling silo-vaults contracts..."
         set +e  # Don't exit on error
-        forge build --profile vaults --no-cache 2>&1 | tee vaults_compilation.log
+        FOUNDRY_PROFILE=vaults forge build --no-cache 2>&1 | tee vaults_compilation.log
         COMPILE_EXIT_CODE=$?
         set -e  # Re-enable exit on error
         
@@ -157,7 +157,7 @@ jobs:
       run: |
         echo "🔍 Compiling x-silo contracts..."
         set +e  # Don't exit on error
-        forge build --profile x_silo --no-cache 2>&1 | tee x_silo_compilation.log
+        FOUNDRY_PROFILE=x_silo forge build --no-cache 2>&1 | tee x_silo_compilation.log
         COMPILE_EXIT_CODE=$?
         set -e  # Re-enable exit on error
         
@@ -185,7 +185,7 @@ jobs:
       run: |
         echo "🔍 Compiling common contracts..."
         set +e  # Don't exit on error
-        forge build --profile default --no-cache 2>&1 | tee common_compilation.log
+        FOUNDRY_PROFILE=default forge build --no-cache 2>&1 | tee common_compilation.log
         COMPILE_EXIT_CODE=$?
         set -e  # Re-enable exit on error
         
@@ -207,68 +207,6 @@ jobs:
           exit 1
         fi
 
-    # Generate compilation report
-    - name: Generate compilation report
-      run: |
-        echo "📊 Compilation Report" > compilation_report.md
-        echo "====================" >> compilation_report.md
-        echo "" >> compilation_report.md
-        echo "**Timestamp:** $(date -u '+%Y-%m-%d %H:%M:%S') UTC" >> compilation_report.md
-        echo "**Commit:** ${{ github.sha }}" >> compilation_report.md
-        echo "" >> compilation_report.md
-        
-        # Core results
-        echo "## silo-core" >> compilation_report.md
-        if [ "${{ steps.compile-core.outputs.core_has_warnings }}" = "true" ]; then
-          echo "❌ **WARNINGS FOUND**" >> compilation_report.md
-        else
-          echo "✅ **No warnings**" >> compilation_report.md
-        fi
-        echo "" >> compilation_report.md
-        
-        # Oracles results
-        echo "## silo-oracles" >> compilation_report.md
-        if [ "${{ steps.compile-oracles.outputs.oracles_has_warnings }}" = "true" ]; then
-          echo "❌ **WARNINGS FOUND**" >> compilation_report.md
-        else
-          echo "✅ **No warnings**" >> compilation_report.md
-        fi
-        echo "" >> compilation_report.md
-        
-        # Vaults results
-        echo "## silo-vaults" >> compilation_report.md
-        if [ "${{ steps.compile-vaults.outputs.vaults_has_warnings }}" = "true" ]; then
-          echo "❌ **WARNINGS FOUND**" >> compilation_report.md
-        else
-          echo "✅ **No warnings**" >> compilation_report.md
-        fi
-        echo "" >> compilation_report.md
-        
-        # x-silo results
-        echo "## x-silo" >> compilation_report.md
-        if [ "${{ steps.compile-x-silo.outputs.x_silo_has_warnings }}" = "true" ]; then
-          echo "❌ **WARNINGS FOUND**" >> compilation_report.md
-        else
-          echo "✅ **No warnings**" >> compilation_report.md
-        fi
-        echo "" >> compilation_report.md
-        
-        # Common results
-        echo "## common" >> compilation_report.md
-        if [ "${{ steps.compile-common.outputs.common_has_warnings }}" = "true" ]; then
-          echo "❌ **WARNINGS FOUND**" >> compilation_report.md
-        else
-          echo "✅ **No warnings**" >> compilation_report.md
-        fi
-        echo "" >> compilation_report.md
-
-    # Post compilation report as comment (if PR)
-    - name: Comment compilation report on PR
-      if: github.event_name == 'pull_request'
-      uses: marocchino/sticky-pull-request-comment@v2
-      with:
-        header: solidity-compilation-check
-        path: compilation_report.md
 
     # Final check - fail if any warnings found
     - name: Check for warnings
