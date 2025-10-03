@@ -92,7 +92,6 @@ contract DepositTest is VaultsLittleHelper {
         assertEq(balanceAfter0, depositAmount, "invalid balanceAfter0");
 
         uint256 sharesBalance = market0.balanceOf(address(vault));
-        uint256 currentPreviewRedeem = market0.previewRedeem(sharesBalance);
 
         bytes memory data = abi.encodeWithSelector(IERC4626.previewRedeem.selector, sharesBalance);
 

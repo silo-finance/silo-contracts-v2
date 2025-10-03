@@ -129,8 +129,6 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
      FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt testWithdrawMarketBalanceTracker -vvv
     */
     function testWithdrawMarketBalanceTracker() public {
-        uint256 length = vault.withdrawQueueLength();
-
         IERC4626 market0 = vault.withdrawQueue(0);
         IERC4626 market1 = vault.withdrawQueue(1);
 
