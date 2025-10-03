@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
+import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
+
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IPTLinearOracleConfig} from "./IPTLinearOracleConfig.sol";
 
-interface IPTLinearOracle is ISiloOracle {
+interface IPTLinearOracle is ISiloOracle, AggregatorV3Interface {
     event PTLinearOracleInitialized(IPTLinearOracleConfig indexed configAddress);
 
     error NotInitialized();

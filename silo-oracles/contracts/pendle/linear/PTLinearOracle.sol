@@ -13,7 +13,7 @@ import {IPTLinearOracle} from "../../interfaces/IPTLinearOracle.sol";
 
 import {ISparkLinearDiscountOracle} from "../../pendle/interfaces/ISparkLinearDiscountOracle.sol";
 
-contract PTLinearOracle is IPTLinearOracle, Initializable, AggregatorV3Interface {
+contract PTLinearOracle is IPTLinearOracle, Initializable {
     uint256 internal constant _DP = 1e18;
 
     IPTLinearOracleConfig public oracleConfig;
