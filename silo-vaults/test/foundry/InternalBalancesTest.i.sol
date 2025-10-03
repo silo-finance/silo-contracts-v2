@@ -32,8 +32,6 @@ contract InternalBalancesTest is VaultsLittleHelper {
 
         IERC4626 market0 = vault.supplyQueue(0);
 
-        MarketConfig memory config0 = vault.config(market0);
-
         address depositor = makeAddr("Depositor");
 
         uint256 depositAmount = 1e18;
