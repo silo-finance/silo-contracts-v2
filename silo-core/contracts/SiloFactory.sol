@@ -224,10 +224,10 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         address _shareDebtTokenImpl,
         address _creator
     ) internal virtual returns (ISilo silo0, ISilo silo1) {
-        uint256 creatorSiloCounter = creatorSiloCounter[_creator];
+        uint256 counter = creatorSiloCounter[_creator];
 
-        silo0 = ISilo(CloneDeterministic.silo0(_siloImpl, creatorSiloCounter, _creator));
-        silo1 = ISilo(CloneDeterministic.silo1(_siloImpl, creatorSiloCounter, _creator));
+        silo0 = ISilo(CloneDeterministic.silo0(_siloImpl, counter, _creator));
+        silo1 = ISilo(CloneDeterministic.silo1(_siloImpl, counter, _creator));
 
         (address siloFromConfig0, address siloFromConfig1) = _siloConfig.getSilos();
 
@@ -239,7 +239,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             silo1,
             _shareProtectedCollateralTokenImpl,
             _shareDebtTokenImpl,
-            creatorSiloCounter,
+            counter,
             _creator
         );
     }
