@@ -17,6 +17,8 @@ BASE_DISCOUNT_PER_YEAR=0.25e18 \
  */
 contract PTLinearOracleDeploy is PTLinearOracleDeployCommon {
     function run() public {
+        // TODO use factory to deploy linear 
+        
         address ptToken = AddrLib.getAddress(ChainsLib.chainAlias(), vm.envString("PT_TOKEN"));
         address market = vm.envAddress("PT_MARKET_ADDRESS");
         uint256 baseDiscountPerYear = vm.envUint("BASE_DISCOUNT_PER_YEAR");

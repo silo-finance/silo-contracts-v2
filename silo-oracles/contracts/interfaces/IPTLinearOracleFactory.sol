@@ -20,11 +20,6 @@ interface IPTLinearOracleFactory {
     error DeployerCannotBeZero();
     error AddressZero();
     error InvalidMaxYield();
-    error InvalidSyRateMethod();
-    error PTTokenDoesNotMatchMarket();
-    error FailedToCallSyRateMethod();
-    error AssetAddressMustBeOurUnderlyingToken();
-    error InvalidExchangeFactor();
     error MaturityDateIsInThePast();
     error MaturityDateInvalid();
     error LinearOracleCannotBeZero();
