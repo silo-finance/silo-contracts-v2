@@ -74,6 +74,7 @@ contract PTLinearOracleFactory is Create2Factory, OracleFactory, IPTLinearOracle
         returns (IPTLinearOracleConfig.OracleConfig memory oracleConfig)
     {
         require(_deploymentConfig.maxYield < 1e18, InvalidMaxYield());
+        require(_deploymentConfig.ptToken != address(0), AddressZero());
 
         oracleConfig = IPTLinearOracleConfig.OracleConfig({
             ptToken: _deploymentConfig.ptToken,
