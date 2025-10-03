@@ -39,7 +39,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
       with:
         submodules: recursive
         
@@ -48,19 +48,7 @@ jobs:
       with:
         version: v1.2.3
         
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'yarn'
-        
-    - name: Install dependencies
-      run: yarn install
-      
-    - name: Update submodules
-      run: git submodule update --init --recursive
-      
-    - name: Build silo-foundry-utils
+    - name: Build silo foundry utils
       working-directory: ./gitmodules/silo-foundry-utils
       run: |
         cargo build --release
