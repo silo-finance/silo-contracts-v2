@@ -17,6 +17,8 @@ import {IPendleSYTokenLike} from "../interfaces/IPendleSYTokenLike.sol";
 import {IPendlePTLike} from "../interfaces/IPendlePTLike.sol";
 import {ISparkLinearDiscountOracleFactory} from "../interfaces/ISparkLinearDiscountOracleFactory.sol";
 
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+
 contract PTLinearOracleFactory is Create2Factory, OracleFactory, IPTLinearOracleFactory {
     ISparkLinearDiscountOracleFactory public immutable PENDLE_LINEAR_ORACLE_FACTORY;
 
@@ -76,9 +78,12 @@ contract PTLinearOracleFactory is Create2Factory, OracleFactory, IPTLinearOracle
         require(_deploymentConfig.maxYield < 1e18, InvalidMaxYield());
         require(_deploymentConfig.ptToken != address(0), AddressZero());
 
+        uint256 tokenDecimals = TokenHelper.assertAndGetDecimals(_deploymentConfig.ptToken);
+
         oracleConfig = IPTLinearOracleConfig.OracleConfig({
             ptToken: _deploymentConfig.ptToken,
             hardcodedQuoteToken: _deploymentConfig.hardcodedQuoteToken,
+            normalizationDivider: 10 ** tokenDecimals,
             linearOracle: PENDLE_LINEAR_ORACLE_FACTORY.createWithPt({
                 ptToken: _deploymentConfig.ptToken,
                 baseDiscountPerYear: _deploymentConfig.maxYield
@@ -100,5 +105,7 @@ contract PTLinearOracleFactory is Create2Factory, OracleFactory, IPTLinearOracle
 
         require(_oracleConfig.hardcodedQuoteToken != address(0), AddressZero());
         require(_oracleConfig.linearOracle != address(0), LinearOracleCannotBeZero());
+
+        require(_oracleConfig.normalizationDivider <= 1e18, NormalizationDividerTooLarge());
     }
 }

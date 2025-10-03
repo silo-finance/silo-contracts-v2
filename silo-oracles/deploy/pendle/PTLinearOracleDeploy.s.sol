@@ -12,15 +12,18 @@ import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 import {IPTLinearOracleFactory} from "silo-oracles/contracts/pendle/linear/PTLinearOracleFactory.sol";
 import {IPTLinearOracle} from "silo-oracles/contracts/interfaces/IPTLinearOracle.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPendleSYTokenLike.sol";
+import {IPendleMarketV3Like} from "silo-oracles/contracts/pendle/interfaces/IPendleMarketV3Like.sol";
+import {IPendlePTLike} from "silo-oracles/contracts/pendle/interfaces/IPendlePTLike.sol";
 
 /*
 FOUNDRY_PROFILE=oracles \
-PT_TOKEN=PT-wstUSR-29JAN2026 \
+PT_TOKEN=PT_thBILL_27NOV25 \
 HARDCODED_QUOTE_TOKEN=USDC \
 PT_MARKET=0x39c3f8e0e7c6f44dc8f0397feb124517ba82e26e \
 MAX_YIELD=0.25e18 \
     forge script silo-oracles/deploy/pendle/PTLinearOracleDeploy.s.sol \
-    --ffi --rpc-url $RPC_SONIC --broadcast --verify
+    --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
  */
 contract PTLinearOracleDeploy is CommonDeploy {
     function run() public {
@@ -45,11 +48,12 @@ contract PTLinearOracleDeploy is CommonDeploy {
         string memory configName = string.concat("PT_LINEAR_ORACLE_", baseSymbol, "_", quoteSymbol);
     
         OraclesDeployments.save(getChainAlias(), configName, address(oracle));
+
+        _qa(oracle, 10 ** IERC20Metadata(deploymentConfig.ptToken).decimals(), deploymentConfig.ptToken);
     }
 
     function _qa(IPTLinearOracle _oracle, uint256 _baseAmount, address _baseToken)
         internal
-        view
         returns (uint256 quote)
     {
         quote = _oracle.quote(_baseAmount, _baseToken);
@@ -63,7 +67,7 @@ contract PTLinearOracleDeploy is CommonDeploy {
         _verifyMarket(vm.envAddress("PT_MARKET"), _baseToken, _oracle.quoteToken());
     }
 
-    function _verifyOracle(AggregatorV3Interface _oracle, address _pt) internal {
+    function _verifyOracle(IPTLinearOracle _oracle, address _pt) internal {
         uint256 maturityDate = IPendlePTLike(_pt).expiry();
         uint256 currentTime = block.timestamp;
 
@@ -83,7 +87,7 @@ contract PTLinearOracleDeploy is CommonDeploy {
         vm.warp(currentTime);
     }
 
-    function _printPrice(AggregatorV3Interface _oracle, string memory _description)
+    function _printPrice(IPTLinearOracle _oracle, string memory _description)
         internal
         view
         returns (int256 price)

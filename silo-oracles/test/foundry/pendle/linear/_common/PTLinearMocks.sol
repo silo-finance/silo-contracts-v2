@@ -27,6 +27,7 @@ contract PTLinearMocks is Test {
 
     function _doAllNecessaryMockCalls() internal {
         _mockExpiry();
+        _mockDecimals();
     }
 
     function _makeValidConfig(IPTLinearOracleFactory.DeploymentConfig memory _config) internal {
@@ -57,6 +58,12 @@ contract PTLinearMocks is Test {
     function _mockDecimals() internal {
         vm.mockCall(
             makeAddr("ptToken"), abi.encodeWithSelector(AggregatorV3Interface.decimals.selector), abi.encode(18)
+        );
+    }
+
+    function _mockDecimals(address _ptToken, uint8 _decimals) internal {
+        vm.mockCall(
+            _ptToken, abi.encodeWithSelector(AggregatorV3Interface.decimals.selector), abi.encode(_decimals)
         );
     }
 }

@@ -7,17 +7,20 @@ contract PTLinearOracleConfig is IPTLinearOracleConfig {
     address internal immutable _LINEAR_ORACLE;
     address internal immutable _PT_TOKEN;
     address internal immutable _HARDCODED_QUOTE_TOKEN;
+    uint256 internal immutable _NORMALIZATION_DIVIDER;
 
     /// @dev all verification should be done by factory
     constructor(OracleConfig memory _cfg) {
         _LINEAR_ORACLE = _cfg.linearOracle;
         _PT_TOKEN = _cfg.ptToken;
         _HARDCODED_QUOTE_TOKEN = _cfg.hardcodedQuoteToken;
+        _NORMALIZATION_DIVIDER = _cfg.normalizationDivider;
     }
 
     function getConfig() external view virtual returns (OracleConfig memory cfg) {
         cfg.linearOracle = _LINEAR_ORACLE;
         cfg.ptToken = _PT_TOKEN;
         cfg.hardcodedQuoteToken = _HARDCODED_QUOTE_TOKEN;
+        cfg.normalizationDivider = _NORMALIZATION_DIVIDER;
     }
 }

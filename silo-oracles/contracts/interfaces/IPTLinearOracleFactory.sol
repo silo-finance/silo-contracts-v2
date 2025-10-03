@@ -23,6 +23,7 @@ interface IPTLinearOracleFactory {
     error MaturityDateIsInThePast();
     error MaturityDateInvalid();
     error LinearOracleCannotBeZero();
+    error NormalizationDividerTooLarge();
 
     function create(DeploymentConfig memory _config, bytes32 _externalSalt)
         external

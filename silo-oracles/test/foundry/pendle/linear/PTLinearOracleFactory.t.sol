@@ -171,6 +171,7 @@ contract PTLinearOracleFactoryTest is PTLinearMocks {
 
         config.hardcodedQuoteToken = makeAddr("quoteToken");
         config.ptToken = makeAddr("ptToken");
+        _mockDecimals(config.ptToken, 19);
         _mockExpiry(makeAddr("ptToken"), 0);
 
         vm.expectRevert(abi.encodeWithSelector(IPTLinearOracleFactory.MaturityDateInvalid.selector));
@@ -181,6 +182,10 @@ contract PTLinearOracleFactoryTest is PTLinearMocks {
         factory.createAndVerifyOracleConfig(config);
 
         _mockExpiry(makeAddr("ptToken"), block.timestamp + 1);
+        vm.expectRevert(abi.encodeWithSelector(IPTLinearOracleFactory.NormalizationDividerTooLarge.selector));
+        factory.createAndVerifyOracleConfig(config);
+
+        _mockDecimals(config.ptToken, 0);
         factory.createAndVerifyOracleConfig(config);
     }
 

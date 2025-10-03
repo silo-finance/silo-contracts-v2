@@ -14,8 +14,6 @@ import {IPTLinearOracle} from "../../interfaces/IPTLinearOracle.sol";
 import {ISparkLinearDiscountOracle} from "../../pendle/interfaces/ISparkLinearDiscountOracle.sol";
 
 contract PTLinearOracle is IPTLinearOracle, Initializable {
-    uint256 internal constant _DP = 1e18;
-
     IPTLinearOracleConfig public oracleConfig;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -42,10 +40,9 @@ contract PTLinearOracle is IPTLinearOracle, Initializable {
         override
         returns (uint80, int256 answer, uint256, uint256, uint80)
     {
-        address baseToken = oracleConfig.getConfig().ptToken;
-        uint256 baseAmount = 10 ** TokenHelper.assertAndGetDecimals(baseToken);
-
-        answer = SafeCast.toInt256(quote(baseAmount, baseToken));
+        IPTLinearOracleConfig.OracleConfig memory cfg = oracleConfig.getConfig();
+        // pull price for one token, normalizationDivider is one token in token decimals
+        answer = SafeCast.toInt256(quote(cfg.normalizationDivider, cfg.ptToken));
         return (0, answer, 0, 0, 0);
     }
 
@@ -98,7 +95,7 @@ contract PTLinearOracle is IPTLinearOracle, Initializable {
         */
         (, int256 ptLinearPrice,,,) = AggregatorV3Interface(cfg.linearOracle).latestRoundData();
 
-        quoteAmount = _baseAmount * uint256(ptLinearPrice) / _DP;
+        quoteAmount = _baseAmount * uint256(ptLinearPrice) / cfg.normalizationDivider;
 
         require(quoteAmount != 0, ZeroQuote());
     }
