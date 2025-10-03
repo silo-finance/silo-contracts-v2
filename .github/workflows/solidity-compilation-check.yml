@@ -1,0 +1,313 @@
+name: Solidity Compilation Check
+
+on:
+  push:
+    branches: [ master, develop ]
+    paths:
+      - '**/*.sol'
+      - '**/*.ts'
+      - '**/*.js'
+      - '**/*.json'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'foundry.toml'
+      - '.github/workflows/solidity-compilation-check.yml'
+
+  pull_request:
+    paths:
+      - '**/*.sol'
+      - '**/*.ts'
+      - '**/*.js'
+      - '**/*.json'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'foundry.toml'
+      - '.github/workflows/solidity-compilation-check.yml'
+
+env:
+  RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
+  RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
+  RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
+  RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
+  RPC_SONIC: ${{ secrets.RPC_SONIC }}
+  RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
+  PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
+
+jobs:
+  compilation-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        
+    - name: Install Foundry
+      uses: foundry-rs/foundry-toolchain@v1
+      with:
+        version: v1.2.3
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'yarn'
+        
+    - name: Install dependencies
+      run: yarn install
+      
+    - name: Update submodules
+      run: git submodule update --init --recursive
+      
+    - name: Build silo-foundry-utils
+      working-directory: ./gitmodules/silo-foundry-utils
+      run: |
+        cargo build --release
+        cp target/release/silo-foundry-utils ../../silo-foundry-utils
+        ../../silo-foundry-utils --version
+
+    # Check silo-core compilation
+    - name: Compile silo-core contracts
+      id: compile-core
+      run: |
+        echo "🔍 Compiling silo-core contracts..."
+        set +e  # Don't exit on error
+        forge build --profile core --no-cache 2>&1 | tee core_compilation.log
+        COMPILE_EXIT_CODE=$?
+        set -e  # Re-enable exit on error
+        
+        # Check for warnings in the output
+        if grep -i "warning" core_compilation.log; then
+          echo "❌ Found warnings in silo-core compilation"
+          echo "core_has_warnings=true" >> $GITHUB_OUTPUT
+        else
+          echo "✅ No warnings in silo-core compilation"
+          echo "core_has_warnings=false" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "core_exit_code=$COMPILE_EXIT_CODE" >> $GITHUB_OUTPUT
+        
+        # If compilation failed, show the error
+        if [ $COMPILE_EXIT_CODE -ne 0 ]; then
+          echo "❌ silo-core compilation failed"
+          cat core_compilation.log
+          exit 1
+        fi
+
+    # Check silo-oracles compilation
+    - name: Compile silo-oracles contracts
+      id: compile-oracles
+      run: |
+        echo "🔍 Compiling silo-oracles contracts..."
+        set +e  # Don't exit on error
+        forge build --profile oracles --no-cache 2>&1 | tee oracles_compilation.log
+        COMPILE_EXIT_CODE=$?
+        set -e  # Re-enable exit on error
+        
+        # Check for warnings in the output
+        if grep -i "warning" oracles_compilation.log; then
+          echo "❌ Found warnings in silo-oracles compilation"
+          echo "oracles_has_warnings=true" >> $GITHUB_OUTPUT
+        else
+          echo "✅ No warnings in silo-oracles compilation"
+          echo "oracles_has_warnings=false" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "oracles_exit_code=$COMPILE_EXIT_CODE" >> $GITHUB_OUTPUT
+        
+        # If compilation failed, show the error
+        if [ $COMPILE_EXIT_CODE -ne 0 ]; then
+          echo "❌ silo-oracles compilation failed"
+          cat oracles_compilation.log
+          exit 1
+        fi
+
+    # Check silo-vaults compilation
+    - name: Compile silo-vaults contracts
+      id: compile-vaults
+      run: |
+        echo "🔍 Compiling silo-vaults contracts..."
+        set +e  # Don't exit on error
+        forge build --profile vaults --no-cache 2>&1 | tee vaults_compilation.log
+        COMPILE_EXIT_CODE=$?
+        set -e  # Re-enable exit on error
+        
+        # Check for warnings in the output
+        if grep -i "warning" vaults_compilation.log; then
+          echo "❌ Found warnings in silo-vaults compilation"
+          echo "vaults_has_warnings=true" >> $GITHUB_OUTPUT
+        else
+          echo "✅ No warnings in silo-vaults compilation"
+          echo "vaults_has_warnings=false" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "vaults_exit_code=$COMPILE_EXIT_CODE" >> $GITHUB_OUTPUT
+        
+        # If compilation failed, show the error
+        if [ $COMPILE_EXIT_CODE -ne 0 ]; then
+          echo "❌ silo-vaults compilation failed"
+          cat vaults_compilation.log
+          exit 1
+        fi
+
+    # Check x-silo compilation
+    - name: Compile x-silo contracts
+      id: compile-x-silo
+      run: |
+        echo "🔍 Compiling x-silo contracts..."
+        set +e  # Don't exit on error
+        forge build --profile x_silo --no-cache 2>&1 | tee x_silo_compilation.log
+        COMPILE_EXIT_CODE=$?
+        set -e  # Re-enable exit on error
+        
+        # Check for warnings in the output
+        if grep -i "warning" x_silo_compilation.log; then
+          echo "❌ Found warnings in x-silo compilation"
+          echo "x_silo_has_warnings=true" >> $GITHUB_OUTPUT
+        else
+          echo "✅ No warnings in x-silo compilation"
+          echo "x_silo_has_warnings=false" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "x_silo_exit_code=$COMPILE_EXIT_CODE" >> $GITHUB_OUTPUT
+        
+        # If compilation failed, show the error
+        if [ $COMPILE_EXIT_CODE -ne 0 ]; then
+          echo "❌ x-silo compilation failed"
+          cat x_silo_compilation.log
+          exit 1
+        fi
+
+    # Check common contracts compilation
+    - name: Compile common contracts
+      id: compile-common
+      run: |
+        echo "🔍 Compiling common contracts..."
+        set +e  # Don't exit on error
+        forge build --profile default --no-cache 2>&1 | tee common_compilation.log
+        COMPILE_EXIT_CODE=$?
+        set -e  # Re-enable exit on error
+        
+        # Check for warnings in the output
+        if grep -i "warning" common_compilation.log; then
+          echo "❌ Found warnings in common compilation"
+          echo "common_has_warnings=true" >> $GITHUB_OUTPUT
+        else
+          echo "✅ No warnings in common compilation"
+          echo "common_has_warnings=false" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "common_exit_code=$COMPILE_EXIT_CODE" >> $GITHUB_OUTPUT
+        
+        # If compilation failed, show the error
+        if [ $COMPILE_EXIT_CODE -ne 0 ]; then
+          echo "❌ common compilation failed"
+          cat common_compilation.log
+          exit 1
+        fi
+
+    # Generate compilation report
+    - name: Generate compilation report
+      run: |
+        echo "📊 Compilation Report" > compilation_report.md
+        echo "====================" >> compilation_report.md
+        echo "" >> compilation_report.md
+        echo "**Timestamp:** $(date -u '+%Y-%m-%d %H:%M:%S') UTC" >> compilation_report.md
+        echo "**Commit:** ${{ github.sha }}" >> compilation_report.md
+        echo "" >> compilation_report.md
+        
+        # Core results
+        echo "## silo-core" >> compilation_report.md
+        if [ "${{ steps.compile-core.outputs.core_has_warnings }}" = "true" ]; then
+          echo "❌ **WARNINGS FOUND**" >> compilation_report.md
+        else
+          echo "✅ **No warnings**" >> compilation_report.md
+        fi
+        echo "" >> compilation_report.md
+        
+        # Oracles results
+        echo "## silo-oracles" >> compilation_report.md
+        if [ "${{ steps.compile-oracles.outputs.oracles_has_warnings }}" = "true" ]; then
+          echo "❌ **WARNINGS FOUND**" >> compilation_report.md
+        else
+          echo "✅ **No warnings**" >> compilation_report.md
+        fi
+        echo "" >> compilation_report.md
+        
+        # Vaults results
+        echo "## silo-vaults" >> compilation_report.md
+        if [ "${{ steps.compile-vaults.outputs.vaults_has_warnings }}" = "true" ]; then
+          echo "❌ **WARNINGS FOUND**" >> compilation_report.md
+        else
+          echo "✅ **No warnings**" >> compilation_report.md
+        fi
+        echo "" >> compilation_report.md
+        
+        # x-silo results
+        echo "## x-silo" >> compilation_report.md
+        if [ "${{ steps.compile-x-silo.outputs.x_silo_has_warnings }}" = "true" ]; then
+          echo "❌ **WARNINGS FOUND**" >> compilation_report.md
+        else
+          echo "✅ **No warnings**" >> compilation_report.md
+        fi
+        echo "" >> compilation_report.md
+        
+        # Common results
+        echo "## common" >> compilation_report.md
+        if [ "${{ steps.compile-common.outputs.common_has_warnings }}" = "true" ]; then
+          echo "❌ **WARNINGS FOUND**" >> compilation_report.md
+        else
+          echo "✅ **No warnings**" >> compilation_report.md
+        fi
+        echo "" >> compilation_report.md
+
+    # Post compilation report as comment (if PR)
+    - name: Comment compilation report on PR
+      if: github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: solidity-compilation-check
+        path: compilation_report.md
+
+    # Final check - fail if any warnings found
+    - name: Check for warnings
+      run: |
+        echo "🔍 Final compilation check..."
+        
+        WARNINGS_FOUND=false
+        
+        if [ "${{ steps.compile-core.outputs.core_has_warnings }}" = "true" ]; then
+          echo "❌ silo-core has warnings"
+          WARNINGS_FOUND=true
+        fi
+        
+        if [ "${{ steps.compile-oracles.outputs.oracles_has_warnings }}" = "true" ]; then
+          echo "❌ silo-oracles has warnings"
+          WARNINGS_FOUND=true
+        fi
+        
+        if [ "${{ steps.compile-vaults.outputs.vaults_has_warnings }}" = "true" ]; then
+          echo "❌ silo-vaults has warnings"
+          WARNINGS_FOUND=true
+        fi
+        
+        if [ "${{ steps.compile-x-silo.outputs.x_silo_has_warnings }}" = "true" ]; then
+          echo "❌ x-silo has warnings"
+          WARNINGS_FOUND=true
+        fi
+        
+        if [ "${{ steps.compile-common.outputs.common_has_warnings }}" = "true" ]; then
+          echo "❌ common has warnings"
+          WARNINGS_FOUND=true
+        fi
+        
+        if [ "$WARNINGS_FOUND" = "true" ]; then
+          echo ""
+          echo "❌ COMPILATION FAILED: Warnings found in one or more workspaces"
+          echo "Check the compilation report above for details"
+          exit 1
+        else
+          echo ""
+          echo "✅ COMPILATION SUCCESS: No warnings found in any workspace"
+        fi
