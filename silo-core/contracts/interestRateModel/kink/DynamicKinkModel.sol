@@ -440,10 +440,11 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
 
         require(_args.silo == state.silo, InvalidSilo());
 
-        if (_args.interestRateTimestamp.wouldOverflowOnCastToInt256()) return (0, 0);
-        if (_args.blockTimestamp.wouldOverflowOnCastToInt256()) return (0, 0);
-        if (_args.collateralAssets.wouldOverflowOnCastToInt256()) return (0, 0);
-        if (_args.debtAssets.wouldOverflowOnCastToInt256()) return (0, 0);
+        // k should be set to min on overflow
+        if (_args.interestRateTimestamp.wouldOverflowOnCastToInt256()) return (0, cfg.kmin);
+        if (_args.blockTimestamp.wouldOverflowOnCastToInt256()) return (0, cfg.kmin);
+        if (_args.collateralAssets.wouldOverflowOnCastToInt256()) return (0, cfg.kmin);
+        if (_args.debtAssets.wouldOverflowOnCastToInt256()) return (0, cfg.kmin);
 
         try this.compoundInterestRate({
             _cfg: cfg,

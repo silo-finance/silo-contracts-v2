@@ -11,7 +11,7 @@ import {
 } from "../../../../contracts/interestRateModel/kink/DynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelConfig.sol";
 import {DynamicKinkModelFactory} from "../../../../contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
-
+import {DynamicKinkModelMock} from "./DynamicKinkModelMock.sol";
 import {ISilo} from "../../../../contracts/interfaces/ISilo.sol";
 import {KinkCommonTest} from "./KinkCommon.t.sol";
 import {KinkMath} from "../../../../contracts/lib/KinkMath.sol";
@@ -204,6 +204,15 @@ contract DynamicKinkModelTest is KinkCommonTest {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRateAndUpdate_kOnOverflow -vv
+    */
+    function test_kink_getCompoundInterestRateAndUpdate_kOnOverflow() public {
+        _kink_getCompoundInterestRateAndUpdate_kOnOverflow(type(uint256).max, 1, 1);
+        _kink_getCompoundInterestRateAndUpdate_kOnOverflow(1, type(uint256).max, 1);
+        _kink_getCompoundInterestRateAndUpdate_kOnOverflow(1, 1, type(uint256).max);
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRateAndUpdate_neverRevert -vv
     */
     function test_kink_getCompoundInterestRateAndUpdate_neverRevert_fuzz(
@@ -338,9 +347,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
 
         _assertCorrectHistory(irm.irmConfig(), prevConfig);
         assertEq(newImmutable.timelock, prevImmutable.timelock, "timelock is not the same");
-        assertEq(
-            newImmutable.rcompCapPerSecond, prevImmutable.rcompCapPerSecond, "rcompCapPerSecond is not the same"
-        );
+        assertEq(newImmutable.rcompCapPerSecond, prevImmutable.rcompCapPerSecond, "rcompCapPerSecond is not the same");
     }
 
     /*
@@ -370,9 +377,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
 
         irm.updateConfig(config);
 
-        _setUtilizationData(
-            ISilo.UtilizationData({interestRateTimestamp: 1, collateralAssets: 1e18, debtAssets: _u})
-        );
+        _setUtilizationData(ISilo.UtilizationData({interestRateTimestamp: 1, collateralAssets: 1e18, debtAssets: _u}));
 
         uint256 blockTimestamp = 365 days;
 
@@ -427,9 +432,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
     }
 
     function _kink_zeroRateAlways_u(uint256 _u) public {
-        _setUtilizationData(
-            ISilo.UtilizationData({interestRateTimestamp: 1, collateralAssets: 1e18, debtAssets: _u})
-        );
+        _setUtilizationData(ISilo.UtilizationData({interestRateTimestamp: 1, collateralAssets: 1e18, debtAssets: _u}));
 
         IDynamicKinkModel.Config memory config;
         irm.updateConfig(config);
@@ -438,5 +441,27 @@ contract DynamicKinkModelTest is KinkCommonTest {
 
         assertEq(irm.getCurrentInterestRate(address(this), blockTimestamp), 0, "rcur is not 0");
         assertEq(irm.getCompoundInterestRate(address(this), blockTimestamp), 0, "rcomp is not 0");
+    }
+
+    function _kink_getCompoundInterestRateAndUpdate_kOnOverflow(
+        uint256 _collateralAssets,
+        uint256 _debtAssets,
+        uint256 _interestRateTimestamp
+    ) internal {
+        IDynamicKinkModel.Config memory cfg = _defaultConfig();
+        assertGt(cfg.kmin, 0, "expect k > 0 for this test");
+
+        irm.updateConfig(cfg);
+        assertFalse(irm.pendingConfigExists(), "expect no pending config");
+
+        DynamicKinkModelMock(address(irm)).mockStateK(cfg.kmin + 1);
+
+        int96 kBefore = irm.modelState().k;
+        assertGt(kBefore, 0, "expect k > 0 for this test");
+        assertNotEq(kBefore, cfg.kmin, "expect k to not be kmin");
+
+        irm.getCompoundInterestRateAndUpdate(_collateralAssets, _debtAssets, _interestRateTimestamp);
+
+        assertEq(irm.modelState().k, cfg.kmin, "k should be set to min on overflow");
     }
 }
