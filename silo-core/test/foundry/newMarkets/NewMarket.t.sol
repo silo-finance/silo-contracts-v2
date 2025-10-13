@@ -40,7 +40,6 @@ contract NewMarketTest is Test {
         IERC20Metadata collateralToken;
         ISilo debtSilo;
         IERC20Metadata debtToken;
-        uint256 debtPrice;
         uint256 warpTime;
     }
 
@@ -104,7 +103,6 @@ contract NewMarketTest is Test {
                 collateralToken: TOKEN0,
                 debtSilo: SILO1,
                 debtToken: TOKEN1,
-                debtPrice: EXTERNAL_PRICE1,
                 warpTime: 0
             })
         );
@@ -115,7 +113,6 @@ contract NewMarketTest is Test {
                 collateralToken: TOKEN0,
                 debtSilo: SILO1,
                 debtToken: TOKEN1,
-                debtPrice: EXTERNAL_PRICE1,
                 warpTime: 1 days
             })
         );
@@ -128,7 +125,6 @@ contract NewMarketTest is Test {
                 collateralToken: TOKEN1,
                 debtSilo: SILO0,
                 debtToken: TOKEN0,
-                debtPrice: EXTERNAL_PRICE0,
                 warpTime: 0
             })
         );
@@ -139,7 +135,6 @@ contract NewMarketTest is Test {
                 collateralToken: TOKEN1,
                 debtSilo: SILO0,
                 debtToken: TOKEN0,
-                debtPrice: EXTERNAL_PRICE0,
                 warpTime: 1 days
             })
         );
