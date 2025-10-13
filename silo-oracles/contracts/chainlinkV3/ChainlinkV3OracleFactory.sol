@@ -48,6 +48,7 @@ contract ChainlinkV3OracleFactory is Create2Factory, OracleFactory {
         configId = keccak256(abi.encode(_config));
     }
 
+    // solhint-disable-next-line code-complexity
     function verifyConfig(IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory _config)
         public
         view

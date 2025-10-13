@@ -51,6 +51,7 @@ contract DIAOracleFactory is Create2Factory, OracleFactory {
         configId = keccak256(abi.encode(_config));
     }
 
+    // solhint-disable-next-line code-complexity
     function verifyConfig(IDIAOracle.DIADeploymentConfig calldata _config) public view virtual {
         if (address(_config.diaOracle) == address(0)) revert IDIAOracle.AddressZero();
         if (address(_config.quoteToken) == address(0)) revert IDIAOracle.AddressZero();
