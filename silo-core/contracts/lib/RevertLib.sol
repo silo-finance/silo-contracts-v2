@@ -31,6 +31,7 @@ library RevertLib {
     function revertWithCustomError(bytes4 _errorSelector) internal pure {
         bytes memory customError = abi.encodeWithSelector(_errorSelector);
 
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             revert(add(32, customError), mload(customError))
         }

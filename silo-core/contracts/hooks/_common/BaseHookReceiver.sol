@@ -38,7 +38,7 @@ abstract contract BaseHookReceiver is IHookReceiver, Initializable {
 
     /// @notice Set the silo config
     /// @param _config Silo config
-    function __BaseHookReceiver_init(ISiloConfig _config)
+    function __BaseHookReceiver_init(ISiloConfig _config) // solhint-disable-line func-name-mixedcase
         internal
         onlyInitializing
         virtual

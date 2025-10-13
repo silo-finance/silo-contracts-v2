@@ -36,6 +36,42 @@ contract SiloIncentivesController is BaseIncentivesController {
     }
 
     /// @inheritdoc ISiloIncentivesController
+    function immediateDistribution(address _tokenToDistribute, uint104 _amount) external virtual onlyNotifier {
+        if (_amount == 0) return;
+
+        uint256 totalStaked = _shareToken().totalSupply();
+
+        bytes32 programId = _getOrCreateImmediateDistributionProgram(_tokenToDistribute);
+
+        IncentivesProgram storage program = incentivesPrograms[programId];
+
+        // Update the program's internal state to guarantee that further actions will not break it.
+        _updateAssetStateInternal(programId, totalStaked);
+
+        uint40 distributionEndBefore = program.distributionEnd;
+        uint104 emissionPerSecondBefore = program.emissionPerSecond;
+
+        // Distributing `_amount` of rewards in one second allows the rewards to be added to users' balances
+        // even to the active incentives program.
+        program.distributionEnd = uint40(block.timestamp);  
+        program.lastUpdateTimestamp = uint40(block.timestamp - 1);
+        program.emissionPerSecond = _amount;
+
+        _updateAssetStateInternal(programId, totalStaked);
+
+        // If we have ongoing distribution, we need to revert the changes and keep the state as it was.
+        program.distributionEnd = distributionEndBefore;
+        program.lastUpdateTimestamp = uint40(block.timestamp);
+        program.emissionPerSecond = emissionPerSecondBefore;
+    }
+
+    /// @inheritdoc ISiloIncentivesController
+    function rescueRewards(address _rewardToken) external onlyOwner {
+        IERC20(_rewardToken).safeTransfer(msg.sender, IERC20(_rewardToken).balanceOf(address(this)));
+    }
+
+    /// @inheritdoc ISiloIncentivesController
+    // solhint-disable-next-line function-max-lines, code-complexity
     function afterTokenTransfer(
         address _sender,
         uint256 _senderBalance,
@@ -88,41 +124,6 @@ contract SiloIncentivesController is BaseIncentivesController {
                 _handleAction(programId, _recipient, _totalSupply, _recipientBalance);
             }
         }
-    }
-
-    /// @inheritdoc ISiloIncentivesController
-    function immediateDistribution(address _tokenToDistribute, uint104 _amount) external virtual onlyNotifier {
-        if (_amount == 0) return;
-
-        uint256 totalStaked = _shareToken().totalSupply();
-
-        bytes32 programId = _getOrCreateImmediateDistributionProgram(_tokenToDistribute);
-
-        IncentivesProgram storage program = incentivesPrograms[programId];
-
-        // Update the program's internal state to guarantee that further actions will not break it.
-        _updateAssetStateInternal(programId, totalStaked);
-
-        uint40 distributionEndBefore = program.distributionEnd;
-        uint104 emissionPerSecondBefore = program.emissionPerSecond;
-
-        // Distributing `_amount` of rewards in one second allows the rewards to be added to users' balances
-        // even to the active incentives program.
-        program.distributionEnd = uint40(block.timestamp);  
-        program.lastUpdateTimestamp = uint40(block.timestamp - 1);
-        program.emissionPerSecond = _amount;
-
-        _updateAssetStateInternal(programId, totalStaked);
-
-        // If we have ongoing distribution, we need to revert the changes and keep the state as it was.
-        program.distributionEnd = distributionEndBefore;
-        program.lastUpdateTimestamp = uint40(block.timestamp);
-        program.emissionPerSecond = emissionPerSecondBefore;
-    }
-
-    /// @inheritdoc ISiloIncentivesController
-    function rescueRewards(address _rewardToken) external onlyOwner {
-        IERC20(_rewardToken).safeTransfer(msg.sender, IERC20(_rewardToken).balanceOf(address(this)));
     }
 
     /// @dev Creates a new immediate distribution program if it does not exist.

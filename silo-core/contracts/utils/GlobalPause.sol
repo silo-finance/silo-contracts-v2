@@ -103,6 +103,19 @@ contract GlobalPause is Ownable1and2Steps, IGlobalPause {
         return _authorizedToPause.values();
     }
 
+    /// @inheritdoc IGlobalPause
+    function getAllContractsPauseStatus() external view returns (ContractPauseStatus[] memory result) {
+        uint256 length = _contracts.length();
+        result = new ContractPauseStatus[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            address contractAddress = _contracts.at(i);
+            bool isPaused = IPausable(contractAddress).paused();
+
+            result[i] = ContractPauseStatus({contractAddress: contractAddress, isPaused: isPaused});
+        }
+    }
+
     /// @notice Renounce ownership of the contract and ensure that _contracts and _authorizedToPause are empty
     function renounceOwnership() public virtual override {
         require(_contracts.length() == 0, ContractsNotEmpty());
@@ -119,19 +132,6 @@ contract GlobalPause is Ownable1and2Steps, IGlobalPause {
             if (signers[i] == _account) {
                 return true;
             }
-        }
-    }
-
-    /// @inheritdoc IGlobalPause
-    function getAllContractsPauseStatus() external view returns (ContractPauseStatus[] memory result) {
-        uint256 length = _contracts.length();
-        result = new ContractPauseStatus[](length);
-
-        for (uint256 i = 0; i < length; i++) {
-            address contractAddress = _contracts.at(i);
-            bool isPaused = IPausable(contractAddress).paused();
-
-            result[i] = ContractPauseStatus({contractAddress: contractAddress, isPaused: isPaused});
         }
     }
 

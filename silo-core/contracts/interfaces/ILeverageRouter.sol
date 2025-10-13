@@ -100,6 +100,7 @@ interface ILeverageRouter {
 
     /// @notice Returns the leverage implementation
     /// @return implementation The leverage implementation
+    // solhint-disable-next-line func-name-mixedcase
     function LEVERAGE_IMPLEMENTATION() external view returns (address implementation);
 
     /// @notice Calculates an amount of approval (receive approval) that is required on debt share token in order

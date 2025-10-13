@@ -28,66 +28,6 @@ library SiloLendingLib {
     /// 1e13 * (0.0001/365/24/3600*1e18) * 1 / 1e18 = 31.70979198376459
     uint256 internal constant _ROUNDING_THRESHOLD = 1e13;
 
-    /// @notice Allows repaying borrowed assets either partially or in full
-    /// @param _debtShareToken debt share token address
-    /// @param _debtAsset underlying debt asset address
-    /// @param _assets The amount of assets to repay. Use 0 if shares are used.
-    /// @param _shares The number of corresponding shares associated with the debt. Use 0 if assets are used.
-    /// @param _borrower The account that has the debt
-    /// @param _repayer The account that is repaying the debt
-    /// @return assets The amount of assets that was repaid
-    /// @return shares The corresponding number of debt shares that were repaid
-    function repay(
-        IShareToken _debtShareToken,
-        address _debtAsset,
-        uint256 _assets,
-        uint256 _shares,
-        address _borrower,
-        address _repayer
-    ) internal returns (uint256 assets, uint256 shares) {
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-
-        uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
-        (uint256 debtSharesBalance, uint256 totalDebtShares) = _debtShareToken.balanceOfAndTotalSupply(_borrower);
-
-        (assets, shares) = SiloMathLib.convertToAssetsOrToShares({
-            _assets: _assets,
-            _shares: _shares,
-            _totalAssets: totalDebtAssets,
-            _totalShares: totalDebtShares,
-            _roundingToAssets: Rounding.REPAY_TO_ASSETS,
-            _roundingToShares: Rounding.REPAY_TO_SHARES,
-            _assetType: ISilo.AssetType.Debt
-        });
-
-        if (shares > debtSharesBalance) {
-            shares = debtSharesBalance;
-
-            (assets, shares) = SiloMathLib.convertToAssetsOrToShares({
-                _assets: 0,
-                _shares: shares,
-                _totalAssets: totalDebtAssets,
-                _totalShares: totalDebtShares,
-                _roundingToAssets: Rounding.REPAY_TO_ASSETS,
-                _roundingToShares: Rounding.REPAY_TO_SHARES,
-                _assetType: ISilo.AssetType.Debt
-            });
-        }
-
-        require(totalDebtAssets >= assets, ISilo.RepayTooHigh());
-
-        // subtract repayment from debt, save to unchecked because of above `totalDebtAssets < assets`
-        unchecked { $.totalAssets[ISilo.AssetType.Debt] = totalDebtAssets - assets; }
-
-        // Anyone can repay anyone's debt so no approval check is needed.
-        _debtShareToken.burn(_borrower, _repayer, shares);
-        // fee-on-transfer is ignored
-        // Reentrancy is possible only for view methods (read-only reentrancy),
-        // so no harm can be done as the state is already updated.
-        // We do not expect the silo to work with any malicious token that will not send tokens back.
-        IERC20(_debtAsset).safeTransferFrom(_repayer, address(this), assets);
-    }
-
     /// @notice Accrues interest on assets, updating the collateral and debt balances
     /// @dev This method will accrue interest for ONE asset ONLY, to calculate for both silos you have to call it twice
     /// with `_configData` for each token
@@ -95,6 +35,7 @@ library SiloLendingLib {
     /// @param _daoFee DAO's fee in 18 decimals points
     /// @param _deployerFee Deployer's fee in 18 decimals points
     /// @return accruedInterest The total amount of interest accrued
+    // solhint-disable-next-line function-max-lines
     function accrueInterestForAsset(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee)
         external
         returns (uint256 accruedInterest)
@@ -156,6 +97,66 @@ library SiloLendingLib {
         unchecked { $.daoAndDeployerRevenue += uint192(totalFees); }
     }
 
+    /// @notice Allows repaying borrowed assets either partially or in full
+    /// @param _debtShareToken debt share token address
+    /// @param _debtAsset underlying debt asset address
+    /// @param _assets The amount of assets to repay. Use 0 if shares are used.
+    /// @param _shares The number of corresponding shares associated with the debt. Use 0 if assets are used.
+    /// @param _borrower The account that has the debt
+    /// @param _repayer The account that is repaying the debt
+    /// @return assets The amount of assets that was repaid
+    /// @return shares The corresponding number of debt shares that were repaid
+    function repay(
+        IShareToken _debtShareToken,
+        address _debtAsset,
+        uint256 _assets,
+        uint256 _shares,
+        address _borrower,
+        address _repayer
+    ) internal returns (uint256 assets, uint256 shares) {
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+
+        uint256 totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];
+        (uint256 debtSharesBalance, uint256 totalDebtShares) = _debtShareToken.balanceOfAndTotalSupply(_borrower);
+
+        (assets, shares) = SiloMathLib.convertToAssetsOrToShares({
+            _assets: _assets,
+            _shares: _shares,
+            _totalAssets: totalDebtAssets,
+            _totalShares: totalDebtShares,
+            _roundingToAssets: Rounding.REPAY_TO_ASSETS,
+            _roundingToShares: Rounding.REPAY_TO_SHARES,
+            _assetType: ISilo.AssetType.Debt
+        });
+
+        if (shares > debtSharesBalance) {
+            shares = debtSharesBalance;
+
+            (assets, shares) = SiloMathLib.convertToAssetsOrToShares({
+                _assets: 0,
+                _shares: shares,
+                _totalAssets: totalDebtAssets,
+                _totalShares: totalDebtShares,
+                _roundingToAssets: Rounding.REPAY_TO_ASSETS,
+                _roundingToShares: Rounding.REPAY_TO_SHARES,
+                _assetType: ISilo.AssetType.Debt
+            });
+        }
+
+        require(totalDebtAssets >= assets, ISilo.RepayTooHigh());
+
+        // subtract repayment from debt, save to unchecked because of above `totalDebtAssets < assets`
+        unchecked { $.totalAssets[ISilo.AssetType.Debt] = totalDebtAssets - assets; }
+
+        // Anyone can repay anyone's debt so no approval check is needed.
+        _debtShareToken.burn(_borrower, _repayer, shares);
+        // fee-on-transfer is ignored
+        // Reentrancy is possible only for view methods (read-only reentrancy),
+        // so no harm can be done as the state is already updated.
+        // We do not expect the silo to work with any malicious token that will not send tokens back.
+        IERC20(_debtAsset).safeTransferFrom(_repayer, address(this), assets);
+    }
+
     /// @notice Allows a user or a delegate to borrow assets against their collateral
     /// @dev The function checks for necessary conditions such as borrow possibility, enough liquidity, and zero
     /// values
@@ -204,6 +205,73 @@ library SiloLendingLib {
             // fee-on-transfer is ignored.
             IERC20(_token).safeTransfer(_args.receiver, borrowedAssets);
         }
+    }
+
+    function getCompoundInterestRate(
+        address _interestRateModel,
+        uint256 _totalCollateralAssets,
+        uint256 _totalDebtAssets,
+        uint64 _lastTimestamp
+    ) internal returns (uint256 rcomp) {
+        try
+            IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
+                _totalCollateralAssets,
+                _totalDebtAssets,
+                _lastTimestamp
+            )
+            returns (uint256 interestRate)
+        {
+            rcomp = interestRate;
+        } catch {
+            // do not lock silo on interest calculation
+            emit IInterestRateModel.InterestRateModelError();
+        }
+    }
+
+    function applyFractions(
+        uint256 _totalDebtAssets,
+        uint256 _rcomp,
+        uint256 _accruedInterest,
+        uint256 _fees,
+        uint256 _totalFees
+    )
+        internal returns (uint256 accruedInterest, uint256 totalFees)
+    {
+        // if _totalDebtAssets is greater than _ROUNDING_THRESHOLD then we don't need to worry
+        // about precision because there is enough amount of debt to generate double wei digit
+        // of interest per second so we can safely ignore fractions
+        if (_totalDebtAssets >= _ROUNDING_THRESHOLD) return (_accruedInterest, _totalFees);
+
+        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
+        uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
+
+        // `accrueInterestForAsset` should never revert,
+        // so we check edge cases for revert and do early return
+        // instead of checking each calculation individually for underflow/overflow
+        if (totalCollateralAssets == type(uint256).max || totalCollateralAssets == 0) {
+            return (_accruedInterest, _totalFees);
+        }
+
+        ISilo.Fractions memory fractions = $.fractions;
+
+        uint256 integralInterest;
+        uint256 integralRevenue;
+
+        (
+            integralInterest, fractions.interest
+        ) = SiloMathLib.calculateFraction(_totalDebtAssets, _rcomp, fractions.interest);
+
+        accruedInterest = _accruedInterest + integralInterest;
+
+        (
+            integralRevenue, fractions.revenue
+        ) = SiloMathLib.calculateFraction(accruedInterest, _fees, fractions.revenue);
+
+        totalFees = _totalFees + integralRevenue;
+
+        $.fractions = fractions;
+        $.totalAssets[ISilo.AssetType.Debt] += integralInterest;
+        $.totalAssets[ISilo.AssetType.Collateral] = totalCollateralAssets + integralInterest - integralRevenue;
     }
 
     /// @notice Determines the maximum amount (both in assets and shares) that a borrower can borrow
@@ -356,6 +424,7 @@ library SiloLendingLib {
     /// @param _totalDebtShares Total shares of the debt
     /// @return assets Maximum borrowable assets
     /// @return shares Maximum borrowable shares
+    // solhint-disable-next-line function-max-lines
     function maxBorrowValueToAssetsAndShares(
         uint256 _maxBorrowValue,
         address _debtAsset,
@@ -422,72 +491,5 @@ library SiloLendingLib {
         assets = SiloMathLib.convertToAssets(
             shares, _totalDebtAssets, _totalDebtShares, Rounding.MAX_BORROW_TO_ASSETS, ISilo.AssetType.Debt
         );
-    }
-
-    function getCompoundInterestRate(
-        address _interestRateModel,
-        uint256 _totalCollateralAssets,
-        uint256 _totalDebtAssets,
-        uint64 _lastTimestamp
-    ) internal returns (uint256 rcomp) {
-        try
-            IInterestRateModel(_interestRateModel).getCompoundInterestRateAndUpdate(
-                _totalCollateralAssets,
-                _totalDebtAssets,
-                _lastTimestamp
-            )
-            returns (uint256 interestRate)
-        {
-            rcomp = interestRate;
-        } catch {
-            // do not lock silo on interest calculation
-            emit IInterestRateModel.InterestRateModelError();
-        }
-    }
-
-    function applyFractions(
-        uint256 _totalDebtAssets,
-        uint256 _rcomp,
-        uint256 _accruedInterest,
-        uint256 _fees,
-        uint256 _totalFees
-    )
-        internal returns (uint256 accruedInterest, uint256 totalFees)
-    {
-        // if _totalDebtAssets is greater than _ROUNDING_THRESHOLD then we don't need to worry
-        // about precision because there is enough amount of debt to generate double wei digit
-        // of interest per second so we can safely ignore fractions
-        if (_totalDebtAssets >= _ROUNDING_THRESHOLD) return (_accruedInterest, _totalFees);
-
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-        uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
-
-        // `accrueInterestForAsset` should never revert,
-        // so we check edge cases for revert and do early return
-        // instead of checking each calculation individually for underflow/overflow
-        if (totalCollateralAssets == type(uint256).max || totalCollateralAssets == 0) {
-            return (_accruedInterest, _totalFees);
-        }
-
-        ISilo.Fractions memory fractions = $.fractions;
-
-        uint256 integralInterest;
-        uint256 integralRevenue;
-
-        (
-            integralInterest, fractions.interest
-        ) = SiloMathLib.calculateFraction(_totalDebtAssets, _rcomp, fractions.interest);
-
-        accruedInterest = _accruedInterest + integralInterest;
-
-        (
-            integralRevenue, fractions.revenue
-        ) = SiloMathLib.calculateFraction(accruedInterest, _fees, fractions.revenue);
-
-        totalFees = _totalFees + integralRevenue;
-
-        $.fractions = fractions;
-        $.totalAssets[ISilo.AssetType.Debt] += integralInterest;
-        $.totalAssets[ISilo.AssetType.Collateral] = totalCollateralAssets + integralInterest - integralRevenue;
     }
 }

@@ -263,6 +263,13 @@ contract SiloLens is ISiloLens {
         }
     }
 
+    function getOracleAddresses(ISilo _silo) external view returns (address solvencyOracle, address maxLtvOracle) {
+        ISiloConfig.ConfigData memory config = _silo.config().getConfig(address(_silo));
+
+        solvencyOracle = config.solvencyOracle;
+        maxLtvOracle = config.maxLtvOracle;
+    }
+
     function getModel(ISilo _silo) public view returns (IInterestRateModel irm) {
         irm = IInterestRateModel(_silo.config().getConfig(address(_silo)).interestRateModel);
     }
@@ -285,13 +292,6 @@ contract SiloLens is ISiloLens {
                 programsNames[i] = originalProgramsNames[i];
             }
         }
-    }
-
-    function getOracleAddresses(ISilo _silo) external view returns (address solvencyOracle, address maxLtvOracle) {
-        ISiloConfig.ConfigData memory config = _silo.config().getConfig(address(_silo));
-
-        solvencyOracle = config.solvencyOracle;
-        maxLtvOracle = config.maxLtvOracle;
     }
 
     function _isTokenAddress(bytes memory _name) private view returns (bool isToken) {

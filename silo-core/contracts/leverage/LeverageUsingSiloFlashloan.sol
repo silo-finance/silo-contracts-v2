@@ -77,30 +77,6 @@ abstract contract LeverageUsingSiloFlashloan is
     }
 
     /// @inheritdoc ILeverageUsingSiloFlashloan
-    function openLeveragePosition(
-        address _msgSender,
-        FlashArgs calldata _flashArgs,
-        bytes calldata _swapArgs,
-        DepositArgs calldata _depositArgs
-    )
-        public
-        payable
-        virtual
-        onlyRouter
-        nonReentrant
-        setupTxState(_msgSender, _depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
-    {
-        _txMsgValue = msg.value;
-
-        require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
-            _receiver: this,
-            _token: ISilo(_flashArgs.flashloanTarget).asset(),
-            _amount: _flashArgs.amount,
-            _data: abi.encode(_swapArgs, _depositArgs)
-        }), FlashloanFailed());
-    }
-
-    /// @inheritdoc ILeverageUsingSiloFlashloan
     function closeLeveragePositionPermit(
         address _msgSender,
         bytes calldata _swapArgs,
@@ -121,26 +97,6 @@ abstract contract LeverageUsingSiloFlashloan is
         _executePermit(_msgSender, _withdrawAllowance, shareTokenToApprove);
 
         closeLeveragePosition(_msgSender, _swapArgs, _closeArgs);
-    }
-
-    /// @inheritdoc ILeverageUsingSiloFlashloan
-    function closeLeveragePosition(
-        address _msgSender,
-        bytes calldata _swapArgs,
-        CloseLeverageArgs calldata _closeArgs
-    )
-        public
-        virtual
-        onlyRouter
-        nonReentrant
-        setupTxState(_msgSender, _closeArgs.siloWithCollateral, LeverageAction.Close, _closeArgs.flashloanTarget)
-    {
-        require(IERC3156FlashLender(_closeArgs.flashloanTarget).flashLoan({
-            _receiver: this,
-            _token: ISilo(_closeArgs.flashloanTarget).asset(),
-            _amount: _resolveOtherSilo(_closeArgs.siloWithCollateral).maxRepay(_msgSender),
-            _data: abi.encode(_swapArgs, _closeArgs)
-        }), FlashloanFailed());
     }
 
     /// @inheritdoc IERC3156FlashBorrower
@@ -171,6 +127,51 @@ abstract contract LeverageUsingSiloFlashloan is
         return _FLASHLOAN_CALLBACK;
     }
 
+    /// @inheritdoc ILeverageUsingSiloFlashloan
+    function openLeveragePosition(
+        address _msgSender,
+        FlashArgs calldata _flashArgs,
+        bytes calldata _swapArgs,
+        DepositArgs calldata _depositArgs
+    )
+        public
+        payable
+        virtual
+        onlyRouter
+        nonReentrant
+        setupTxState(_msgSender, _depositArgs.silo, LeverageAction.Open, _flashArgs.flashloanTarget)
+    {
+        _txMsgValue = msg.value;
+
+        require(IERC3156FlashLender(_flashArgs.flashloanTarget).flashLoan({
+            _receiver: this,
+            _token: ISilo(_flashArgs.flashloanTarget).asset(),
+            _amount: _flashArgs.amount,
+            _data: abi.encode(_swapArgs, _depositArgs)
+        }), FlashloanFailed());
+    }
+
+    /// @inheritdoc ILeverageUsingSiloFlashloan
+    function closeLeveragePosition(
+        address _msgSender,
+        bytes calldata _swapArgs,
+        CloseLeverageArgs calldata _closeArgs
+    )
+        public
+        virtual
+        onlyRouter
+        nonReentrant
+        setupTxState(_msgSender, _closeArgs.siloWithCollateral, LeverageAction.Close, _closeArgs.flashloanTarget)
+    {
+        require(IERC3156FlashLender(_closeArgs.flashloanTarget).flashLoan({
+            _receiver: this,
+            _token: ISilo(_closeArgs.flashloanTarget).asset(),
+            _amount: _resolveOtherSilo(_closeArgs.siloWithCollateral).maxRepay(_msgSender),
+            _data: abi.encode(_swapArgs, _closeArgs)
+        }), FlashloanFailed());
+    }
+
+    // solhint-disable-next-line function-max-lines
     function _openLeverage(
         uint256 _flashloanAmount,
         uint256 _flashloanFee,
@@ -295,38 +296,6 @@ abstract contract LeverageUsingSiloFlashloan is
         virtual
         returns (uint256 amountOut);
 
-    function _getBorrowerTotalShareDebtBalance(ISilo _siloWithDebt)
-        internal
-        view
-        virtual
-        returns (uint256 repayShareBalance)
-    {
-        (,, address shareDebtToken) = _txSiloConfig.getShareTokens(address(_siloWithDebt));
-        repayShareBalance = IERC20(shareDebtToken).balanceOf(_txMsgSender);
-    }
-
-    function _getBorrowerTotalShareCollateralBalance(CloseLeverageArgs memory _closeArgs)
-        internal
-        view
-        virtual
-        returns (uint256 balanceOf)
-    {
-        if (_closeArgs.collateralType == ISilo.CollateralType.Collateral) {
-            return _closeArgs.siloWithCollateral.balanceOf(_txMsgSender);
-        }
-
-        (address protectedShareToken,,) = _txSiloConfig.getShareTokens(address(_closeArgs.siloWithCollateral));
-
-        balanceOf = ISilo(protectedShareToken).balanceOf(_txMsgSender);
-    }
-
-    function _resolveOtherSilo(ISilo _thisSilo) internal view returns (ISilo otherSilo) {
-        (address silo0, address silo1) = _txSiloConfig.getSilos();
-        require(address(_thisSilo) == silo0 || address(_thisSilo) == silo1, InvalidSilo());
-
-        otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
-    }
-
     function _executePermit(address _msgSender, Permit memory _permit, address _token) internal virtual {
         if (_permit.deadline == 0) return;
 
@@ -359,5 +328,37 @@ abstract contract LeverageUsingSiloFlashloan is
 
     function _payLeverageFee(address _token, uint256 _leverageFee) internal virtual {
         if (_leverageFee != 0) IERC20(_token).safeTransfer(ROUTER.revenueReceiver(), _leverageFee);
+    }
+
+    function _getBorrowerTotalShareDebtBalance(ISilo _siloWithDebt)
+        internal
+        view
+        virtual
+        returns (uint256 repayShareBalance)
+    {
+        (,, address shareDebtToken) = _txSiloConfig.getShareTokens(address(_siloWithDebt));
+        repayShareBalance = IERC20(shareDebtToken).balanceOf(_txMsgSender);
+    }
+
+    function _getBorrowerTotalShareCollateralBalance(CloseLeverageArgs memory _closeArgs)
+        internal
+        view
+        virtual
+        returns (uint256 balanceOf)
+    {
+        if (_closeArgs.collateralType == ISilo.CollateralType.Collateral) {
+            return _closeArgs.siloWithCollateral.balanceOf(_txMsgSender);
+        }
+
+        (address protectedShareToken,,) = _txSiloConfig.getShareTokens(address(_closeArgs.siloWithCollateral));
+
+        balanceOf = ISilo(protectedShareToken).balanceOf(_txMsgSender);
+    }
+
+    function _resolveOtherSilo(ISilo _thisSilo) internal view returns (ISilo otherSilo) {
+        (address silo0, address silo1) = _txSiloConfig.getSilos();
+        require(address(_thisSilo) == silo0 || address(_thisSilo) == silo1, InvalidSilo());
+
+        otherSilo = ISilo(silo0 == address(_thisSilo) ? silo1 : silo0);
     }
 }

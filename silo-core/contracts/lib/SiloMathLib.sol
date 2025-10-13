@@ -311,25 +311,6 @@ library SiloMathLib {
         }
     }
 
-    /// @dev Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
-    /// itself. It should return actual result and round it up.
-    function _commonConvertTo(
-        uint256 _totalAssets,
-        uint256 _totalShares,
-        ISilo.AssetType _assetType
-    ) private pure returns (uint256 totalShares, uint256 totalAssets) {
-        if (_totalShares == 0) {
-            // silo is empty and we have dust to redistribute: this can only happen when everyone exits silo
-            // this case can happen only for collateral, because for collateral we rounding in favorite of protocol
-            // by resetting totalAssets, the dust that we have will go to first depositor and we starts from clean state
-            _totalAssets = 0;
-        }
-
-            (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
-                ? (_totalShares, _totalAssets)
-                : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
-    }
-
     /// @dev Calculates the fraction of a given total and percentage
     /// @param _total The total value to calculate the fraction from
     /// @param _percent The percentage to calculate the fraction from
@@ -362,5 +343,24 @@ library SiloMathLib {
             // fraction is what we get below 1e18
             fraction = uint64((_currentFraction + remainder) % _PRECISION_DECIMALS);
         }
+    }
+
+    /// @dev Debt calculations should not lower the result. Debt is a liability so protocol should not take any for
+    /// itself. It should return actual result and round it up.
+    function _commonConvertTo(
+        uint256 _totalAssets,
+        uint256 _totalShares,
+        ISilo.AssetType _assetType
+    ) private pure returns (uint256 totalShares, uint256 totalAssets) {
+        if (_totalShares == 0) {
+            // silo is empty and we have dust to redistribute: this can only happen when everyone exits silo
+            // this case can happen only for collateral, because for collateral we rounding in favorite of protocol
+            // by resetting totalAssets, the dust that we have will go to first depositor and we starts from clean state
+            _totalAssets = 0;
+        }
+
+            (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt
+                ? (_totalShares, _totalAssets)
+                : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);
     }
 }

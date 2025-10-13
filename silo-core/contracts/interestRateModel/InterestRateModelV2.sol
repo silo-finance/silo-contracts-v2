@@ -10,7 +10,7 @@ import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
 
-// solhint-disable func-name-mixedcase
+// solhint-disable func-name-mixedcase, ordering
 
 /// @title InterestRateModelV2
 /// @notice This model is for one silo/asset set. So one silo need to have as many IRMs as many assets it holds.

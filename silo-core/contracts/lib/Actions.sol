@@ -268,6 +268,7 @@ library Actions {
     /// - `transitionFrom`: Specifies whether transitioning from collateral or protected
     /// @return assets Amount of assets transitioned
     /// @return toShares Equivalent shares gained from the transition
+    // solhint-disable-next-line function-max-lines
     function transitionCollateral(ISilo.TransitionCollateralArgs memory _args)
         external
         returns (uint256 assets, uint256 toShares)
@@ -423,6 +424,7 @@ library Actions {
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
     /// accordingly
     /// @param _silo Silo address
+    // solhint-disable-next-line function-max-lines
     function withdrawFees(ISilo _silo)
         external
         returns (uint256 daoRevenue, uint256 deployerRevenue, bool redirectedDeployerFees)
@@ -519,6 +521,20 @@ library Actions {
         } else {
             (success, result) = _target.call{value: _value}(_input); // solhint-disable-line avoid-low-level-calls
         }
+    }
+
+    /**
+     * @dev Transfer `value` amount of `token` from the calling contract to `to`. If `token` returns no value,
+     * non-reverting calls are assumed to be successful.
+     */
+    // solhint-disable-next-line private-vars-leading-underscore
+    function _safeTransferInternal(IERC20 _token, address _to, uint256 _value) internal returns (bool result) {
+        bytes memory data = abi.encodeCall(_token.transfer, (_to, _value));
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory returndata) = address(_token).call(data);
+        if (!success) return false;
+
+        result = returndata.length == 0 || abi.decode(returndata, (bool));
     }
 
     // this method expect interest to be already accrued
@@ -687,17 +703,5 @@ library Actions {
         bytes memory data = abi.encodePacked(_assets, _shares, _receiver, _exactAssets, _exactShare);
 
         IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);
-    }
-
-    /**
-     * @dev Transfer `value` amount of `token` from the calling contract to `to`. If `token` returns no value,
-     * non-reverting calls are assumed to be successful.
-     */
-    function _safeTransferInternal(IERC20 _token, address _to, uint256 _value) internal returns (bool result) {
-        bytes memory data = abi.encodeCall(_token.transfer, (_to, _value));
-        (bool success, bytes memory returndata) = address(_token).call(data);
-        if (!success) return false;
-
-        result = returndata.length == 0 || abi.decode(returndata, (bool));
     }
 }
