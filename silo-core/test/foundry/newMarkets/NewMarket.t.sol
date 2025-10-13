@@ -257,8 +257,12 @@ contract NewMarketTest is Test {
         assertTrue(borrowed >= maxBorrow, "Borrowed more or equal to calculated maxBorrow based on prices");
 
         if (_scenario.warpTimeBeforeRepay > 0) {
+            uint256 maxRepayBefore = _scenario.debtSilo.maxRepay(address(this));
+
             vm.warp(block.timestamp + _scenario.warpTimeBeforeRepay);
             console2.log("\t- warp ", _scenario.warpTimeBeforeRepay);
+            
+            assertLt(maxRepayBefore, _scenario.debtSilo.maxRepay(address(this)), "we have to generate interest");
         }
 
         // 3. Repay
