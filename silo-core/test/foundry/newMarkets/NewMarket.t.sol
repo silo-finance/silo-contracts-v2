@@ -42,7 +42,6 @@ contract NewMarketTest is Test {
         IERC20Metadata debtToken;
         uint256 collateralPrice;
         uint256 debtPrice;
-        uint256 ltv;
         uint256 warpTime;
     }
 
@@ -108,7 +107,6 @@ contract NewMarketTest is Test {
                 debtToken: TOKEN1,
                 collateralPrice: EXTERNAL_PRICE0,
                 debtPrice: EXTERNAL_PRICE1,
-                ltv: MAX_LTV0,
                 warpTime: 0
             })
         );
@@ -121,7 +119,6 @@ contract NewMarketTest is Test {
                 debtToken: TOKEN1,
                 collateralPrice: EXTERNAL_PRICE0,
                 debtPrice: EXTERNAL_PRICE1,
-                ltv: MAX_LTV0,
                 warpTime: 1 days
             })
         );
@@ -136,7 +133,6 @@ contract NewMarketTest is Test {
                 debtToken: TOKEN0,
                 collateralPrice: EXTERNAL_PRICE1,
                 debtPrice: EXTERNAL_PRICE0,
-                ltv: MAX_LTV1,
                 warpTime: 0
             })
         );
@@ -149,7 +145,6 @@ contract NewMarketTest is Test {
                 debtToken: TOKEN0,
                 collateralPrice: EXTERNAL_PRICE1,
                 debtPrice: EXTERNAL_PRICE0,
-                ltv: MAX_LTV1,
                 warpTime: 1 days
             })
         );
@@ -176,13 +171,15 @@ contract NewMarketTest is Test {
 
         uint256 maxBorrow = _scenario.debtSilo.maxBorrow(address(this));
 
+        uint256 colateralMaxLtv = SILO_CONFIG.getConfig(address(_scenario.collateralSilo)).maxLtv;
+
         assertTrue(
-            _scenario.ltv == 0
-                || maxBorrow > 10 ** TokenHelper.assertAndGetDecimals(address(_scenario.debtToken)),
+            colateralMaxLtv == 0 || maxBorrow > 10 ** TokenHelper.assertAndGetDecimals(address(_scenario.debtToken)),
             "expect to borrow at least one token otherwise LTV is zero"
         );
 
-        if (_scenario.ltv == 0) {
+        if (colateralMaxLtv == 0) {
+            // TODO try to borrow with 1 wei
             _logBorrowScenarioSkipped({_collateralSilo: _scenario.collateralSilo, _debtSilo: _scenario.debtSilo});
             return;
         }
