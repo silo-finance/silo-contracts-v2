@@ -119,6 +119,7 @@ contract PTLinearOracleFactoryTest is PTLinearMocks {
         vm.assume(_hashConfig(_config1) != _hashConfig(_config2));
 
         _mockExpiry();
+        _mockDecimals(makeAddr("ptToken"), 18);
 
         uint256 snapshot = vm.snapshotState();
 
