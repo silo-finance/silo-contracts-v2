@@ -146,9 +146,9 @@ contract NewMarketTest is Test {
     }
 
     function _borrowScenario(BorrowScenario memory _scenario) internal {
-        uint256 tokensToDeposit = 100_000_000; // without decimals
-        uint256 collateralAmount =
-            tokensToDeposit * 10 ** uint256(TokenHelper.assertAndGetDecimals(address(_scenario.collateralToken)));
+        uint256 collateralDecimals = TokenHelper.assertAndGetDecimals(address(_scenario.collateralToken));
+
+        uint256 collateralAmount = 100_000_000 * 10 ** collateralDecimals;
 
         // 1. Deposit
         _siloDeposit(_scenario.collateralSilo, address(this), collateralAmount);
@@ -163,15 +163,20 @@ contract NewMarketTest is Test {
 
         uint256 colateralMaxLtv = SILO_CONFIG.getConfig(address(_scenario.collateralSilo)).maxLtv;
 
-        assertTrue(
-            colateralMaxLtv == 0 || maxBorrow > 10 ** TokenHelper.assertAndGetDecimals(address(_scenario.debtToken)),
-            "expect to borrow at least one token otherwise LTV is zero"
-        );
-
         if (colateralMaxLtv == 0) {
-            // TODO try to borrow with 1 wei
+            // TODO will that hold for same asset borrow?
+            assertEq(maxBorrow, 0, "maxBorrow is zero when LTV is zero");
+            vm.expectRevert(); // it can be ZeroQuote or AboveMaxLtv
+            _scenario.debtSilo.borrow(1, address(this), address(this));
+
+            // in some extream case we can get ZeroQuote, but we can debug this case if needed
+            vm.expectRevert(ISilo.AboveMaxLtv.selector);
+            _scenario.debtSilo.borrow(10, address(this), address(this));
+
             _logBorrowScenarioSkipped({_collateralSilo: _scenario.collateralSilo, _debtSilo: _scenario.debtSilo});
             return;
+        } else {
+            assertGt(maxBorrow, 0, "expect to borrow at least some tokens");
         }
 
         // 2. Borrow
