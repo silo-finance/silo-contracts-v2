@@ -23,15 +23,15 @@ interface OldGauge {
     function killGauge() external;
 }
 
-/**
- * The test is designed to be run right after the silo lending market deployment.
- * It is excluded from the general tests CI pipeline and has separate workflow.
- *
- * FOUNDRY_PROFILE=core_test CONFIG=0x94387Bb763ee94D53a9828EFCCa2C2A3A7dA5428 \
- *     EXTERNAL_PRICE_0=9187 \
- *     EXTERNAL_PRICE_1=9997 \
- *     RPC_URL=$RPC_MAINNET \
- *     forge test --mc "NewMarketTest" --ffi -vv
+/*
+    The test is designed to be run right after the silo lending market deployment.
+    It is excluded from the general tests CI pipeline and has separate workflow.
+
+    FOUNDRY_PROFILE=core_test CONFIG=0x94387Bb763ee94D53a9828EFCCa2C2A3A7dA5428 \
+    EXTERNAL_PRICE_0=9187 \
+    EXTERNAL_PRICE_1=9997 \
+    RPC_URL=$RPC_MAINNET \
+    forge test --mc "NewMarketTest" --ffi -vv
  */
 // solhint-disable var-name-mixedcase
 contract NewMarketTest is Test {
@@ -165,12 +165,9 @@ contract NewMarketTest is Test {
         uint256 collateralAmount =
             tokensToDeposit * 10 ** uint256(TokenHelper.assertAndGetDecimals(address(_scenario.collateralToken)));
 
-        deal(address(_scenario.collateralToken), address(this), collateralAmount);
-        _scenario.collateralToken.approve(address(_scenario.collateralSilo), collateralAmount);
-
         // 1. Deposit
-        _scenario.collateralSilo.deposit(collateralAmount, address(this));
-        _someoneDeposited(_scenario.debtToken, _scenario.debtSilo, 1e40);
+        _siloDeposit(_scenario.collateralSilo, address(this), collateralAmount);
+        _siloDeposit(_scenario.debtSilo, makeAddr("stranger"), 1e40);
 
         if (_scenario.warpTime > 0) {
             vm.warp(block.timestamp + _scenario.warpTime);
@@ -266,15 +263,15 @@ contract NewMarketTest is Test {
         assertEq((new SiloLens()).getLtv(_debtSilo, address(this)), 0, "Repay is successful, LTV==0");
     }
 
-    function _someoneDeposited(IERC20Metadata _token, ISilo _silo, uint256 _amount) internal {
-        address stranger = address(1);
+    function _siloDeposit(ISilo _silo, address _depositor, uint256 _amount) internal {
+        IERC20Metadata token = IERC20Metadata(_silo.asset());
 
-        deal(address(_token), stranger, _amount);
-        vm.prank(stranger);
-        _token.approve(address(_silo), _amount);
+        deal(address(token), _depositor, _amount);
+        vm.prank(_depositor);
+        token.approve(address(_silo), _amount);
 
-        vm.prank(stranger);
-        _silo.deposit(_amount, stranger);
+        vm.prank(_depositor);
+        _silo.deposit(_amount, _depositor);
     }
 
     function _checkGauges(ISiloConfig.ConfigData memory _configData) internal {
