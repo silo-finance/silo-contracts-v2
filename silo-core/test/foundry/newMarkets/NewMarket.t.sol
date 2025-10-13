@@ -213,8 +213,8 @@ contract NewMarketTest is Test {
             console2.log("\twarp ", _scenario.warpTimeBeforeRepay);
         }
 
-        uint256 maxBorrow = _scenario.sameAsset 
-            ? _scenario.debtSilo.maxBorrowSameAsset(address(this)) 
+        uint256 maxBorrow = _scenario.sameAsset
+            ? _scenario.debtSilo.maxBorrowSameAsset(address(this))
             : _scenario.debtSilo.maxBorrow(address(this));
 
         console2.log("\t- check for maxBorrow", maxBorrow);
@@ -233,13 +233,15 @@ contract NewMarketTest is Test {
 
             console2.log("\t- expect revert on borrow: OK");
 
-            console2.log(string.concat(
-                SKIPPED_SYMBOL,
-                "Borrow scenario is skipped because asset is not borrowable, collateral:",
-                _scenario.collateralSilo.symbol(),
-                " -> debt:",
-                _scenario.debtSilo.symbol()
-            ));
+            console2.log(
+                string.concat(
+                    SKIPPED_SYMBOL,
+                    "Borrow scenario is skipped because asset is not borrowable, collateral:",
+                    _scenario.collateralSilo.symbol(),
+                    " -> debt:",
+                    _scenario.debtSilo.symbol()
+                )
+            );
 
             return;
         }
@@ -261,7 +263,7 @@ contract NewMarketTest is Test {
 
             vm.warp(block.timestamp + _scenario.warpTimeBeforeRepay);
             console2.log("\t- warp ", _scenario.warpTimeBeforeRepay);
-            
+
             assertLt(maxRepayBefore, _scenario.debtSilo.maxRepay(address(this)), "we have to generate interest");
         }
 
@@ -275,13 +277,15 @@ contract NewMarketTest is Test {
             _initiallyDeposited: collateralAmount
         });
 
-        console2.log(string.concat(
-            SUCCESS_SYMBOL, 
-            "Borrow scenario success for direction", 
-            _scenario.collateralSilo.symbol(), 
-            "->",
-            _scenario.debtSilo.symbol()
-        ));
+        console2.log(
+            string.concat(
+                SUCCESS_SYMBOL,
+                "Borrow scenario success for direction",
+                _scenario.collateralSilo.symbol(),
+                "->",
+                _scenario.debtSilo.symbol()
+            )
+        );
     }
 
     function _withdrawAndCheck(ISilo _collateralSilo, IERC20Metadata _collateralToken, uint256 _initiallyDeposited)
