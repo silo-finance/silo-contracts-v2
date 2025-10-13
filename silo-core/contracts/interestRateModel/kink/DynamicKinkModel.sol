@@ -320,9 +320,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         virtual
         returns (int256 rcomp, int256 k)
     {
-        // no debt, no interest, overriding min APR
-        if (_tba == 0) return (0, _state.k);
-
         LocalVarsRCOMP memory _l;
 
         require(_t0 <= _t1, InvalidTimestamp());
@@ -379,6 +376,9 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
             // k should be set to min only on overflow or cap
             k = _cfg.kmin;
         }
+
+        // no debt, no interest, overriding min APR
+        if (_tba == 0) rcomp = 0;
     }
 
     function _updateConfiguration(IDynamicKinkModel.Config memory _config) internal virtual {
