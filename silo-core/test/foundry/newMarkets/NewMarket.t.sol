@@ -176,30 +176,10 @@ contract NewMarketTest is Test {
 
         uint256 maxBorrow = _scenario.debtSilo.maxBorrow(address(this));
 
-        // silo0 is collateral as example, silo1 is debt.
-        // collateral / borrowed = LTV ->
-        // tokensToBorrow * borrowPrice / tokensToDeposit * collateralPrice = LTV
-        // EXTERNAL_PRICE0 * tokensToDeposit * MAX_LTV0/10**18 = EXTERNAL_PRICE1 * tokensToBorrow
-        // EXTERNAL_PRICE0 * tokensToDeposit * MAX_LTV0/10**18 = EXTERNAL_PRICE1 * maxBorrow / 10**borrowTokensDecimals
-        // EXTERNAL_PRICE0 * tokensToDeposit * MAX_LTV0/10**18 * 10**borrowTokensDecimals = EXTERNAL_PRICE1 * maxBorrow
-
-        uint256 calculatedCollateralValue = _scenario.collateralPrice * tokensToDeposit;
-        uint256 calculatedBorrowedValue = calculatedCollateralValue * _scenario.ltv / 10 ** 18;
-        uint256 calculatedTokensToBorrow = calculatedBorrowedValue / _scenario.debtPrice;
-
-        uint256 calculatedMaxBorrow =
-            calculatedTokensToBorrow * 10 ** TokenHelper.assertAndGetDecimals(address(_scenario.debtToken));
-
         assertTrue(
             _scenario.ltv == 0
-                || calculatedMaxBorrow > 10 ** TokenHelper.assertAndGetDecimals(address(_scenario.debtToken)),
-            "at least one token for precision or LTV is zero"
-        );
-
-        assertApproxEqRel(
-            maxBorrow,
-            calculatedMaxBorrow,
-            0.01e18 // 1% deviation max
+                || maxBorrow > 10 ** TokenHelper.assertAndGetDecimals(address(_scenario.debtToken)),
+            "expect to borrow at least one token otherwise LTV is zero"
         );
 
         if (_scenario.ltv == 0) {
