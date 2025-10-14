@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
+// solhint-disable ordering
+
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "openzeppelin5/utils/Address.sol";
@@ -523,20 +525,6 @@ library Actions {
         }
     }
 
-    /**
-     * @dev Transfer `value` amount of `token` from the calling contract to `to`. If `token` returns no value,
-     * non-reverting calls are assumed to be successful.
-     */
-    // solhint-disable-next-line private-vars-leading-underscore
-    function _safeTransferInternal(IERC20 _token, address _to, uint256 _value) internal returns (bool result) {
-        bytes memory data = abi.encodeCall(_token.transfer, (_to, _value));
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = address(_token).call(data);
-        if (!success) return false;
-
-        result = returndata.length == 0 || abi.decode(returndata, (bool));
-    }
-
     // this method expect interest to be already accrued
     function _checkSolvencyWithoutAccruingInterest(
         ISiloConfig.ConfigData memory _collateralConfig,
@@ -703,5 +691,19 @@ library Actions {
         bytes memory data = abi.encodePacked(_assets, _shares, _receiver, _exactAssets, _exactShare);
 
         IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), action, data);
+    }
+
+    /**
+     * @dev Transfer `value` amount of `token` from the calling contract to `to`. If `token` returns no value,
+     * non-reverting calls are assumed to be successful.
+     */
+    // solhint-disable-next-line private-vars-leading-underscore
+    function _safeTransferInternal(IERC20 _token, address _to, uint256 _value) internal returns (bool result) {
+        bytes memory data = abi.encodeCall(_token.transfer, (_to, _value));
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory returndata) = address(_token).call(data);
+        if (!success) return false;
+
+        result = returndata.length == 0 || abi.decode(returndata, (bool));
     }
 }
