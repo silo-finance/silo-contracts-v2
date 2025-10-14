@@ -77,10 +77,6 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
         initializer
     {
         require(_silo != address(0), EmptySilo());
-
-        // sanity check for the silo interface
-        ISilo(_silo).utilizationData();
-
         require(_immutableArgs.timelock <= MAX_TIMELOCK, InvalidTimelock());
         require(_immutableArgs.rcompCap > 0, InvalidRcompCap());
         require(_immutableArgs.rcompCap <= RCUR_CAP, InvalidRcompCap());
