@@ -8,8 +8,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {SiloVerifier} from "silo-core/deploy/silo/verifier/SiloVerifier.sol";
 import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/InterestRateModelConfigData.sol";
 import {
-    InterestRateModelV2,
-    IInterestRateModelV2
+    InterestRateModelV2, IInterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
@@ -17,11 +16,14 @@ import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/hooks/g
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {CheckNonBorrowableAsset} from "silo-core/deploy/silo/verifier/checks/silo/CheckNonBorrowableAsset.sol";
-
+import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 /*
-    FOUNDRY_PROFILE=core_test forge test -vv --match-contract SiloVerifierScriptTest --ffi
+    FOUNDRY_PROFILE=core_test forge test -vv --match-contract SiloVerifierScriptTest --ffi -- mt test_CheckSiloImplementation
 */
+
 contract SiloVerifierScriptTest is Test {
     ISiloConfig constant WS_USDC_CONFIG = ISiloConfig(0x062A36Bbe0306c2Fd7aecdf25843291fBAB96AD2);
     address constant USDC = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894;
@@ -30,9 +32,14 @@ contract SiloVerifierScriptTest is Test {
     uint256 constant EXTERNAL_PRICE_0 = 410;
     uint256 constant EXTERNAL_PRICE_1 = 1000;
 
+    address public constant SILO_FACTORY = 0xa42001D6d2237d2c74108FE360403C4b796B7170;
+
     function setUp() public {
         vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 7229436);
         AddrLib.init();
+
+        // factory at block 7229436
+        AddrLib.setAddress(SiloCoreContracts.SILO_FACTORY, SILO_FACTORY);
     }
 
     function test_CheckDaoFee() public {
@@ -166,6 +173,12 @@ contract SiloVerifierScriptTest is Test {
             abi.encode(configData1)
         );
 
+        vm.mockCall(address(USDC), abi.encodeWithSelector(ISilo.factory.selector), abi.encode(SILO_FACTORY));
+
+        vm.mockCall(
+            address(SILO_FACTORY), abi.encodeWithSelector(ISiloFactory.isSilo.selector, USDC), abi.encode(true)
+        );
+
         verifier = new SiloVerifier(WS_USDC_CONFIG, false, EXTERNAL_PRICE_0, EXTERNAL_PRICE_1);
         assertEq(verifier.verify(), 2, "2 errors after breaking Silo implementation in both Silos");
     }
@@ -234,15 +247,11 @@ contract SiloVerifierScriptTest is Test {
         ISiloConfig.ConfigData memory configData1 = WS_USDC_CONFIG.getConfig(silo1);
 
         vm.mockCall(
-            address(configData0.hookReceiver),
-            abi.encodeWithSelector(Ownable.owner.selector),
-            abi.encode(address(1))
+            address(configData0.hookReceiver), abi.encodeWithSelector(Ownable.owner.selector), abi.encode(address(1))
         );
 
         vm.mockCall(
-            address(configData1.hookReceiver),
-            abi.encodeWithSelector(Ownable.owner.selector),
-            abi.encode(address(2))
+            address(configData1.hookReceiver), abi.encodeWithSelector(Ownable.owner.selector), abi.encode(address(2))
         );
 
         verifier = new SiloVerifier(WS_USDC_CONFIG, false, EXTERNAL_PRICE_0, EXTERNAL_PRICE_1);
