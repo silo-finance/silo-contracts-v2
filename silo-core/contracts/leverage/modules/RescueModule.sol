@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+// solhint-disable ordering
+
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
@@ -32,6 +34,10 @@ abstract contract RescueModule is TransientReentrancy {
     /// @dev Thrown when native token transfer fails
     error NativeTokenTransferFailed();
 
+    constructor(address _router) {
+        ROUTER = ILeverageRouter(_router);
+    }
+
     modifier onlyRouter() {
         require(msg.sender == address(ROUTER), OnlyRouter());
         _;
@@ -40,10 +46,6 @@ abstract contract RescueModule is TransientReentrancy {
     modifier onlyLeverageUser() {
         require(ROUTER.predictUserLeverageContract(msg.sender) == address(this), OnlyLeverageUser());
         _;
-    }
-    
-    constructor(address _router) {
-        ROUTER = ILeverageRouter(_router);
     }
 
     /// @notice We do not expect anyone else to engage with a contract except the user
