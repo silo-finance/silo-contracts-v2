@@ -13,6 +13,7 @@ import {PTLinearMocks} from "./_common/PTLinearMocks.sol";
 import {PTLinearOracle} from "silo-oracles/contracts/pendle/linear/PTLinearOracle.sol";
 
 import {SparkLinearDiscountOracleFactoryMock} from "./_common/SparkLinearDiscountOracleFactoryMock.sol";
+import {ISparkLinearDiscountOracle} from "silo-oracles/contracts/pendle/interfaces/ISparkLinearDiscountOracle.sol";
 
 contract Token is ERC20 {
     constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
@@ -29,29 +30,17 @@ contract PTLinearOracleTest is PTLinearMocks {
     }
 
     /*
-    FOUNDRY_PROFILE=oracles forge test --mt test_ptLinear_multiplier --ffi -vv
-    */
-    function test_ptLinear_multiplier() public {
-        IPTLinearOracle oracle = _createOracle();
-
-        _mockLatestRoundData(0.9e18);
-
-        assertEq(oracle.multiplier(), 0.9e18);
-    }
-
-    /*
     FOUNDRY_PROFILE=oracles forge test --mt test_ptLinear_Mockprice --ffi -vv
     */
     function test_ptLinear_Mockprice() public {
         IPTLinearOracle oracle = _createOracle();
 
-        _mockLatestRoundData(0.9e18);
-        _mockExchangeRate(0.8e18);
+        uint256 mockedPrice = 0.9e18;
+        _mockLatestRoundData(int256(mockedPrice));
 
         uint256 price = oracle.quote(1e18, makeAddr("ptToken"));
 
-        assertEq(price, 1e18 * 0.9e18 * 0.8e18 / DP / DP, "Mocked PT price");
-        assertEq(price, 0.72e18, "Mocked PT price");
+        assertEq(price, mockedPrice, "Mocked PT price");
 
         _mockDecimals();
 
@@ -74,12 +63,8 @@ contract PTLinearOracleTest is PTLinearMocks {
 
         IPTLinearOracleFactory.DeploymentConfig memory config;
         config.hardcodedQuoteToken = address(quoteToken);
-        config.expectedUnderlyingToken = address(quoteToken);
+        config.ptToken = address(pt);
 
-        _makeValidConfig(config);
-        _mockReadTokens(makeAddr("syToken"), address(pt), address(quoteToken));
-        _mockExchangeRate(1e18);
-        _mockAssetInfo(address(quoteToken));
         _mockExpiry(address(pt), block.timestamp + 1 days);
 
         AggregatorV3Interface oracle = AggregatorV3Interface(address(factory.create(config, bytes32(0))));
@@ -110,7 +95,6 @@ contract PTLinearOracleTest is PTLinearMocks {
         AggregatorV3Interface oracle = AggregatorV3Interface(address(_createOracle()));
 
         _mockLatestRoundData(0.9e18);
-        _mockExchangeRate(0.8e18);
 
         (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
             oracle.getRoundData(0);
@@ -129,16 +113,13 @@ contract PTLinearOracleTest is PTLinearMocks {
         IPTLinearOracle oracle = _createOracle();
 
         _mockLatestRoundData(0);
-        _mockExchangeRate(1);
 
         vm.expectRevert(abi.encodeWithSelector(IPTLinearOracle.ZeroQuote.selector));
         oracle.quote(1e18, makeAddr("ptToken"));
 
         // even when non zero, we div by 1e36, so result will be 0
         _mockLatestRoundData(1);
-        _mockExchangeRate(1);
 
-        vm.expectRevert(abi.encodeWithSelector(IPTLinearOracle.ZeroQuote.selector));
         oracle.quote(1e18, makeAddr("ptToken"));
     }
 
@@ -169,7 +150,7 @@ contract PTLinearOracleTest is PTLinearMocks {
         public
         assumeValidConfig(_config)
     {
-        _doAllNecessaryMockCalls(_config);
+        _doAllNecessaryMockCalls();
 
         IPTLinearOracle oracle = factory.create(_config, bytes32(0));
 
@@ -195,12 +176,29 @@ contract PTLinearOracleTest is PTLinearMocks {
         oracle.quote(1e18, makeAddr("ptToken"));
     }
 
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_ptLinear_baseDiscountPerYear --ffi -vv
+    */
+    function test_ptLinear_baseDiscountPerYear() public {
+        IPTLinearOracle oracle = _createOracle();
+
+        ISparkLinearDiscountOracle sparkOracle = ISparkLinearDiscountOracle(oracle.oracleConfig().getConfig().linearOracle);
+
+        vm.mockCall(
+            address(sparkOracle),
+            abi.encodeWithSelector(ISparkLinearDiscountOracle.baseDiscountPerYear.selector),
+            abi.encode(0.25e18)
+        );
+
+        assertEq(oracle.baseDiscountPerYear(), 0.25e18, "Base discount per year should match");
+    }
+
     function _createOracle(IPTLinearOracleFactory.DeploymentConfig memory _config)
         internal
         returns (IPTLinearOracle oracle)
     {
         _makeValidConfig(_config);
-        _doAllNecessaryMockCalls(_config);
+        _doAllNecessaryMockCalls();
 
         oracle = factory.create(_config, bytes32(0));
     }
