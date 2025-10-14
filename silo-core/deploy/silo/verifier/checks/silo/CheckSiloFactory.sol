@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {ICheck} from "silo-core/deploy/silo/verifier/checks/ICheck.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {CommonDeploy} from "silo-core/deploy/_CommonDeploy.sol";
@@ -32,10 +33,13 @@ contract CheckSiloFactory is ICheck, CommonDeploy {
     }
 
     function errorMessage() external view override returns (string memory message) {
-        message = string.concat(Strings.toHexString(siloFactory), " DOES NOT match SiloFactory address");
+        message = string.concat(
+            Strings.toHexString(siloFactory), " DOES NOT match SiloFactory address or factory does not have the silo"
+        );
     }
 
     function execute() external view override returns (bool result) {
-        result = siloFactory == deployedSiloFactory;
+        if (siloFactory != deployedSiloFactory) return false;
+        result = ISiloFactory(siloFactory).isSilo(configData.silo);
     }
 }
