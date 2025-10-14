@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.28;
 
-// solhint-disable ordering
-
 import {DistributionTypes} from "../lib/DistributionTypes.sol";
 
 interface IDistributionManager {
@@ -72,17 +70,7 @@ interface IDistributionManager {
         external
         view
         returns (IncentiveProgramDetails memory details);
-
-    /**
-     * @dev Returns the program id for the given program name.
-     * This method TRUNCATES the program name to 32 bytes.
-     * If provided strings only differ after the 32nd byte they would result in the same ProgramId.
-     * Ensure to use inputs that will result in 32 bytes or less.
-     * @param _programName The incentives program name
-     * @return programId
-     */
-    function getProgramId(string calldata _programName) external pure returns (bytes32 programId);
-
+    
     /**
      * @dev returns the names of all the incentives programs
      * @return programsNames the names of all the incentives programs
@@ -95,4 +83,14 @@ interface IDistributionManager {
      * @return programName the name (string) of the incentives program
      */
     function getProgramName(bytes32 _programName) external view returns (string memory programName);
+
+    /**
+     * @dev Returns the program id for the given program name.
+     * This method TRUNCATES the program name to 32 bytes.
+     * If provided strings only differ after the 32nd byte they would result in the same ProgramId.
+     * Ensure to use inputs that will result in 32 bytes or less.
+     * @param _programName The incentives program name
+     * @return programId
+     */
+    function getProgramId(string calldata _programName) external pure returns (bytes32 programId);
 }
