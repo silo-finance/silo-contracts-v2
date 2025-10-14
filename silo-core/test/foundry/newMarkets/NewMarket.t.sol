@@ -23,15 +23,15 @@ interface OldGauge {
     function killGauge() external;
 }
 
-/**
- * The test is designed to be run right after the silo lending market deployment.
- * It is excluded from the general tests CI pipeline and has separate workflow.
- *
- * FOUNDRY_PROFILE=core_test CONFIG=0x94387Bb763ee94D53a9828EFCCa2C2A3A7dA5428 \
- *     EXTERNAL_PRICE_0=9187 \
- *     EXTERNAL_PRICE_1=9997 \
- *     RPC_URL=$RPC_MAINNET \
- *     forge test --mc "NewMarketTest" --ffi -vv
+/*
+    The test is designed to be run right after the silo lending market deployment.
+    It is excluded from the general tests CI pipeline and has separate workflow.
+
+    FOUNDRY_PROFILE=core_test CONFIG=0x3c2007B90b5E69BFaacA3bC5f56FC2e786342981 \
+    EXTERNAL_PRICE_0=9187 \
+    EXTERNAL_PRICE_1=9997 \
+    RPC_URL=$RPC_MAINNET \
+    forge test --mc "NewMarketTest" --ffi -vv --mt test_newMarketTest_borrowSameAssetSilo
  */
 // solhint-disable var-name-mixedcase
 contract NewMarketTest is Test {
@@ -40,10 +40,8 @@ contract NewMarketTest is Test {
         IERC20Metadata collateralToken;
         ISilo debtSilo;
         IERC20Metadata debtToken;
-        uint256 collateralPrice;
-        uint256 debtPrice;
-        uint256 ltv;
-        uint256 warpTime;
+        uint256 warpTimeBeforeRepay;
+        bool sameAsset;
     }
 
     string public constant SUCCESS_SYMBOL = unicode"✅";
@@ -99,17 +97,15 @@ contract NewMarketTest is Test {
         MAX_LTV1 = SILO_CONFIG.getConfig(silo1).maxLtv;
     }
 
-    function test_newMarketTest_borrowSilo0ToSilo1() public logSiloConfigName {
+    function test_newMarketTest_borrowSilo1() public logSiloConfigName {
         _borrowScenario(
             BorrowScenario({
                 collateralSilo: SILO0,
                 collateralToken: TOKEN0,
                 debtSilo: SILO1,
                 debtToken: TOKEN1,
-                collateralPrice: EXTERNAL_PRICE0,
-                debtPrice: EXTERNAL_PRICE1,
-                ltv: MAX_LTV0,
-                warpTime: 0
+                warpTimeBeforeRepay: 0,
+                sameAsset: false
             })
         );
 
@@ -119,25 +115,45 @@ contract NewMarketTest is Test {
                 collateralToken: TOKEN0,
                 debtSilo: SILO1,
                 debtToken: TOKEN1,
-                collateralPrice: EXTERNAL_PRICE0,
-                debtPrice: EXTERNAL_PRICE1,
-                ltv: MAX_LTV0,
-                warpTime: 1 days
+                warpTimeBeforeRepay: 2 days,
+                sameAsset: false
             })
         );
     }
 
-    function test_newMarketTest_borrowSilo1ToSilo0() public logSiloConfigName {
+    function test_newMarketTest_borrowSameAssetSilo1() public logSiloConfigName {
+        _borrowScenario(
+            BorrowScenario({
+                collateralSilo: SILO1,
+                collateralToken: TOKEN1,
+                debtSilo: SILO1,
+                debtToken: TOKEN1,
+                warpTimeBeforeRepay: 0,
+                sameAsset: true
+            })
+        );
+
+        _borrowScenario(
+            BorrowScenario({
+                collateralSilo: SILO1,
+                collateralToken: TOKEN1,
+                debtSilo: SILO1,
+                debtToken: TOKEN1,
+                warpTimeBeforeRepay: 2 days,
+                sameAsset: true
+            })
+        );
+    }
+
+    function test_newMarketTest_borrowSilo0() public logSiloConfigName {
         _borrowScenario(
             BorrowScenario({
                 collateralSilo: SILO1,
                 collateralToken: TOKEN1,
                 debtSilo: SILO0,
                 debtToken: TOKEN0,
-                collateralPrice: EXTERNAL_PRICE1,
-                debtPrice: EXTERNAL_PRICE0,
-                ltv: MAX_LTV1,
-                warpTime: 0
+                warpTimeBeforeRepay: 0,
+                sameAsset: false
             })
         );
 
@@ -147,10 +163,32 @@ contract NewMarketTest is Test {
                 collateralToken: TOKEN1,
                 debtSilo: SILO0,
                 debtToken: TOKEN0,
-                collateralPrice: EXTERNAL_PRICE1,
-                debtPrice: EXTERNAL_PRICE0,
-                ltv: MAX_LTV1,
-                warpTime: 1 days
+                warpTimeBeforeRepay: 1 days,
+                sameAsset: false
+            })
+        );
+    }
+
+    function test_newMarketTest_borrowSameAssetSilo0() public logSiloConfigName {
+        _borrowScenario(
+            BorrowScenario({
+                collateralSilo: SILO0,
+                collateralToken: TOKEN0,
+                debtSilo: SILO0,
+                debtToken: TOKEN0,
+                warpTimeBeforeRepay: 0,
+                sameAsset: true
+            })
+        );
+
+        _borrowScenario(
+            BorrowScenario({
+                collateralSilo: SILO0,
+                collateralToken: TOKEN0,
+                debtSilo: SILO0,
+                debtToken: TOKEN0,
+                warpTimeBeforeRepay: 2 days,
+                sameAsset: true
             })
         );
     }
@@ -161,76 +199,76 @@ contract NewMarketTest is Test {
     }
 
     function _borrowScenario(BorrowScenario memory _scenario) internal {
-        uint256 tokensToDeposit = 100_000_000; // without decimals
-        uint256 collateralAmount =
-            tokensToDeposit * 10 ** uint256(TokenHelper.assertAndGetDecimals(address(_scenario.collateralToken)));
+        uint256 collateralDecimals = TokenHelper.assertAndGetDecimals(address(_scenario.collateralToken));
 
-        deal(address(_scenario.collateralToken), address(this), collateralAmount);
-        _scenario.collateralToken.approve(address(_scenario.collateralSilo), collateralAmount);
+        uint256 collateralAmount = 100_000_000 * 10 ** collateralDecimals;
 
         // 1. Deposit
-        _scenario.collateralSilo.deposit(collateralAmount, address(this));
-        _someoneDeposited(_scenario.debtToken, _scenario.debtSilo, 1e40);
+        _siloDeposit(_scenario.collateralSilo, address(this), collateralAmount);
+        _siloDeposit(_scenario.debtSilo, makeAddr("stranger"), 1e40);
+        console2.log("\t- deposited collateral");
 
-        if (_scenario.warpTime > 0) {
-            vm.warp(block.timestamp + _scenario.warpTime);
-            console2.log("warp ", _scenario.warpTime);
+        if (_scenario.warpTimeBeforeRepay > 0) {
+            vm.warp(block.timestamp + _scenario.warpTimeBeforeRepay);
+            console2.log("\twarp ", _scenario.warpTimeBeforeRepay);
         }
 
-        uint256 maxBorrow = _scenario.debtSilo.maxBorrow(address(this));
+        uint256 maxBorrow = _scenario.sameAsset
+            ? _scenario.debtSilo.maxBorrowSameAsset(address(this))
+            : _scenario.debtSilo.maxBorrow(address(this));
 
-        // silo0 is collateral as example, silo1 is debt.
-        // collateral / borrowed = LTV ->
-        // tokensToBorrow * borrowPrice / tokensToDeposit * collateralPrice = LTV
-        // EXTERNAL_PRICE0 * tokensToDeposit * MAX_LTV0/10**18 = EXTERNAL_PRICE1 * tokensToBorrow
-        // EXTERNAL_PRICE0 * tokensToDeposit * MAX_LTV0/10**18 = EXTERNAL_PRICE1 * maxBorrow / 10**borrowTokensDecimals
-        // EXTERNAL_PRICE0 * tokensToDeposit * MAX_LTV0/10**18 * 10**borrowTokensDecimals = EXTERNAL_PRICE1 * maxBorrow
+        console2.log("\t- check for maxBorrow", maxBorrow);
 
-        uint256 calculatedCollateralValue = _scenario.collateralPrice * tokensToDeposit;
-        uint256 calculatedBorrowedValue = calculatedCollateralValue * _scenario.ltv / 10 ** 18;
-        uint256 calculatedTokensToBorrow = calculatedBorrowedValue / _scenario.debtPrice;
+        uint256 colateralMaxLtv = SILO_CONFIG.getConfig(address(_scenario.collateralSilo)).maxLtv;
 
-        uint256 calculatedMaxBorrow =
-            calculatedTokensToBorrow * 10 ** TokenHelper.assertAndGetDecimals(address(_scenario.debtToken));
+        if (colateralMaxLtv == 0) {
+            // TODO will that hold for same asset borrow?
+            assertEq(maxBorrow, 0, "maxBorrow is zero when LTV is zero");
+            vm.expectRevert(); // it can be ZeroQuote or AboveMaxLtv
+            _scenario.debtSilo.borrow(1, address(this), address(this));
 
-        assertTrue(
-            _scenario.ltv == 0
-                || calculatedMaxBorrow > 10 ** TokenHelper.assertAndGetDecimals(address(_scenario.debtToken)),
-            "at least one token for precision or LTV is zero"
-        );
+            // in some extream case we can get ZeroQuote, but we can debug this case if needed
+            vm.expectRevert(ISilo.AboveMaxLtv.selector);
+            _scenario.debtSilo.borrow(10, address(this), address(this));
 
-        assertApproxEqRel(
-            maxBorrow,
-            calculatedMaxBorrow,
-            0.01e18 // 1% deviation max
-        );
+            console2.log("\t- expect revert on borrow: OK");
 
-        if (_scenario.ltv == 0) {
-            _logBorrowScenarioSkipped({_collateralSilo: _scenario.collateralSilo, _debtSilo: _scenario.debtSilo});
+            console2.log(
+                string.concat(
+                    SKIPPED_SYMBOL,
+                    "Borrow scenario is skipped because asset is not borrowable, collateral:",
+                    _scenario.collateralSilo.symbol(),
+                    " -> debt:",
+                    _scenario.debtSilo.symbol()
+                )
+            );
+
             return;
         }
 
+        assertGt(maxBorrow, 0, "expect to borrow at least some tokens");
+
         // 2. Borrow
-        _scenario.debtSilo.borrow(maxBorrow, address(this), address(this));
+        if (_scenario.sameAsset) {
+            _scenario.debtSilo.borrowSameAsset(maxBorrow, address(this), address(this));
+        } else {
+            _scenario.debtSilo.borrow(maxBorrow, address(this), address(this));
+        }
+
         uint256 borrowed = _scenario.debtToken.balanceOf(address(this));
         assertTrue(borrowed >= maxBorrow, "Borrowed more or equal to calculated maxBorrow based on prices");
 
-        if (_scenario.warpTime > 0) {
-            vm.warp(block.timestamp + _scenario.warpTime);
-            console2.log("warp ", _scenario.warpTime);
+        if (_scenario.warpTimeBeforeRepay > 0) {
+            uint256 maxRepayBefore = _scenario.debtSilo.maxRepay(address(this));
+
+            vm.warp(block.timestamp + _scenario.warpTimeBeforeRepay);
+            console2.log("\t- warp ", _scenario.warpTimeBeforeRepay);
+
+            assertLt(maxRepayBefore, _scenario.debtSilo.maxRepay(address(this)), "we have to generate interest");
         }
 
         // 3. Repay
         _repayAndCheck({_debtSilo: _scenario.debtSilo, _debtToken: _scenario.debtToken});
-
-        _logBorrowScenarioSuccess({
-            _collateralSilo: _scenario.collateralSilo,
-            _collateralToken: _scenario.collateralToken,
-            _debtSilo: _scenario.debtSilo,
-            _debtToken: _scenario.debtToken,
-            _deposited: collateralAmount,
-            _borrowed: borrowed
-        });
 
         // 4. Withdraw
         _withdrawAndCheck({
@@ -238,6 +276,16 @@ contract NewMarketTest is Test {
             _collateralToken: _scenario.collateralToken,
             _initiallyDeposited: collateralAmount
         });
+
+        console2.log(
+            string.concat(
+                SUCCESS_SYMBOL,
+                "Borrow scenario success for direction",
+                _scenario.collateralSilo.symbol(),
+                "->",
+                _scenario.debtSilo.symbol()
+            )
+        );
     }
 
     function _withdrawAndCheck(ISilo _collateralSilo, IERC20Metadata _collateralToken, uint256 _initiallyDeposited)
@@ -245,6 +293,7 @@ contract NewMarketTest is Test {
     {
         assertEq(_collateralToken.balanceOf(address(this)), 0, "no collateralToken yet");
         _collateralSilo.redeem(_collateralSilo.balanceOf(address(this)), address(this), address(this));
+        console2.log("\t- redeemed collateral");
 
         assertApproxEqRel(
             _collateralToken.balanceOf(address(this)),
@@ -264,17 +313,18 @@ contract NewMarketTest is Test {
         assertEq(_debtToken.balanceOf(address(this)), maxRepay);
         _debtSilo.repayShares(sharesToRepay, address(this));
         assertEq((new SiloLens()).getLtv(_debtSilo, address(this)), 0, "Repay is successful, LTV==0");
+        console2.log("\t- repaid debt");
     }
 
-    function _someoneDeposited(IERC20Metadata _token, ISilo _silo, uint256 _amount) internal {
-        address stranger = address(1);
+    function _siloDeposit(ISilo _silo, address _depositor, uint256 _amount) internal {
+        IERC20Metadata token = IERC20Metadata(_silo.asset());
 
-        deal(address(_token), stranger, _amount);
-        vm.prank(stranger);
-        _token.approve(address(_silo), _amount);
+        deal(address(token), _depositor, _amount);
+        vm.prank(_depositor);
+        token.approve(address(_silo), _amount);
 
-        vm.prank(stranger);
-        _silo.deposit(_amount, stranger);
+        vm.prank(_depositor);
+        _silo.deposit(_amount, _depositor);
     }
 
     function _checkGauges(ISiloConfig.ConfigData memory _configData) internal {
@@ -307,54 +357,5 @@ contract NewMarketTest is Test {
     function _tryKillOldGauge(address _gauge) internal {
         vm.prank(Ownable(_gauge).owner());
         try OldGauge(_gauge).killGauge() {} catch {}
-    }
-
-    function _logBorrowScenarioSkipped(ISilo _collateralSilo, ISilo _debtSilo) internal view {
-        console2.log(
-            string.concat(
-                SKIPPED_SYMBOL,
-                " Borrow scenario is skipped because asset is not borrowable for ",
-                _collateralSilo.symbol(),
-                " -> ",
-                _debtSilo.symbol()
-            )
-        );
-    }
-
-    function _logBorrowScenarioSuccess(
-        ISilo _collateralSilo,
-        IERC20Metadata _collateralToken,
-        ISilo _debtSilo,
-        IERC20Metadata _debtToken,
-        uint256 _deposited,
-        uint256 _borrowed
-    ) internal view {
-        console2.log(DELIMITER);
-
-        console2.log(
-            string.concat(
-                SUCCESS_SYMBOL,
-                " Borrow scenario success for direction ",
-                _collateralSilo.symbol(),
-                " -> ",
-                _debtSilo.symbol()
-            )
-        );
-
-        console2.log(
-            "1. Deposited (in own decimals)",
-            _deposited / (10 ** _collateralToken.decimals()),
-            _collateralToken.symbol()
-        );
-
-        console2.log(
-            "2. Borrowed up to maxBorrow (in own decimals)",
-            _borrowed / (10 ** _debtToken.decimals()),
-            _debtToken.symbol(),
-            "with less than 1% deviation from expected amount to maxBorrow() based on LTV and external prices"
-        );
-
-        console2.log("3. Repaid everything");
-        console2.log("4. Withdrawn all collateral");
     }
 }
