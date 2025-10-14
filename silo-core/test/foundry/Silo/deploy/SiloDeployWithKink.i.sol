@@ -35,6 +35,10 @@ contract SiloDeployWithKinkTest is SiloDeployTest {
         assertTrue(factory.createdByFactory(config1.interestRateModel), "expect value KinkIRM model in silo1");
     }
 
+    function test_oracles_deploy() public view override {
+        // we not using oracle for Kink test
+    }
+
     function _useConfig() internal pure override returns (string memory) {
         return SiloConfigsNames.SILO_CONFIG_KINK_TEST;
     }

@@ -76,7 +76,7 @@ contract SiloDeployTest is IntegrationTest {
     }
 
     // AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi -mt test_oracles_deploy
-    function test_oracles_deploy() public view {
+    function test_oracles_deploy() public view virtual {
         // solhint-disable-line func-name-mixedcase
         (, address silo1) = _siloConfig.getSilos();
 
