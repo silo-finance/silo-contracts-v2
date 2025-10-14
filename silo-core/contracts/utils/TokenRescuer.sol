@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.10;
 
+// solhint-disable ordering
+
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 
 contract TokenRescuer {
     using SafeERC20 for IERC20;
 
-    event TokensRescued(address indexed executor, address indexed token, uint256 amount);
     error EmptyRecipient();
+    event TokensRescued(address indexed executor, address indexed token, uint256 amount);
 
     function _rescueTokens(address _recipient, IERC20 _token) internal virtual {
         if (_recipient == address(0)) revert EmptyRecipient();
