@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+// solhint-disable ordering
+
 import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -81,18 +83,6 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
         );
     }
 
-    /// @notice Set the owner of the hook receiver
-    /// @param _owner Owner address
-    function __GaugeHookReceiver_init(address _owner) // solhint-disable-line func-name-mixedcase
-        internal
-        onlyInitializing
-        virtual
-    {
-        require(_owner != address(0), OwnerIsZeroAddress());
-
-        _transferOwnership(_owner);
-    }
-
     /// @notice Get the token type for the share token
     /// @param _silo Silo address for which tokens was deployed
     /// @param _shareToken Share token address
@@ -110,5 +100,17 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
         if (_shareToken == debtShareToken) return Hook.DEBT_TOKEN;
 
         revert InvalidShareToken();
+    }
+
+    /// @notice Set the owner of the hook receiver
+    /// @param _owner Owner address
+    function __GaugeHookReceiver_init(address _owner) // solhint-disable-line func-name-mixedcase
+        internal
+        onlyInitializing
+        virtual
+    {
+        require(_owner != address(0), OwnerIsZeroAddress());
+
+        _transferOwnership(_owner);
     }
 }
