@@ -139,7 +139,7 @@ contract NewMarketTest is Test {
                 collateralToken: TOKEN1,
                 debtSilo: SILO1,
                 debtToken: TOKEN1,
-                warpTimeBeforeRepay: 2 days,
+                warpTimeBeforeRepay: 10 days,
                 sameAsset: true
             })
         );
@@ -163,7 +163,7 @@ contract NewMarketTest is Test {
                 collateralToken: TOKEN1,
                 debtSilo: SILO0,
                 debtToken: TOKEN0,
-                warpTimeBeforeRepay: 1 days,
+                warpTimeBeforeRepay: 10 days,
                 sameAsset: false
             })
         );
@@ -187,7 +187,7 @@ contract NewMarketTest is Test {
                 collateralToken: TOKEN0,
                 debtSilo: SILO0,
                 debtToken: TOKEN0,
-                warpTimeBeforeRepay: 2 days,
+                warpTimeBeforeRepay: 10 days,
                 sameAsset: true
             })
         );
@@ -222,7 +222,6 @@ contract NewMarketTest is Test {
         uint256 colateralMaxLtv = SILO_CONFIG.getConfig(address(_scenario.collateralSilo)).maxLtv;
 
         if (colateralMaxLtv == 0) {
-            // TODO will that hold for same asset borrow?
             assertEq(maxBorrow, 0, "maxBorrow is zero when LTV is zero");
             vm.expectRevert(); // it can be ZeroQuote or AboveMaxLtv
             _scenario.debtSilo.borrow(1, address(this), address(this));
