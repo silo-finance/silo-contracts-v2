@@ -148,6 +148,12 @@ contract DynamicKinkModelTest is KinkCommonTest {
     ) public whenValidConfig(_config) {
         vm.assume(_silo != address(0));
 
+        vm.mockCall(
+            address(1),
+            abi.encodeWithSelector(ISilo.utilizationData.selector),
+            abi.encode(ISilo.UtilizationData({interestRateTimestamp: 0, collateralAssets: 0, debtAssets: 0}))
+        );
+
         IDynamicKinkModel.ImmutableArgs memory immutableArgs = _defaultImmutableArgs();
 
         vm.expectEmit(true, true, true, true);
