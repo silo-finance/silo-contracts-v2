@@ -27,11 +27,11 @@ interface OldGauge {
     The test is designed to be run right after the silo lending market deployment.
     It is excluded from the general tests CI pipeline and has separate workflow.
 
-    FOUNDRY_PROFILE=core_test CONFIG=0x3c2007B90b5E69BFaacA3bC5f56FC2e786342981 \
-    EXTERNAL_PRICE_0=9187 \
-    EXTERNAL_PRICE_1=9997 \
-    RPC_URL=$RPC_MAINNET \
-    forge test --mc "NewMarketTest" --ffi -vv --mt test_newMarketTest_borrowSameAssetSilo
+    FOUNDRY_PROFILE=core_test CONFIG=0x9407458B4b5F8f241535b53802bed23A097e5DfB \
+    EXTERNAL_PRICE_0=4147 \
+    EXTERNAL_PRICE_1=1 \
+    RPC_URL=$RPC_AVALANCHE \
+    forge test --mc "NewMarketTest" --ffi -vvv --mt test_newMarketTest_borrowSameAssetSilo0
  */
 // solhint-disable var-name-mixedcase
 contract NewMarketTest is Test {
@@ -115,7 +115,7 @@ contract NewMarketTest is Test {
                 collateralToken: TOKEN0,
                 debtSilo: SILO1,
                 debtToken: TOKEN1,
-                warpTimeBeforeRepay: 2 days,
+                warpTimeBeforeRepay: 10 days,
                 sameAsset: false
             })
         );
@@ -200,12 +200,15 @@ contract NewMarketTest is Test {
 
     function _borrowScenario(BorrowScenario memory _scenario) internal {
         uint256 collateralDecimals = TokenHelper.assertAndGetDecimals(address(_scenario.collateralToken));
+        uint256 debtDecimals = TokenHelper.assertAndGetDecimals(address(_scenario.debtToken));
 
-        uint256 collateralAmount = 100_000_000 * 10 ** collateralDecimals;
+        uint256 collateralAmount = 1000 * 10 ** collateralDecimals;
+
+        address borrower = address(this);
 
         // 1. Deposit
-        _siloDeposit(_scenario.collateralSilo, address(this), collateralAmount);
-        _siloDeposit(_scenario.debtSilo, makeAddr("stranger"), 1e40);
+        _siloDeposit(_scenario.collateralSilo, borrower, collateralAmount);
+        _siloDeposit(_scenario.debtSilo, makeAddr("stranger"), 1000 * 10 ** debtDecimals);
         console2.log("\t- deposited collateral");
 
         if (_scenario.warpTimeBeforeRepay > 0) {
@@ -214,8 +217,8 @@ contract NewMarketTest is Test {
         }
 
         uint256 maxBorrow = _scenario.sameAsset
-            ? _scenario.debtSilo.maxBorrowSameAsset(address(this))
-            : _scenario.debtSilo.maxBorrow(address(this));
+            ? _scenario.debtSilo.maxBorrowSameAsset(borrower)
+            : _scenario.debtSilo.maxBorrow(borrower);
 
         console2.log("\t- check for maxBorrow", maxBorrow);
 
@@ -224,20 +227,20 @@ contract NewMarketTest is Test {
         if (colateralMaxLtv == 0) {
             assertEq(maxBorrow, 0, "maxBorrow is zero when LTV is zero");
             vm.expectRevert(); // it can be ZeroQuote or AboveMaxLtv
-            _scenario.debtSilo.borrow(1, address(this), address(this));
+            _scenario.debtSilo.borrow(1, borrower, borrower);
 
             // in some extream case we can get ZeroQuote, but we can debug this case if needed
             vm.expectRevert(ISilo.AboveMaxLtv.selector);
-            _scenario.debtSilo.borrow(10, address(this), address(this));
+            _scenario.debtSilo.borrow(10, borrower, borrower);
 
             console2.log("\t- expect revert on borrow: OK");
 
             console2.log(
                 string.concat(
                     SKIPPED_SYMBOL,
-                    "Borrow scenario is skipped because asset is not borrowable, collateral:",
+                    "Borrow scenario is skipped because asset is not borrowable, collateral: ",
                     _scenario.collateralSilo.symbol(),
-                    " -> debt:",
+                    " -> debt: ",
                     _scenario.debtSilo.symbol()
                 )
             );
@@ -249,21 +252,22 @@ contract NewMarketTest is Test {
 
         // 2. Borrow
         if (_scenario.sameAsset) {
-            _scenario.debtSilo.borrowSameAsset(maxBorrow, address(this), address(this));
+            _scenario.debtSilo.borrowSameAsset(maxBorrow, borrower, borrower);
         } else {
-            _scenario.debtSilo.borrow(maxBorrow, address(this), address(this));
+            _scenario.debtSilo.borrow(maxBorrow, borrower, borrower);
         }
 
-        uint256 borrowed = _scenario.debtToken.balanceOf(address(this));
+        uint256 borrowed = _scenario.debtToken.balanceOf(borrower);
         assertTrue(borrowed >= maxBorrow, "Borrowed more or equal to calculated maxBorrow based on prices");
 
         if (_scenario.warpTimeBeforeRepay > 0) {
-            uint256 maxRepayBefore = _scenario.debtSilo.maxRepay(address(this));
+            uint256 maxRepayBefore = _scenario.debtSilo.maxRepay(borrower);
+            assertGt(maxRepayBefore, 0, "maxRepayBefore should be greater than 0");
 
             vm.warp(block.timestamp + _scenario.warpTimeBeforeRepay);
             console2.log("\t- warp ", _scenario.warpTimeBeforeRepay);
 
-            assertLt(maxRepayBefore, _scenario.debtSilo.maxRepay(address(this)), "we have to generate interest");
+            assertLt(maxRepayBefore, _scenario.debtSilo.maxRepay(borrower), "we have to generate interest");
         }
 
         // 3. Repay
@@ -279,9 +283,9 @@ contract NewMarketTest is Test {
         console2.log(
             string.concat(
                 SUCCESS_SYMBOL,
-                "Borrow scenario success for direction",
+                "Borrow scenario success for direction ",
                 _scenario.collateralSilo.symbol(),
-                "->",
+                " -> ",
                 _scenario.debtSilo.symbol()
             )
         );
@@ -294,10 +298,10 @@ contract NewMarketTest is Test {
         _collateralSilo.redeem(_collateralSilo.balanceOf(address(this)), address(this), address(this));
         console2.log("\t- redeemed collateral");
 
-        assertApproxEqRel(
+        assertGe(
             _collateralToken.balanceOf(address(this)),
-            _initiallyDeposited - 1, // lost one wei due to rounding
-            uint256(1e18 / 1e6) // should be equal to initial deposit with 10^-4% deviation max due to rounding
+            _initiallyDeposited - 1,
+            "we can loose 1 wei due to rounding unless we got interest"
         );
     }
 
