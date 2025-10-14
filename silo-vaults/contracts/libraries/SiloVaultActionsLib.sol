@@ -37,7 +37,7 @@ library SiloVaultActionsLib {
     function setCap(
         IERC4626 _market,
         uint184 _supplyCap,
-        address _asset,
+        address /* _asset */,
         mapping(IERC4626 => MarketConfig) storage _config,
         mapping(IERC4626 => PendingUint192) storage _pendingCap,
         IERC4626[] storage _withdrawQueue

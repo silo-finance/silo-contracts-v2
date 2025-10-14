@@ -15,6 +15,11 @@ contract OracleForQA is ISiloOracle {
         BASE_DECIMALS = IERC20Metadata(base).decimals();
     }
 
+    /// @param _price if oracle is set for WETH/USDC, where USDC is quote, then correct price would be 3000e6
+    function setPriceOfOneBaseToken(uint256 _price) external {
+        priceOfOneBaseToken = _price;
+    }
+
     function quoteToken() external view override virtual returns (address) {
         return QUOTE_TOKEN;
     }
@@ -24,11 +29,6 @@ contract OracleForQA is ISiloOracle {
         return _baseToken == QUOTE_TOKEN
             ? _baseAmount
             : _baseAmount * priceOfOneBaseToken / (10 ** BASE_DECIMALS);
-    }
-
-    /// @param _price if oracle is set for WETH/USDC, where USDC is quote, then correct price would be 3000e6
-    function setPriceOfOneBaseToken(uint256 _price) external {
-        priceOfOneBaseToken = _price;
     }
 
     function beforeQuote(address) external pure virtual override {

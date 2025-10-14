@@ -202,7 +202,7 @@ library Views {
         configData1.callBeforeQuote = _initData.callBeforeQuote1;
     }
 
-    // solhint-disable-next-line code-complexity
+    // solhint-disable-next-line code-complexity, function-max-lines
     function validateSiloInitData(
         ISiloConfig.InitData memory _initData,
         ISiloFactory.Range memory _daoFeeRange,

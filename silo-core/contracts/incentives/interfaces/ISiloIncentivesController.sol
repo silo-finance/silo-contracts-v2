@@ -164,5 +164,5 @@ interface ISiloIncentivesController is IDistributionManager {
 
     /// @notice Returns the Silo share token address
     /// @return shareToken Address of the Silo share token
-    function SHARE_TOKEN() external view returns (address);
+    function SHARE_TOKEN() external view returns (address); // solhint-disable-line func-name-mixedcase
 }

@@ -46,6 +46,7 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
     }
 
     /// @inheritdoc ISiloOracle
+    // solhint-disable-next-line code-complexity
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
         DIAOracleConfig cacheOracleConfig = oracleConfig;
         DIAConfig memory data = cacheOracleConfig.getConfig();

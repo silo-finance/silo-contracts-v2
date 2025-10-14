@@ -10,7 +10,7 @@ import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
 import {IInterestRateModelV2} from "../interfaces/IInterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "../interfaces/IInterestRateModelV2Config.sol";
 
-// solhint-disable func-name-mixedcase
+// solhint-disable func-name-mixedcase, ordering
 
 /// @title InterestRateModelV2
 /// @notice This model is for one silo/asset set. So one silo need to have as many IRMs as many assets it holds.
@@ -391,6 +391,8 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
             rcur_max = ri_max + rp_max;
             int256 rcur_min = ri_min + rp_min;
             int256 rcur_ann_max = rcur_max * YEAR;
+            rcur_min; // silence unused local variable warning
+            rcur_ann_max; // silence unused local variable warning 
         }
 
         {
@@ -400,6 +402,7 @@ contract InterestRateModelV2 is IInterestRateModel, IInterestRateModelV2 {
             int256 slope_min = slopei_min;
 
             int256 x_max = rcur_max * 2 * MAX_TIME / 2 + (_max(slope_max, -slope_min) * MAX_TIME)**2 / 2;
+            x_max; // silence unused local variable warning
         }
     }
 

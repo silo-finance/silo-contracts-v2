@@ -57,12 +57,12 @@ library SiloVaultFactoryActionsLib {
     }
 
     /// @param _constructorArgs The constructor arguments for the Silo Vault encoded via abi.encode.
-    /// @return initCodeHash The init code hash of the Silo Vault.
+    /// @return codeHash The init code hash of the Silo Vault.
     function initCodeHash(bytes memory _constructorArgs)
         external
         pure
-        returns (bytes32 initCodeHash)
+        returns (bytes32 codeHash)
     {
-        initCodeHash = keccak256(abi.encodePacked(type(SiloVault).creationCode, _constructorArgs));
+        codeHash = keccak256(abi.encodePacked(type(SiloVault).creationCode, _constructorArgs));
     }
 }
