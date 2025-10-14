@@ -293,10 +293,14 @@ contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable
             excessU = _u - _cfg.ulow;
 
             if (_u >= _cfg.ucrit) {
-                excessU = excessU + _cfg.alpha * (_u - _cfg.ucrit) / _DP;
+                // excessU = excessU + _cfg.alpha * (_u - _cfg.ucrit) / _DP;
+                // rcur = (excessU + _cfg.alpha * (_u - _cfg.ucrit) / _DP) * k * ONE_YEAR / _DP + _cfg.rmin * ONE_YEAR;
+                int256 kOneYear = k * ONE_YEAR;
+                rcur = excessU * kOneYear + _cfg.alpha * (_u - _cfg.ucrit) * kOneYear / _DP / _DP + _cfg.rmin * ONE_YEAR;
+            } else {
+                rcur = excessU * k * ONE_YEAR / _DP + _cfg.rmin * ONE_YEAR;
             }
 
-            rcur = excessU * k * ONE_YEAR / _DP + _cfg.rmin * ONE_YEAR;
         } else {
             rcur = _cfg.rmin * ONE_YEAR;
         }
