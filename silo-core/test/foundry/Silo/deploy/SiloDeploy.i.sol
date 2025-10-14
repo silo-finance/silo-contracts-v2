@@ -62,7 +62,7 @@ contract SiloDeployTest is IntegrationTest {
         AddrLib.setAddress("CHAINLINK_SECONDARY_AGGREGATOR", makeAddr("Chainlink secondary aggregator"));
         AddrLib.setAddress("DIA_ORACLE_EXAMPLE", makeAddr("DIA oracle example"));
 
-        _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST).run();
+        _siloConfig = _siloDeploy.useConfig(_useConfig()).run();
     }
 
     /*
@@ -162,5 +162,9 @@ contract SiloDeployTest is IntegrationTest {
         AddrLib.setAddress(
             SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY, address(_uniV3OracleFactoryMock)
         );
+    }
+
+    function _useConfig() internal virtual pure returns (string memory) {
+        return SiloConfigsNames.SILO_FULL_CONFIG_TEST;
     }
 }
