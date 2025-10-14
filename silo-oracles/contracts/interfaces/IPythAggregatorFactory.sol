@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
+// solhint-disable ordering
+
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 
 interface IPythAggregatorFactory {
-    /// @dev Emitted when the aggregator is deployed.
-    /// @param priceId Pyth feed price id.
-    /// @param aggregator New aggregator address.
-    event AggregatorDeployed(bytes32 indexed priceId, AggregatorV3Interface indexed aggregator);
+    /// @dev Get Pyth address, which is used for aggregators deployment.
+    function pyth() external view returns (address);
 
-    /// @dev Revert if the aggregator is already deployed for price id.
-    error AggregatorAlreadyExists();
-    
+    /// @notice Get deployed aggregator address for a specific price id.
+    /// @param _priceId Pyth feed price id.
+    /// @return aggregator PythAggregatorV3 address deployed by this factory.
+    function aggregators(bytes32 _priceId) external view returns (AggregatorV3Interface);
+
     /// @notice Deploy aggregator for a specific price id. Reverts if the aggregator is already deployed. This function
     /// is permissionless.
     /// @param _priceId Pyth feed price id.
@@ -22,11 +24,11 @@ interface IPythAggregatorFactory {
         bytes32 _externalSalt
     ) external returns (AggregatorV3Interface);
 
-    /// @dev Get Pyth address, which is used for aggregators deployment.
-    function pyth() external view returns (address);
+    /// @dev Emitted when the aggregator is deployed.
+    /// @param priceId Pyth feed price id.
+    /// @param aggregator New aggregator address.
+    event AggregatorDeployed(bytes32 indexed priceId, AggregatorV3Interface indexed aggregator);
 
-    /// @notice Get deployed aggregator address for a specific price id.
-    /// @param _priceId Pyth feed price id.
-    /// @return aggregator PythAggregatorV3 address deployed by this factory.
-    function aggregators(bytes32 _priceId) external view returns (AggregatorV3Interface);
+    /// @dev Revert if the aggregator is already deployed for price id.
+    error AggregatorAlreadyExists();
 }
