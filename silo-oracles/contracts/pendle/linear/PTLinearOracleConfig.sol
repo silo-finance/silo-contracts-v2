@@ -4,9 +4,13 @@ pragma solidity 0.8.28;
 import {IPTLinearOracleConfig} from "../../interfaces/IPTLinearOracleConfig.sol";
 
 contract PTLinearOracleConfig is IPTLinearOracleConfig {
+    /// @dev Linear oracle address deploybed by ISparkLinearDiscountOracleFactory
     address internal immutable _LINEAR_ORACLE;
+    /// @dev PT token address
     address internal immutable _PT_TOKEN;
+    /// @dev Hardcoded quote token address that will be used for quoteToken() function in oracle
     address internal immutable _HARDCODED_QUOTE_TOKEN;
+    /// @dev Normalization divider, must be 10 ** tokenDecimals of ptToken
     uint256 internal immutable _NORMALIZATION_DIVIDER;
 
     /// @dev all verification should be done by factory
