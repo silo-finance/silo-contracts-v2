@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
+// solhint-disable ordering
+
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 
@@ -13,11 +15,6 @@ import {SiloMathLib} from "./SiloMathLib.sol";
 library SiloLensLib {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
 
-    function borrowShare(ISilo _silo, address _borrower) internal view returns (uint256) {
-        (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
-        return IShareToken(debtShareToken).balanceOf(_borrower);
-    }
-    
     function getRawLiquidity(ISilo _silo) internal view returns (uint256 liquidity) {
         return SiloMathLib.liquidity(
             _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral),
@@ -148,6 +145,11 @@ library SiloLensLib {
     function totalBorrowShare(ISilo _silo) internal view returns (uint256) {
         (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
         return IShareToken(debtShareToken).totalSupply();
+    }
+
+    function borrowShare(ISilo _silo, address _borrower) external view returns (uint256) {
+        (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
+        return IShareToken(debtShareToken).balanceOf(_borrower);
     }
 
     function calculateValues(ISiloConfig _siloConfig, address _borrower)
