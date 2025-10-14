@@ -66,10 +66,6 @@ contract PTLinearOracleFactory is Create2Factory, OracleFactory, IPTLinearOracle
             Clones.predictDeterministicAddress(ORACLE_IMPLEMENTATION, _createSalt(_deployer, _externalSalt));
     }
 
-    function hashConfig(DeploymentConfig memory _deploymentConfig) public view virtual returns (bytes32 configId) {
-        configId = keccak256(abi.encode(_deploymentConfig));
-    }
-
     function createAndVerifyOracleConfig(DeploymentConfig memory _deploymentConfig)
         public
         virtual
@@ -91,6 +87,10 @@ contract PTLinearOracleFactory is Create2Factory, OracleFactory, IPTLinearOracle
         });
 
         _verifyOracleConfig(oracleConfig);
+    }
+
+    function hashConfig(DeploymentConfig memory _deploymentConfig) public view virtual returns (bytes32 configId) {
+        configId = keccak256(abi.encode(_deploymentConfig));
     }
 
     function resolveExistingOracle(bytes32 _configId) public view virtual returns (address oracle) {

@@ -58,6 +58,11 @@ contract PTLinearOracle is IPTLinearOracle, Initializable {
         return string.concat("PTLinearOracle for ", baseSymbol, " / ", quoteSymbol);
     }
 
+    /// @inheritdoc IPTLinearOracle
+    function baseDiscountPerYear() external view returns (uint256 discount) {
+        discount = ISparkLinearDiscountOracle(oracleConfig.getConfig().linearOracle).baseDiscountPerYear();
+    }
+
     /// @inheritdoc ISiloOracle
     function beforeQuote(address) external pure virtual override {
         // nothing to execute
@@ -98,9 +103,5 @@ contract PTLinearOracle is IPTLinearOracle, Initializable {
         quoteAmount = _baseAmount * uint256(ptLinearPrice) / cfg.normalizationDivider;
 
         require(quoteAmount != 0, ZeroQuote());
-    }
-
-    function baseDiscountPerYear() external view returns (uint256 discount) {
-        discount = ISparkLinearDiscountOracle(oracleConfig.getConfig().linearOracle).baseDiscountPerYear();
     }
 }

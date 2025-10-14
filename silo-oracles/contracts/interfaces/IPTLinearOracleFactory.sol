@@ -25,17 +25,19 @@ interface IPTLinearOracleFactory {
     error LinearOracleCannotBeZero();
     error NormalizationDividerTooLarge();
 
+    /// @dev Use this method to create oracle for PT token
     function create(DeploymentConfig memory _config, bytes32 _externalSalt)
         external
         returns (IPTLinearOracle oracle);
 
-    function resolveExistingOracle(bytes32 _configId) external view returns (address oracle);
-
-    function hashConfig(DeploymentConfig memory _deploymentConfig) external view returns (bytes32 configId);
-
+    /// @notice this is only helper method, should not be used directly
     function createAndVerifyOracleConfig(DeploymentConfig memory _deploymentConfig)
         external
         returns (IPTLinearOracleConfig.OracleConfig memory oracleConfig);
+
+    function resolveExistingOracle(bytes32 _configId) external view returns (address oracle);
+
+    function hashConfig(DeploymentConfig memory _deploymentConfig) external view returns (bytes32 configId);
 
     function predictAddress(DeploymentConfig memory _deploymentConfig, address _deployer, bytes32 _externalSalt)
         external
