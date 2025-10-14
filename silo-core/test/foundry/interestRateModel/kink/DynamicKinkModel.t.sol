@@ -46,6 +46,18 @@ contract DynamicKinkModelTest is KinkCommonTest {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_initRevert_whenNotSilo -vv
+    */
+    function test_kink_initRevert_whenNotSilo() public {
+        DynamicKinkModel newModel = new DynamicKinkModel();
+        IDynamicKinkModel.Config memory config;
+        IDynamicKinkModel.ImmutableArgs memory immutableArgs;
+
+        vm.expectRevert();
+        newModel.initialize(config, immutableArgs, address(this), address(1));
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_initRevert_whenAlreadyInitialized -vv
     */
     function test_kink_initRevert_whenAlreadyInitialized() public {
