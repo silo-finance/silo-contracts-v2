@@ -38,8 +38,6 @@ contract SiloIncentivesController is BaseIncentivesController {
     }
 
     /// @inheritdoc ISiloIncentivesController
-
-    /// @inheritdoc ISiloIncentivesController
     // solhint-disable-next-line function-max-lines, code-complexity
     function afterTokenTransfer(
         address _sender,
