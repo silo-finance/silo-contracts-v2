@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+// solhint-disable ordering
+
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Utils} from "silo-foundry-utils/lib/Utils.sol";
@@ -263,13 +265,6 @@ contract SiloLens is ISiloLens {
         }
     }
 
-    function getOracleAddresses(ISilo _silo) external view returns (address solvencyOracle, address maxLtvOracle) {
-        ISiloConfig.ConfigData memory config = _silo.config().getConfig(address(_silo));
-
-        solvencyOracle = config.solvencyOracle;
-        maxLtvOracle = config.maxLtvOracle;
-    }
-
     function getModel(ISilo _silo) public view returns (IInterestRateModel irm) {
         irm = IInterestRateModel(_silo.config().getConfig(address(_silo)).interestRateModel);
     }
@@ -292,6 +287,13 @@ contract SiloLens is ISiloLens {
                 programsNames[i] = originalProgramsNames[i];
             }
         }
+    }
+
+    function getOracleAddresses(ISilo _silo) external view returns (address solvencyOracle, address maxLtvOracle) {
+        ISiloConfig.ConfigData memory config = _silo.config().getConfig(address(_silo));
+
+        solvencyOracle = config.solvencyOracle;
+        maxLtvOracle = config.maxLtvOracle;
     }
 
     function _isTokenAddress(bytes memory _name) private view returns (bool isToken) {
