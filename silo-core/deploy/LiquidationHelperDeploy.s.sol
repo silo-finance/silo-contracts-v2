@@ -119,7 +119,8 @@ contract LiquidationHelperDeploy is CommonDeploy {
         if (chainId == ChainsLib.INK_CHAIN_ID) return GNOSIS_SAFE_INK;
         if (chainId == ChainsLib.MAINNET_CHAIN_ID) return GNOSIS_SAFE_MAINNET;
         if (chainId == ChainsLib.AVALANCHE_CHAIN_ID) return GNOSIS_SAFE_AVALANCHE;
+        if (chainId == ChainsLib.INJECTIVE_CHAIN_ID) return payable(AddrLib.getAddress(AddrKey.DAO));
 
-        revert(string.concat("tokenReceiver not set for ", ChainsLib.chainAlias()));
+        revert(string.concat("[LiquidationHelperDeploy] tokenReceiver not set for ", ChainsLib.chainAlias()));
     }
 }

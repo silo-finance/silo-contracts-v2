@@ -178,13 +178,15 @@ FOUNDRY_PROFILE=core_test forge snapshot --diff --desc --no-match-test "_skip_" 
 
 ## Deployment
 
-set env variable `PRIVATE_KEY` then run
+### Silo Core
+1. set env variable `PRIVATE_KEY` then run
+1. some adjustment is needed for new blockchain, I will use `Injective` as example:
+  - update silo utils to add new blockchain
+  - create `common/addresses/injective.json` and add necessary addresses
+  - add necessary keys `common/addresses/AddrKey.sol`
+1. Silo Core: check [MainnetDeploy.sol](silo-core/deploy/MainnetDeploy.s.sol) script
 
-```bash
-FOUNDRY_PROFILE=core \
-forge script silo-core/deploy/MainnetDeploy.s.sol \
---ffi --broadcast --rpc-url https://arbitrum-mainnet.infura.io/v3/<key>
-```
+
 
 ### New Silo deployer with Silo, ProtectedShareToken, and DebtShareToken implementations
 

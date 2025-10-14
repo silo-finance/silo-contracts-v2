@@ -3,6 +3,10 @@ pragma solidity 0.8.28;
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
+import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
+
 import {InterestRateModelV2FactoryDeploy} from "./InterestRateModelV2FactoryDeploy.s.sol";
 import {InterestRateModelV2Deploy} from "./InterestRateModelV2Deploy.s.sol";
 import {SiloHookV1Deploy} from "./SiloHookV1Deploy.s.sol";
@@ -19,7 +23,7 @@ import {DKinkIRMFactoryDeploy} from "silo-core/deploy/DKinkIRMFactoryDeploy.s.so
 /*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/MainnetDeploy.s.sol \
-        --ffi --rpc-url $RPC_SONIC --verify --broadcast
+        --ffi --rpc-url $RPC_INJECTIVE --verify --broadcast
  */
 contract MainnetDeploy is CommonDeploy {
     function run() public {
@@ -38,13 +42,15 @@ contract MainnetDeploy is CommonDeploy {
         SiloIncentivesControllerFactoryDeploy siloIncentivesControllerFactoryDeploy =
             new SiloIncentivesControllerFactoryDeploy();
 
-        _deploySiloFactory();
+        _requireSiloFactoryDeployed();
+        _requireSiloImplementationDeployed();
+
         interestRateModelV2ConfigFactoryDeploy.run();
         dkinkIRMFactoryDeploy.run();
         interestRateModelV2Deploy.run();
         siloHookV1Deploy.run();
         siloDeployerDeploy.run();
-        liquidationHelperDeploy.run();
+        // liquidationHelperDeploy.run();
         siloLensDeploy.run();
         towerDeploy.run();
         siloRouterV2Deploy.run();
@@ -52,8 +58,15 @@ contract MainnetDeploy is CommonDeploy {
         manualLiquidationHelperDeploy.run();
     }
 
-    function _deploySiloFactory() internal virtual {
-        SiloFactoryDeploy siloFactoryDeploy = new SiloFactoryDeploy();
-        siloFactoryDeploy.run();
+    function _requireSiloFactoryDeployed() internal virtual {
+        string memory chainAlias = ChainsLib.chainAlias();
+        address siloFactory = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias);
+        require(siloFactory != address(0), string.concat(SiloCoreContracts.SILO_FACTORY, " not deployed"));
+    }
+
+    function _requireSiloImplementationDeployed() internal virtual {
+        string memory chainAlias = ChainsLib.chainAlias();
+        address siloImplementation = SiloCoreDeployments.get(SiloCoreContracts.SILO, chainAlias);
+        require(siloImplementation != address(0), string.concat(SiloCoreContracts.SILO, " not deployed"));
     }
 }
