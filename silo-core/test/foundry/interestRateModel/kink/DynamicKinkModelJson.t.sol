@@ -40,7 +40,14 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
 
         _RCOMP_CAP_PER_SECOND = int96(tmp.RCOMP_CAP_PER_SECOND());
 
-        IRM = DynamicKinkModelMock(FACTORY.predictAddress(address(this), bytes32(0)));
+        IDynamicKinkModel.Config memory cfg;
+
+        IDynamicKinkModel.ImmutableArgs memory immutableArgs =
+            IDynamicKinkModel.ImmutableArgs({timelock: _TIMELOCK, rcompCap: int96(tmp.RCUR_CAP())});
+
+        IRM = DynamicKinkModelMock(
+            address(FACTORY.create(cfg, immutableArgs, address(this), address(this), bytes32(0)))
+        );
 
         // 1e18 is 100%
         _rcompDiffPercent[5] = 69700005108;
@@ -60,19 +67,6 @@ contract DynamicKinkModelJsonTest is KinkRcompTestData, KinkRcurTestData {
         _rcompDiffPercent[221] = 15758917106;
         _rcompDiffPercent[289] = 14419032745;
         _rcompDiffPercent[291] = 15911114231;
-    }
-
-    function setUp() public {
-        DynamicKinkModel tmp = new DynamicKinkModel();
-
-        IDynamicKinkModel.Config memory cfg;
-
-        IDynamicKinkModel.ImmutableArgs memory immutableArgs =
-            IDynamicKinkModel.ImmutableArgs({timelock: _TIMELOCK, rcompCap: int96(tmp.RCUR_CAP())});
-
-        DynamicKinkModelMock(
-            address(FACTORY.create(cfg, immutableArgs, address(this), address(this), bytes32(0)))
-        );
     }
 
     /* 
