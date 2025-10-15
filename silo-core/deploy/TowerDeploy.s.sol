@@ -27,10 +27,6 @@ contract TowerDeploy is CommonDeploy {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         string memory chainAlias = ChainsLib.chainAlias();
 
-        address siloFactory = SiloCoreDeployments.get(SiloCoreContracts.SILO_FACTORY, chainAlias);
-        address liquidationHelper = SiloCoreDeployments.get(SiloCoreContracts.LIQUIDATION_HELPER, chainAlias);
-        address siloLens = SiloCoreDeployments.get(SiloCoreContracts.SILO_LENS, chainAlias);
-
         vm.startBroadcast(deployerPrivateKey);
 
         tower = new Tower();

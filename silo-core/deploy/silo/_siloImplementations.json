@@ -42,5 +42,11 @@
             "implementation": "0x2C7E816323B2E3894EB98d53B2cbec659aE26441",
             "description": "original implementation"
         }
+    ],
+    "injective": [
+        {
+            "implementation": "0xC66D2a90c37c873872281a05445EC0e9e82c76a9",
+            "description": "initial implementation for Injective"
+        }
     ]
 }
