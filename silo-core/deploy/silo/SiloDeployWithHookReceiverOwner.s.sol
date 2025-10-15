@@ -6,15 +6,19 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
 
 /*
-FOUNDRY_PROFILE=core CONFIG=Test_Silo_smsUSD_USDC.e_KinkIRM HOOK_RECEIVER_OWNER=DAO \
+FOUNDRY_PROFILE=core CONFIG=Test_Silo_WINJ_USDT_KinkIRM HOOK_RECEIVER_OWNER=DAO \
     forge script silo-core/deploy/silo/SiloDeployWithHookReceiverOwner.s.sol \
-    --ffi --rpc-url $RPC_SONIC --broadcast --verify
+    --ffi --rpc-url $RPC_INJECTIVE --broadcast --slow --verify \
+    --verifier blockscout \
+    --verifier-url $VERIFIER_URL_INJECTIVE
 
 Resume verification:
-    FOUNDRY_PROFILE=core CONFIG=Silo_WAVAX_USDC HOOK_RECEIVER_OWNER=DAO \
+    FOUNDRY_PROFILE=core CONFIG=Test_Silo_WINJ_USDT_KinkIRM HOOK_RECEIVER_OWNER=DAO \
     forge script silo-core/deploy/silo/SiloDeployWithHookReceiverOwner.s.sol \
-        --ffi --rpc-url $RPC_SONIC \
+        --ffi --rpc-url $RPC_INJECTIVE \
         --verify \
+        --verifier blockscout \
+        --verifier-url $VERIFIER_URL_INJECTIVE \
         --private-key $PRIVATE_KEY \
         --resume
  */
