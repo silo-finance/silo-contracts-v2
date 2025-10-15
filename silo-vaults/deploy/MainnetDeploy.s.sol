@@ -14,7 +14,7 @@ import {SiloIncentivesControllerCLDeployerDeploy} from "./SiloIncentivesControll
         --ffi --rpc-url $RPC_INJECTIVE  --broadcast --slow --verify
 
     Resume verification:
-    FOUNDRY_PROFILE=core \
+    FOUNDRY_PROFILE=vaults \
         forge script silo-vaults/deploy/MainnetDeploy.s.sol:MainnetDeploy \
         --ffi --rpc-url $RPC_INJECTIVE \
         --verify \
