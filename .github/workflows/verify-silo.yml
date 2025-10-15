@@ -1,5 +1,17 @@
 name: Verify Silo Config
 
+env:
+    RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
+    RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
+    RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
+    RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
+    RPC_SONIC: ${{ secrets.RPC_SONIC }}
+    RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
+    PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
+    VERIFIER_URL_SONIC: ${{ secrets.VERIFIER_URL_SONIC }}
+    VERIFIER_API_KEY_SONIC: ${{ secrets.VERIFIER_API_KEY_SONIC }}
+    AGGREGATOR: "1INCH" # because it is available on all blockchains
+
 on:
   pull_request:
     # Trigger only when the deployments file is changed
@@ -74,13 +86,6 @@ jobs:
           echo "RPC_URL=$RPC_URL"
           echo "RPC_URL=$RPC_URL" >> $GITHUB_OUTPUT
           echo "CONFIG_NAME=$CONFIG_NAME" >> $GITHUB_OUTPUT
-
-        env:
-          # Available RPC URLs (add more if needed)
-          RPC_SONIC: ${{ secrets.RPC_SONIC }}
-          RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
-          RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
-          RPC_ARBITRUM_ONE: ${{ secrets.RPC_ARBITRUM }}
 
       - name: Extract optional price arguments from PR body
         id: price
