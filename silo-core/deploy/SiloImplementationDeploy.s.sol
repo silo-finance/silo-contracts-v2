@@ -15,15 +15,15 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 /*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloImplementationDeploy.s.sol \
-        --ffi --rpc-url $RPC_SONIC --broadcast --verify
+        --ffi --rpc-url $RPC_INJECTIVE --broadcast --verify --resume
 
     Resume verification:
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloImplementationDeploy.s.sol \
-        --ffi --rpc-url $RPC_INK \
+        --ffi --rpc-url $RPC_INJECTIVE \
         --verify \
         --verifier blockscout \
-        --verifier-url $VERIFIER_URL_INK \
+        --verifier-url $VERIFIER_URL_INJECTIVE \
         --private-key $PRIVATE_KEY \
         --resume
 
