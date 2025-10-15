@@ -188,6 +188,7 @@ FOUNDRY_PROFILE=core_test forge snapshot --diff --desc --no-match-test "_skip_" 
 1. run `silo-core/deploy/SiloImplementationDeploy.s.sol`
 1. run [MainnetDeploy.sol](silo-core/deploy/MainnetDeploy.s.sol) script
 1. update onchain registry `silo-core/deploy/TowerRegistration.s.sol`
+1. deploy any test market, to confirm everything is ok.
 
 ### Silo Vaults
 1. run `silo-vaults/deploy/MainnetDeploy.s.sol`
