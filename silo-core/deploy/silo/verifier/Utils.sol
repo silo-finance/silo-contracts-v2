@@ -112,7 +112,7 @@ library Utils {
     }
 
     function tryGetTokenDecimals(address _token) internal view returns (uint8 decimals) {
-        return 18; // uint8(TokenHelper.assertAndGetDecimals(_token));
+        return uint8(TokenHelper.assertAndGetDecimals(_token));
     }
 
     function tryGetTokenSymbol(address _token) internal view returns (string memory) {
@@ -181,8 +181,6 @@ library Utils {
     }
 
     function isTokenERC4626(address _token) internal view returns (bool result) {
-        return false;
-        
         try IERC4626(_token).convertToAssets(1000 * 10 ** IERC20Metadata(_token).decimals()) returns (uint256 assets)
         {
             return assets != 0;
