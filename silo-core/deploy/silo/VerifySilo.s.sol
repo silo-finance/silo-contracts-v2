@@ -8,7 +8,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 /*
-FOUNDRY_PROFILE=core CONFIG=0xf64b3323329Fe5bd8C4C4dC1D2CbD11Ec9ad7cbf \
+FOUNDRY_PROFILE=core CONFIG=0xDe40655b172772488948C18b2146F33af829Fd22 \
     EXTERNAL_PRICE_0=1 EXTERNAL_PRICE_1=1 \
     forge script silo-core/deploy/silo/VerifySilo.s.sol \
     --ffi --rpc-url $RPC_INJECTIVE
