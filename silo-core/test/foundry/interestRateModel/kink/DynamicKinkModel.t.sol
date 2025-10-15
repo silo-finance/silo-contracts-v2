@@ -249,6 +249,28 @@ contract DynamicKinkModelTest is KinkCommonTest {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRateAndUpdate_updateKWhenNoDebt -vv
+    */
+    function test_kink_getCompoundInterestRateAndUpdate_updateKWhenNoDebt() public {
+        IDynamicKinkModel.Config memory cfg = _defaultConfig();
+        irm.updateConfig(cfg);
+        assertFalse(irm.pendingConfigExists(), "expect no pending config");
+
+        vm.warp(1 days);
+        uint256 rcomp = irm.getCompoundInterestRateAndUpdate({_collateralAssets: 1e18, _debtAssets: 1e18, _interestRateTimestamp: 1});
+    
+        assertGt(rcomp, 0, "expect some rate");
+
+        int256 kBefore = irm.modelState().k;
+        assertNotEq(kBefore, int256(cfg.kmin), "k was changed");
+
+        vm.warp(1 days);
+        rcomp = irm.getCompoundInterestRateAndUpdate({_collateralAssets: 1e18, _debtAssets: 0, _interestRateTimestamp: 1});
+        assertEq(rcomp, 0, "rcomp is not 0 when no debt");
+        assertNotEq(irm.modelState().k, kBefore, "k was updated even when no debt");
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_getCompoundInterestRate_neverRevert -vv
     */
     function test_kink_getCompoundInterestRate_neverRevert_fuzz(
