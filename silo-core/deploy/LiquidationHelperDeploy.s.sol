@@ -109,7 +109,7 @@ contract LiquidationHelperDeploy is CommonDeploy {
         aggregator = vm.envOr(string("AGGREGATOR"), string(""));
     }
 
-    function _tokenReceiver() internal view returns (address payable) {
+    function _tokenReceiver() internal returns (address payable) {
         uint256 chainId = getChainId();
 
         if (chainId == ChainsLib.ANVIL_CHAIN_ID) return payable(address(3));

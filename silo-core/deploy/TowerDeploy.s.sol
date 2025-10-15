@@ -34,9 +34,6 @@ contract TowerDeploy is CommonDeploy {
         vm.startBroadcast(deployerPrivateKey);
 
         tower = new Tower();
-        // tower.register("SiloFactory", siloFactory);
-        // tower.register("LiquidationHelper", liquidationHelper);
-        // tower.register("SiloLens", siloLens);
 
         vm.stopBroadcast();
 

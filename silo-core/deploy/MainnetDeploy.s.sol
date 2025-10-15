@@ -23,7 +23,17 @@ import {DKinkIRMFactoryDeploy} from "silo-core/deploy/DKinkIRMFactoryDeploy.s.so
 /*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/MainnetDeploy.s.sol \
-        --ffi --rpc-url $RPC_INJECTIVE --verify --broadcast
+        --ffi --rpc-url $RPC_INJECTIVE --verify --broadcast --slow
+
+    Resume verification:
+    FOUNDRY_PROFILE=core \
+        forge script silo-core/deploy/MainnetDeploy.s.sol \
+        --ffi --rpc-url $RPC_INJECTIVE \
+        --verify \
+        --verifier blockscout \
+        --verifier-url $VERIFIER_URL_INJECTIVE \
+        --private-key $PRIVATE_KEY \
+        --resume
  */
 contract MainnetDeploy is CommonDeploy {
     function run() public {
