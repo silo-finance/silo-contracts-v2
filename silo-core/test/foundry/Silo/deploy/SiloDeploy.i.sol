@@ -62,7 +62,7 @@ contract SiloDeployTest is IntegrationTest {
         AddrLib.setAddress("CHAINLINK_SECONDARY_AGGREGATOR", makeAddr("Chainlink secondary aggregator"));
         AddrLib.setAddress("DIA_ORACLE_EXAMPLE", makeAddr("DIA oracle example"));
 
-        _siloConfig = _siloDeploy.useConfig(SiloConfigsNames.SILO_FULL_CONFIG_TEST).run();
+        _siloConfig = _siloDeploy.useConfig(_useConfig()).run();
     }
 
     /*
@@ -76,7 +76,7 @@ contract SiloDeployTest is IntegrationTest {
     }
 
     // AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test -vv --ffi -mt test_oracles_deploy
-    function test_oracles_deploy() public view {
+    function test_oracles_deploy() public view virtual {
         // solhint-disable-line func-name-mixedcase
         (, address silo1) = _siloConfig.getSilos();
 
@@ -162,5 +162,9 @@ contract SiloDeployTest is IntegrationTest {
         AddrLib.setAddress(
             SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY, address(_uniV3OracleFactoryMock)
         );
+    }
+
+    function _useConfig() internal virtual pure returns (string memory) {
+        return SiloConfigsNames.SILO_FULL_CONFIG_TEST;
     }
 }
