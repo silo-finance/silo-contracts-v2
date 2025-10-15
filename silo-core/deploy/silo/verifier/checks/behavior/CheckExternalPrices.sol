@@ -86,8 +86,8 @@ contract CheckExternalPrices is ICheck {
     function _checkExternalPrice() internal returns (bool success) {
         uint256 precisionDecimals = 10 ** 18;
 
-        uint256 token0Decimals = uint256(IERC20Metadata(token0).decimals());
-        uint256 token1Decimals = uint256(IERC20Metadata(token1).decimals());
+        uint256 token0Decimals = 18; // uint256(IERC20Metadata(token0).decimals());
+        uint256 token1Decimals = 18; // uint256(IERC20Metadata(token1).decimals());
         uint256 oneToken0 = 10 ** token0Decimals;
         uint256 oneToken1 = 10 ** token1Decimals;
 
