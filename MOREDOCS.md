@@ -184,6 +184,8 @@ FOUNDRY_PROFILE=core_test forge snapshot --diff --desc --no-match-test "_skip_" 
   - update silo utils to add new blockchain
   - create `common/addresses/injective.json` and add necessary addresses
   - add necessary keys `common/addresses/AddrKey.sol`
+1. Deploy `silo-core/deploy/SiloFactoryDeploy.s.sol`
+
 1. Silo Core: check [MainnetDeploy.sol](silo-core/deploy/MainnetDeploy.s.sol) script
 
 
