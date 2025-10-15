@@ -13,24 +13,12 @@ import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProt
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 
 /*
+    FOUNDRY_PROFILE=core forge clean
+    FOUNDRY_PROFILE=core forge build --force 
+
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloImplementationDeploy.s.sol \
         --ffi --rpc-url $RPC_INJECTIVE --broadcast --slow --verify
-
-    FOUNDRY_PROFILE=core \
-        forge create --rpc-url $RPC_INJECTIVE \
-        --broadcast silo-core/contracts/lib/Actions.sol:Actions \
-        --private-key $PRIVATE_KEY
-
-    FOUNDRY_PROFILE=core \
-        forge script silo-core/deploy/SiloImplementationDeploy.s.sol \
-        --ffi --rpc-url $RPC_INJECTIVE --broadcast --slow \
-        --libraries silo-core/contracts/lib/Actions.sol:Actions:0x2a4507b28c6E620A2Dcc05062F250D3d1C0f3faa
-        --force --no-catche --verify
-
-    FOUNDRY_PROFILE=core \
-        forge script silo-core/deploy/SiloImplementationDeploy.s.sol \
-        --ffi --rpc-url $RPC_INJECTIVE --private-key $PRIVATE_KEY --resume
 
     Resume verification:
     FOUNDRY_PROFILE=core \
@@ -107,20 +95,12 @@ contract SiloImplementationDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
         address siloImpl = address(new Silo(ISiloFactory(siloFactory)));
-        vm.stopBroadcast();
-        
-        console2.log("New SiloImplementation deployed", siloImpl);
-
-        vm.startBroadcast(deployerPrivateKey);
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
-        vm.stopBroadcast();
-
-        console2.log("New ShareProtectedCollateralToken deployed", shareProtectedCollateralTokenImpl);
-
-        vm.startBroadcast(deployerPrivateKey);
         address shareDebtTokenImpl = address(new ShareDebtToken());
         vm.stopBroadcast();
 
+        console2.log("New SiloImplementation deployed", siloImpl);
+        console2.log("New ShareProtectedCollateralToken deployed", shareProtectedCollateralTokenImpl);
         console2.log("New ShareDebtToken deployed", shareDebtTokenImpl);
 
         _registerDeployment(siloImpl, SiloCoreContracts.SILO);
