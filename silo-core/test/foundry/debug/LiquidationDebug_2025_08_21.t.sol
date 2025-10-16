@@ -16,7 +16,7 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_08_21 --ffi -vvv
 */
 contract LiquidationDebug_2025_08_21 is IntegrationTest {
-    SiloLens constant internal lens = SiloLens(0xB95AD415b0fcE49f84FbD5B26b14ec7cf4822c69);
+    SiloLens internal constant lens = SiloLens(0xB95AD415b0fcE49f84FbD5B26b14ec7cf4822c69);
     // IPartialLiquidation constant internal hook = IPartialLiquidation(0xDdBa71380230a3a5ab7094d9c774A6C5852a0fFC);
     // ILiquidationHelper constant internal helper = ILiquidationHelper(0xd98C025cf5d405FE3385be8C9BE64b219EC750F8);
     ILiquidationHelper internal helper;
@@ -29,10 +29,7 @@ contract LiquidationDebug_2025_08_21 is IntegrationTest {
         // vm.label(address(hook), "IPartialLiquidation");
         vm.label(swapAllowanceHolder, "SWAP AllowanceHolder");
 
-        vm.createSelectFork(
-            vm.envString("RPC_SONIC"),
-            43873559
-        );
+        vm.createSelectFork(vm.envString("RPC_SONIC"), 43873559);
 
         helper = LiquidationHelper(payable(0xf363C6d369888F5367e9f1aD7b6a7dAe133e8740));
     }
@@ -41,7 +38,7 @@ contract LiquidationDebug_2025_08_21 is IntegrationTest {
     FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_08_21 --mt test_skip_liquidation_20250821 --ffi -vvv
 
     "silo": "0x396922EF30Cf012973343f7174db850c7D265278",
-  "borrower": "0x318312055830e05fAe49D3b15b8b5fCa5593Ecc8",
+    "borrower": "0x318312055830e05fAe49D3b15b8b5fCa5593Ecc8",
 
     */
     function test_skip_liquidation_20250821() public {
@@ -52,13 +49,10 @@ contract LiquidationDebug_2025_08_21 is IntegrationTest {
 
         console2.log("Liquidation Debug 2025-08-21");
 
-
         ISiloConfig config = ISiloConfig(silo.config());
 
-        (
-            ISiloConfig.ConfigData memory collateralCfg,
-            ISiloConfig.ConfigData memory debtCfg
-        ) = config.getConfigsForSolvency(user);
+        (ISiloConfig.ConfigData memory collateralCfg, ISiloConfig.ConfigData memory debtCfg) =
+            config.getConfigsForSolvency(user);
 
         _printUserState(user, config);
 
@@ -69,7 +63,6 @@ contract LiquidationDebug_2025_08_21 is IntegrationTest {
         });
 
         ILiquidationHelper.DexSwapInput[] memory dexSwapInput = new ILiquidationHelper.DexSwapInput[](0);
-
 
         // while (!ISilo(debtCfg.silo).isSolvent(user)) {
         //     console2.log("block number: ", block.number);
@@ -94,10 +87,8 @@ contract LiquidationDebug_2025_08_21 is IntegrationTest {
         console2.log("block timestamp: ", block.timestamp);
         console2.log("user: ", _user);
 
-        (
-            ISiloConfig.ConfigData memory collateralCfg,
-            ISiloConfig.ConfigData memory debtCfg
-        ) = _config.getConfigsForSolvency(_user);
+        (ISiloConfig.ConfigData memory collateralCfg, ISiloConfig.ConfigData memory debtCfg) =
+            _config.getConfigsForSolvency(_user);
 
         console2.log("collateral silo: ", collateralCfg.silo);
         console2.log("collateral asset: ", collateralCfg.token);
