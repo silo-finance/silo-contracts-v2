@@ -13,9 +13,9 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 
 /*
-FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_10_15 --ffi -vvv
+FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_10_15_Sonic1 --ffi -vvv
 */
-contract LiquidationDebug_2025_10_15 is IntegrationTest {
+contract LiquidationDebug_2025_10_15_Sonic1 is IntegrationTest {
     SiloLens internal constant lens = SiloLens(0xB95AD415b0fcE49f84FbD5B26b14ec7cf4822c69);
     // IPartialLiquidation constant internal hook = IPartialLiquidation(0xDdBa71380230a3a5ab7094d9c774A6C5852a0fFC);
     // ILiquidationHelper constant internal helper = ILiquidationHelper(0xf363c6d369888f5367e9f1ad7b6a7dae133e8740);
