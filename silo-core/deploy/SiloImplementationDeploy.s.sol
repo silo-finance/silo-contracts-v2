@@ -30,31 +30,24 @@ import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
         --private-key $PRIVATE_KEY \
         --resume
 
-    Lib verification:\
+    Lib verification:
 
 
-FOUNDRY_PROFILE=core forge verify-contract \
-  --rpc-url https://k8s.bm.mainnet.json-rpc.injective.network \
-  --verifier blockscout \
-  --verifier-url 'https://blockscout-api.injective.network/api/' \
-  0x682095e340505C5388f8f784D6619AF8C367823e \
-  silo-core/contracts/lib/Actions.sol:Actions --watch
+    FOUNDRY_PROFILE=core forge verify-contract \
+        --rpc-url $RPC_INJECTIVE \
+        --verifier blockscout \
+        --verifier-url $VERIFIER_URL_INJECTIVE \
+        0x682095e340505C5388f8f784D6619AF8C367823e \
+        silo-core/contracts/lib/Actions.sol:Actions --watch \
+        --show-standard-json-input > flatten_Actions.json
 
-    FOUNDRY_PROFILE=core forge verify-contract 0x2a4507b28c6E620A2Dcc05062F250D3d1C0f3faa \
-        silo-core/contracts/lib/Actions.sol:Actions \
+    FOUNDRY_PROFILE=core forge verify-contract \
         --rpc-url $RPC_INJECTIVE \
         --verifier blockscout --verifier-url $VERIFIER_URL_INJECTIVE \
-        --watch \
-        --num-of-optimizations 200 \
-        --compiler-version 0.8.28
-
-    FOUNDRY_PROFILE=core forge verify-contract 0xdea61602c8711aea4026f689d3de9ea18a0253b8 \
-         silo-core/contracts/lib/ShareCollateralTokenLib.sol:ShareCollateralTokenLib \
-        --rpc-url $RPC_INJECTIVE \
-        --verifier blockscout --verifier-url $VERIFIER_URL_INJECTIVE --watch \
         --compiler-version 0.8.28 \
         --num-of-optimizations 200 \
-        --watch
+        0xfDB04b179f43b9f9680Ee1510D5cb249bF003813 \
+        silo-core/contracts/lib/ShareCollateralTokenLib.sol:ShareCollateralTokenLib --watch --show-standard-json-input
 
     FOUNDRY_PROFILE=core forge verify-contract <contract-address> \
          silo-core/contracts/lib/ShareTokenLib.sol:ShareTokenLib \
