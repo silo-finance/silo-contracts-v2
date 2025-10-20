@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [3.11.1] - 2025-10-20
+### Updated
+- redeploy SiloDeployer with audited version of Kink
+
 ## [3.11.0] - 2025-10-20
 ### Added
 - silo-core: Dynamic Kink Factory deployment
