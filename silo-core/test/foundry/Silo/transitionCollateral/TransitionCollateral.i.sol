@@ -66,8 +66,16 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
 
         (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
 
-        assertEq(IShareToken(protectedShareToken).balanceOf(owner), 1 * SiloMathLib._DECIMALS_OFFSET_POW, "protectedShareToken balance");
-        assertEq(IShareToken(collateralShareToken).balanceOf(owner), 9 * SiloMathLib._DECIMALS_OFFSET_POW, "collateralShareToken balance");
+        assertEq(
+            IShareToken(protectedShareToken).balanceOf(owner),
+            1 * SiloMathLib._DECIMALS_OFFSET_POW,
+            "protectedShareToken balance"
+        );
+        assertEq(
+            IShareToken(collateralShareToken).balanceOf(owner),
+            9 * SiloMathLib._DECIMALS_OFFSET_POW,
+            "collateralShareToken balance"
+        );
     }
 
     /*
@@ -82,8 +90,16 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
 
         (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
 
-        assertEq(IShareToken(protectedShareToken).balanceOf(owner), 8 * SiloMathLib._DECIMALS_OFFSET_POW, "protectedShareToken balance");
-        assertEq(IShareToken(collateralShareToken).balanceOf(owner), 2 * SiloMathLib._DECIMALS_OFFSET_POW, "collateralShareToken balance");
+        assertEq(
+            IShareToken(protectedShareToken).balanceOf(owner),
+            8 * SiloMathLib._DECIMALS_OFFSET_POW,
+            "protectedShareToken balance"
+        );
+        assertEq(
+            IShareToken(collateralShareToken).balanceOf(owner),
+            2 * SiloMathLib._DECIMALS_OFFSET_POW,
+            "collateralShareToken balance"
+        );
 
         _withdraw(2, owner);
         _withdraw(8, owner, ISilo.CollateralType.Protected);
@@ -103,8 +119,16 @@ contract TransitionCollateralTest is SiloLittleHelper, Test {
 
         silo0.transitionCollateral(2 * SiloMathLib._DECIMALS_OFFSET_POW, otherOwner, ISilo.CollateralType.Protected);
 
-        assertEq(IShareToken(protectedShareToken).balanceOf(otherOwner), 8 * SiloMathLib._DECIMALS_OFFSET_POW, "protectedShareToken balance");
-        assertEq(IShareToken(collateralShareToken).balanceOf(otherOwner), 2 * SiloMathLib._DECIMALS_OFFSET_POW, "collateralShareToken");
+        assertEq(
+            IShareToken(protectedShareToken).balanceOf(otherOwner),
+            8 * SiloMathLib._DECIMALS_OFFSET_POW,
+            "protectedShareToken balance"
+        );
+        assertEq(
+            IShareToken(collateralShareToken).balanceOf(otherOwner),
+            2 * SiloMathLib._DECIMALS_OFFSET_POW,
+            "collateralShareToken"
+        );
 
         _withdraw(2, otherOwner);
         _withdraw(8, otherOwner, ISilo.CollateralType.Protected);

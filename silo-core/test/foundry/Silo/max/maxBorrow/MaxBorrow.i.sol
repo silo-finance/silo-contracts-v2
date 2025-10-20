@@ -53,34 +53,26 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_maxBorrow_withCollateral_
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxBorrow_withCollateral_1token_fuzz(
-        uint128 _collateral, uint128 _liquidity
-    ) public {
+    function test_maxBorrow_withCollateral_1token_fuzz(uint128 _collateral, uint128 _liquidity) public {
         // uint128 _collateral = 401;
         // uint128 _liquidity = 1;
         _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Collateral, SAME_ASSET);
     }
 
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxBorrow_withCollateral_protected_1token_fuzz(
-        uint128 _collateral, uint128 _liquidity
-    ) public {
+    function test_maxBorrow_withCollateral_protected_1token_fuzz(uint128 _collateral, uint128 _liquidity) public {
         _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Protected, SAME_ASSET);
     }
 
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxBorrow_withCollateral_2tokens_fuzz(
-        uint128 _collateral, uint128 _liquidity
-    ) public {
+    function test_maxBorrow_withCollateral_2tokens_fuzz(uint128 _collateral, uint128 _liquidity) public {
         // uint128 _collateral = 401;
         // uint128 _liquidity = 1;
         _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Collateral, TWO_ASSETS);
     }
 
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxBorrow_withCollateral_protected_2tokens_fuzz(
-        uint128 _collateral, uint128 _liquidity
-    ) public {
+    function test_maxBorrow_withCollateral_protected_2tokens_fuzz(uint128 _collateral, uint128 _liquidity) public {
         _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Protected, TWO_ASSETS);
     }
 
@@ -161,10 +153,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_withDebt_2_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxBorrow_withDebt_2_fuzz(
-        uint128 _collateral,
-        uint128 _liquidity
-    ) public {
+    function test_maxBorrow_withDebt_2_fuzz(uint128 _collateral, uint128 _liquidity) public {
         // (uint128 _collateral, uint128 _liquidity) = (3672, 3669);
         _maxBorrow_withDebt(_collateral, _liquidity, TWO_ASSETS);
     }
@@ -243,14 +232,13 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_repayWithInterest_2tokens_protected_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 5000
-    function test_maxBorrow_repayWithInterest_2tokens_protected_fuzz(uint64 _collateral, uint128 _liquidity) public {
+    function test_maxBorrow_repayWithInterest_2tokens_protected_fuzz(uint64 _collateral, uint128 _liquidity)
+        public
+    {
         _maxBorrow_repayWithInterest(_collateral, _liquidity, ISilo.CollateralType.Protected, TWO_ASSETS);
     }
 
-    function test_maxBorrow_repayWithInterest_1token_fuzz(
-        uint64 _collateral,
-        uint128 _liquidity
-    ) public {
+    function test_maxBorrow_repayWithInterest_1token_fuzz(uint64 _collateral, uint128 _liquidity) public {
         // (uint64 _collateral, uint128 _liquidity) = (5, 1);
         _maxBorrow_repayWithInterest(_collateral, _liquidity, ISilo.CollateralType.Collateral, SAME_ASSET);
     }
@@ -258,10 +246,9 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_repayWithInterest_1token_protected_fuzz
     */
-    function test_maxBorrow_repayWithInterest_1token_protected_fuzz(
-        uint64 _collateral,
-        uint128 _liquidity
-    ) public {
+    function test_maxBorrow_repayWithInterest_1token_protected_fuzz(uint64 _collateral, uint128 _liquidity)
+        public
+    {
         _maxBorrow_repayWithInterest(_collateral, _liquidity, ISilo.CollateralType.Protected, SAME_ASSET);
     }
 
@@ -343,9 +330,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         emit log("User 1 borrows the maximum returned from maxBorrow from Silo 1");
         uint256 maxBorrow = _sameAsset ? silo0.maxBorrowSameAsset(user1) : silo0.maxBorrow(user1);
         vm.prank(user1);
-        _sameAsset
-            ? silo0.borrowSameAsset(maxBorrow, user1, user1)
-            : silo0.borrow(maxBorrow, user1, user1);
+        _sameAsset ? silo0.borrowSameAsset(maxBorrow, user1, user1) : silo0.borrow(maxBorrow, user1, user1);
 
         vm.warp(block.timestamp + 41);
 
@@ -385,10 +370,11 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         emit log_named_decimal_uint("[_assertWeCanNotBorrowAboveMax]  toBorrow", toBorrow, 18);
 
         vm.prank(borrower);
-        (bool success, bytes memory data) = address(silo1).call(abi.encodeWithSelector(
-            _sameAsset ? ISilo.borrow.selector : ISilo.borrowSameAsset.selector,
-            toBorrow, borrower, borrower
-        ));
+        (bool success, bytes memory data) = address(silo1).call(
+            abi.encodeWithSelector(
+                _sameAsset ? ISilo.borrow.selector : ISilo.borrowSameAsset.selector, toBorrow, borrower, borrower
+            )
+        );
 
         if (success) {
             revert("we expect tx to be reverted for _maxBorrow + _precision!");
@@ -427,14 +413,19 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     }
 
     function _assertMaxBorrowIsZeroAtTheEnd(uint256 _underestimatedBy, bool _sameAsset) internal {
-        emit log_named_uint("================ _assertMaxBorrowIsZeroAtTheEnd ================ +/-", _underestimatedBy);
+        emit log_named_uint(
+            "================ _assertMaxBorrowIsZeroAtTheEnd ================ +/-", _underestimatedBy
+        );
 
         uint256 maxBorrow = _maxBorrow1(_sameAsset);
 
         assertLe(
             maxBorrow,
             _underestimatedBy,
-            string.concat("[_assertMaxBorrowIsZeroAtTheEnd] at this point max should return 0 +/-", _underestimatedBy.toString())
+            string.concat(
+                "[_assertMaxBorrowIsZeroAtTheEnd] at this point max should return 0 +/-",
+                _underestimatedBy.toString()
+            )
         );
     }
 

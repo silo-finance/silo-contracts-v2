@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+// solhint-disable ordering
+
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Utils} from "silo-foundry-utils/lib/Utils.sol";

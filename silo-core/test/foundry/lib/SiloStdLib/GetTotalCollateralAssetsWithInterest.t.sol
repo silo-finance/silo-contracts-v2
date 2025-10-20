@@ -7,7 +7,6 @@ import {SiloStdLib} from "silo-core/contracts/lib/SiloStdLib.sol";
 import {SiloMock} from "../../_mocks/SiloMock.sol";
 import {InterestRateModelMock} from "../../_mocks/InterestRateModelMock.sol";
 
-
 // forge test -vv --mc GetTotalAssetsWithInterestTest
 contract GetTotalAssetsWithInterestTest is Test {
     uint256 constant DECIMALS_POINTS = 1e18;
@@ -15,7 +14,7 @@ contract GetTotalAssetsWithInterestTest is Test {
     SiloMock immutable SILO;
     InterestRateModelMock immutable INTEREST_RATE_MODEL;
 
-    constructor () {
+    constructor() {
         SILO = new SiloMock(address(0));
         INTEREST_RATE_MODEL = new InterestRateModelMock();
     }
@@ -37,10 +36,14 @@ contract GetTotalAssetsWithInterestTest is Test {
         assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 0);
 
         SILO.getCollateralAndDebtAssetsMock(1000e18, 0);
-        assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 1000e18);
+        assertEq(
+            SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 1000e18
+        );
 
         SILO.getCollateralAndDebtAssetsMock(1000e18, 500e18);
-        assertEq(SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 1005e18);
+        assertEq(
+            SiloStdLib.getTotalCollateralAssetsWithInterest(silo, interestRateModel, daoFee, deployerFee), 1005e18
+        );
 
         SILO.getCollateralAndDebtAssetsMock(1000e18, 1000e18);
         daoFee = 0.01e18;

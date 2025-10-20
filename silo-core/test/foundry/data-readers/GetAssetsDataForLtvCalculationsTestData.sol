@@ -59,7 +59,8 @@ contract GetAssetsDataForLtvCalculationsTestData is Test {
 
     function _readDataFromJson() internal view returns (ScenarioData[] memory) {
         return abi.decode(
-            vm.parseJson(_readInput("GetAssetsDataForLtvCalculationsScenarios"), string(abi.encodePacked("."))), (ScenarioData[])
+            vm.parseJson(_readInput("GetAssetsDataForLtvCalculationsScenarios"), string(abi.encodePacked("."))),
+            (ScenarioData[])
         );
     }
 
@@ -70,11 +71,11 @@ contract GetAssetsDataForLtvCalculationsTestData is Test {
     function print(ScenarioData memory scenario) public {
         // Print ScenarioData
         emit log_named_uint("id", scenario.id);
-        
+
         // Print Input struct within ScenarioData
         emit log_named_string("accrueInMemory", scenario.input.accrueInMemory ? "Yes" : "No");
         emit log_named_string("oracleType", scenario.input.oracleType);
-        
+
         // Print DebtConfig struct within Input
         emit log_named_uint("compoundInterestRate_debt", scenario.input.debtConfig.compoundInterestRate);
         emit log_named_uint("debtShareBalanceOf", scenario.input.debtConfig.debtShareBalanceOf);
@@ -86,7 +87,9 @@ contract GetAssetsDataForLtvCalculationsTestData is Test {
 
         // Print CollateralConfig struct within Input
         emit log_named_uint("collateralShareBalanceOf", scenario.input.collateralConfig.collateralShareBalanceOf);
-        emit log_named_uint("collateralShareTotalSupply", scenario.input.collateralConfig.collateralShareTotalSupply);
+        emit log_named_uint(
+            "collateralShareTotalSupply", scenario.input.collateralConfig.collateralShareTotalSupply
+        );
         emit log_named_uint("compoundInterestRate_collateral", scenario.input.collateralConfig.compoundInterestRate);
         emit log_named_uint("daoFee", scenario.input.collateralConfig.daoFee);
         emit log_named_uint("deployerFee", scenario.input.collateralConfig.deployerFee);
@@ -97,7 +100,7 @@ contract GetAssetsDataForLtvCalculationsTestData is Test {
         emit log_named_uint("totalCollateralAssets", scenario.input.collateralConfig.totalCollateralAssets);
         emit log_named_uint("totalDebtAssets_collateral", scenario.input.collateralConfig.totalDebtAssets);
         emit log_named_uint("totalProtectedAssets", scenario.input.collateralConfig.totalProtectedAssets);
-        
+
         // Print Expected struct within ScenarioData
         emit log_named_uint("borrowerCollateralAssets", scenario.expected.borrowerCollateralAssets);
         emit log_named_uint("borrowerDebtAssets", scenario.expected.borrowerDebtAssets);

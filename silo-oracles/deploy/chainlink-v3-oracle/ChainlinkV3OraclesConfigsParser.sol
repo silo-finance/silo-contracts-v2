@@ -9,15 +9,12 @@ import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorag
 import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
 
 library ChainlinkV3OraclesConfigsParser {
-    string constant public CONFIGS_DIR = "silo-oracles/deploy/chainlink-v3-oracle/configs/";
-    string constant internal _EXTENSION = ".json";
+    string public constant CONFIGS_DIR = "silo-oracles/deploy/chainlink-v3-oracle/configs/";
+    string internal constant _EXTENSION = ".json";
 
-    bytes32 constant internal _EMPTY_STR_HASH = keccak256(abi.encodePacked("\"\""));
+    bytes32 internal constant _EMPTY_STR_HASH = keccak256(abi.encodePacked("\"\""));
 
-    function getConfig(
-        string memory _network,
-        string memory _name
-    )
+    function getConfig(string memory _network, string memory _name)
         internal
         returns (IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config)
     {
@@ -44,7 +41,9 @@ library ChainlinkV3OraclesConfigsParser {
 
         require(config.normalizationDivider <= 1e36, "normalizationDivider is over 1e36");
         require(config.normalizationMultiplier <= 1e36, "normalizationMultiplier is over 1e36");
-        require(config.normalizationDivider != 0 || config.normalizationMultiplier != 0, "normalization variables not set");
+        require(
+            config.normalizationDivider != 0 || config.normalizationMultiplier != 0, "normalization variables not set"
+        );
 
         AggregatorV3Interface secondaryAggregator = AggregatorV3Interface(address(0));
 

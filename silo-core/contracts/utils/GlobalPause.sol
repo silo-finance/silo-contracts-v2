@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+// solhint-disable ordering
+
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
 import {Ownable1and2Steps, Ownable2Step} from "common/access/Ownable1and2Steps.sol";

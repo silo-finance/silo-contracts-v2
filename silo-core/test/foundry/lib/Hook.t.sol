@@ -23,9 +23,7 @@ contract HookTest is Test {
         assertEq(Hook.BORROW_SAME_ASSET, Hook.NONE.addAction(Hook.BORROW_SAME_ASSET));
 
         assertEq(
-            Hook.BORROW_SAME_ASSET,
-            Hook.BORROW_SAME_ASSET.addAction(Hook.BORROW_SAME_ASSET),
-            "nothing was changed"
+            Hook.BORROW_SAME_ASSET, Hook.BORROW_SAME_ASSET.addAction(Hook.BORROW_SAME_ASSET), "nothing was changed"
         );
 
         uint256 bitmap = Hook.TRANSITION_COLLATERAL;
@@ -67,7 +65,9 @@ contract HookTest is Test {
     }
 
     function test_hook_removeAction() public pure {
-        assertEq(Hook.TRANSITION_COLLATERAL, Hook.TRANSITION_COLLATERAL.removeAction(Hook.NONE), "nothing was removed");
+        assertEq(
+            Hook.TRANSITION_COLLATERAL, Hook.TRANSITION_COLLATERAL.removeAction(Hook.NONE), "nothing was removed"
+        );
 
         uint256 bitmap = Hook.BORROW | Hook.WITHDRAW;
         assertEq(Hook.BORROW, bitmap.removeAction(Hook.WITHDRAW), "remove WITHDRAW");

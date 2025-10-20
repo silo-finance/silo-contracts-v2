@@ -14,8 +14,9 @@ import {SiloRouterV2Deploy} from "./SiloRouterV2Deploy.s.sol";
 import {SiloFactoryDeploy} from "./SiloFactoryDeploy.s.sol";
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 import {ManualLiquidationHelperDeploy} from "silo-core/deploy/ManualLiquidationHelperDeploy.s.sol";
+import {DKinkIRMFactoryDeploy} from "silo-core/deploy/DKinkIRMFactoryDeploy.s.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/MainnetDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --verify --broadcast
@@ -32,12 +33,14 @@ contract MainnetDeploy is CommonDeploy {
         TowerDeploy towerDeploy = new TowerDeploy();
         SiloRouterV2Deploy siloRouterV2Deploy = new SiloRouterV2Deploy();
         ManualLiquidationHelperDeploy manualLiquidationHelperDeploy = new ManualLiquidationHelperDeploy();
+        DKinkIRMFactoryDeploy dkinkIRMFactoryDeploy = new DKinkIRMFactoryDeploy();
 
         SiloIncentivesControllerFactoryDeploy siloIncentivesControllerFactoryDeploy =
             new SiloIncentivesControllerFactoryDeploy();
 
         _deploySiloFactory();
         interestRateModelV2ConfigFactoryDeploy.run();
+        dkinkIRMFactoryDeploy.run();
         interestRateModelV2Deploy.run();
         siloHookV1Deploy.run();
         siloDeployerDeploy.run();

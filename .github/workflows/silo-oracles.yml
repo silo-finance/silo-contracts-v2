@@ -66,6 +66,12 @@ jobs:
       - name: Solidity Lint
         run: yarn workspace silo-oracles lint:sol
 
+      - name: Solidity Tests Lint
+        run: yarn workspace silo-oracles lint-tests:sol
+
+      - name: Solidity Deploy Scripts Lint
+        run: yarn workspace silo-oracles lint-deploy:sol
+
   foundry:
     name: Foundry QA
     runs-on: ubuntu-latest

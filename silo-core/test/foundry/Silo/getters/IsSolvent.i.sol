@@ -56,8 +56,7 @@ contract IsSolventTest is SiloLittleHelper, Test {
         vm.expectCall(debtShareToken, abi.encodeWithSelector(IERC20.balanceOf.selector, recipient));
 
         vm.expectCall(
-            collateralShareToken,
-            abi.encodeWithSelector(IShareToken.balanceOfAndTotalSupply.selector, recipient)
+            collateralShareToken, abi.encodeWithSelector(IShareToken.balanceOfAndTotalSupply.selector, recipient)
         );
 
         vm.prank(borrower);

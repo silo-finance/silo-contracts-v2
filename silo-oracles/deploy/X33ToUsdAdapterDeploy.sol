@@ -7,7 +7,7 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {X33ToUsdAdapter, AggregatorV3Interface} from "silo-oracles/contracts/custom/X33ToUsdAdapter.sol";
 import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=oracles \
         forge script silo-oracles/deploy/X33ToUsdAdapterDeploy.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify

@@ -5,15 +5,15 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
 
-/**
-FOUNDRY_PROFILE=core CONFIG=Silo_savETH_ETH HOOK_RECEIVER_OWNER=DAO \
+/*
+FOUNDRY_PROFILE=core CONFIG=Test_Silo_PT-wOS-18DEC2025_USDC.e_KinkIRM HOOK_RECEIVER_OWNER=DAO \
     forge script silo-core/deploy/silo/SiloDeployWithHookReceiverOwner.s.sol \
-    --ffi --rpc-url $RPC_MAINNET --broadcast --verify
+    --ffi --rpc-url $RPC_SONIC --broadcast --verify
 
 Resume verification:
     FOUNDRY_PROFILE=core CONFIG=Silo_WAVAX_USDC HOOK_RECEIVER_OWNER=DAO \
     forge script silo-core/deploy/silo/SiloDeployWithHookReceiverOwner.s.sol \
-        --ffi --rpc-url $RPC_AVALANCHE \
+        --ffi --rpc-url $RPC_SONIC \
         --verify \
         --private-key $PRIVATE_KEY \
         --resume
@@ -33,5 +33,9 @@ contract SiloDeployWithHookReceiverOwner is SiloDeploy {
             initializationData: abi.encode(hookReceiverOwner)
         });
     }
-}
 
+    function _getDKinkIRMInitialOwner() internal override returns (address owner) {
+        string memory hookReceiverOwnerKey = vm.envString("HOOK_RECEIVER_OWNER");
+        owner = AddrLib.getAddress(hookReceiverOwnerKey);
+    }
+}

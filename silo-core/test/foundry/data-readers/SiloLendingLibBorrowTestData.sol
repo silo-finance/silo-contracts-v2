@@ -114,7 +114,7 @@ contract SiloLendingLibBorrowTestData {
         i++;
         _init(data[i], "#8 2nd borrow: 100, 200");
         data[i].input.assets = 200;
-        data[i].input.totalCollateralAssets = data[i-1].input.totalCollateralAssets;
+        data[i].input.totalCollateralAssets = data[i - 1].input.totalCollateralAssets;
         data[i].input.initTotalDebt = 100;
         data[i].mocks.debtSharesTotalSupply = 100;
         data[i].output.borrowedAssets = 200;
@@ -123,7 +123,7 @@ contract SiloLendingLibBorrowTestData {
         i++;
         _init(data[i], "#9 3rd borrow: 100, 200, 5000s");
         data[i].input.shares = 5000;
-        data[i].input.totalCollateralAssets = data[i-1].input.totalCollateralAssets;
+        data[i].input.totalCollateralAssets = data[i - 1].input.totalCollateralAssets;
         data[i].input.initTotalDebt = 100 + 200;
         data[i].mocks.debtSharesTotalSupply = (100 + 200);
         data[i].output.borrowedAssets = 5000;
@@ -133,7 +133,7 @@ contract SiloLendingLibBorrowTestData {
         _init(data[i], "#10 4th borrow: 100, 200, 5000s, all the rest");
         uint256 allTheRest = 5000 - 100 - 200 - 50;
         data[i].input.assets = allTheRest;
-        data[i].input.totalCollateralAssets = data[i-1].input.totalCollateralAssets;
+        data[i].input.totalCollateralAssets = data[i - 1].input.totalCollateralAssets;
         data[i].input.initTotalDebt = 100 + 200 + 50;
         data[i].mocks.debtSharesTotalSupply = (100 + 200 + 50);
         data[i].output.borrowedAssets = allTheRest;

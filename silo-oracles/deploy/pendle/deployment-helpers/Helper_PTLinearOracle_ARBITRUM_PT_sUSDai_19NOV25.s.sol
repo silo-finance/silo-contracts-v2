@@ -5,10 +5,9 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
-
 import {PTLinearOracleDeployCommon} from "./PTLinearOracleDeployCommon.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/pendle/deployment-helpers/Helper_PTLinearOracle_ARBITRUM_PT_sUSDai_19NOV25.s.sol \
     --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify

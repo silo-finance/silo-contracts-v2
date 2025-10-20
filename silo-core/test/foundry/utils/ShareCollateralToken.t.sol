@@ -11,7 +11,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
-import {SiloLittleHelper} from  "../_common/SiloLittleHelper.sol";
+import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
 FOUNDRY_PROFILE=core_test forge test --ffi -vv --mc ShareCollateralTokenTest
@@ -33,11 +33,11 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
 
     function setUp() public {
         siloConfig = _setUpLocalFixture();
-        (address protectedShareToken, address collateralShareToken, ) = siloConfig.getShareTokens(address(silo0));
+        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
         shareCollateralToken0 = ShareCollateralToken(collateralShareToken);
         shareProtectedToken0 = ShareCollateralToken(protectedShareToken);
 
-        (protectedShareToken, collateralShareToken, ) = siloConfig.getShareTokens(address(silo1));
+        (protectedShareToken, collateralShareToken,) = siloConfig.getShareTokens(address(silo1));
         shareCollateralToken1 = ShareCollateralToken(collateralShareToken);
         shareProtectedToken1 = ShareCollateralToken(protectedShareToken);
     }
@@ -176,7 +176,8 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
 
         vm.startPrank(depositor);
 
-        if (_sameAsset) { // deposit is in silo0
+        if (_sameAsset) {
+            // deposit is in silo0
             token0.transfer(receiver, 1);
             assertEq(token0.balanceOf(receiver), 1, "transfer0 success");
 
@@ -280,7 +281,8 @@ contract ShareCollateralTokenTest is Test, SiloLittleHelper {
         IShareToken token0 = _token0(_collateralType);
         IShareToken token1 = _token1(_collateralType);
 
-        if (_sameAsset) { // deposit is in silo0
+        if (_sameAsset) {
+            // deposit is in silo0
             vm.prank(depositor);
             token0.approve(spender, 1);
 

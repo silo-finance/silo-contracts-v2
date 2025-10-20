@@ -8,7 +8,6 @@ import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncent
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
 
-
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {CantinaTicket} from "./CantinaTicket.sol";
 
@@ -27,7 +26,6 @@ contract CantinaTicket195 is CantinaTicket {
     string internal constant _PROGRAM_NAME = "Test";
     string internal constant _PROGRAM_NAME_2 = "Test2";
 
-
     function setUp() public override {
         super.setUp();
 
@@ -44,7 +42,9 @@ contract CantinaTicket195 is CantinaTicket {
 
         _controller = SiloIncentivesController(factory.create(_owner, _notifier, _notifier, bytes32(0)));
 
-        assertTrue(factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory");
+        assertTrue(
+            factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory"
+        );
     }
 
     function test_double_claim_rewards() public {
@@ -54,12 +54,14 @@ contract CantinaTicket195 is CantinaTicket {
         uint256 emissionPerSecond = 1e6;
         // Create an incentives program with a long enough distribution period.
         vm.prank(_controller.owner());
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: address(_rewardToken),
-            distributionEnd: uint40(block.timestamp + 200),
-            emissionPerSecond: uint104(emissionPerSecond)
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: address(_rewardToken),
+                distributionEnd: uint40(block.timestamp + 200),
+                emissionPerSecond: uint104(emissionPerSecond)
+            })
+        );
 
         // Initially, the rewards balance for user1 should be zero.
         assertEq(_controller.getRewardsBalance(user1, _PROGRAM_NAME), 0, "no rewards initially");

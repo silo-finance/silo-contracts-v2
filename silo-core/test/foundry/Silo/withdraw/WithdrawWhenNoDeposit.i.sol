@@ -85,7 +85,11 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
         silo0.withdraw(0, address(this), address(this), ISilo.CollateralType.Protected);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, SiloMathLib._DECIMALS_OFFSET_POW));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, SiloMathLib._DECIMALS_OFFSET_POW
+            )
+        );
         silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Collateral);
 
         vm.expectRevert(ISilo.NothingToWithdraw.selector);
@@ -94,7 +98,11 @@ contract WithdrawWhenNoDepositTest is IntegrationTest {
         // any deposit so we have liquidity
         _anyDeposit(ISilo.CollateralType.Protected);
 
-        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, SiloMathLib._DECIMALS_OFFSET_POW));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, SiloMathLib._DECIMALS_OFFSET_POW
+            )
+        );
         silo0.withdraw(1, address(this), address(this), ISilo.CollateralType.Protected);
     }
 

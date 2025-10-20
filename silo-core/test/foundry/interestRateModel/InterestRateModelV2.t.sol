@@ -91,7 +91,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
         vm.expectRevert(IInterestRateModelV2.InvalidTimestamps.selector);
         INTEREST_RATE_MODEL.calculateCurrentInterestRate(c, 0, 0, 1, 0);
     }
-    
+
     // forge test -vv --mt test_IRM_calculateCurrentInterestRate_CAP
     function test_IRM_calculateCurrentInterestRate_CAP() public view {
         uint256 rcur = INTEREST_RATE_MODEL.calculateCurrentInterestRate(
@@ -102,7 +102,7 @@ contract InterestRateModelV2Test is Test, InterestRateModelConfigs {
             TODAY + 60 days // after 59 days we got capped
         );
 
-        assertEq(rcur, 10**20, "expect to return CAP");
+        assertEq(rcur, 10 ** 20, "expect to return CAP");
     }
 
     function test_IRM_calculateCurrentInterestRate_revertsWhenTimestampInvalid() public {

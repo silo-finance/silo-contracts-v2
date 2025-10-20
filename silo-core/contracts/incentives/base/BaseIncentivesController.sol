@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.28;
 
+// solhint-disable func-name-mixedcase, ordering
+
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";

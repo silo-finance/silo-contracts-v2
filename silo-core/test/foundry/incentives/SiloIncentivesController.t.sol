@@ -37,7 +37,6 @@ contract SiloIncentivesControllerTest is Test {
     event IncentivesProgramUpdated(string name);
     event ClaimerSet(address indexed user, address indexed claimer);
 
-
     function setUp() public {
         _rewardToken = address(new ERC20Mock());
         _notifier = address(new ERC20Mock());
@@ -49,7 +48,9 @@ contract SiloIncentivesControllerTest is Test {
 
         _controller = SiloIncentivesController(_factory.create(_owner, _notifier, _notifier, bytes32(0)));
 
-        assertTrue(_factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory");
+        assertTrue(
+            _factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory"
+        );
 
         _PRECISION = _controller.TEN_POW_PRECISION();
     }
@@ -58,12 +59,14 @@ contract SiloIncentivesControllerTest is Test {
     function test_createIncentivesProgram_OwnableUnauthorizedAccount() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
 
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: address(0),
-            distributionEnd: 0,
-            emissionPerSecond: 0
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: address(0),
+                distributionEnd: 0,
+                emissionPerSecond: 0
+            })
+        );
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_EmissionPerSecondTooHigh
@@ -71,12 +74,14 @@ contract SiloIncentivesControllerTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.EmissionPerSecondTooHigh.selector));
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: address(0),
-            distributionEnd: 0,
-            emissionPerSecond: 1e30
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: address(0),
+                distributionEnd: 0,
+                emissionPerSecond: 1e30
+            })
+        );
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_invalidDistributionEnd
@@ -84,12 +89,14 @@ contract SiloIncentivesControllerTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidDistributionEnd.selector));
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: address(0),
-            distributionEnd: uint40(block.timestamp - 1),
-            emissionPerSecond: 0
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: address(0),
+                distributionEnd: uint40(block.timestamp - 1),
+                emissionPerSecond: 0
+            })
+        );
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_InvalidIncentivesProgramName
@@ -97,12 +104,14 @@ contract SiloIncentivesControllerTest is Test {
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.InvalidIncentivesProgramName.selector));
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: "",
-            rewardToken: address(0),
-            distributionEnd: uint40(block.timestamp),
-            emissionPerSecond: 0
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: "",
+                rewardToken: address(0),
+                distributionEnd: uint40(block.timestamp),
+                emissionPerSecond: 0
+            })
+        );
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_InvalidRewardToken
@@ -110,12 +119,14 @@ contract SiloIncentivesControllerTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidRewardToken.selector));
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: address(0),
-            distributionEnd: uint40(block.timestamp),
-            emissionPerSecond: 0
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: address(0),
+                distributionEnd: uint40(block.timestamp),
+                emissionPerSecond: 0
+            })
+        );
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_tooLongProgramName
@@ -123,12 +134,14 @@ contract SiloIncentivesControllerTest is Test {
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.TooLongProgramName.selector));
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz",
-            rewardToken: _rewardToken,
-            distributionEnd: uint40(block.timestamp + 1000),
-            emissionPerSecond: 1000e18
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz",
+                rewardToken: _rewardToken,
+                distributionEnd: uint40(block.timestamp + 1000),
+                emissionPerSecond: 1000e18
+            })
+        );
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_Success
@@ -138,24 +151,26 @@ contract SiloIncentivesControllerTest is Test {
         uint104 emissionPerSecond = 1000e18;
         uint256 distributionEnd = block.timestamp + 1000;
 
-        IDistributionManager.IncentiveProgramDetails memory detailsBefore = _controller.incentivesProgram(_PROGRAM_NAME);
+        IDistributionManager.IncentiveProgramDetails memory detailsBefore =
+            _controller.incentivesProgram(_PROGRAM_NAME);
 
         vm.expectEmit(true, true, true, true);
         emit IncentivesProgramCreated(_PROGRAM_NAME);
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: _rewardToken,
-            distributionEnd: uint40(distributionEnd),
-            emissionPerSecond: emissionPerSecond
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: _rewardToken,
+                distributionEnd: uint40(distributionEnd),
+                emissionPerSecond: emissionPerSecond
+            })
+        );
 
         IDistributionManager.IncentiveProgramDetails memory details = _controller.incentivesProgram(_PROGRAM_NAME);
 
-        uint256 lastUpdateTimestamp = detailsBefore.lastUpdateTimestamp == 0
-            ? block.timestamp
-            : detailsBefore.lastUpdateTimestamp;
+        uint256 lastUpdateTimestamp =
+            detailsBefore.lastUpdateTimestamp == 0 ? block.timestamp : detailsBefore.lastUpdateTimestamp;
 
         uint256 expectedIndex =
             emissionPerSecond * (block.timestamp - lastUpdateTimestamp) * _PRECISION / _TOTAL_SUPPLY;
@@ -174,22 +189,26 @@ contract SiloIncentivesControllerTest is Test {
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_updateIncentivesProgram_IncentivesProgramAlreadyExists
     function test_updateIncentivesProgram_IncentivesProgramAlreadyExists() public {
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: _rewardToken,
-            distributionEnd: uint40(block.timestamp + 1000),
-            emissionPerSecond: 1000e18
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: _rewardToken,
+                distributionEnd: uint40(block.timestamp + 1000),
+                emissionPerSecond: 1000e18
+            })
+        );
 
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.IncentivesProgramAlreadyExists.selector));
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: _rewardToken,
-            distributionEnd: uint40(block.timestamp + 1000),
-            emissionPerSecond: 1000e18
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: _rewardToken,
+                distributionEnd: uint40(block.timestamp + 1000),
+                emissionPerSecond: 1000e18
+            })
+        );
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_updateIncentivesProgram_EmissionPerSecondTooHigh
@@ -203,12 +222,14 @@ contract SiloIncentivesControllerTest is Test {
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_updateIncentivesProgram_InvalidDistributionEnd
     function test_updateIncentivesProgram_InvalidDistributionEnd() public {
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: _rewardToken,
-            distributionEnd: uint40(block.timestamp + 1000),
-            emissionPerSecond: 1000e18
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: _rewardToken,
+                distributionEnd: uint40(block.timestamp + 1000),
+                emissionPerSecond: 1000e18
+            })
+        );
 
         vm.expectRevert(abi.encodeWithSelector(ISiloIncentivesController.InvalidDistributionEnd.selector));
 
@@ -229,12 +250,14 @@ contract SiloIncentivesControllerTest is Test {
         ERC20Mock(_rewardToken).mint(address(_controller), 20e18);
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: _rewardToken,
-            distributionEnd: uint40(block.timestamp),
-            emissionPerSecond: 1e18
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: _rewardToken,
+                distributionEnd: uint40(block.timestamp),
+                emissionPerSecond: 1e18
+            })
+        );
 
         uint256 clockStart = block.timestamp;
 
@@ -290,12 +313,14 @@ contract SiloIncentivesControllerTest is Test {
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_setDistributionEnd_Success
     function test_setDistributionEnd_Success() public {
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: _rewardToken,
-            distributionEnd: uint40(block.timestamp + 100),
-            emissionPerSecond: 1e18
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: _rewardToken,
+                distributionEnd: uint40(block.timestamp + 100),
+                emissionPerSecond: 1e18
+            })
+        );
 
         // user1 deposit 100
         uint256 user1Deposit1 = 100e18;
@@ -344,12 +369,14 @@ contract SiloIncentivesControllerTest is Test {
         uint104 initialEmissionPerSecond = 1e18;
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: _rewardToken,
-            distributionEnd: uint40(block.timestamp),
-            emissionPerSecond: initialEmissionPerSecond
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: _rewardToken,
+                distributionEnd: uint40(block.timestamp),
+                emissionPerSecond: initialEmissionPerSecond
+            })
+        );
 
         uint256 clockStart = block.timestamp;
 
@@ -427,14 +454,17 @@ contract SiloIncentivesControllerTest is Test {
         uint104 emissionPerSecond = 1000e18;
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: _rewardToken,
-            distributionEnd: distributionEnd,
-            emissionPerSecond: emissionPerSecond
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: _rewardToken,
+                distributionEnd: distributionEnd,
+                emissionPerSecond: emissionPerSecond
+            })
+        );
 
-        IDistributionManager.IncentiveProgramDetails memory detailsBefore = _controller.incentivesProgram(_PROGRAM_NAME);
+        IDistributionManager.IncentiveProgramDetails memory detailsBefore =
+            _controller.incentivesProgram(_PROGRAM_NAME);
 
         assertEq(detailsBefore.emissionPerSecond, emissionPerSecond, "invalid emissionPerSecond");
         assertEq(detailsBefore.distributionEnd, distributionEnd, "invalid distributionEnd");
@@ -450,11 +480,12 @@ contract SiloIncentivesControllerTest is Test {
         vm.prank(_owner);
         _controller.updateIncentivesProgram(_PROGRAM_NAME, distributionEnd, emissionPerSecond);
 
-        uint256 expectedIndex = detailsBefore.index +
-            detailsBefore.emissionPerSecond *
-            (block.timestamp - detailsBefore.lastUpdateTimestamp) * _PRECISION / _TOTAL_SUPPLY;
+        uint256 expectedIndex = detailsBefore.index
+            + detailsBefore.emissionPerSecond * (block.timestamp - detailsBefore.lastUpdateTimestamp) * _PRECISION
+                / _TOTAL_SUPPLY;
 
-        IDistributionManager.IncentiveProgramDetails memory detailsAfter = _controller.incentivesProgram(_PROGRAM_NAME);
+        IDistributionManager.IncentiveProgramDetails memory detailsAfter =
+            _controller.incentivesProgram(_PROGRAM_NAME);
 
         assertEq(detailsAfter.index, expectedIndex, "invalid index");
         assertEq(detailsAfter.emissionPerSecond, emissionPerSecond, "invalid emissionPerSecond");
@@ -485,12 +516,14 @@ contract SiloIncentivesControllerTest is Test {
         uint104 emissionPerSecond = 100e18;
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: _rewardToken,
-            distributionEnd: distributionEnd,
-            emissionPerSecond: emissionPerSecond
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: _rewardToken,
+                distributionEnd: distributionEnd,
+                emissionPerSecond: emissionPerSecond
+            })
+        );
 
         address recipient = makeAddr("Recipient");
         uint256 recipientBalance = 100e18;
@@ -507,13 +540,14 @@ contract SiloIncentivesControllerTest is Test {
         vm.prank(_notifier);
         _controller.afterTokenTransfer(address(0), 0, recipient, recipientBalance, newTotalSupply, amount);
 
-        IDistributionManager.IncentiveProgramDetails memory detailsAfter = _controller.incentivesProgram(_PROGRAM_NAME);
+        IDistributionManager.IncentiveProgramDetails memory detailsAfter =
+            _controller.incentivesProgram(_PROGRAM_NAME);
 
         uint256 userDataAfter = _controller.getUserData(recipient, _PROGRAM_NAME);
 
-        uint256 expectedIndex = detailsAfter.index +
-            detailsAfter.emissionPerSecond *
-            (block.timestamp - detailsAfter.lastUpdateTimestamp) * _PRECISION / newTotalSupply;
+        uint256 expectedIndex = detailsAfter.index
+            + detailsAfter.emissionPerSecond * (block.timestamp - detailsAfter.lastUpdateTimestamp) * _PRECISION
+                / newTotalSupply;
 
         assertEq(expectedIndex, detailsAfter.index);
         assertEq(userDataAfter, expectedIndex);
@@ -522,9 +556,9 @@ contract SiloIncentivesControllerTest is Test {
 
         uint256 rewards = _controller.getRewardsBalance(recipient, _PROGRAM_NAME);
 
-        expectedIndex = expectedIndex +
-            detailsAfter.emissionPerSecond *
-            (block.timestamp - detailsAfter.lastUpdateTimestamp) * _PRECISION / newTotalSupply;
+        expectedIndex = expectedIndex
+            + detailsAfter.emissionPerSecond * (block.timestamp - detailsAfter.lastUpdateTimestamp) * _PRECISION
+                / newTotalSupply;
 
         uint256 expectedRewards = recipientBalance * (expectedIndex - userDataAfter) / _PRECISION;
         expectedRewards += _controller.getUserUnclaimedRewards(recipient, _PROGRAM_NAME);
@@ -863,7 +897,7 @@ contract SiloIncentivesControllerTest is Test {
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_claimRewardsOnBehalf_programNotFound
     function test_claimRewardsOnBehalf_programNotFound() public {
-         vm.prank(_owner);
+        vm.prank(_owner);
         _controller.setClaimer(user1, address(this));
 
         string[] memory programsNames = new string[](1);
@@ -896,12 +930,14 @@ contract SiloIncentivesControllerTest is Test {
         uint104 emissionPerSecond = 100e18;
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: _rewardToken,
-            distributionEnd: distributionEnd,
-            emissionPerSecond: emissionPerSecond
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: _rewardToken,
+                distributionEnd: distributionEnd,
+                emissionPerSecond: emissionPerSecond
+            })
+        );
 
         vm.prank(_owner);
         _controller.setClaimer(user1, address(this));
@@ -939,12 +975,14 @@ contract SiloIncentivesControllerTest is Test {
         uint104 emissionPerSecond = 1e18;
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: _rewardToken,
-            distributionEnd: uint40(distributionEnd),
-            emissionPerSecond: emissionPerSecond
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: _rewardToken,
+                distributionEnd: uint40(distributionEnd),
+                emissionPerSecond: emissionPerSecond
+            })
+        );
 
         string[] memory programsNames = new string[](2);
         programsNames[0] = _PROGRAM_NAME;
@@ -960,20 +998,24 @@ contract SiloIncentivesControllerTest is Test {
         uint104 emissionPerSecond = 1e18;
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME,
-            rewardToken: _rewardToken,
-            distributionEnd: uint40(distributionEnd),
-            emissionPerSecond: emissionPerSecond
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME,
+                rewardToken: _rewardToken,
+                distributionEnd: uint40(distributionEnd),
+                emissionPerSecond: emissionPerSecond
+            })
+        );
 
         vm.prank(_owner);
-        _controller.createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput({
-            name: _PROGRAM_NAME_2,
-            rewardToken: _rewardToken,
-            distributionEnd: uint40(distributionEnd),
-            emissionPerSecond: emissionPerSecond
-        }));
+        _controller.createIncentivesProgram(
+            DistributionTypes.IncentivesProgramCreationInput({
+                name: _PROGRAM_NAME_2,
+                rewardToken: _rewardToken,
+                distributionEnd: uint40(distributionEnd),
+                emissionPerSecond: emissionPerSecond
+            })
+        );
 
         // user1 deposit 100
         uint256 user1Deposit1 = 100e18;
@@ -1104,7 +1146,7 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(programsNames.length, 2, "expected 2 programs");
 
         assertEq(programsNames[0], _programName, "expected programName");
-        
+
         // check immediateDistribution program name
         // 1. It should be a string representation of the `_token`
         string memory expectedProgramName = Strings.toHexString(_token);

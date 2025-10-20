@@ -80,8 +80,6 @@ interface ILeverageUsingSiloFlashloan {
     error SwapDidNotCoverObligations();
     error InvalidSilo();
 
-    function SWAP_MODULE() external view returns (IGeneralSwapModule);
-
     /// @notice Performs leverage operation using a flash loan and token swap. Does not support fee on transfer tokens.
     /// It also does not support borrow on same asset.
     /// @dev Reverts if the amount is so high that fee calculation fails
@@ -142,4 +140,7 @@ interface ILeverageUsingSiloFlashloan {
         CloseLeverageArgs calldata _closeLeverageArgs,
         Permit calldata _withdrawAllowance
     ) external;
+
+    // solhint-disable-next-line func-name-mixedcase
+    function SWAP_MODULE() external view returns (IGeneralSwapModule);
 }

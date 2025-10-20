@@ -23,16 +23,21 @@ contract CantinaTicket235 is CantinaTicket {
         // SILO COMMENT: if round is invalid we will gain even after one iteration
 
         // for (uint256 i = 0; i < iterations; i++) {
-            // Transition collateral from "Collateral" to "Protected Collateral".
-            silo0.transitionCollateral(transitionShares, attacker, ISilo.CollateralType.Collateral);
-            // Redeem the withdrawn assets by depositing them into the "Protected Collateral" state.
-            // uint256 newShares = silo0.deposit(withdrawnAssets, attacker, ISilo.CollateralType.Protected);
-            // The attacker uses the new shares for the next transition.
-            // transitionShares = newShares;
+        // Transition collateral from "Collateral" to "Protected Collateral".
+        silo0.transitionCollateral(transitionShares, attacker, ISilo.CollateralType.Collateral);
+        // Redeem the withdrawn assets by depositing them into the "Protected Collateral" state.
+        // uint256 newShares = silo0.deposit(withdrawnAssets, attacker, ISilo.CollateralType.Protected);
+        // The attacker uses the new shares for the next transition.
+        // transitionShares = newShares;
         // }
 
         // After many transitions, the attacker redeems the final shares.
-        uint256 redeemedAssets = silo0.redeem(silo0.maxRedeem(attacker, ISilo.CollateralType.Protected), attacker, attacker, ISilo.CollateralType.Protected);
+        uint256 redeemedAssets = silo0.redeem(
+            silo0.maxRedeem(attacker, ISilo.CollateralType.Protected),
+            attacker,
+            attacker,
+            ISilo.CollateralType.Protected
+        );
 
         // If rounding discrepancies have accumulated, redeemedAssets will exceed the initialDeposit.
         assertEq(redeemedAssets, initialDeposit, "no gains");

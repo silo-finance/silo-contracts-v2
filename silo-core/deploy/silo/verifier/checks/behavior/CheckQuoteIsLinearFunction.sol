@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
+
 import {console2} from "forge-std/console2.sol";
 
 import {ICheck} from "silo-core/deploy/silo/verifier/checks/ICheck.sol";
@@ -36,18 +37,16 @@ contract CheckQuoteIsLinearFunction is ICheck {
     }
 
     function errorMessage() external view override returns (string memory message) {
-        message = string.concat(
-            "property does not hold, breaks at amount ",
-            PriceFormatter.formatNumberInE(breaksAtAmount)
-        );
+        message =
+            string.concat("property does not hold, breaks at amount ", PriceFormatter.formatNumberInE(breaksAtAmount));
     }
 
     function execute() external override returns (bool result) {
         uint256 previousQuote = type(uint256).max;
-        uint256 maxAmountToQuote = 10**36;
+        uint256 maxAmountToQuote = 10 ** 36;
         bool success;
 
-        for (uint amountToQuote = maxAmountToQuote; amountToQuote >= 100; amountToQuote /= 10) {
+        for (uint256 amountToQuote = maxAmountToQuote; amountToQuote >= 100; amountToQuote /= 10) {
             // init previous quote with the first element
             if (previousQuote == type(uint256).max) {
                 (success, previousQuote) = Utils.quote(oracle, token, amountToQuote);

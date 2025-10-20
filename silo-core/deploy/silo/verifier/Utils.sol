@@ -8,7 +8,10 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/InterestRateModelConfigData.sol";
-import {InterestRateModelV2, IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {DKinkIRMConfigData} from "silo-core/deploy/input-readers/DKinkIRMConfigData.sol";
+import {
+    InterestRateModelV2, IInterestRateModelV2
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {IPendleLPWrapperLike} from "silo-oracles/contracts/pendle/interfaces/IPendleLPWrapperLike.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
@@ -17,49 +20,88 @@ import {ChainlinkV3Oracle} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3O
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
 
+import {IDynamicKinkModelConfig} from "silo-core/contracts/interfaces/IDynamicKinkModelConfig.sol";
+import {IDynamicKinkModel} from "silo-core/contracts/interfaces/IDynamicKinkModel.sol";
+
 interface IPTLinearAggregatorLike {
     function PT() external view returns (address);
     function baseDiscountPerYear() external view returns (uint256);
 }
 
 library Utils {
-    address constant internal _OLD_SILO_VIRTUAL_ASSET_8 = 0xad525F341368AA80093672278234ad364EFcAf0A;
+    address internal constant _OLD_SILO_VIRTUAL_ASSET_8 = 0xad525F341368AA80093672278234ad364EFcAf0A;
     uint256 internal constant _NEW_CHAINLINK_CONFIG_DATA_LEN = 320;
+
+    function findKinkIrmName(ISiloConfig.ConfigData memory _configData)
+        internal
+        returns (string memory irmConfigName, bool success)
+    {
+        DKinkIRMConfigData dkinkIrmConfigData = new DKinkIRMConfigData();
+
+        (
+            DKinkIRMConfigData.KinkJsonData[] memory allModels,
+            DKinkIRMConfigData.ImmutableArgs[] memory allImmutableArgs
+        ) = dkinkIrmConfigData.getAllConfigs();
+
+        IDynamicKinkModelConfig irmConfig = IDynamicKinkModel(_configData.interestRateModel).irmConfig();
+
+        (IDynamicKinkModel.Config memory config, IDynamicKinkModel.ImmutableConfig memory immutableConfig) =
+            irmConfig.getConfig();
+
+        bytes32 deployedConfigHash = keccak256(abi.encode(config));
+        bytes32 deployedImmutableHash = keccak256(abi.encode(immutableConfig));
+
+        string memory configName;
+        string memory immutableName;
+
+        for (uint256 i; i < allModels.length; i++) {
+            bytes32 cfgHash = keccak256(abi.encode(dkinkIrmConfigData.castToConfig(allModels[i])));
+
+            if (cfgHash == deployedConfigHash) {
+                configName = allModels[i].name;
+                break;
+            }
+        }
+
+        for (uint256 i; i < allImmutableArgs.length; i++) {
+            IDynamicKinkModel.ImmutableConfig memory immutableCfg = IDynamicKinkModel.ImmutableConfig({
+                timelock: allImmutableArgs[i].args.timelock,
+                rcompCapPerSecond: allImmutableArgs[i].args.rcompCap / 365 days
+            });
+
+            bytes32 immutableHash = keccak256(abi.encode(immutableCfg));
+
+            if (immutableHash == deployedImmutableHash) {
+                immutableName = allImmutableArgs[i].name;
+                break;
+            }
+        }
+
+        return (
+            string.concat(configName, ":", immutableName),
+            bytes(configName).length > 0 && bytes(immutableName).length > 0
+        );
+    }
 
     function findIrmName(ISiloConfig.ConfigData memory _configData)
         internal
         returns (string memory configName, bool success)
     {
-        InterestRateModelConfigData.ConfigData[] memory allModels =
-            (new InterestRateModelConfigData()).getAllConfigs();
+        InterestRateModelConfigData irmData = new InterestRateModelConfigData();
+        InterestRateModelConfigData.ConfigData[] memory allModels = irmData.getAllConfigs();
 
-        IInterestRateModelV2Config irmV2Config =
-            InterestRateModelV2(_configData.interestRateModel).irmConfig();
+        IInterestRateModelV2Config irmV2Config = InterestRateModelV2(_configData.interestRateModel).irmConfig();
 
         IInterestRateModelV2.Config memory irmConfig = irmV2Config.getConfig();
 
-        uint i;
+        bytes32 deployedCfgHash = keccak256(abi.encode(irmConfig));
 
-        for (; i < allModels.length; i++) {
-            bool configIsMatching = allModels[i].config.uopt == irmConfig.uopt &&
-                allModels[i].config.ucrit == irmConfig.ucrit &&
-                allModels[i].config.ulow == irmConfig.ulow &&
-                allModels[i].config.ki == irmConfig.ki &&
-                allModels[i].config.kcrit == irmConfig.kcrit &&
-                allModels[i].config.klow == irmConfig.klow &&
-                allModels[i].config.klin == irmConfig.klin &&
-                allModels[i].config.beta == irmConfig.beta &&
-                allModels[i].config.ri == irmConfig.ri &&
-                allModels[i].config.Tcrit == irmConfig.Tcrit;
+        for (uint256 i; i < allModels.length; i++) {
+            bytes32 cfgHash = keccak256(abi.encode(irmData.modelConfigToConfig(allModels[i].config)));
 
-            if (configIsMatching) {
-                break;
+            if (cfgHash == deployedCfgHash) {
+                return (allModels[i].name, true);
             }
-        }
-
-        if (i != allModels.length) {
-            configName = allModels[i].name;
-            success = true;
         }
     }
 
@@ -131,9 +173,8 @@ library Utils {
         }
 
         try ChainlinkV3Oracle(address(_oracle)).oracleConfig() returns (ChainlinkV3OracleConfig oracleConfig) {
-            (, bytes memory data) = address(oracleConfig).staticcall(abi.encodeWithSelector(
-                ChainlinkV3OracleConfig.getConfig.selector
-            ));
+            (, bytes memory data) =
+                address(oracleConfig).staticcall(abi.encodeWithSelector(ChainlinkV3OracleConfig.getConfig.selector));
 
             if (data.length != _NEW_CHAINLINK_CONFIG_DATA_LEN) {
                 return (address(0), address(0));
@@ -160,7 +201,8 @@ library Utils {
     }
 
     function isTokenERC4626(address _token) internal view returns (bool result) {
-        try IERC4626(_token).convertToAssets(1000 * 10 ** IERC20Metadata(_token).decimals()) returns (uint256 assets) {
+        try IERC4626(_token).convertToAssets(1000 * 10 ** IERC20Metadata(_token).decimals()) returns (uint256 assets)
+        {
             return assets != 0;
         } catch {}
     }
@@ -179,7 +221,7 @@ library Utils {
                 return false;
             }
 
-            for (uint i; i < bytes(prefix).length; i++) {
+            for (uint256 i; i < bytes(prefix).length; i++) {
                 if (bytes(prefix)[i] != bytes(symbol)[i]) {
                     return false;
                 }

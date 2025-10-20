@@ -24,8 +24,7 @@ contract CheckFlashloanFee is ICheck {
 
     function errorMessage() external view override returns (string memory message) {
         message = string.concat(
-            Strings.toString(configData.flashloanFee),
-            " flashloan fee is NOT within the expected range"
+            Strings.toString(configData.flashloanFee), " flashloan fee is NOT within the expected range"
         );
     }
 

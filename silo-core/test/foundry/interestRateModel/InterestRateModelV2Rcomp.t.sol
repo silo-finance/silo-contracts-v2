@@ -12,7 +12,6 @@ import {InterestRateModelV2Impl} from "./InterestRateModelV2Impl.sol";
 import {InterestRateModelConfigs} from "../_common/InterestRateModelConfigs.sol";
 import {RcompTestData} from "../data-readers/RcompTestData.sol";
 
-
 // forge test -vv --ffi --mc InterestRateModelV2RcompTest
 contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs {
     InterestRateModelV2Impl immutable INTEREST_RATE_MODEL;
@@ -120,19 +119,15 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         uint256 totalDepositsOverflows;
         uint256 totalBorrowAmountOverflows;
 
-        for (uint i; i < data.length; i++) {
+        for (uint256 i; i < data.length; i++) {
             RcompData memory testCase = data[i];
 
             IInterestRateModelV2.Config memory cfg = _toConfigStruct(testCase);
             address silo = address(uint160(i));
             InterestRateModelV2Impl IRMv2Impl = _createIRM(silo, testCase);
 
-            (
-                uint256 rcomp,
-                int256 ri,
-                int256 Tcrit,
-                bool overflow
-            ) = IRMv2Impl.calculateCompoundInterestRateWithOverflowDetection(
+            (uint256 rcomp, int256 ri, int256 Tcrit, bool overflow) = IRMv2Impl
+                .calculateCompoundInterestRateWithOverflowDetection(
                 cfg,
                 testCase.input.totalDeposits,
                 testCase.input.totalBorrowAmount,
@@ -203,17 +198,14 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
     function test_IRM_RcompData_Update() public {
         RcompData[] memory data = _readDataFromJson();
 
-        for (uint i; i < data.length; i++) {
+        for (uint256 i; i < data.length; i++) {
             RcompData memory testCase = data[i];
 
             IInterestRateModelV2.Config memory cfg = _toConfigStruct(testCase);
             address silo = address(uint160(i));
             InterestRateModelV2Impl IRMv2Impl = _createIRM(silo, testCase);
 
-            (
-                , int256 ri,
-                int256 Tcrit,
-            ) = IRMv2Impl.calculateCompoundInterestRateWithOverflowDetection(
+            (, int256 ri, int256 Tcrit,) = IRMv2Impl.calculateCompoundInterestRateWithOverflowDetection(
                 cfg,
                 testCase.input.totalDeposits,
                 testCase.input.totalBorrowAmount,
@@ -226,9 +218,7 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
             vm.warp(testCase.input.currentTime);
             vm.prank(silo);
             IRMv2Impl.getCompoundInterestRateAndUpdate(
-                testCase.input.totalDeposits,
-                testCase.input.totalBorrowAmount,
-                testCase.input.lastTransactionTime
+                testCase.input.totalDeposits, testCase.input.totalBorrowAmount, testCase.input.lastTransactionTime
             );
 
             (int112 storageRi, int112 storageTcrit, bool initialized) = IRMv2Impl.getSetup(silo);
@@ -239,7 +229,10 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         }
     }
 
-    function _createIRM(address _silo, RcompData memory _testCase) internal returns (InterestRateModelV2Impl IRMv2Impl) {
+    function _createIRM(address _silo, RcompData memory _testCase)
+        internal
+        returns (InterestRateModelV2Impl IRMv2Impl)
+    {
         IRMv2Impl = InterestRateModelV2Impl(Clones.clone(address(INTEREST_RATE_MODEL)));
 
         IInterestRateModelV2Config configAddress = new InterestRateModelV2Config(_toConfigStruct(_testCase));
@@ -252,12 +245,14 @@ contract InterestRateModelV2RcompTest is RcompTestData, InterestRateModelConfigs
         int256 deviation = (_a * int256(BASIS_POINTS)) / _b;
         uint256 positiveDeviation = uint256(deviation < 0 ? -deviation : deviation);
 
-        diff = positiveDeviation > BASIS_POINTS ? positiveDeviation - BASIS_POINTS : BASIS_POINTS - positiveDeviation;
+        diff =
+            positiveDeviation > BASIS_POINTS ? positiveDeviation - BASIS_POINTS : BASIS_POINTS - positiveDeviation;
     }
 
     function _diff(uint256 _a, uint256 _b) internal pure returns (uint256 diff) {
         uint256 positiveDeviation = (_a * BASIS_POINTS) / _b;
-        diff = positiveDeviation > BASIS_POINTS ? positiveDeviation - BASIS_POINTS : BASIS_POINTS - positiveDeviation;
+        diff =
+            positiveDeviation > BASIS_POINTS ? positiveDeviation - BASIS_POINTS : BASIS_POINTS - positiveDeviation;
     }
 
     function _concatMsg(uint256 _i, string memory _msg) internal pure returns (string memory) {

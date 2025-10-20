@@ -88,12 +88,9 @@ contract PreviewMintTest is SiloLittleHelper, Test {
         silo1.accrueInterest();
     }
 
-    function _previewMint_afterNoInterest(
-        uint128 _depositAmount,
-        uint128 _shares,
-        bool _defaultType,
-        uint8 _type
-    ) internal {
+    function _previewMint_afterNoInterest(uint128 _depositAmount, uint128 _shares, bool _defaultType, uint8 _type)
+        internal
+    {
         vm.assume(_depositAmount > 0);
         vm.assume(_shares > 0);
         vm.assume(_type == 0 || _type == 1);
@@ -121,7 +118,8 @@ contract PreviewMintTest is SiloLittleHelper, Test {
         vm.startPrank(depositor);
         token0.approve(address(silo0), previewMint);
 
-        uint256 depositedAssets = _defaultType ? silo0.mint(_shares, depositor) : silo0.mint(_shares, depositor, cType);
+        uint256 depositedAssets =
+            _defaultType ? silo0.mint(_shares, depositor) : silo0.mint(_shares, depositor, cType);
 
         assertEq(previewMint, depositedAssets, "previewMint == depositedAssets, NOT fewer");
         assertEq(previewMint, silo0.convertToAssets(_shares, aType), "previewMint == convertToAssets");

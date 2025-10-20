@@ -14,12 +14,11 @@ import {SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {console2} from "forge-std/console2.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=core EXPECTED_OWNER=DAO \
     forge script silo-core/deploy/SiloCoreVerifier.s.sol \
     --ffi --rpc-url $RPC_SONIC
  */
-
 contract SiloCoreVerifier is CommonDeploy {
     string public constant SUCCESS_SYMBOL = unicode"✅";
     string public constant FAIL_SYMBOL = unicode"❌";
@@ -76,12 +75,7 @@ contract SiloCoreVerifier is CommonDeploy {
             if (!_skipCheckOwnerForContractName(allCoreContractsNames[i]) && success && owner != _expectedOwner) {
                 errorsCounter++;
 
-                console2.log(
-                    FAIL_SYMBOL,
-                    allCoreContractsNames[i],
-                    "owner is not expected, real owner is",
-                    owner
-                );
+                console2.log(FAIL_SYMBOL, allCoreContractsNames[i], "owner is not expected, real owner is", owner);
             }
         }
     }
@@ -135,12 +129,12 @@ contract SiloCoreVerifier is CommonDeploy {
 
         address siloDeployerProtectedTokenImpl = address(siloDeployer.SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL());
 
-        if (siloDeployerProtectedTokenImpl != getDeployedAddress(SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN)) {
+        if (siloDeployerProtectedTokenImpl != getDeployedAddress(SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN))
+        {
             errorsCounter++;
 
             _logError(
-                "SiloDeployer SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL is not expected",
-                siloDeployerProtectedTokenImpl
+                "SiloDeployer SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL is not expected", siloDeployerProtectedTokenImpl
             );
         }
 

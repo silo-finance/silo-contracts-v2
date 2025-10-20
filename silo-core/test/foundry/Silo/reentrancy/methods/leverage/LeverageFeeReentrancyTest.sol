@@ -11,7 +11,7 @@ contract LeverageFeeReentrancyTest is MethodReentrancyTest {
         _ensureItWillNotRevert();
     }
 
-    function verifyReentrancy() external {
+    function verifyReentrancy() external view {
         _ensureItWillNotRevert();
     }
 
@@ -19,7 +19,7 @@ contract LeverageFeeReentrancyTest is MethodReentrancyTest {
         description = "leverageFee()";
     }
 
-    function _ensureItWillNotRevert() internal {
+    function _ensureItWillNotRevert() internal view {
         LeverageRouter router = _getLeverageRouter();
         router.leverageFee();
     }

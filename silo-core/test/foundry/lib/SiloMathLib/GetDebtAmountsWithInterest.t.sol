@@ -54,11 +54,11 @@ contract GetDebtAmountsWithInterestTest is Test {
         // this should be impossible because of IRM cap, but for QA we have to support it
         uint256 rcompInDp = 1e18; // 100 %
 
-        (
-            uint256 debtAssetsWithInterest, uint256 accruedInterest
-        ) = SiloMathLib.getDebtAmountsWithInterest(debtAssets, rcompInDp);
+        (uint256 debtAssetsWithInterest, uint256 accruedInterest) =
+            SiloMathLib.getDebtAmountsWithInterest(debtAssets, rcompInDp);
 
-        uint256 interestWithoutOverflow = debtAssets.mulDiv(rcompInDp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
+        uint256 interestWithoutOverflow =
+            debtAssets.mulDiv(rcompInDp, _PRECISION_DECIMALS, Rounding.ACCRUED_INTEREST);
 
         assertGt(interestWithoutOverflow, accruedInterest, "accruedInterest is lower on overflow");
         assertEq(debtAssetsWithInterest, debtAssets + accruedInterest, "No debt assets overflow");
@@ -72,9 +72,8 @@ contract GetDebtAmountsWithInterestTest is Test {
         // this should be impossible because of IRM cap, but for QA we have to support it
         uint256 rcompInDp = 1e18; // 100 %
 
-        (
-            uint256 debtAssetsWithInterest, uint256 accruedInterest
-        ) = SiloMathLib.getDebtAmountsWithInterest(debtAssets, rcompInDp);
+        (uint256 debtAssetsWithInterest, uint256 accruedInterest) =
+            SiloMathLib.getDebtAmountsWithInterest(debtAssets, rcompInDp);
 
         assertEq(debtAssetsWithInterest, debtAssets, "debtAssets stay the same");
         assertEq(accruedInterest, 0, "accruedInterest is zero");

@@ -50,14 +50,13 @@ contract LiquidationHelperDebug20250127 is Test {
          TODO this can must be skip because foundry do not support Sonic network yet
     */
     function test_skip_debug_liquidationCall() public {
-
         LiquidationHelper liquidationHelper = LiquidationHelper(payable(0xf363C6d369888F5367e9f1aD7b6a7dAe133e8740));
 
-//        liquidationHelper = new LiquidationHelper(
-//            0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38,
-//            0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D,
-//            payable(makeAddr("TOKENS_RECEIVER"))
-//        );
+        //        liquidationHelper = new LiquidationHelper(
+        //            0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38,
+        //            0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D,
+        //            payable(makeAddr("TOKENS_RECEIVER"))
+        //        );
 
         address hookReceiver = 0xB01e62Ba9BEc9Cfa24b2Ee321392b8Ce726D2A09;
         address borrower = 0x748e6AC25025758612507CEFeeD7987Db2dBDd8b;
@@ -119,11 +118,7 @@ contract LiquidationHelperDebug20250127 is Test {
             uint256 debtToCover = debtToRepay * 0.95e18 / ltv;
 
             liquidationHelper.executeLiquidation(
-                flashLoanFrom,
-                debtToken,
-                debtToCover,
-                liquidationData,
-                swapsInputs0x
+                flashLoanFrom, debtToken, debtToCover, liquidationData, swapsInputs0x
             );
         }
     }

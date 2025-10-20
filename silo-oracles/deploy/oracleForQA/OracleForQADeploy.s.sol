@@ -7,7 +7,7 @@ import {CommonDeploy} from "../CommonDeploy.sol";
 import {OracleForQA} from "silo-oracles/contracts/oracleForQA/OracleForQA.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
-/**
+/*
 ETHERSCAN_API_KEY=$ARBISCAN_API_KEY FOUNDRY_PROFILE=oracles \
 BASE=0x82aF49447D8a07e3bd95BD0d56f35241523fBab1 \
 QUOTE=0xaf88d065e77c8cC2239327C5EDb3A432268e5831 \
@@ -28,6 +28,8 @@ contract OracleForQADeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        OraclesDeployments.save(getChainAlias(), string.concat("OracleForQA_",bSymbol,"-",qSymbol), address(oracle));
+        OraclesDeployments.save(
+            getChainAlias(), string.concat("OracleForQA_", bSymbol, "-", qSymbol), address(oracle)
+        );
     }
 }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+// solhint-disable ordering
+
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
@@ -26,14 +28,17 @@ contract SiloIncentivesController is BaseIncentivesController {
 
     /// @param _owner address of wallet that can manage the storage
     /// @param _notifier address of the notifier
-    /// @param _shareToken is contract with IERC20 interface with users balances, based based on which
+    /// @param _shareTokenAddress is contract with IERC20 interface with users balances, based based on which
     /// rewards distribution is calculated
-    constructor(address _owner, address _notifier, address _shareToken) BaseIncentivesController(_owner, _notifier) {
-        require(_shareToken != address(0), EmptyShareToken());
-        SHARE_TOKEN = _shareToken;
+    constructor(address _owner, address _notifier, address _shareTokenAddress)
+        BaseIncentivesController(_owner, _notifier)
+    {
+        require(_shareTokenAddress != address(0), EmptyShareToken());
+        SHARE_TOKEN = _shareTokenAddress;
     }
 
     /// @inheritdoc ISiloIncentivesController
+    // solhint-disable-next-line function-max-lines, code-complexity
     function afterTokenTransfer(
         address _sender,
         uint256 _senderBalance,

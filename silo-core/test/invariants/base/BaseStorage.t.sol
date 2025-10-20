@@ -30,7 +30,8 @@ import {
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
 import {
-    IInterestRateModelV2, InterestRateModelV2
+    IInterestRateModelV2,
+    InterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";

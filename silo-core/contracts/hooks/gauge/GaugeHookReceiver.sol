@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+// solhint-disable ordering
+
 import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -102,7 +104,7 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
 
     /// @notice Set the owner of the hook receiver
     /// @param _owner Owner address
-    function __GaugeHookReceiver_init(address _owner)
+    function __GaugeHookReceiver_init(address _owner) // solhint-disable-line func-name-mixedcase
         internal
         onlyInitializing
         virtual

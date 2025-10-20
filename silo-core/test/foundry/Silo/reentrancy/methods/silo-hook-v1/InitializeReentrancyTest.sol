@@ -12,7 +12,6 @@ contract InitializeReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string("\tEnsure it will revert");
         _ensureItWillRevert();
-        
     }
 
     function verifyReentrancy() external {

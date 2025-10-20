@@ -17,7 +17,7 @@ contract EchidnaSetup is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
 
     uint256 constant ACTORS_COUNT = 3;
-    mapping (uint256 index => address actor) actors;
+    mapping(uint256 index => address actor) actors;
 
     ISiloConfig siloConfig;
 
@@ -45,15 +45,10 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         uint256 high = ACTORS_COUNT - 1;
 
         if (value < low || value > high) {
-            uint ans = low + (value % (high - low + 1));
+            uint256 ans = low + (value % (high - low + 1));
             string memory valueStr = Strings.toString(value);
             string memory ansStr = Strings.toString(ans);
-            bytes memory message = abi.encodePacked(
-                "Clamping value ",
-                valueStr,
-                " to ",
-                ansStr
-            );
+            bytes memory message = abi.encodePacked("Clamping value ", valueStr, " to ", ansStr);
             emit log(string(message));
             return actors[ans];
         }
@@ -77,15 +72,19 @@ contract EchidnaSetup is SiloLittleHelper, Test {
 
         isSolvent = silo0.isSolvent(_user);
 
-        (,, address debtShareToken0 ) = siloConfig.getShareTokens(address(silo0));
-        (,, address debtShareToken1 ) = siloConfig.getShareTokens(address(silo1));
+        (,, address debtShareToken0) = siloConfig.getShareTokens(address(silo0));
+        (,, address debtShareToken1) = siloConfig.getShareTokens(address(silo1));
 
         uint256 debtShareBalance0 = IShareToken(debtShareToken0).balanceOf(_user);
         uint256 debtShareBalance1 = IShareToken(debtShareToken1).balanceOf(_user);
 
         if (!isSolvent) {
-            assertEq(debtShareBalance0 * debtShareBalance1, 0, "[_invariant_insolventHasDebt] one balance must be 0");
-            assertGt(debtShareBalance0 + debtShareBalance1, 0, "[_invariant_insolventHasDebt] user should have debt");
+            assertEq(
+                debtShareBalance0 * debtShareBalance1, 0, "[_invariant_insolventHasDebt] one balance must be 0"
+            );
+            assertGt(
+                debtShareBalance0 + debtShareBalance1, 0, "[_invariant_insolventHasDebt] user should have debt"
+            );
         }
 
         (_siloWithDebt, _siloWithCollateral) = debtShareBalance0 > 0 ? (silo0, silo1) : (silo1, silo0);
@@ -99,9 +98,8 @@ contract EchidnaSetup is SiloLittleHelper, Test {
 
         isSolvent = silo0.isSolvent(_user);
 
-        (
-            address protectedShareToken0, address collateralShareToken0, address debtShareToken0
-        ) = siloConfig.getShareTokens(address(silo0));
+        (address protectedShareToken0, address collateralShareToken0, address debtShareToken0) =
+            siloConfig.getShareTokens(address(silo0));
 
         (,, address debtShareToken1) = siloConfig.getShareTokens(address(silo1));
 
@@ -155,7 +153,6 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         (uint256 collectedFees0, uint256 irmTimestamp0,,,) = silo0.getSiloStorage();
         (uint256 collectedFees1, uint256 irmTimestamp1,,,) = silo1.getSiloStorage();
 
-
         emit log_named_decimal_uint("getLiquidity0:", silo0.getLiquidity(), 18);
         emit log_named_decimal_uint("getLiquidity1:", silo1.getLiquidity(), 18);
 
@@ -167,21 +164,31 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         emit log_named_decimal_uint("LTV0:", silo0.getLtv(_actor), 16);
         emit log_named_decimal_uint("LTV1:", silo1.getLtv(_actor), 16);
 
-        (
-            address protectedToken0, address collateralToken0, address debtShareToken0
-        ) = siloConfig.getShareTokens(address(silo0));
+        (address protectedToken0, address collateralToken0, address debtShareToken0) =
+            siloConfig.getShareTokens(address(silo0));
 
-        (
-            address protectedToken1, address collateralToken1,  address debtShareToken1
-        ) = siloConfig.getShareTokens(address(silo1));
+        (address protectedToken1, address collateralToken1, address debtShareToken1) =
+            siloConfig.getShareTokens(address(silo1));
 
-        emit log_named_decimal_uint("protectedToken0.balanceOf:", IShareToken(protectedToken0).balanceOf(_actor), 18);
-        emit log_named_decimal_uint("collateralToken0.balanceOf:", IShareToken(collateralToken0).balanceOf(_actor), 18);
-        emit log_named_decimal_uint("debtShareToken0.balanceOf:", IShareToken(debtShareToken0).balanceOf(_actor), 18);
+        emit log_named_decimal_uint(
+            "protectedToken0.balanceOf:", IShareToken(protectedToken0).balanceOf(_actor), 18
+        );
+        emit log_named_decimal_uint(
+            "collateralToken0.balanceOf:", IShareToken(collateralToken0).balanceOf(_actor), 18
+        );
+        emit log_named_decimal_uint(
+            "debtShareToken0.balanceOf:", IShareToken(debtShareToken0).balanceOf(_actor), 18
+        );
 
-        emit log_named_decimal_uint("protectedToken1.balanceOf:", IShareToken(protectedToken1).balanceOf(_actor), 18);
-        emit log_named_decimal_uint("collateralToken1.balanceOf:", IShareToken(collateralToken1).balanceOf(_actor), 18);
-        emit log_named_decimal_uint("debtShareToken1.balanceOf:", IShareToken(debtShareToken1).balanceOf(_actor), 18);
+        emit log_named_decimal_uint(
+            "protectedToken1.balanceOf:", IShareToken(protectedToken1).balanceOf(_actor), 18
+        );
+        emit log_named_decimal_uint(
+            "collateralToken1.balanceOf:", IShareToken(collateralToken1).balanceOf(_actor), 18
+        );
+        emit log_named_decimal_uint(
+            "debtShareToken1.balanceOf:", IShareToken(debtShareToken1).balanceOf(_actor), 18
+        );
 
         emit log_named_decimal_uint("maxWithdraw0:", silo0.maxWithdraw(_actor), 18);
         emit log_named_decimal_uint("maxRedeem0:", silo0.maxRedeem(_actor), 18);
@@ -193,8 +200,12 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         emit log_named_decimal_uint("maxBorrow0:", maxBorrow0, 18);
         emit log_named_decimal_uint("maxBorrow1:", maxBorrow1, 18);
 
-        emit log_named_decimal_uint("convertToShares(maxBorrow0):", silo0.convertToShares(maxBorrow0, ISilo.AssetType.Debt), 18);
-        emit log_named_decimal_uint("convertToShares(maxBorrow1):", silo1.convertToShares(maxBorrow1, ISilo.AssetType.Debt), 18);
+        emit log_named_decimal_uint(
+            "convertToShares(maxBorrow0):", silo0.convertToShares(maxBorrow0, ISilo.AssetType.Debt), 18
+        );
+        emit log_named_decimal_uint(
+            "convertToShares(maxBorrow1):", silo1.convertToShares(maxBorrow1, ISilo.AssetType.Debt), 18
+        );
 
         emit log_named_decimal_uint("maxBorrowShares0:", silo0.maxBorrowShares(_actor), 18);
         emit log_named_decimal_uint("maxBorrowShares1:", silo1.maxBorrowShares(_actor), 18);

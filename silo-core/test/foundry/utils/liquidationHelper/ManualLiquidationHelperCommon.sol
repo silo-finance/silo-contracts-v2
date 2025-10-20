@@ -55,9 +55,8 @@ abstract contract ManualLiquidationHelperCommon is SiloLittleHelper, Test {
     }
 
     function _assertAddressHasNoSTokens(ISilo _silo, address _address) internal view {
-        (
-            address protectedShareToken, address collateralShareToken, address debtShareToken
-        ) = siloConfig.getShareTokens(address(_silo));
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            siloConfig.getShareTokens(address(_silo));
 
         uint256 pBalance = IERC20(protectedShareToken).balanceOf(_address);
         uint256 cBalance = IERC20(collateralShareToken).balanceOf(_address);

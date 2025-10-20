@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
+// solhint-disable ordering
+
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
@@ -95,6 +97,7 @@ library SiloLendingLib {
     /// @param _daoFee DAO's fee in 18 decimals points
     /// @param _deployerFee Deployer's fee in 18 decimals points
     /// @return accruedInterest The total amount of interest accrued
+    // solhint-disable-next-line function-max-lines
     function accrueInterestForAsset(address _interestRateModel, uint256 _daoFee, uint256 _deployerFee)
         external
         returns (uint256 accruedInterest)
@@ -356,6 +359,7 @@ library SiloLendingLib {
     /// @param _totalDebtShares Total shares of the debt
     /// @return assets Maximum borrowable assets
     /// @return shares Maximum borrowable shares
+    // solhint-disable-next-line function-max-lines
     function maxBorrowValueToAssetsAndShares(
         uint256 _maxBorrowValue,
         address _debtAsset,

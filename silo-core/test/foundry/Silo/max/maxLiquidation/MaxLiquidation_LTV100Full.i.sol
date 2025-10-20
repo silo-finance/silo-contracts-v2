@@ -115,9 +115,8 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
         // to test max, we want to provide higher `_maxDebtToCover` and we expect not higher results
         uint256 maxDebtToCover = type(uint256).max;
 
-        (
-            uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired
-        ) = partialLiquidation.maxLiquidation(borrower);
+        (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired) =
+            partialLiquidation.maxLiquidation(borrower);
 
         (,,, bool fullLiquidation) = siloLens.maxLiquidation(silo1, partialLiquidation, borrower);
         assertTrue(fullLiquidation, "[100FULL] fullLiquidation flag is UP when LTV is 100%");
@@ -134,11 +133,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
         assertTrue(!sTokenRequired, "sTokenRequired NOT required");
 
         (withdrawCollateral, repayDebtAssets) = partialLiquidation.liquidationCall(
-            address(_sameToken ? token1 : token0),
-            address(token1),
-            borrower,
-            maxDebtToCover,
-            _receiveSToken
+            address(_sameToken ? token1 : token0), address(token1), borrower, maxDebtToCover, _receiveSToken
         );
 
         emit log_named_decimal_uint("[100FULL] ltv after", silo0.getLtv(borrower), 16);
@@ -146,11 +141,7 @@ contract MaxLiquidationLTV100FullTest is MaxLiquidationCommon {
 
         assertEq(debtToRepay, repayDebtAssets, "[100FULL] debt: maxLiquidation == result");
 
-        _assertEqDiff(
-            withdrawCollateral,
-            collateralToLiquidate,
-            "[100FULL] collateral: max == result"
-        );
+        _assertEqDiff(withdrawCollateral, collateralToLiquidate, "[100FULL] collateral: max == result");
     }
 
     function _withChunks() internal pure virtual override returns (bool) {

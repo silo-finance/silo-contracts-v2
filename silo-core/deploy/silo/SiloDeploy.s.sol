@@ -9,7 +9,9 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 import {CommonDeploy} from "../_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
+import {IDynamicKinkModel} from "silo-core/contracts/interfaces/IDynamicKinkModel.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
+import {DKinkIRMConfigData} from "../input-readers/DKinkIRMConfigData.sol";
 import {SiloConfigData, ISiloConfig} from "../input-readers/SiloConfigData.sol";
 import {SiloDeployments} from "./SiloDeployments.sol";
 import {ISiloDeployer} from "silo-core/contracts/interfaces/ISiloDeployer.sol";
@@ -21,18 +23,18 @@ import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3
 import {IChainlinkV3Factory} from "silo-oracles/contracts/interfaces/IChainlinkV3Factory.sol";
 import {IDIAOracle} from "silo-oracles/contracts/interfaces/IDIAOracle.sol";
 import {IDIAOracleFactory} from "silo-oracles/contracts/interfaces/IDIAOracleFactory.sol";
-import {
-    ChainlinkV3OraclesConfigsParser
-} from "silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OraclesConfigsParser.sol";
+import {ChainlinkV3OraclesConfigsParser} from
+    "silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OraclesConfigsParser.sol";
 import {
     SiloOraclesFactoriesContracts,
     SiloOraclesFactoriesDeployments
 } from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
-import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol"; 
+import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
+import {PTLinearOracleTxLib} from "../lib/PTLinearOracleTxLib.sol";
 
 /// @dev use `SiloDeployWithDeployerOwner` or `SiloDeployWithHookReceiverOwner`
 abstract contract SiloDeploy is CommonDeploy {
@@ -42,6 +44,8 @@ abstract contract SiloDeploy is CommonDeploy {
     uint256 public privateKey;
 
     string[] public verificationIssues;
+
+    error UnknownInterestRateModelFactory();
 
     function useConfig(string memory _config) external returns (SiloDeploy) {
         configName = _config;
@@ -71,13 +75,13 @@ abstract contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] Config prepared");
 
-        InterestRateModelConfigData modelData = new InterestRateModelConfigData();
+        bytes memory irmConfigData0;
+        bytes memory irmConfigData1;
 
-        IInterestRateModelV2.Config memory irmConfigData0 = modelData.getConfigData(config.interestRateModelConfig0);
-        IInterestRateModelV2.Config memory irmConfigData1 = modelData.getConfigData(config.interestRateModelConfig1);
+        (irmConfigData0, irmConfigData1) = _getIRMConfigData(config, siloInitData);
 
         console2.log("[SiloCommonDeploy] IRM configs prepared");
-        
+
         ISiloDeployer.Oracles memory oracles = _getOracles(config, siloData);
         siloInitData.solvencyOracle0 = oracles.solvencyOracle0.deployed;
         siloInitData.maxLtvOracle0 = oracles.maxLtvOracle0.deployed;
@@ -133,11 +137,9 @@ abstract contract SiloDeploy is CommonDeploy {
         });
     }
 
-    function _saveOracles(
-        ISiloConfig _siloConfig,
-        SiloConfigData.ConfigData memory _config,
-        bytes32 _noOracleKey
-    ) internal {
+    function _saveOracles(ISiloConfig _siloConfig, SiloConfigData.ConfigData memory _config, bytes32 _noOracleKey)
+        internal
+    {
         (address silo0, address silo1) = _siloConfig.getSilos();
 
         ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
@@ -196,10 +198,11 @@ abstract contract SiloDeploy is CommonDeploy {
         });
     }
 
-    function _getOracleTxData(string memory _oracleConfigName, bytes32 _noOracleKey, bytes32 placeHolderKey)
-        internal
-        returns (ISiloDeployer.OracleCreationTxData memory txData)
-    {
+    function _getOracleTxData(
+        string memory _oracleConfigName,
+        bytes32 _noOracleKey,
+        bytes32 placeHolderKey
+    ) internal returns (ISiloDeployer.OracleCreationTxData memory txData) {
         console2.log("[SiloCommonDeploy] _getOracleTxData for config: ", _oracleConfigName);
 
         bytes32 configHashedKey = keccak256(bytes(_oracleConfigName));
@@ -227,17 +230,36 @@ abstract contract SiloDeploy is CommonDeploy {
             return txData;
         }
 
+        require(txData.deployed == address(0), "[_getOracleTxData] at this point we need to create NEW deployment");
+
         if (_isUniswapOracle(_oracleConfigName)) {
-            console2.log("\t[SiloCommonDeploy] _uniswapV3TxData used for", _oracleConfigName);
-            return _uniswapV3TxData(_oracleConfigName);
+            console2.log(
+                "\t[SiloCommonDeploy] NEW oracle will be deployed using UniswapV3OracleTxData for: ",
+                _oracleConfigName
+            );
+
+            txData = _uniswapV3TxData(_oracleConfigName);
+        } else if (_isChainlinkOracle(_oracleConfigName)) {
+            console2.log(
+                "\t[SiloCommonDeploy] NEW oracle will be deployed using ChainlinkV3OracleTxData for: ",
+                _oracleConfigName
+            );
+
+            txData = _chainLinkTxData(_oracleConfigName);
+        } else if (PTLinearOracleTxLib.isPendleLinearOracle(_oracleConfigName)) {
+            console2.log(
+                "\t[SiloCommonDeploy] NEW oracle will be deployed using PendleLinearOracleTxData for: ",
+                _oracleConfigName
+            );
+
+            txData = PTLinearOracleTxLib.pendleLinearOracleTxData(_oracleConfigName);
+        } else {
+            revert(string.concat("[_getOracleTxData] ERROR unknown oracle type: ", _oracleConfigName));
         }
 
-        if (_isChainlinkOracle(_oracleConfigName)) {
-            console2.log("\t[SiloCommonDeploy] _chainLinkTxData used for", _oracleConfigName);
-            return _chainLinkTxData(_oracleConfigName);
-        }
-
-        revert("[_getOracleTxData] unknown oracle type");
+        require(txData.deployed == address(0), "[_getOracleTxData] expect tx data, not deployed address");
+        require(txData.factory != address(0), string.concat("[_getOracleTxData] empty factory for oracle: ", _oracleConfigName));
+        require(txData.txInput.length != 0, string.concat("[_getOracleTxData] missing tx data for oracle: ", _oracleConfigName));
     }
 
     function _uniswapV3TxData(string memory _oracleConfigName)
@@ -246,15 +268,11 @@ abstract contract SiloDeploy is CommonDeploy {
     {
         string memory chainAlias = ChainsLib.chainAlias();
 
-        txData.factory = SiloOraclesFactoriesDeployments.get(
-            SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY,
-            chainAlias
-        );
+        txData.factory =
+            SiloOraclesFactoriesDeployments.get(SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY, chainAlias);
 
-        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = UniswapV3OraclesConfigsParser.getConfig(
-            chainAlias,
-            _oracleConfigName
-        );
+        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config =
+            UniswapV3OraclesConfigsParser.getConfig(chainAlias, _oracleConfigName);
 
         // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
         txData.txInput = abi.encodeCall(IUniswapV3Factory.create, (config, bytes32(0)));
@@ -266,15 +284,11 @@ abstract contract SiloDeploy is CommonDeploy {
     {
         string memory chainAlias = ChainsLib.chainAlias();
 
-        txData.factory = SiloOraclesFactoriesDeployments.get(
-            SiloOraclesFactoriesContracts.CHAINLINK_V3_ORACLE_FACTORY,
-            chainAlias
-        );
+        txData.factory =
+            SiloOraclesFactoriesDeployments.get(SiloOraclesFactoriesContracts.CHAINLINK_V3_ORACLE_FACTORY, chainAlias);
 
-        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config = ChainlinkV3OraclesConfigsParser.getConfig(
-            chainAlias,
-            _oracleConfigName
-        );
+        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config =
+            ChainlinkV3OraclesConfigsParser.getConfig(chainAlias, _oracleConfigName);
 
         // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
         txData.txInput = abi.encodeCall(IChainlinkV3Factory.create, (config, bytes32(0)));
@@ -300,17 +314,64 @@ abstract contract SiloDeploy is CommonDeploy {
         txData.txInput = abi.encodeCall(IDIAOracleFactory.create, (config, bytes32(0)));
     }
 
+    function _getIRMConfigData(SiloConfigData.ConfigData memory _config, ISiloConfig.InitData memory _siloInitData)
+        internal
+        returns (bytes memory irmConfigData0, bytes memory irmConfigData1)
+    {
+        InterestRateModelConfigData irmModelData = new InterestRateModelConfigData();
+
+        address irmConfigFactory = _resolveDeployedContract(SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY);
+        address dkinkIRMConfigFactory = _resolveDeployedContract(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY);
+
+        if (_siloInitData.interestRateModel0 == irmConfigFactory) {
+            console2.log("\tIRM model #0: InterestRateModelV2");
+            irmConfigData0 = abi.encode(irmModelData.getConfigData(_config.interestRateModelConfig0));
+        } else if (_siloInitData.interestRateModel0 == dkinkIRMConfigFactory) {
+            console2.log("\tIRM model #0: DynamicKinkModel");
+            irmConfigData0 = _prepareDKinkIRMConfig(_config.interestRateModelConfig0);
+        } else {
+            revert UnknownInterestRateModelFactory();
+        }
+
+        console2.log("\tIRM config#0: ", _config.interestRateModelConfig0);
+
+        if (_siloInitData.interestRateModel1 == irmConfigFactory) {
+            console2.log("\tIRM model #1: InterestRateModelV2");
+            irmConfigData1 = abi.encode(irmModelData.getConfigData(_config.interestRateModelConfig1));
+        } else if (_siloInitData.interestRateModel1 == dkinkIRMConfigFactory) {
+            console2.log("\tIRM model #1: DynamicKinkModel");
+            irmConfigData1 = _prepareDKinkIRMConfig(_config.interestRateModelConfig1);
+        } else {
+            revert UnknownInterestRateModelFactory();
+        }
+
+        console2.log("\tIRM config#1: ", _config.interestRateModelConfig1);
+    }
+
+    function _prepareDKinkIRMConfig(string memory _configName) internal returns (bytes memory irmConfigData) {
+        DKinkIRMConfigData dkinkIRMModelData = new DKinkIRMConfigData();
+
+        (
+            IDynamicKinkModel.Config memory dkinkIRMConfigData, 
+            IDynamicKinkModel.ImmutableArgs memory immutableArgs
+        ) = dkinkIRMModelData.getConfigData(_configName);
+
+        ISiloDeployer.DKinkIRMConfig memory dkinkIRMConfig = ISiloDeployer.DKinkIRMConfig({
+            config: dkinkIRMConfigData,
+            immutableArgs: immutableArgs,
+            initialOwner: _getDKinkIRMInitialOwner()
+        });
+
+        irmConfigData = abi.encode(dkinkIRMConfig);
+    }
+
     function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {
         contractAddress = SiloCoreDeployments.get(_name, ChainsLib.chainAlias());
         console2.log(string.concat("[SiloCommonDeploy] ", _name, " @ %s resolved "), contractAddress);
     }
 
     function _isUniswapOracle(string memory _oracleConfigName) internal returns (bool isUniswapOracle) {
-        address pool = KV.getAddress(
-            UniswapV3OraclesConfigsParser.configFile(),
-            _oracleConfigName,
-            "pool"
-        );
+        address pool = KV.getAddress(UniswapV3OraclesConfigsParser.configFile(), _oracleConfigName, "pool");
 
         isUniswapOracle = pool != address(0);
     }
@@ -326,19 +387,16 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     function _isDiaOracle(string memory _oracleConfigName) internal returns (bool isDiaOracle) {
-        address diaOracle = KV.getAddress(
-            DIAOraclesConfigsParser.configFile(),
-            _oracleConfigName,
-            "diaOracle"
-        );
+        address diaOracle = KV.getAddress(DIAOraclesConfigsParser.configFile(), _oracleConfigName, "diaOracle");
 
         isDiaOracle = diaOracle != address(0);
     }
 
-    function beforeCreateSilo(
-        ISiloConfig.InitData memory,
-        address _hookReceiverImplementation
-    ) internal virtual returns (address hookImplementation) {
+    function beforeCreateSilo(ISiloConfig.InitData memory, address _hookReceiverImplementation)
+        internal
+        virtual
+        returns (address hookImplementation)
+    {
         hookImplementation = _hookReceiverImplementation;
     }
 
@@ -347,10 +405,12 @@ abstract contract SiloDeploy is CommonDeploy {
         virtual
         returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver);
 
-    function _printAndValidateDetails(
-        ISiloConfig _siloConfig,
-        ISiloConfig.InitData memory siloInitData
-    ) internal view {
+    function _getDKinkIRMInitialOwner() internal virtual returns (address);
+
+    function _printAndValidateDetails(ISiloConfig _siloConfig, ISiloConfig.InitData memory siloInitData)
+        internal
+        view
+    {
         string memory chainAlias = ChainsLib.chainAlias();
 
         if (keccak256(bytes(chainAlias)) == keccak256(bytes(ChainsLib.ANVIL_ALIAS))) return;
@@ -386,8 +446,7 @@ abstract contract SiloDeploy is CommonDeploy {
         console2.log("\n");
 
         console2.log(
-            "\tasset",
-            string.concat(tokenStr, " (", tokenSymbol, ", ", vm.toString(tokenDecimals), " decimals)")
+            "\tasset", string.concat(tokenStr, " (", tokenSymbol, ", ", vm.toString(tokenDecimals), " decimals)")
         );
 
         console2.log("\n");
@@ -400,7 +459,7 @@ abstract contract SiloDeploy is CommonDeploy {
         console2.log("\tdaoFee        ", _representAsPercent(_siloConfig.daoFee), icon);
 
         configValueUint256 = _siloInitData.deployerFee;
-        icon = _siloConfig.deployerFee != configValueUint256 ? _x_() : _ok_();   
+        icon = _siloConfig.deployerFee != configValueUint256 ? _x_() : _ok_();
 
         console2.log("\tdeployerFee   ", _representAsPercent(_siloConfig.deployerFee), icon);
 
@@ -432,11 +491,7 @@ abstract contract SiloDeploy is CommonDeploy {
             icon = string.concat(_warn_(), "!!! WARNING !!!");
         }
 
-        console2.log(
-            "\tliquidationTargetLtv",
-            _representAsPercent(_siloConfig.liquidationTargetLtv),
-            icon
-        );
+        console2.log("\tliquidationTargetLtv", _representAsPercent(_siloConfig.liquidationTargetLtv), icon);
 
         console2.log("\n");
         console2.log("\tsolvencyOracle", _siloConfig.solvencyOracle);
@@ -462,12 +517,7 @@ abstract contract SiloDeploy is CommonDeploy {
         console2.log(
             "\t\tquoteToken",
             string.concat(
-                vm.toString(quoteToken),
-                " (",
-                quoteTokenSymbol,
-                ", ",
-                vm.toString(quoteTokenDecimals),
-                " decimals)"
+                vm.toString(quoteToken), " (", quoteTokenSymbol, ", ", vm.toString(quoteTokenDecimals), " decimals)"
             )
         );
 
@@ -539,8 +589,7 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     function _symbol(address _token) internal view returns (string memory assetSymbol) {
-        (bool hasMetadata, bytes memory data) =
-            _tokenMetadataCall(_token, abi.encodeCall(IERC20Metadata.symbol, ()));
+        (bool hasMetadata, bytes memory data) = _tokenMetadataCall(_token, abi.encodeCall(IERC20Metadata.symbol, ()));
 
         if (!hasMetadata || data.length == 0) {
             return "?";
@@ -550,11 +599,11 @@ abstract contract SiloDeploy is CommonDeploy {
             return abi.decode(data, (string));
         }
     }
-    
+
     function _x_() internal pure virtual returns (string memory) {
         return string.concat(unicode"❌", " ");
     }
-    
+
     function _ok_() internal pure virtual returns (string memory) {
         return string.concat(unicode"✅", " ");
     }

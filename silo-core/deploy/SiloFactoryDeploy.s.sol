@@ -12,7 +12,7 @@ import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloFactoryDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --verify --broadcast

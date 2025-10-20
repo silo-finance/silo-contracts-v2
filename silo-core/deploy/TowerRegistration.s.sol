@@ -6,11 +6,13 @@ import {console2} from "forge-std/console2.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 
 import {Tower} from "silo-core/contracts/utils/Tower.sol";
-import {LiquidationHelper, ILiquidationHelper} from "silo-core/contracts/utils/liquidationHelper/LiquidationHelper.sol";
+import {
+    LiquidationHelper, ILiquidationHelper
+} from "silo-core/contracts/utils/liquidationHelper/LiquidationHelper.sol";
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
     forge script silo-core/deploy/TowerRegistration.s.sol:TowerRegistration \
     --ffi --rpc-url $RPC_SONIC --broadcast
@@ -24,10 +26,7 @@ contract TowerRegistration is CommonDeploy {
         _registerLiquidationHelper(AGGREGATOR_ENSO);
         _registerLiquidationHelper(AGGREGATOR_0X);
 
-        _register(
-            "ManualLiquidationHelper",
-            getDeployedAddress(SiloCoreContracts.MANUAL_LIQUIDATION_HELPER)
-        );
+        _register("ManualLiquidationHelper", getDeployedAddress(SiloCoreContracts.MANUAL_LIQUIDATION_HELPER));
 
         _register("SiloLens", getDeployedAddress(SiloCoreContracts.SILO_LENS));
         _register("SiloLeverageUsingSilo", getDeployedAddress(SiloCoreContracts.SILO_LEVERAGE_USING_SILO));

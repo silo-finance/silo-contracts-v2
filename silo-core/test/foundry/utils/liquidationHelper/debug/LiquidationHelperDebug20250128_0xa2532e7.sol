@@ -54,11 +54,11 @@ contract LiquidationHelperDebug20250128_0xa2532e is Test {
     function test_skip_debug_liquidationCall() public {
         LiquidationHelper liquidationHelper = LiquidationHelper(payable(0xf363C6d369888F5367e9f1aD7b6a7dAe133e8740));
 
-//        liquidationHelper = new LiquidationHelper(
-//            0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38,
-//            0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D,
-//            payable(makeAddr("TOKENS_RECEIVER"))
-//        );
+        //        liquidationHelper = new LiquidationHelper(
+        //            0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38,
+        //            0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D,
+        //            payable(makeAddr("TOKENS_RECEIVER"))
+        //        );
 
         address hookReceiver = 0xB01e62Ba9BEc9Cfa24b2Ee321392b8Ce726D2A09;
         address borrower = 0x1946a1DD383FE3c3cd9ae3066C638EF6ed7E35e5;
@@ -80,7 +80,7 @@ contract LiquidationHelperDebug20250128_0xa2532e is Test {
         emit log_named_decimal_uint("collateral", collateral, 18);
         emit log_named_decimal_uint("debtToRepay", debtToRepay, 6);
 
-//        uint256 collateralToLiquidate = 639935999999999999491;
+        //        uint256 collateralToLiquidate = 639935999999999999491;
         /*
         83bd37f9
         0001039e2fb66102314ce7b64ce5ce3e5183bc94ad38
@@ -93,14 +93,14 @@ contract LiquidationHelperDebug20250128_0xa2532e is Test {
 
         */
         bytes memory swapCallData = abi.encodePacked(
-//            hex"83bd37f9",
-//            hex"0001e5da20f15420ad15de0fa650600afc998bbe3955", // sell token
-//            hex"0001039e2fb66102314ce7b64ce5ce3e5183bc94ad38", // buy token
-//            hex"09",
-//            uint72(0x3008fb81bc1ad0b6b2), // amount in, 18 characters
-//            hex"09301d486ae3936c000007ae1400019b99e9c620b2e2f09e0b9fced8f679eecf2653fe00000001",
-//            address(liquidationHelper), // seller address in swap data
-//            hex"000000000301020300060101010200ff000000000000000000000000000000000000000000de861c8fc9ab78fe00490c5a38813d26e2d09c95e5da20f15420ad15de0fa650600afc998bbe3955000000000000000000000000000000000000000000000000"
+            //            hex"83bd37f9",
+            //            hex"0001e5da20f15420ad15de0fa650600afc998bbe3955", // sell token
+            //            hex"0001039e2fb66102314ce7b64ce5ce3e5183bc94ad38", // buy token
+            //            hex"09",
+            //            uint72(0x3008fb81bc1ad0b6b2), // amount in, 18 characters
+            //            hex"09301d486ae3936c000007ae1400019b99e9c620b2e2f09e0b9fced8f679eecf2653fe00000001",
+            //            address(liquidationHelper), // seller address in swap data
+            //            hex"000000000301020300060101010200ff000000000000000000000000000000000000000000de861c8fc9ab78fe00490c5a38813d26e2d09c95e5da20f15420ad15de0fa650600afc998bbe3955000000000000000000000000000000000000000000000000"
             hex"83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000129219dd400f2bf60e5a23d13be72b486d40388940765978850b45a3302346f07ae1400019b99e9c620b2e2f09e0b9fced8f679eecf2653fe00016cc7e9bb6c020cf18a44b0593cf110a16df32c0c0001f363c6d369888f5367e9f1ad7b6a7dae133e87400000000003010203000301010001020114ff000000000000000000000000000000000000006cc7e9bb6c020cf18a44b0593cf110a16df32c0c039e2fb66102314ce7b64ce5ce3e5183bc94ad38000000000000000000000000000000000000000000000000"
         );
 
@@ -121,15 +121,11 @@ contract LiquidationHelperDebug20250128_0xa2532e is Test {
             vm.label(debtToken, "debtToken");
             vm.label(liquidationData.collateralAsset, "collateralAsset");
             uint256 debtToCover = 12388;
-//            uint256 debtToCover = debtToRepay * 0.95e18 / ltv;
-//            uint256 debtToCover = debtToRepay * (1e18 - flashFee - liquidationFee) / ltv;
+            //            uint256 debtToCover = debtToRepay * 0.95e18 / ltv;
+            //            uint256 debtToCover = debtToRepay * (1e18 - flashFee - liquidationFee) / ltv;
 
             liquidationHelper.executeLiquidation(
-                flashLoanFrom,
-                debtToken,
-                debtToCover,
-                liquidationData,
-                swapsInputs0x
+                flashLoanFrom, debtToken, debtToCover, liquidationData, swapsInputs0x
             );
         }
     }

@@ -17,7 +17,7 @@ contract TutorialCreatePosition is Test {
     // WETH Silo
     ISilo public constant SILO1 = ISilo(0x58A31D1f2Be10Bf2b48C6eCfFbb27D1f3194e547);
     // wstETH/WETH market config for both Silos
-    ISiloConfig public constant SILO_CONFIG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7d64f2597CFb74bAB); 
+    ISiloConfig public constant SILO_CONFIG = ISiloConfig(0x02ED2727D2Dc29b24E5AC9A7d64f2597CFb74bAB);
     // helper to read the data from Silo protocol
     ISiloLens public SILO_LENS;
     // example user to impersonate deposit
@@ -35,13 +35,13 @@ contract TutorialCreatePosition is Test {
 
         // get wstETH
         vm.prank(EXAMPLE_USER);
-        IERC20(WSTETH).transfer(address(this), 100 * 10**18);
+        IERC20(WSTETH).transfer(address(this), 100 * 10 ** 18);
     }
 
     // Deposit assets to Silo using ERC4626 deposit function.
     function test_deposit() public {
         // 1 wstETH to deposit, SILO0 asset is wstETH.
-        uint256 depositAssets = 10**18;
+        uint256 depositAssets = 10 ** 18;
         IERC20(WSTETH).approve(address(SILO0), depositAssets);
         SILO0.deposit(depositAssets, address(this));
 
@@ -51,7 +51,7 @@ contract TutorialCreatePosition is Test {
     // Withdraw deposit from Silo using ERC4626 withdraw function.
     function test_withdrawAll() public {
         // create deposit position to withdraw funds from it
-        uint256 depositAssets = 10**18;
+        uint256 depositAssets = 10 ** 18;
         _createDepositPosition(depositAssets);
         uint256 balanceBeforeWithdraw = IERC20(WSTETH).balanceOf(address(this));
 
@@ -74,10 +74,10 @@ contract TutorialCreatePosition is Test {
     // Borrow WETH with wstETH as collateral.
     function test_borrow() public {
         // create deposit position in wstETH Silo to use it as collateral for borrowing in WETH Silo
-        _createDepositPosition(10**18);
+        _createDepositPosition(10 ** 18);
         assertTrue(SILO0.balanceOf(address(this)) > 0, "Collateral exist in Silo0");
 
-        uint256 borrowAssets = 10**17;
+        uint256 borrowAssets = 10 ** 17;
         uint256 balanceBeforeBorrow = IERC20(WETH).balanceOf(address(this));
         SILO1.borrow(borrowAssets, address(this), address(this));
         uint256 balanceAfterBorrow = IERC20(WETH).balanceOf(address(this));
@@ -88,7 +88,7 @@ contract TutorialCreatePosition is Test {
     // Repay borrowed WETH with wstETH as collateral
     function test_repayAll() public {
         // create borrow position to repay it later
-        uint256 borrowAssets = 10**17;
+        uint256 borrowAssets = 10 ** 17;
         _createBorrowPosition(borrowAssets * 10, borrowAssets);
 
         // It is better to repayShares(shares) instead of repay(assets) to repay full amount of debt. Interest rate

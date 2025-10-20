@@ -45,7 +45,7 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
     function test_burnCreatedSiloToken() public {
         uint256 firstSiloId = 100;
 
-        (,address owner) = siloFactory.getFeeReceivers(address(silo0));
+        (, address owner) = siloFactory.getFeeReceivers(address(silo0));
 
         assertNotEq(owner, address(0), "owner is 0");
 
@@ -60,7 +60,7 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
         vm.prank(owner);
         siloFactory.burn(firstSiloId);
 
-        (,owner) = siloFactory.getFeeReceivers(address(silo0));
+        (, owner) = siloFactory.getFeeReceivers(address(silo0));
 
         assertEq(owner, address(0), "owner is not 0 after burn");
 
@@ -98,10 +98,7 @@ contract SiloFactoryTest is SiloLittleHelper, IntegrationTest {
         address siloConfigFromFactory = siloFactory.idToSiloConfig(firstSiloId);
 
         string memory expectedURI = string.concat(
-            _newBaseURI,
-            Strings.toString(block.chainid),
-            "/",
-            Strings.toHexString(siloConfigFromFactory)
+            _newBaseURI, Strings.toString(block.chainid), "/", Strings.toHexString(siloConfigFromFactory)
         );
 
         vm.expectEmit(true, true, true, true);

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
+// solhint-disable ordering
+
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "openzeppelin5/utils/Address.sol";
@@ -268,6 +270,7 @@ library Actions {
     /// - `transitionFrom`: Specifies whether transitioning from collateral or protected
     /// @return assets Amount of assets transitioned
     /// @return toShares Equivalent shares gained from the transition
+    // solhint-disable-next-line function-max-lines
     function transitionCollateral(ISilo.TransitionCollateralArgs memory _args)
         external
         returns (uint256 assets, uint256 toShares)
@@ -423,6 +426,7 @@ library Actions {
     /// @dev This function takes into account scenarios where either the DAO or deployer may not be set, distributing
     /// accordingly
     /// @param _silo Silo address
+    // solhint-disable-next-line function-max-lines
     function withdrawFees(ISilo _silo)
         external
         returns (uint256 daoRevenue, uint256 deployerRevenue, bool redirectedDeployerFees)
@@ -693,8 +697,10 @@ library Actions {
      * @dev Transfer `value` amount of `token` from the calling contract to `to`. If `token` returns no value,
      * non-reverting calls are assumed to be successful.
      */
+    // solhint-disable-next-line private-vars-leading-underscore
     function _safeTransferInternal(IERC20 _token, address _to, uint256 _value) internal returns (bool result) {
         bytes memory data = abi.encodeCall(_token.transfer, (_to, _value));
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory returndata) = address(_token).call(data);
         if (!success) return false;
 

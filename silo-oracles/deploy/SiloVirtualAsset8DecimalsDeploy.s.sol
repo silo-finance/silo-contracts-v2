@@ -5,7 +5,7 @@ import {CommonDeploy} from "./CommonDeploy.sol";
 import {SiloVirtualAsset8Decimals} from "silo-oracles/contracts/silo-virtual-assets/SiloVirtualAsset8Decimals.sol";
 import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=oracles \
         forge script silo-oracles/deploy/SiloVirtualAsset8DecimalsDeploy.s.sol \
         --ffi --rpc-url $RPC_INK --broadcast --verify

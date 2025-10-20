@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import {IUniswapV3Oracle} from "silo-oracles/contracts/interfaces/IUniswapV3Oracle.sol";
 
 contract UniswapV3OracleFactoryMock {
-    address constant public MOCK_ORACLE_ADDR = address(3);
+    address public constant MOCK_ORACLE_ADDR = address(3);
 
     function create(IUniswapV3Oracle.UniswapV3DeploymentConfig memory, bytes32)
         external

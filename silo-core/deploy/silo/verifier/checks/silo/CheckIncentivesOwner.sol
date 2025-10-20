@@ -49,10 +49,12 @@ contract CheckIncentivesOwner is ICheck {
         address collateralShareTokensGauge =
             address(hookReceiver.configuredGauges(IShareToken(configData.collateralShareToken)));
 
-        address debtShareTokensGauge =
-            address(hookReceiver.configuredGauges(IShareToken(configData.debtShareToken)));
+        address debtShareTokensGauge = address(hookReceiver.configuredGauges(IShareToken(configData.debtShareToken)));
 
-        if (collateralShareTokensGauge == address(0) && protectedShareTokensGauge == address(0) && debtShareTokensGauge == address(0)) {
+        if (
+            collateralShareTokensGauge == address(0) && protectedShareTokensGauge == address(0)
+                && debtShareTokensGauge == address(0)
+        ) {
             skipped = true;
             return true;
         }
@@ -65,8 +67,7 @@ contract CheckIncentivesOwner is ICheck {
     }
 
     function _checkIncentivesOwner(address _gauge) internal returns (bool success) {
-        success = _gauge == address(0) ||
-            Ownable(_gauge).owner() == AddrLib.getAddress(AddrKey.GROWTH_MULTISIG);
+        success = _gauge == address(0) || Ownable(_gauge).owner() == AddrLib.getAddress(AddrKey.GROWTH_MULTISIG);
 
         if (!success) {
             gauge = _gauge;

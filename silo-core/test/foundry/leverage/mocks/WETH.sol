@@ -10,7 +10,7 @@ contract WETH {
         wrapped = _wrapped;
     }
 
-    function deposit() payable external {
+    function deposit() external payable {
         wrapped.mint(msg.sender, msg.value);
     }
 }

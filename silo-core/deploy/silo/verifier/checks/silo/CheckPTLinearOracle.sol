@@ -12,9 +12,7 @@ contract CheckPTLinearOracle is ICheck {
     constructor(address _oracle, address _asset) {
         asset = _asset;
 
-        (
-            address primaryAggregator, address secondaryAggregator
-        ) = Utils.tryGetChainlinkAggregators(_oracle);
+        (address primaryAggregator, address secondaryAggregator) = Utils.tryGetChainlinkAggregators(_oracle);
 
         if (Utils.tryGetPT(primaryAggregator) != address(0)) {
             ptLinearAggregator = primaryAggregator;

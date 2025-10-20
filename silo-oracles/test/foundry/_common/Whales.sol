@@ -6,7 +6,7 @@ import "./TokensGenerator.sol";
 
 contract Whales is TokensGenerator {
     // asset => whale
-    mapping (IERC20 => address) public whales;
+    mapping(IERC20 => address) public whales;
 
     constructor(BlockChain _chain) TokensGenerator(_chain) {
         if (isEthereum(_chain)) {

@@ -6,9 +6,8 @@ import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.so
 import {MessageHashUtils} from "openzeppelin5/utils/cryptography/MessageHashUtils.sol";
 import {Vm} from "forge-std/Vm.sol";
 
-import {
-    LeverageUsingSiloFlashloanWithGeneralSwap
-} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from
+    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
@@ -30,10 +29,10 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
 
     Vm.Wallet public wallet = vm.createWallet("User");
 
-    bytes32 constant internal _PERMIT_TYPEHASH =
+    bytes32 internal constant _PERMIT_TYPEHASH =
         keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
-    function callMethod() external virtual{
+    function callMethod() external virtual {
         _openLeverage();
     }
 
@@ -58,7 +57,7 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         description = "openLeveragePosition((address,uint256),bytes,(address,uint256,uint8))";
     }
 
-    function _getLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
+    function _getLeverage() internal view returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
         return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION());
     }
@@ -86,7 +85,7 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         swap.setSwap(TestStateLib.token1(), flashloanAmount, TestStateLib.token0(), flashloanAmount * 99 / 100);
 
         TestStateLib.enableLeverageReentrancy();
-        
+
         // Execute leverage position opening
         LeverageRouter router = _getLeverageRouter();
 
@@ -120,7 +119,7 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         address _user,
         uint256 _depositAmount,
         uint256 _flashloanAmount,
-        SwapRouterMock _swap,
+        SwapRouterMock, /*_swap*/
         bool _approveAssets
     ) internal {
         // Get user's leverage contract from router
@@ -143,10 +142,7 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         ISiloConfig config = TestStateLib.silo1().config();
         (,, address debtShareToken) = config.getShareTokens(address(TestStateLib.silo1()));
 
-        uint256 debtReceiveApproval = router.calculateDebtReceiveApproval(
-            TestStateLib.silo1(), 
-            _flashloanAmount
-        );
+        uint256 debtReceiveApproval = router.calculateDebtReceiveApproval(TestStateLib.silo1(), _flashloanAmount);
 
         IERC20R(debtShareToken).setReceiveApproval(userLeverageContract, debtReceiveApproval);
 
@@ -171,7 +167,7 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         // Get user's leverage contract for the permit
         LeverageRouter router = _getLeverageRouter();
         address userLeverageContract = router.predictUserLeverageContract(wallet.addr);
-        
+
         (permit.v, permit.r, permit.s) = _createPermit({
             _signer: wallet.addr,
             _signerPrivateKey: wallet.privateKey,
@@ -200,14 +196,15 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         (v, r, s) = vm.sign(_signerPrivateKey, digest);
     }
 
-    function _prepareLeverageArgs(
-        uint256 _flashloanAmount,
-        uint256 _depositAmount
-    ) internal view returns (
-        ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
-        ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
-        IGeneralSwapModule.SwapArgs memory swapArgs
-    ) {
+    function _prepareLeverageArgs(uint256 _flashloanAmount, uint256 _depositAmount)
+        internal
+        view
+        returns (
+            ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs,
+            ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs,
+            IGeneralSwapModule.SwapArgs memory swapArgs
+        )
+    {
         // Prepare leverage arguments
         flashArgs = ILeverageUsingSiloFlashloan.FlashArgs({
             flashloanTarget: address(TestStateLib.silo1()),

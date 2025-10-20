@@ -9,13 +9,10 @@ import {IUniswapV3Oracle} from "silo-oracles/contracts/interfaces/IUniswapV3Orac
 import {IUniswapV3Pool} from "uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 library UniswapV3OraclesConfigsParser {
-    string constant public CONFIGS_DIR = "silo-oracles/deploy/uniswap-v3-oracle/configs/";
-    string constant internal _EXTENSION = ".json";
+    string public constant CONFIGS_DIR = "silo-oracles/deploy/uniswap-v3-oracle/configs/";
+    string internal constant _EXTENSION = ".json";
 
-    function getConfig(
-        string memory _network,
-        string memory _name
-    )
+    function getConfig(string memory _network, string memory _name)
         internal
         returns (IUniswapV3Oracle.UniswapV3DeploymentConfig memory config)
     {

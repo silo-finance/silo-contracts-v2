@@ -58,7 +58,7 @@ contract MaliciousToken is MintableToken, Test {
         }
 
         if (TestStateLib.leverageReenter()) {
-            address leverageRouter = TestStateLib.leverageRouter();
+            // address leverageRouter = TestStateLib.leverageRouter();
 
             // bool entered = TransientReentrancy(leverage).reentrancyGuardEntered();
             // assertTrue(entered, "Reentrancy is not enabled on a token transfer when leverage");
@@ -74,7 +74,7 @@ contract MaliciousToken is MintableToken, Test {
 
         uint256 stateBeforeReentrancyTest = vm.snapshotState();
 
-        for (uint j = 0; j < _methodRegistries.length; j++) {
+        for (uint256 j = 0; j < _methodRegistries.length; j++) {
             if (Strings.equal(_methodRegistries[j].abiFile(), _leverageMethodsRegistry.abiFile())) continue;
 
             uint256 totalMethods = _methodRegistries[j].supportedMethodsLength();

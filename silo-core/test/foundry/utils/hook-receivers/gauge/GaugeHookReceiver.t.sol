@@ -19,8 +19,8 @@ import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 
-import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
-import {TransferOwnership} from  "../../../_common/TransferOwnership.sol";
+import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
+import {TransferOwnership} from "../../../_common/TransferOwnership.sol";
 
 // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc GaugeHookReceiverTest
 contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
@@ -126,16 +126,15 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testSetGaugePass
     function testSetGaugePass() public {
         (address silo0, address silo1) = _siloConfig.getSilos();
-        (,address shareCollateralToken,) = _siloConfig.getShareTokens(silo0);
+        (, address shareCollateralToken,) = _siloConfig.getShareTokens(silo0);
 
         _mockGaugeShareToken(_gauge, shareCollateralToken);
 
         vm.prank(_dao);
         _hookReceiver.setGauge(ISiloIncentivesController(_gauge), IShareToken(shareCollateralToken));
 
-        ISiloIncentivesController configured = GaugeHookReceiver(address(_hookReceiver)).configuredGauges(
-            IShareToken(shareCollateralToken)
-        );
+        ISiloIncentivesController configured =
+            GaugeHookReceiver(address(_hookReceiver)).configuredGauges(IShareToken(shareCollateralToken));
 
         assertEq(address(configured), _gauge);
 
@@ -164,9 +163,9 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testRemoveGauge
-        function testRemoveGauge() public {
+    function testRemoveGauge() public {
         (address silo0, address silo1) = _siloConfig.getSilos();
-        (,address shareCollateralToken,) = _siloConfig.getShareTokens(silo0);
+        (, address shareCollateralToken,) = _siloConfig.getShareTokens(silo0);
 
         vm.prank(_dao);
         vm.expectRevert(IGaugeHookReceiver.GaugeIsNotConfigured.selector);
@@ -209,7 +208,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt testAfterTokenTransfer
     function testAfterTokenTransfer() public {
         (address silo0,) = _siloConfig.getSilos();
-        (,,address debtShareToken) = _siloConfig.getShareTokens(silo0);
+        (,, address debtShareToken) = _siloConfig.getShareTokens(silo0);
 
         _mockGaugeShareToken(_gauge, debtShareToken);
 
@@ -224,33 +223,18 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
         bytes memory data = _getEncodedData();
 
         vm.prank(debtShareToken);
-        _hookReceiver.afterAction(
-            silo0,
-            action,
-            data
-        );
+        _hookReceiver.afterAction(silo0, action, data);
 
         // will do nothing as action didn't match
         uint256 invalidAction = Hook.shareTokenTransfer(Hook.COLLATERAL_TOKEN);
         vm.prank(debtShareToken);
-        _hookReceiver.afterAction(
-            silo0,
-            invalidAction,
-            data
-        );
+        _hookReceiver.afterAction(silo0, invalidAction, data);
     }
 
     function _mockGaugeAfterTransfer() internal {
         bytes memory data = abi.encodeCall(
             ISiloIncentivesController.afterTokenTransfer,
-            (
-                _sender,
-                _SENDER_BAL,
-                _recipient,
-                _RECIPIENT_BAL,
-                _TS,
-                _AMOUNT
-            )
+            (_sender, _SENDER_BAL, _recipient, _RECIPIENT_BAL, _TS, _AMOUNT)
         );
 
         vm.mockCall(_gauge, data, abi.encode(true));
@@ -258,14 +242,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
     }
 
     function _getEncodedData() internal view returns (bytes memory) {
-        return abi.encodePacked(
-            _sender,
-            _recipient,
-            _AMOUNT,
-            _SENDER_BAL,
-            _RECIPIENT_BAL,
-            _TS
-        );
+        return abi.encodePacked(_sender, _recipient, _AMOUNT, _SENDER_BAL, _RECIPIENT_BAL, _TS);
     }
 
     function _mockGaugeShareToken(address _gaugeToMock, address _tokenToSet) internal {
@@ -279,11 +256,7 @@ contract GaugeHookReceiverTest is SiloLittleHelper, Test, TransferOwnership {
 
         assertEq(address(hookReceiver), address(_hookReceiver));
 
-        (
-            address collateral,
-            address protected,
-            address debt
-        ) = _siloConfig.getShareTokens(_silo);
+        (address collateral, address protected, address debt) = _siloConfig.getShareTokens(_silo);
 
         _testHookReceiverForShareToken(collateral);
         _testHookReceiverForShareToken(protected);

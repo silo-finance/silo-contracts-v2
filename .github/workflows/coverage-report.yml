@@ -11,6 +11,11 @@ on:
           - silo-core
           - silo-oracles
           - silo-vaults
+      match_contracts:
+        description: 'Match contracts pattern (--mc). If empty, will use default --nmc behavior'
+        required: false
+        type: string
+        default: ''
 
 env:
   RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
@@ -83,7 +88,14 @@ jobs:
           FOUNDRY_PROFILE=core forge build
 
           echo "Running forge coverage..."
-          AGGREGATOR=1INCH FOUNDRY_PROFILE=core_with_test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" --nmc "SiloLensCompatibilityTest|NewMarketTest" > coverage/silo-core.log 2>&1 || true
+          # Set up match contracts parameter
+          if [ -n "${{ inputs.match_contracts }}" ]; then
+            MATCH_CONTRACTS_ARG="--mc ${{ inputs.match_contracts }}"
+          else
+            MATCH_CONTRACTS_ARG="--nmc SiloLensCompatibilityTest|NewMarketTest"
+          fi
+          
+          AGGREGATOR=1INCH FOUNDRY_PROFILE=core_with_test forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" $MATCH_CONTRACTS_ARG > coverage/silo-core.log 2>&1 || true
 
           echo "Coverage log contents:"
           cat coverage/silo-core.log || true
@@ -107,7 +119,14 @@ jobs:
           FOUNDRY_PROFILE=oracles forge build
 
           echo "Running forge coverage..."
-          FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov --ffi --no-match-test "_skip_|_gas_|_gas|_anvil_|test_UniswapV3OracleFactory_create_reuseConfig" > coverage/silo-oracles.log 2>&1 || true
+          # Set up match contracts parameter
+          if [ -n "${{ inputs.match_contracts }}" ]; then
+            MATCH_CONTRACTS_ARG="--mc ${{ inputs.match_contracts }}"
+          else
+            MATCH_CONTRACTS_ARG=""
+          fi
+          
+          FOUNDRY_PROFILE=oracles forge coverage --report summary --report lcov --ffi --no-match-test "_skip_|_gas_|_gas|_anvil_|test_UniswapV3OracleFactory_create_reuseConfig" $MATCH_CONTRACTS_ARG > coverage/silo-oracles.log 2>&1 || true
 
           echo "Coverage log contents:"
           cat coverage/silo-oracles.log || true
@@ -131,7 +150,14 @@ jobs:
           FOUNDRY_PROFILE=vaults forge build
 
           echo "Running forge coverage..."
-          FOUNDRY_PROFILE=vaults_with_tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" > coverage/silo-vaults.log 2>&1 || true
+          # Set up match contracts parameter
+          if [ -n "${{ inputs.match_contracts }}" ]; then
+            MATCH_CONTRACTS_ARG="--mc ${{ inputs.match_contracts }}"
+          else
+            MATCH_CONTRACTS_ARG=""
+          fi
+          
+          FOUNDRY_PROFILE=vaults_with_tests forge coverage --report summary --report lcov --gas-price 1 --ffi --gas-limit 40000000000 --no-match-test "_skip_|_gas_|_anvil_" $MATCH_CONTRACTS_ARG > coverage/silo-vaults.log 2>&1 || true
 
           echo "Coverage log contents:"
           cat coverage/silo-vaults.log || true

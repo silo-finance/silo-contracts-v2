@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {
-    LeverageUsingSiloFlashloanWithGeneralSwap
-    } from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from
+    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
@@ -55,6 +54,7 @@ contract CloseLeveragePositionPermitReentrancyTest is CloseLeveragePositionReent
 
     function methodDescription() external pure override returns (string memory description) {
         // solhint-disable-next-line max-line-length
-        description = "closeLeveragePositionPermit(bytes,(address,address,uint8),(uint256,uint256,uint8,bytes32,bytes32))";
+        description =
+            "closeLeveragePositionPermit(bytes,(address,address,uint8),(uint256,uint256,uint8,bytes32,bytes32))";
     }
 }

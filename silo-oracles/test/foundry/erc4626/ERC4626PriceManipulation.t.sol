@@ -73,7 +73,7 @@ contract ERC4626PriceManipulation is IntegrationTest {
 
         assertEq(
             initialPrice,
-            finalPrice, 
+            finalPrice,
             string.concat("Price ", direction, ": ", vm.toString(initialPrice), " => ", vm.toString(finalPrice))
         );
     }
@@ -257,8 +257,12 @@ contract ERC4626PriceManipulation is IntegrationTest {
         uint256 totalShares = _vault.totalSupply();
         uint256 totalAssets = _vault.convertToAssets(totalShares);
 
-        emit log_named_decimal_uint(string.concat("Vault ", _vaultSymbol, " total shares"), totalShares, _vaultDecimals);
-        emit log_named_decimal_uint(string.concat("Vault ", _vaultSymbol, " total assets"), totalAssets, _assetDecimals);
+        emit log_named_decimal_uint(
+            string.concat("Vault ", _vaultSymbol, " total shares"), totalShares, _vaultDecimals
+        );
+        emit log_named_decimal_uint(
+            string.concat("Vault ", _vaultSymbol, " total assets"), totalAssets, _assetDecimals
+        );
     }
 
     function _getPrice() internal view returns (uint256 price) {

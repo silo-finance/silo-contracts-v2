@@ -13,7 +13,7 @@ import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
@@ -41,7 +41,9 @@ contract LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        console2.log("LeverageRouter for LeverageUsingSiloFlashloanWithGeneralSwap redeployed - remember to run `TowerRegistration` script!");
+        console2.log(
+            "LeverageRouter for LeverageUsingSiloFlashloanWithGeneralSwap redeployed - remember to run `TowerRegistration` script!"
+        );
 
         _registerDeployment(address(leverage), SiloCoreContracts.LEVERAGE_ROUTER);
     }

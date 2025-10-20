@@ -9,7 +9,7 @@ import {DIAOracleFactory} from "silo-oracles/contracts/dia/DIAOracleFactory.sol"
 import {DIAOracle} from "silo-oracles/contracts/dia/DIAOracle.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles CONFIG=DIA_PEAS_USD \
     forge script silo-oracles/deploy/dia-oracle/DIAOracleDeploy.s.sol \
      --rpc-url $RPC_ARBITRUM --ffi --broadcast --verify

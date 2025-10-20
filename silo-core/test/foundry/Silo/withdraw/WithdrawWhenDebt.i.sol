@@ -60,11 +60,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
         assertFalse(silo0.isSolvent(borrower), "must be insolvent");
 
-        assertEq(
-            silo0.maxWithdraw(borrower),
-            0,
-            "should not be able to withdraw more collateral"
-        );
+        assertEq(silo0.maxWithdraw(borrower), 0, "should not be able to withdraw more collateral");
 
         assertEq(
             silo0.maxWithdraw(borrower, ISilo.CollateralType.Protected),
@@ -86,9 +82,8 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
         ISilo collateralSilo = silo0;
 
-        (
-            address protectedShareToken, address collateralShareToken,
-        ) = siloConfig.getShareTokens(address(collateralSilo));
+        (address protectedShareToken, address collateralShareToken,) =
+            siloConfig.getShareTokens(address(collateralSilo));
         (,, address debtShareToken) = siloConfig.getShareTokens(address(silo1));
 
         // collateral
@@ -97,7 +92,8 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         assertEq(maxWithdraw, 2e18 - 1, "maxWithdraw, because we have protected (-1 for underestimation)");
 
         uint256 previewWithdraw = collateralSilo.previewWithdraw(maxWithdraw);
-        uint256 gotShares = collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.CollateralType.Collateral);
+        uint256 gotShares =
+            collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.CollateralType.Collateral);
 
         assertEq(collateralSilo.maxWithdraw(address(this)), 0, "no collateral left");
 
@@ -116,8 +112,16 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
         assertEq(previewWithdraw, gotShares, "previewWithdraw");
 
         assertEq(IShareToken(debtShareToken).balanceOf(address(this)), 0.1e18, "debtShareToken");
-        assertEq(IShareToken(protectedShareToken).balanceOf(address(this)), 1e18 * SiloMathLib._DECIMALS_OFFSET_POW, "protectedShareToken stays the same");
-        assertLe(IShareToken(collateralShareToken).balanceOf(address(this)), 2 * SiloMathLib._DECIMALS_OFFSET_POW, "collateral burned");
+        assertEq(
+            IShareToken(protectedShareToken).balanceOf(address(this)),
+            1e18 * SiloMathLib._DECIMALS_OFFSET_POW,
+            "protectedShareToken stays the same"
+        );
+        assertLe(
+            IShareToken(collateralShareToken).balanceOf(address(this)),
+            2 * SiloMathLib._DECIMALS_OFFSET_POW,
+            "collateral burned"
+        );
 
         assertLe(
             collateralSilo.getCollateralAssets(),

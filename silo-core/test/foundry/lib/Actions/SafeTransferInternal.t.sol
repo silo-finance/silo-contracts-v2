@@ -52,8 +52,7 @@ contract SafeTransferInternalTest is Test {
         bytes4 selector = bytes4(keccak256("transfer(address,uint256)"));
         vm.mockCall(TOKEN, abi.encodeWithSelector(selector, TO, AMOUNT), abi.encode(uint256(1)));
         assertTrue(
-            Actions._safeTransferInternal(IERC20(TOKEN), TO, AMOUNT),
-            "1 == true, so result will be sucessful"
+            Actions._safeTransferInternal(IERC20(TOKEN), TO, AMOUNT), "1 == true, so result will be sucessful"
         );
     }
 

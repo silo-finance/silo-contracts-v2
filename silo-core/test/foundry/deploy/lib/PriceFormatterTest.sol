@@ -8,7 +8,6 @@ import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc PriceFormatterTest
 */
 contract PriceFormatterTest is Test {
-
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_PriceFormatter_digits
     */
@@ -41,6 +40,5 @@ contract PriceFormatterTest is Test {
         assertEq(PriceFormatter.formatPriceInE18(123256), "123256 [6 digits]", "formatPriceInE18(123256)");
         assertEq(PriceFormatter.formatPriceInE18(0.123e18), "0.123e18", "formatPriceInE18(0.123e18)");
         assertEq(PriceFormatter.formatPriceInE18(1.2e18), "1.2e18", "formatPriceInE18(1.2e18)");
-
     }
 }

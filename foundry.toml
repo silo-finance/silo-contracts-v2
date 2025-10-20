@@ -82,7 +82,20 @@ fs_permissions = [
 ]
 
 [profile.default.fmt]
-line_length=119
+# Maximum line length where formatter will try to wrap the line
+line_length = 118
+# Number of spaces per indentation level
+tab_width = 4
+# Print spaces between brackets
+bracket_spacing = false
+# Style of uint/int256 types
+int_types = "long"
+# If function parameters are multiline then always put the function attributes on separate lines
+func_attrs_with_params_multiline = true
+# Style of quotation marks
+quote_style = "double"
+# Style of underscores in number literals
+number_underscore = "preserve"
 
 [profile.vaults]
 src = 'silo-vaults/contracts'
@@ -146,6 +159,7 @@ test = 'silo-oracles/test'
 broadcast = 'silo-oracles/broadcast'
 
 [fuzz]
+runs = 800
 max_test_rejects = 131072 # 65536 * 2 (doubled a default value)
 
 [rpc_endpoints]

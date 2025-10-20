@@ -29,19 +29,16 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation {
     // Events to be emitted by the hook receiver to see decoded inputs
     // HA - Hook Action
     event DepositBeforeHA(
-        address silo,
-        uint256 assets,
-        uint256 shares,
-        address receiver,
-        ISilo.CollateralType collateralType
+        address silo, uint256 assets, uint256 shares, address receiver, ISilo.CollateralType collateralType
     );
 
-    event DepositAfterHA(
+    event DepositAfterHA( // The exact amount of assets being deposited
+        // The exact amount of shares being minted
         address silo,
         uint256 depositedAssets,
         uint256 depositedShares,
-        uint256 receivedAssets, // The exact amount of assets being deposited
-        uint256 mintedShares, // The exact amount of shares being minted
+        uint256 receivedAssets,
+        uint256 mintedShares,
         address receiver,
         ISilo.CollateralType collateralType
     );
@@ -110,11 +107,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation {
     );
 
     event RepayBeforeHA(
-        address silo,
-        uint256 repaidAssets,
-        uint256 repaidShares,
-        address borrower,
-        address repayer
+        address silo, uint256 repaidAssets, uint256 repaidShares, address borrower, address repayer
     );
 
     event RepayAfterHA(
@@ -127,13 +120,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation {
         uint256 returnedShares
     );
 
-    event TransitionCollateralHA(
-        address silo,
-        uint256 shares,
-        address owner,
-        uint256 assets,
-        bool isBefore
-    );
+    event TransitionCollateralHA(address silo, uint256 shares, address owner, uint256 assets, bool isBefore);
 
     event SwitchCollateralBeforeHA(address user);
 
@@ -187,23 +174,20 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation {
     }
 
     /// @inheritdoc IHookReceiver
-    function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
-        external
-    {
+    function beforeAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external {
         if (revertAllActions || revertOnlyBeforeAction) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_BEFORE);
     }
 
     /// @inheritdoc IHookReceiver
-    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput)
-        external
-        override
-    {
+    function afterAction(address _silo, uint256 _action, bytes calldata _inputAndOutput) external override {
         if (revertAllActions || revertOnlyAfterAction) revert ActionsStopped();
         _processActions(_silo, _action, _inputAndOutput, _IS_AFTER);
     }
 
-    function _processActions(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
+    function _processActions(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore)
+        internal
+    {
         if (_action.matchAction(Hook.DEPOSIT)) {
             _processDeposit(_silo, _action, _inputAndOutput, _isBefore);
         } else if (_action.matchAction(Hook.SHARE_TOKEN_TRANSFER)) {
@@ -227,12 +211,13 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation {
         }
     }
 
-    function _processDeposit(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
+    function _processDeposit(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore)
+        internal
+    {
         bool isCollateral = _action.matchAction(Hook.depositAction(ISilo.CollateralType.Collateral));
 
-        ISilo.CollateralType collateralType = isCollateral
-                ? ISilo.CollateralType.Collateral
-                : ISilo.CollateralType.Protected;
+        ISilo.CollateralType collateralType =
+            isCollateral ? ISilo.CollateralType.Collateral : ISilo.CollateralType.Protected;
 
         if (_isBefore) {
             Hook.BeforeDepositInput memory input = Hook.beforeDepositDecode(_inputAndOutput);
@@ -299,24 +284,19 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation {
         }
     }
 
-    function _processWithdraw(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
+    function _processWithdraw(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore)
+        internal
+    {
         bool isCollateral = _action.matchAction(Hook.withdrawAction(ISilo.CollateralType.Collateral));
 
-        ISilo.CollateralType collateralType = isCollateral
-                ? ISilo.CollateralType.Collateral
-                : ISilo.CollateralType.Protected;
+        ISilo.CollateralType collateralType =
+            isCollateral ? ISilo.CollateralType.Collateral : ISilo.CollateralType.Protected;
 
         if (_isBefore) {
             Hook.BeforeWithdrawInput memory input = Hook.beforeWithdrawDecode(_inputAndOutput);
 
             emit WithdrawBeforeHA(
-                _silo,
-                input.assets,
-                input.shares,
-                input.receiver,
-                input.owner,
-                input.spender,
-                collateralType
+                _silo, input.assets, input.shares, input.receiver, input.owner, input.spender, collateralType
             );
         } else {
             Hook.AfterWithdrawInput memory input = Hook.afterWithdrawDecode(_inputAndOutput);
@@ -335,7 +315,9 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation {
         }
     }
 
-    function _processBorrow(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
+    function _processBorrow(address _silo, uint256 _action, bytes calldata _inputAndOutput, bool _isBefore)
+        internal
+    {
         if (_action.matchAction(Hook.BORROW) || _action.matchAction(Hook.BORROW_SAME_ASSET)) {
             _processBorrowAction(_silo, _inputAndOutput, _isBefore);
         } else {
@@ -347,14 +329,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation {
         if (_isBefore) {
             Hook.BeforeBorrowInput memory input = Hook.beforeBorrowDecode(_inputAndOutput);
 
-            emit BorrowBeforeHA(
-                _silo,
-                input.assets,
-                input.shares,
-                input.borrower,
-                input.receiver,
-                input.spender
-            );
+            emit BorrowBeforeHA(_silo, input.assets, input.shares, input.borrower, input.receiver, input.spender);
         } else {
             Hook.AfterBorrowInput memory input = Hook.afterBorrowDecode(_inputAndOutput);
 
@@ -377,7 +352,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation {
             emit RepayBeforeHA(_silo, input.assets, input.shares, input.borrower, input.repayer);
         } else {
             Hook.AfterRepayInput memory input = Hook.afterRepayDecode(_inputAndOutput);
-            
+
             emit RepayAfterHA(
                 _silo,
                 input.assets,
@@ -400,11 +375,7 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation {
         }
     }
 
-    function _processSwitchCollateral(
-        uint256 _action,
-        bytes calldata _inputAndOutput,
-        bool _isBefore
-    ) internal {
+    function _processSwitchCollateral(uint256 _action, bytes calldata _inputAndOutput, bool _isBefore) internal {
         Hook.SwitchCollateralInput memory input = Hook.switchCollateralDecode(_inputAndOutput);
 
         if (_action.matchAction(Hook.SWITCH_COLLATERAL)) {
@@ -418,13 +389,10 @@ contract HookReceiverAllActionsWithEvents is PartialLiquidation {
         }
     }
 
-    function _processTransitionCollateral(
-        address _silo,
-        bytes calldata _inputAndOutput,
-        bool _isBefore
-    ) internal {
+    function _processTransitionCollateral(address _silo, bytes calldata _inputAndOutput, bool _isBefore) internal {
         if (_isBefore) {
-            Hook.BeforeTransitionCollateralInput memory input = Hook.beforeTransitionCollateralDecode(_inputAndOutput);
+            Hook.BeforeTransitionCollateralInput memory input =
+                Hook.beforeTransitionCollateralDecode(_inputAndOutput);
             emit TransitionCollateralHA(_silo, input.shares, input.owner, 0, _isBefore);
         } else {
             Hook.AfterTransitionCollateralInput memory input = Hook.afterTransitionCollateralDecode(_inputAndOutput);

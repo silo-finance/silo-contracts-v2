@@ -3,6 +3,9 @@ pragma solidity 0.8.28;
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {console2} from "forge-std/console2.sol";
+
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
@@ -10,10 +13,10 @@ import {ERC4626OracleFactory} from "silo-oracles/contracts/erc4626/ERC4626Oracle
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
-/**
-FOUNDRY_PROFILE=oracles VAULT=woS \
+/*
+FOUNDRY_PROFILE=oracles VAULT=tAVAX \
     forge script silo-oracles/deploy/erc4626/ERC4626OracleDeploy.s.sol \
-    --ffi --rpc-url $RPC_SONIC --broadcast --verify
+    --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify
  */
 contract ERC4626OracleDeploy is CommonDeploy {
     string public vaultKey;
@@ -44,5 +47,12 @@ contract ERC4626OracleDeploy is CommonDeploy {
         string memory oracleName = string.concat("ERC4626_", vaultKey);
 
         OraclesDeployments.save(getChainAlias(), oracleName, address(oracle));
+
+        _qa(oracle, vault);
+    }
+
+    function _qa(ISiloOracle oracle, IERC4626 vault) internal view {
+        console2.log("fetch price for: %s/%s", IERC20Metadata(vault).symbol(), IERC20Metadata(vault.asset()).symbol());
+        _printQuote(oracle, address(vault), uint256(10 ** IERC20Metadata(vault).decimals()));
     }
 }

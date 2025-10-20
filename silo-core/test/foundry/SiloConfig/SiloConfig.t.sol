@@ -187,7 +187,8 @@ contract SiloConfigTest is Test {
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         siloConfig.getShareTokens(_wrongSilo);
 
-        (address protectedShareToken, address collateralShareToken, address debtShareToken) = siloConfig.getShareTokens(_configData0.silo);
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            siloConfig.getShareTokens(_configData0.silo);
         assertEq(protectedShareToken, _configData0.protectedShareToken);
         assertEq(collateralShareToken, _configData0.silo);
         assertEq(debtShareToken, _configData0.debtShareToken);
@@ -297,7 +298,8 @@ contract SiloConfigTest is Test {
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         siloConfig.getFeesWithAsset(_wrongSilo);
 
-        (uint256 daoFee, uint256 deployerFee, uint256 flashloanFee, address asset) = siloConfig.getFeesWithAsset(_configData0.silo);
+        (uint256 daoFee, uint256 deployerFee, uint256 flashloanFee, address asset) =
+            siloConfig.getFeesWithAsset(_configData0.silo);
 
         assertEq(daoFee, _configData0.daoFee);
         assertEq(deployerFee, _configData0.deployerFee);
@@ -326,7 +328,8 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_getDebtShareTokenAndAsset_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 3
-    function test_getDebtShareTokenAndAsset_fuzz(uint256 _siloId,
+    function test_getDebtShareTokenAndAsset_fuzz(
+        uint256 _siloId,
         ISiloConfig.ConfigData memory _configData0,
         ISiloConfig.ConfigData memory _configData1
     ) public {
@@ -574,23 +577,12 @@ contract SiloConfigTest is Test {
     forge test -vv --mt test_getConfigs_zero
     */
     function test_getConfigs_zero() public {
-        vm.mockCall(
-            _configDataDefault0.debtShareToken,
-            abi.encodeCall(IERC20.balanceOf, address(0)),
-            abi.encode(0)
-        );
+        vm.mockCall(_configDataDefault0.debtShareToken, abi.encodeCall(IERC20.balanceOf, address(0)), abi.encode(0));
 
-        vm.mockCall(
-            _configDataDefault1.debtShareToken,
-            abi.encodeCall(IERC20.balanceOf, address(0)),
-            abi.encode(0)
-        );
+        vm.mockCall(_configDataDefault1.debtShareToken, abi.encodeCall(IERC20.balanceOf, address(0)), abi.encode(0));
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig
-        ) = _siloConfig.getConfigsForSolvency(address(0));
-
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+            _siloConfig.getConfigsForSolvency(address(0));
 
         assertEq(collateralConfig.silo, address(0), "User has no debt - config should be empty");
         assertEq(debtConfig.silo, address(0), "User has no debt - config should be empty");
@@ -1051,15 +1043,11 @@ contract SiloConfigTest is Test {
 
     function _mockShareTokensBlances(address _user, uint256 _balance0, uint256 _balance1) internal {
         vm.mockCall(
-            _configDataDefault0.debtShareToken,
-            abi.encodeCall(IERC20.balanceOf, _user),
-            abi.encode(_balance0)
+            _configDataDefault0.debtShareToken, abi.encodeCall(IERC20.balanceOf, _user), abi.encode(_balance0)
         );
 
         vm.mockCall(
-            _configDataDefault1.debtShareToken,
-            abi.encodeCall(IERC20.balanceOf, _user),
-            abi.encode(_balance1)
+            _configDataDefault1.debtShareToken, abi.encodeCall(IERC20.balanceOf, _user), abi.encode(_balance1)
         );
     }
 }

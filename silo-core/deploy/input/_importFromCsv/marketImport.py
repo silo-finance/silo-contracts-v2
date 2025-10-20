@@ -20,7 +20,7 @@ def to_percent(percentage_string):
     except (ValueError, AttributeError):
         return "N/A"
 
-def find_config_name(configName: str, is_borrowable: str, filename: str = 'silo-core/deploy/input/InterestRateModelConfigs.json') -> str:
+def find_config_name(configName: str, is_borrowable: str, filename: str = 'silo-core/deploy/input/irmConfigs/InterestRateModelConfigs.json') -> str:
     # Check if not borrowable (case insensitive)
     if is_borrowable.lower() == 'non-borrowable':
         return 'NA'
@@ -84,7 +84,7 @@ with open(input_file, "r", newline="", encoding="utf-8") as csvfile:
         data.append({keys[i]: row[i] for i in range(len(keys))})
 
 json_structure = {
-    "deployer": "",
+    "deployer": "0xAaD2F138Eb20fb60C34ac70624339ccbaC2320fa",
     "hookReceiver": "CLONE_IMPLEMENTATION",
     "hookReceiverImplementation": "SiloHookV1.sol",
     "daoFee": to_percent(data[0]["daoFee"]),

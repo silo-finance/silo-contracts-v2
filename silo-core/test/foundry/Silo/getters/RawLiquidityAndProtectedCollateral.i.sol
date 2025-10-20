@@ -70,7 +70,8 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
         _printSiloStats("\nStep5 withdraw fees (Silo0)", silo0, token0);
 
         // liquidation
-        (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired) = partialLiquidation.maxLiquidation(user0);
+        (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired) =
+            partialLiquidation.maxLiquidation(user0);
 
         assertGt(collateralToLiquidate, 0, "expect collateralToLiquidate");
         assertTrue(sTokenRequired, "sTokenRequired required because NotEnoughLiquidity");
@@ -85,7 +86,7 @@ contract RawLiquidityAndProtectedCollateralTest is SiloLittleHelper, Test {
 
         // If there is not liquidity in the silo, the liquidator can receive share tokens
 
-        (,address collateralShareToken,) = _siloConfig.getShareTokens(address(silo0));
+        (, address collateralShareToken,) = _siloConfig.getShareTokens(address(silo0));
 
         assertEq(IERC20(collateralShareToken).balanceOf(address(this)), 0, "expect 0 balance");
 

@@ -16,8 +16,8 @@ import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_07_23 --ffi -vvv
 */
 contract LiquidationDebug_2025_07_23 is IntegrationTest {
-    SiloLens constant internal lens = SiloLens(0xB95AD415b0fcE49f84FbD5B26b14ec7cf4822c69);
-    IPartialLiquidation constant internal hook = IPartialLiquidation(0xDdBa71380230a3a5ab7094d9c774A6C5852a0fFC);
+    SiloLens internal constant lens = SiloLens(0xB95AD415b0fcE49f84FbD5B26b14ec7cf4822c69);
+    IPartialLiquidation internal constant hook = IPartialLiquidation(0xDdBa71380230a3a5ab7094d9c774A6C5852a0fFC);
     // ILiquidationHelper constant internal helper = ILiquidationHelper(0xd98C025cf5d405FE3385be8C9BE64b219EC750F8);
     ILiquidationHelper internal helper;
     address internal swapAllowanceHolder = 0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D;
@@ -29,13 +29,10 @@ contract LiquidationDebug_2025_07_23 is IntegrationTest {
         vm.label(address(hook), "IPartialLiquidation");
         vm.label(swapAllowanceHolder, "SWAP AllowanceHolder");
 
-        vm.createSelectFork(
-            vm.envString("RPC_SONIC"),
-            39843039 - 5
+        vm.createSelectFork(vm.envString("RPC_SONIC"), 39843039 - 5);
         //  -1: 649934417432853875
         //  -5:
         // -10: 649402322711757183
-        );
 
         helper = LiquidationHelper(payable(0xf363C6d369888F5367e9f1aD7b6a7dAe133e8740));
     }
@@ -44,23 +41,23 @@ contract LiquidationDebug_2025_07_23 is IntegrationTest {
     FOUNDRY_PROFILE=core_test forge test --mc LiquidationDebug_2025_07_23 --mt test_skip_liquidation_20250723 --ffi -vvv
 
     _flashLoanFrom	address
-0x322e1d5384aa4ED66AeCa770B95686271de61dc3
-2	_debtAsset	address
-0x29219dd400f2Bf60E5a23d13Be72B486D4038894
-3	_maxDebtToCover	uint256
-1760484
-3	_liquidation.hook	address
-0xDdBa71380230a3a5ab7094d9c774A6C5852a0fFC
-3	_liquidation.collateralAsset	address
-0x79bbF4508B1391af3A0F4B30bb5FC4aa9ab0E07C
-3	_liquidation.user	address
-0xE67D43cB12C16a3Da358B3705EA1B32A652f1221
-4	_swapsInputs0x.sellToken	address
-0x79bbF4508B1391af3A0F4B30bb5FC4aa9ab0E07C
-4	_swapsInputs0x.allowanceTarget	address
-0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D
-4	_swapsInputs0x.swapCallData	bytes
-0x83bd37f9000179bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c000129219dd400f2bf60e5a23d13be72b486d40388940809d7284eb250b236031d552407ae14000146a405160258f071b5db777e0965c98133ea03a300000001f363c6d369888f5367e9f1ad7b6a7dae133e8740000000000301020300060101010200ff0000000000000000000000000000000000000000006f7c5f531024216cd8156d0b4e271e0c92a8a4e679bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c000000000000000000000000000000000000000000000000
+    0x322e1d5384aa4ED66AeCa770B95686271de61dc3
+    2	_debtAsset	address
+    0x29219dd400f2Bf60E5a23d13Be72B486D4038894
+    3	_maxDebtToCover	uint256
+    1760484
+    3	_liquidation.hook	address
+    0xDdBa71380230a3a5ab7094d9c774A6C5852a0fFC
+    3	_liquidation.collateralAsset	address
+    0x79bbF4508B1391af3A0F4B30bb5FC4aa9ab0E07C
+    3	_liquidation.user	address
+    0xE67D43cB12C16a3Da358B3705EA1B32A652f1221
+    4	_swapsInputs0x.sellToken	address
+    0x79bbF4508B1391af3A0F4B30bb5FC4aa9ab0E07C
+    4	_swapsInputs0x.allowanceTarget	address
+    0xaC041Df48dF9791B0654f1Dbbf2CC8450C5f2e9D
+    4	_swapsInputs0x.swapCallData	bytes
+    0x83bd37f9000179bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c000129219dd400f2bf60e5a23d13be72b486d40388940809d7284eb250b236031d552407ae14000146a405160258f071b5db777e0965c98133ea03a300000001f363c6d369888f5367e9f1ad7b6a7dae133e8740000000000301020300060101010200ff0000000000000000000000000000000000000000006f7c5f531024216cd8156d0b4e271e0c92a8a4e679bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c000000000000000000000000000000000000000000000000
 
     */
     function test_skip_liquidation_20250723() public {
@@ -88,7 +85,8 @@ contract LiquidationDebug_2025_07_23 is IntegrationTest {
         console2.log("user: ", user);
 
         ISiloConfig config = ISiloConfig(silo.config());
-        (ISiloConfig.ConfigData memory collateralCfg, ISiloConfig.ConfigData memory debtCfg) = config.getConfigsForSolvency(user);
+        (ISiloConfig.ConfigData memory collateralCfg, ISiloConfig.ConfigData memory debtCfg) =
+            config.getConfigsForSolvency(user);
         console2.log("collateral silo: ", collateralCfg.silo);
         console2.log("debt silo: ", debtCfg.silo);
         console2.log("collateral Liquidation Threshold: ", collateralCfg.lt);

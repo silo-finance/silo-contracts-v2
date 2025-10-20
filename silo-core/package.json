@@ -13,7 +13,10 @@
     "solhint": "~3.4.1"
   },
   "scripts": {
-    "lint:sol": "../scripts/lint-sol.sh 40",
+    "lint:sol": "../scripts/lint-sol.sh 0",
+    "lint-tests:sol": "../scripts/lint-sol.sh 0 test/**/*.sol",
+    "lint-deploy:sol": "../scripts/lint-sol.sh 0 deploy/**/*.sol",
+    "lint-common:sol": "../scripts/lint-sol.sh 0 common/**/*.sol",
     "foundry:qa": "FOUNDRY_PROFILE=core forge test -vvv"
   }
 }

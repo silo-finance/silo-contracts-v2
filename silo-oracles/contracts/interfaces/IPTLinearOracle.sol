@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
+import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
+
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IPTLinearOracleConfig} from "./IPTLinearOracleConfig.sol";
 
-interface IPTLinearOracle is ISiloOracle {
+interface IPTLinearOracle is ISiloOracle, AggregatorV3Interface {
     event PTLinearOracleInitialized(IPTLinearOracleConfig indexed configAddress);
 
     error NotInitialized();
@@ -17,20 +19,10 @@ interface IPTLinearOracle is ISiloOracle {
 
     /// @notice validation of config is checked in factory, therefore you should not deploy and initialize directly
     /// use factory always.
-    function initialize(IPTLinearOracleConfig _configAddress, string memory _syRateMethod) external;
-
-    /// @dev resolves the exchange factor for the given syToken and syRateMethodSelector
-    ///required for the PTLinearOracle to calculate the quote
-    function callForExchangeFactor(address _syToken, bytes4 _syRateMethodSelector)
-        external
-        view
-        returns (uint256 exchangeFactor);
+    function initialize(IPTLinearOracleConfig _configAddress) external;
 
     function oracleConfig() external view returns (IPTLinearOracleConfig);
 
-    /// @dev returns the PT multiplier of the linear oracle, for debugging purposes
-    function multiplier() external view returns (int256);
-
-    /// @dev returns the syRateMethod of the linear oracle, for debugging purposes
-    function syRateMethod() external view returns (string memory);
+    /// @dev returns the max discount per year that oracle was created with
+    function baseDiscountPerYear() external view returns (uint256);
 }

@@ -20,13 +20,7 @@ contract SiloLendingLibConsumerVulnerable {
         address _borrower,
         address _repayer
     ) external {
-        SiloLendingLibWithReentrancyIssue.repay(
-            _configData,
-            _assets,
-            _shares,
-            _borrower,
-            _repayer
-        );
+        SiloLendingLibWithReentrancyIssue.repay(_configData, _assets, _shares, _borrower, _repayer);
     }
 
     function getTotalDebt() public view returns (uint256) {

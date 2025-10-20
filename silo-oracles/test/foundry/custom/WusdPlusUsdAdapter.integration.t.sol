@@ -11,9 +11,8 @@ import {IChainlinkV3Factory} from "silo-oracles/contracts/interfaces/IChainlinkV
 import {ChainlinkV3Oracle} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3Oracle.sol";
 import {ChainlinkV3OracleFactory} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleFactory.sol";
 
-import {
-    ChainlinkV3OraclesConfigsParser
-} from "silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OraclesConfigsParser.sol";
+import {ChainlinkV3OraclesConfigsParser} from
+    "silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OraclesConfigsParser.sol";
 
 import {
     SiloOraclesFactoriesContracts,
@@ -25,15 +24,12 @@ contract WusdPlusUsdAdapterTest is IntegrationTest {
     uint256 internal constant _FORKING_BLOCK_NUMBER = 284751238;
 
     string internal constant _ORACLE_CONFIG_NAME = "CHAINLINK_WUSDPlus_USDC";
-    
+
     ChainlinkV3OracleFactory internal _chainlinkV3OracleFactory;
     WusdPlusUsdAdapter internal _adapter;
 
     function setUp() public {
-        vm.createSelectFork(
-            getChainRpcUrl(ARBITRUM_ONE_ALIAS),
-            _FORKING_BLOCK_NUMBER
-        );
+        vm.createSelectFork(getChainRpcUrl(ARBITRUM_ONE_ALIAS), _FORKING_BLOCK_NUMBER);
 
         WusdPlusUsdAdapterDeploy deploy = new WusdPlusUsdAdapterDeploy();
         deploy.disableDeploymentsSync();
@@ -41,8 +37,7 @@ contract WusdPlusUsdAdapterTest is IntegrationTest {
 
         _chainlinkV3OracleFactory = ChainlinkV3OracleFactory(
             SiloOraclesFactoriesDeployments.get(
-                SiloOraclesFactoriesContracts.CHAINLINK_V3_ORACLE_FACTORY,
-                getChainAlias()
+                SiloOraclesFactoriesContracts.CHAINLINK_V3_ORACLE_FACTORY, getChainAlias()
             )
         );
     }
@@ -50,10 +45,8 @@ contract WusdPlusUsdAdapterTest is IntegrationTest {
     // FOUNDRY_PROFILE=oracles forge test --mt test_wusdPlusUsdAdapterWithChainlinkV3Oracle --ffi -vvv
     // TODOD this test must be skipped because factory changed and forked version does not match new code
     function test_skip_wusdPlusUsdAdapterWithChainlinkV3Oracle() public {
-        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config = ChainlinkV3OraclesConfigsParser.getConfig(
-            getChainAlias(),
-            _ORACLE_CONFIG_NAME
-        );
+        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config =
+            ChainlinkV3OraclesConfigsParser.getConfig(getChainAlias(), _ORACLE_CONFIG_NAME);
 
         ChainlinkV3Oracle oracle = _chainlinkV3OracleFactory.create(config, bytes32(0));
 
@@ -65,10 +58,13 @@ contract WusdPlusUsdAdapterTest is IntegrationTest {
     // FOUNDRY_PROFILE=oracles forge test --mc WusdPlusUsdAdapterTest --ffi -vvv
     function test_wusdPlusUsdAdapter() public view {
         (
-            /*uint80 roundID*/,
+            /*uint80 roundID*/
+            ,
             int256 aggregatorPrice,
-            /*uint256 startedAt*/,
-            /*uint256 priceTimestamp*/,
+            /*uint256 startedAt*/
+            ,
+            /*uint256 priceTimestamp*/
+            ,
             /*uint80 answeredInRound*/
         ) = _adapter.latestRoundData();
 

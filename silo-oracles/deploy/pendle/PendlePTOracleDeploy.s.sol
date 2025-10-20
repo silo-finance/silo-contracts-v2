@@ -8,16 +8,15 @@ import {PendlePTOracleFactory} from "silo-oracles/contracts/pendle/PendlePTOracl
 import {PendlePTOracle} from "silo-oracles/contracts/pendle/PendlePTOracle.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
-import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol"; 
+import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
-
 
 interface IPendleMarketV3 {
     function increaseObservationsCardinalityNext(uint16 cardinalityNext) external;
 }
 
-/**
+/*
 FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE_NAME=CHAINLINK_USDC_USD_aggregator MARKET=0x43023675c804A759cBf900Da83DBcc97ee2afbe7 \
     forge script silo-oracles/deploy/pendle/PendlePTOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
@@ -67,22 +66,13 @@ contract PendlePTOracleDeploy is CommonDeploy {
         // IPendleMarketV3(market).increaseObservationsCardinalityNext(900);
         // IPendleMarketV3(market).increaseObservationsCardinalityNext(1801);
 
-        oracle = factory.create({
-            _underlyingOracle: underlyingOracle,
-            _market: market,
-            _externalSalt: bytes32(0)
-        });
+        oracle = factory.create({_underlyingOracle: underlyingOracle, _market: market, _externalSalt: bytes32(0)});
 
         vm.stopBroadcast();
 
-        IERC20Metadata ptToken = IERC20Metadata(PendlePTOracle(address(oracle)).PT_TOKEN()); 
+        IERC20Metadata ptToken = IERC20Metadata(PendlePTOracle(address(oracle)).PT_TOKEN());
 
-        string memory oracleName = string.concat(
-            "PENDLE_PT_ORACLE_",
-            ptToken.symbol(),
-            "_",
-            underlyingOracleName
-        );
+        string memory oracleName = string.concat("PENDLE_PT_ORACLE_", ptToken.symbol(), "_", underlyingOracleName);
 
         OraclesDeployments.save(getChainAlias(), oracleName, address(oracle));
     }

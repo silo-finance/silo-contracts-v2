@@ -6,6 +6,7 @@ import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Inter
 
 /// @dev part of EGGS contract interface to get the EGGS / S exchange rate
 interface IEggsLike {
+    // solhint-disable-next-line func-name-mixedcase
     function EGGStoSONIC(uint256 value) external view returns (uint256);
 }
 

@@ -23,14 +23,13 @@ contract Oracle is ISiloOracle {
         quoteToken = _quoteToken;
     }
 
-    function beforeQuote(address) external {
-    }
+    function beforeQuote(address) external {}
 
     function setPrice(uint256 _priceOfOne) external {
         priceOfOneBaseToken = _priceOfOne;
     }
 
-    function quote(uint256 _baseAmount, address /* _baseToken */) external view returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address /* _baseToken */ ) external view returns (uint256 quoteAmount) {
         return _baseAmount * priceOfOneBaseToken / (10 ** baseDecimals);
     }
 }
@@ -82,7 +81,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         assertEq(silo1.maxBorrow(borrower), 75e5 - 1, "maxBorrow");
         _borrow(silo1.maxBorrow(borrower), borrower);
 
-        assertEq(silo0.maxWithdraw(borrower), 1176469 , "maxWithdraw");
+        assertEq(silo0.maxWithdraw(borrower), 1176469, "maxWithdraw");
         _withdraw(silo0.maxWithdraw(borrower), borrower);
 
         vm.warp(10 days);
@@ -99,9 +98,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         token1.approve(address(partialLiquidation), debt);
         token1.mint(address(this), debt);
 
-        partialLiquidation.liquidationCall(
-            address(token0), address(token1), borrower, debt, receiveSToken
-        );
+        partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debt, receiveSToken);
     }
 
     /*
@@ -139,9 +136,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         token1.approve(address(partialLiquidation), debt);
         token1.mint(address(this), debt);
 
-        partialLiquidation.liquidationCall(
-            address(token0), address(token1), borrower, debt, receiveSToken
-        );
+        partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debt, receiveSToken);
     }
 
     /*
@@ -157,7 +152,9 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _depositForBorrow(1e18, depositor);
 
         // -3e8 is because we decrease the user collateral by 1wei during maxBorrow calculation due to fractions
-        assertEq(silo1.maxBorrow(borrower), 0.75e18 - 3e8, "maxBorrow, maxLTV is 75% (-3e8 because of the fractions)");
+        assertEq(
+            silo1.maxBorrow(borrower), 0.75e18 - 3e8, "maxBorrow, maxLTV is 75% (-3e8 because of the fractions)"
+        );
         _borrow(silo1.maxBorrow(borrower), borrower);
 
         // LT is 85%, so 0.75e18 / 0.85 = 882352941176470700 of value in collateral is needed.
@@ -173,16 +170,14 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(10, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 100_4885418 , "collateral");
+        assertEq(collateral, 100_4885418, "collateral");
         assertEq(debt, 382813493616435237, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
         token1.approve(address(partialLiquidation), debt);
         token1.mint(address(this), debt);
 
-        partialLiquidation.liquidationCall(
-            address(token0), address(token1), borrower, debt, receiveSToken
-        );
+        partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debt, receiveSToken);
     }
 
     /*
@@ -203,7 +198,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         // LT is 85%, so (375000 - 1) / 0.85 = 441175 of value in collateral is needed.
         // we have 1HALF, 1e6 - (441175 * 2) = 117650.
         // 117650 / 1e6 = 0.11765 can be removed, => 1e6 * 0.117648 = 117650
-        assertEq(silo0.maxWithdraw(borrower), 117644 , "maxWithdraw (-1 underestimate for fractions)");
+        assertEq(silo0.maxWithdraw(borrower), 117644, "maxWithdraw (-1 underestimate for fractions)");
         _withdraw(silo0.maxWithdraw(borrower), borrower);
 
         vm.warp(1 days);
@@ -220,8 +215,6 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         token1.approve(address(partialLiquidation), debt);
         token1.mint(address(this), debt);
 
-        partialLiquidation.liquidationCall(
-            address(token0), address(token1), borrower, debt, receiveSToken
-        );
+        partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debt, receiveSToken);
     }
 }

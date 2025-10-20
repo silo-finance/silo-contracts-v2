@@ -13,9 +13,7 @@ contract MaxRepayRawMath {
         uint256 _totalBorrowerCollateralValue,
         uint256 _ltvAfterLiquidation,
         uint256 _liquidationFee
-    )
-        internal pure returns (uint256 repayValue)
-    {
+    ) internal pure returns (uint256 repayValue) {
         uint256 tmp = _ltvAfterLiquidation * _liquidationFee / _DECIMALS_POINTS;
         if (_ltvAfterLiquidation + tmp > _DECIMALS_POINTS) return _totalBorrowerDebtValue;
 

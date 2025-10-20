@@ -83,11 +83,7 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         }
 
         partialLiquidation.liquidationCall(
-            address(token1),
-            address(token0),
-            borrowerOnReentrancy,
-            debtToRepay,
-            receiveSTokens
+            address(token1), address(token0), borrowerOnReentrancy, debtToRepay, receiveSTokens
         );
     }
 

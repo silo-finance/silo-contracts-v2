@@ -15,8 +15,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {InterestRateModelConfigData} from "silo-core/deploy/input-readers/InterestRateModelConfigData.sol";
 import {
-    InterestRateModelV2,
-    IInterestRateModelV2
+    InterestRateModelV2, IInterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {IInterestRateModelV2Config} from "silo-core/contracts/interfaces/IInterestRateModelV2Config.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
@@ -30,12 +29,14 @@ import {Utils, IPTLinearAggregatorLike} from "silo-core/deploy/silo/verifier/Uti
 import {PendlePTOracle} from "silo-oracles/contracts/pendle/PendlePTOracle.sol";
 import {PendleLPTOracle} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTOracle.sol";
 import {PendlePTToAssetOracle} from "silo-oracles/contracts/pendle/PendlePTToAssetOracle.sol";
+
 import {IDIAOracle, DIAOracle, DIAOracleConfig} from "silo-oracles/contracts/dia/DIAOracle.sol";
 import {
     WrappedMetaVaultOracleAdapter,
     IWrappedMetaVaultOracle
 } from "silo-oracles/contracts/custom/wrappedMetaVaultOracle/WrappedMetaVaultOracleAdapter.sol";
 import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
+import {PTLinearOracle} from "silo-oracles/contracts/pendle/linear/PTLinearOracle.sol";
 
 contract Logger is Test {
     // used to generate quote amounts and names to log
@@ -65,7 +66,7 @@ contract Logger is Test {
     string public constant DELIMITER =
         "\n----------------------------------------------------------------------------";
 
-    uint256 internal constant  _OLD_CHAINLINK_CONFIG_DATA_LEN = 288;
+    uint256 internal constant _OLD_CHAINLINK_CONFIG_DATA_LEN = 288;
     uint256 internal constant _NEW_CHAINLINK_CONFIG_DATA_LEN = 320;
     uint256 internal constant _DIA_CONFIG_DATA_LEN = 256;
 
@@ -74,17 +75,11 @@ contract Logger is Test {
     function logSetup(ISiloConfig _siloConfig) external {
         console2.log(DELIMITER);
 
-        _logSiloSetup({
-            _siloConfig: _siloConfig,
-            _forSiloZero: true
-        });
+        _logSiloSetup({_siloConfig: _siloConfig, _forSiloZero: true});
 
         console2.log(DELIMITER);
 
-        _logSiloSetup({
-            _siloConfig: _siloConfig,
-            _forSiloZero: false
-        });
+        _logSiloSetup({_siloConfig: _siloConfig, _forSiloZero: false});
 
         console2.log(DELIMITER);
 
@@ -117,6 +112,7 @@ contract Logger is Test {
         emit log_named_decimal_uint("\tliquidationTargetLtv(%) ", configData.liquidationTargetLtv * 100, 18);
         emit log_named_address("\tsolvencyOracle          ", configData.solvencyOracle);
         emit log_named_address("\tmaxLtvOracle            ", configData.maxLtvOracle);
+        emit log_named_address("\tinterestRateModel       ", configData.interestRateModel);
 
         console2.log();
         (string memory irmName, bool success) = Utils.findIrmName(configData);
@@ -170,8 +166,7 @@ contract Logger is Test {
         address quoteToken = _oracle.quoteToken();
         uint8 baseTokenDecimals = Utils.tryGetTokenDecimals(_baseToken);
 
-        (bool success, uint256 oneTokenPrice) =
-            Utils.quote(_oracle, _baseToken, 10 ** uint256(baseTokenDecimals));
+        (bool success, uint256 oneTokenPrice) = Utils.quote(_oracle, _baseToken, 10 ** uint256(baseTokenDecimals));
 
         string memory oneTokenPriceLogMessage = string.concat(
             "\tPrice of one token (in it's own decimals, ",
@@ -200,14 +195,16 @@ contract Logger is Test {
             _logPendleOracle(_oracle, market, false);
         } catch {}
 
+        try PTLinearOracle(address(_oracle)).baseDiscountPerYear() returns (uint256) {
+            _logPendleLinearOracle(_oracle);
+        } catch {}
+
         try PendleLPTOracle(address(_oracle)).PENDLE_MARKET() returns (address market) {
             _logPendleOracle(_oracle, market, true);
         } catch {}
 
-        (
-            address primaryAggregator,
-            address secondaryAggregator
-        ) = _resolveUnderlyingChainlinkAggregators({_oracle: _oracle, _logDetails: false});
+        (address primaryAggregator, address secondaryAggregator) =
+            _resolveUnderlyingChainlinkAggregators({_oracle: _oracle, _logDetails: false});
 
         if (primaryAggregator != address(0)) {
             _logLatestRoundData({_aggregator: primaryAggregator, _isPrimary: true});
@@ -217,11 +214,10 @@ contract Logger is Test {
             _logLatestRoundData({_aggregator: secondaryAggregator, _isPrimary: false});
         }
 
-
         console2.log("\n\tQuotes for different amounts:");
         QuoteNamedAmount[] memory amountsToQuote = _getAmountsToQuote(baseTokenDecimals);
 
-        for (uint i; i < amountsToQuote.length; i++) {
+        for (uint256 i; i < amountsToQuote.length; i++) {
             _printPrice(_oracle, _baseToken, amountsToQuote[i]);
         }
 
@@ -271,6 +267,17 @@ contract Logger is Test {
         console2.log(DELIMITER);
     }
 
+    function _logPendleLinearOracle(ISiloOracle _oracle) internal view {
+        console2.log(DELIMITER);
+        console2.log("\n\tPENDLE LINEAR ORACLE INFO\n");
+        console2.log("\tdescription:", PTLinearOracle(address(_oracle)).description());
+        console2.log(
+            "\tbaseDiscountPerYear:",
+            PriceFormatter.formatPriceInE18(PTLinearOracle(address(_oracle)).baseDiscountPerYear())
+        );
+        console2.log(DELIMITER);
+    }
+
     function _logLatestRoundData(address _aggregator, bool _isPrimary) internal {
         string memory aggregatorType = _isPrimary ? "Primary" : "Secondary";
         uint8 aggregatorDecimals = AggregatorV3Interface(_aggregator).decimals();
@@ -284,9 +291,11 @@ contract Logger is Test {
         );
 
         (
-            /*uint80 roundID*/,
+            /*uint80 roundID*/
+            ,
             int256 aggregatorPrice,
-            /*uint256 startedAt*/,
+            /*uint256 startedAt*/
+            ,
             uint256 priceTimestamp,
             /*uint80 answeredInRound*/
         ) = AggregatorV3Interface(_aggregator).latestRoundData();
@@ -304,12 +313,12 @@ contract Logger is Test {
     /// @dev returns underlying primary and secondary aggregators. Logs setup if needed.
     function _resolveUnderlyingChainlinkAggregators(ISiloOracle _oracle, bool _logDetails)
         internal
-        view returns (address primaryAggregator, address secondaryAggregator)
+        view
+        returns (address primaryAggregator, address secondaryAggregator)
     {
         try ChainlinkV3Oracle(address(_oracle)).oracleConfig() returns (ChainlinkV3OracleConfig oracleConfig) {
-            (, bytes memory data) = address(oracleConfig).staticcall(abi.encodeWithSelector(
-                ChainlinkV3OracleConfig.getConfig.selector
-            ));
+            (, bytes memory data) =
+                address(oracleConfig).staticcall(abi.encodeWithSelector(ChainlinkV3OracleConfig.getConfig.selector));
 
             if (data.length == _OLD_CHAINLINK_CONFIG_DATA_LEN) {
                 OldChainlinkV3Config memory config = abi.decode(data, (OldChainlinkV3Config));
@@ -388,10 +397,7 @@ contract Logger is Test {
         uint256 _normalizationMultiplier,
         bool _convertToQuote,
         bool _invertSecondPrice
-    )
-        internal
-        pure
-    {
+    ) internal pure {
         console2.log("\nDIA underlying feed setup:");
         console2.log("\tPrimary key: ", _primaryKey);
 
@@ -421,10 +427,7 @@ contract Logger is Test {
         uint256 _normalizationMultiplier,
         bool _convertToQuote,
         bool _invertSecondPrice
-    )
-        internal
-        view
-    {
+    ) internal view {
         console2.log("\n\tChainlinkV3 underlying feed setup:");
         console2.log("\tOracle config: ", _oracleConfig);
         console2.log("\tPrimary aggregator: ", _primaryAggregator);
@@ -446,12 +449,13 @@ contract Logger is Test {
         console2.log("\tConvert to quote: ", _convertToQuote);
         console2.log("\tInvert second price: ", _invertSecondPrice);
 
-         try WrappedMetaVaultOracleAdapter(address(_primaryAggregator)).FEED() returns (IWrappedMetaVaultOracle feed) {
+        try WrappedMetaVaultOracleAdapter(address(_primaryAggregator)).FEED() returns (IWrappedMetaVaultOracle feed) {
             console2.log("\tUnderlying WrappedMetaVaultOracle: ", address(feed));
             console2.log("\tUnderlying wrappedMetaVault: ", address(feed.wrappedMetaVault()));
-         } catch {}
+        } catch {}
     }
 
+    // TODO add option for trying with new linear oracle
     function _tryLogPTLinearAggregator(address _aggregator) internal view {
         if (Utils.tryGetPT(_aggregator) == address(0)) return;
 
@@ -478,9 +482,7 @@ contract Logger is Test {
 
             if (_quoteNamedAmount.quoteForOneToken && (price < 0.0001e18 || price > 200_000e18)) {
                 console2.log(
-                    "\t", 
-                    WARNING_SYMBOL, 
-                    "Price looks odd, check normalization, we expect 18 decimals for price \n"
+                    "\t", WARNING_SYMBOL, "Price looks odd, check normalization, we expect 18 decimals for price \n"
                 );
             }
         } else {
@@ -503,12 +505,8 @@ contract Logger is Test {
             quoteForOneToken: false
         });
 
-        amountsToQuote[1] = QuoteNamedAmount({
-            amount: 10,
-            name: "10 wei",
-            logExponentialNotation: false,
-            quoteForOneToken: false
-        });
+        amountsToQuote[1] =
+            QuoteNamedAmount({amount: 10, name: "10 wei", logExponentialNotation: false, quoteForOneToken: false});
 
         amountsToQuote[2] = QuoteNamedAmount({
             amount: oneToken / 10,
@@ -553,14 +551,14 @@ contract Logger is Test {
         });
 
         amountsToQuote[8] = QuoteNamedAmount({
-            amount: 10**36,
+            amount: 10 ** 36,
             name: "10**36 wei",
             logExponentialNotation: true,
             quoteForOneToken: false
         });
 
         amountsToQuote[9] = QuoteNamedAmount({
-            amount: 10**20 * oneToken,
+            amount: 10 ** 20 * oneToken,
             name: "10**20 tokens (More than USA GDP if the token worth at least 0.001 cent)",
             logExponentialNotation: true,
             quoteForOneToken: false

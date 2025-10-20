@@ -24,9 +24,10 @@ contract LtvMathTest is Test {
     function test_ltvMath_noDebt() public pure {
         assertEq(SiloSolvencyLib.ltvMath({_totalBorrowerDebtValue: 0, _sumOfBorrowerCollateralValue: 1}), 0);
         assertEq(SiloSolvencyLib.ltvMath({_totalBorrowerDebtValue: 0, _sumOfBorrowerCollateralValue: 1e18}), 0);
-        assertEq(SiloSolvencyLib.ltvMath({
-            _totalBorrowerDebtValue: 0, _sumOfBorrowerCollateralValue: type(uint256).max
-        }), 0);
+        assertEq(
+            SiloSolvencyLib.ltvMath({_totalBorrowerDebtValue: 0, _sumOfBorrowerCollateralValue: type(uint256).max}),
+            0
+        );
     }
 
     /*
@@ -41,25 +42,38 @@ contract LtvMathTest is Test {
     forge test --ffi -vv --mt test_ltvMath_allMax
     */
     function test_ltvMath_allMax() public pure {
-        assertEq(SiloSolvencyLib.ltvMath({
-            _totalBorrowerDebtValue: type(uint256).max, _sumOfBorrowerCollateralValue: type(uint256).max
-        }), 1e18);
+        assertEq(
+            SiloSolvencyLib.ltvMath({
+                _totalBorrowerDebtValue: type(uint256).max,
+                _sumOfBorrowerCollateralValue: type(uint256).max
+            }),
+            1e18
+        );
     }
 
     function test_ltvMath_maxDebt() public pure {
-        assertEq(SiloSolvencyLib.ltvMath({
-            _totalBorrowerDebtValue: type(uint256).max, _sumOfBorrowerCollateralValue: 1e18
-        }), type(uint256).max);
+        assertEq(
+            SiloSolvencyLib.ltvMath({
+                _totalBorrowerDebtValue: type(uint256).max,
+                _sumOfBorrowerCollateralValue: 1e18
+            }),
+            type(uint256).max
+        );
     }
 
     function test_ltvMath_overflow() public {
         vm.expectRevert();
-        SiloSolvencyLib.ltvMath({_totalBorrowerDebtValue: type(uint256).max, _sumOfBorrowerCollateralValue: 1e18 - 1});
+        SiloSolvencyLib.ltvMath({
+            _totalBorrowerDebtValue: type(uint256).max,
+            _sumOfBorrowerCollateralValue: 1e18 - 1
+        });
     }
 
     function test_ltvMath_rounding() public pure {
-        assertEq(SiloSolvencyLib.ltvMath({
-            _totalBorrowerDebtValue: 1, _sumOfBorrowerCollateralValue: 3
-        }), 333333333333333334, "0.3(3) ceil +1");
+        assertEq(
+            SiloSolvencyLib.ltvMath({_totalBorrowerDebtValue: 1, _sumOfBorrowerCollateralValue: 3}),
+            333333333333333334,
+            "0.3(3) ceil +1"
+        );
     }
 }

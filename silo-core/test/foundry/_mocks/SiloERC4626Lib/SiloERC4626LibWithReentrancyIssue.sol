@@ -49,7 +49,7 @@ library SiloERC4626LibWithReentrancyIssue {
         unchecked {
             $.totalAssets[ISilo.AssetType.Collateral] = totalAssets + assets;
         }
-        
+
         // Hook receiver is called after `mint` and can reentry but state changes are completed already
         _collateralShareToken.mint(_receiver, _depositor, shares);
     }

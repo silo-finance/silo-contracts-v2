@@ -67,9 +67,8 @@ contract GetPositionValuesTest is Test, OraclesHelper {
         collateralOracle.quoteMock(protectedAssets + collateralAssets, collateralAsset, 123);
         debtOracle.quoteMock(debtAssets, debtAsset, 44);
 
-        (
-            uint256 collateralValue, uint256 debtValue
-        ) = SiloSolvencyLib.getPositionValues(ltvData, collateralAsset, debtAsset);
+        (uint256 collateralValue, uint256 debtValue) =
+            SiloSolvencyLib.getPositionValues(ltvData, collateralAsset, debtAsset);
 
         assertEq(collateralValue, 123, "collateralValue");
         assertEq(debtValue, 44, "debtValue");

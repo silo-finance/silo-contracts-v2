@@ -18,13 +18,25 @@ import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";
 import {SiloInternal} from "../internal_testing/SiloInternal.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
-import {IInterestRateModelV2Factory, InterestRateModelV2Factory} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
-import {IInterestRateModelV2, InterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {IInterestRateModelV2Config, InterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
+import {
+    IInterestRateModelV2Factory,
+    InterestRateModelV2Factory
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
+import {
+    IInterestRateModelV2,
+    InterestRateModelV2
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {
+    IInterestRateModelV2Config,
+    InterestRateModelV2Config
+} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {IGaugeHookReceiver, GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {ISiloConfig, SiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
+import {DynamicKinkModelFactory} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
+import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
+import {DynamicKinkModel} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModel.sol";
 
 contract Deployers is VyperDeployer, Data {
     address timelockAdmin = address(0xb4b3);
@@ -65,27 +77,27 @@ contract Deployers is VyperDeployer, Data {
         siloData["FULL"] = ISiloConfig.InitData({
             deployer: timelockAdmin,
             daoFee: 0.15e18,
-            deployerFee: 0.1000e18,
+            deployerFee: 0.1e18,
             token0: _tokens["WETH"],
             solvencyOracle0: oracles["DIA"],
             maxLtvOracle0: oracles["CHAINLINK"],
             interestRateModel0: address(interestRateModelV2),
-            maxLtv0: 0.7500e18,
-            lt0: 0.8500e18,
-            liquidationTargetLtv0: 0.8500e18 * 0.9e19 / 1e18,
-            liquidationFee0: 0.0500e18,
-            flashloanFee0: 0.0100e18,
+            maxLtv0: 0.75e18,
+            lt0: 0.85e18,
+            liquidationTargetLtv0: 0.85e18 * 0.9e19 / 1e18,
+            liquidationFee0: 0.05e18,
+            flashloanFee0: 0.01e18,
             callBeforeQuote0: true,
             hookReceiver: address(liquidationModule),
             token1: _tokens["USDC"],
             solvencyOracle1: oracles["UniV3-ETH-USDC-0.3"],
             maxLtvOracle1: oracles[""],
             interestRateModel1: address(interestRateModelV2),
-            maxLtv1: 0.8500e18,
-            lt1: 0.9500e18,
-            liquidationTargetLtv1: 0.9500e18 * 0.9e18 / 1e18,
-            liquidationFee1: 0.0250e18,
-            flashloanFee1: 0.0100e18,
+            maxLtv1: 0.85e18,
+            lt1: 0.95e18,
+            liquidationTargetLtv1: 0.95e18 * 0.9e18 / 1e18,
+            liquidationFee1: 0.025e18,
+            flashloanFee1: 0.01e18,
             callBeforeQuote1: true
         });
 
@@ -117,17 +129,13 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deploySiloFactory(address feeReceiver) internal {
-        address daoFeeReceiver = feeReceiver == address(0)
-            ? address(0)
-            : feeReceiver;
+        address daoFeeReceiver = feeReceiver == address(0) ? address(0) : feeReceiver;
 
         siloFactory = ISiloFactory(address(new SiloFactory(daoFeeReceiver)));
     }
 
     function core_deployInterestRateConfigFactory() internal {
-        interestRateModelV2ConfigFactory = IInterestRateModelV2Factory(
-            address(new InterestRateModelV2Factory())
-        );
+        interestRateModelV2ConfigFactory = IInterestRateModelV2Factory(address(new InterestRateModelV2Factory()));
     }
 
     function core_deployInterestRateModel() internal {
@@ -143,17 +151,23 @@ contract Deployers is VyperDeployer, Data {
     }
 
     function core_deploySiloDeployer() internal {
+        address dkinkIRMConfigFactory = address(new DynamicKinkModelFactory(new DynamicKinkModel()));
         address siloImpl = address(new Silo(siloFactory));
         address shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
         address shareDebtTokenImpl = address(new ShareDebtToken());
 
-        siloDeployer = ISiloDeployer(address(new SiloDeployer(
-            interestRateModelV2ConfigFactory,
-            siloFactory,
-            siloImpl,
-            shareProtectedCollateralTokenImpl,
-            shareDebtTokenImpl
-        )));
+        siloDeployer = ISiloDeployer(
+            address(
+                new SiloDeployer(
+                    interestRateModelV2ConfigFactory,
+                    IDynamicKinkModelFactory(dkinkIRMConfigFactory),
+                    siloFactory,
+                    siloImpl,
+                    shareProtectedCollateralTokenImpl,
+                    shareDebtTokenImpl
+                )
+            )
+        );
     }
 
     function _deploySiloConfig(
@@ -176,43 +190,29 @@ contract Deployers is VyperDeployer, Data {
             siloFactory.maxLiquidationFee()
         );
 
-        configData0.silo = CloneDeterministic.predictSilo0Addr(
-            _siloImpl, creatorSiloCounter, address(siloFactory), msg.sender
-        );
+        configData0.silo =
+            CloneDeterministic.predictSilo0Addr(_siloImpl, creatorSiloCounter, address(siloFactory), msg.sender);
 
-        configData1.silo = CloneDeterministic.predictSilo1Addr(
-            _siloImpl, creatorSiloCounter, address(siloFactory), msg.sender
-        );
+        configData1.silo =
+            CloneDeterministic.predictSilo1Addr(_siloImpl, creatorSiloCounter, address(siloFactory), msg.sender);
 
         configData0.collateralShareToken = configData0.silo;
         configData1.collateralShareToken = configData1.silo;
 
         configData0.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
-            _shareProtectedCollateralTokenImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
+            _shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         configData1.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
-            _shareProtectedCollateralTokenImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
+            _shareProtectedCollateralTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         configData0.debtShareToken = CloneDeterministic.predictShareDebtToken0Addr(
-            _shareDebtTokenImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
+            _shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         configData1.debtShareToken = CloneDeterministic.predictShareDebtToken1Addr(
-            _shareDebtTokenImpl,
-            creatorSiloCounter,
-            address(siloFactory),
-            msg.sender
+            _shareDebtTokenImpl, creatorSiloCounter, address(siloFactory), msg.sender
         );
 
         siloConfig = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));

@@ -76,7 +76,7 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
 
         assertEq(token1.balanceOf(borrower), 50e18, "borrower debt");
         assertEq(token1.balanceOf(depositor), 0);
-        assertEq(token1.balanceOf(address(silo1)),50e18, "depositor's deposit");
+        assertEq(token1.balanceOf(address(silo1)), 50e18, "depositor's deposit");
 
         vm.warp(block.timestamp + 100 days);
         silo1.accrueInterest();
@@ -85,7 +85,6 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         maxLtvOracle0.breakOracle();
 
         assertTrue(_withdrawAll(), "expect all tx to be executed till the end");
-
 
         assertEq(token0.balanceOf(borrower), 100e18, "borrower got all collateral");
         assertEq(token0.balanceOf(depositor), 0, "depositor didnt had token1");
@@ -119,12 +118,18 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         vm.prank(depositor);
         vm.expectRevert();
         silo1.withdraw(silo1Liquidity + 1, depositor, depositor);
-        assertEq(token1.balanceOf(depositor), 0, "silo has only X tokens available, withdraw for depositor will fail");
+        assertEq(
+            token1.balanceOf(depositor), 0, "silo has only X tokens available, withdraw for depositor will fail"
+        );
 
         vm.prank(depositor);
         silo1.withdraw(silo1Liquidity, depositor, depositor);
-        assertEq(token1.balanceOf(depositor), silo1Liquidity, "depositor can withdraw up to liquidity without oracle");
-        assertEq(token1.balanceOf(address(silo1)), silo1Balance - silo1Liquidity, "no available tokens left in silo");
+        assertEq(
+            token1.balanceOf(depositor), silo1Liquidity, "depositor can withdraw up to liquidity without oracle"
+        );
+        assertEq(
+            token1.balanceOf(address(silo1)), silo1Balance - silo1Liquidity, "no available tokens left in silo"
+        );
 
         _repay(10, borrower);
         assertEq(token1.balanceOf(address(silo1)), silo1Balance - silo1Liquidity + 10, "repay without oracle");
@@ -133,7 +138,9 @@ contract OracleThrowsTest is SiloLittleHelper, Test {
         uint256 borrowerDebtShares = IShareToken(debtShareToken).balanceOf(borrower);
 
         _repayShares(silo1.previewRepayShares(borrowerDebtShares), borrowerDebtShares, borrower);
-        assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "repay all without oracle - expect no share debt");
+        assertEq(
+            IShareToken(debtShareToken).balanceOf(borrower), 0, "repay all without oracle - expect no share debt"
+        );
 
         (, address collateralShareToken,) = collateralSilo.config().getShareTokens(address(collateralSilo));
 

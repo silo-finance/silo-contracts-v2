@@ -9,11 +9,21 @@
         "normalizationDivider": 1e8,
         "normalizationMultiplier": 0
     },
-    "CHAINLINK_USDC_USD": {
+    "CHAINLINK_USDC_USD_V1": {
         "baseToken": "USDC",
         "quoteToken": "SILO_VIRTUAL_USD_8",
         "primaryAggregator": "CHAINLINK_USDC_USD_AGGREGATOR",
         "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 0,
+        "normalizationMultiplier": 1e4
+    },
+    "CHAINLINK_USDC_USD": {
+        "baseToken": "USDC",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_USDC_USD_AGGREGATOR",
+        "primaryHeartbeat": 3139001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
         "normalizationDivider": 0,
@@ -232,6 +242,16 @@
         "normalizationDivider": 1e6,
         "normalizationMultiplier": 0
     },
+    "LINEAR_ORACLE_PT-siUSD-8JAN2026_USDC": {
+        "baseToken": "PT-siUSD-8JAN2026",
+        "quoteToken": "USDC",
+        "primaryAggregator": "LINEAR_ORACLE_PT-siUSD-8JAN2026_USDC_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0
+    },
     "LINEAR_ORACLE_PT-sUSDf-29JAN2026_sUSDf_HARDCODED_USDC": {
         "baseToken": "PT-sUSDf-29JAN2026",
         "quoteToken": "USDC",
@@ -241,5 +261,26 @@
         "secondaryHeartbeat": 0,
         "normalizationDivider": 1e18,
         "normalizationMultiplier": 0
+    },
+    "LINEAR_ORACLE_PT_iUSD_4DEC2025_iUSD_HARDCODED_USDC": {
+        "baseToken": "PT-iUSD-4DEC2025",
+        "quoteToken": "USDC",
+        "primaryAggregator": "LINEAR_ORACLE_PT-iUSD-4DEC2025_iUSD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0
+    },
+    "CHAINLINK_PT_wstUSR_29JAN2026_USD": {
+        "baseToken": "PT-wstUSR-29JAN2026",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "LINEAR_ORACLE_PT-wstUSR-29JAN2026_stUSR_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "CHAINLINK_LIKE_USR_USD_AGGREGATOR",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e26,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
     }
 }

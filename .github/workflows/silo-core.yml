@@ -98,6 +98,15 @@ jobs:
             -   name: Solidity Lint
                 run: yarn workspace silo-core lint:sol
 
+            -   name: Solidity Tests Lint
+                run: yarn workspace silo-core lint-tests:sol
+
+            -   name: Solidity Deploy Scripts Lint
+                run: yarn workspace silo-core lint-deploy:sol
+
+            -   name: Solidity Common Lint
+                run: yarn workspace silo-core lint-common:sol
+
     fast-tests:
         runs-on: ubuntu-latest
 

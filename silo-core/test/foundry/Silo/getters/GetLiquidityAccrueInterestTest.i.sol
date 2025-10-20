@@ -25,7 +25,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
     function setUp() public {
         siloConfig = _setUpLocalFixture();
     }
-    
+
     /*
     forge test -vv --ffi --mt test_liquidity_zero
     */
@@ -49,11 +49,17 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
 
         assertEq(silo0.getLiquidity(), _assets, "[0] expect liquidity");
         assertEq(silo0.getLiquidity(), _assets, "[0] expect collateral liquidity, no interest");
-        assertEq(silo0.getTotalAssetsStorage(ISilo.AssetType.Protected), _assets / 2, "[0] expect protected liquidity, no interest");
+        assertEq(
+            silo0.getTotalAssetsStorage(ISilo.AssetType.Protected),
+            _assets / 2,
+            "[0] expect protected liquidity, no interest"
+        );
 
         assertEq(silo1.getLiquidity(), 0, "[1] no liquidity 1");
         assertEq(silo1.getLiquidity(), 0, "[1] no liquidity after deploy 1");
-        assertEq(silo1.getTotalAssetsStorage(ISilo.AssetType.Protected), 0, "[1] no protected liquidity after deploy 1");
+        assertEq(
+            silo1.getTotalAssetsStorage(ISilo.AssetType.Protected), 0, "[1] no protected liquidity after deploy 1"
+        );
     }
 
     /*
@@ -66,11 +72,17 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
 
         assertEq(silo0.getLiquidity(), 0, "[0] expect liquidity");
         assertEq(silo0.getLiquidity(), 0, "[0] expect no collateral liquidity, no interest");
-        assertEq(silo0.getTotalAssetsStorage(ISilo.AssetType.Protected), _assets, "[0] expect protected liquidity, no interest");
+        assertEq(
+            silo0.getTotalAssetsStorage(ISilo.AssetType.Protected),
+            _assets,
+            "[0] expect protected liquidity, no interest"
+        );
 
         assertEq(silo1.getLiquidity(), 0, "[1] no liquidity after deploy 1");
         assertEq(silo1.getLiquidity(), 0, "[1] no collateral liquidity after deploy 1");
-        assertEq(silo1.getTotalAssetsStorage(ISilo.AssetType.Protected), 0, "[1] no protected liquidity after deploy 1");
+        assertEq(
+            silo1.getTotalAssetsStorage(ISilo.AssetType.Protected), 0, "[1] no protected liquidity after deploy 1"
+        );
     }
 
     /*
@@ -91,19 +103,11 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
         _deposit(_toDeposit, borrower);
         _borrow(_toBorrow, borrower);
 
-        assertEq(
-            silo0.getLiquidity(),
-            _toDeposit,
-            "[0] expect collateral, no interest"
-        );
+        assertEq(silo0.getLiquidity(), _toDeposit, "[0] expect collateral, no interest");
 
         assertEq(silo0.getTotalAssetsStorage(ISilo.AssetType.Protected), 0, "[0] no protected, no interest");
 
-        assertEq(
-            silo1.getLiquidity(),
-            _toDeposit - _toBorrow,
-            "[1] expect diff after borrow (interest)"
-        );
+        assertEq(silo1.getLiquidity(), _toDeposit - _toBorrow, "[1] expect diff after borrow (interest)");
 
         assertEq(
             silo1.getTotalAssetsStorage(ISilo.AssetType.Protected),
@@ -119,9 +123,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
         _liquidity_whenDepositAndBorrowWithInterest(_toDeposit, _toBorrow);
     }
 
-    function _liquidity_whenDepositAndBorrowWithInterest(uint128 _toDeposit, uint128 _toBorrow)
-        private
-    {
+    function _liquidity_whenDepositAndBorrowWithInterest(uint128 _toDeposit, uint128 _toBorrow) private {
         vm.assume(_toDeposit > 0);
         vm.assume(_toBorrow > 0);
         vm.assume(_toBorrow < _toDeposit / 2);
@@ -148,11 +150,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
         vm.assume(accruedInterest1 > 0);
         emit log_named_decimal_uint("accruedInterest1", accruedInterest1, 18);
 
-        assertEq(
-            silo1_rawLiquidity,
-            _toDeposit - _toBorrow,
-            "[1] expect liquidity without counting in interest"
-        );
+        assertEq(silo1_rawLiquidity, _toDeposit - _toBorrow, "[1] expect liquidity without counting in interest");
 
         if (accruedInterest1 < 4) {
             assertEq(
@@ -170,9 +168,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
         }
 
         assertEq(
-            silo1_liquidityWithInterest,
-            silo1.getLiquidity(),
-            "[1] expect getLiquidity() calculations correct"
+            silo1_liquidityWithInterest, silo1.getLiquidity(), "[1] expect getLiquidity() calculations correct"
         );
 
         assertEq(
@@ -181,11 +177,7 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
             "[1] expect getLiquidity(ISilo.CollateralType.Collateral) calculations correct"
         );
 
-        assertEq(
-            protectedDeposit1,
-            silo1_protectedLiquidity,
-            "[1] protected liquidity"
-        );
+        assertEq(protectedDeposit1, silo1_protectedLiquidity, "[1] protected liquidity");
 
         assertEq(
             protectedDeposit1,
@@ -209,17 +201,9 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
         uint256 accruedInterest0 = silo0.accrueInterest();
         assertEq(accruedInterest0, 0, "[0] expect no interest on silo0");
 
-        assertEq(
-            silo0_rawLiquidity,
-            _toDeposit,
-            "[0] expect same liquidity, because no borrow on this silo"
-        );
+        assertEq(silo0_rawLiquidity, _toDeposit, "[0] expect same liquidity, because no borrow on this silo");
 
-        assertEq(
-            silo0_liquidityWithInterest,
-            _toDeposit,
-            "[0] same liquidity, no interest"
-        );
+        assertEq(silo0_liquidityWithInterest, _toDeposit, "[0] same liquidity, no interest");
 
         assertLe(silo0.getLiquidity(), silo0_rawLiquidity, "[0] no interest on silo0, liquidity the same");
 
@@ -237,14 +221,11 @@ contract GetLiquidityAccrueInterestTest is SiloLittleHelper, Test {
             "[0] expect total(ISilo.AssetType.Protected) calculations correct"
         );
 
-        assertEq(
-            silo0_protectedLiquidity,
-            protectedDeposit0,
-            "[0] no interest on protected"
-        );
+        assertEq(silo0_protectedLiquidity, protectedDeposit0, "[0] no interest on protected");
     }
 
     function _getRawLiquidity(ISilo _silo) internal view returns (uint256) {
-        return _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral) - _silo.getTotalAssetsStorage(ISilo.AssetType.Debt);
+        return _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral)
+            - _silo.getTotalAssetsStorage(ISilo.AssetType.Debt);
     }
 }

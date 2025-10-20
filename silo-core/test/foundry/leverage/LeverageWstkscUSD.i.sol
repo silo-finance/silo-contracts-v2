@@ -9,16 +9,16 @@ import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 
-import {
-    LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy
-} from "silo-core/deploy/LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
+import {LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy} from
+    "silo-core/deploy/LeverageRouterUsingSiloFlashloanWithGeneralSwapDeploy.s.sol";
 
 import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
-import {LeverageUsingSiloFlashloanWithGeneralSwap} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from
+    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
@@ -56,7 +56,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
     function setUp() public {
         vm.createSelectFork(vm.envString("RPC_SONIC"), 29990521);
 
-        (,collateralShareToken,) = siloConfig.getShareTokens(address(wstkscUSDSilo));
+        (, collateralShareToken,) = siloConfig.getShareTokens(address(wstkscUSDSilo));
         (,, debtShareToken) = siloConfig.getShareTokens(address(usdcSilo));
 
         leverageRouter = _deployLeverage();
@@ -114,10 +114,8 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
 
         // flashloan USDC
 
-        ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs = ILeverageUsingSiloFlashloan.FlashArgs({
-            amount: 1.1e6,
-            flashloanTarget: address(usdcSilo)
-        });
+        ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs =
+            ILeverageUsingSiloFlashloan.FlashArgs({amount: 1.1e6, flashloanTarget: address(usdcSilo)});
 
         // swap USDC -> PT
 
@@ -131,9 +129,9 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
 
         address userLeverage = leverageRouter.predictUserLeverageContract(borrower);
 
-        address swapModule = address(LeverageUsingSiloFlashloanWithGeneralSwap(
-            leverageRouter.LEVERAGE_IMPLEMENTATION()
-        ).SWAP_MODULE());
+        address swapModule = address(
+            LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION()).SWAP_MODULE()
+        );
 
         IGeneralSwapModule.SwapArgs memory swapArgs = IGeneralSwapModule.SwapArgs({
             sellToken: address(usdcAsset),
@@ -165,9 +163,8 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
         // siloLeverage needs approval to pull user tokens to do deposit in behalf of user
         wstkscUSDAsset.forceApprove(userLeverage, depositArgs.amount);
 
-        uint256 debtReceiveApproval = _calculateDebtReceiveApproval(
-            flashArgs.amount, ISilo(flashArgs.flashloanTarget)
-        );
+        uint256 debtReceiveApproval =
+            _calculateDebtReceiveApproval(flashArgs.amount, ISilo(flashArgs.flashloanTarget));
 
         // user must set approvals for debt share token
         IERC20(debtShareToken).forceApprove(userLeverage, debtReceiveApproval);
@@ -198,9 +195,9 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
 
         address userLeverage = leverageRouter.predictUserLeverageContract(borrower);
 
-        address swapModule = address(LeverageUsingSiloFlashloanWithGeneralSwap(
-            leverageRouter.LEVERAGE_IMPLEMENTATION()
-        ).SWAP_MODULE());
+        address swapModule = address(
+            LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION()).SWAP_MODULE()
+        );
 
         IGeneralSwapModule.SwapArgs memory swapArgs = IGeneralSwapModule.SwapArgs({
             sellToken: address(wstkscUSDAsset),
@@ -218,7 +215,8 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
             )
         });
 
-        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs = ILeverageUsingSiloFlashloan.CloseLeverageArgs({
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs = ILeverageUsingSiloFlashloan
+            .CloseLeverageArgs({
             flashloanTarget: address(usdcSilo),
             siloWithCollateral: wstkscUSDSilo,
             collateralType: ISilo.CollateralType.Collateral
@@ -242,10 +240,11 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
         _displayBorrowerState();
     }
 
-    function _calculateDebtReceiveApproval(
-        uint256 _flashAmount,
-        ISilo _flashFrom
-    ) internal view returns (uint256 debtReceiveApproval) {
+    function _calculateDebtReceiveApproval(uint256 _flashAmount, ISilo _flashFrom)
+        internal
+        view
+        returns (uint256 debtReceiveApproval)
+    {
         uint256 borrowAssets = _flashAmount + _flashFrom.flashFee(_flashFrom.asset(), _flashAmount);
         debtReceiveApproval = _flashFrom.convertToShares(borrowAssets, ISilo.AssetType.Debt);
     }
@@ -265,7 +264,7 @@ contract LeverageWstkscUSDTest is SiloLittleHelper, Test {
         address userLeverage = leverageRouter.predictUserLeverageContract(borrower);
 
         uint256 debtAllowance = IERC20(debtShareToken).allowance(borrower, userLeverage);
-        uint256 debtReceiveAllowance = IERC20R(debtShareToken).receiveAllowance(borrower,userLeverage);
+        uint256 debtReceiveAllowance = IERC20R(debtShareToken).receiveAllowance(borrower, userLeverage);
 
         emit log_named_decimal_uint("DEBT allowance", debtAllowance, 6);
         emit log_named_decimal_uint("DEBT receiveAllowance", debtReceiveAllowance, 6);

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {
-    LeverageUsingSiloFlashloanWithGeneralSwap
-} from "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
+import {LeverageUsingSiloFlashloanWithGeneralSwap} from
+    "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {ILeverageUsingSiloFlashloan} from "silo-core/contracts/interfaces/ILeverageUsingSiloFlashloan.sol";
 import {ILeverageRouter} from "silo-core/contracts/interfaces/ILeverageRouter.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -27,32 +26,25 @@ contract OpenLeveragePositionDirectReentrancyTest is MethodReentrancyTest {
 
     function _ensureItWillRevertWithOnlyRouter() internal {
         LeverageUsingSiloFlashloanWithGeneralSwap leverage = _getLeverage();
-        
+
         // Prepare test data
-        ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs = ILeverageUsingSiloFlashloan.FlashArgs({
-            flashloanTarget: address(TestStateLib.silo0()),
-            amount: 100e18
-        });
-        
+        ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs =
+            ILeverageUsingSiloFlashloan.FlashArgs({flashloanTarget: address(TestStateLib.silo0()), amount: 100e18});
+
         bytes memory swapArgs = "";
-        
+
         ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs = ILeverageUsingSiloFlashloan.DepositArgs({
             silo: TestStateLib.silo1(),
             amount: 100e18,
             collateralType: ISilo.CollateralType.Collateral
         });
-        
+
         // This should revert with OnlyRouter error
         vm.expectRevert(RescueModule.OnlyRouter.selector);
-        leverage.openLeveragePosition{value: 0}(
-            address(this),
-            flashArgs,
-            swapArgs,
-            depositArgs
-        );
+        leverage.openLeveragePosition{value: 0}(address(this), flashArgs, swapArgs, depositArgs);
     }
 
-    function _getLeverage() internal returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
+    function _getLeverage() internal view returns (LeverageUsingSiloFlashloanWithGeneralSwap) {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
         return LeverageUsingSiloFlashloanWithGeneralSwap(leverageRouter.LEVERAGE_IMPLEMENTATION());
     }

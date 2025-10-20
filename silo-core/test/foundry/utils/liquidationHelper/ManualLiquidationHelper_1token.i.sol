@@ -31,10 +31,9 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
     /*
     forge test --ffi --mt test_executeLiquidation_1_token -vvv
     */
-    function test_executeLiquidation_1_token_woBadDebt(
-        uint32 _addTimestamp
-    ) public {
-//        uint32 _addTimestamp = 1478627871;
+    /// forge-config: core_test.fuzz.runs = 200
+    function test_executeLiquidation_1_token_woBadDebt(uint32 _addTimestamp) public {
+        //        uint32 _addTimestamp = 1478627871;
 
         vm.warp(block.timestamp + _addTimestamp);
 
@@ -74,9 +73,7 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
     FOUNDRY_PROFILE=core_test forge test  --ffi --mt test_executeLiquidation_1_token_BadDebt -vv
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_executeLiquidation_1_token_BadDebt_fuzz(
-        uint32 _addTimestamp
-    ) public {
+    function test_executeLiquidation_1_token_BadDebt_fuzz(uint32 _addTimestamp) public {
         vm.warp(block.timestamp + _addTimestamp);
 
         uint256 ltv = siloLens.getLtv(silo1, BORROWER);
@@ -102,11 +99,7 @@ contract ManualLiquidationHelper1TokenTest is ManualLiquidationHelperCommon {
 
         uint256 withdrawCollateral = token1.balanceOf(_tokenReceiver());
 
-        assertGe(
-            withdrawCollateral,
-            collateralToLiquidate,
-            "on bad debt estimation should work as well"
-        );
+        assertGe(withdrawCollateral, collateralToLiquidate, "on bad debt estimation should work as well");
 
         _assertAddressHasNoSTokens(silo0, _tokenReceiver());
         _assertAddressHasNoSTokens(silo1, _tokenReceiver());

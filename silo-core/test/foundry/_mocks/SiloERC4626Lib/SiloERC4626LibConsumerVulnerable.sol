@@ -22,12 +22,7 @@ contract SiloERC4626LibConsumerVulnerable {
         IShareToken _collateralShareToken
     ) public {
         SiloERC4626LibWithReentrancyIssue.deposit(
-            _token,
-            _depositor,
-            _assets,
-            _shares,
-            _receiver,
-            _collateralShareToken
+            _token, _depositor, _assets, _shares, _receiver, _collateralShareToken
         );
     }
 

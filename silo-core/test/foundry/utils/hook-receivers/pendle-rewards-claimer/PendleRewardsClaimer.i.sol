@@ -27,16 +27,17 @@ import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/ID
 import {PendleRewardsClaimerDeploy} from "silo-core/deploy/PendleRewardsClaimerDeploy.s.sol";
 import {PendleMarketThatReverts} from "../../../_mocks/PendleMarketThatReverts.sol";
 import {PendleMarketGasWaster} from "../../../_mocks/PendleMarketGasWaster.sol";
-import {SiloLittleHelper} from  "../../../_common/SiloLittleHelper.sol";
-import {TransferOwnership} from  "../../../_common/TransferOwnership.sol";
-import {
-    ISiloIncentivesControllerFactory
-} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
-import {
-    PendleRewardsClaimerHarness
-} from "silo-core/test/foundry/utils/hook-receivers/pendle-rewards-claimer/PendleRewardsClaimerHarness.sol";
+import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
+import {TransferOwnership} from "../../../_common/TransferOwnership.sol";
+import {ISiloIncentivesControllerFactory} from
+    "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
+import {PendleRewardsClaimerHarness} from
+    "silo-core/test/foundry/utils/hook-receivers/pendle-rewards-claimer/PendleRewardsClaimerHarness.sol";
+import {SiloImplementationDeploy} from "silo-core/deploy/SiloImplementationDeploy.s.sol";
 
-// FOUNDRY_PROFILE=core_test forge test --ffi --mc PendleRewardsClaimerTest -vv
+/*
+AGGREGATOR=1INCH FOUNDRY_PROFILE=core_test forge test --ffi --mc PendleRewardsClaimerTest -vv
+*/
 contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     uint256 internal constant _BLOCK_TO_FORK = 22518257;
 
@@ -57,6 +58,12 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     function setUp() public virtual {
         vm.createSelectFork(vm.envString("RPC_MAINNET"), _BLOCK_TO_FORK);
 
+        // we need specyfic block for this test, but silo implementation might be changed (not available),
+        // so we deploy new silo implementation
+        SiloImplementationDeploy siloImplementationDeploy = new SiloImplementationDeploy();
+        siloImplementationDeploy.disableDeploymentsSync();
+        siloImplementationDeploy.run();
+
         PendleRewardsClaimerDeploy pendleRewardsClaimerDeploy = new PendleRewardsClaimerDeploy();
         pendleRewardsClaimerDeploy.disableDeploymentsSync();
         pendleRewardsClaimerDeploy.run();
@@ -65,31 +72,23 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
 
         _hookReceiver = IPendleRewardsClaimer(address(IShareToken(address(silo0)).hookSetup().hookReceiver));
 
-        _factory = ISiloIncentivesControllerFactory(SiloCoreDeployments.get(
-            SiloCoreContracts.INCENTIVES_CONTROLLER_FACTORY,
-            ChainsLib.chainAlias()
-        ));
+        _factory = ISiloIncentivesControllerFactory(
+            SiloCoreDeployments.get(SiloCoreContracts.INCENTIVES_CONTROLLER_FACTORY, ChainsLib.chainAlias())
+        );
 
         _dao = AddrLib.getAddress(AddrKey.DAO);
 
         (address protected,,) = _siloConfig.getShareTokens(address(silo0));
 
-        _incentivesController = ISiloIncentivesController(_factory.create(
-            _dao,
-            address(_hookReceiver),
-            address(protected),
-            bytes32(0)
-        ));
+        _incentivesController =
+            ISiloIncentivesController(_factory.create(_dao, address(_hookReceiver), address(protected), bytes32(0)));
 
         IGaugeHookReceiver gaugeHookReceiver = IGaugeHookReceiver(address(_hookReceiver));
 
         _deployer = vm.addr(uint256(vm.envBytes32("PRIVATE_KEY")));
 
         vm.prank(_deployer);
-        gaugeHookReceiver.setGauge(
-            _incentivesController,
-            IShareToken(address(protected))
-        );
+        gaugeHookReceiver.setGauge(_incentivesController, IShareToken(address(protected)));
 
         PendleRewardsClaimerHarness claimer = new PendleRewardsClaimerHarness();
 
@@ -144,9 +143,9 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         (address protected,,) = _siloConfig.getShareTokens(address(silo0));
         uint256 balance = IERC20(protected).balanceOf(_depositor);
 
-        vm.expectRevert(abi.encodeWithSelector(
-            IPendleRewardsClaimer.TransitionProtectedCollateralNotAllowed.selector
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(IPendleRewardsClaimer.TransitionProtectedCollateralNotAllowed.selector)
+        );
 
         vm.prank(_depositor);
         silo0.transitionCollateral(balance, _depositor, ISilo.CollateralType.Protected);
@@ -328,16 +327,16 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
         assertEq(token.balanceOf(address(silo0)), 0, "Token should have no rewards");
 
         assertEq(
-            token.balanceOf(address(_incentivesController)),
-            someAmount,
-            "Incentives controller should have rewards"
+            token.balanceOf(address(_incentivesController)), someAmount, "Incentives controller should have rewards"
         );
 
         vm.prank(_depositor);
         _incentivesController.claimRewards(_depositor);
 
         // -1wei because of the rounding error in the Silo incentives controller
-        assertEq(token.balanceOf(_depositor), type(uint104).max - 1, "Depositor should have receive type(uint104).max");
+        assertEq(
+            token.balanceOf(_depositor), type(uint104).max - 1, "Depositor should have receive type(uint104).max"
+        );
         // 1wei because of the rounding error in the Silo incentives controller
         assertEq(
             token.balanceOf(address(_incentivesController)),
@@ -349,7 +348,7 @@ contract PendleRewardsClaimerTest is SiloLittleHelper, Test, TransferOwnership {
     // FOUNDRY_PROFILE=core_test forge test --ffi --mt test_hookConfigurationDuringInit -vv
     function test_hookConfigurationDuringInit() public view {
         (uint24 hooksBefore, uint24 hooksAfter) = _hookReceiver.hookReceiverConfig(address(silo0));
-        
+
         // All before actions should be configured (type(uint24).max)
         assertEq(hooksBefore, type(uint24).max, "All before actions should be configured");
 

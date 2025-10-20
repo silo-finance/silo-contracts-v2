@@ -23,7 +23,8 @@ contract MaxLiquidationDustWithChunksTest is MaxLiquidationDustTest {
         uint256 collateralToLiquidate;
         uint256 maxDebtToCover;
 
-        { // too deep
+        {
+            // too deep
             bool sTokenRequired;
             (collateralToLiquidate, maxDebtToCover, sTokenRequired) = partialLiquidation.maxLiquidation(borrower);
             assertTrue(!sTokenRequired, "sTokenRequired not required");
@@ -53,11 +54,7 @@ contract MaxLiquidationDustWithChunksTest is MaxLiquidationDustTest {
         vm.expectRevert(IPartialLiquidation.FullLiquidationRequired.selector);
 
         partialLiquidation.liquidationCall(
-            address(_sameToken ? token1 : token0),
-            address(token1),
-            borrower,
-            _maxDebtToCover,
-            _receiveSToken
+            address(_sameToken ? token1 : token0), address(token1), borrower, _maxDebtToCover, _receiveSToken
         );
     }
 

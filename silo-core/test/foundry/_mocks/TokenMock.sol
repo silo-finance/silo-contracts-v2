@@ -67,12 +67,9 @@ contract TokenMock is CommonBase {
         totalSupplyMock(_totalSupply, true);
     }
 
-    function balanceOfAndTotalSupplyMock(
-        address _owner,
-        uint256 _balance,
-        uint256 _totalSupply,
-        bool _expectCall
-    ) public {
+    function balanceOfAndTotalSupplyMock(address _owner, uint256 _balance, uint256 _totalSupply, bool _expectCall)
+        public
+    {
         bytes memory data = abi.encodeWithSelector(IShareToken.balanceOfAndTotalSupply.selector, _owner);
         vm.mockCall(ADDRESS, data, abi.encode(_balance, _totalSupply));
 

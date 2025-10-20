@@ -75,9 +75,8 @@ contract UpdateHooksTest is SiloLittleHelper, Test {
         uint24 expectedBefore = 123;
         uint24 expectedAfter = 456;
 
-        (
-            address protectedShareToken, address collateralShareToken, address debtShareToken
-        ) = siloConfig.getShareTokens(address(silo1));
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            siloConfig.getShareTokens(address(silo1));
 
         IShareToken.HookSetup memory hooks = IShareToken(protectedShareToken).hookSetup();
         assertEq(hooks.hooksBefore, expectedBefore, "protectedShareToken hooksBefore");
@@ -116,9 +115,8 @@ contract UpdateHooksTest is SiloLittleHelper, Test {
         _hooksAfter = 456;
         _hooksBefore = 123;
 
-        (
-            address protectedShareToken, address collateralShareToken, address debtShareToken
-        ) = siloConfig.getShareTokens(address(silo1));
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            siloConfig.getShareTokens(address(silo1));
 
         IShareToken.HookSetup memory hooks = IShareToken(protectedShareToken).hookSetup();
         assertEq(hooks.hooksBefore, 0, "protectedShareToken hooksBefore");
@@ -142,12 +140,14 @@ contract UpdateHooksTest is SiloLittleHelper, Test {
 
         vm.mockCall(
             address(siloConfig),
-            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(silo0)), abi.encode(mockedCfg0)
+            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(silo0)),
+            abi.encode(mockedCfg0)
         );
 
         vm.mockCall(
             address(siloConfig),
-            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(silo1)), abi.encode(mockedCfg1)
+            abi.encodeWithSelector(ISiloConfig.getConfig.selector, address(silo1)),
+            abi.encode(mockedCfg1)
         );
     }
 }

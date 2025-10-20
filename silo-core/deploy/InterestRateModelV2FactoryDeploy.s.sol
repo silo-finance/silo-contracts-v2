@@ -9,7 +9,7 @@ import {
     InterestRateModelV2Factory
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/InterestRateModelV2FactoryDeploy.s.sol:InterestRateModelV2FactoryDeploy \
         --ffi --rpc-url $RPC_INK --broadcast --verify
@@ -29,8 +29,7 @@ contract InterestRateModelV2FactoryDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        interestRateModelV2ConfigFactory =
-            IInterestRateModelV2Factory(address(new InterestRateModelV2Factory()));
+        interestRateModelV2ConfigFactory = IInterestRateModelV2Factory(address(new InterestRateModelV2Factory()));
 
         vm.stopBroadcast();
 

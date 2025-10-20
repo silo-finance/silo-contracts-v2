@@ -12,16 +12,17 @@ import {AddrKey} from "common/addresses/AddrKey.sol";
 import {CommonDeploy} from "../CommonDeploy.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles \
     forge script silo-oracles/deploy/pendle/PTLinearOracleFactoryDeploy.s.sol \
-    --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
+    --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract PTLinearOracleFactoryDeploy is CommonDeploy {
     function run() public returns (address factory) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
-        address pendleLinearOracleFactory = AddrLib.getAddress(ChainsLib.chainAlias(), AddrKey.PENDLE_LINEAR_ORACLE_FACTORY);
+        address pendleLinearOracleFactory =
+            AddrLib.getAddress(ChainsLib.chainAlias(), AddrKey.PENDLE_SPARK_LINEAR_DISCOUNT_FACTORY);
         console2.log("pendleLinearOracleFactory", pendleLinearOracleFactory);
         require(pendleLinearOracleFactory != address(0), "pendleLinearOracleFactory is not set");
 

@@ -16,6 +16,7 @@ contract CheckShareTokensInGauge is ICheck {
     string internal siloName;
 
     address internal shareToken;
+
     constructor(ISiloConfig.ConfigData memory _configData, bool _isSiloZero) {
         configData = _configData;
         siloName = _isSiloZero ? "silo0" : "silo1";
@@ -42,8 +43,7 @@ contract CheckShareTokensInGauge is ICheck {
         address collateralShareTokensGauge =
             address(hookReceiver.configuredGauges(IShareToken(configData.collateralShareToken)));
 
-        address debtShareTokensGauge =
-            address(hookReceiver.configuredGauges(IShareToken(configData.debtShareToken)));
+        address debtShareTokensGauge = address(hookReceiver.configuredGauges(IShareToken(configData.debtShareToken)));
 
         if (!_checkGauge(protectedShareTokensGauge, configData.protectedShareToken)) return false;
         if (!_checkGauge(collateralShareTokensGauge, configData.collateralShareToken)) return false;

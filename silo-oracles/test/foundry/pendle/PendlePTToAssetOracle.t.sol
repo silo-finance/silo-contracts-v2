@@ -104,9 +104,7 @@ contract PendlePTToAssetOracleTest is Forking {
 
     function test_PendlePTToAssetOracle_constructor_revertsInvalidUnderlyingOracle() public {
         vm.mockCall(
-            address(underlyingOracle),
-            abi.encodeWithSelector(ISiloOracle.quote.selector),
-            abi.encode(uint256(0))
+            address(underlyingOracle), abi.encodeWithSelector(ISiloOracle.quote.selector), abi.encode(uint256(0))
         );
 
         vm.expectRevert(PendlePTToAssetOracle.InvalidUnderlyingOracle.selector);
@@ -158,9 +156,7 @@ contract PendlePTToAssetOracleTest is Forking {
 
     function test_PendlePTToAssetOracle_constructor_revertsPPendlePtToAssetRateIsZero() public {
         vm.mockCall(
-            address(pendleOracle),
-            abi.encodeWithSelector(IPyYtLpOracleLike.getPtToAssetRate.selector),
-            abi.encode(0)
+            address(pendleOracle), abi.encodeWithSelector(IPyYtLpOracleLike.getPtToAssetRate.selector), abi.encode(0)
         );
 
         vm.expectRevert(PendlePTToAssetOracle.PendlePtToAssetRateIsZero.selector);
@@ -194,11 +190,7 @@ contract PendlePTToAssetOracleTest is Forking {
     }
 
     function test_PendlePTToAssetOracle_quote_revertsZeroPrice() public {
-        vm.mockCall(
-            address(underlyingOracle),
-            abi.encodeWithSelector(ISiloOracle.quote.selector),
-            abi.encode(0)
-        );
+        vm.mockCall(address(underlyingOracle), abi.encodeWithSelector(ISiloOracle.quote.selector), abi.encode(0));
 
         vm.expectRevert(PendlePTToAssetOracle.ZeroPrice.selector);
         oracle.quote(0, ptToken);
@@ -210,7 +202,7 @@ contract PendlePTToAssetOracleTest is Forking {
 
         assertEq(underlyingOracle.quote(1, address(0)), 1, "underlying oracle always returns same");
         assertEq(underlyingOracle.quote(2, syUnderlyingToken), 2, "underlying oracle returns same");
-        
+
         assertEq(
             oracle.quote(quoteAmount, ptToken),
             rateFromPendleOracle,
@@ -303,6 +295,6 @@ contract PendlePTToAssetOracleTest is Forking {
         vm.prank(eoa2);
         address oracle2 = address(factory.create(underlyingOracle, market, bytes32(0)));
 
-        assertNotEq(oracle1, oracle2, "oracle1 == oracle2");        
+        assertNotEq(oracle1, oracle2, "oracle1 == oracle2");
     }
 }

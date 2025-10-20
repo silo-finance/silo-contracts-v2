@@ -26,6 +26,7 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
     }
 
     /// @inheritdoc ISiloOracle
+    // solhint-disable-next-line code-complexity
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
         ChainlinkV3Config memory config = oracleConfig.getConfig();
 

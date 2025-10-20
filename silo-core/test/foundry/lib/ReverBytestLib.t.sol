@@ -6,13 +6,13 @@ import {Test} from "forge-std/Test.sol";
 import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 /**
-    forge test -vv --mc ReverBytestLibTest
+ * forge test -vv --mc ReverBytestLibTest
  */
 contract ReverBytestLibTest is Test {
     uint256 constant A = 1;
     uint256 constant B = 2;
 
-    string constant public CUSTOM_ERR = "custom error message";
+    string public constant CUSTOM_ERR = "custom error message";
 
     bytes public errMsg;
 
@@ -23,16 +23,16 @@ contract ReverBytestLibTest is Test {
     }
 
     /**
-        forge test -vv --mt test_RevertLib_errorMsgRevert
-    */
+     * forge test -vv --mt test_RevertLib_errorMsgRevert
+     */
     function test_RevertLib_errorMsgRevert() public {
         vm.expectRevert(abi.encodeWithSelector(CustomError1.selector, A, B));
         RevertLib.revertBytes(errMsg, CUSTOM_ERR);
     }
 
     /**
-        forge test -vv --mt test_RevertLib_customErrorRevert
-    */
+     * forge test -vv --mt test_RevertLib_customErrorRevert
+     */
     function test_RevertLib_customErrorRevert() public {
         bytes memory emptyErrMsg;
 

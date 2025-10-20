@@ -36,7 +36,6 @@ contract MaxRedeemDustTest is SiloLittleHelper, Test {
     */
     function test_maxWithdraw_dust_withDebt_protected() public {
         _maxWithdraw_dust_withDebt(ISilo.CollateralType.Protected);
-
     }
 
     /*
@@ -53,10 +52,7 @@ contract MaxRedeemDustTest is SiloLittleHelper, Test {
 
         _deposit(10, depositor, _type);
 
-        (
-            address protectedShareToken,
-            address collateralShareToken,
-        ) = silo0.config().getShareTokens(address(silo0));
+        (address protectedShareToken, address collateralShareToken,) = silo0.config().getShareTokens(address(silo0));
 
         address shareToken = _type == ISilo.CollateralType.Protected ? protectedShareToken : collateralShareToken;
 
@@ -81,17 +77,14 @@ contract MaxRedeemDustTest is SiloLittleHelper, Test {
 
         _deposit(10, depositor, _type);
 
-        (
-            address protectedShareToken,
-            address collateralShareToken,
-        ) = silo0.config().getShareTokens(address(silo0));
+        (address protectedShareToken, address collateralShareToken,) = silo0.config().getShareTokens(address(silo0));
 
         address shareToken = _type == ISilo.CollateralType.Protected ? protectedShareToken : collateralShareToken;
 
         vm.prank(depositor);
         IShareToken(shareToken).transfer(owner, 999);
 
-        (,,address debtShareToken) = silo1.config().getShareTokens(address(silo1));
+        (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
 
         _depositForBorrow(9, address(2));
         _borrow(3, depositor);

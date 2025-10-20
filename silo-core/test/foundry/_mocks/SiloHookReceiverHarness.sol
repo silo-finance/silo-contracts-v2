@@ -15,7 +15,12 @@ contract SiloHookReceiverHarness is BaseHookReceiver {
 
     function initialize(ISiloConfig _siloConfig, bytes calldata _data) public virtual override {}
 
-    function hookReceiverConfig(address _silo) external view override returns (uint24 hooksBefore, uint24 hooksAfter) {
+    function hookReceiverConfig(address _silo)
+        external
+        view
+        override
+        returns (uint24 hooksBefore, uint24 hooksAfter)
+    {
         (hooksBefore, hooksAfter) = _hookReceiverConfig(_silo);
     }
 

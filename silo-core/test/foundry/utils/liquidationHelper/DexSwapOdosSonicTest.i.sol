@@ -25,7 +25,7 @@ contract DexSwapOdosSonicTest is IntegrationTest {
 
         IERC20 sellToken = IERC20(getAddress(AddrKey.wS));
         vm.prank(whale);
-        sellToken.transfer(address(dex),50e18);
+        sellToken.transfer(address(dex), 50e18);
 
         IERC20 buyToken = IERC20(getAddress(AddrKey.WETH));
         address allowanceTarget = getAddress(AddrKey.ODOS_ROUTER);
@@ -34,7 +34,8 @@ contract DexSwapOdosSonicTest is IntegrationTest {
         assertEq(wethBefore, 0, "expect to have no WETH");
 
         // seller address in swap data: 5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
-        bytes memory swapCallData = hex"83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000150c42deacd8fc9773493ed674b675be577f2634b0902b5e3af16b188000007257ed11a78e51e028f5c00018e7591e2919157A6BBE9E3defe0F1Ff793e65Ec1000000015615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f000000000301020300060101010201ff000000000000000000000000000000000000000000e45a270b10cfed62ba586d3f1b72b36989a623ba039e2fb66102314ce7b64ce5ce3e5183bc94ad38000000000000000000000000000000000000000000000000";
+        bytes memory swapCallData =
+            hex"83bd37f90001039e2fb66102314ce7b64ce5ce3e5183bc94ad38000150c42deacd8fc9773493ed674b675be577f2634b0902b5e3af16b188000007257ed11a78e51e028f5c00018e7591e2919157A6BBE9E3defe0F1Ff793e65Ec1000000015615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f000000000301020300060101010201ff000000000000000000000000000000000000000000e45a270b10cfed62ba586d3f1b72b36989a623ba039e2fb66102314ce7b64ce5ce3e5183bc94ad38000000000000000000000000000000000000000000000000";
         dex.fillQuote(address(sellToken), allowanceTarget, swapCallData);
 
         assertEq(buyToken.balanceOf(address(dex)), 10535913188180254, "expect to have WETH");

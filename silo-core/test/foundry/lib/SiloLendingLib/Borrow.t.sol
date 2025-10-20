@@ -18,12 +18,12 @@ import {SiloLendingLibImpl} from "../../_common/SiloLendingLibImpl.sol";
 */
 contract BorrowTest is Test {
     // solhint-disable immutable-vars-naming
-    TokenMock immutable public protectedShareToken;
-    TokenMock immutable public collateralShareToken;
-    TokenMock immutable public debtShareToken;
-    TokenMock immutable public debtToken;
+    TokenMock public immutable protectedShareToken;
+    TokenMock public immutable collateralShareToken;
+    TokenMock public immutable debtShareToken;
+    TokenMock public immutable debtToken;
 
-    SiloLendingLibBorrowTestData immutable public tests;
+    SiloLendingLibBorrowTestData public immutable tests;
     // solhint-enable immutable-vars-naming
 
     constructor() {
@@ -49,11 +49,7 @@ contract BorrowTest is Test {
         ISiloConfig.ConfigData memory configData;
         configData.debtShareToken = makeAddr("debtShareToken");
 
-        vm.mockCall(
-            configData.debtShareToken,
-            abi.encodeWithSelector(IERC20.totalSupply.selector),
-            abi.encode(0)
-        );
+        vm.mockCall(configData.debtShareToken, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(0));
 
         vm.expectRevert(ISilo.InputZeroShares.selector);
 
@@ -87,12 +83,11 @@ contract BorrowTest is Test {
             }
 
             if (testDatas[i].output.borrowedShare != 0) {
-                debtToken.transferMock(
-                    testDatas[i].input.receiver,
-                    testDatas[i].output.borrowedAssets
-                );
+                debtToken.transferMock(testDatas[i].input.receiver, testDatas[i].output.borrowedAssets);
 
-                debtShareToken.mintMock(testDatas[i].input.borrower, testDatas[i].input.spender, testDatas[i].output.borrowedShare);
+                debtShareToken.mintMock(
+                    testDatas[i].input.borrower, testDatas[i].input.spender, testDatas[i].output.borrowedShare
+                );
             }
 
             if (txReverts) {
@@ -111,8 +106,16 @@ contract BorrowTest is Test {
                 testDatas[i].input.totalCollateralAssets
             );
 
-            assertEq(borrowedAssets, testDatas[i].output.borrowedAssets, string(abi.encodePacked(testDatas[i].name, " > borrowedAssets")));
-            assertEq(borrowedShares, testDatas[i].output.borrowedShare, string(abi.encodePacked(testDatas[i].name, " > borrowedShare")));
+            assertEq(
+                borrowedAssets,
+                testDatas[i].output.borrowedAssets,
+                string(abi.encodePacked(testDatas[i].name, " > borrowedAssets"))
+            );
+            assertEq(
+                borrowedShares,
+                testDatas[i].output.borrowedShare,
+                string(abi.encodePacked(testDatas[i].name, " > borrowedShare"))
+            );
         }
     }
 }

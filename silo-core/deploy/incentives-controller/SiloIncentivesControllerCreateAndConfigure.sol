@@ -10,7 +10,7 @@ import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookRecei
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
-/**
+/*
     INCENTIVES_OWNER=GROWTH_MULTISIG SILO=wS_scUSD_Silo INCENTIVIZED_ASSET=scUSD \
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/incentives-controller/SiloIncentivesControllerCreateAndConfigure.s.sol \
@@ -38,7 +38,9 @@ contract SiloIncentivesControllerCreateAndConfigure is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        IGaugeHookReceiver(hookReceiver).setGauge(ISiloIncentivesController(incentivesController), IShareToken(shareToken));
+        IGaugeHookReceiver(hookReceiver).setGauge(
+            ISiloIncentivesController(incentivesController), IShareToken(shareToken)
+        );
 
         vm.stopBroadcast();
 

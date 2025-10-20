@@ -6,8 +6,6 @@ import {IPartialLiquidation} from "./IPartialLiquidation.sol";
 
 /// @notice LiquidationHelper IS NOT PART OF THE PROTOCOL. SILO CREATED THIS TOOL, MOSTLY AS AN EXAMPLE.
 interface ILiquidationHelper {
-    error UnableToRepayFlashloan();
-
     /// @param sellToken The `sellTokenAddress` field from the API response.
     /// @param buyToken The `buyTokenAddress` field from the API response.
     /// @param allowanceTarget The `allowanceTarget` field from the API response.
@@ -27,6 +25,8 @@ interface ILiquidationHelper {
         address collateralAsset;
         address user;
     }
+
+    error UnableToRepayFlashloan();
 
     /// @param _flashLoanFrom silo from where we can flashloan `_maxDebtToCover` amount of `_debtAsset` to repay debt
     /// @param _debtAsset address of debt token (underlying token)

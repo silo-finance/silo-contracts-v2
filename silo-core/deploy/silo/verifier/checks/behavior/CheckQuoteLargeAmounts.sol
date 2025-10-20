@@ -21,13 +21,12 @@ contract CheckQuoteLargeAmounts is ICheck {
         token = _token;
         oracleName = _oracleName;
 
-        toQuote = 10**36 + 10**20 * (10**uint256(Utils.tryGetTokenDecimals(_token)));
+        toQuote = 10 ** 36 + 10 ** 20 * (10 ** uint256(Utils.tryGetTokenDecimals(_token)));
     }
 
     function checkName() external view override returns (string memory name) {
         name = string.concat(
-            oracleName,
-            " quote must not revert for large amounts quote(10**36 wei + 10**20 tokens in own decimals)"
+            oracleName, " quote must not revert for large amounts quote(10**36 wei + 10**20 tokens in own decimals)"
         );
     }
 

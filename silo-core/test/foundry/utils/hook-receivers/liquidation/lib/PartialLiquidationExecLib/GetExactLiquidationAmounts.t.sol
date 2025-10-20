@@ -13,7 +13,8 @@ import {PartialLiquidationExecLib} from "silo-core/contracts/hooks/liquidation/l
 import {SiloMock} from "../../../../../_mocks/SiloMock.sol";
 import {InterestRateModelMock} from "../../../../../_mocks/InterestRateModelMock.sol";
 import {TokenMock} from "../../../../../_mocks/TokenMock.sol";
-import {GetExactLiquidationAmountsTestData} from "../../../../../data-readers/GetExactLiquidationAmountsTestData.sol";
+import {GetExactLiquidationAmountsTestData} from
+    "../../../../../data-readers/GetExactLiquidationAmountsTestData.sol";
 
 // this is not test contract, just a helper
 contract GetExactLiquidationAmountsHelper is Test {
@@ -36,7 +37,7 @@ contract GetExactLiquidationAmountsHelper is Test {
 
     InterestRateModelMock immutable INTEREST_RATE_MODEL;
 
-    constructor () {
+    constructor() {
         SILO_A = new SiloMock(makeAddr("SILO_A"));
         SILO_B = new SiloMock(makeAddr("SILO_B"));
 
@@ -58,7 +59,10 @@ contract GetExactLiquidationAmountsHelper is Test {
         uint128 _collateralUserBalanceOf,
         uint128 _debtUserBalanceOf,
         uint32 _liquidationFee
-    ) external returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets, bytes4 customError) {
+    )
+        external
+        returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets, bytes4 customError)
+    {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) = _configs();
         uint256 sharesOffset = 10 ** 2;
 
@@ -66,25 +70,17 @@ contract GetExactLiquidationAmountsHelper is Test {
         SILO_A.getCollateralAndProtectedAssetsMock(2 ** 128 - 1, 0);
 
         C_SHARE_TOKEN_A.balanceOfAndTotalSupplyMock(
-            makeAddr("borrower"),
-            _collateralUserBalanceOf * sharesOffset,
-            (2 ** 128 - 1) * sharesOffset
+            makeAddr("borrower"), _collateralUserBalanceOf * sharesOffset, (2 ** 128 - 1) * sharesOffset
         );
 
         D_SHARE_TOKEN_B.balanceOfAndTotalSupplyMock(
-            makeAddr("borrower"),
-            _debtUserBalanceOf * sharesOffset,
-            _debtUserBalanceOf * sharesOffset
+            makeAddr("borrower"), _debtUserBalanceOf * sharesOffset, _debtUserBalanceOf * sharesOffset
         );
 
         SILO_B.totalMock(ISilo.AssetType.Debt, _debtUserBalanceOf);
 
         return PartialLiquidationExecLib.getExactLiquidationAmounts(
-            collateralConfig,
-            debtConfig,
-            makeAddr("borrower"),
-            _maxDebtToCover,
-            _liquidationFee
+            collateralConfig, debtConfig, makeAddr("borrower"), _maxDebtToCover, _liquidationFee
         );
     }
 
@@ -111,16 +107,13 @@ contract GetExactLiquidationAmountsHelper is Test {
     }
 }
 
-
 // forge test -vv --mc GetExactLiquidationAmountsTest
 contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
     /*
     forge test -vv --mt test_getExactLiquidationAmounts_noOracle_zero
     */
     function test_getExactLiquidationAmounts_noOracle_zero() public {
-        (
-            ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig
-        ) = _configs();
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) = _configs();
 
         address user;
         uint256 maxDebtToCover;
@@ -134,9 +127,8 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         D_SHARE_TOKEN_B.balanceOfAndTotalSupplyMock(user, 0, 0);
         SILO_B.totalMock(ISilo.AssetType.Debt, 0);
 
-        (
-            uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets,
-        ) = PartialLiquidationExecLib.getExactLiquidationAmounts(collateralConfig, debtConfig, user, maxDebtToCover, liquidationFee);
+        (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets,) = PartialLiquidationExecLib
+            .getExactLiquidationAmounts(collateralConfig, debtConfig, user, maxDebtToCover, liquidationFee);
 
         assertEq(fromCollateral, 0);
         assertEq(fromProtected, 0);
@@ -149,7 +141,8 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
     function test_getExactLiquidationAmounts_noOracle_loop() public {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) = _configs();
 
-        GetExactLiquidationAmountsTestData.GELAData[] memory testDatas = new GetExactLiquidationAmountsTestData().getData();
+        GetExactLiquidationAmountsTestData.GELAData[] memory testDatas =
+            new GetExactLiquidationAmountsTestData().getData();
 
         for (uint256 i; i < testDatas.length; i++) {
             GetExactLiquidationAmountsTestData.GELAData memory testData = testDatas[i];
@@ -161,8 +154,7 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
             );
 
             SILO_A.getCollateralAndProtectedAssetsMock(
-                testData.mocks.siloTotalCollateralAssets,
-                testData.mocks.siloTotalProtectedAssets
+                testData.mocks.siloTotalCollateralAssets, testData.mocks.siloTotalProtectedAssets
             );
 
             C_SHARE_TOKEN_A.balanceOfAndTotalSupplyMock(
@@ -172,16 +164,13 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
             );
 
             D_SHARE_TOKEN_B.balanceOfAndTotalSupplyMock(
-                testData.input.user,
-                testData.mocks.debtUserSharesBalanceOf,
-                testData.mocks.debtSharesTotalSupply
+                testData.input.user, testData.mocks.debtUserSharesBalanceOf, testData.mocks.debtSharesTotalSupply
             );
 
             SILO_B.totalMock(ISilo.AssetType.Debt, testData.mocks.siloTotalDebtAssets);
 
-            (
-                uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets,
-            ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
+            (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets,) = PartialLiquidationExecLib
+                .getExactLiquidationAmounts(
                 collateralConfig,
                 debtConfig,
                 testData.input.user,
@@ -191,7 +180,9 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
 
             assertEq(fromProtected, testData.output.fromProtected, _concatMsg(i, testData.name, "fromProtected"));
             assertEq(fromCollateral, testData.output.fromCollateral, _concatMsg(i, testData.name, "fromCollateral"));
-            assertEq(repayDebtAssets, testData.output.repayDebtAssets, _concatMsg(i, testData.name, "repayDebtAssets"));
+            assertEq(
+                repayDebtAssets, testData.output.repayDebtAssets, _concatMsg(i, testData.name, "repayDebtAssets")
+            );
         }
     }
 
@@ -216,9 +207,8 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         vm.assume(ltvBefore >= LT);
         vm.assume(ltvBefore <= DECIMALS_POINTS);
 
-        (
-            uint256 collateralToLiquidate,, bool success, bytes4 errorType
-        ) = _tryGetExactLiquidationAmounts(_maxDebtToCover, _collateralUserBalanceOf, _debtUserBalanceOf, 1);
+        (uint256 collateralToLiquidate,, bool success, bytes4 errorType) =
+            _tryGetExactLiquidationAmounts(_maxDebtToCover, _collateralUserBalanceOf, _debtUserBalanceOf, 1);
 
         // we want cases where we do not revert
         vm.assume(success);
@@ -235,23 +225,27 @@ contract GetExactLiquidationAmountsTest is GetExactLiquidationAmountsHelper {
         uint32 _liquidationFee
     ) internal returns (uint256 collateralToLiquidate, uint256 ltvAfter, bool success, bytes4 errorType) {
         try GetExactLiquidationAmountsHelper(this).getExactLiquidationAmounts(
-            _maxDebtToCover,
-            _collateralUserBalanceOf,
-            _debtUserBalanceOf,
-            _liquidationFee
-        ) returns (uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets, bytes4 /* customError */) {
+            _maxDebtToCover, _collateralUserBalanceOf, _debtUserBalanceOf, _liquidationFee
+        ) returns (
+            uint256 fromCollateral, uint256 fromProtected, uint256 repayDebtAssets, bytes4 /* customError */
+        ) {
             collateralToLiquidate = fromCollateral + fromProtected;
             success = true;
 
             ltvAfter = _collateralUserBalanceOf - fromCollateral == 0
                 ? 0
-                : uint256(_debtUserBalanceOf - repayDebtAssets) * DECIMALS_POINTS / uint256(_collateralUserBalanceOf - fromCollateral);
+                : uint256(_debtUserBalanceOf - repayDebtAssets) * DECIMALS_POINTS
+                    / uint256(_collateralUserBalanceOf - fromCollateral);
         } catch (bytes memory data) {
             errorType = bytes4(data);
         }
     }
 
-    function _concatMsg(uint256 _i, string memory _name, string memory _msg) internal pure returns (string memory) {
+    function _concatMsg(uint256 _i, string memory _name, string memory _msg)
+        internal
+        pure
+        returns (string memory)
+    {
         return string.concat("[", Strings.toString(_i), "] ", _name, ": ", _msg);
     }
 }

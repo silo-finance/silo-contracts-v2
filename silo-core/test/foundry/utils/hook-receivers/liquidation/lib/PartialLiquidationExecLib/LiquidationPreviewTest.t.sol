@@ -11,7 +11,6 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {OraclesHelper} from "../../../../../_common/OraclesHelper.sol";
 import {PartialLiquidationExecLibImpl} from "../../../../../_common/PartialLiquidationExecLibImpl.sol";
 
-
 // forge test -vv --mc LiquidationPreviewTest
 contract LiquidationPreviewTest is Test, OraclesHelper {
     // this must match value from PartialLiquidationLib
@@ -77,7 +76,8 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         collateralOracle.quoteMock(collateralSum, COLLATERAL_ASSET, 0);
         debtOracle.quoteMock(ltvData.borrowerDebtAssets, DEBT_ASSET, 0);
 
-        (uint256 receiveCollateral, uint256 repayDebt,) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
+        (uint256 receiveCollateral, uint256 repayDebt,) =
+            PartialLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 0, "zero collateral on empty values");
         assertEq(repayDebt, 0, "zero debt on empty values");
     }
@@ -97,7 +97,7 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         PartialLiquidationLib.LiquidationPreviewParams memory params;
         params.collateralConfigAsset = COLLATERAL_ASSET;
         params.debtConfigAsset = DEBT_ASSET;
-        params.collateralLt = 0.8000e18 - 1; // must be below LTV that is present in `ltvData`
+        params.collateralLt = 0.8e18 - 1; // must be below LTV that is present in `ltvData`
         params.liquidationTargetLtv = params.collateralLt * 0.9e18 / 1e18;
 
         (uint256 maxCollateralToLiquidate, uint256 maxDebtToCover) = PartialLiquidationLib.maxLiquidation(
@@ -149,7 +149,8 @@ contract LiquidationPreviewTest is Test, OraclesHelper {
         // ltv 200% - user NOT solvent
         // no oracle calls
 
-        (uint256 receiveCollateral, uint256 repayDebt,) = PartialLiquidationExecLib.liquidationPreview(ltvData, params);
+        (uint256 receiveCollateral, uint256 repayDebt,) =
+            PartialLiquidationExecLib.liquidationPreview(ltvData, params);
         assertEq(receiveCollateral, 2, "receiveCollateral");
         assertEq(repayDebt, 2, "repayDebt");
     }

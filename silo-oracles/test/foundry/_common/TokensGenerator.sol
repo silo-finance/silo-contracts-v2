@@ -5,13 +5,12 @@ pragma abicoder v2;
 import "./Forking.sol";
 import "../interfaces/IERC20Metadata.sol"; // interfaces included BECAUSE OF 0.7.6
 
-
 contract TokensGenerator is Forking {
     // token symbol => address
-    mapping (string => IERC20) public tokens;
+    mapping(string => IERC20) public tokens;
 
     // token => balance slot
-    mapping (address => uint256) public balanceMappingPosition;
+    mapping(address => uint256) public balanceMappingPosition;
 
     constructor(BlockChain _chain) Forking(_chain) {
         if (isEthereum(_chain)) {
@@ -49,7 +48,10 @@ contract TokensGenerator is Forking {
         return giveMeTokens(_tokenName, _amount, msg.sender);
     }
 
-    function giveMeTokens(string calldata _tokenName, uint256 _amount, address _recipient) public returns (IERC20 token) {
+    function giveMeTokens(string calldata _tokenName, uint256 _amount, address _recipient)
+        public
+        returns (IERC20 token)
+    {
         return giveMeTokens(address(tokens[_tokenName]), _amount, _recipient);
     }
 

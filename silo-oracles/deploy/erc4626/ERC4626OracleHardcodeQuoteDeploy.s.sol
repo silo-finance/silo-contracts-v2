@@ -14,7 +14,7 @@ import {ERC4626OracleHardcodeQuoteFactory} from "silo-oracles/contracts/erc4626/
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=oracles VAULT=savETH HARDCODE_QUOTE_TOKEN=WETH \
     forge script silo-oracles/deploy/erc4626/ERC4626OracleHardcodeQuoteDeploy.s.sol \
     --ffi --rpc-url $RPC_MAINNET --broadcast --verify
@@ -24,7 +24,7 @@ contract ERC4626OracleHardcodeQuoteDeploy is CommonDeploy {
     string public quoteTokenKey;
 
     function setVaultKey(string memory _vaultKey) public {
-        vaultKey = _vaultKey;   
+        vaultKey = _vaultKey;
     }
 
     function setQuoteTokenKey(string memory _quoteTokenKey) public {
@@ -65,7 +65,9 @@ contract ERC4626OracleHardcodeQuoteDeploy is CommonDeploy {
     }
 
     function _qa(ISiloOracle oracle, address baseToken, address quoteToken) internal view {
-        console2.log("fetch price for: %s/%s", IERC20Metadata(baseToken).symbol(), IERC20Metadata(quoteToken).symbol());
-        printQuote(oracle, baseToken, uint256(10 ** IERC20Metadata(baseToken).decimals()));
+        console2.log(
+            "fetch price for: %s/%s", IERC20Metadata(baseToken).symbol(), IERC20Metadata(quoteToken).symbol()
+        );
+        _printQuote(oracle, baseToken, uint256(10 ** IERC20Metadata(baseToken).decimals()));
     }
 }

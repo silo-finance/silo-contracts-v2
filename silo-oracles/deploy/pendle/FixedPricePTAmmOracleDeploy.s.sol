@@ -16,7 +16,6 @@ import {
     SiloOraclesFactoriesDeployments
 } from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 
-
 import {SaveDeployedOracle} from "../_common/SaveDeployedOracle.sol";
 
 import {IFixedPricePTAMMOracleFactory} from "silo-oracles/contracts/interfaces/IFixedPricePTAMMOracleFactory.sol";
@@ -82,7 +81,11 @@ contract FixedPricePTAmmOracleDeploy is CommonDeploy, SaveDeployedOracle {
         _qa(oracle, _config);
     }
 
-    function _makeOracleName(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) internal view returns (string memory) {
+    function _makeOracleName(IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
+        internal
+        view
+        returns (string memory)
+    {
         bool hardcodedQuote = _config.hardcoddedQuoteToken != _config.ptUnderlyingQuoteToken;
 
         return string.concat(
@@ -102,8 +105,9 @@ contract FixedPricePTAmmOracleDeploy is CommonDeploy, SaveDeployedOracle {
         console2.log("sample price for 1e18 PT: ", PriceFormatter.formatPriceInE18(price));
     }
 
-
-    function _qa(IFixedPricePTAMMOracle _oracle, IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config) internal {
+    function _qa(IFixedPricePTAMMOracle _oracle, IFixedPricePTAMMOracleConfig.DeploymentConfig memory _config)
+        internal
+    {
         console2.log("QAing oracle: ", address(_oracle));
         _querySamplePrice(_oracle, _config);
 

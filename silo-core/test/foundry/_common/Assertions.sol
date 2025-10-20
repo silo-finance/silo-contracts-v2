@@ -29,14 +29,13 @@ contract Assertions is Test {
         int256 diff = a < b ? b - a : a - b;
 
         uint256 absDiff = uint256(diff < 0 ? -diff : diff);
-        uint256 bu = uint256(b < 0 ? - b : b);
+        uint256 bu = uint256(b < 0 ? -b : b);
         uint256 relativeDiff = absDiff * hundredPercent / bu;
 
         if (relativeDiff > percent) {
             uint256 au = uint256(a < 0 ? -a : a);
             emit log(string(abi.encodePacked("expect ", au.toString(), " to be close to ", bu.toString())));
             emit log(string(abi.encodePacked("abs difference ", absDiff.toString())));
-
         }
 
         assertLe(relativeDiff, percent, err);

@@ -95,15 +95,15 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
     forge test -vv --ffi --mt test_borrowSameAsset_onWrongSilo_for_receiver_with_collateral
     */
     function test_borrowSameAsset_onWrongSilo_for_receiver_with_collateral() public {
-            uint256 assets = 1e18;
-            address borrower = makeAddr("borrower");
-            address receiver = makeAddr("receiver");
+        uint256 assets = 1e18;
+        address borrower = makeAddr("borrower");
+        address receiver = makeAddr("receiver");
 
-            _deposit(assets, receiver, ISilo.CollateralType.Protected);
+        _deposit(assets, receiver, ISilo.CollateralType.Protected);
 
-            vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
-            vm.prank(borrower);
-            silo1.borrowSameAsset(1, borrower, receiver);
+        vm.expectRevert(ISilo.NotEnoughLiquidity.selector);
+        vm.prank(borrower);
+        silo1.borrowSameAsset(1, borrower, receiver);
     }
 
     /*
@@ -167,9 +167,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         _deposit(assets, makeAddr("depositor"));
         _deposit(assets, borrower, ISilo.CollateralType.Protected);
 
-        (
-            address protectedShareToken, address collateralShareToken,
-        ) = siloConfig.getShareTokens(address(silo0));
+        (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
 
         _depositCollateral(5, frontrunner, false);
         _depositCollateral(3, frontrunner, false, ISilo.CollateralType.Protected);
@@ -193,7 +191,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         _deposit(assets, makeAddr("depositor"));
 
         uint256 notCollateral = 123;
-        _depositCollateral(notCollateral, borrower, true /* to silo1 */);
+        _depositCollateral(notCollateral, borrower, true /* to silo1 */ );
         _deposit(assets, borrower, ISilo.CollateralType.Protected);
 
         vm.expectEmit(address(silo0));
@@ -300,8 +298,12 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         vm.prank(borrower);
         silo0.borrowSameAsset(maxBorrow / 2, borrower, borrower);
 
-        assertEq(silo0.getLtv(borrower), expectedLtv / 2, "borrow 50% of max, maxLTV is 75%, so LT == 37,5% (silo0)");
-        assertEq(silo1.getLtv(borrower), expectedLtv / 2, "borrow 50% of max, maxLTV is 75%, so LT == 37,5% (silo1)");
+        assertEq(
+            silo0.getLtv(borrower), expectedLtv / 2, "borrow 50% of max, maxLTV is 75%, so LT == 37,5% (silo0)"
+        );
+        assertEq(
+            silo1.getLtv(borrower), expectedLtv / 2, "borrow 50% of max, maxLTV is 75%, so LT == 37,5% (silo1)"
+        );
 
         assertEq(silo1.maxBorrowSameAsset(borrower), 0, "maxBorrow 0");
         assertTrue(silo0.isSolvent(borrower), "still isSolvent (silo0)");
@@ -312,11 +314,9 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         silo1.borrowSameAsset(1, borrower, borrower);
     }
 
-    function _borrowSameAssetWithAssertions(
-        address _borrower,
-        address _debtShareToken,
-        address _collateralToken
-    ) private {
+    function _borrowSameAssetWithAssertions(address _borrower, address _debtShareToken, address _collateralToken)
+        private
+    {
         uint256 maxLtv = 0.75e18;
 
         uint256 maxBorrow = silo1.maxBorrow(_borrower);
@@ -341,12 +341,20 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         uint256 expectedShares = 1e18;
         expectedShares = expectedShares.decimalsOffsetPow();
 
-        assertEq(IShareToken(_debtShareToken).balanceOf(_borrower), shareTokenCurrentDebt - 1, "expect borrower to have 1/2 of debt");
+        assertEq(
+            IShareToken(_debtShareToken).balanceOf(_borrower),
+            shareTokenCurrentDebt - 1,
+            "expect borrower to have 1/2 of debt"
+        );
         assertEq(IShareToken(_collateralToken).balanceOf(_borrower), expectedShares, "borrower has collateral");
         assertEq(silo0.getDebtAssets(), shareTokenCurrentDebt - 1, "silo debt");
         assertEq(gotShares, shareTokenCurrentDebt - 1, "got debt shares");
         assertEq(gotShares, convertToShares, "convertToShares returns same result");
-        assertEq(borrowAmount, silo0.convertToAssets(gotShares, ISilo.AssetType.Debt), "convertToAssets returns borrowAmount");
+        assertEq(
+            borrowAmount,
+            silo0.convertToAssets(gotShares, ISilo.AssetType.Debt),
+            "convertToAssets returns borrowAmount"
+        );
 
         borrowAmount = silo0.maxBorrowSameAsset(_borrower);
         emit log_named_decimal_uint("borrowAmount #2", borrowAmount, 18);
@@ -361,16 +369,16 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         assertEq(gotShares, maxLtv / 2 - 2, "got shares"); // -2 because of the fractions underestimation
         assertEq(silo0.getDebtAssets(), maxBorrow - 2, "debt silo: has debt"); // -2 because of the fractions underestimation
         assertEq(gotShares, convertToShares, "convertToShares returns same result (2)");
-        assertEq(borrowAmount, silo0.convertToAssets(gotShares, ISilo.AssetType.Debt), "convertToAssets returns borrowAmount (2)");
+        assertEq(
+            borrowAmount,
+            silo0.convertToAssets(gotShares, ISilo.AssetType.Debt),
+            "convertToAssets returns borrowAmount (2)"
+        );
 
         // other silo
         (,, _debtShareToken) = siloConfig.getShareTokens(address(silo1));
 
-        assertEq(
-            IShareToken(_debtShareToken).balanceOf(_borrower),
-            0,
-            "other silo: expect borrower NOT have debt"
-        );
+        assertEq(IShareToken(_debtShareToken).balanceOf(_borrower), 0, "other silo: expect borrower NOT have debt");
 
         assertEq(
             IShareToken(_collateralToken).balanceOf(_borrower),

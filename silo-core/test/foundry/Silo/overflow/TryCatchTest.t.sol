@@ -10,11 +10,11 @@ contract Overflows {
         return uint256(1) / uint256(0);
     }
 
-    function underflow() public pure  returns (uint256) {
+    function underflow() public pure returns (uint256) {
         return uint256(0) - uint256(1);
     }
 
-    function overflow() public pure  returns (uint256) {
+    function overflow() public pure returns (uint256) {
         return type(uint256).max + uint256(1);
     }
 

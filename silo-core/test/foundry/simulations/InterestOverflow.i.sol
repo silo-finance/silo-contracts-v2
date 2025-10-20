@@ -79,7 +79,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
         uint256 allInterest;
 
-        for (uint i;; i++) {
+        for (uint256 i;; i++) {
             // if we apply interest often, we will generate more interest in shorter time
             allInterest += silo1.accrueInterest();
             emit log_named_decimal_uint("silo1.getLiquidity()", silo1.getLiquidity(), 18);
@@ -91,7 +91,6 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
                 vm.warp(block.timestamp + 10 days);
                 emit log_named_uint("days pass", i * 10);
                 _printUtilization(silo1);
-
             } else {
                 emit log("INTEREST OVERFLOW");
                 break;
@@ -112,7 +111,8 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
 
         uint256 revenueLost;
 
-        { // too deep
+        {
+            // too deep
             // even when overflow, we can deposit
             // approval is +2 because of rounding UP on convertToAssets and mint
             uint256 minted = _mintForBorrow(dust + 2, 1, makeAddr("user4"));
@@ -130,8 +130,7 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
             assertLe(revenueLost, 6, "we did not lost revenue (6 wei acceptable)");
 
             // we repay revenue only, so that part that's not going to users as interest
-            _repay( daoAndDeployerRevenue, borrower);
-
+            _repay(daoAndDeployerRevenue, borrower);
 
             // we have dust because
             assertEq(silo1.getLiquidity(), minted + 1, "even with huge repay, we cover interest first");
@@ -153,8 +152,9 @@ contract InterestOverflowTest is SiloLittleHelper, Test {
         _withdrawAndCheck(makeAddr("user4"), silo1.convertToAssets(1), 1);
 
         {
-            (address collateralShare,, address debtShare) = ISiloConfig(silo1.config()).getShareTokens(address(silo1));
-            (uint daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
+            (address collateralShare,, address debtShare) =
+                ISiloConfig(silo1.config()).getShareTokens(address(silo1));
+            (uint256 daoAndDeployerRevenue,,,,) = silo1.getSiloStorage();
             assertGe(token1.balanceOf(address(silo1)), daoAndDeployerRevenue, "got balance for fees");
             silo1.withdrawFees();
 

@@ -43,7 +43,7 @@ contract TransferReentrancyTest is MethodReentrancyTest {
         vm.prank(borrower);
         silo0.borrow(borrowAmount, borrower, borrower);
 
-        (,,address debtToken) = TestStateLib.siloConfig().getShareTokens(address(silo0));
+        (,, address debtToken) = TestStateLib.siloConfig().getShareTokens(address(silo0));
 
         vm.prank(receiver);
         ShareDebtToken(debtToken).setReceiveApproval(borrower, borrowAmount);
@@ -65,7 +65,7 @@ contract TransferReentrancyTest is MethodReentrancyTest {
         ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
 
-        (,,address debtToken) = config.getShareTokens(address(silo0));
+        (,, address debtToken) = config.getShareTokens(address(silo0));
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareDebtToken(debtToken).transfer(address(0), 0);

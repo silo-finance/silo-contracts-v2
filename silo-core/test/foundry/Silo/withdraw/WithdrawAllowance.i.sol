@@ -38,7 +38,12 @@ contract WithdrawAllowanceTest is SiloLittleHelper, Test {
         _deposit(ASSETS, DEPOSITOR);
 
         vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, ASSETS * SiloMathLib._DECIMALS_OFFSET_POW)
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientAllowance.selector,
+                address(this),
+                0,
+                ASSETS * SiloMathLib._DECIMALS_OFFSET_POW
+            )
         );
         silo0.withdraw(ASSETS, RECEIVER, DEPOSITOR);
     }
@@ -65,13 +70,15 @@ contract WithdrawAllowanceTest is SiloLittleHelper, Test {
 
         assertEq(token0.balanceOf(RECEIVER), 0, "no balance before");
 
-        silo0.withdraw(ASSETS / 2, RECEIVER, DEPOSITOR,  _type);
+        silo0.withdraw(ASSETS / 2, RECEIVER, DEPOSITOR, _type);
 
         assertEq(token0.balanceOf(RECEIVER), ASSETS / 2, "receiver got tokens");
         assertEq(IShareToken(shareToken).allowance(DEPOSITOR, address(this)), 0, "allowance used");
 
         vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, SiloMathLib._DECIMALS_OFFSET_POW)
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientAllowance.selector, address(this), 0, SiloMathLib._DECIMALS_OFFSET_POW
+            )
         );
         silo0.withdraw(1, RECEIVER, DEPOSITOR, _type);
 

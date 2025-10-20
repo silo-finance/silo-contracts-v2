@@ -6,7 +6,7 @@ import {console2} from "forge-std/console2.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
-/**
+/*
 FOUNDRY_PROFILE=core \
     forge script silo-core/deploy/silo/CheckForOldVirtualToken.s.sol \
     --ffi --rpc-url $RPC_ARBITRUM
@@ -40,4 +40,3 @@ contract CheckForOldVirtualToken {
         }
     }
 }
-

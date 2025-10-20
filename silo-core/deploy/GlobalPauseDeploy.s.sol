@@ -10,7 +10,7 @@ import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {GlobalPause} from "silo-core/contracts/utils/GlobalPause.sol";
 import {IGlobalPause} from "common/utils/interfaces/IGlobalPause.sol";
 
-/**
+/*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/GlobalPauseDeploy.s.sol \
         --ffi --rpc-url $RPC_INK --broadcast --verify

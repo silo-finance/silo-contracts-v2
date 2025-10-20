@@ -290,21 +290,29 @@ contract ConvertToSharesTest is Test {
         assertEq(totalAssets, 4 + 1 + 100, "#2 totalAssets");
         assertEq(totalShares, 34333, "#2 totalShares");
 
-        assertEq(SiloMathLib.convertToAssets({
-            _shares: shares1,
-            _totalAssets: totalAssets,
-            _totalShares: totalShares,
-            _assetType: assetType,
-            _rounding: Rounding.DEPOSIT_TO_ASSETS
-        }), 4, "user deposit 1 but with dust got 4");
+        assertEq(
+            SiloMathLib.convertToAssets({
+                _shares: shares1,
+                _totalAssets: totalAssets,
+                _totalShares: totalShares,
+                _assetType: assetType,
+                _rounding: Rounding.DEPOSIT_TO_ASSETS
+            }),
+            4,
+            "user deposit 1 but with dust got 4"
+        );
 
-        assertEq(SiloMathLib.convertToAssets({
-            _shares: shares2,
-            _totalAssets: totalAssets,
-            _totalShares: totalShares,
-            _assetType: assetType,
-            _rounding: Rounding.DEPOSIT_TO_ASSETS
-        }), 100, "user deposit 100 and got 100 back");
+        assertEq(
+            SiloMathLib.convertToAssets({
+                _shares: shares2,
+                _totalAssets: totalAssets,
+                _totalShares: totalShares,
+                _assetType: assetType,
+                _rounding: Rounding.DEPOSIT_TO_ASSETS
+            }),
+            100,
+            "user deposit 100 and got 100 back"
+        );
 
         // there will be 1 dust left after withdrawals
     }

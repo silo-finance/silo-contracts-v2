@@ -9,6 +9,8 @@ library SiloCoreContracts {
     string public constant SILO_FACTORY = "SiloFactory.sol";
     string public constant INTEREST_RATE_MODEL_V2_FACTORY = "InterestRateModelV2Factory.sol";
     string public constant INTEREST_RATE_MODEL_V2 = "InterestRateModelV2.sol";
+    string public constant DYNAMIC_KINK_MODEL_FACTORY = "DynamicKinkModelFactory.sol";
+    string public constant DYNAMIC_KINK_MODEL = "DynamicKinkModel.sol";
     string public constant SILO_HOOK_V1 = "SiloHookV1.sol";
     string public constant SILO_DEPLOYER = "SiloDeployer.sol";
     string public constant SILO = "Silo.sol";
@@ -56,15 +58,16 @@ library SiloCoreDeployments {
      * @dev Implementation of {tryParseHexUint} that does not check bounds. Caller should make sure that
      * `begin <= end <= input.length`. Other inputs would result in undefined behavior.
      */
-    function _tryParseHexUintUncheckedBounds(
-        string memory input,
-        uint256 begin,
-        uint256 end
-    ) private pure returns (bool success, uint256 value) {
+    function _tryParseHexUintUncheckedBounds(string memory input, uint256 begin, uint256 end)
+        private
+        pure
+        returns (bool success, uint256 value)
+    {
         bytes memory buffer = bytes(input);
 
         // skip 0x prefix if present
-        bool hasPrefix = (end > begin + 1) && bytes2(_unsafeReadBytesOffset(buffer, begin)) == bytes2("0x"); // don't do out-of-bound (possibly unsafe) read if sub-string is empty
+        // don't do out-of-bound (possibly unsafe) read if sub-string is empty
+        bool hasPrefix = (end > begin + 1) && bytes2(_unsafeReadBytesOffset(buffer, begin)) == bytes2("0x");
         uint256 offset = hasPrefix ? 2 : 0;
 
         uint256 result = 0;
@@ -73,8 +76,8 @@ library SiloCoreDeployments {
             if (chr > 15) return (false, 0);
             result *= 16;
             unchecked {
-            // Multiplying by 16 is equivalent to a shift of 4 bits (with additional overflow check).
-            // This guaratees that adding a value < 16 will not cause an overflow, hence the unchecked.
+                // Multiplying by 16 is equivalent to a shift of 4 bits (with additional overflow check).
+                // This guaratees that adding a value < 16 will not cause an overflow, hence the unchecked.
                 result += chr;
             }
         }
@@ -107,6 +110,7 @@ library SiloCoreDeployments {
      */
     function _unsafeReadBytesOffset(bytes memory buffer, uint256 offset) private pure returns (bytes32 value) {
         // This is not memory safe in the general case, but all calls to this private function are within bounds.
+        // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
             value := mload(add(buffer, add(0x20, offset)))
         }
