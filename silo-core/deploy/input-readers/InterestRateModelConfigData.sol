@@ -29,19 +29,6 @@ contract InterestRateModelConfigData {
         string name;
     }
 
-    function _readInput(string memory input) internal view returns (string memory) {
-        string memory inputDir = string.concat(VmLib.vm().projectRoot(), "/silo-core/deploy/input/");
-        string memory file = string.concat(input, ".json");
-        return VmLib.vm().readFile(string.concat(inputDir, file));
-    }
-
-    function _readDataFromJson() internal view returns (ConfigData[] memory) {
-        return abi.decode(
-            VmLib.vm().parseJson(_readInput("InterestRateModelConfigs"), string(abi.encodePacked("."))),
-            (ConfigData[])
-        );
-    }
-
     function getAllConfigs() public view returns (ConfigData[] memory) {
         return _readDataFromJson();
     }
@@ -91,5 +78,18 @@ contract InterestRateModelConfigData {
         console2.log("ucrit", _configData.ucrit);
         console2.log("ulow", _configData.ulow);
         console2.log("uopt", _configData.uopt);
+    }
+
+    function _readDataFromJson() private view returns (ConfigData[] memory) {
+        return abi.decode(
+            VmLib.vm().parseJson(_readInput("InterestRateModelConfigs"), string(abi.encodePacked("."))),
+            (ConfigData[])
+        );
+    }
+
+    function _readInput(string memory input) private view returns (string memory) {
+        string memory inputDir = string.concat(VmLib.vm().projectRoot(), "/silo-core/deploy/input/irmConfigs/");
+        string memory file = string.concat(input, ".json");
+        return VmLib.vm().readFile(string.concat(inputDir, file));
     }
 }

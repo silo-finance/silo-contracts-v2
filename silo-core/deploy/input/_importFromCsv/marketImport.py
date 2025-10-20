@@ -20,7 +20,7 @@ def to_percent(percentage_string):
     except (ValueError, AttributeError):
         return "N/A"
 
-def find_config_name(configName: str, is_borrowable: str, filename: str = 'silo-core/deploy/input/InterestRateModelConfigs.json') -> str:
+def find_config_name(configName: str, is_borrowable: str, filename: str = 'silo-core/deploy/input/irmConfigs/InterestRateModelConfigs.json') -> str:
     # Check if not borrowable (case insensitive)
     if is_borrowable.lower() == 'non-borrowable':
         return 'NA'

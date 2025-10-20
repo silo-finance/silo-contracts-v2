@@ -34,31 +34,51 @@ library Utils {
 
     function findKinkIrmName(ISiloConfig.ConfigData memory _configData)
         internal
-        returns (string memory configName, bool success)
+        returns (string memory irmConfigName, bool success)
     {
-        DKinkIRMConfigData.ConfigData[] memory allModels = (new DKinkIRMConfigData()).getAllConfigs();
+        (
+            DKinkIRMConfigData.KinkJsonData[] memory allModels,
+            DKinkIRMConfigData.ImmutableArgs[] memory allImmutableArgs
+        ) = (new DKinkIRMConfigData()).getAllConfigs();
 
         IDynamicKinkModelConfig irmConfig = IDynamicKinkModel(_configData.interestRateModel).irmConfig();
 
         (IDynamicKinkModel.Config memory config, IDynamicKinkModel.ImmutableConfig memory immutableConfig) =
             irmConfig.getConfig();
 
-        bytes32 deployedHash = keccak256(abi.encode(config, immutableConfig));
+        bytes32 deployedConfigHash = keccak256(abi.encode(config));
+        bytes32 deployedImmutableHash = keccak256(abi.encode(immutableConfig));
 
         uint256 i;
+        string memory configName;
+        string memory immutableName;
 
         for (; i < allModels.length; i++) {
-            IDynamicKinkModel.ImmutableConfig memory immutableCfg = IDynamicKinkModel.ImmutableConfig({
-                timelock: allModels[i].immutableArgs.timelock,
-                rcompCapPerSecond: allModels[i].immutableArgs.rcompCap / 365 days
-            });
+            bytes32 cfgHash = keccak256(abi.encode(allModels[i].config));
 
-            bytes32 cfgHash = keccak256(abi.encode(allModels[i].config, immutableCfg));
-
-            if (cfgHash == deployedHash) {
-                return (allModels[i].name, true);
+            if (cfgHash == deployedConfigHash) {
+                configName = allModels[i].name;
+                break;
             }
         }
+
+        for (; i < allImmutableArgs.length; i++) {
+            IDynamicKinkModel.ImmutableConfig memory immutableCfg = IDynamicKinkModel.ImmutableConfig({
+                timelock: allImmutableArgs[i].args.timelock,
+                rcompCapPerSecond: allImmutableArgs[i].args.rcompCap / 365 days
+            });
+
+            bytes32 immutableHash = keccak256(abi.encode(immutableCfg));
+
+            if (immutableHash == deployedImmutableHash) {
+                immutableName = allImmutableArgs[i].name;
+                break;
+            }
+        }
+        return (
+            string.concat(configName, ":", immutableName),
+            bytes(configName).length > 0 && bytes(immutableName).length > 0
+        );
     }
 
     function findIrmName(ISiloConfig.ConfigData memory _configData)
@@ -71,8 +91,6 @@ library Utils {
         IInterestRateModelV2Config irmV2Config = InterestRateModelV2(_configData.interestRateModel).irmConfig();
 
         IInterestRateModelV2.Config memory irmConfig = irmV2Config.getConfig();
-
-        // ri and Tcrit can be changed over time, but this test is done just after deployment, so they should match
 
         bytes32 deployedCfgHash = keccak256(abi.encode(irmConfig));
 
