@@ -18,7 +18,7 @@ library AddrKey {
     string constant public LINK = "LINK";
     string constant public ODOS_ROUTER = "ODOS_ROUTER";
     string constant public PENDLE_FIXED_PRICE_AMM_ORACLE = "PENDLE_FIXED_PRICE_AMM_ORACLE";
-    string constant public PENDLE_LINEAR_ORACLE_FACTORY = "PENDLE_LINEAR_ORACLE_FACTORY";
+    string constant public PENDLE_SPARK_LINEAR_DISCOUNT_FACTORY = "PENDLE_SPARK_LINEAR_DISCOUNT_FACTORY";
     string constant public PENDLE_ORACLE = "PENDLE_ORACLE";
     string constant public PYTH_SHADOW_USD_aggregator = "PYTH_SHADOW_USD_aggregator";
     string constant public scUSD = "scUSD";

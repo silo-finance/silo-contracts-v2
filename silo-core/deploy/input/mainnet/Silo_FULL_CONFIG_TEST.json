@@ -19,7 +19,7 @@
     "solvencyOracle1": "UniV3-ETH-USDC-0.3",
     "maxLtvOracle1": "NO_ORACLE",
     "interestRateModel1": "DynamicKinkModelFactory.sol",
-    "interestRateModelConfig1": "zero:T0_C100",
+    "interestRateModelConfig1": "static-5.5-20:T0_CAP_MAX",
     "maxLtv1": 8500,
     "lt1": 9500,
     "liquidationTargetLtv1": 8550,

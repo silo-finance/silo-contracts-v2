@@ -18,7 +18,7 @@ contract DKinkIRMConfigData is DKinkIRMConfigDataReader, DKinkIRMImmutableDataRe
         return (_getAllConfigs(), _getAllImmutableArgs());
     }
 
-    /// @param _name The name of the KinkIRM config in format <config>:<immutable> eg: "zero:T0_C100"
+    /// @param _name The name of the KinkIRM config in format <config>:<immutable> eg: "static-5.5-20:T0_CAP_MAX"
     function getConfigData(string memory _name)
         public
         view
@@ -29,8 +29,28 @@ contract DKinkIRMConfigData is DKinkIRMConfigDataReader, DKinkIRMImmutableDataRe
         KinkJsonData memory modelConfig = _getModelConfig(configName);
         ImmutableArgs memory immutableArgs = _getImmutableArgs(immutableName);
 
-        cfg = _castToConfig(modelConfig);
+        cfg = castToConfig(modelConfig);
         args = _castToImmutableArgs(immutableArgs);
+    }
+
+    function castToConfig(KinkJsonData memory _modelConfig)
+        public
+        pure
+        returns (IDynamicKinkModel.Config memory cfg)
+    {
+        cfg.ulow = _modelConfig.config.ulow;
+        cfg.u1 = _modelConfig.config.u1;
+        cfg.u2 = _modelConfig.config.u2;
+        cfg.ucrit = _modelConfig.config.ucrit;
+        cfg.rmin = _modelConfig.config.rmin;
+        cfg.kmin = int96(int256(_modelConfig.config.kmin));
+        cfg.kmax = int96(int256(_modelConfig.config.kmax));
+        cfg.alpha = _modelConfig.config.alpha;
+        cfg.cminus = _modelConfig.config.cminus;
+        cfg.cplus = _modelConfig.config.cplus;
+        cfg.c1 = _modelConfig.config.c1;
+        cfg.c2 = _modelConfig.config.c2;
+        cfg.dmax = _modelConfig.config.dmax;
     }
 
     function _splitName(string memory _name)
@@ -51,26 +71,6 @@ contract DKinkIRMConfigData is DKinkIRMConfigDataReader, DKinkIRMImmutableDataRe
         require(bytes(configName).length != 0, string.concat("ERROR: empty configName: `", string(_name)));
 
         require(bytes(immutableName).length != 0, string.concat("ERROR: empty immutableName: `", string(_name)));
-    }
-
-    function _castToConfig(KinkJsonData memory _modelConfig)
-        private
-        pure
-        returns (IDynamicKinkModel.Config memory cfg)
-    {
-        cfg.ulow = _modelConfig.config.ulow;
-        cfg.u1 = _modelConfig.config.u1;
-        cfg.u2 = _modelConfig.config.u2;
-        cfg.ucrit = _modelConfig.config.ucrit;
-        cfg.rmin = _modelConfig.config.rmin;
-        cfg.kmin = int96(int256(_modelConfig.config.kmin));
-        cfg.kmax = int96(int256(_modelConfig.config.kmax));
-        cfg.alpha = _modelConfig.config.alpha;
-        cfg.cminus = _modelConfig.config.cminus;
-        cfg.cplus = _modelConfig.config.cplus;
-        cfg.c1 = _modelConfig.config.c1;
-        cfg.c2 = _modelConfig.config.c2;
-        cfg.dmax = _modelConfig.config.dmax;
     }
 
     function _castToImmutableArgs(ImmutableArgs memory _immutableArgs)
