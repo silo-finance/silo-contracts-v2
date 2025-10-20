@@ -437,6 +437,7 @@ contract Logger is Test {
         } catch {}
     }
 
+    // TODO add option for trying with new linear oracle
     function _tryLogPTLinearAggregator(address _aggregator) internal view {
         if (Utils.tryGetPT(_aggregator) == address(0)) return;
 

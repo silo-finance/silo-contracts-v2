@@ -9,7 +9,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 /*
 FOUNDRY_PROFILE=core CONFIG=0xB37Ec4a417C2540B2c353aE4a7D9cBC576f702ea \
-    EXTERNAL_PRICE_0=10658 EXTERNAL_PRICE_1=100000 \
+    EXTERNAL_PRICE_0=9600 EXTERNAL_PRICE_1=9999 \
     forge script silo-core/deploy/silo/VerifySilo.s.sol \
     --ffi --rpc-url $RPC_SONIC
  */
