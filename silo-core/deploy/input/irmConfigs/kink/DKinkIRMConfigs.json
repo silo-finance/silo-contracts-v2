@@ -1,7 +1,7 @@
 [
     {
-      "name": "zero",
-      "config": {
+        "name": "zero",
+        "config": {
             "ulow": 0,
             "u1": 0,
             "u2": 0,
@@ -15,10 +15,6 @@
             "c1": 0,
             "c2": 0,
             "dmax": 0
-      },
-        "immutableArgs": {
-        "timelock": 0,
-        "rcompCap": 1000000000000000000
-      }
+        }
     }
 ]

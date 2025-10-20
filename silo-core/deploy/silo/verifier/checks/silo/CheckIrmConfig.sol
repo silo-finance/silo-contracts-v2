@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {ICheck} from "silo-core/deploy/silo/verifier/checks/ICheck.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {Utils} from "silo-core/deploy/silo/verifier/Utils.sol";
 
-import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
 import {SiloCoreDeployments, SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 
@@ -46,8 +47,14 @@ contract CheckIrmConfig is ICheck {
     }
 
     function _isKinkIrm(address _irm) internal returns (bool) {
-        address factory = AddrLib.getAddress(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY);
-        if (factory == address(0)) return false;
+        require(_irm != address(0), "IRM address is empty");
+
+        address factory = SiloCoreDeployments.get(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, ChainsLib.chainAlias());
+
+        if (factory == address(0)) {
+            console2.log(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, "is not deployed ", unicode"🚨");
+            return false;
+        }
 
         return IDynamicKinkModelFactory(factory).createdByFactory(_irm);
     }
