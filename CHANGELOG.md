@@ -5,10 +5,31 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-### Added
-- add suport for PT linear oracle in Silo deployer script
-- add support for KINK deployment
 
+## [3.11.0] - 2025-10-20
+### Added
+- silo-core: Dynamic Kink Factory deployment
+- silo-core: add support for PT linear to silo deployer script (#1676)
+- silo-core: new kink configs
+- silo-core: add support for kink predefined configs (#1679)
+- Pendle linear oracle support  (#1660)
+- fix warnings in code and add CI to check for warnings (#1450)
+- Include local broadcast files for latest run (#1635)
+
+### Changed
+- silo-oracles: redeploy CHAINLINK_USDC_USD to use newest chainlink (#1653)
+- silo-core: replace irm with factory name in market configs
+- silo-core: update incentive factories
+
+#### Markets
+- silo-core: `PT-siUSD-8JAN2026/USDC` market on Mainnet (#1671)
+- silo-core: `PT wstUSR (USR) / USDC` Ethereum market (#1652)
+- silo-core: `PT-iUSD 4 DEC25 / USDC` Ethereum market (#1650)
+- external market verification: Silo `RYT/USDC` (147) on Arbitrum (#1640)
+
+### Removed
+- silo-core: remove cache from CI (#1637)
+- remove irm zero file and additional tests for new market (#1661)
 
 ## [3.10.0] - 2025-09-30
 ### Added

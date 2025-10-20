@@ -14,7 +14,7 @@ import {DynamicKinkModel} from "silo-core/contracts/interestRateModel/kink/Dynam
 /*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/DynamicKinkModelFactoryDeploy.s.sol:DynamicKinkModelFactoryDeploy \
-        --ffi --rpc-url $RPC_ARBITRUM --broadcast --verify
+        --ffi --rpc-url $RPC_SONIC --broadcast --verify
 
     Resume verification:
     FOUNDRY_PROFILE=core \
