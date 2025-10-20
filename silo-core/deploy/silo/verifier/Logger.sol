@@ -112,6 +112,7 @@ contract Logger is Test {
         emit log_named_decimal_uint("\tliquidationTargetLtv(%) ", configData.liquidationTargetLtv * 100, 18);
         emit log_named_address("\tsolvencyOracle          ", configData.solvencyOracle);
         emit log_named_address("\tmaxLtvOracle            ", configData.maxLtvOracle);
+        emit log_named_address("\tinterestRateModel       ", configData.interestRateModel);
 
         console2.log();
         (string memory irmName, bool success) = Utils.findIrmName(configData);

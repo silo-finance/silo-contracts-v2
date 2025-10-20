@@ -36,10 +36,12 @@ library Utils {
         internal
         returns (string memory irmConfigName, bool success)
     {
+        DKinkIRMConfigData dkinkIrmConfigData = new DKinkIRMConfigData();
+
         (
             DKinkIRMConfigData.KinkJsonData[] memory allModels,
             DKinkIRMConfigData.ImmutableArgs[] memory allImmutableArgs
-        ) = (new DKinkIRMConfigData()).getAllConfigs();
+        ) = dkinkIrmConfigData.getAllConfigs();
 
         IDynamicKinkModelConfig irmConfig = IDynamicKinkModel(_configData.interestRateModel).irmConfig();
 
@@ -49,12 +51,11 @@ library Utils {
         bytes32 deployedConfigHash = keccak256(abi.encode(config));
         bytes32 deployedImmutableHash = keccak256(abi.encode(immutableConfig));
 
-        uint256 i;
         string memory configName;
         string memory immutableName;
 
-        for (; i < allModels.length; i++) {
-            bytes32 cfgHash = keccak256(abi.encode(allModels[i].config));
+        for (uint256 i; i < allModels.length; i++) {
+            bytes32 cfgHash = keccak256(abi.encode(dkinkIrmConfigData.castToConfig(allModels[i])));
 
             if (cfgHash == deployedConfigHash) {
                 configName = allModels[i].name;
@@ -62,7 +63,7 @@ library Utils {
             }
         }
 
-        for (; i < allImmutableArgs.length; i++) {
+        for (uint256 i; i < allImmutableArgs.length; i++) {
             IDynamicKinkModel.ImmutableConfig memory immutableCfg = IDynamicKinkModel.ImmutableConfig({
                 timelock: allImmutableArgs[i].args.timelock,
                 rcompCapPerSecond: allImmutableArgs[i].args.rcompCap / 365 days
@@ -75,6 +76,7 @@ library Utils {
                 break;
             }
         }
+
         return (
             string.concat(configName, ":", immutableName),
             bytes(configName).length > 0 && bytes(immutableName).length > 0
