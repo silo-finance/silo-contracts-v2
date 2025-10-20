@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 ### Added
+- add suport for PT linear oracle in Silo deployer script
 - add support for KINK deployment
 
 

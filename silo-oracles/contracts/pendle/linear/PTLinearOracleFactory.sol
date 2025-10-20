@@ -20,12 +20,12 @@ import {ISparkLinearDiscountOracleFactory} from "../interfaces/ISparkLinearDisco
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 contract PTLinearOracleFactory is Create2Factory, OracleFactory, IPTLinearOracleFactory {
-    ISparkLinearDiscountOracleFactory public immutable PENDLE_LINEAR_ORACLE_FACTORY;
+    ISparkLinearDiscountOracleFactory public immutable PENDLE_SPARK_LINEAR_DISCOUNT_FACTORY;
 
     constructor(address _pendleLinearOracleFactory) OracleFactory(address(new PTLinearOracle())) {
         require(_pendleLinearOracleFactory != address(0), AddressZero());
 
-        PENDLE_LINEAR_ORACLE_FACTORY = ISparkLinearDiscountOracleFactory(_pendleLinearOracleFactory);
+        PENDLE_SPARK_LINEAR_DISCOUNT_FACTORY = ISparkLinearDiscountOracleFactory(_pendleLinearOracleFactory);
     }
 
     /// @inheritdoc IPTLinearOracleFactory
@@ -80,7 +80,7 @@ contract PTLinearOracleFactory is Create2Factory, OracleFactory, IPTLinearOracle
             ptToken: _deploymentConfig.ptToken,
             hardcodedQuoteToken: _deploymentConfig.hardcodedQuoteToken,
             normalizationDivider: 10 ** tokenDecimals,
-            linearOracle: PENDLE_LINEAR_ORACLE_FACTORY.createWithPt({
+            linearOracle: PENDLE_SPARK_LINEAR_DISCOUNT_FACTORY.createWithPt({
                 ptToken: _deploymentConfig.ptToken,
                 baseDiscountPerYear: _deploymentConfig.maxYield
             })

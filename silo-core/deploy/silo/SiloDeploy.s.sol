@@ -34,6 +34,7 @@ import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
+import {PTLinearOracleTxLib} from "../lib/PTLinearOracleTxLib.sol";
 
 /// @dev use `SiloDeployWithDeployerOwner` or `SiloDeployWithHookReceiverOwner`
 abstract contract SiloDeploy is CommonDeploy {
@@ -197,10 +198,11 @@ abstract contract SiloDeploy is CommonDeploy {
         });
     }
 
-    function _getOracleTxData(string memory _oracleConfigName, bytes32 _noOracleKey, bytes32 placeHolderKey)
-        internal
-        returns (ISiloDeployer.OracleCreationTxData memory txData)
-    {
+    function _getOracleTxData(
+        string memory _oracleConfigName,
+        bytes32 _noOracleKey,
+        bytes32 placeHolderKey
+    ) internal returns (ISiloDeployer.OracleCreationTxData memory txData) {
         console2.log("[SiloCommonDeploy] _getOracleTxData for config: ", _oracleConfigName);
 
         bytes32 configHashedKey = keccak256(bytes(_oracleConfigName));
@@ -228,17 +230,36 @@ abstract contract SiloDeploy is CommonDeploy {
             return txData;
         }
 
+        require(txData.deployed == address(0), "[_getOracleTxData] at this point we need to create NEW deployment");
+
         if (_isUniswapOracle(_oracleConfigName)) {
-            console2.log("\t[SiloCommonDeploy] _uniswapV3TxData used for", _oracleConfigName);
-            return _uniswapV3TxData(_oracleConfigName);
+            console2.log(
+                "\t[SiloCommonDeploy] NEW oracle will be deployed using UniswapV3OracleTxData for: ",
+                _oracleConfigName
+            );
+
+            txData = _uniswapV3TxData(_oracleConfigName);
+        } else if (_isChainlinkOracle(_oracleConfigName)) {
+            console2.log(
+                "\t[SiloCommonDeploy] NEW oracle will be deployed using ChainlinkV3OracleTxData for: ",
+                _oracleConfigName
+            );
+
+            txData = _chainLinkTxData(_oracleConfigName);
+        } else if (PTLinearOracleTxLib.isPendleLinearOracle(_oracleConfigName)) {
+            console2.log(
+                "\t[SiloCommonDeploy] NEW oracle will be deployed using PendleLinearOracleTxData for: ",
+                _oracleConfigName
+            );
+
+            txData = PTLinearOracleTxLib.pendleLinearOracleTxData(_oracleConfigName);
+        } else {
+            revert(string.concat("[_getOracleTxData] ERROR unknown oracle type: ", _oracleConfigName));
         }
 
-        if (_isChainlinkOracle(_oracleConfigName)) {
-            console2.log("\t[SiloCommonDeploy] _chainLinkTxData used for", _oracleConfigName);
-            return _chainLinkTxData(_oracleConfigName);
-        }
-
-        revert("[_getOracleTxData] unknown oracle type");
+        require(txData.deployed == address(0), "[_getOracleTxData] expect tx data, not deployed address");
+        require(txData.factory != address(0), string.concat("[_getOracleTxData] empty factory for oracle: ", _oracleConfigName));
+        require(txData.txInput.length != 0, string.concat("[_getOracleTxData] missing tx data for oracle: ", _oracleConfigName));
     }
 
     function _uniswapV3TxData(string memory _oracleConfigName)
@@ -247,15 +268,11 @@ abstract contract SiloDeploy is CommonDeploy {
     {
         string memory chainAlias = ChainsLib.chainAlias();
 
-        txData.factory = SiloOraclesFactoriesDeployments.get(
-            SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY,
-            chainAlias
-        );
+        txData.factory =
+            SiloOraclesFactoriesDeployments.get(SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY, chainAlias);
 
-        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config = UniswapV3OraclesConfigsParser.getConfig(
-            chainAlias,
-            _oracleConfigName
-        );
+        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config =
+            UniswapV3OraclesConfigsParser.getConfig(chainAlias, _oracleConfigName);
 
         // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
         txData.txInput = abi.encodeCall(IUniswapV3Factory.create, (config, bytes32(0)));
@@ -267,15 +284,11 @@ abstract contract SiloDeploy is CommonDeploy {
     {
         string memory chainAlias = ChainsLib.chainAlias();
 
-        txData.factory = SiloOraclesFactoriesDeployments.get(
-            SiloOraclesFactoriesContracts.CHAINLINK_V3_ORACLE_FACTORY,
-            chainAlias
-        );
+        txData.factory =
+            SiloOraclesFactoriesDeployments.get(SiloOraclesFactoriesContracts.CHAINLINK_V3_ORACLE_FACTORY, chainAlias);
 
-        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config = ChainlinkV3OraclesConfigsParser.getConfig(
-            chainAlias,
-            _oracleConfigName
-        );
+        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config =
+            ChainlinkV3OraclesConfigsParser.getConfig(chainAlias, _oracleConfigName);
 
         // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
         txData.txInput = abi.encodeCall(IChainlinkV3Factory.create, (config, bytes32(0)));
