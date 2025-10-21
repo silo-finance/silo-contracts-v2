@@ -10,6 +10,7 @@ env:
     RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
     RPC_SONIC: ${{ secrets.RPC_SONIC }}
     RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
+    RPC_INK: ${{ secrets.RPC_INK }}
     PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
     VERIFIER_URL_SONIC: ${{ secrets.VERIFIER_URL_SONIC }}
     VERIFIER_API_KEY_SONIC: ${{ secrets.VERIFIER_API_KEY_SONIC }}
@@ -128,7 +129,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: all fast test
-                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest|NewMarketTest" --ffi -vv
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest|NewMarketTest|SiloDeployerIntegrationTest" --ffi -vv
 
     slow-contracts-tests:
         strategy:
