@@ -28,18 +28,24 @@ contract SiloDeployerIntegrationTest is Test {
         siloDeployer = SiloDeployer(_getDeployedAddress(SiloCoreContracts.SILO_DEPLOYER));
     }
 
-    function test_compateToOldDeployer() public {
-        string memory msg = " (This is verification test, adjust it when needed)";
+    /*
+    FOUNDRY_PROFILE=core_test RPC_URL=$RPC_INK forge test -vv --ffi --mt test_compateToOldDeployer
+    */
+    function test_compateToOldDeployer() public view {
+        string memory i = " (This is verification test, adjust it when needed)";
         SiloDeployer oldDeployer = _getPreviousDeployer();
 
-        assertNotEq(address(oldDeployer), address(0), string.concat("Previous deployer not found", msg));
+        console2.log("chain alias", ChainsLib.chainAlias());
+        assertNotEq(address(oldDeployer), address(0), string.concat("Previous deployer not found", i));
 
         bool irmConfigFactoryMatch = oldDeployer.IRM_CONFIG_FACTORY() == siloDeployer.IRM_CONFIG_FACTORY();
         bool dynamicKinkModelFactoryMatch;
 
         try oldDeployer.DYNAMIC_KINK_MODEL_FACTORY() returns (IDynamicKinkModelFactory dynamicKinkModelFactory) {
             dynamicKinkModelFactoryMatch = dynamicKinkModelFactory == siloDeployer.DYNAMIC_KINK_MODEL_FACTORY();
-        } catch {}
+        } catch {
+            console2.log("dynamic kink model factory not found on OLD deployer");
+        }
 
         bool siloFactoryMatch = oldDeployer.SILO_FACTORY() == siloDeployer.SILO_FACTORY();
         bool siloImplMatch = oldDeployer.SILO_IMPL() == siloDeployer.SILO_IMPL();
@@ -55,13 +61,7 @@ contract SiloDeployerIntegrationTest is Test {
         _printMatch(shareDebtTokenImplMatch, SiloCoreContracts.SHARE_DEBT_TOKEN);
     }
 
-    function _printMatch(bool _match, string memory _contractName) internal {
-        console2.log(
-            _contractName, _match ? string.concat(_ok_(), "address match") : string.concat(_x_(), "DOES NOT MATCH")
-        );
-    }
-
-    function _getPreviousDeployer() internal returns (SiloDeployer) {
+    function _getPreviousDeployer() internal view returns (SiloDeployer) {
         uint256 chainId = ChainsLib.getChainId();
 
         if (chainId == ChainsLib.AVALANCHE_CHAIN_ID) {
@@ -143,5 +143,11 @@ contract SiloDeployerIntegrationTest is Test {
 
     function _warn_() internal pure virtual returns (string memory) {
         return string.concat(unicode"🚸", " ");
+    }
+
+    function _printMatch(bool _match, string memory _contractName) internal pure {
+        console2.log(
+            _contractName, _match ? string.concat(_ok_(), "address match") : string.concat(_x_(), "DOES NOT MATCH")
+        );
     }
 }
