@@ -33,27 +33,27 @@ contract SiloDeployerIntegrationTest is Test {
     */
     function test_siloDeployer_addresses() public {
         _checkAddress(address(siloDeployer.IRM_CONFIG_FACTORY()), SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY);
-        
+
         // Kink is new deployment, not available on all chains yet
         try siloDeployer.DYNAMIC_KINK_MODEL_FACTORY() returns (IDynamicKinkModelFactory dynamicKinkModelFactory) {
             _checkAddress(address(dynamicKinkModelFactory), SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY);
         } catch {
             assertEq(
-                _getDeployedAddress(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY), 
-                address(0), 
+                _getDeployedAddress(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY),
+                address(0),
                 "deployer don't have DKINK so we expect it is not deployed"
             );
         }
-        
+
         _checkAddress(address(siloDeployer.SILO_FACTORY()), SiloCoreContracts.SILO_FACTORY);
-        
+
         _checkAddress(address(siloDeployer.SILO_IMPL()), SiloCoreContracts.SILO);
-        
+
         _checkAddress(
             address(siloDeployer.SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL()),
             SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN
         );
-        
+
         _checkAddress(address(siloDeployer.SHARE_DEBT_TOKEN_IMPL()), SiloCoreContracts.SHARE_DEBT_TOKEN);
     }
 
