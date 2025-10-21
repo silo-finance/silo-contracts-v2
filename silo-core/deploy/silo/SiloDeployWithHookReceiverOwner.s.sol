@@ -11,7 +11,7 @@ FOUNDRY_PROFILE=core CONFIG=Silo_savUSD_USDC_v4 HOOK_RECEIVER_OWNER=DAO \
     --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify
 
 Resume verification:
-    FOUNDRY_PROFILE=core CONFIG=Silo_WAVAX_USDC HOOK_RECEIVER_OWNER=DAO \
+    FOUNDRY_PROFILE=core CONFIG=Silo_savUSD_USDC_v4 HOOK_RECEIVER_OWNER=DAO \
     forge script silo-core/deploy/silo/SiloDeployWithHookReceiverOwner.s.sol \
         --ffi --rpc-url $RPC_SONIC \
         --verify \
