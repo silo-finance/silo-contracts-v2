@@ -38,24 +38,11 @@ contract CheckIrmConfig is ICheck {
     }
 
     function execute() external override returns (bool result) {
-        if (_isKinkIrm(configData.interestRateModel)) {
+        if (Utils.isKinkIrm(configData.interestRateModel)) {
             isKinkIrm = true;
             (irmName, result) = Utils.findKinkIrmName(configData);
         } else {
             (irmName, result) = Utils.findIrmName(configData);
         }
-    }
-
-    function _isKinkIrm(address _irm) internal returns (bool) {
-        require(_irm != address(0), "IRM address is empty");
-
-        address factory = SiloCoreDeployments.get(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, ChainsLib.chainAlias());
-
-        if (factory == address(0)) {
-            console2.log(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, "is not deployed ", unicode"🚨");
-            return false;
-        }
-
-        return IDynamicKinkModelFactory(factory).createdByFactory(_irm);
     }
 }

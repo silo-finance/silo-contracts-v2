@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
@@ -22,6 +24,9 @@ import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3
 
 import {IDynamicKinkModelConfig} from "silo-core/contracts/interfaces/IDynamicKinkModelConfig.sol";
 import {IDynamicKinkModel} from "silo-core/contracts/interfaces/IDynamicKinkModel.sol";
+import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
+import {SiloCoreDeployments, SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 interface IPTLinearAggregatorLike {
     function PT() external view returns (address);
@@ -87,6 +92,17 @@ library Utils {
         internal
         returns (string memory configName, bool success)
     {
+        if (isKinkIrm(_configData.interestRateModel)) {
+            return findKinkIrmName(_configData);
+        } else {
+            return findIrmV2Name(_configData);
+        }
+    }
+
+    function findIrmV2Name(ISiloConfig.ConfigData memory _configData)
+        internal
+        returns (string memory configName, bool success)
+    {
         InterestRateModelConfigData irmData = new InterestRateModelConfigData();
         InterestRateModelConfigData.ConfigData[] memory allModels = irmData.getAllConfigs();
 
@@ -103,6 +119,19 @@ library Utils {
                 return (allModels[i].name, true);
             }
         }
+    }
+
+    function isKinkIrm(address _irm) internal returns (bool) {
+        require(_irm != address(0), "IRM address is empty");
+
+        address factory = SiloCoreDeployments.get(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, ChainsLib.chainAlias());
+
+        if (factory == address(0)) {
+            console2.log(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, "is not deployed ", unicode"🚨");
+            return false;
+        }
+
+        return IDynamicKinkModelFactory(factory).createdByFactory(_irm);
     }
 
     function quote(ISiloOracle _oracle, address _baseToken, uint256 _amount)
