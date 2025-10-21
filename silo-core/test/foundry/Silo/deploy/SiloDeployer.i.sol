@@ -9,11 +9,12 @@ import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
+import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
 
 import {SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 
 /*
-FOUNDRY_PROFILE=core_test RPC_URL=$RPC_SONIC forge test -vv --ffi --mc SiloDeployerIntegrationTest
+FOUNDRY_PROFILE=core_test RPC_URL=$RPC_INK forge test -vv --ffi --mc SiloDeployerIntegrationTest
 
 It check if SiloDeployer is using newest/current contract addresses
 */
@@ -27,23 +28,38 @@ contract SiloDeployerIntegrationTest is Test {
         siloDeployer = SiloDeployer(_getDeployedAddress(SiloCoreContracts.SILO_DEPLOYER));
     }
 
-    // fFOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloHookV1Deploy_run
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloHookV1Deploy_run
+    */
     function test_siloDeployer_addresses() public {
         _checkAddress(address(siloDeployer.IRM_CONFIG_FACTORY()), SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY);
-        _checkAddress(
-            address(siloDeployer.DYNAMIC_KINK_MODEL_FACTORY()), SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY
-        );
+        
+        // Kink is new deployment, not available on all chains yet
+        try siloDeployer.DYNAMIC_KINK_MODEL_FACTORY() returns (IDynamicKinkModelFactory dynamicKinkModelFactory) {
+            _checkAddress(address(dynamicKinkModelFactory), SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY);
+        } catch {
+            assertEq(
+                _getDeployedAddress(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY), 
+                address(0), 
+                "deployer don't have DKINK so we expect it is not deployed"
+            );
+        }
+        
         _checkAddress(address(siloDeployer.SILO_FACTORY()), SiloCoreContracts.SILO_FACTORY);
+        
         _checkAddress(address(siloDeployer.SILO_IMPL()), SiloCoreContracts.SILO);
+        
         _checkAddress(
             address(siloDeployer.SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL()),
             SiloCoreContracts.SHARE_PROTECTED_COLLATERAL_TOKEN
         );
+        
         _checkAddress(address(siloDeployer.SHARE_DEBT_TOKEN_IMPL()), SiloCoreContracts.SHARE_DEBT_TOKEN);
     }
 
     function _checkAddress(address _addressInDeployer, string memory _contractName) internal {
         address deployedAddress = _getDeployedAddress(_contractName);
+        assertNotEq(deployedAddress, address(0), string.concat(_contractName, " not deployed"));
 
         console2.log("%s: %s", _contractName, Strings.toHexString(deployedAddress));
 
@@ -62,6 +78,5 @@ contract SiloDeployerIntegrationTest is Test {
 
     function _getDeployedAddress(string memory _contractName) internal returns (address deployedAddress) {
         deployedAddress = SiloCoreDeployments.get(_contractName, ChainsLib.chainAlias());
-        assertNotEq(deployedAddress, address(0), string.concat(_contractName, " not deployed"));
     }
 }

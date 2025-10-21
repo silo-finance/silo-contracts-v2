@@ -10,6 +10,7 @@ env:
     RPC_ANVIL: ${{ secrets.RPC_ANVIL }}
     RPC_SONIC: ${{ secrets.RPC_SONIC }}
     RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
+    RPC_INK: ${{ secrets.RPC_INK }}
     PRIVATE_KEY: ${{ secrets.ANVIL_PRIVATE_KEY }}
     VERIFIER_URL_SONIC: ${{ secrets.VERIFIER_URL_SONIC }}
     VERIFIER_API_KEY_SONIC: ${{ secrets.VERIFIER_API_KEY_SONIC }}
@@ -171,7 +172,8 @@ jobs:
                     RPC_ARBITRUM,
                     RPC_OPTIMISM,
                     RPC_AVALANCHE,
-                    RPC_MAINNET
+                    RPC_MAINNET,
+                    RPC_INK
                ]
 
         runs-on: ubuntu-latest
@@ -192,8 +194,8 @@ jobs:
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
 
-            -   name: ${{ matrix.match-rpc }}
-                run: FOUNDRY_PROFILE=core_test RPC_URL=${{ matrix.match-rpc }} forge test --mc SiloDeployerIntegrationTest --ffi -vv
+            -   name: Check Deployer with ${{ matrix.match-rpc }}
+                run: FOUNDRY_PROFILE=core_test RPC_URL=$${{ matrix.match-rpc }} forge test --mc SiloDeployerIntegrationTest --ffi -vv
 
     MaxLiquidationTest:
         strategy:
