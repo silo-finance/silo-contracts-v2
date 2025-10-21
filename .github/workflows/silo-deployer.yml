@@ -19,8 +19,12 @@ env:
 on:
     push:
         branches: [ master, develop ]
+        paths:
+            - 'silo-core/deployments/*/SiloDeployer.sol.json'
 
     pull_request:
+        paths:
+            - 'silo-core/deployments/*/SiloDeployer.sol.json'
 
 jobs:
     silo-deployer-tests:
