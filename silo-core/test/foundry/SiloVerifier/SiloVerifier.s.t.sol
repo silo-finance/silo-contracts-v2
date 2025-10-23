@@ -20,25 +20,25 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {CheckNonBorrowableAsset} from "silo-core/deploy/silo/verifier/checks/silo/CheckNonBorrowableAsset.sol";
 import {SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
-/*
-    FOUNDRY_PROFILE=core_test forge test -vv --match-contract SiloVerifierScriptTest --ffi -- mt test_CheckSiloImplementation
-*/
 
+/*
+    FOUNDRY_PROFILE=core_test forge test -vvv --match-contract SiloVerifierScriptTest --ffi \
+    --mt test_CheckDaoFee
+*/
 contract SiloVerifierScriptTest is Test {
     ISiloConfig constant WS_USDC_CONFIG = ISiloConfig(0x062A36Bbe0306c2Fd7aecdf25843291fBAB96AD2);
     address constant USDC = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894;
     address constant EXAMPLE_HOOK_RECEIVER = 0x2D3d269334485d2D876df7363e1A50b13220a7D8;
 
-    uint256 constant EXTERNAL_PRICE_0 = 410;
+    uint256 constant EXTERNAL_PRICE_0 = 172; // price of wS @ 51321936 block
     uint256 constant EXTERNAL_PRICE_1 = 1000;
 
     address public constant SILO_FACTORY = 0xa42001D6d2237d2c74108FE360403C4b796B7170;
 
     function setUp() public {
-        vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 7229436);
+        vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 51338462);
         AddrLib.init();
 
-        // factory at block 7229436
         AddrLib.setAddress(SiloCoreContracts.SILO_FACTORY, SILO_FACTORY);
     }
 

@@ -29,12 +29,14 @@ import {Utils, IPTLinearAggregatorLike} from "silo-core/deploy/silo/verifier/Uti
 import {PendlePTOracle} from "silo-oracles/contracts/pendle/PendlePTOracle.sol";
 import {PendleLPTOracle} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTOracle.sol";
 import {PendlePTToAssetOracle} from "silo-oracles/contracts/pendle/PendlePTToAssetOracle.sol";
+
 import {IDIAOracle, DIAOracle, DIAOracleConfig} from "silo-oracles/contracts/dia/DIAOracle.sol";
 import {
     WrappedMetaVaultOracleAdapter,
     IWrappedMetaVaultOracle
 } from "silo-oracles/contracts/custom/wrappedMetaVaultOracle/WrappedMetaVaultOracleAdapter.sol";
 import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
+import {PTLinearOracle} from "silo-oracles/contracts/pendle/linear/PTLinearOracle.sol";
 
 contract Logger is Test {
     // used to generate quote amounts and names to log
@@ -110,6 +112,7 @@ contract Logger is Test {
         emit log_named_decimal_uint("\tliquidationTargetLtv(%) ", configData.liquidationTargetLtv * 100, 18);
         emit log_named_address("\tsolvencyOracle          ", configData.solvencyOracle);
         emit log_named_address("\tmaxLtvOracle            ", configData.maxLtvOracle);
+        emit log_named_address("\tinterestRateModel       ", configData.interestRateModel);
 
         console2.log();
         (string memory irmName, bool success) = Utils.findIrmName(configData);
@@ -192,6 +195,10 @@ contract Logger is Test {
             _logPendleOracle(_oracle, market, false);
         } catch {}
 
+        try PTLinearOracle(address(_oracle)).baseDiscountPerYear() returns (uint256) {
+            _logPendleLinearOracle(_oracle);
+        } catch {}
+
         try PendleLPTOracle(address(_oracle)).PENDLE_MARKET() returns (address market) {
             _logPendleOracle(_oracle, market, true);
         } catch {}
@@ -257,6 +264,17 @@ contract Logger is Test {
         console2.log("\tUnderlying oracle:", underlyingOracle);
         console2.log("\n\tPendle underlying oracle info:");
         _logOracle(ISiloOracle(underlyingOracle), underlyingToken);
+        console2.log(DELIMITER);
+    }
+
+    function _logPendleLinearOracle(ISiloOracle _oracle) internal view {
+        console2.log(DELIMITER);
+        console2.log("\n\tPENDLE LINEAR ORACLE INFO\n");
+        console2.log("\tdescription:", PTLinearOracle(address(_oracle)).description());
+        console2.log(
+            "\tbaseDiscountPerYear:",
+            PriceFormatter.formatPriceInE18(PTLinearOracle(address(_oracle)).baseDiscountPerYear())
+        );
         console2.log(DELIMITER);
     }
 
@@ -437,6 +455,7 @@ contract Logger is Test {
         } catch {}
     }
 
+    // TODO add option for trying with new linear oracle
     function _tryLogPTLinearAggregator(address _aggregator) internal view {
         if (Utils.tryGetPT(_aggregator) == address(0)) return;
 

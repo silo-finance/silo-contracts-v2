@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
@@ -22,6 +24,9 @@ import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3
 
 import {IDynamicKinkModelConfig} from "silo-core/contracts/interfaces/IDynamicKinkModelConfig.sol";
 import {IDynamicKinkModel} from "silo-core/contracts/interfaces/IDynamicKinkModel.sol";
+import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
+import {SiloCoreDeployments, SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
 interface IPTLinearAggregatorLike {
     function PT() external view returns (address);
@@ -34,34 +39,67 @@ library Utils {
 
     function findKinkIrmName(ISiloConfig.ConfigData memory _configData)
         internal
-        returns (string memory configName, bool success)
+        returns (string memory irmConfigName, bool success)
     {
-        DKinkIRMConfigData.ConfigData[] memory allModels = (new DKinkIRMConfigData()).getAllConfigs();
+        DKinkIRMConfigData dkinkIrmConfigData = new DKinkIRMConfigData();
+
+        (
+            DKinkIRMConfigData.KinkJsonData[] memory allModels,
+            DKinkIRMConfigData.ImmutableArgs[] memory allImmutableArgs
+        ) = dkinkIrmConfigData.getAllConfigs();
 
         IDynamicKinkModelConfig irmConfig = IDynamicKinkModel(_configData.interestRateModel).irmConfig();
 
         (IDynamicKinkModel.Config memory config, IDynamicKinkModel.ImmutableConfig memory immutableConfig) =
             irmConfig.getConfig();
 
-        bytes32 deployedHash = keccak256(abi.encode(config, immutableConfig));
+        bytes32 deployedConfigHash = keccak256(abi.encode(config));
+        bytes32 deployedImmutableHash = keccak256(abi.encode(immutableConfig));
 
-        uint256 i;
+        string memory configName;
+        string memory immutableName;
 
-        for (; i < allModels.length; i++) {
-            IDynamicKinkModel.ImmutableConfig memory immutableCfg = IDynamicKinkModel.ImmutableConfig({
-                timelock: allModels[i].immutableArgs.timelock,
-                rcompCapPerSecond: allModels[i].immutableArgs.rcompCap / 365 days
-            });
+        for (uint256 i; i < allModels.length; i++) {
+            bytes32 cfgHash = keccak256(abi.encode(dkinkIrmConfigData.castToConfig(allModels[i])));
 
-            bytes32 cfgHash = keccak256(abi.encode(allModels[i].config, immutableCfg));
-
-            if (cfgHash == deployedHash) {
-                return (allModels[i].name, true);
+            if (cfgHash == deployedConfigHash) {
+                configName = allModels[i].name;
+                break;
             }
         }
+
+        for (uint256 i; i < allImmutableArgs.length; i++) {
+            IDynamicKinkModel.ImmutableConfig memory immutableCfg = IDynamicKinkModel.ImmutableConfig({
+                timelock: allImmutableArgs[i].args.timelock,
+                rcompCapPerSecond: allImmutableArgs[i].args.rcompCap / 365 days
+            });
+
+            bytes32 immutableHash = keccak256(abi.encode(immutableCfg));
+
+            if (immutableHash == deployedImmutableHash) {
+                immutableName = allImmutableArgs[i].name;
+                break;
+            }
+        }
+
+        return (
+            string.concat(configName, ":", immutableName),
+            bytes(configName).length > 0 && bytes(immutableName).length > 0
+        );
     }
 
     function findIrmName(ISiloConfig.ConfigData memory _configData)
+        internal
+        returns (string memory configName, bool success)
+    {
+        if (isKinkIrm(_configData.interestRateModel)) {
+            return findKinkIrmName(_configData);
+        } else {
+            return findIrmV2Name(_configData);
+        }
+    }
+
+    function findIrmV2Name(ISiloConfig.ConfigData memory _configData)
         internal
         returns (string memory configName, bool success)
     {
@@ -72,8 +110,6 @@ library Utils {
 
         IInterestRateModelV2.Config memory irmConfig = irmV2Config.getConfig();
 
-        // ri and Tcrit can be changed over time, but this test is done just after deployment, so they should match
-
         bytes32 deployedCfgHash = keccak256(abi.encode(irmConfig));
 
         for (uint256 i; i < allModels.length; i++) {
@@ -83,6 +119,19 @@ library Utils {
                 return (allModels[i].name, true);
             }
         }
+    }
+
+    function isKinkIrm(address _irm) internal returns (bool) {
+        require(_irm != address(0), "IRM address is empty");
+
+        address factory = SiloCoreDeployments.get(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, ChainsLib.chainAlias());
+
+        if (factory == address(0)) {
+            console2.log(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, "is not deployed ", unicode"🚨");
+            return false;
+        }
+
+        return IDynamicKinkModelFactory(factory).createdByFactory(_irm);
     }
 
     function quote(ISiloOracle _oracle, address _baseToken, uint256 _amount)

@@ -7,102 +7,78 @@ import {VmLib} from "silo-foundry-utils/lib/VmLib.sol";
 
 import {IDynamicKinkModel} from "silo-core/contracts/interfaces/IDynamicKinkModel.sol";
 
-contract DKinkIRMConfigData {
+import {DKinkIRMConfigDataReader} from "./DKinkIRMConfigDataReader.sol";
+import {DKinkIRMImmutableDataReader} from "./DKinkIRMImmutableDataReader.sol";
+import {StringLib} from "../lib/StringLib.sol";
+
+contract DKinkIRMConfigData is DKinkIRMConfigDataReader, DKinkIRMImmutableDataReader {
     error ConfigNotFound();
 
-    // must be in alphabetic order for JSON parsing
-    struct ModelConfig {
-        int256 alpha;
-        int256 c1;
-        int256 c2;
-        int256 cminus;
-        int256 cplus;
-        int256 dmax;
-        int256 kmax;
-        int256 kmin;
-        int256 rmin;
-        int256 u1;
-        int256 u2;
-        int256 ucrit;
-        int256 ulow;
+    function getAllConfigs() public view returns (KinkJsonData[] memory, ImmutableArgs[] memory) {
+        return (_getAllConfigs(), _getAllImmutableArgs());
     }
 
-    struct ImmutableArgs {
-        int96 rcompCap;
-        uint32 timelock;
-    }
-
-    struct ConfigData {
-        ModelConfig config;
-        ImmutableArgs immutableArgs;
-        string name;
-    }
-
-    function _readInput(string memory input) internal view returns (string memory) {
-        string memory inputDir = string.concat(VmLib.vm().projectRoot(), "/silo-core/deploy/input/");
-        string memory file = string.concat(input, ".json");
-        return VmLib.vm().readFile(string.concat(inputDir, file));
-    }
-
-    function _readDataFromJson() internal view returns (ConfigData[] memory) {
-        return abi.decode(
-            VmLib.vm().parseJson(_readInput("DKinkIRMConfigs"), string(abi.encodePacked("."))), (ConfigData[])
-        );
-    }
-
-    function getAllConfigs() public view returns (ConfigData[] memory) {
-        return _readDataFromJson();
-    }
-
+    /// @param _name The name of the KinkIRM config in format <config>:<immutable> eg: "static-5.5-20:T0_CAP_MAX"
     function getConfigData(string memory _name)
         public
         view
-        returns (IDynamicKinkModel.Config memory modelConfig, IDynamicKinkModel.ImmutableArgs memory immutableArgs)
+        returns (IDynamicKinkModel.Config memory cfg, IDynamicKinkModel.ImmutableArgs memory args)
     {
-        ConfigData[] memory configs = _readDataFromJson();
-        bool found = false;
+        (string memory configName, string memory immutableName) = _splitName(_name);
 
-        for (uint256 index = 0; index < configs.length; index++) {
-            if (keccak256(bytes(configs[index].name)) == keccak256(bytes(_name))) {
-                modelConfig.ulow = configs[index].config.ulow;
-                modelConfig.u1 = configs[index].config.u1;
-                modelConfig.u2 = configs[index].config.u2;
-                modelConfig.ucrit = configs[index].config.ucrit;
-                modelConfig.rmin = configs[index].config.rmin;
-                modelConfig.kmin = int96(int256(configs[index].config.kmin));
-                modelConfig.kmax = int96(int256(configs[index].config.kmax));
-                modelConfig.alpha = configs[index].config.alpha;
-                modelConfig.cminus = configs[index].config.cminus;
-                modelConfig.cplus = configs[index].config.cplus;
-                modelConfig.c1 = configs[index].config.c1;
-                modelConfig.c2 = configs[index].config.c2;
-                modelConfig.dmax = configs[index].config.dmax;
+        KinkJsonData memory modelConfig = _getModelConfig(configName);
+        ImmutableArgs memory immutableArgs = _getImmutableArgs(immutableName);
 
-                immutableArgs.timelock = configs[index].immutableArgs.timelock;
-                immutableArgs.rcompCap = configs[index].immutableArgs.rcompCap;
-
-                found = true;
-
-                break;
-            }
-        }
-
-        require(found, ConfigNotFound());
+        cfg = castToConfig(modelConfig);
+        args = _castToImmutableArgs(immutableArgs);
     }
 
-    function print(IDynamicKinkModel.Config memory _configData) public pure {
-        console2.log("ulow", _configData.ulow);
-        console2.log("u1", _configData.u1);
-        console2.log("u2", _configData.u2);
-        console2.log("ucrit", _configData.ucrit);
-        console2.log("rmin", _configData.rmin);
-        console2.log("kmin", _configData.kmin);
-        console2.log("kmax", _configData.kmax);
-        console2.log("alpha", _configData.alpha);
-        console2.log("cminus", _configData.cminus);
-        console2.log("cplus", _configData.cplus);
-        console2.log("c1", _configData.c1);
-        console2.log("c2", _configData.c2);
-        console2.log("dmax", _configData.dmax);
+    function castToConfig(KinkJsonData memory _modelConfig)
+        public
+        pure
+        returns (IDynamicKinkModel.Config memory cfg)
+    {
+        cfg.ulow = _modelConfig.config.ulow;
+        cfg.u1 = _modelConfig.config.u1;
+        cfg.u2 = _modelConfig.config.u2;
+        cfg.ucrit = _modelConfig.config.ucrit;
+        cfg.rmin = _modelConfig.config.rmin;
+        cfg.kmin = int96(int256(_modelConfig.config.kmin));
+        cfg.kmax = int96(int256(_modelConfig.config.kmax));
+        cfg.alpha = _modelConfig.config.alpha;
+        cfg.cminus = _modelConfig.config.cminus;
+        cfg.cplus = _modelConfig.config.cplus;
+        cfg.c1 = _modelConfig.config.c1;
+        cfg.c2 = _modelConfig.config.c2;
+        cfg.dmax = _modelConfig.config.dmax;
+    }
+
+    function _splitName(string memory _name)
+        private
+        pure
+        returns (string memory configName, string memory immutableName)
+    {
+        string[] memory parts = StringLib.split(_name, ":");
+
+        require(
+            parts.length == 2,
+            string.concat("ERROR: expect 2 parts separated by `:` <config>:<immutable> got `", string(_name))
+        );
+
+        configName = parts[0];
+        immutableName = parts[1];
+
+        require(bytes(configName).length != 0, string.concat("ERROR: empty configName: `", string(_name)));
+
+        require(bytes(immutableName).length != 0, string.concat("ERROR: empty immutableName: `", string(_name)));
+    }
+
+    function _castToImmutableArgs(ImmutableArgs memory _immutableArgs)
+        private
+        pure
+        returns (IDynamicKinkModel.ImmutableArgs memory args)
+    {
+        args.timelock = _immutableArgs.args.timelock;
+        args.rcompCap = _immutableArgs.args.rcompCap;
     }
 }
