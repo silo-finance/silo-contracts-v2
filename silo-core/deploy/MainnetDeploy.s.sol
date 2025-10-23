@@ -23,7 +23,7 @@ import {DKinkIRMFactoryDeploy} from "silo-core/deploy/DKinkIRMFactoryDeploy.s.so
 /*
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/MainnetDeploy.s.sol \
-        --ffi --rpc-url $RPC_INJECTIVE --verify --broadcast --slow
+        --ffi --rpc-url $RPC_INJECTIVE --broadcast --slow --verify
 
     Resume verification:
     FOUNDRY_PROFILE=core \
@@ -60,7 +60,7 @@ contract MainnetDeploy is CommonDeploy {
         interestRateModelV2Deploy.run();
         siloHookV1Deploy.run();
         siloDeployerDeploy.run();
-        // liquidationHelperDeploy.run();
+        // liquidationHelperDeploy.run(); // TODO once we have exchange on Injective
         siloLensDeploy.run();
         towerDeploy.run();
         siloRouterV2Deploy.run();
