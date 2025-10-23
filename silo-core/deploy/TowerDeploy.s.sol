@@ -25,7 +25,6 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 contract TowerDeploy is CommonDeploy {
     function run() public returns (Tower tower) {
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        string memory chainAlias = ChainsLib.chainAlias();
 
         vm.startBroadcast(deployerPrivateKey);
 
