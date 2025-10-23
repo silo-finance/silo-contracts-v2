@@ -190,12 +190,14 @@ FOUNDRY_PROFILE=core_test forge snapshot --diff --desc --no-match-test "_skip_" 
 1. update onchain registry `silo-core/deploy/TowerRegistration.s.sol`
 1. deploy any test market, to confirm everything is ok.
 
+#### New SiloDeployer with Silo, ProtectedShareToken, and DebtShareToken implementations
+SiloDeployer is deployed using `MainnetDeploy` script. In case you need to redeploy:
+- run `silo-core/deploy/SiloDeployerDeploy.s.sol` script
+- then deploy new market
+
 ### Silo Vaults
 1. run `silo-vaults/deploy/MainnetDeploy.s.sol`
 
 
-
-### New Silo deployer with Silo, ProtectedShareToken, and DebtShareToken implementations
-
-- run `silo-core/deploy/SiloDeployerDeploy.s.sol` script
-- then deploy new market
+### Oracles
+Choose oracle you want to deploy and ruch each deployer individually.
