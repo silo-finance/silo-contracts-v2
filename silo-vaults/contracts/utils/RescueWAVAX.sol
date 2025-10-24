@@ -14,9 +14,13 @@ contract RescueWAVAX is IIncentivesClaimingLogic {
 
     function claimRewardsAndDistribute() external {
         IERC4626 vault = IERC4626(address(this));
-        require(vault.asset() != address(WAVAX), VaultAssetCanNotBeRescued());
 
-        uint256 balance = WAVAX.balanceOf(address(this));
+        if (vault.asset() == address(WAVAX)) {
+            // vault asset can not be rescued
+            return;
+        }
+
+        uint256 balance = WAVAX.balanceOf(address(vault));
         if (balance == 0) return;
 
         try WAVAX.transfer(WAVAX_RECEIVER, balance) {

@@ -18,6 +18,9 @@ import {IVaultIncentivesModule} from "../../../contracts/interfaces/IVaultIncent
 
 import {RescueWAVAX} from "silo-vaults/contracts/utils/RescueWAVAX.sol";
 
+/*
+FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_rescue_tokens_from_vault -vvv
+*/
 contract RescueTokensFromVault is Test {
     address constant MULTISIG = 0xE8e8041cB5E3158A0829A19E014CA1cf91098554;
     SiloVault internal constant VAULT = SiloVault(0x6c09bfdc1df45D6c4Ff78Dc9F1C13aF29eB335d4);
@@ -83,6 +86,36 @@ contract RescueTokensFromVault is Test {
         // then incentive module owner can remove the logic
         vm.prank(incentivesModuleOwner);
         incentivesModule.removeIncentivesClaimingLogic(VAULT, newLogic);
+
+        assertEq(_printLigics(), 0, "no logics should be left");
+        _qaVaultOperations();
+    }
+
+    /*
+    FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_add_remove_logic -vvv
+    */
+    function test_add_remove_logic() public {
+        _qaVaultOperations();
+
+        // we need to have access to owner of the incentivesModule
+        address incentivesModuleOwner = Ownable(address(incentivesModule)).owner();
+        console2.log("incentives module owner", incentivesModuleOwner);
+
+        RescueWAVAX newLogic = new RescueWAVAX();
+        uint256 wAvaxBalanceBefore = wAvax.balanceOf(address(newLogic.WAVAX_RECEIVER()));
+        console2.log("wAvax balance before", wAvaxBalanceBefore);
+
+        // we need to call `submitIncentivesClaimingLogic` from safe
+        vm.prank(incentivesModuleOwner);
+        incentivesModule.submitIncentivesClaimingLogic(VAULT, newLogic);
+
+        _qaVaultOperations();
+        _printLigics();
+
+        vm.prank(incentivesModuleOwner);
+        incentivesModule.revokePendingClaimingLogic(VAULT, newLogic);
+
+        _qaVaultOperations();
 
         assertEq(_printLigics(), 0, "no logics should be left");
         _qaVaultOperations();
