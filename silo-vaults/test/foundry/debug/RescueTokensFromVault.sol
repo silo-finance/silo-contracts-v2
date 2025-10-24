@@ -51,6 +51,7 @@ contract RescueTokensFromVault is Test {
 
         // we need to have access to owner of the incentivesModule
         address incentivesModuleOwner = Ownable(address(incentivesModule)).owner();
+        console2.log("vault incentives module", address(incentivesModule));
         console2.log("incentives module owner", incentivesModuleOwner);
 
         RescueWAVAX newLogic = new RescueWAVAX();
