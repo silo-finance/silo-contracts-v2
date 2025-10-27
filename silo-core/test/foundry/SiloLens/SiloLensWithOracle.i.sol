@@ -36,6 +36,9 @@ contract SiloLensWithOracleTest is SiloLittleHelper, Test {
         solvencyOracle0 = new DummyOracle(1e18, address(token1));
         maxLtvOracle0 = new DummyOracle(1e18, address(token1));
 
+        solvencyOracle0.setExpectBeforeQuote(true);
+        maxLtvOracle0.setExpectBeforeQuote(true);
+
         SiloConfigOverride memory overrides;
         overrides.token0 = address(token0);
         overrides.token1 = address(token1);
@@ -56,20 +59,22 @@ contract SiloLensWithOracleTest is SiloLittleHelper, Test {
     function test_SiloLensOracle_calculateProfitableLiquidation() public {
         _depositForBorrow(100e18, depositor);
 
-        _depositCollateral(100e18, borrower, true);
-        _borrow(80e18, borrower);
+        _depositCollateral(100e18, borrower, false);
+        _borrow(75e18, borrower);
 
         uint256 ltv = siloLens.getLtv(silo0, borrower);
-        assertLt(ltv, 0.8e18, "price is 1:1 so LTV is 80%");
+        assertEq(ltv, 0.75e18, "price is 1:1 so LTV is 75%");
 
         solvencyOracle0.setPrice(0.5e18);
         ltv = siloLens.getLtv(silo0, borrower);
-        assertLt(ltv, 1.6e18, "price drop");
+        assertEq(ltv, 1.5e18, "price drop");
 
         (uint256 collateralToLiquidate, uint256 debtToCover) =
             siloLens.calculateProfitableLiquidation(silo0, borrower);
 
-        assertEq(collateralToLiquidate, 100e18, "collateralToLiquidate is 0 when position is solvent");
-        assertEq(debtToCover, 50e18, "debtToCover is 0 when position is solvent");
+        // we underestimate collateral by 2
+        assertEq(collateralToLiquidate, 100e18 - 2, "collateralToLiquidate is 0 when position is solvent");
+        // -1 for rounding
+        assertEq(debtToCover, 50e18 - 50e18 * 0.05e18 / 1e18 - 1, "debtToCover is 0 when position is solvent");
     }
 }
