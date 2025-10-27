@@ -3,8 +3,6 @@ pragma solidity ^0.8.28;
 
 // solhint-disable ordering
 
-import {console2} from "forge-std/console2.sol";
-
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareToken} from "../interfaces/IShareToken.sol";
 
@@ -55,8 +53,9 @@ library SiloLensLib {
         depositAPR = depositAPR * (_PRECISION_DECIMALS - cfg.daoFee - cfg.deployerFee) / _PRECISION_DECIMALS;
     }
 
-    /// @dev calculate profitable liquidation values, in case of bad debt, it will calculate max debt to cover
-    /// based on available collateral (minus liquidation fee)
+    /// @dev calculate profitable liquidation values, in case of bad debt. 
+    /// For LTV < 100%, it will return max values.
+    /// For LTV >= 100%, it will calculate max debt to cover based on available collateral (minus liquidation fee)
     function calculateProfitableLiquidation(ISilo _silo, address _borrower) 
         internal 
         view 
@@ -72,23 +71,28 @@ library SiloLensLib {
             ISiloConfig.ConfigData memory debtConfig
         ) = _silo.config().getConfigsForSolvency(_borrower);
 
+        uint256 ltv = SiloSolvencyLib.getLtv(
+            collateralConfig,
+            debtConfig,
+            _borrower,
+            ISilo.OracleType.Solvency,
+            ISilo.AccrueInterestInMemory.Yes,
+            IShareToken(debtConfig.debtShareToken).balanceOf(_borrower)
+        );
+
+        if (ltv < 1e18) return (collateralToLiquidate, debtToCover);
+
         // collateral - fee => debt to cover
         uint256 fee = collateralToLiquidate * collateralConfig.liquidationFee / _PRECISION_DECIMALS;
-                    console2.log("collateralToLiquidate", collateralToLiquidate);
-                    console2.log("  fee", fee);
-                    console2.log("  collateralConfig.liquidationFee", collateralConfig.liquidationFee);
 
         uint256 valueToCover = 
             collateralConfig.solvencyOracle == address(0) 
             ? collateralToLiquidate - fee 
-            :ISiloOracle(collateralConfig.solvencyOracle).quote(collateralToLiquidate - fee, collateralConfig.token);
+            : ISiloOracle(collateralConfig.solvencyOracle).quote(collateralToLiquidate - fee, collateralConfig.token);
         
         uint256 debtValue = debtConfig.solvencyOracle == address(0) 
             ? debtToCover 
             : ISiloOracle(debtConfig.solvencyOracle).quote(debtToCover, debtConfig.token);
-
-            console2.log("valueToCover", valueToCover);
-            console2.log("   debtValue", debtValue);
 
         // if collateral is enough to cover debt, return the original values
         if (valueToCover > debtValue) return (collateralToLiquidate, debtToCover);

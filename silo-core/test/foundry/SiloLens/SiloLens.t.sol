@@ -68,9 +68,6 @@ contract SiloLensTest is SiloLittleHelper, Test {
         assertLt(ltv, 0.95e18, "LTV is less than 95% (to make space for liquidation fee)");
 
         (collateralToLiquidate, debtToCover) = siloLens.calculateProfitableLiquidation(silo0, _borrower);
-        console2.log("collateralToLiquidate", collateralToLiquidate);
-        console2.log("debtToCover", debtToCover);
-        console2.log("LTV", ltv);
 
         assertFalse(silo1.isSolvent(_borrower), "expected position to be insolvent");
 
@@ -79,9 +76,16 @@ contract SiloLensTest is SiloLittleHelper, Test {
         assertEq(collateralToLiquidate, maxCollateralToLiquidate, "[collateral] collateral is always max");
         assertEq(debtToCover, maxDebtToCover, "[debt] when no bad debt, result is max liquidation values");
 
+        vm.warp(block.timestamp + 500 days);
+
+        (maxCollateralToLiquidate, maxDebtToCover,) = hook.maxLiquidation(_borrower);
+
+        ltv = siloLens.getLtv(silo0, _borrower);
+        assertGt(ltv, 1e18, "expect bad debt");
+
         (collateralToLiquidate, debtToCover) = siloLens.calculateProfitableLiquidation(silo1, _borrower);
-        assertEq(collateralToLiquidate, 0, "collateralToLiquidate is 0 when position is solvent");
-        assertEq(debtToCover, 0, "debtToCover is 0 when position is solvent");
+        assertEq(collateralToLiquidate, maxCollateralToLiquidate, "collateralToLiquidate is max collateral");
+        assertLt(debtToCover, collateralToLiquidate, "we have price 1:1 so debt must be less than collateral");
     }
 
     /*
