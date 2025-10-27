@@ -57,14 +57,18 @@ contract SiloLensTest is SiloLittleHelper, Test {
     function test_SiloLens_calculateProfitableLiquidation() public {
         IPartialLiquidation hook = IPartialLiquidation(IShareToken(address(silo1)).hookReceiver());
 
-        (uint256 collateralToLiquidate, uint256 debtToCover) = siloLens.calculateProfitableLiquidation(silo0, _borrower);
+        uint256 ltv = siloLens.getLtv(silo0, _borrower);
+        assertLt(ltv, 0.5e18, "price is 1:! so LTV is 50%, otherwise we need to adjust this test");
+
+        (uint256 collateralToLiquidate, uint256 debtToCover) =
+            siloLens.calculateProfitableLiquidation(silo0, _borrower);
         assertEq(collateralToLiquidate, 0, "collateralToLiquidate is 0 when position is solvent");
         assertEq(debtToCover, 0, "debtToCover is 0 when position is solvent");
 
         vm.warp(block.timestamp + 3000 days);
 
         // insolvent but not bad debt position should return max debt to cover
-        uint256 ltv = siloLens.getLtv(silo0, _borrower);
+        ltv = siloLens.getLtv(silo0, _borrower);
         assertLt(ltv, 0.95e18, "LTV is less than 95% (to make space for liquidation fee)");
 
         (collateralToLiquidate, debtToCover) = siloLens.calculateProfitableLiquidation(silo0, _borrower);
@@ -76,7 +80,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
         assertEq(collateralToLiquidate, maxCollateralToLiquidate, "[collateral] collateral is always max");
         assertEq(debtToCover, maxDebtToCover, "[debt] when no bad debt, result is max liquidation values");
 
-        vm.warp(block.timestamp + 500 days);
+        vm.warp(block.timestamp + 1000 days);
 
         (maxCollateralToLiquidate, maxDebtToCover,) = hook.maxLiquidation(_borrower);
 
@@ -312,9 +316,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
 
         address token = address(bytes20(nameBytes));
 
-        vm.mockCallRevert(
-            token, abi.encodeWithSelector(IERC20.balanceOf.selector, address(siloLens)), abi.encode(0)
-        );
+        vm.mockCallRevert(token, abi.encodeWithSelector(IERC20.balanceOf.selector, address(siloLens)), abi.encode(0));
 
         // to simulate what we have in the DistributionManager
         string[] memory incentivesControllerProgramsNames = new string[](1);
