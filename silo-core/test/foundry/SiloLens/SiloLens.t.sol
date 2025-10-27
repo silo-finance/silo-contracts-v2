@@ -58,7 +58,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
         IPartialLiquidation hook = IPartialLiquidation(IShareToken(address(silo1)).hookReceiver());
 
         uint256 ltv = siloLens.getLtv(silo0, _borrower);
-        assertLt(ltv, 0.5e18, "price is 1:! so LTV is 50%, otherwise we need to adjust this test");
+        assertEq(ltv, 0.5e18, "price is 1:! so LTV is 50%, otherwise we need to adjust this test");
 
         (uint256 collateralToLiquidate, uint256 debtToCover) =
             siloLens.calculateProfitableLiquidation(silo0, _borrower);
