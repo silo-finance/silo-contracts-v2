@@ -3,21 +3,21 @@ pragma solidity 0.8.28;
 
 import {SiloVaultsContracts} from "silo-vaults/common/SiloVaultsContracts.sol";
 
-import {RescueWAVAX} from "../contracts/utils/RescueWAVAX.sol";
+import {RescueWAVAX} from "../../contracts/utils/RescueWAVAX.sol";
 
-import {CommonDeploy} from "./common/CommonDeploy.sol";
+import {CommonDeploy} from "../common/CommonDeploy.sol";
 
 /*
     FOUNDRY_PROFILE=vaults \
-        forge script silo-vaults/deploy/RescueWAVAXDeploy.s.sol:RescueWAVAXDeploy \
-        --ffi --rpc-url $RPC_INK --broadcast --verify
+        forge script silo-vaults/deploy/utils/RescueWAVAXDeploy.s.sol:RescueWAVAXDeploy \
+        --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify
 
     Resume verification:
     FOUNDRY_PROFILE=vaults \
-        forge script silo-vaults/deploy/RescueWAVAXDeploy.s.sol:RescueWAVAXDeploy \
-        --ffi --rpc-url $RPC_INK \
+        forge script silo-vaults/deploy/utils/RescueWAVAXDeploy.s.sol:RescueWAVAXDeploy \
+        --ffi --rpc-url $RPC_AVALANCHE \
         --verify \
-        --verifier blockscout --verifier-url $VERIFIER_URL_INK \
+        --verifier blockscout --verifier-url $ETHERSCAN_API_KEY \
         --private-key $PRIVATE_KEY \
         --resume
 */
