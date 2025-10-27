@@ -6,9 +6,9 @@ abstract contract OracleFactory {
     /// @dev implementation that will be cloned
     address public immutable ORACLE_IMPLEMENTATION; // solhint-disable-line var-name-mixedcase
 
-    /// @dev hash(config) => oracle contract
+    /// @dev hash(config) => oracle config contract
     /// oracle ID is determine by initial configuration, the logic is the same, so config is the only difference
-    /// that's why we can use it as ID, at the same time we can detect duplicated and save gas by reusing same config
+    /// that's why we can use it as ID, at the same time we can detect duplicates and save gas by reusing same config
     /// multiple times
     mapping(bytes32 => address) public getConfigAddress;
 

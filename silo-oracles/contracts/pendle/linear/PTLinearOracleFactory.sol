@@ -12,8 +12,6 @@ import {IPTLinearOracleFactory} from "../../interfaces/IPTLinearOracleFactory.so
 import {IPTLinearOracle} from "../../interfaces/IPTLinearOracle.sol";
 import {IPTLinearOracleConfig} from "../../interfaces/IPTLinearOracleConfig.sol";
 
-import {IPendleMarketV3Like} from "../interfaces/IPendleMarketV3Like.sol";
-import {IPendleSYTokenLike} from "../interfaces/IPendleSYTokenLike.sol";
 import {IPendlePTLike} from "../interfaces/IPendlePTLike.sol";
 import {ISparkLinearDiscountOracleFactory} from "../interfaces/ISparkLinearDiscountOracleFactory.sol";
 
