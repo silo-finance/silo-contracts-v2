@@ -12,10 +12,8 @@ interface IPTLinearOracle is ISiloOracle, AggregatorV3Interface {
     error NotInitialized();
     error EmptyConfigAddress();
     error AssetNotSupported();
-    error InvalidExchangeFactor();
     error ZeroQuote();
     error BaseAmountOverflow();
-    error FailedToCallSyRateMethod();
 
     /// @notice validation of config is checked in factory, therefore you should not deploy and initialize directly
     /// use factory always.
