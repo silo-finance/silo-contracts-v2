@@ -2,11 +2,15 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+import {console2} from "forge-std/console2.sol";
+
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
@@ -45,6 +49,39 @@ contract SiloLensTest is SiloLittleHelper, Test {
     function test_SiloLens_getInterestRateModel() public view {
         assertEq(siloLens.getInterestRateModel(silo0), _siloConfig.getConfig(address(silo0)).interestRateModel);
         assertEq(siloLens.getInterestRateModel(silo1), _siloConfig.getConfig(address(silo1)).interestRateModel);
+    }
+
+    /*
+        FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_SiloLens_calculateProfitableLiquidation
+    */
+    function test_SiloLens_calculateProfitableLiquidation() public {
+        IPartialLiquidation hook = IPartialLiquidation(IShareToken(address(silo1)).hookReceiver());
+
+        (uint256 collateralToLiquidate, uint256 debtToCover) = siloLens.calculateProfitableLiquidation(silo0, _borrower);
+        assertEq(collateralToLiquidate, 0, "collateralToLiquidate is 0 when position is solvent");
+        assertEq(debtToCover, 0, "debtToCover is 0 when position is solvent");
+
+        vm.warp(block.timestamp + 3000 days);
+
+        // insolvent but not bad debt position should return max debt to cover
+        uint256 ltv = siloLens.getLtv(silo0, _borrower);
+        assertLt(ltv, 0.95e18, "LTV is less than 95% (to make space for liquidation fee)");
+
+        (collateralToLiquidate, debtToCover) = siloLens.calculateProfitableLiquidation(silo0, _borrower);
+        console2.log("collateralToLiquidate", collateralToLiquidate);
+        console2.log("debtToCover", debtToCover);
+        console2.log("LTV", ltv);
+
+        assertFalse(silo1.isSolvent(_borrower), "expected position to be insolvent");
+
+        (uint256 maxCollateralToLiquidate, uint256 maxDebtToCover,) = hook.maxLiquidation(_borrower);
+
+        assertEq(collateralToLiquidate, maxCollateralToLiquidate, "[collateral] collateral is always max");
+        assertEq(debtToCover, maxDebtToCover, "[debt] when no bad debt, result is max liquidation values");
+
+        (collateralToLiquidate, debtToCover) = siloLens.calculateProfitableLiquidation(silo1, _borrower);
+        assertEq(collateralToLiquidate, 0, "collateralToLiquidate is 0 when position is solvent");
+        assertEq(debtToCover, 0, "debtToCover is 0 when position is solvent");
     }
 
     /*

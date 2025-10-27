@@ -91,6 +91,13 @@ interface ISiloLens {
     /// @return TRUE if user borrowed any amount of any asset, otherwise FALSE
     function inDebt(ISiloConfig _siloConfig, address _borrower) external view returns (bool);
 
+    /// @dev calculate profitable liquidation values, in case of bad debt, it will calculate max debt to cover
+    /// based on available collateral (minus liquidation fee)
+    function calculateProfitableLiquidation(ISilo _silo, address _borrower) 
+        external
+        view
+        returns (uint256 collateralToLiquidate, uint256 debtToCover);
+
     /// @notice Retrieves the fee details in 18 decimals points and the addresses of the DAO and deployer fee receivers
     /// @param _silo Address of the silo
     /// @return daoFeeReceiver The address of the DAO fee receiver
