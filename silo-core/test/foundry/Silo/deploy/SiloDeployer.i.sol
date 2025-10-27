@@ -31,7 +31,7 @@ contract SiloDeployerIntegrationTest is Test {
     /*
     FOUNDRY_PROFILE=core_test RPC_URL=$RPC_INK forge test -vv --ffi --mt test_compateToOldDeployer
     */
-    function test_compateToOldDeployer() public view {
+    function test_compateToOldDeployer() public {
         string memory i = " (This is verification test, adjust it when needed)";
         SiloDeployer oldDeployer = _getPreviousDeployer();
 
@@ -67,7 +67,7 @@ contract SiloDeployerIntegrationTest is Test {
         _printMatch(shareDebtTokenImplMatch, SiloCoreContracts.SHARE_DEBT_TOKEN);
     }
 
-    function _getPreviousDeployer() internal view returns (SiloDeployer) {
+    function _getPreviousDeployer() internal returns (SiloDeployer) {
         uint256 chainId = ChainsLib.getChainId();
 
         if (chainId == ChainsLib.AVALANCHE_CHAIN_ID) {
