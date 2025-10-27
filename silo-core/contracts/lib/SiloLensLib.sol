@@ -51,6 +51,39 @@ library SiloLensLib {
         depositAPR = depositAPR * (_PRECISION_DECIMALS - cfg.daoFee - cfg.deployerFee) / _PRECISION_DECIMALS;
     }
 
+    /// @dev calculate profitable liquidation values, in case of bad debt, it will calculate max debt to cover
+    /// based on available collateral (minus liquidation fee)
+    function calculateProfitableLiquidation(ISilo _silo, address _borrower) 
+        internal 
+        view 
+        returns (uint256 collateralToLiquidate, uint256 debtToCover) {
+        IPartialLiquidation _hook = IPartialLiquidation(_silo.hookReceiver());
+        (collateralToLiquidate, debtToCover,) = _hook.maxLiquidation(_borrower);
+
+        if (collateralToLiquidate == 0) return (0, 0);
+
+        (
+            ISiloConfig.ConfigData memory collateralConfig, 
+            ISiloConfig.ConfigData memory debtConfig
+        ) = _silo.config().getConfigsForSolvency(_borrower);
+
+        // collateral - fee => debt to cover
+        uint256 fee = collateralToLiquidate * collateralConfig.liquidationFee / _PRECISION_DECIMALS;
+        
+        uint256 valueToCover = 
+            collateralConfig.solvencyOracle == address(0) 
+            ? collateralToLiquidate - fee 
+            :ISiloOracle(collateralConfig.solvencyOracle).quote(collateralToLiquidate - fee, collateralConfig.token);
+        
+        debtValue = debtConfig.solvencyOracle == address(0) 
+            ? debtToCover 
+            : ISiloOracle(debtConfig.solvencyOracle).quote(debtToCover, debtConfig.token);
+
+        // if collateral is enough to cover debt, return the original values
+        if (valueToCover > debtValue) return (collateralToLiquidate, debtToCover);
+
+    }
+
     function getLtv(ISilo _silo, address _borrower) internal view returns (uint256 ltv) {
         (
             ISiloConfig.ConfigData memory collateralConfig,
