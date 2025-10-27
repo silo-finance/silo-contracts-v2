@@ -25,6 +25,10 @@ contract DummyOracle is ISiloOracle {
         _expectBeforeQuote = _expect;
     }
 
+    function setPrice(uint256 _price) external {
+        price = _price;
+    }
+
     function quote(uint256 _baseAmount, address _baseToken) external view returns (uint256 quoteAmount) {
         if (_baseToken == quoteToken) revert("quote: wrong base token");
         if (_oracleBroken) revert("quote: oracle is broken");
