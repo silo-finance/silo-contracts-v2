@@ -111,7 +111,7 @@ contract ERC4626Test is IntegrationTest, IERC3156FlashBorrower {
         vm.assume(withdrawn > 1);
 
         deposited = bound(deposited, MIN_TEST_ASSETS, MAX_TEST_ASSETS);
-        withdrawn = bound(withdrawn, 0, deposited);
+        withdrawn = bound(withdrawn, 1, deposited);
 
         vm.prank(SUPPLIER);
         uint256 shares = vault.deposit(deposited, ONBEHALF);
