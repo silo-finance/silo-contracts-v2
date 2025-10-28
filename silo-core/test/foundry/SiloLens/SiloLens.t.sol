@@ -56,7 +56,6 @@ contract SiloLensTest is SiloLittleHelper, Test {
     */
     function test_SiloLens_calculateProfitableLiquidation() public {
         IPartialLiquidation hook = IPartialLiquidation(IShareToken(address(silo1)).hookReceiver());
-        uint256 underestimation = 2;
 
         uint256 ltv = siloLens.getLtv(silo0, _borrower);
         assertEq(ltv, 0.5e18, "price is 1:1 so LTV is 50%, otherwise we need to adjust this test");
