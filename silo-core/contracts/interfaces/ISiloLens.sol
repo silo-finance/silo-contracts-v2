@@ -92,7 +92,8 @@ interface ISiloLens {
     function inDebt(ISiloConfig _siloConfig, address _borrower) external view returns (bool);
 
     /// @dev calculate profitable liquidation values, in case of bad debt, it will calculate max debt to cover
-    /// based on available collateral (minus liquidation fee)
+    /// based on available collateral. 
+    /// Result returned by this method might not work for case, when full liquidation is required.
     function calculateProfitableLiquidation(ISilo _silo, address _borrower) 
         external
         view

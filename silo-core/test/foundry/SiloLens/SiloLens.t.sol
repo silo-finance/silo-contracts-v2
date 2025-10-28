@@ -56,12 +56,14 @@ contract SiloLensTest is SiloLittleHelper, Test {
     */
     function test_SiloLens_calculateProfitableLiquidation() public {
         IPartialLiquidation hook = IPartialLiquidation(IShareToken(address(silo1)).hookReceiver());
+        uint256 underestimation = 2;
 
         uint256 ltv = siloLens.getLtv(silo0, _borrower);
-        assertEq(ltv, 0.5e18, "price is 1:! so LTV is 50%, otherwise we need to adjust this test");
+        assertEq(ltv, 0.5e18, "price is 1:1 so LTV is 50%, otherwise we need to adjust this test");
 
         (uint256 collateralToLiquidate, uint256 debtToCover) =
             siloLens.calculateProfitableLiquidation(silo0, _borrower);
+
         assertEq(collateralToLiquidate, 0, "collateralToLiquidate is 0 when position is solvent");
         assertEq(debtToCover, 0, "debtToCover is 0 when position is solvent");
 
@@ -69,7 +71,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
 
         // insolvent but not bad debt position should return max debt to cover
         ltv = siloLens.getLtv(silo0, _borrower);
-        assertLt(ltv, 0.95e18, "LTV is less than 95% (to make space for liquidation fee)");
+        assertLt(ltv, 0.95e18, "LTV is less than 95% (to have some space for liquidation fee)");
 
         (collateralToLiquidate, debtToCover) = siloLens.calculateProfitableLiquidation(silo0, _borrower);
 
@@ -78,7 +80,9 @@ contract SiloLensTest is SiloLittleHelper, Test {
         (uint256 maxCollateralToLiquidate, uint256 maxDebtToCover,) = hook.maxLiquidation(_borrower);
 
         assertEq(collateralToLiquidate, maxCollateralToLiquidate, "[collateral] collateral is always max");
-        assertEq(debtToCover, maxDebtToCover, "[debt] when no bad debt, result is max liquidation values");
+        assertEq(
+            debtToCover, _estimateDebtToCover(collateralToLiquidate), "[debt] debt should be calculated with profit"
+        );
 
         vm.warp(block.timestamp + 1000 days);
 
@@ -89,7 +93,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
 
         (collateralToLiquidate, debtToCover) = siloLens.calculateProfitableLiquidation(silo1, _borrower);
         assertEq(collateralToLiquidate, maxCollateralToLiquidate, "collateralToLiquidate is max collateral");
-        assertLt(debtToCover, collateralToLiquidate, "we have price 1:1 so debt must be less than collateral");
+        assertEq(debtToCover, _estimateDebtToCover(collateralToLiquidate), "debt to cover must allow for profit");
     }
 
     /*
@@ -331,5 +335,10 @@ contract SiloLensTest is SiloLittleHelper, Test {
         string[] memory programsNames = siloLens.getSiloIncentivesControllerProgramsNames(siloIncentivesController);
         assertEq(programsNames.length, 1);
         assertEq(programsNames[0], expectedString);
+    }
+
+    function _estimateDebtToCover(uint256 _collateralToLiquidate) internal pure returns (uint256) {
+        // fee here is hardcoded
+        return _collateralToLiquidate * 1e18 / (1e18 + 0.05e18);
     }
 }
