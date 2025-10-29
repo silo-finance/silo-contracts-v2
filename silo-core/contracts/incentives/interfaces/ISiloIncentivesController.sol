@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.28;
 
+import {IBackwardsCompatibleGaugeLike} from "./IBackwardsCompatibleGaugeLike.sol";
 import {IDistributionManager} from "./IDistributionManager.sol";
 import {DistributionTypes} from "../lib/DistributionTypes.sol";
 
-interface ISiloIncentivesController is IDistributionManager {
+interface ISiloIncentivesController is IBackwardsCompatibleGaugeLike, IDistributionManager {
     event ClaimerSet(address indexed user, address indexed claimer);
     event IncentivesProgramCreated(string name);
     event IncentivesProgramUpdated(string name);
