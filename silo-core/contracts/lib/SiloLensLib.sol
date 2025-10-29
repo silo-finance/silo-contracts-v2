@@ -8,6 +8,8 @@ import {IShareToken} from "../interfaces/IShareToken.sol";
 
 import {ISiloConfig} from "../interfaces/ISiloConfig.sol";
 import {IInterestRateModel} from "../interfaces/IInterestRateModel.sol";
+import {IPartialLiquidation} from "../interfaces/IPartialLiquidation.sol";
+import {ISiloOracle} from "../interfaces/ISiloOracle.sol";
 
 import {SiloSolvencyLib} from "./SiloSolvencyLib.sol";
 import {SiloMathLib} from "./SiloMathLib.sol";
@@ -49,6 +51,36 @@ library SiloLensLib {
         ISiloConfig.ConfigData memory cfg = _silo.config().getConfig((address(_silo)));
         depositAPR = getBorrowAPR(_silo) * _silo.getDebtAssets() / collateralAssets;
         depositAPR = depositAPR * (_PRECISION_DECIMALS - cfg.daoFee - cfg.deployerFee) / _PRECISION_DECIMALS;
+    }
+
+    /// @dev calculate profitable liquidation values, in case of bad debt, it will calculate max debt to cover
+    /// based on available collateral.
+    /// Result returned by this method might not work for case, when full liquidation is required.
+    function calculateProfitableLiquidation(ISilo _silo, address _borrower)
+        internal
+        view
+        returns (uint256 collateralToLiquidate, uint256 debtToCover)
+    {
+        IPartialLiquidation _hook = IPartialLiquidation(IShareToken(address(_silo)).hookReceiver());
+        (collateralToLiquidate, debtToCover,) = _hook.maxLiquidation(_borrower);
+
+        if (collateralToLiquidate == 0) return (0, 0);
+
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+            _silo.config().getConfigsForSolvency(_borrower);
+
+        uint256 collateralValue = collateralConfig.solvencyOracle == address(0)
+            ? collateralToLiquidate
+            : ISiloOracle(collateralConfig.solvencyOracle).quote(collateralToLiquidate, collateralConfig.token);
+
+        uint256 debtValue = debtConfig.solvencyOracle == address(0)
+            ? debtToCover
+            : ISiloOracle(debtConfig.solvencyOracle).quote(debtToCover, debtConfig.token);
+
+        uint256 debtValueToCover =
+            collateralValue * _PRECISION_DECIMALS / (_PRECISION_DECIMALS + collateralConfig.liquidationFee);
+
+        debtToCover = debtToCover * debtValueToCover / debtValue; // rounding down
     }
 
     function getLtv(ISilo _silo, address _borrower) internal view returns (uint256 ltv) {
@@ -112,7 +144,7 @@ library SiloLensLib {
         if (IShareToken(cfg1.debtShareToken).balanceOf(_borrower) != 0) return true;
 
         return false;
-      }
+    }
 
     function inDebt(ISiloConfig _siloConfig, address _borrower) internal view returns (bool has) {
         (, ISiloConfig.ConfigData memory debtConfig) = _siloConfig.getConfigsForSolvency(_borrower);

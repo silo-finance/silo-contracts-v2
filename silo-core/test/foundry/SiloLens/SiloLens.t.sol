@@ -2,11 +2,15 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+import {console2} from "forge-std/console2.sol";
+
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
@@ -45,6 +49,50 @@ contract SiloLensTest is SiloLittleHelper, Test {
     function test_SiloLens_getInterestRateModel() public view {
         assertEq(siloLens.getInterestRateModel(silo0), _siloConfig.getConfig(address(silo0)).interestRateModel);
         assertEq(siloLens.getInterestRateModel(silo1), _siloConfig.getConfig(address(silo1)).interestRateModel);
+    }
+
+    /*
+        FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_SiloLens_calculateProfitableLiquidation
+    */
+    function test_SiloLens_calculateProfitableLiquidation() public {
+        IPartialLiquidation hook = IPartialLiquidation(IShareToken(address(silo1)).hookReceiver());
+
+        uint256 ltv = siloLens.getLtv(silo0, _borrower);
+        assertEq(ltv, 0.5e18, "price is 1:1 so LTV is 50%, otherwise we need to adjust this test");
+
+        (uint256 collateralToLiquidate, uint256 debtToCover) =
+            siloLens.calculateProfitableLiquidation(silo0, _borrower);
+
+        assertEq(collateralToLiquidate, 0, "collateralToLiquidate is 0 when position is solvent");
+        assertEq(debtToCover, 0, "debtToCover is 0 when position is solvent");
+
+        vm.warp(block.timestamp + 3000 days);
+
+        // insolvent but not bad debt position should return max debt to cover
+        ltv = siloLens.getLtv(silo0, _borrower);
+        assertLt(ltv, 0.95e18, "LTV is less than 95% (to have some space for liquidation fee)");
+
+        (collateralToLiquidate, debtToCover) = siloLens.calculateProfitableLiquidation(silo0, _borrower);
+
+        assertFalse(silo1.isSolvent(_borrower), "expected position to be insolvent");
+
+        (uint256 maxCollateralToLiquidate, uint256 maxDebtToCover,) = hook.maxLiquidation(_borrower);
+
+        assertEq(collateralToLiquidate, maxCollateralToLiquidate, "[collateral] collateral is always max");
+        assertEq(
+            debtToCover, _estimateDebtToCover(collateralToLiquidate), "[debt] debt should be calculated with profit"
+        );
+
+        vm.warp(block.timestamp + 1000 days);
+
+        (maxCollateralToLiquidate, maxDebtToCover,) = hook.maxLiquidation(_borrower);
+
+        ltv = siloLens.getLtv(silo0, _borrower);
+        assertGt(ltv, 1e18, "expect bad debt");
+
+        (collateralToLiquidate, debtToCover) = siloLens.calculateProfitableLiquidation(silo1, _borrower);
+        assertEq(collateralToLiquidate, maxCollateralToLiquidate, "collateralToLiquidate is max collateral");
+        assertEq(debtToCover, _estimateDebtToCover(collateralToLiquidate), "debt to cover must allow for profit");
     }
 
     /*
@@ -271,9 +319,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
 
         address token = address(bytes20(nameBytes));
 
-        vm.mockCallRevert(
-            token, abi.encodeWithSelector(IERC20.balanceOf.selector, address(siloLens)), abi.encode(0)
-        );
+        vm.mockCallRevert(token, abi.encodeWithSelector(IERC20.balanceOf.selector, address(siloLens)), abi.encode(0));
 
         // to simulate what we have in the DistributionManager
         string[] memory incentivesControllerProgramsNames = new string[](1);
@@ -288,5 +334,10 @@ contract SiloLensTest is SiloLittleHelper, Test {
         string[] memory programsNames = siloLens.getSiloIncentivesControllerProgramsNames(siloIncentivesController);
         assertEq(programsNames.length, 1);
         assertEq(programsNames[0], expectedString);
+    }
+
+    function _estimateDebtToCover(uint256 _collateralToLiquidate) internal pure returns (uint256) {
+        // fee here is hardcoded
+        return _collateralToLiquidate * 1e18 / (1e18 + 0.05e18);
     }
 }
