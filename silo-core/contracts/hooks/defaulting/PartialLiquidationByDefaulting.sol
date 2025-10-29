@@ -1,61 +1,58 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
-import {IERC20} from "openzeppelin5/interfaces/IERC20.sol";
-import {SafeERC20} from "openzeppelin5/token/ERC20/utils/SafeERC20.sol";
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
-import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
-import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IGaugeHookReceiver, IHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
+
+import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationLib.sol";
-import {RepayActionLib} from "silo-core/contracts/hooks/liquidation/lib/RepayActionLib.sol";
 
-import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
-import {Hook} from "silo-core/contracts/lib/Hook.sol";
-import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
-import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
-import {CallBeforeQuoteLib} from "silo-core/contracts/lib/CallBeforeQuoteLib.sol";
-
-import {PartialLiquidationExecLib} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationExecLib.sol";
-import {TransientReentrancy} from "silo-core/contracts/hooks/_common/TransientReentrancy.sol";
-import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
+import {PartialLiquidation, ISiloConfig, ISilo, IShareToken, PartialLiquidationExecLib, RevertLib} from "../liquidation/PartialLiquidation.sol";
+import {DefaultingSiloLogic} from "./DefaultingSiloLogic.sol";
 
 /// @title PartialLiquidation module for executing liquidations
 /// @dev if we need additional hook functionality, this contract should be included as parent
-abstract contract PartialLiquidationByDefaulting is TransientReentrancy, BaseHookReceiver, IPartialLiquidation {
-    using SafeERC20 for IERC20;
-    using Hook for uint24;
-    using CallBeforeQuoteLib for ISiloConfig.ConfigData;
+abstract contract PartialLiquidationByDefaulting is PartialLiquidation {
 
     /// @dev The portion of total liquidation fee proceeds allocated to the keeper. Expressed in 18 decimals.
     /// For example, liquidation fee is 10% (0.1e18), and keeper fee is 20% (0.2e18),
     /// then 2% liquidation fee goes to the keeper and 8% goes to the protocol.
-    uint256 public KEEPER_FEE;
+    uint256 public constant KEEPER_FEE = 0.2e18;
+
+    address public liquidationLogicAddress;
+
+    error NoControllerForCollateral(address collateralShareToken);
 
     struct CallParams {
         uint256 collateralShares;
         uint256 protectedShares;
-        uint256 withdrawAssetsFromCollateralTotal;
+        uint256 withdrawAssetsFromCollateral;
         uint256 withdrawAssetsFromCollateralForKeeper;
         uint256 withdrawAssetsFromCollateralForLenders;
-        uint256 withdrawAssetsFromProtectedTotal;
+        uint256 withdrawAssetsFromProtected;
         uint256 withdrawAssetsFromProtectedForKeeper;
         uint256 withdrawAssetsFromProtectedForLenders;
         bytes4 customError;
     }
 
-    function __PartialLiquidationByDefaulting_init(uint256 _keeperFee) // solhint-disable-line func-name-mixedcase
+    function __PartialLiquidationByDefaulting_init() // solhint-disable-line func-name-mixedcase
         internal
         onlyInitializing
         virtual
     {
-        require(_keeperFee <= 1e18, "Invalid keeper fee");
-        KEEPER_FEE = _keeperFee;
+        liquidationLogicAddress = address(new DefaultingSiloLogic());
+
+        (address silo0, address silo1) = siloConfig.getSilos();
+        (, address collateralShareToken0,) = siloConfig.getShareTokens(silo0);
+        (, address collateralShareToken1,) = siloConfig.getShareTokens(silo1);
+
+        ISiloIncentivesController controllerCollateral0 = IGaugeHookReceiver(address(this)).configuredGauges(IShareToken(collateralShareToken0));
+        ISiloIncentivesController controllerCollateral1 = IGaugeHookReceiver(address(this)).configuredGauges(IShareToken(collateralShareToken1));
+
+        require(address(controllerCollateral0) != address(0), NoControllerForCollateral(collateralShareToken0));
+        require(address(controllerCollateral1) != address(0), NoControllerForCollateral(collateralShareToken1));
     }
 
     function liquidationCallByDefaulting( // solhint-disable-line function-max-lines, code-complexity
@@ -84,7 +81,7 @@ abstract contract PartialLiquidationByDefaulting is TransientReentrancy, BaseHoo
         CallParams memory params;
 
         (
-            params.withdrawAssetsFromCollateralTotal, params.withdrawAssetsFromProtectedTotal, repayDebtAssets, params.customError
+            params.withdrawAssetsFromCollateral, params.withdrawAssetsFromProtected, repayDebtAssets, params.customError
         ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
             collateralConfig,
             debtConfig,
@@ -100,12 +97,12 @@ abstract contract PartialLiquidationByDefaulting is TransientReentrancy, BaseHoo
         
         // calculate split between keeper and lenders
         (params.withdrawAssetsFromCollateralForKeeper, params.withdrawAssetsFromCollateralForLenders) = getKeeperAndLenderAssetsSplit(
-            params.withdrawAssetsFromCollateralTotal,
+            params.withdrawAssetsFromCollateral,
             collateralConfig.liquidationFee
         );
 
         (params.withdrawAssetsFromProtectedForKeeper, params.withdrawAssetsFromProtectedForLenders) = getKeeperAndLenderAssetsSplit(
-            params.withdrawAssetsFromProtectedTotal,
+            params.withdrawAssetsFromProtected,
             collateralConfig.liquidationFee
         );
 
@@ -149,18 +146,13 @@ abstract contract PartialLiquidationByDefaulting is TransientReentrancy, BaseHoo
             ISilo.AssetType.Protected
         );
 
+        _decreaseTotalCollateralAssets(debtConfig.silo, repayDebtAssets);
+
         siloConfigCached.turnOffReentrancyProtection();
 
         // settle debt without transferring tokens to silo, by defaulting on debt repayment
 
-        bytes memory input = abi.encodeWithSelector(this.repayDebtByDefaulting.selector, repayDebtAssets, _borrower);
-
-        ISilo(debtConfig.silo).callOnBehalfOfSilo({
-            _target: address(this),
-            _value: 0,
-            _callType: ISilo.CallType.Delegatecall,
-            _input: input
-        });
+        _repayDebtByDefaulting(debtConfig.silo, repayDebtAssets, _borrower);
 
         // TODO: test that if repay reverts, all reverts
 
@@ -192,43 +184,46 @@ abstract contract PartialLiquidationByDefaulting is TransientReentrancy, BaseHoo
         );
     }
 
-    function getKeeperAndLenderAssetsSplit(uint256 withdrawAssetsFromCollateralTotal, uint256 _liquidationFee)
+    function getKeeperAndLenderAssetsSplit(uint256 withdrawAssetsFromCollateral, uint256 _liquidationFee)
         public
         view
         virtual
         returns (uint256 withdrawAssetsFromCollateralForKeeper, uint256 withdrawAssetsFromCollateralForLenders)
     {
         // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds using some kind of 1 wei rounding attack loop
-        withdrawAssetsFromCollateralForKeeper = withdrawAssetsFromCollateralTotal
+        withdrawAssetsFromCollateralForKeeper = withdrawAssetsFromCollateral
             * (_liquidationFee * KEEPER_FEE / PartialLiquidationLib._PRECISION_DECIMALS) // effective fee to keeper
             / (PartialLiquidationLib._PRECISION_DECIMALS + _liquidationFee); // adjust for fee-inclusive amount, 100% + liquidationFee
-        withdrawAssetsFromCollateralForLenders = withdrawAssetsFromCollateralTotal - withdrawAssetsFromCollateralForKeeper;
+        withdrawAssetsFromCollateralForLenders = withdrawAssetsFromCollateral - withdrawAssetsFromCollateralForKeeper;
     }
 
-    function maxLiquidationByDefaulting(address _borrower)
-        external
-        view
-        virtual
-        returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired)
-    {
-        return PartialLiquidationExecLib.maxLiquidation(siloConfig, _borrower);
-    }
+    function _decreaseTotalCollateralAssets(address _silo, uint256 _assetsToRepay) internal virtual {
+        bytes memory input = abi.encodeWithSelector(
+            DefaultingSiloLogic.decreaseTotalCollateralAssets.selector,
+            _assetsToRepay
+        );
 
-    function repayDebtByDefaulting(uint256 _assets, address _borrower)
-        external
-        virtual
-        returns (uint256 shares)
-    {
-        uint256 assets;
-
-        (assets, shares) = RepayActionLib.repay({
-            _assets: _assets,
-            _shares: 0,
-            _borrower: _borrower,
-            _repayer: msg.sender
+        ISilo(_silo).callOnBehalfOfSilo({
+            _target: liquidationLogicAddress,
+            _value: 0,
+            _callType: ISilo.CallType.Delegatecall,
+            _input: input
         });
+    }
 
-        emit ISilo.Repay(msg.sender, _borrower, assets, shares);
+    function _repayDebtByDefaulting(address _silo, uint256 _assets, address _borrower) internal virtual {
+        bytes memory input = abi.encodeWithSelector(
+            DefaultingSiloLogic.repayDebtByDefaulting.selector,
+            _assets,
+            _borrower
+        );
+
+        ISilo(_silo).callOnBehalfOfSilo({
+            _target: liquidationLogicAddress,
+            _value: 0,
+            _callType: ISilo.CallType.Delegatecall,
+            _input: input
+        });
     }
 
     function _defaultAndDistributeCollateral(
@@ -241,7 +236,7 @@ abstract contract PartialLiquidationByDefaulting is TransientReentrancy, BaseHoo
     ) internal virtual returns (uint256 collateralShares) {
         ISiloIncentivesController controllerCollateral = IGaugeHookReceiver(address(this)).configuredGauges(IShareToken(_collateralShareTokenForDebt));
 
-        require(address(controllerCollateral) != address(0), "No controller for collateral");
+        require(address(controllerCollateral) != address(0), NoControllerForCollateral(_collateralShareTokenForDebt));
 
         collateralShares = _callShareTokenForwardTransferNoChecks(
             _silo,
@@ -253,56 +248,5 @@ abstract contract PartialLiquidationByDefaulting is TransientReentrancy, BaseHoo
         );
 
         controllerCollateral.immediateDistribution(_collateralShareToken, SafeCast.toUint104(collateralShares));
-    }
-
-    function _fetchConfigs(
-        ISiloConfig _siloConfigCached,
-        address _collateralAsset,
-        address _debtAsset,
-        address _borrower
-    )
-        internal
-        virtual
-        returns (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig
-        )
-    {
-        (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);
-
-        require(debtConfig.silo != address(0), UserIsSolvent());
-        require(_collateralAsset == collateralConfig.token, UnexpectedCollateralToken());
-        require(_debtAsset == debtConfig.token, UnexpectedDebtToken());
-
-        ISilo(debtConfig.silo).accrueInterest();
-
-        if (collateralConfig.silo != debtConfig.silo) {
-            ISilo(collateralConfig.silo).accrueInterest();
-            collateralConfig.callSolvencyOracleBeforeQuote();
-            debtConfig.callSolvencyOracleBeforeQuote();
-        }
-    }
-
-    function _callShareTokenForwardTransferNoChecks(
-        address _silo,
-        address _borrower,
-        address _receiver,
-        uint256 _withdrawAssets,
-        address _shareToken,
-        ISilo.AssetType _assetType
-    ) internal virtual returns (uint256 shares) {
-        if (_withdrawAssets == 0) return 0;
-        
-        shares = SiloMathLib.convertToShares(
-            _withdrawAssets,
-            ISilo(_silo).getTotalAssetsStorage(_assetType),
-            IShareToken(_shareToken).totalSupply(),
-            Rounding.LIQUIDATE_TO_SHARES,
-            ISilo.AssetType(_assetType)
-        );
-
-        if (shares == 0) return 0;
-
-        IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, _receiver, shares);
     }
 }
