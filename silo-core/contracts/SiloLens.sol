@@ -94,6 +94,15 @@ contract SiloLens is ISiloLens {
     }
 
     /// @inheritdoc ISiloLens
+    function calculateProfitableLiquidation(ISilo _silo, address _borrower) 
+        external
+        view
+        returns (uint256 collateralToLiquidate, uint256 debtToCover)
+    {
+        (collateralToLiquidate, debtToCover) = SiloLensLib.calculateProfitableLiquidation(_silo, _borrower);
+    }
+
+    /// @inheritdoc ISiloLens
     function getFeesAndFeeReceivers(ISilo _silo)
         external
         view

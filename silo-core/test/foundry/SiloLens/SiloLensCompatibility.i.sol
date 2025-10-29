@@ -12,7 +12,9 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloDeployments} from "silo-core/deploy/silo/SiloDeployments.sol";
 
-// FOUNDRY_PROFILE=core_test forge test --mc SiloLensCompatibilityTest --ffi -vv
+/*
+FOUNDRY_PROFILE=core_test forge test --mc SiloLensCompatibilityTest --ffi -vv
+*/
 contract SiloLensCompatibilityTest is IntegrationTest {
     ISiloLens internal _lens;
     address internal _borrower = makeAddr("borrower");
@@ -62,6 +64,7 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         _testFn(_liquidity, _silo);
         _testFn(_getRawLiquidity, _silo);
         _testFn(_getMaxLtv, _silo);
+        _testFn(_calculateProfitableLiquidation, _silo, _borrower);
         _testFn(_getLt, _silo);
         _testFn(_getUserLT, _silo, _borrower);
         _testFn(_getUserLTBorrowersArray, _silo);
@@ -199,6 +202,12 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         // expect do not revert
         _lens.inDebt(_siloConfig, _user);
         sig = ISiloLens.inDebt.selector;
+    }
+
+    function _calculateProfitableLiquidation(ISilo _silo, address _user) internal view returns (bytes4 sig) {
+        // expect do not revert
+        _lens.calculateProfitableLiquidation(_silo, _user);
+        sig = ISiloLens.calculateProfitableLiquidation.selector;
     }
 
     function _getFeesAndFeeReceivers(ISilo _silo) internal view returns (bytes4 sig) {
