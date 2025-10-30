@@ -27,7 +27,7 @@ library DefaultingRepayLib {
     /// @return assets number of assets that had been repay
     /// @return shares number of shares that had been repay
     // solhint-disable-next-line function-max-lines
-    function repay(
+    function actionsRepay(
         uint256 _assets,
         uint256 _shares,
         address _borrower,
@@ -50,7 +50,7 @@ library DefaultingRepayLib {
 
         (address debtShareToken, address debtAsset) = siloConfig.getDebtShareTokenAndAsset(address(this));
 
-        (assets, shares) = repay(
+        (assets, shares) = siloLendingLibRepay(
             IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer
         );
 
@@ -64,7 +64,7 @@ library DefaultingRepayLib {
 
     /// @dev This is a copy of lib/SiloLendingLib.sol repay() function with a single line changed.
     /// In the last line _debtAsset transfer from repayer is removed.
-    function repay(
+    function siloLendingLibRepay(
         IShareToken _debtShareToken,
         address /* _debtAsset */,
         uint256 _assets,
