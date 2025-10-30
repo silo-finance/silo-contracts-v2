@@ -19,7 +19,7 @@ contract DefaultingSiloLogic {
     {
         uint256 assets;
 
-        (assets, shares) = DefaultingRepayLib.repay({
+        (assets, shares) = DefaultingRepayLib.actionsRepay({
             _assets: _assets,
             _shares: 0,
             _borrower: _borrower,

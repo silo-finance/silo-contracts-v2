@@ -5,6 +5,7 @@ import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IGaugeHookReceiver, IHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
+import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IPartialLiquidationByDefaulting.sol";
 
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationLib.sol";
@@ -14,7 +15,7 @@ import {DefaultingSiloLogic} from "./DefaultingSiloLogic.sol";
 
 /// @title PartialLiquidation module for executing liquidations
 /// @dev if we need additional hook functionality, this contract should be included as parent
-abstract contract PartialLiquidationByDefaulting is PartialLiquidation {
+abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefaulting, PartialLiquidation {
 
     /// @dev The portion of total liquidation fee proceeds allocated to the keeper. Expressed in 18 decimals.
     /// For example, liquidation fee is 10% (0.1e18), and keeper fee is 20% (0.2e18),
@@ -22,20 +23,6 @@ abstract contract PartialLiquidationByDefaulting is PartialLiquidation {
     uint256 public constant KEEPER_FEE = 0.2e18;
 
     address public liquidationLogicAddress;
-
-    error NoControllerForCollateral(address collateralShareToken);
-
-    struct CallParams {
-        uint256 collateralShares;
-        uint256 protectedShares;
-        uint256 withdrawAssetsFromCollateral;
-        uint256 withdrawAssetsFromCollateralForKeeper;
-        uint256 withdrawAssetsFromCollateralForLenders;
-        uint256 withdrawAssetsFromProtected;
-        uint256 withdrawAssetsFromProtectedForKeeper;
-        uint256 withdrawAssetsFromProtectedForLenders;
-        bytes4 customError;
-    }
 
     function __PartialLiquidationByDefaulting_init() // solhint-disable-line func-name-mixedcase
         internal
@@ -45,14 +32,9 @@ abstract contract PartialLiquidationByDefaulting is PartialLiquidation {
         liquidationLogicAddress = address(new DefaultingSiloLogic());
 
         (address silo0, address silo1) = siloConfig.getSilos();
-        (, address collateralShareToken0,) = siloConfig.getShareTokens(silo0);
-        (, address collateralShareToken1,) = siloConfig.getShareTokens(silo1);
 
-        ISiloIncentivesController controllerCollateral0 = IGaugeHookReceiver(address(this)).configuredGauges(IShareToken(collateralShareToken0));
-        ISiloIncentivesController controllerCollateral1 = IGaugeHookReceiver(address(this)).configuredGauges(IShareToken(collateralShareToken1));
-
-        require(address(controllerCollateral0) != address(0), NoControllerForCollateral(collateralShareToken0));
-        require(address(controllerCollateral1) != address(0), NoControllerForCollateral(collateralShareToken1));
+        validateControllerForCollateral(silo0);
+        validateControllerForCollateral(silo1);
     }
 
     function liquidationCallByDefaulting( // solhint-disable-line function-max-lines, code-complexity
@@ -146,7 +128,7 @@ abstract contract PartialLiquidationByDefaulting is PartialLiquidation {
             ISilo.AssetType.Protected
         );
 
-        _decreaseTotalCollateralAssets(debtConfig.silo, repayDebtAssets);
+        _deductDefaultedDebtFromCollateral(debtConfig.silo, repayDebtAssets);
 
         siloConfigCached.turnOffReentrancyProtection();
 
@@ -197,7 +179,17 @@ abstract contract PartialLiquidationByDefaulting is PartialLiquidation {
         withdrawAssetsFromCollateralForLenders = withdrawAssetsFromCollateral - withdrawAssetsFromCollateralForKeeper;
     }
 
-    function _decreaseTotalCollateralAssets(address _silo, uint256 _assetsToRepay) internal virtual {
+    function validateControllerForCollateral(address _silo)
+        public
+        view
+        virtual
+    {
+        (, address collateralShareToken,) = siloConfig.getShareTokens(_silo);
+        ISiloIncentivesController controllerCollateral = IGaugeHookReceiver(address(this)).configuredGauges(IShareToken(collateralShareToken));
+        require(address(controllerCollateral) != address(0), NoControllerForCollateral(collateralShareToken));
+    }
+
+    function _deductDefaultedDebtFromCollateral(address _silo, uint256 _assetsToRepay) internal virtual {
         bytes memory input = abi.encodeWithSelector(
             DefaultingSiloLogic.decreaseTotalCollateralAssets.selector,
             _assetsToRepay
@@ -234,9 +226,7 @@ abstract contract PartialLiquidationByDefaulting is PartialLiquidation {
         address _collateralShareToken,
         ISilo.AssetType _assetType
     ) internal virtual returns (uint256 collateralShares) {
-        ISiloIncentivesController controllerCollateral = IGaugeHookReceiver(address(this)).configuredGauges(IShareToken(_collateralShareTokenForDebt));
-
-        require(address(controllerCollateral) != address(0), NoControllerForCollateral(_collateralShareTokenForDebt));
+        validateControllerForCollateral(_silo);
 
         collateralShares = _callShareTokenForwardTransferNoChecks(
             _silo,
