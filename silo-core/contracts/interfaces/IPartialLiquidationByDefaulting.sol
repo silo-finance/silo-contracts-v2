@@ -15,7 +15,7 @@ interface IPartialLiquidationByDefaulting {
         bytes4 customError;
     }
 
-    error NoControllerForCollateral(address collateralShareToken);
+    error NoControllerForCollateral();
 
     /// @notice Function to liquidate insolvent position by distributing user's collateral to lenders
     /// - The caller (liquidator) does not cover any debt. `debtToCover` is amount of debt being liquidated
