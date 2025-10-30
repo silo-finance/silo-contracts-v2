@@ -94,7 +94,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             collateralConfig.silo,
             _borrower,
             params.withdrawAssetsFromCollateralForLenders,
-            debtConfig.collateralShareToken,
+            debtConfig.silo,
             collateralConfig.collateralShareToken,
             ISilo.AssetType.Collateral
         );
@@ -103,7 +103,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             collateralConfig.silo,
             _borrower,
             params.withdrawAssetsFromProtectedForLenders,
-            debtConfig.collateralShareToken,
+            debtConfig.silo,
             collateralConfig.protectedShareToken,
             ISilo.AssetType.Protected
         );
@@ -183,15 +183,16 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         public
         view
         virtual
+        returns (ISiloIncentivesController controllerCollateral)
     {
         (, address collateralShareToken,) = siloConfig.getShareTokens(_silo);
-        ISiloIncentivesController controllerCollateral = IGaugeHookReceiver(address(this)).configuredGauges(IShareToken(collateralShareToken));
+        controllerCollateral = IGaugeHookReceiver(address(this)).configuredGauges(IShareToken(collateralShareToken));
         require(address(controllerCollateral) != address(0), NoControllerForCollateral(collateralShareToken));
     }
 
     function _deductDefaultedDebtFromCollateral(address _silo, uint256 _assetsToRepay) internal virtual {
         bytes memory input = abi.encodeWithSelector(
-            DefaultingSiloLogic.decreaseTotalCollateralAssets.selector,
+            DefaultingSiloLogic.deductDefaultedDebtFromCollateral.selector,
             _assetsToRepay
         );
 
@@ -222,11 +223,11 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         address _silo,
         address _borrower,
         uint256 _withdrawAssetsForLenders,
-        address _collateralShareTokenForDebt,
+        address _debtSilo,
         address _collateralShareToken,
         ISilo.AssetType _assetType
     ) internal virtual returns (uint256 collateralShares) {
-        validateControllerForCollateral(_silo);
+        ISiloIncentivesController controllerCollateral = validateControllerForCollateral(_debtSilo);
 
         collateralShares = _callShareTokenForwardTransferNoChecks(
             _silo,
