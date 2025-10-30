@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
@@ -175,9 +176,19 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         returns (uint256 withdrawAssetsFromCollateralForKeeper, uint256 withdrawAssetsFromCollateralForLenders)
     {
         // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds using some kind of 1 wei rounding attack loop
-        withdrawAssetsFromCollateralForKeeper = withdrawAssetsFromCollateral
-            * (_liquidationFee * KEEPER_FEE / PartialLiquidationLib._PRECISION_DECIMALS) // effective fee to keeper
-            / (PartialLiquidationLib._PRECISION_DECIMALS + _liquidationFee); // adjust for fee-inclusive amount, 100% + liquidationFee
+
+        // `withdrawAssetsFromCollateral` represents collateral amount with liquidation fee. Keeper gets a portion of
+        // liquidation fee, so we need to calculate how much of `withdrawAssetsFromCollateral` goes to keeper.
+        // To calculate keeper's share we need to multiply `KEEPER_FEE` and `_liquidationFee` to get effective
+        // fee to keeper and then multiply by `withdrawAssetsFromCollateral` to get actual amount. Then we divide by
+        // (1 + _liquidationFee) to adjust for liquidation-fee-inclusive amount.
+        withdrawAssetsFromCollateralForKeeper = Math.mulDiv(
+            withdrawAssetsFromCollateral,
+            _liquidationFee * KEEPER_FEE,
+            PartialLiquidationLib._PRECISION_DECIMALS,
+            Math.Rounding.Floor
+        ) / (PartialLiquidationLib._PRECISION_DECIMALS + _liquidationFee);
+
         withdrawAssetsFromCollateralForLenders = withdrawAssetsFromCollateral - withdrawAssetsFromCollateralForKeeper;
     }
 
