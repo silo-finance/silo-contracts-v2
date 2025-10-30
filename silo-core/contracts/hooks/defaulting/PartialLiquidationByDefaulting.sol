@@ -22,15 +22,17 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     /// then 2% liquidation fee goes to the keeper and 8% goes to the protocol.
     uint256 public constant KEEPER_FEE = 0.2e18;
 
-    address public liquidationLogicAddress;
+    address public immutable liquidationLogicAddress;
+
+    constructor() {
+        liquidationLogicAddress = address(new DefaultingSiloLogic());
+    }
 
     function __PartialLiquidationByDefaulting_init() // solhint-disable-line func-name-mixedcase
         internal
         onlyInitializing
         virtual
     {
-        liquidationLogicAddress = address(new DefaultingSiloLogic());
-
         (address silo0, address silo1) = siloConfig.getSilos();
 
         validateControllerForCollateral(silo0);
@@ -90,7 +92,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         // transfer share tokens to incentive controller for distribution to lenders
 
-        params.collateralShares = _defaultAndDistributeCollateral(
+        params.collateralShares = _liquidateByDistributingCollateral(
             collateralConfig.silo,
             _borrower,
             params.withdrawAssetsFromCollateralForLenders,
@@ -99,7 +101,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             ISilo.AssetType.Collateral
         );
 
-        params.protectedShares = _defaultAndDistributeCollateral(
+        params.protectedShares = _liquidateByDistributingCollateral(
             collateralConfig.silo,
             _borrower,
             params.withdrawAssetsFromProtectedForLenders,
@@ -187,7 +189,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     {
         (, address collateralShareToken,) = siloConfig.getShareTokens(_silo);
         controllerCollateral = IGaugeHookReceiver(address(this)).configuredGauges(IShareToken(collateralShareToken));
-        require(address(controllerCollateral) != address(0), NoControllerForCollateral(collateralShareToken));
+        require(address(controllerCollateral) != address(0), NoControllerForCollateral());
     }
 
     function _deductDefaultedDebtFromCollateral(address _silo, uint256 _assetsToRepay) internal virtual {
@@ -219,7 +221,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         });
     }
 
-    function _defaultAndDistributeCollateral(
+    function _liquidateByDistributingCollateral(
         address _silo,
         address _borrower,
         uint256 _withdrawAssetsForLenders,
