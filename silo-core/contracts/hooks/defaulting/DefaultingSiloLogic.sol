@@ -29,7 +29,7 @@ contract DefaultingSiloLogic {
         emit ISilo.Repay(msg.sender, _borrower, assets, shares);
     }
 
-    function decreaseTotalCollateralAssets(uint256 _assetsToRepay) external virtual {
+    function deductDefaultedDebtFromCollateral(uint256 _assetsToRepay) external virtual {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
