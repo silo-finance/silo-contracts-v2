@@ -104,24 +104,29 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
 
         ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
-        if (_receiveSToken) {
-            if (params.collateralShares != 0) {
-                withdrawCollateral = ISilo(collateralConfig.silo).previewRedeem(
-                    params.collateralShares,
-                    ISilo.CollateralType.Collateral
+        uint256 previewRedeemCollateral;
+        uint256 previewRedeemProtected;
+
+        if (params.collateralShares != 0) {
+            previewRedeemCollateral = ISilo(collateralConfig.silo).previewRedeem(
+                params.collateralShares,
+                ISilo.CollateralType.Collateral
+            );
+        }
+
+        if (params.protectedShares != 0) {
+            unchecked {
+                // protected and collateral values were split from total collateral to withdraw,
+                // so we will not overflow when we sum them back, especially that on redeem, we rounding down
+                previewRedeemProtected += ISilo(collateralConfig.silo).previewRedeem(
+                    params.protectedShares,
+                    ISilo.CollateralType.Protected
                 );
             }
+        }
 
-            if (params.protectedShares != 0) {
-                unchecked {
-                    // protected and collateral values were split from total collateral to withdraw,
-                    // so we will not overflow when we sum them back, especially that on redeem, we rounding down
-                    withdrawCollateral += ISilo(collateralConfig.silo).previewRedeem(
-                        params.protectedShares,
-                        ISilo.CollateralType.Protected
-                    );
-                }
-            }
+        if (_receiveSToken) {
+            withdrawCollateral = previewRedeemCollateral + previewRedeemProtected;
         } else {
             // in case of liquidation redeem, hook transfers sTokens to itself and it has no debt
             // so solvency will not be checked in silo on redeem action
@@ -130,24 +135,34 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
             // so there is a need to check assets before we withdraw collateral/protected
 
             if (params.collateralShares != 0) {
-                withdrawCollateral = ISilo(collateralConfig.silo).redeem({
-                    _shares: params.collateralShares,
-                    _receiver: msg.sender,
-                    _owner: address(this),
-                    _collateralType: ISilo.CollateralType.Collateral
-                });
+                if (previewRedeemCollateral == 0) {
+                    withdrawCollateral = previewRedeemCollateral;
+                    ISilo(collateralConfig.silo).transfer(msg.sender, params.collateralShares);
+                } else {
+                    withdrawCollateral = ISilo(collateralConfig.silo).redeem({
+                        _shares: params.collateralShares,
+                        _receiver: msg.sender,
+                        _owner: address(this),
+                        _collateralType: ISilo.CollateralType.Collateral
+                    });
+                }
             }
 
             if (params.protectedShares != 0) {
-                unchecked {
-                    // protected and collateral values were split from total collateral to withdraw,
-                    // so we will not overflow when we sum them back, especially that on redeem, we rounding down
-                    withdrawCollateral += ISilo(collateralConfig.silo).redeem({
-                        _shares: params.protectedShares,
-                        _receiver: msg.sender,
-                        _owner: address(this),
-                        _collateralType: ISilo.CollateralType.Protected
-                    });
+                if (previewRedeemProtected == 0) {
+                    withdrawCollateral += previewRedeemProtected;
+                    ISilo(collateralConfig.protectedShareToken).transfer(msg.sender, params.protectedShares);                    
+                } else {
+                    unchecked {
+                        // protected and collateral values were split from total collateral to withdraw,
+                        // so we will not overflow when we sum them back, especially that on redeem, we rounding down
+                        withdrawCollateral += ISilo(collateralConfig.silo).redeem({
+                            _shares: params.protectedShares,
+                            _receiver: msg.sender,
+                            _owner: address(this),
+                            _collateralType: ISilo.CollateralType.Protected
+                        });
+                    }
                 }
             }
         }

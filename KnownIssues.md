@@ -56,3 +56,14 @@ During liquidation, the protocol performs two conversions that both round down:
 When the asset/share ratio is high, cumulative rounding errors can exceed 2 wei. The estimated value may be up to 2 × rounding error higher, because there are two conversions that round down. As a result, maxLiquidation() may overestimate the collateral to be liquidated in such cases.
 
 **Recommendation**: Instead of comparing maxLiquidation directly with the actual liquidation result, just check whether the liquidation is profitable. This avoids failed transactions caused by a small wei-level overestimation.
+
+
+### Liquidation when we have share dust
+
+In an edge case where during liquidation we need to transfer shares that cannot be converted to a full asset amount (e.g., 999 shares => 0 assets), liquidation will fail if `_receiveSToken` is `false`.  
+
+Workarounds for this case are:
+- deposit a dust amount of assets for the borrower for the collateral type that has dust
+- or transfer shares to the borrower if you already have some
+
+For example, with a deposit of 10 wei, it will give us ~10000 shares, so `999 + 10000 shares converts to > 0 assets` and liquidation will succeed.
