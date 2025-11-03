@@ -154,7 +154,7 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
             if (params.protectedShares != 0) {
                 if (previewRedeemProtected == 0) {
                     withdrawCollateral += previewRedeemProtected;
-                    ISilo(collateralConfig.protectedShareToken).transfer(msg.sender, params.protectedShares);                    
+                    ISilo(collateralConfig.protectedShareToken).transfer(msg.sender, params.protectedShares);
                 } else {
                     unchecked {
                         // protected and collateral values were split from total collateral to withdraw,

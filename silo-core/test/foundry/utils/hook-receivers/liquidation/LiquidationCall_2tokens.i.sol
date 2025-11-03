@@ -204,9 +204,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         // we have NoCollateralToLiquidate error for this, but ReturnZeroShares is generate as first one
         vm.expectRevert(ISilo.ReturnZeroShares.selector);
-        partialLiquidation.liquidationCall(
-            address(token0), address(token1), BORROWER, 1, false /* receiveSToken */
-        );
+        partialLiquidation.liquidationCall(address(token0), address(token1), BORROWER, 1, false /* receiveSToken */ );
     }
 
     /*
@@ -562,7 +560,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidationCall_badDebt_full_withToken
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_badDebt_full_withToken_2tokens
     */
     function test_liquidationCall_badDebt_full_withToken_2tokens() public {
         bool receiveSToken;
@@ -582,7 +580,7 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_liquidationCall_badDebt_full_withSToken_2tokens
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_badDebt_full_withSToken_2tokens
     */
     function test_liquidationCall_badDebt_full_withSToken_2tokens() public {
         bool receiveSToken = true;
@@ -662,46 +660,34 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         vm.prank(liquidator);
         token1.approve(address(partialLiquidation), maxRepay);
 
+        (collateralToLiquidate, debtToRepay, sTokenRequired) = partialLiquidation.maxLiquidation(BORROWER);
+
         emit log_named_decimal_uint("[test] maxRepay", maxRepay, 18);
 
-        // repay
-        vm.expectCall(
-            address(token1),
-            abi.encodeWithSelector(IERC20.transferFrom.selector, liquidator, address(partialLiquidation), maxRepay)
-        );
+        assertEq(collateralToLiquidate, 0, "expect no collateral to liquidate");
+        assertEq(debtToRepay, maxRepay, "expect debtToRepay to be equal to maxRepay");
+        assertFalse(sTokenRequired, "expect sTokenRequired to be false, because not collateral");
 
-        vm.expectCall(
-            address(token1),
-            abi.encodeWithSelector(
-                IERC20.transferFrom.selector, address(partialLiquidation), address(silo1), maxRepay
-            )
-        );
-
+        vm.expectRevert(IPartialLiquidation.NoCollateralToLiquidate.selector);
         vm.prank(liquidator);
         partialLiquidation.liquidationCall(address(token0), address(token1), BORROWER, maxRepay, _receiveSToken);
 
-        if (_receiveSToken) {
-            assertEq(
-                token1.balanceOf(address(silo1)),
-                maxDebtToCover + maxRepay + 0.5e18,
-                "[_receiveSToken] silo has debt token == to cover + original 0.5"
-            );
-        } else {
+        assertEq(
+            token1.balanceOf(address(silo1)),
+            maxDebtToCover + 0.5e18,
+            "[_liquidationCall_badDebt_full] silo has debt token == liquidation + original 0.5"
+        );
+
+        if (!_receiveSToken) {
             assertEq(
                 token0.balanceOf(liquidator),
                 // underestimation is 2, but this is bad debt, so we liquidated full collateral
-                collateralToLiquidate + 2,
+                COLLATERAL,
                 "[!_receiveSToken] expect to have liquidated collateral"
-            );
-
-            assertEq(
-                token1.balanceOf(address(silo1)),
-                maxDebtToCover + maxRepay + 0.5e18,
-                "[!_receiveSToken] silo has debt token == to cover + original 0.5"
             );
         }
 
-        assertEq(silo1.getDebtAssets(), 0, "debt is repay");
+        assertEq(silo1.getDebtAssets(), maxRepay, "bad debt debt left");
         assertGt(silo1.getCollateralAssets(), 8e18, "collateral ready to borrow (with interests)");
 
         _liquidationModuleDoNotHaveTokens();
