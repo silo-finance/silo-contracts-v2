@@ -125,6 +125,9 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
             }
         }
 
+        // without collateral this is not longer liquidation, it's repay
+        require(previewRedeemCollateral != 0 || previewRedeemProtected != 0, NoCollateralToLiquidate());
+
         if (_receiveSToken) {
             withdrawCollateral = previewRedeemCollateral + previewRedeemProtected;
         } else {

@@ -176,6 +176,39 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         assertTrue(silo0.isSolvent(BORROWER), "BORROWER should be solvent");
     }
 
+    /* 
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_revertWhenNoCollateral_2tokens
+    */
+    function test_liquidationCall_revertWhenNoCollateral_2tokens() public {
+        token0.setOnDemand(true);
+        token1.setOnDemand(true);
+
+        vm.warp(block.timestamp + 365 days);
+
+        uint256 ltv = siloLens.getLtv(silo0, BORROWER);
+        assertGt(ltv, 1e18, "expect bad debt for this test");
+
+        (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
+        assertGt(collateralToLiquidate, 0, "expect any collateral to liquidate");
+        assertLt(collateralToLiquidate, debtToRepay, "price is 1:1 os the goal is to get 0 collateral and some debt");
+
+        partialLiquidation.liquidationCall(
+            address(token0), address(token1), BORROWER, collateralToLiquidate, false /* receiveSToken */
+        );
+
+        assertTrue(!silo0.isSolvent(BORROWER), "BORROWER should be insolvent");
+
+        (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(BORROWER);
+        assertEq(collateralToLiquidate, 0, "expect no collateral to liquidate");
+        assertGt(debtToRepay, 0, "expect some debt to repay");
+
+        // we have NoCollateralToLiquidate error for this, but ReturnZeroShares is generate as first one
+        vm.expectRevert(ISilo.ReturnZeroShares.selector);
+        partialLiquidation.liquidationCall(
+            address(token0), address(token1), BORROWER, 1, false /* receiveSToken */
+        );
+    }
+
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999collateral_2tokens
 
