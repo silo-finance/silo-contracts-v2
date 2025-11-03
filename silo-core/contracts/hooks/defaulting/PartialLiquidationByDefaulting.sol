@@ -11,17 +11,21 @@ import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IP
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationLib.sol";
 
-import {PartialLiquidation, ISiloConfig, ISilo, IShareToken, PartialLiquidationExecLib, RevertLib} from "../liquidation/PartialLiquidation.sol";
+import {PartialLiquidation, ISiloConfig, ISilo, IShareToken, PartialLiquidationExecLib, RevertLib, CallBeforeQuoteLib} from "../liquidation/PartialLiquidation.sol";
 import {DefaultingSiloLogic} from "./DefaultingSiloLogic.sol";
+import {Whitelist} from "silo-core/contracts/hooks/_common/Whitelist.sol";
 
 /// @title PartialLiquidation module for executing liquidations
 /// @dev if we need additional hook functionality, this contract should be included as parent
-abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefaulting, PartialLiquidation {
+abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefaulting, PartialLiquidation, Whitelist {
+    using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
     /// @dev The portion of total liquidation fee proceeds allocated to the keeper. Expressed in 18 decimals.
     /// For example, liquidation fee is 10% (0.1e18), and keeper fee is 20% (0.2e18),
     /// then 2% liquidation fee goes to the keeper and 8% goes to the protocol.
     uint256 public constant KEEPER_FEE = 0.2e18;
+
+    address public defaultingCollateral;
 
     address public immutable liquidationLogicAddress;
 
@@ -29,56 +33,58 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         liquidationLogicAddress = address(new DefaultingSiloLogic());
     }
 
-    function __PartialLiquidationByDefaulting_init() // solhint-disable-line func-name-mixedcase
+    function __PartialLiquidationByDefaulting_init(address _owner, address _defaultingCollateral) // solhint-disable-line func-name-mixedcase
         internal
         onlyInitializing
         virtual
     {
+        __Whitelist_init(_owner);
+
         (address silo0, address silo1) = siloConfig.getSilos();
 
         validateControllerForCollateral(silo0);
         validateControllerForCollateral(silo1);
+
+        defaultingCollateral = _defaultingCollateral;
     }
 
-    function liquidationCallByDefaulting( // solhint-disable-line function-max-lines, code-complexity
-        address _collateralAsset,
-        address _debtAsset,
-        address _borrower,
-        uint256 _maxDebtToCover
-    )
+    function liquidationCallByDefaulting(address _borrower) // solhint-disable-line function-max-lines, code-complexity
         external
         virtual
         nonReentrant
+        onlyAllowedOrPublic
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         ISiloConfig siloConfigCached = siloConfig;
 
         require(address(siloConfigCached) != address(0), EmptySiloConfig());
-        require(_maxDebtToCover != 0, NoDebtToCover());
 
         siloConfigCached.turnOnReentrancyProtection();
 
         (
             ISiloConfig.ConfigData memory collateralConfig,
             ISiloConfig.ConfigData memory debtConfig
-        ) = _fetchConfigs(siloConfigCached, _collateralAsset, _debtAsset, _borrower);
+        ) = _fetchConfigs(siloConfigCached, _borrower);
+
+        // defaulting can be only done for one (predefined) collateral to avoid creating cascading liquidations
+        // on the other silo
+        require(collateralConfig.token == defaultingCollateral, CollateralNotSupportedForDefaulting());
+
+        collateralConfig.lt += 0.1e18; // require higher LT for defaulting liquidations
 
         CallParams memory params;
 
         (
             params.withdrawAssetsFromCollateral, params.withdrawAssetsFromProtected, repayDebtAssets, params.customError
-        ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
-            collateralConfig,
-            debtConfig,
-            _borrower,
-            _maxDebtToCover,
-            collateralConfig.liquidationFee
-        );
+        ) = PartialLiquidationExecLib.getExactLiquidationAmounts({
+            _collateralConfig: collateralConfig,
+            _debtConfig: debtConfig,
+            _user: _borrower,
+            _maxDebtToCover: type(uint256).max,
+            _liquidationFee: collateralConfig.liquidationFee
+        });
 
         RevertLib.revertIfError(params.customError);
-
-        // we do not allow dust so full liquidation is required
-        require(repayDebtAssets <= _maxDebtToCover, FullLiquidationRequired());
         
         // calculate split between keeper and lenders
         (params.withdrawAssetsFromCollateralForKeeper, params.withdrawAssetsFromCollateralForLenders) = getKeeperAndLenderAssetsSplit(
@@ -175,6 +181,8 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         virtual
         returns (uint256 withdrawAssetsFromCollateralForKeeper, uint256 withdrawAssetsFromCollateralForLenders)
     {
+        if (withdrawAssetsFromCollateral == 0) return (0, 0);
+
         // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds using some kind of 1 wei rounding attack loop
 
         // `withdrawAssetsFromCollateral` represents collateral amount with liquidation fee. Keeper gets a portion of
@@ -251,6 +259,29 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             _assetType
         );
 
-        controllerCollateral.immediateDistribution(_collateralShareToken, SafeCast.toUint104(collateralShares));
+        if (collateralShares != 0) {
+            controllerCollateral.immediateDistribution(_collateralShareToken, SafeCast.toUint104(collateralShares));
+        }
+    }
+
+    function _fetchConfigs(ISiloConfig _siloConfigCached, address _borrower)
+        internal
+        virtual
+        returns (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        )
+    {
+        (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);
+
+        require(debtConfig.silo != address(0), UserIsSolvent());
+
+        ISilo(debtConfig.silo).accrueInterest();
+
+        if (collateralConfig.silo != debtConfig.silo) {
+            ISilo(collateralConfig.silo).accrueInterest();
+            collateralConfig.callSolvencyOracleBeforeQuote();
+            debtConfig.callSolvencyOracleBeforeQuote();
+        }
     }
 }

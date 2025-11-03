@@ -16,11 +16,11 @@ contract SiloHookV2 is GaugeHookReceiver, PartialLiquidationByDefaulting {
         initializer
         virtual
     {
-        (address owner) = abi.decode(_data, (address));
+        (address owner, address defaultingCollateral) = abi.decode(_data, (address, address));
 
         BaseHookReceiver.__BaseHookReceiver_init(_config);
         GaugeHookReceiver.__GaugeHookReceiver_init(owner);
-        PartialLiquidationByDefaulting.__PartialLiquidationByDefaulting_init();
+        PartialLiquidationByDefaulting.__PartialLiquidationByDefaulting_init(owner, defaultingCollateral);
     }
 
     /// @inheritdoc IHookReceiver
