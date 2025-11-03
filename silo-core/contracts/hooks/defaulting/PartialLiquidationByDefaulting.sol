@@ -185,11 +185,25 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds using some kind of 1 wei rounding attack loop
 
-        // `withdrawAssetsFromCollateral` represents collateral amount with liquidation fee. Keeper gets a portion of
-        // liquidation fee, so we need to calculate how much of `withdrawAssetsFromCollateral` goes to keeper.
-        // To calculate keeper's share we need to multiply `KEEPER_FEE` and `_liquidationFee` to get effective
-        // fee to keeper and then multiply by `withdrawAssetsFromCollateral` to get actual amount. Then we divide by
-        // (1 + _liquidationFee) to adjust for liquidation-fee-inclusive amount.
+        // c - collateral
+        // wc - withdrawCollateral
+        // f - liquidation fee
+        // kf - keeper Fee
+        // kw - keeper withdrawal
+        // D - normalization divider
+
+        // c + c * f = wc
+        // c * (1 + f) = wc
+        // c = wc / ( 1 + f)
+
+        // kw =  c * f * kf => f * kf * wc / ( 1 + f) 
+
+        // at the end we need to normalize, but we see we have only mul and div operations, so we can do
+        // normalization at the end no problem, assuming D is our normalization Divider based on fees
+        // decimals final pseudo code is:
+
+        // kw = f * kf * wc / (1 + f) / D
+        // kw = muldiv(f * kf, wc, (1 + f), Floor) / D
         withdrawAssetsFromCollateralForKeeper = Math.mulDiv(
             withdrawAssetsFromCollateral,
             _liquidationFee * KEEPER_FEE,
