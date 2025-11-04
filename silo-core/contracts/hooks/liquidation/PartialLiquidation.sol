@@ -105,7 +105,7 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
         ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
         // without collateral this is not longer liquidation, it's repay
-        require(previewRedeemCollateral != 0 || previewRedeemProtected != 0, NoCollateralToLiquidate());
+        require(params.collateralShares != 0 || params.protectedShares != 0, NoCollateralToLiquidate());
 
         if (_receiveSToken) {
             if (params.collateralShares != 0) {
