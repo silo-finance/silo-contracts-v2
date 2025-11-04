@@ -170,7 +170,12 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
         }
 
         emit LiquidationCall(
-            msg.sender, debtConfig.silo, _borrower, repayDebtAssets, withdrawCollateral, _receiveSToken
+            msg.sender,
+            debtConfig.silo,
+            _borrower,
+            repayDebtAssets,
+            withdrawCollateral,
+            _receiveSToken
         );
     }
 
@@ -192,7 +197,10 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
     )
         internal
         virtual
-        returns (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig)
+        returns (
+            ISiloConfig.ConfigData memory collateralConfig,
+            ISiloConfig.ConfigData memory debtConfig
+        )
     {
         (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);
 
