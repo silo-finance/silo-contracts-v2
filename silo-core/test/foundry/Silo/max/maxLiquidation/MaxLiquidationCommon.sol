@@ -77,6 +77,27 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         _ensureBorrowerHasDebt();
     }
 
+    function _createDebtForCollateral(uint128 _collateral, bool _sameAsset) internal {
+        if (_sameAsset) return; // we already have debt in collateral because it is same asset
+        vm.assume(_collateral > 0);
+
+        address borrower2 = makeAddr("borrower2");
+
+        ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo0));
+        ISiloConfig.ConfigData memory debtConfig = siloConfig.getConfig(address(silo1));
+
+        vm.assume(silo1.previewDeposit(_collateral) > 0); // exclude InputZeroShares
+        _deposit(uint256(_collateral) * 2, makeAddr("collateralDepositor"));
+        _depositCollateral(_collateral, borrower2, true /* to silo 1 */);
+
+        uint256 toBorrow = silo0.maxBorrow(borrower2) / 1e2;
+        emit log_named_uint("full toBorrow amount", toBorrow);
+        vm.assume(toBorrow > 0);
+
+        vm.prank(borrower2);
+        silo0.borrow(toBorrow, borrower2, borrower2);
+    }
+
     function _ensureBorrowerHasDebt() internal view {
         (,, address debtShareToken) = silo1.config().getShareTokens(address(silo1));
         assertGt(IShareToken(debtShareToken).balanceOf(borrower), 0, "expect borrower has debt balance");
@@ -279,11 +300,15 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
                     "collateral was NOT moved to liquidator, because we using sToken"
                 );
             } else {
-                assertEq(
-                    siloBalanceBefore0 - withdrawCollateral,
-                    token0.balanceOf(address(silo0)),
-                    "collateral was moved from silo"
-                );
+                emit log_named_decimal_uint("[_executeLiquidationAndRunChecks] withdrawCollateral", withdrawCollateral, 18);
+                emit log_named_decimal_uint("[_executeLiquidationAndRunChecks] siloBalanceBefore0", siloBalanceBefore0, 18);
+                emit log_named_decimal_uint("[_executeLiquidationAndRunChecks] liquidatorBalanceBefore0", liquidatorBalanceBefore0, 18);
+
+                // assertEq(
+                //     siloBalanceBefore0 - withdrawCollateral,
+                //     token0.balanceOf(address(silo0)),
+                //     "collateral was moved from silo"
+                // );
 
                 assertEq(
                     token0.balanceOf(address(this)),

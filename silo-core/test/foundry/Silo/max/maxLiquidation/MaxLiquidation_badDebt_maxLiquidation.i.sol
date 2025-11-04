@@ -31,6 +31,15 @@ contract MaxLiquidationBadDebtMaxLiquidationTest is MaxLiquidationBadDebtWithChu
         _maxLiquidation_overestimate_1token({_collateral: _collateral, _receiveSToken: false, _warp: _warp, _onlyCreateCase: false});
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxLiquidation_sameAsset_badDebt_underestimation_case
+    */
+    function test_maxLiquidation_sameAsset_badDebt_underestimation_case() public {
+       (uint128 collateral, uint64 warp) = (510608153255423372444039826906605, 565330127391458536);
+
+        _maxLiquidation_overestimate_1token({_collateral: collateral, _receiveSToken: false, _warp: warp, _onlyCreateCase: false});
+    }
+
 
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxLiquidation_sameAsset_badDebt_anotherBorrower_fuzz
@@ -105,6 +114,7 @@ contract MaxLiquidationBadDebtMaxLiquidationTest is MaxLiquidationBadDebtWithChu
         bool sameAsset = false;
 
         _createDebtForBorrower(_collateral, sameAsset);
+        _createDebtForCollateral(_collateral, sameAsset);
 
         // we want high interest
         vm.startPrank(borrower);
@@ -152,12 +162,14 @@ contract MaxLiquidationBadDebtMaxLiquidationTest is MaxLiquidationBadDebtWithChu
         emit log_named_uint("[SameAssetBadDebt] getCollateralAssets()", silo1.getCollateralAssets());
 
         emit log("\t\t =================== maxLiquidation");
+        bool missingLiquidity = false;
 
         try partialLiquidation.maxLiquidation(borrower)
-            returns (uint256 _totalCollateralToLiquidate, uint256 _totalDebtToCover, bool)
+            returns (uint256 _totalCollateralToLiquidate, uint256 _totalDebtToCover, bool _sTokenRequired)
         {
             totalCollateralToLiquidate = _totalCollateralToLiquidate;
             totalDebtToCover = _totalDebtToCover;
+            missingLiquidity = _sTokenRequired;
         } catch {
             // we don't want case when we overflow
             vm.assume(false);
@@ -168,14 +180,27 @@ contract MaxLiquidationBadDebtMaxLiquidationTest is MaxLiquidationBadDebtWithChu
         }
 
         uint256 testDebtToCover = totalDebtToCover;
-        emit log_named_uint("[SameAssetBadDebt] testDebtToCover", testDebtToCover);
-        emit log_named_uint("[SameAssetBadDebt] ratio", silo1.convertToAssets(1e18));
+        emit log_named_decimal_uint("[SameAssetBadDebt] testDebtToCover", testDebtToCover, 18);
+        emit log_named_decimal_uint("[SameAssetBadDebt] ratio (1e21)", silo1.convertToAssets(1e21), 18);
         emit log("\t\t =================== _liquidationCall");
 
+        emit log_named_decimal_uint("[SameAssetBadDebt]                  liquidity", silo0.getLiquidity(), 18);
+        emit log_named_decimal_uint("[SameAssetBadDebt] totalCollateralToLiquidate", totalCollateralToLiquidate, 18);
+
+        if (missingLiquidity) {
+            uint256 maxRepay = silo0.maxRepay(makeAddr("borrower2"));
+
+            if (maxRepay > 0) {
+                token0.setOnDemand(true);
+                vm.prank(makeAddr("borrower2"));
+                silo0.repay(maxRepay, makeAddr("borrower2"));
+            }
+        }
+        
         (withdrawCollateral, repayDebtAssets) = _liquidationCall(testDebtToCover, _sameToken, _receiveSToken);
 
-        emit log_named_uint("[SameAssetBadDebt] withdrawCollateral", withdrawCollateral);
-        emit log_named_uint("[SameAssetBadDebt] repayDebtAssets", repayDebtAssets);
+        emit log_named_decimal_uint("[SameAssetBadDebt]         withdrawCollateral", withdrawCollateral, 18);
+        emit log_named_decimal_uint("[SameAssetBadDebt] repayDebtAssets", repayDebtAssets, 18);
 
         assertGe(withdrawCollateral, totalCollateralToLiquidate, "expect no overestimation on maxLiquidation method");
 
