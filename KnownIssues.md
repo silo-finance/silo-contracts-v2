@@ -47,13 +47,14 @@ Silos with id < 100 on Sonic use `approve`. All other versions use `setReceiveAp
 
 ### Liquidation collateral overestimation
 
-The `PartialLiquidationLib` uses a fixed `_UNDERESTIMATION` constant of 2 wei to account for rounding errors during liquidation conversions (assets → shares → assets). This underestimation becomes insufficient when the asset-to-share ratio is high.
+The `PartialLiquidationLib` uses a fixed `_UNDERESTIMATION` constant of 2 wei to account for rounding errors during liquidation conversions (assets → shares → assets). This underestimation becomes insufficient when the asset-to-share ratio is high and liquidation is for same asset position. We were not able to find such a case for two asset position.
 
 During liquidation, the protocol performs two conversions that both round down:
 1. Converting collateral assets to shares (rounds down)
 2. Converting shares back to assets for withdrawal (rounds down)
+3. Repay same asset also changes the ratio based on which `maxLiquidation` was calculated
 
-When the asset/share ratio is high, cumulative rounding errors can exceed 2 wei. The estimated value may be up to 2 × rounding error higher, because there are two conversions that round down. As a result, maxLiquidation() may overestimate the collateral to be liquidated in such cases.
+Because of all above factors, cumulative rounding errors can exceed 2 wei. As a result, `maxLiquidation()` may overestimate the collateral to be liquidated in such cases.
 
 **Recommendation**: Instead of comparing maxLiquidation directly with the actual liquidation result, just check whether the liquidation is profitable. This avoids failed transactions caused by a small wei-level overestimation.
 
