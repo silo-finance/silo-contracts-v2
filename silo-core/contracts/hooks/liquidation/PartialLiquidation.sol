@@ -104,21 +104,26 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
 
         ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
-        uint256 previewRedeemCollateral;
-        uint256 previewRedeemProtected;
-
         // without collateral this is not longer liquidation, it's repay
         require(previewRedeemCollateral != 0 || previewRedeemProtected != 0, NoCollateralToLiquidate());
 
         if (_receiveSToken) {
-            withdrawCollateral =
-                ISilo(collateralConfig.silo).previewRedeem(params.collateralShares, ISilo.CollateralType.Collateral);
+            if (params.collateralShares != 0) {
+                withdrawCollateral = ISilo(collateralConfig.silo).previewRedeem(
+                    params.collateralShares,
+                    ISilo.CollateralType.Collateral
+                );
+            }
 
-            unchecked {
-                // protected and collateral values were split from total collateral to withdraw,
-                // so we will not overflow when we sum them back, especially that on redeem, we rounding down
-                withdrawCollateral +=
-                    ISilo(collateralConfig.silo).previewRedeem(params.protectedShares, ISilo.CollateralType.Protected);
+            if (params.protectedShares != 0) {
+                unchecked {
+                    // protected and collateral values were split from total collateral to withdraw,
+                    // so we will not overflow when we sum them back, especially that on redeem, we rounding down
+                    withdrawCollateral += ISilo(collateralConfig.silo).previewRedeem(
+                        params.protectedShares,
+                        ISilo.CollateralType.Protected
+                    );
+                }
             }
         } else {
             // in case of liquidation redeem, hook transfers sTokens to itself and it has no debt
