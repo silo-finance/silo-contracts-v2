@@ -1,0 +1,143 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.28;
+
+import {Test} from "forge-std/Test.sol";
+import {console2} from "forge-std/console2.sol";
+
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
+
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateModel.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
+
+import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
+
+/*
+    forge test -vv --ffi --mc LiquidationCall999case2tokensTest
+*/
+contract LiquidationCall999case2tokensTest is SiloLittleHelper, Test {
+    using SiloLensLib for ISilo;
+    using SafeCast for uint256;
+
+    address immutable DEPOSITOR;
+    address immutable BORROWER;
+    uint256 constant COLLATERAL = 10e18;
+    uint256 constant COLLATERAL_FOR_BORROW = 8e18;
+    uint256 constant DEBT = 7.5e18;
+    bool constant TO_SILO_1 = true;
+
+    ISiloConfig siloConfig;
+    uint256 debtStart;
+
+    ISiloConfig.ConfigData silo0Config;
+    ISiloConfig.ConfigData silo1Config;
+
+    error SenderNotSolventAfterTransfer();
+
+    constructor() {
+        DEPOSITOR = makeAddr("depositor");
+        BORROWER = makeAddr("borrower");
+    }
+
+    function setUp() public {
+        siloConfig = _setUpLocalFixture();
+
+        _depositForBorrow(COLLATERAL_FOR_BORROW, DEPOSITOR);
+        emit log_named_decimal_uint("COLLATERAL_FOR_BORROW", COLLATERAL_FOR_BORROW, 18);
+
+        _depositCollateral(COLLATERAL, BORROWER, !TO_SILO_1);
+        _borrow(DEBT, BORROWER);
+        emit log_named_decimal_uint("DEBT", DEBT, 18);
+        debtStart = block.timestamp;
+
+        assertEq(token0.balanceOf(address(this)), 0, "liquidation should have no collateral");
+        assertEq(token0.balanceOf(address(silo0)), COLLATERAL, "silo0 has borrower collateral");
+        assertEq(token1.balanceOf(address(silo1)), 0.5e18, "silo1 has only 0.5 debt token (8 - 7.5)");
+
+        silo0Config = siloConfig.getConfig(address(silo0));
+        silo1Config = siloConfig.getConfig(address(silo1));
+
+        assertEq(silo0Config.liquidationFee, 0.05e18, "liquidationFee0");
+        assertEq(silo1Config.liquidationFee, 0.025e18, "liquidationFee1");
+
+        token0.setOnDemand(true);
+        token1.setOnDemand(true);
+    }
+
+    /* 
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999protected_2tokens
+
+    this is test for 999 case bug 
+    scenario is: borrower has protected collateral and 999 regular collateral, 
+    on liquidation we use both collaterals but protected can not be translated to assets, so tx reverts
+    this test fails for v3.12.0
+    */
+    function test_liquidationCall_999protected_2tokens() public {
+        _liquidationCall_999case_2tokens(ISilo.CollateralType.Protected);
+    }
+
+    /* 
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999collateral_2tokens
+    */
+    function test_liquidationCall_999collateral_2tokens() public {
+        vm.startPrank(BORROWER);
+        silo0.transitionCollateral(silo0.balanceOf(BORROWER), BORROWER, ISilo.CollateralType.Collateral);
+        vm.stopPrank();
+
+        _liquidationCall_999case_2tokens(ISilo.CollateralType.Collateral);
+    }
+
+    function _liquidationCall_999case_2tokens(ISilo.CollateralType _generateDustForType) internal {
+        _deposit(1e18, DEPOSITOR, _generateDustForType);
+        _deposit(2, BORROWER, _generateDustForType);
+
+        (IShareToken shareToken, IShareToken otherShareToken) = _generateDustForType == ISilo.CollateralType.Protected
+            ? (IShareToken(silo0Config.protectedShareToken), IShareToken(silo0Config.collateralShareToken))
+            : (IShareToken(silo0Config.collateralShareToken), IShareToken(silo0Config.protectedShareToken));
+
+        vm.prank(address(silo0));
+        shareToken.burn(DEPOSITOR, DEPOSITOR, 12345678987654321);
+        uint256 ratio = silo0.convertToShares(1, ISilo.AssetType(uint8(_generateDustForType)));
+        assertEq(ratio, 999, "for this test we expect ratio to be 999");
+
+        vm.prank(BORROWER);
+        shareToken.transfer(DEPOSITOR, 1000);
+
+        uint256 borrowerShares = shareToken.balanceOf(BORROWER);
+
+        assertGt(borrowerShares, 1, "we need to have some shares");
+        // we need to -1 because on liqiuidation we underestimate twice
+        assertEq(silo0.previewRedeem(borrowerShares - 1), 0, "we need shares to be not withdrawable");
+
+        vm.warp(block.timestamp + 365 days);
+
+        console2.log("--- LIQUIDATION CALL ---");
+
+        uint256 sharesBefore = shareToken.balanceOf(address(this));
+        assertEq(sharesBefore, 0, "liquidator should have no shares before liquidation");
+
+        uint256 otherSharesBefore = otherShareToken.balanceOf(address(this));
+        assertEq(otherSharesBefore, 0, "liquidator should have no other shares before liquidation");
+
+        partialLiquidation.liquidationCall(
+            address(token0), address(token1), BORROWER, silo1.maxRepay(BORROWER), false /* receiveSToken */
+        );
+
+        assertTrue(silo0.isSolvent(BORROWER), "BORROWER should be solvent");
+
+        uint256 sharesBalanceAfter = shareToken.balanceOf(address(this));
+        assertEq(sharesBalanceAfter, 999, "liquidator should got dust protected shares");
+        emit log_named_string("shares token", shareToken.symbol());
+        emit log_named_uint("sharesBalanceAfter", sharesBalanceAfter);
+
+        uint256 otherSharesBalanceAfter = otherShareToken.balanceOf(address(this));
+        assertEq(otherSharesBalanceAfter, 0, "liquidator should have no other shares after liquidation");
+        emit log_named_string("other shares token", otherShareToken.symbol());
+        emit log_named_uint("otherSharesBalanceAfter", otherSharesBalanceAfter);
+    }
+}

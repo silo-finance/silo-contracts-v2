@@ -142,53 +142,6 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
     }
 
     /* 
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999protected_2tokens
-    */
-    function test_liquidationCall_999protected_2tokens() public {
-        token0.setOnDemand(true);
-        token1.setOnDemand(true);
-
-        _deposit(1e18, address(1), ISilo.CollateralType.Protected);
-        _deposit(2, BORROWER, ISilo.CollateralType.Protected);
-
-        vm.prank(address(silo0));
-        IShareToken(silo0Config.protectedShareToken).burn(address(1), address(1), 12345678987654321);
-        uint256 ratio = silo0.convertToShares(1, ISilo.AssetType.Protected);
-        assertEq(ratio, 999, "for this test we expect ratio to be 999");
-
-        vm.prank(BORROWER);
-        IShareToken(silo0Config.protectedShareToken).transfer(address(1), 1000);
-
-        uint256 borrowerShares = IShareToken(silo0Config.protectedShareToken).balanceOf(BORROWER);
-
-        assertGt(borrowerShares, 1, "we need to have some shares");
-        // we need to -1 because on liqiuidation we underestimate twice
-        assertEq(silo0.previewRedeem(borrowerShares - 1), 0, "we need shares to be not withdrawable");
-
-        vm.warp(block.timestamp + 365 days);
-
-        console2.log("--- LIQUIDATION CALL ---");
-
-        uint256 protectedSharesBefore = IShareToken(silo0Config.protectedShareToken).balanceOf(address(this));
-        assertEq(protectedSharesBefore, 0, "liquidator should have no protected shares before liquidation");
-
-        uint256 collateralSharesBefore = IShareToken(silo0Config.collateralShareToken).balanceOf(address(this));
-        assertEq(collateralSharesBefore, 0, "liquidator should have no collateral shares before liquidation");
-
-        partialLiquidation.liquidationCall(
-            address(token0), address(token1), BORROWER, silo1.maxRepay(BORROWER), false /* receiveSToken */
-        );
-
-        assertTrue(silo0.isSolvent(BORROWER), "BORROWER should be solvent");
-
-        uint256 protectedSharesBalanceAfter = IShareToken(silo0Config.protectedShareToken).balanceOf(address(this));
-        assertEq(protectedSharesBalanceAfter, 999, "liquidator should got dust protected shares");
-
-        uint256 collateralSharesBalanceAfter = IShareToken(silo0Config.collateralShareToken).balanceOf(address(this));
-        assertEq(collateralSharesBalanceAfter, 0, "liquidator should have no collateral shares after liquidation");
-    }
-
-    /* 
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_revertWhenNoCollateral_2tokens
     */
     function test_liquidationCall_revertWhenNoCollateral_2tokens() public {
@@ -217,54 +170,6 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
         // we have NoCollateralToLiquidate error for this, but ReturnZeroShares is generate as first one
         vm.expectRevert(ISilo.ReturnZeroShares.selector);
         partialLiquidation.liquidationCall(address(token0), address(token1), BORROWER, 1, false /* receiveSToken */ );
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999collateral_2tokens
-
-    this is test for 999 case bug 
-    scenario is: borrower has protected collateral and 999 regular collateral, 
-    on liquidation we use both collaterals but protected can not be translated to assets, so tx reverts
-    this test fails for v3.12.0
-    */
-    function test_liquidationCall_999collateral_2tokens() public {
-        token0.setOnDemand(true);
-        token1.setOnDemand(true);
-
-        // we need to change ratio on silo0
-
-        address otherBorrower = makeAddr("otherBorrower");
-        _deposit(COLLATERAL, otherBorrower);
-        _depositForBorrow(1e18, otherBorrower);
-        uint256 otherMaxBorrow = silo0.maxBorrow(otherBorrower);
-        vm.prank(otherBorrower);
-        silo0.borrow(otherMaxBorrow, otherBorrower, otherBorrower);
-
-        uint256 borrowerShares = silo0.balanceOf(BORROWER);
-        emit log_named_decimal_uint("borrowerShares", borrowerShares, 18);
-
-        uint256 oneAssetInShares = silo0.convertToShares(1);
-
-        vm.prank(BORROWER);
-        silo0.transitionCollateral(borrowerShares - oneAssetInShares, BORROWER, ISilo.CollateralType.Collateral);
-
-        borrowerShares = silo0.balanceOf(BORROWER);
-
-        vm.warp(block.timestamp + 365 days);
-
-        assertEq(silo0.convertToShares(1), 999, "for this test we expect ratio to be 999");
-
-        assertGt(borrowerShares, 1, "we need to have some shares");
-        // we need to -1 because on liqiuidation we underestimate twice
-        assertEq(silo0.previewRedeem(borrowerShares - 1), 0, "we need shares ot be not withdrawable");
-
-        console2.log("---- LIQUIDATION CALL ----");
-
-        partialLiquidation.liquidationCall(
-            address(token0), address(token1), BORROWER, silo1.maxRepay(BORROWER), false /* receiveSToken */
-        );
-
-        assertTrue(silo0.isSolvent(BORROWER), "BORROWER should be solvent after liquidation");
     }
 
     /*
