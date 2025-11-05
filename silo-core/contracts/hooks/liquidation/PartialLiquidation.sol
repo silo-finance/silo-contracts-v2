@@ -133,40 +133,24 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
             // so there is a need to check assets before we withdraw collateral/protected
 
             if (params.collateralShares != 0) {
-                try ISilo(collateralConfig.silo).redeem({
+                withdrawCollateral += _tryRedeem({
+                    _silo: collateralConfig.silo,
+                    _shareToken: collateralConfig.collateralShareToken,
                     _shares: params.collateralShares,
-                    _receiver: msg.sender,
-                    _owner: address(this),
                     _collateralType: ISilo.CollateralType.Collateral
-                }) returns (uint256 assets) {
-                    withdrawCollateral = assets;
-                } catch (bytes memory e) {
-                    if (_isToAssetsConvertionError(e)) {
-                        ISilo(collateralConfig.silo).transfer(msg.sender, params.collateralShares);
-                    } else {
-                        RevertLib.revertBytes(e, string(""));
-                    }
-                }
+                });
             }
 
             if (params.protectedShares != 0) {
-                try ISilo(collateralConfig.silo).redeem({
-                    _shares: params.protectedShares,
-                    _receiver: msg.sender,
-                    _owner: address(this),
-                    _collateralType: ISilo.CollateralType.Protected
-                }) returns (uint256 assets) {
+                unchecked {
                     // protected and collateral values were split from total collateral to withdraw,
                     // so we will not overflow when we sum them back, especially that on redeem, we rounding down
-                    unchecked {
-                        withdrawCollateral += assets;
-                    }
-                } catch (bytes memory e) {
-                    if (_isToAssetsConvertionError(e)) {
-                        ISilo(collateralConfig.protectedShareToken).transfer(msg.sender, params.protectedShares);
-                    } else {
-                        RevertLib.revertBytes(e, string(""));
-                    }
+                    withdrawCollateral += _tryRedeem({
+                        _silo: collateralConfig.silo,
+                        _shareToken: collateralConfig.protectedShareToken,
+                        _shares: params.protectedShares,
+                        _collateralType: ISilo.CollateralType.Protected
+                    });
                 }
             }
         }
@@ -235,6 +219,28 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
         if (shares == 0) return 0;
 
         IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, _receiver, shares);
+    }
+
+    function _tryRedeem(
+        address _silo,
+        address _shareToken,
+        uint256 _shares,
+        ISilo.CollateralType _collateralType
+    ) internal returns (uint256 withdrawCollateral) {
+        try ISilo(_silo).redeem({
+            _shares: _shares,
+            _receiver: msg.sender,
+            _owner: address(this),
+            _collateralType: _collateralType
+        }) returns (uint256 assets) {
+            withdrawCollateral = assets;
+        } catch (bytes memory e) {
+            if (_isToAssetsConvertionError(e)) {
+                IERC20(_shareToken).transfer(msg.sender, _shares);
+            } else {
+                RevertLib.revertBytes(e, string(""));
+            }
+        }
     }
 
     /// @dev this method detect if error is caused by unable to convert shares to assets eg 999 shares => 0 assets
