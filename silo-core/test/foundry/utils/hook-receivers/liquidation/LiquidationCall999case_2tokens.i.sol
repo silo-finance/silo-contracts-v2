@@ -69,6 +69,30 @@ contract LiquidationCall999case2tokensTest is SiloLittleHelper, Test {
         token1.setOnDemand(true);
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_NoCollateralToLiquidate_2tokens
+    */
+    function test_liquidationCall_NoCollateralToLiquidate_2tokens() public {
+        vm.warp(block.timestamp + 365 days);
+        uint256 ltv = siloLens.getLtv(silo0, BORROWER);
+        assertGt(ltv, 1e18, "expect bad debt for this test");
+
+        // price is 1:1 so we wil use collateral value as max debt to cover
+        (uint256 collateralToLiquidate,,) = partialLiquidation.maxLiquidation(BORROWER);
+
+        partialLiquidation.liquidationCall(
+            address(token0), address(token1), BORROWER, collateralToLiquidate, false /* receiveSToken */
+        );
+
+        ltv = siloLens.getLtv(silo0, BORROWER);
+        assertEq(ltv, type(uint256).max, "expect ininite LTV after liquidation");
+
+        vm.expectRevert(IPartialLiquidation.NoCollateralToLiquidate.selector);
+        partialLiquidation.liquidationCall(
+            address(token0), address(token1), BORROWER, type(uint256).max, false /* receiveSToken */
+        );
+    }
+
     /* 
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999protected_2tokens
 
