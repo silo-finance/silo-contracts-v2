@@ -163,17 +163,29 @@ contract LiquidationCall2TokensTest is SiloLittleHelper, Test {
 
         assertGt(borrowerShares, 1, "we need to have some shares");
         // we need to -1 because on liqiuidation we underestimate twice
-        assertEq(silo0.previewRedeem(borrowerShares - 1), 0, "we need shares ot be not withdrawable");
+        assertEq(silo0.previewRedeem(borrowerShares - 1), 0, "we need shares to be not withdrawable");
 
         vm.warp(block.timestamp + 365 days);
 
         console2.log("--- LIQUIDATION CALL ---");
+
+        uint256 protectedSharesBefore = IShareToken(silo0Config.protectedShareToken).balanceOf(address(this));
+        assertEq(protectedSharesBefore, 0, "liquidator should have no protected shares before liquidation");
+
+        uint256 collateralSharesBefore = IShareToken(silo0Config.collateralShareToken).balanceOf(address(this));
+        assertEq(collateralSharesBefore, 0, "liquidator should have no collateral shares before liquidation");
 
         partialLiquidation.liquidationCall(
             address(token0), address(token1), BORROWER, silo1.maxRepay(BORROWER), false /* receiveSToken */
         );
 
         assertTrue(silo0.isSolvent(BORROWER), "BORROWER should be solvent");
+
+        uint256 protectedSharesBalanceAfter = IShareToken(silo0Config.protectedShareToken).balanceOf(address(this));
+        assertEq(protectedSharesBalanceAfter, 999, "liquidator should got dust protected shares");
+
+        uint256 collateralSharesBalanceAfter = IShareToken(silo0Config.collateralShareToken).balanceOf(address(this));
+        assertEq(collateralSharesBalanceAfter, 0, "liquidator should have no collateral shares after liquidation");
     }
 
     /* 
