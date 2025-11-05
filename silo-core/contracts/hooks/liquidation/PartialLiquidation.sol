@@ -132,26 +132,22 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
             // if share token offset is more than 0, positive number of shares can generate 0 assets
             // so there is a need to check assets before we withdraw collateral/protected
 
-            if (params.collateralShares != 0) {
+            withdrawCollateral = _tryRedeem({
+                _silo: collateralConfig.silo,
+                _shareToken: collateralConfig.collateralShareToken,
+                _shares: params.collateralShares,
+                _collateralType: ISilo.CollateralType.Collateral
+            });
+
+            unchecked {
+                // protected and collateral values were split from total collateral to withdraw,
+                // so we will not overflow when we sum them back, especially that on redeem, we rounding down
                 withdrawCollateral += _tryRedeem({
                     _silo: collateralConfig.silo,
-                    _shareToken: collateralConfig.collateralShareToken,
-                    _shares: params.collateralShares,
-                    _collateralType: ISilo.CollateralType.Collateral
+                    _shareToken: collateralConfig.protectedShareToken,
+                    _shares: params.protectedShares,
+                    _collateralType: ISilo.CollateralType.Protected
                 });
-            }
-
-            if (params.protectedShares != 0) {
-                unchecked {
-                    // protected and collateral values were split from total collateral to withdraw,
-                    // so we will not overflow when we sum them back, especially that on redeem, we rounding down
-                    withdrawCollateral += _tryRedeem({
-                        _silo: collateralConfig.silo,
-                        _shareToken: collateralConfig.protectedShareToken,
-                        _shares: params.protectedShares,
-                        _collateralType: ISilo.CollateralType.Protected
-                    });
-                }
             }
         }
 
@@ -227,6 +223,8 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
         uint256 _shares,
         ISilo.CollateralType _collateralType
     ) internal returns (uint256 withdrawCollateral) {
+        if (_shares == 0) return 0;
+
         try ISilo(_silo).redeem({
             _shares: _shares,
             _receiver: msg.sender,
