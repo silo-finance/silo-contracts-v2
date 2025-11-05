@@ -140,11 +140,10 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
                     _collateralType: ISilo.CollateralType.Collateral
                 }) returns (uint256 assets) {
                     withdrawCollateral = assets;
-                } catch {
-                    // in case redeem fail for "999case", when we can not withdraw full amount of assets,
-                    // we transfer shares, we do not estimate amount of assets
-                    // in any other case, liquidator has to handle shares itself
-                    ISilo(collateralConfig.silo).transfer(msg.sender, params.collateralShares);
+                } catch (bytes memory e) {
+                    if (_isToAssetsConvertionError(e)) {
+                        ISilo(collateralConfig.silo).transfer(msg.sender, params.collateralShares);
+                    } else RevertLib.revertBytes(e, string(""));
                 }
             }
 
@@ -160,11 +159,10 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
                     unchecked {
                         withdrawCollateral += assets;
                     }
-                } catch {
-                    // in case redeem fail for "999case", when we can not withdraw full amount of assets,
-                    // we transfer shares, we do not estimate amount of assets
-                    // in any other case, liquidator has to handle shares itself
-                    ISilo(collateralConfig.protectedShareToken).transfer(msg.sender, params.protectedShares);
+                } catch (bytes memory e) {
+                    if (_isToAssetsConvertionError(e)) {
+                        ISilo(collateralConfig.protectedShareToken).transfer(msg.sender, params.protectedShares);
+                    } else RevertLib.revertBytes(e, string(""));
                 }
             }
         }
@@ -238,5 +236,10 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
         if (shares == 0) return 0;
 
         IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, _receiver, shares);
+    }
+
+    /// @dev this method detect if error is caused by unable to convert shares to assets eg 999 shares => 0 assets
+    function _isToAssetsConvertionError(bytes memory _error) internal pure returns (bool) {
+        return bytes4(_error) == ISilo.ReturnZeroAssets.selector;
     }
 }
