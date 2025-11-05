@@ -143,7 +143,9 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
                 } catch (bytes memory e) {
                     if (_isToAssetsConvertionError(e)) {
                         ISilo(collateralConfig.silo).transfer(msg.sender, params.collateralShares);
-                    } else RevertLib.revertBytes(e, string(""));
+                    } else {
+                        RevertLib.revertBytes(e, string(""));
+                    }
                 }
             }
 
@@ -162,18 +164,15 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
                 } catch (bytes memory e) {
                     if (_isToAssetsConvertionError(e)) {
                         ISilo(collateralConfig.protectedShareToken).transfer(msg.sender, params.protectedShares);
-                    } else RevertLib.revertBytes(e, string(""));
+                    } else {
+                        RevertLib.revertBytes(e, string(""));
+                    }
                 }
             }
         }
 
         emit LiquidationCall(
-            msg.sender,
-            debtConfig.silo,
-            _borrower,
-            repayDebtAssets,
-            withdrawCollateral,
-            _receiveSToken
+            msg.sender, debtConfig.silo, _borrower, repayDebtAssets, withdrawCollateral, _receiveSToken
         );
     }
 
