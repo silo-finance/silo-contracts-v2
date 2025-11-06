@@ -77,10 +77,8 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         siloConfigCached.turnOnReentrancyProtection();
 
-        (
-            ISiloConfig.ConfigData memory collateralConfig,
-            ISiloConfig.ConfigData memory debtConfig
-        ) = _fetchConfigs(siloConfigCached, _borrower);
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
+            _fetchConfigs(siloConfigCached, _borrower);
 
         // defaulting can be only done for one (predefined) collateral to avoid creating cascading liquidations
         // on the other silo
@@ -103,15 +101,11 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         RevertLib.revertIfError(params.customError);
 
         // calculate split between keeper and lenders
-        (params.withdrawAssetsFromCollateralForKeeper, params.withdrawAssetsFromCollateralForLenders) = getKeeperAndLenderAssetsSplit(
-            params.withdrawAssetsFromCollateral,
-            collateralConfig.liquidationFee
-        );
+        (params.withdrawAssetsFromCollateralForKeeper, params.withdrawAssetsFromCollateralForLenders) =
+            getKeeperAndLenderAssetsSplit(params.withdrawAssetsFromCollateral, collateralConfig.liquidationFee);
 
-        (params.withdrawAssetsFromProtectedForKeeper, params.withdrawAssetsFromProtectedForLenders) = getKeeperAndLenderAssetsSplit(
-            params.withdrawAssetsFromProtected,
-            collateralConfig.liquidationFee
-        );
+        (params.withdrawAssetsFromProtectedForKeeper, params.withdrawAssetsFromProtectedForLenders) =
+            getKeeperAndLenderAssetsSplit(params.withdrawAssetsFromProtected, collateralConfig.liquidationFee);
 
         // transfer share tokens to incentive controller for distribution to lenders
 
@@ -248,10 +242,8 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     }
 
     function _deductDefaultedDebtFromCollateral(address _silo, uint256 _assetsToRepay) internal virtual {
-        bytes memory input = abi.encodeWithSelector(
-            DefaultingSiloLogic.deductDefaultedDebtFromCollateral.selector,
-            _assetsToRepay
-        );
+        bytes memory input =
+            abi.encodeWithSelector(DefaultingSiloLogic.deductDefaultedDebtFromCollateral.selector, _assetsToRepay);
 
         ISilo(_silo).callOnBehalfOfSilo({
             _target: LIQUIDATION_LOGIC,
@@ -262,11 +254,8 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     }
 
     function _repayDebtByDefaulting(address _silo, uint256 _assets, address _borrower) internal virtual {
-        bytes memory input = abi.encodeWithSelector(
-            DefaultingSiloLogic.repayDebtByDefaulting.selector,
-            _assets,
-            _borrower
-        );
+        bytes memory input =
+            abi.encodeWithSelector(DefaultingSiloLogic.repayDebtByDefaulting.selector, _assets, _borrower);
 
         ISilo(_silo).callOnBehalfOfSilo({
             _target: LIQUIDATION_LOGIC,
