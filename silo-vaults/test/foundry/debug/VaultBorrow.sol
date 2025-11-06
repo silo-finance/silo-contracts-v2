@@ -61,7 +61,7 @@ contract VaultBorrow is Test {
         console2.log("silo asset balance before", assetBalanceBefore);
 
         uint256 maxBorrow = SILO.maxBorrow(address(VAULT));
-        console2.log("VAULT maxBorrow", maxBorrow);
+        emit log_named_decimal_uint("VAULT maxBorrow", maxBorrow, assetDecimals);
         console2.log("SILO liquidity", SILO.getLiquidity());
 
 
@@ -70,25 +70,28 @@ contract VaultBorrow is Test {
         vm.prank(incentivesModuleOwner);
         incentivesModule.submitIncentivesClaimingLogic(VAULT, newLogic);
 
-        // _qaVaultOperations();
+        _qaVaultOperations();
         _printLogics();
 
         // we need to wait for the timelock to pass, because we not using trusted factory
         vm.warp(block.timestamp + VAULT.timelock());
 
+        assetBalanceBefore = SILO_ASSET.balanceOf(address(VAULT));
+        emit log_named_decimal_uint("ASSET balance after", assetBalanceBefore, assetDecimals);
+
         // anyone can accept the logic, so we can call it + claim rewards
         incentivesModule.acceptIncentivesClaimingLogic(VAULT, newLogic);
 
-        // _qaVaultOperations();
+        _qaVaultOperations();
+
+        assertGt(SILO_ASSET.balanceOf(address(VAULT)), maxBorrow, "silo asset should be borrowed");
 
         // THIS WILL BORROW TOKENS
         VAULT.claimRewards();
 
-        assertGt(SILO_ASSET.balanceOf(address(VAULT)), maxBorrow, "silo asset should be borrowed");
-
-return;
         uint256 assetBalanceAfter = SILO_ASSET.balanceOf(address(VAULT));
-        emit log_named_decimal_uint("wAvax balance after", assetBalanceAfter, assetDecimals);
+        emit log_named_decimal_uint("ASSET balance after", assetBalanceAfter, assetDecimals);
+        emit log_named_decimal_uint("difference", assetBalanceAfter - assetBalanceBefore, assetDecimals);
 
         _qaVaultOperations();
 
@@ -104,11 +107,9 @@ return;
         console2.log("\t ------- QA vault operations -------");
         VAULT.claimRewards(); // always work
 
-        address usdtWhale = 0x5fA70a4D7635618afCE319e0F09c67a2Ec661c8b;
         IERC20 asset = IERC20Metadata(VAULT.asset());
 
-        vm.prank(usdtWhale);
-        asset.transfer(address(this), 100e6);
+        deal(address(asset), address(this), 100e6);
 
         asset.approve(address(VAULT), 100e6);
         VAULT.deposit(100e6, address(this));
