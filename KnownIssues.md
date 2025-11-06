@@ -66,4 +66,4 @@ Workarounds for this case are:
 - deposit a dust amount of assets for the borrower for the collateral type that has dust
 - or transfer shares to the borrower if you already have some
 
-For example, with a deposit of 10 wei, it will give us ~10000 shares, so `999 + 10000 shares converts to > 0 assets` and liquidation will succeed.
+For example, with a deposit of 10 wei, it will give us ~10000 shares, so `999 + 10000 shares converts to ~ 1 assets` and liquidation will succeed.

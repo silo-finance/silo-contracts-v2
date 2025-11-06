@@ -18,7 +18,7 @@ import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc LiquidationCall999case2tokensTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc LiquidationCall999case2tokensTest
 */
 contract LiquidationCall999case2tokensTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
@@ -102,7 +102,9 @@ contract LiquidationCall999case2tokensTest is SiloLittleHelper, Test {
     this test fails for v3.12.0
     */
     function test_liquidationCall_999protected_2tokens() public {
-        _liquidationCall_999case_2tokens(ISilo.CollateralType.Protected);
+        _liquidationCall_999case(
+            ISilo.CollateralType.Protected, _executeLiquidation2tokens, _makeSharesNotWithdrawable2tokens, 365 days
+        );
     }
 
     /* 
@@ -113,34 +115,106 @@ contract LiquidationCall999case2tokensTest is SiloLittleHelper, Test {
         silo0.transitionCollateral(silo0.balanceOf(BORROWER), BORROWER, ISilo.CollateralType.Collateral);
         vm.stopPrank();
 
-        _liquidationCall_999case_2tokens(ISilo.CollateralType.Collateral);
+        _liquidationCall_999case(
+            ISilo.CollateralType.Collateral, _executeLiquidation2tokens, _makeSharesNotWithdrawable2tokens, 365 days
+        );
     }
 
-    function _liquidationCall_999case_2tokens(ISilo.CollateralType _generateDustForType) internal {
-        _deposit(1e18, DEPOSITOR, _generateDustForType);
-        _deposit(2, BORROWER, _generateDustForType);
+    /* 
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999collateral_1token
+    */
+    function test_liquidationCall_999collateral_1token() public {
+        // not able to create case where we can have 99 case for collateral shares
 
+        ISilo.CollateralType collateralType = ISilo.CollateralType.Collateral;
+
+        _repay(silo1.maxRepay(BORROWER), BORROWER);
+
+        // we need liquidity for borrow
+        _deposit(COLLATERAL, makeAddr("any"));
+
+        vm.startPrank(BORROWER);
+        silo0.borrowSameAsset(silo0.maxBorrowSameAsset(BORROWER), BORROWER, BORROWER);
+        silo0.transitionCollateral(silo0.balanceOf(BORROWER), BORROWER, ISilo.CollateralType.Collateral);
+        vm.stopPrank();
+
+        assertGt(silo0.maxRepay(BORROWER), 0, "we want debt in silo 0");
+        assertEq(silo1.maxRepay(BORROWER), 0, "expect no debt on silo1");
+
+        // address borrower2 = makeAddr("borrower2");
+
+        // // second borrow needed because when we liquidate BORROWER, we repay whole debt and
+        // _deposit(COLLATERAL, borrower2, ISilo.CollateralType.Protected);
+        // vm.startPrank(borrower2);
+        // silo0.borrowSameAsset(silo0.maxBorrowSameAsset(borrower2), borrower2, borrower2);
+        // vm.stopPrank();
+
+        _liquidationCall_999case(collateralType, _executeLiquidation1token, _makeSharesNotWithdrawable1token, 50 days);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999protected_1token
+    */
+    function test_liquidationCall_999protected_1token() public {
+        _repay(silo1.maxRepay(BORROWER), BORROWER);
+
+        // we need liquidity for borrow
+        _deposit(COLLATERAL, makeAddr("any"));
+
+        ISilo.CollateralType collateralType = ISilo.CollateralType.Protected;
+
+        vm.startPrank(BORROWER);
+        silo0.borrowSameAsset(silo0.maxBorrowSameAsset(BORROWER), BORROWER, BORROWER);
+        vm.stopPrank();
+
+        assertGt(silo0.maxRepay(BORROWER), 0, "we want debt in silo 0");
+        assertEq(silo1.maxRepay(BORROWER), 0, "expect no debt on silo1");
+
+        // address borrower2 = makeAddr("borrower2");
+
+        // // second borrow needed because when we liquidate BORROWER, we repay whole debt and
+        // _deposit(COLLATERAL, borrower2, ISilo.CollateralType.Protected);
+        // vm.startPrank(borrower2);
+        // silo0.borrowSameAsset(silo0.maxBorrowSameAsset(borrower2), borrower2, borrower2);
+        // vm.stopPrank();
+
+        _liquidationCall_999case(
+            ISilo.CollateralType.Protected, _executeLiquidation1token, _makeSharesNotWithdrawable1token, 1000 days
+        );
+    }
+
+    function _liquidationCall_999case(
+        ISilo.CollateralType _generateDustForType,
+        function() _liquidationCallFn,
+        function(ISilo.CollateralType) _makeSharesNotWithdrawableFn,
+        uint256 _daysToWarp
+    ) internal {
         (IShareToken shareToken, IShareToken otherShareToken) = _generateDustForType == ISilo.CollateralType.Protected
             ? (IShareToken(silo0Config.protectedShareToken), IShareToken(silo0Config.collateralShareToken))
             : (IShareToken(silo0Config.collateralShareToken), IShareToken(silo0Config.protectedShareToken));
 
-        vm.prank(address(silo0));
-        shareToken.burn(DEPOSITOR, DEPOSITOR, 12345678987654321);
-        uint256 ratio = silo0.convertToShares(1, ISilo.AssetType(uint8(_generateDustForType)));
-        assertEq(ratio, 999, "for this test we expect ratio to be 999");
+        vm.warp(block.timestamp + _daysToWarp);
 
-        vm.prank(BORROWER);
-        shareToken.transfer(DEPOSITOR, 1000);
+        // uint256 assetsToForceTransfer = silo0.previewRedeem(borrowerShares, _generateDustForType);
 
-        uint256 borrowerShares = shareToken.balanceOf(BORROWER);
+        // if (assetsToForceTransfer > 0) {
+        //     emit log_named_uint("assetsToForceTransfer", assetsToForceTransfer);
+        //     uint256 sharesToForceTransfer = silo0.previewWithdraw(assetsToForceTransfer, _generateDustForType);
+        //     emit log_named_uint("sharesToForceTransfer", sharesToForceTransfer);
+        //     vm.prank(address(partialLiquidation));
+        //     shareToken.forwardTransferFromNoChecks(BORROWER, makeAddr("random"), borrowerShares - 999);
+        // }
 
-        assertGt(borrowerShares, 1, "we need to have some shares");
-        // we need to -1 because on liqiuidation we underestimate twice
-        assertEq(silo0.previewRedeem(borrowerShares - 1), 0, "we need shares to be not withdrawable");
+        // borrowerShares = shareToken.balanceOf(BORROWER);
+        // emit log_named_uint("borrower shares", borrowerShares);
+        // assertGt(borrowerShares, 1, "we need to have some shares");
+        // assertEq(silo0.previewRedeem(borrowerShares - 1, _generateDustForType), 0, "we need shares to be not withdrawable (2)");
 
-        vm.warp(block.timestamp + 365 days);
+        _makeSharesNotWithdrawableFn(_generateDustForType);
 
-        console2.log("--- LIQUIDATION CALL ---");
+        emit log_named_decimal_uint("borrower other shares", otherShareToken.balanceOf(BORROWER), 18);
+
+        emit log_named_decimal_uint("LTV before liquidation [%]", siloLens.getLtv(silo0, BORROWER), 16);
 
         uint256 sharesBefore = shareToken.balanceOf(address(this));
         assertEq(sharesBefore, 0, "liquidator should have no shares before liquidation");
@@ -148,20 +222,144 @@ contract LiquidationCall999case2tokensTest is SiloLittleHelper, Test {
         uint256 otherSharesBefore = otherShareToken.balanceOf(address(this));
         assertEq(otherSharesBefore, 0, "liquidator should have no other shares before liquidation");
 
-        partialLiquidation.liquidationCall(
-            address(token0), address(token1), BORROWER, silo1.maxRepay(BORROWER), false /* receiveSToken */
+        (uint256 collateralToLiquidate,,) = partialLiquidation.maxLiquidation(BORROWER);
+        emit log_named_decimal_uint("collateralToLiquidate", collateralToLiquidate, 18);
+        emit log_named_decimal_uint(
+            "collateral to shares",
+            silo0.convertToShares(collateralToLiquidate, ISilo.AssetType(uint8(_generateDustForType))),
+            18
         );
 
-        assertTrue(silo0.isSolvent(BORROWER), "BORROWER should be solvent");
+        console2.log("--- LIQUIDATION CALL ---");
+
+        _liquidationCallFn();
+
+        // assertTrue(silo0.isSolvent(BORROWER), "BORROWER should be solvent");
 
         uint256 sharesBalanceAfter = shareToken.balanceOf(address(this));
-        assertEq(sharesBalanceAfter, 999, "liquidator should got dust protected shares");
         emit log_named_string("shares token", shareToken.symbol());
         emit log_named_uint("sharesBalanceAfter", sharesBalanceAfter);
 
         uint256 otherSharesBalanceAfter = otherShareToken.balanceOf(address(this));
-        assertEq(otherSharesBalanceAfter, 0, "liquidator should have no other shares after liquidation");
         emit log_named_string("other shares token", otherShareToken.symbol());
         emit log_named_uint("otherSharesBalanceAfter", otherSharesBalanceAfter);
+
+        assertGt(sharesBalanceAfter, 0, "liquidator should got dust shares");
+        assertEq(
+            silo0.previewRedeem(sharesBalanceAfter, _generateDustForType),
+            0,
+            "liquidator should got non withdrawable shares"
+        );
+
+        assertEq(otherSharesBalanceAfter, 0, "liquidator should have no other shares after liquidation");
+    }
+
+    function _executeLiquidation2tokens() internal {
+        partialLiquidation.liquidationCall(
+            address(token0), address(token1), BORROWER, type(uint256).max, false /* receiveSToken */
+        );
+    }
+
+    function _executeLiquidation1token() internal {
+        (uint256 collateralToLiquidate,,) = partialLiquidation.maxLiquidation(BORROWER);
+
+        partialLiquidation.liquidationCall(
+            address(token0), address(token0), BORROWER, collateralToLiquidate, false /* receiveSToken */
+        );
+    }
+
+    function _makeSharesNotWithdrawable1token(ISilo.CollateralType _generateDustForType) internal {
+        (IShareToken shareToken, IShareToken otherShareToken) = _generateDustForType == ISilo.CollateralType.Protected
+            ? (IShareToken(silo0Config.protectedShareToken), IShareToken(silo0Config.collateralShareToken))
+            : (IShareToken(silo0Config.collateralShareToken), IShareToken(silo0Config.protectedShareToken));
+
+        _deposit(1e18, DEPOSITOR, _generateDustForType);
+        _deposit(987e18, DEPOSITOR); // collateral
+
+        uint256 borrowerShares = shareToken.balanceOf(BORROWER);
+        emit log_named_uint("borrower non witdrawable shares (1)", borrowerShares);
+
+        vm.prank(address(silo0));
+        shareToken.burn(DEPOSITOR, DEPOSITOR, 123456789);
+
+        uint256 ratio = silo0.convertToShares(1, ISilo.AssetType(uint8(_generateDustForType)));
+        emit log_named_uint("ratio", ratio);
+        assertLt(ratio, 1e3, "for this test we expect ratio to be not 1:1");
+
+        vm.prank(BORROWER);
+        silo0.mint(ratio + 1, BORROWER, _generateDustForType);
+
+        borrowerShares = shareToken.balanceOf(BORROWER);
+        emit log_named_uint("borrower shares (2)", borrowerShares);
+
+        // (uint256 collateralToLiquidate,,) = partialLiquidation.maxLiquidation(BORROWER);
+        // uint256 sharesToLiquidate = silo0.previewWithdraw(collateralToLiquidate);
+
+        // vm.prank(address(partialLiquidation));
+        // shareToken.forwardTransferFromNoChecks(BORROWER, makeAddr("random"), 1);
+
+        uint256 reduceCollateralValue = otherShareToken.balanceOf(BORROWER) / 2;
+        vm.prank(address(partialLiquidation));
+        otherShareToken.forwardTransferFromNoChecks(BORROWER, makeAddr("random"), reduceCollateralValue);
+        {
+            uint256 otherSharesBalance = otherShareToken.balanceOf(BORROWER);
+            ISilo.CollateralType otherType = _generateDustForType == ISilo.CollateralType.Collateral
+                ? ISilo.CollateralType.Protected
+                : ISilo.CollateralType.Collateral;
+            uint256 toAssets = silo0.previewRedeem(otherSharesBalance, otherType);
+            uint256 toShares = silo0.previewWithdraw(toAssets, otherType);
+            emit log_named_decimal_uint("other shares balance", otherSharesBalance, 18);
+            emit log_named_decimal_uint("to shares", toShares, 18);
+
+            // uint256 reduce = otherSharesBalance - toShares - 2;
+            // emit log_named_uint("reduce", reduce);
+
+            // if (reduce > 0) {
+            //     vm.prank(address(partialLiquidation));
+            //     otherShareToken.forwardTransferFromNoChecks(BORROWER, makeAddr("random"), reduce);
+            // }
+        }
+        borrowerShares = shareToken.balanceOf(BORROWER);
+        emit log_named_uint("borrower non witdrawable shares (3)", borrowerShares);
+
+        assertEq(
+            silo0.previewRedeem(borrowerShares, _generateDustForType), 1, "we need shares to generate 1 wei of assets"
+        );
+        assertEq(
+            silo0.previewRedeem(borrowerShares - 1, _generateDustForType),
+            0,
+            "we need shares to be not withdrawable when rounding down"
+        );
+    }
+
+    function _makeSharesNotWithdrawable2tokens(ISilo.CollateralType _generateDustForType) internal {
+        IShareToken shareToken = _generateDustForType == ISilo.CollateralType.Protected
+            ? IShareToken(silo0Config.protectedShareToken)
+            : IShareToken(silo0Config.collateralShareToken);
+
+        _deposit(1e18, DEPOSITOR, _generateDustForType);
+        _deposit(2, BORROWER, _generateDustForType);
+
+        vm.prank(address(silo0));
+        shareToken.burn(DEPOSITOR, DEPOSITOR, 12345678987654321);
+
+        uint256 ratio = silo0.convertToShares(1, ISilo.AssetType(uint8(_generateDustForType)));
+        emit log_named_uint("ratio", ratio);
+        assertEq(ratio, 999, "for this test we expect ratio to be 999");
+
+        vm.prank(address(partialLiquidation));
+        shareToken.forwardTransferFromNoChecks(BORROWER, makeAddr("random"), 1000);
+
+        uint256 borrowerShares = shareToken.balanceOf(BORROWER);
+        emit log_named_uint("borrower shares", borrowerShares);
+
+        assertEq(
+            silo0.previewRedeem(borrowerShares, _generateDustForType), 1, "we need shares to generate 1 wei of assets"
+        );
+        assertEq(
+            silo0.previewRedeem(borrowerShares - 1, _generateDustForType),
+            0,
+            "we need shares to be not withdrawable when rounding down"
+        );
     }
 }

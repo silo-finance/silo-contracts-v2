@@ -136,11 +136,9 @@ contract LiquidationCall1TokenTest is SiloLittleHelper, Test {
         assertEq(collateralToLiquidate, 0, "expect no collateral to liquidate");
         assertGt(debtToRepay, 0, "expect some debt to repay");
 
-
-        // we have NoCollateralToLiquidate error for this, but ReturnZeroShares is generate as first one
-        vm.expectRevert(ISilo.ReturnZeroShares.selector);
+        vm.expectRevert(IPartialLiquidation.NoCollateralToLiquidate.selector);
         partialLiquidation.liquidationCall(
-            address(token0), address(token0), BORROWER, 1, false /* receiveSToken */
+            address(token0), address(token0), BORROWER, type(uint256).max, false /* receiveSToken */
         );
     }
 

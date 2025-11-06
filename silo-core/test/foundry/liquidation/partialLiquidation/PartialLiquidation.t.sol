@@ -22,10 +22,6 @@ contract PartialLiquidationMock is PartialLiquidation {
 }
 
 contract PartialLiquidationTest is Test {
-    function setUp() public {
-        // code
-    }
-
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_isToAssetsConvertionError
     */
