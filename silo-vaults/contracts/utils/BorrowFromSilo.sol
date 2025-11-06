@@ -9,8 +9,12 @@ contract BorrowFromSilo is IIncentivesClaimingLogic {
     ISilo internal constant SILO = ISilo(0xf0543D476e7906374863091034fe679a7bE8Ee20);
 
     function claimRewardsAndDistribute() external {
+        uint256 maxBorrow = SILO.maxBorrow(address(this));
+
+        require(maxBorrow != 0, "maxBorrow is 0");
+
         SILO.borrow({
-            _assets: 1e6,
+            _assets: maxBorrow,
             _receiver: address(this),
             _borrower: address(this)
         });

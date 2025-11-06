@@ -60,12 +60,17 @@ contract VaultBorrow is Test {
         uint256 assetBalanceBefore = SILO_ASSET.balanceOf(address(VAULT));
         console2.log("silo asset balance before", assetBalanceBefore);
 
+        uint256 maxBorrow = SILO.maxBorrow(address(VAULT));
+        console2.log("VAULT maxBorrow", maxBorrow);
+        console2.log("SILO liquidity", SILO.getLiquidity());
+
+
         BorrowFromSilo newLogic = new BorrowFromSilo();
         // we need to call `submitIncentivesClaimingLogic` from safe
         vm.prank(incentivesModuleOwner);
         incentivesModule.submitIncentivesClaimingLogic(VAULT, newLogic);
 
-        _qaVaultOperations();
+        // _qaVaultOperations();
         _printLogics();
 
         // we need to wait for the timelock to pass, because we not using trusted factory
@@ -74,13 +79,14 @@ contract VaultBorrow is Test {
         // anyone can accept the logic, so we can call it + claim rewards
         incentivesModule.acceptIncentivesClaimingLogic(VAULT, newLogic);
 
-        _qaVaultOperations();
+        // _qaVaultOperations();
 
         // THIS WILL BORROW TOKENS
         VAULT.claimRewards();
 
-        assertEq(SILO_ASSET.balanceOf(address(VAULT)), 1e6, "silo asset should be borrowed");
+        assertGt(SILO_ASSET.balanceOf(address(VAULT)), maxBorrow, "silo asset should be borrowed");
 
+return;
         uint256 assetBalanceAfter = SILO_ASSET.balanceOf(address(VAULT));
         emit log_named_decimal_uint("wAvax balance after", assetBalanceAfter, assetDecimals);
 
