@@ -20,19 +20,14 @@ library DefaultingRepayLib {
 
     /// @notice Repays a given asset amount and returns the equivalent number of shares
     /// @dev This is a copy of lib/Actions.sol repay() function with a single line changed.
-    /// this.repay() is used instead of SiloLendingLib.repay().
+    /// this.actionsRepay() is used instead of SiloLendingLib.repay().
     /// @param _assets Amount of assets to be repaid
     /// @param _borrower Address of the borrower whose debt is being repaid
     /// @param _repayer Address of the repayer who repay debt
     /// @return assets number of assets that had been repay
     /// @return shares number of shares that had been repay
     // solhint-disable-next-line function-max-lines
-    function actionsRepay(
-        uint256 _assets,
-        uint256 _shares,
-        address _borrower,
-        address _repayer
-    )
+    function actionsRepay(uint256 _assets, uint256 _shares, address _borrower, address _repayer)
         external
         returns (uint256 assets, uint256 shares)
     {
@@ -66,7 +61,7 @@ library DefaultingRepayLib {
     /// In the last line _debtAsset transfer from repayer is removed.
     function siloLendingLibRepay(
         IShareToken _debtShareToken,
-        address /* _debtAsset */,
+        address, /* _debtAsset */
         uint256 _assets,
         uint256 _shares,
         address _borrower,

@@ -9,14 +9,9 @@ import {DefaultingRepayLib} from "silo-core/contracts/hooks/defaulting/Defaultin
 /// @title DefaultingSiloLogic
 /// @dev implements custom logic for Silo to do delegate calls
 contract DefaultingSiloLogic {
-
     /// @dev This is a copy of Silo.sol repay() function with a single line changed.
-    /// DefaultingRepayLib.repay() is used instead of Actions.repay().
-    function repayDebtByDefaulting(uint256 _assets, address _borrower)
-        external
-        virtual
-        returns (uint256 shares)
-    {
+    /// DefaultingRepayLib.actionsRepay() is used instead of Actions.repay().
+    function repayDebtByDefaulting(uint256 _assets, address _borrower) external virtual returns (uint256 shares) {
         uint256 assets;
 
         (assets, shares) = DefaultingRepayLib.actionsRepay({
