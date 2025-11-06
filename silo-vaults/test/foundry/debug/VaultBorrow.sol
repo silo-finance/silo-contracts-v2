@@ -25,7 +25,7 @@ FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_vault_borrow -vvv
 contract VaultBorrow is Test {
     SiloVault internal constant VAULT = SiloVault(0x2BA39e5388aC6C702Cb29AEA78d52aa66832f1ee);
     ISilo internal constant SILO = ISilo(0xf0543D476e7906374863091034fe679a7bE8Ee20);
-    IERC20Metadata internal constant SILO_ASSET = IERC20Metadata(SILO.asset());
+    IERC20Metadata internal SILO_ASSET;
 
     IVaultIncentivesModule internal incentivesModule;
 
@@ -36,6 +36,7 @@ contract VaultBorrow is Test {
         console2.log("block number", block.number);
 
         incentivesModule = VAULT.INCENTIVES_MODULE();
+        SILO_ASSET = IERC20Metadata(SILO.asset());
     }
 
     /*
