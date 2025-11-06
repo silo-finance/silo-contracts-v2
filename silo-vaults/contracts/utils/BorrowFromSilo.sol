@@ -11,7 +11,7 @@ contract BorrowFromSilo is IIncentivesClaimingLogic {
     function claimRewardsAndDistribute() external {
         uint256 maxBorrow = SILO.maxBorrow(address(this));
 
-        require(maxBorrow != 0, "maxBorrow is 0");
+        if(maxBorrow == 0) return;
 
         SILO.borrow({
             _assets: maxBorrow,
