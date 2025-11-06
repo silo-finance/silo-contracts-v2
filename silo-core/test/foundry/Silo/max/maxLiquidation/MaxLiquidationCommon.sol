@@ -339,9 +339,16 @@ abstract contract MaxLiquidationCommon is SiloLittleHelper, Test {
         } catch (bytes memory data) {
             bytes4 errorType = bytes4(data);
 
-            bytes4 expectedError = bytes4(keccak256(abi.encodePacked("ReturnZeroAssets()")));
+            bytes4 returnZeroAssets = bytes4(keccak256(abi.encodePacked("ReturnZeroAssets()")));
+            bytes4 noCollateralToLiquidate = bytes4(keccak256(abi.encodePacked("NoCollateralToLiquidate()")));
 
-            assertEq(errorType, expectedError, "only ReturnZeroAssets error is expected");
+            if (errorType == returnZeroAssets) {
+                return (0, 0);
+            } else if (errorType == noCollateralToLiquidate) {
+                return (0, 0);
+            }
+
+            revert(string.concat("[_liquidationCall] unexpected error: ", string(data)));
         }
     }
 

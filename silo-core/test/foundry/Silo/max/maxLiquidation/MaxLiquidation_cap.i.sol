@@ -59,7 +59,7 @@ contract MaxLiquidationCapTest is MaxLiquidationCommon {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxLiquidation_cap_2tokens
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxLiquidation_cap_2tokens
     */
     function test_maxLiquidation_cap_2tokens() public {
         _createDebtForBorrower(1e18, false);
