@@ -21,9 +21,8 @@ abstract contract Whitelist is AccessControlEnumerable {
         _;
     }
 
-    function __Whitelist_init(
-        address _owner // solhint-disable-line func-name-mixedcase
-    ) internal virtual {
+    // solhint-disable-next-line func-name-mixedcase
+    function __Whitelist_init(address _owner) internal virtual {
         _grantRole(DEFAULT_ADMIN_ROLE, _owner);
     }
 }

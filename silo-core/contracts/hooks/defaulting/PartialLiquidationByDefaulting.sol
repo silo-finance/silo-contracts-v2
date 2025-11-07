@@ -23,6 +23,8 @@ import {
 import {DefaultingSiloLogic} from "./DefaultingSiloLogic.sol";
 import {Whitelist} from "silo-core/contracts/hooks/_common/Whitelist.sol";
 
+// solhint-disable ordering
+
 /// @title PartialLiquidation module for executing liquidations
 /// @dev if we need additional hook functionality, this contract should be included as parent
 abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefaulting, PartialLiquidation, Whitelist {
@@ -170,7 +172,8 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     {
         if (withdrawAssetsFromCollateral == 0) return (0, 0);
 
-        // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds using some kind of 1 wei rounding attack loop
+        // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds 
+        // using some kind of 1 wei rounding attack loop
 
         // c - collateral
         // wc - withdrawCollateral
