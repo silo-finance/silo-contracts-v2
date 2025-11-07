@@ -467,6 +467,8 @@ abstract contract SiloDeploy is CommonDeploy {
             return HookVersion.V2;
         } else if (_implementation == getDeployedAddress(SiloCoreContracts.SILO_HOOK_V1)) {
             return HookVersion.V1;
+        } else if (_implementation == getDeployedAddress(SiloCoreContracts.PENDLE_REWARDS_CLAIMER)) {
+            return HookVersion.V2;
         }
 
         console2.log(string.concat(
