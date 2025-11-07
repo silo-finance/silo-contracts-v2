@@ -32,7 +32,7 @@ contract VaultBorrow is Test {
     IERC20 internal wAvax = IERC20(0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7);
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("RPC_ARBITRUM"), 397368393);
+        vm.createSelectFork(vm.envString("RPC_ARBITRUM"));
         console2.log("block number", block.number);
 
         incentivesModule = VAULT.INCENTIVES_MODULE();
@@ -74,24 +74,27 @@ contract VaultBorrow is Test {
         _printLogics();
 
         // we need to wait for the timelock to pass, because we not using trusted factory
-        vm.warp(block.timestamp + VAULT.timelock());
+        vm.warp(block.timestamp + VAULT.timelock() + 7 days);
 
         assetBalanceBefore = SILO_ASSET.balanceOf(address(VAULT));
-        emit log_named_decimal_uint("ASSET balance after", assetBalanceBefore, assetDecimals);
+        emit log_named_decimal_uint("ASSET balance before", assetBalanceBefore, assetDecimals);
 
+        console2.log("acceptIncentivesClaimingLogic()");
         // anyone can accept the logic, so we can call it + claim rewards
         incentivesModule.acceptIncentivesClaimingLogic(VAULT, newLogic);
-
-        _qaVaultOperations();
-
-        assertGt(SILO_ASSET.balanceOf(address(VAULT)), maxBorrow, "silo asset should be borrowed");
-
-        // THIS WILL BORROW TOKENS
-        VAULT.claimRewards();
 
         uint256 assetBalanceAfter = SILO_ASSET.balanceOf(address(VAULT));
         emit log_named_decimal_uint("ASSET balance after", assetBalanceAfter, assetDecimals);
         emit log_named_decimal_uint("difference", assetBalanceAfter - assetBalanceBefore, assetDecimals);
+
+        // _qaVaultOperations();
+
+
+        _borrowViaVault(0);
+        assertGt(SILO_ASSET.balanceOf(address(VAULT)), maxBorrow, "silo asset should be borrowed");
+
+        _borrowViaVault(14 days);
+        _borrowViaVault(30 days);
 
         _qaVaultOperations();
 
@@ -104,7 +107,7 @@ contract VaultBorrow is Test {
     }
 
     function _qaVaultOperations() internal {
-        console2.log("\t ------- QA vault operations -------");
+        console2.log("------- QA vault operations -------");
         VAULT.claimRewards(); // always work
 
         IERC20 asset = IERC20Metadata(VAULT.asset());
@@ -128,5 +131,23 @@ contract VaultBorrow is Test {
         for (uint256 i = 0; i < totalLogics; i++) {
             console2.log("logic", logics[i]);
         }
+    }
+
+    function _borrowViaVault(uint256 _warp) internal {
+        console2.log("--------------------------------\nborrow via vault: claimRewards\n--------------------------------\n");
+        uint256 assetDecimals = SILO_ASSET.decimals();
+        string memory symbol = SILO_ASSET.symbol();
+        console2.log(string.concat("[_borrowViaVault] symbol ", symbol, ", decimals"), assetDecimals, address(SILO_ASSET));
+        uint256 assetBalanceBefore = SILO_ASSET.balanceOf(address(VAULT));
+        emit log_named_decimal_uint("[_borrowViaVault] ASSET balance before", assetBalanceBefore, assetDecimals);
+
+        vm.warp(block.timestamp + _warp);
+
+        // THIS WILL BORROW TOKENS
+        VAULT.claimRewards();
+
+        uint256 assetBalanceAfter = SILO_ASSET.balanceOf(address(VAULT));
+        emit log_named_decimal_uint("[_borrowViaVault] ASSET balance after", assetBalanceAfter, assetDecimals);
+        emit log_named_decimal_uint(string.concat("[_borrowViaVault] ", symbol, " balance"), assetBalanceAfter - assetBalanceBefore, assetDecimals);
     }
 }
