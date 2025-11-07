@@ -38,6 +38,10 @@ import {PTLinearOracleTxLib} from "../lib/PTLinearOracleTxLib.sol";
 
 /// @dev use `SiloDeployWithDeployerOwner` or `SiloDeployWithHookReceiverOwner`
 abstract contract SiloDeploy is CommonDeploy {
+    string public constant SUCCESS_SYMBOL = unicode"✅";
+    string public constant FAIL_SYMBOL = unicode"❌";
+    string public constant WARNING_SYMBOL = unicode"🚨";
+
     uint256 private constant _BYTES32_SIZE = 32;
 
     string public configName;
@@ -46,6 +50,7 @@ abstract contract SiloDeploy is CommonDeploy {
     string[] public verificationIssues;
 
     enum HookVersion {
+        UNKNOWN,
         V1,
         V2
     }
@@ -427,8 +432,6 @@ abstract contract SiloDeploy is CommonDeploy {
             initializationData = _generateHookReceiverInitializationDataV2(_siloInitData);
         }
 
-        require(initializationData.length != 0, "[_getClonableHookReceiverConfig] missing initialization data");
-
         hookReceiver = ISiloDeployer.ClonableHookReceiver({
             implementation: _implementation,
             initializationData: initializationData
@@ -466,7 +469,13 @@ abstract contract SiloDeploy is CommonDeploy {
             return HookVersion.V1;
         }
 
-        revert(string.concat("[_resolveHookVersion] unknown hook implementation: ", vm.toString(_implementation)));
+        console2.log(string.concat(
+            "\n", 
+            WARNING_SYMBOL, "[_resolveHookVersion] unknown hook implementation: ", vm.toString(_implementation), 
+            "\n"
+        ));
+
+        return HookVersion.UNKNOWN;
     }
 
     function _getDKinkIRMInitialOwner() internal virtual returns (address);
