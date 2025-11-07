@@ -45,6 +45,11 @@ abstract contract SiloDeploy is CommonDeploy {
 
     string[] public verificationIssues;
 
+    enum HookVersion {
+        V1,
+        V2
+    }
+
     error UnknownInterestRateModelFactory();
 
     function useConfig(string memory _config) external returns (SiloDeploy) {
@@ -104,17 +109,17 @@ abstract contract SiloDeploy is CommonDeploy {
         console2.log("[SiloCommonDeploy] hookReceiverImplementation", hookReceiverImplementation);
 
         ISiloDeployer.ClonableHookReceiver memory hookReceiver;
-        hookReceiver = _getClonableHookReceiverConfig(hookReceiverImplementation);
+        hookReceiver = _getClonableHookReceiverConfig(hookReceiverImplementation, siloInitData);
 
         vm.startBroadcast(deployerPrivateKey);
 
-        siloConfig = siloDeployer.deploy(
-            oracles,
-            irmConfigData0,
-            irmConfigData1,
-            hookReceiver,
-            siloInitData
-        );
+        siloConfig = siloDeployer.deploy({
+            _oracles: oracles,
+            _irmConfigData0: irmConfigData0,
+            _irmConfigData1: irmConfigData1,
+            _clonableHookReceiver: hookReceiver,
+            _siloInitData: siloInitData
+        });
 
         vm.stopBroadcast();
 
@@ -258,8 +263,16 @@ abstract contract SiloDeploy is CommonDeploy {
         }
 
         require(txData.deployed == address(0), "[_getOracleTxData] expect tx data, not deployed address");
-        require(txData.factory != address(0), string.concat("[_getOracleTxData] empty factory for oracle: ", _oracleConfigName));
-        require(txData.txInput.length != 0, string.concat("[_getOracleTxData] missing tx data for oracle: ", _oracleConfigName));
+
+        require(
+            txData.factory != address(0),
+            string.concat("[_getOracleTxData] empty factory for oracle: ", _oracleConfigName)
+        );
+        
+        require(
+            txData.txInput.length != 0,
+            string.concat("[_getOracleTxData] missing tx data for oracle: ", _oracleConfigName)
+        );
     }
 
     function _uniswapV3TxData(string memory _oracleConfigName)
@@ -400,10 +413,61 @@ abstract contract SiloDeploy is CommonDeploy {
         hookImplementation = _hookReceiverImplementation;
     }
 
-    function _getClonableHookReceiverConfig(address _implementation)
+    function _getClonableHookReceiverConfig(address _implementation, ISiloConfig.InitData memory _siloInitData)
         internal
         virtual
-        returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver);
+        returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver)
+    {
+        bytes memory initializationData;
+        HookVersion hookVersion = _resolveHookVersion(_implementation);
+
+        if (hookVersion == HookVersion.V1) {
+            initializationData = _generateHookReceiverInitializationDataV1();
+        } else if (hookVersion == HookVersion.V2) {
+            initializationData = _generateHookReceiverInitializationDataV2(_siloInitData);
+        }
+
+        require(initializationData.length != 0, "[_getClonableHookReceiverConfig] missing initialization data");
+
+        hookReceiver = ISiloDeployer.ClonableHookReceiver({
+            implementation: _implementation,
+            initializationData: initializationData
+        });
+    }
+
+    function _getClonableHookReceiverOwner() internal view virtual returns (address owner);
+
+    function _generateHookReceiverInitializationDataV1() internal view returns (bytes memory) {
+        return abi.encode(_getClonableHookReceiverOwner());
+    }
+
+    function _generateHookReceiverInitializationDataV2(ISiloConfig.InitData memory _siloInitData)
+        internal
+        view
+        returns (bytes memory)
+    {
+        return abi.encode(_getClonableHookReceiverOwner(), _resolveDefaultingCollateralToken(_siloInitData));
+    }
+
+    /// @dev by default we using token0 as defaulting one
+    function _resolveDefaultingCollateralToken(ISiloConfig.InitData memory _siloInitData)
+        internal
+        view
+        virtual
+        returns (address defaultingCollateralToken)
+    {
+        defaultingCollateralToken = _siloInitData.token0;
+    }
+
+    function _resolveHookVersion(address _implementation) internal returns (HookVersion hookVersion) {
+        if (_implementation == getDeployedAddress(SiloCoreContracts.SILO_HOOK_V2)) {
+            return HookVersion.V2;
+        } else if (_implementation == getDeployedAddress(SiloCoreContracts.SILO_HOOK_V1)) {
+            return HookVersion.V1;
+        }
+
+        revert(string.concat("[_resolveHookVersion] unknown hook implementation: ", vm.toString(_implementation)));
+    }
 
     function _getDKinkIRMInitialOwner() internal virtual returns (address);
 
