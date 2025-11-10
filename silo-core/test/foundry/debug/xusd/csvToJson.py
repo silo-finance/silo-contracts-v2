@@ -11,7 +11,34 @@ import json
 import os
 
 # Hardcoded path (relative to project root)
-CSV_FILE_PATH = "silo-core/test/foundry/debug/xusd/data/stream_markets_positions (1).csv"
+CSV_FILE_PATH = "silo-core/test/foundry/data/xusd/stream_markets_positions.csv"
+
+# Fields that should be converted to numbers
+NUMERIC_FIELDS = {'network_id', 'assets', 'block_number'}
+# Fields that should be converted to booleans
+BOOLEAN_FIELDS = {'is_contract'}
+
+def convert_row_types(row):
+    """Convert row values to appropriate types (numbers, booleans)."""
+    converted_row = {}
+    for key, value in row.items():
+        if key in NUMERIC_FIELDS:
+            # Convert to integer
+            try:
+                converted_row[key] = int(value)
+            except (ValueError, TypeError):
+                converted_row[key] = value
+        elif key in BOOLEAN_FIELDS:
+            # Convert "True"/"False" strings to boolean
+            if value == "True":
+                converted_row[key] = True
+            elif value == "False":
+                converted_row[key] = False
+            else:
+                converted_row[key] = value
+        else:
+            converted_row[key] = value
+    return converted_row
 
 def csv_to_json():
     """Convert CSV file to JSON format."""
@@ -29,7 +56,8 @@ def csv_to_json():
     with open(csv_path, 'r', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            data.append(row)
+            converted_row = convert_row_types(row)
+            data.append(converted_row)
     
     # Write JSON file
     with open(json_path, 'w', encoding='utf-8') as jsonfile:
