@@ -33,9 +33,6 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     /// then 2% liquidation fee goes to the keeper and 8% goes to the protocol.
     uint256 public constant KEEPER_FEE = 0.2e18;
 
-    /// @dev Asset address of silo0 or silo1 that will be used for defaulting liquidations
-    address public defaultingCollateral;
-
     /// @dev Address of the DefaultingSiloLogic contract used by Silo for delegate calls
     address public immutable LIQUIDATION_LOGIC;
 
@@ -47,7 +44,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         LIQUIDATION_LOGIC = address(new DefaultingSiloLogic());
     }
 
-    function __PartialLiquidationByDefaulting_init(address _owner, address _defaultingCollateral) // solhint-disable-line func-name-mixedcase
+    function __PartialLiquidationByDefaulting_init(address _owner) // solhint-disable-line func-name-mixedcase
         internal
         onlyInitializing
         virtual
@@ -56,12 +53,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         (address silo0, address silo1) = siloConfig.getSilos();
 
-        validateControllerForCollateral(silo0);
-        validateControllerForCollateral(silo1);
-
-        validateDefaultingCollateral(_defaultingCollateral, silo0, silo1);
-
-        defaultingCollateral = _defaultingCollateral;
+        validateDefaultingCollateral(silo0, silo1);
     }
 
     function liquidationCallByDefaulting(address _borrower) // solhint-disable-line function-max-lines, code-complexity
@@ -79,10 +71,6 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             _fetchConfigs(siloConfigCached, _borrower);
-
-        // defaulting can be only done for one (predefined) collateral to avoid creating cascading liquidations
-        // on the other silo
-        require(collateralConfig.token == defaultingCollateral, CollateralNotSupportedForDefaulting());
 
         collateralConfig.lt += LT_MARGIN_FOR_DEFAULTING;
 
@@ -224,21 +212,15 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         require(address(controllerCollateral) != address(0), NoControllerForCollateral());
     }
 
-    function validateDefaultingCollateral(address _defaultingCollateral, address _silo0, address _silo1)
+    function validateDefaultingCollateral(address _silo0, address _silo1)
         public
         view
         virtual
     {
-        address defaultingSilo = _defaultingCollateral == ISilo(_silo0).asset() ? _silo0 : _silo1;
+        ISiloConfig.ConfigData memory config0 = siloConfig.getConfig(_silo0);
+        ISiloConfig.ConfigData memory config1 = siloConfig.getConfig(_silo1);
 
-        require(_defaultingCollateral == ISilo(defaultingSilo).asset(), InvalidDefaultingCollateral());
-
-        ISiloConfig.ConfigData memory config = siloConfig.getConfig(defaultingSilo);
-
-        require(
-            config.lt + LT_MARGIN_FOR_DEFAULTING < PartialLiquidationLib._PRECISION_DECIMALS,
-            InvalidDefaultingCollateralLT()
-        );
+        require(config0.maxLtv == 0 || config1.maxLtv == 0, InvalidLT());
     }
 
     function _deductDefaultedDebtFromCollateral(address _silo, uint256 _assetsToRepay) internal virtual {
