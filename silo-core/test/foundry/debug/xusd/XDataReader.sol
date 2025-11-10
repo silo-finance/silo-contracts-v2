@@ -6,7 +6,7 @@ import {console2} from "forge-std/console2.sol";
 
 contract XDataReader is Test {
     bytes32 constant TRUE = keccak256("True");
-    
+
     /*
         "network_id": "146",
     "account": "0x9a1bf5365edbb99c2c61ca6d9ffad0b705acfc6f",

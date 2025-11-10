@@ -41,7 +41,7 @@ contract Borrowable_xUSD is UserState {
 
         _borrowable_xUSD_mainnet(0x172a687c397E315DBE56ED78aB347D7743D0D4fa, "SONIC");
     }
-    
+
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_skip_borrowable_xUSD_arbitrum --ffi -vvv
     */
@@ -68,7 +68,7 @@ contract Borrowable_xUSD is UserState {
         ISiloConfig config = ISiloConfig(xUSDsilo.config());
         (address silo0, address silo1) = config.getSilos();
         ISilo collateralSilo = silo0 == address(xUSDsilo) ? ISilo(silo1) : ISilo(silo0);
-       
+
         ISiloConfig.ConfigData memory collateralConfig = config.getConfig(address(collateralSilo));
 
         if (collateralConfig.maxLtv == 0) {
@@ -98,7 +98,9 @@ contract Borrowable_xUSD is UserState {
         collateral.approve(address(collateralSilo), collateralAmount);
         collateralSilo.deposit(collateralAmount, user, ISilo.CollateralType.Collateral);
 
-        emit log_named_decimal_uint(string.concat("collateral deposited ", collateral.symbol()), collateralAmount, collateralDecimals);
+        emit log_named_decimal_uint(
+            string.concat("collateral deposited ", collateral.symbol()), collateralAmount, collateralDecimals
+        );
         uint256 borrowable = xUSDsilo.maxBorrow(user);
         emit log_named_decimal_uint("estimate borrowable", borrowable, xDecimals);
 
