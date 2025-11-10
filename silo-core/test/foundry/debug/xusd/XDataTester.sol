@@ -19,9 +19,6 @@ contract XDataTester is XDataReader {
     string constant MARKETS_FILE = "stream_markets_positions.json";
     string constant VAULTS_FILE = "stream_vaults_positions.json";
 
-    // Position[] public markets;
-    // Position[] public vaults;
-
     mapping(uint256 chainId => bool checked) public chainIdChecked;
     mapping(uint256 chainId => uint256 forkingBlock) public forkingBlock;
 
@@ -83,13 +80,21 @@ contract XDataTester is XDataReader {
 
                 if (totalShares == type(uint256).max) continue; // we already checked
 
-                assertLe(totalAssets, ISilo(position.market).totalAssets(), string.concat("invalid total assets for market ", vm.toString(position.market)));
+                assertLe(
+                    totalAssets,
+                    ISilo(position.market).totalAssets(),
+                    string.concat("invalid total assets for market ", vm.toString(position.market))
+                );
                 uint256 assetsDiff = ISilo(position.market).totalAssets() - totalAssets;
 
                 console2.log("shares diff", totalShares - ISilo(position.market).totalSupply());
                 console2.log("assets diff", assetsDiff); // it is ok to have mote in Silo, because or rounding on withdraw
 
-                assertEq(totalShares, ISilo(position.market).totalSupply(), string.concat("invalid total shares for market ", vm.toString(position.market)));
+                assertEq(
+                    totalShares,
+                    ISilo(position.market).totalSupply(),
+                    string.concat("invalid total shares for market ", vm.toString(position.market))
+                );
 
                 marketShares[position.market] = type(uint256).max;
                 marketAssets[position.market] = type(uint256).max;
@@ -110,9 +115,15 @@ contract XDataTester is XDataReader {
             console2.log("[%s] on chain shares %s, on chain assets %s", _id, shares, assets);
         }
 
-        assertEq(assets, _position.assets, string.concat("assets mismatch for account ", vm.toString(_position.account)));
+        assertEq(
+            assets, _position.assets, string.concat("assets mismatch for account ", vm.toString(_position.account))
+        );
 
-        assertEq(IsContract.isContract(_position.account), _position.is_contract, string.concat("contract detection mismatch for account ", vm.toString(_position.account)));
+        assertEq(
+            IsContract.isContract(_position.account),
+            _position.is_contract,
+            string.concat("contract detection mismatch for account ", vm.toString(_position.account))
+        );
     }
 
     function _resolveChainIds(Position[] memory _data) internal {
@@ -149,6 +160,8 @@ contract XDataTester is XDataReader {
             console2.log("forking to avalanche");
             assertEq(_blockNumber, 71568890);
             vm.createSelectFork(vm.envString("RPC_AVALANCHE"), _blockNumber);
-        } else revert("chainId not supported (make sure you replace `vault` => `market` in json file)");
+        } else {
+            revert("chainId not supported (make sure you replace `vault` => `market` in json file)");
+        }
     }
 }
