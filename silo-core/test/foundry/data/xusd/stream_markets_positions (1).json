@@ -1,13 +1,13 @@
 [
   {
-    "network_id": "146",
+    "network_id": 146,
     "account": "0x9a1bf5365edbb99c2c61ca6d9ffad0b705acfc6f",
     "market": "0x27968d36b937dcb26f33902fa489e5b228b104be",
     "asset_symbol": "dUSD",
-    "assets": "23174657540190411039416",
+    "assets": 23174657540190411039416,
     "is_contract": "True",
     "assets_normalized": "23174.657540190411039416",
-    "block_number": "54144258"
+    "block_number": 54144258
   },
   {
     "network_id": "146",
