@@ -40,7 +40,7 @@ contract MainnetDeploy is CommonDeploy {
         SiloIncentivesControllerFactoryDeploy siloIncentivesControllerFactoryDeploy =
             new SiloIncentivesControllerFactoryDeploy();
 
-        _deploySiloFactory();
+        _deploySiloFactory(); // TODO why this is here? it was replaced by only checking if factory is deployed.
         interestRateModelV2ConfigFactoryDeploy.run();
         dkinkIRMFactoryDeploy.run();
         interestRateModelV2Deploy.run();
