@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -12,12 +13,15 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IPartialLiquidationByDefaulting.sol";
+import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
+import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {SiloConfigOverride, SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 
@@ -42,6 +46,8 @@ should work for both collaterals (collateral and protected) in same way
 TODO test if we revert with TooHigh error on repay because of delegate call
 
 anything todo with decimals?
+
+
 */
 
 contract DefaultingLiquidationTest is SiloLittleHelper, Test {
@@ -55,6 +61,7 @@ contract DefaultingLiquidationTest is SiloLittleHelper, Test {
     DummyOracle oracle;
 
     IPartialLiquidationByDefaulting defaulting;
+    ISiloIncentivesController gauge;
 
     function setUp() public {
         token0 = new MintableToken(18);
@@ -79,6 +86,8 @@ contract DefaultingLiquidationTest is SiloLittleHelper, Test {
 
         partialLiquidation = IPartialLiquidation(hook);
         defaulting = IPartialLiquidationByDefaulting(hook);
+        // TODO test if revert for silo0
+        gauge = new SiloIncentivesController(address(this), hook, address(silo0));
     }
 
     /*
@@ -102,7 +111,11 @@ contract DefaultingLiquidationTest is SiloLittleHelper, Test {
         _printLtv(borrower);
         vm.assume(_defaultingPossible(borrower));
 
+        _createIncentiveController();
+
         defaulting.liquidationCallByDefaulting(borrower);
+
+        _printLtv(borrower);
 
         // assertEq(silo0.getLtv(borrower), 1e18, "expected LTV for test");
 
@@ -122,6 +135,10 @@ contract DefaultingLiquidationTest is SiloLittleHelper, Test {
 
     /*
     fee is corectly splitted 
+    */
+
+    /*
+    NoControllerForCollateral error should revert
     */
 
 
@@ -206,5 +223,12 @@ contract DefaultingLiquidationTest is SiloLittleHelper, Test {
         uint256 margin = defaulting.LT_MARGIN_FOR_DEFAULTING();
         uint256 lt = silo0.config().getConfig(address(silo0)).lt;
         return silo0.getLtv(_user) >= lt + margin;
+    }
+
+    function _createIncentiveController() internal {
+        address owner = Ownable(address(defaulting)).owner();
+        vm.prank(owner);
+        IGaugeHookReceiver(address(defaulting)).setGauge(gauge, IShareToken(address(silo0)));
+        console2.log("gauge configured");
     }
 }
