@@ -99,6 +99,8 @@ contract ActionsLibImpl is LibImpl {
 
 /*
 FOUNDRY_PROFILE=core_test forge test --ffi --mc DefaultingRepayLibTest -vvv
+
+tests to ensure copied code behave in exacly same way as original one
 */
 contract DefaultingRepayLibTest is Test {
     address borrower = makeAddr("borrower");
