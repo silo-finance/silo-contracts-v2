@@ -453,9 +453,10 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
 
         assertEq(PartialLiquidationLib.valueToAssetsByRatio({_value: 1, _totalAssets: 100, _totalValue: 100}), 1, "#6");
 
-        assertEq(PartialLiquidationLib.valueToAssetsByRatio({_value: 2, _totalAssets: 10, _totalValue: 100}), 1, "#7");
+        assertEq(PartialLiquidationLib.valueToAssetsByRatio({_value: 1, _totalAssets: 10, _totalValue: 100}), 1, "#7");
+        assertEq(PartialLiquidationLib.valueToAssetsByRatio({_value: 2, _totalAssets: 10, _totalValue: 100}), 1, "#8");
 
-        assertEq(PartialLiquidationLib.valueToAssetsByRatio({_value: 2, _totalAssets: 1000, _totalValue: 100}), 20, "#8");
+        assertEq(PartialLiquidationLib.valueToAssetsByRatio({_value: 2, _totalAssets: 1000, _totalValue: 100}), 20, "#9");
     }
 
     function _assetsChunk(uint256 _totalValue, uint256 _totalAssets, uint256 _chunkValue)
