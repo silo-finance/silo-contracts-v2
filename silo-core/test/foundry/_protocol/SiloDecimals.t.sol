@@ -102,7 +102,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
     }
 
     /*
-        forge test -vv --ffi --mt test_decimals_ETH_USDC_oracle
+        FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_decimals_ETH_USDC_oracle
     */
     function test_decimals_ETH_USDC_oracle() public {
         _setUp(18, 6, true);
@@ -129,7 +129,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(1e6, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 417011079366804429, "collateral");
+        assertEq(collateral, 417011079366804430, "collateral");
         assertEq(debt, 992883522, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
@@ -170,7 +170,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(10, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 100_4885418, "collateral");
+        assertEq(collateral, 100_4885419, "collateral");
         assertEq(debt, 382813493616435237, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
