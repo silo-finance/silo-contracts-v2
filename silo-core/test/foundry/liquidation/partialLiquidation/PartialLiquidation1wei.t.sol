@@ -136,6 +136,9 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         uint256 ltv = siloLens.getLtv(silo0, borrower);
         emit log_named_decimal_uint("ltv", ltv, 16);
 
+        partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debtToRepay, false);
+
+
         // by depositing 1 share of protected collateral, we make liquiretion possible?
         silo0.deposit(1, borrower, ISilo.CollateralType.Protected);
         _mockQuote(2, 1e9 * 2);
