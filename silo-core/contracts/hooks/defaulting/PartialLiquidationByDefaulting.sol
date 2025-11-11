@@ -258,7 +258,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         address _collateralShareToken,
         ISilo.AssetType _assetType
     ) internal virtual returns (uint256 collateralShares) {
-        ISiloIncentivesController controllerCollateral = validateControllerForCollateral(_debtSilo);
+        ISiloIncentivesController controllerCollateral = validateControllerForCollateral(_silo);
 
         collateralShares = _callShareTokenForwardTransferNoChecks(
             _silo,
