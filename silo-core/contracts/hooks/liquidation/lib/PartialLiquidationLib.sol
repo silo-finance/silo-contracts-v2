@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
-import {console2} from "forge-std/console2.sol";
-
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
@@ -95,14 +93,6 @@ library PartialLiquidationLib {
         pure
         returns (uint256 collateralToLiquidate, uint256 debtToRepay, uint256 ltvAfter)
     {
-        console2.log("ltvBefore", _ltvBefore);
-        console2.log("sumOfCollateralAssets", _sumOfCollateralAssets);
-        console2.log("sumOfCollateralValue", _sumOfCollateralValue);
-        console2.log("borrowerDebtAssets", _borrowerDebtAssets);
-        console2.log("borrowerDebtValue", _borrowerDebtValue);
-        console2.log("liquidationTargetLtv", _params.liquidationTargetLtv);
-        console2.log("liquidationFee", _params.liquidationFee);
-
         uint256 collateralValueToLiquidate;
         uint256 debtValueToRepay;
 
@@ -130,22 +120,15 @@ library PartialLiquidationLib {
             }
         }
 
-        console2.log("debtValueToRepay", debtValueToRepay);
-        console2.log("sumOfCollateralValue", _sumOfCollateralValue);
-        console2.log("liquidationFee", _params.liquidationFee);
-
         collateralValueToLiquidate = calculateCollateralToLiquidate(
             debtValueToRepay, _sumOfCollateralValue, _params.liquidationFee
         );
-
-        console2.log("collateralValueToLiquidate", collateralValueToLiquidate);
 
         collateralToLiquidate = valueToAssetsByRatio(
             collateralValueToLiquidate,
             _sumOfCollateralAssets,
             _sumOfCollateralValue
         );
-        console2.log("collateralToLiquidate", collateralToLiquidate);
 
         ltvAfter = _calculateLtvAfter(
             _sumOfCollateralValue, _borrowerDebtValue, collateralValueToLiquidate, debtValueToRepay
@@ -162,7 +145,7 @@ library PartialLiquidationLib {
     {
         require(_totalValue != 0, IPartialLiquidation.UnknownRatio());
 
-        assets = Math.mulDiv(_value, _totalAssets, _totalValue, Rounding.UP);
+        assets = _value * _totalAssets / _totalValue;
     }
 
     /// @notice this function never reverts
