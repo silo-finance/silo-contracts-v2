@@ -107,7 +107,7 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
 
         // in BTC/USDC 1e8 BTC == 100000e18 USDC,
         // so 1 wei BTC = 100000e18 USDC / 1e8 = 1e10 USDC
-        _mockQuote(1, 1e2 * 1.1e18 / 1e18);
+        _mockQuote(1, 1e10);
 
         uint256 maxBorrow = silo1.maxBorrow(borrower);
         console2.log("maxBorrow >>>>>>", maxBorrow);
@@ -138,16 +138,17 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
 
         partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debtToRepay, false);
 
+        console2.log("BTC balance", token0.balanceOf(address(this)));
 
         // by depositing 1 share of protected collateral, we make liquiretion possible?
-        silo0.deposit(1, borrower, ISilo.CollateralType.Protected);
-        _mockQuote(2, 1e9 * 2);
-        ltv = siloLens.getLtv(silo0, borrower);
-        emit log_named_decimal_uint("ltv", ltv, 16);
+        // silo0.deposit(1, borrower, ISilo.CollateralType.Protected);
+        // _mockQuote(2, 1e9 * 2);
+        // ltv = siloLens.getLtv(silo0, borrower);
+        // emit log_named_decimal_uint("ltv", ltv, 16);
 
-        partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debtToRepay, false);
+        // // partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debtToRepay, false);
 
-        console2.log("BTC balance", token0.balanceOf(address(this)));
+        // console2.log("BTC balance", token0.balanceOf(address(this)));
 
         // ltv = siloLens.getLtv(silo0, borrower);
         // emit log_named_decimal_uint("ltv", ltv, 16);
