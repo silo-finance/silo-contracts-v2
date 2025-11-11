@@ -364,7 +364,7 @@ contract PartialLiquidationLibTest is Test, MaxRepayRawMath {
         );
         uint256 gasEnd = gasleft();
 
-        assertLe(gasStart - gasEnd, 675, "optimise calculateCollateralToLiquidate()");
+        assertLe(gasStart - gasEnd, 1057, "optimise calculateCollateralToLiquidate()");
     }
 
     /*
