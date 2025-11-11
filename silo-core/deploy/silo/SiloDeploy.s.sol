@@ -114,7 +114,7 @@ abstract contract SiloDeploy is CommonDeploy {
         console2.log("[SiloCommonDeploy] hookReceiverImplementation", hookReceiverImplementation);
 
         ISiloDeployer.ClonableHookReceiver memory hookReceiver;
-        hookReceiver = _getClonableHookReceiverConfig(hookReceiverImplementation, siloInitData);
+        hookReceiver = _getClonableHookReceiverConfig(hookReceiverImplementation);
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -418,7 +418,7 @@ abstract contract SiloDeploy is CommonDeploy {
         hookImplementation = _hookReceiverImplementation;
     }
 
-    function _getClonableHookReceiverConfig(address _implementation, ISiloConfig.InitData memory _siloInitData)
+    function _getClonableHookReceiverConfig(address _implementation)
         internal
         virtual
         returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver)
@@ -427,9 +427,9 @@ abstract contract SiloDeploy is CommonDeploy {
         HookVersion hookVersion = _resolveHookVersion(_implementation);
 
         if (hookVersion == HookVersion.V1) {
-            initializationData = _generateHookReceiverInitializationDataV1();
+            initializationData = _generateHookReceiverInitializationData();
         } else if (hookVersion == HookVersion.V2) {
-            initializationData = _generateHookReceiverInitializationDataV2(_siloInitData);
+            initializationData = _generateHookReceiverInitializationData();
         }
 
         hookReceiver = ISiloDeployer.ClonableHookReceiver({
@@ -440,26 +440,8 @@ abstract contract SiloDeploy is CommonDeploy {
 
     function _getClonableHookReceiverOwner() internal view virtual returns (address owner);
 
-    function _generateHookReceiverInitializationDataV1() internal view returns (bytes memory) {
+    function _generateHookReceiverInitializationData() internal view returns (bytes memory) {
         return abi.encode(_getClonableHookReceiverOwner());
-    }
-
-    function _generateHookReceiverInitializationDataV2(ISiloConfig.InitData memory _siloInitData)
-        internal
-        view
-        returns (bytes memory)
-    {
-        return abi.encode(_getClonableHookReceiverOwner(), _resolveDefaultingCollateralToken(_siloInitData));
-    }
-
-    /// @dev by default we using token0 as defaulting one
-    function _resolveDefaultingCollateralToken(ISiloConfig.InitData memory _siloInitData)
-        internal
-        view
-        virtual
-        returns (address defaultingCollateralToken)
-    {
-        defaultingCollateralToken = _siloInitData.token0;
     }
 
     function _resolveHookVersion(address _implementation) internal returns (HookVersion hookVersion) {
