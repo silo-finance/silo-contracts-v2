@@ -7,6 +7,7 @@ import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 import {EnumerableSet} from "openzeppelin5/utils/structs/EnumerableSet.sol";
 
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {XDataReader} from "./XDataReader.sol";
 
@@ -28,27 +29,33 @@ contract XDataTester is XDataReader {
 
     EnumerableSet.UintSet internal chainIds;
 
-    function setUp() public {
-        // markets = _readDataFromJson(MARKETS_FILE);
-        // vaults = _readDataFromJson(VAULTS_FILE);
-
-        // _resolveChainIds();
-
-        // console2.log("all chainIds", chainIds.length());
-    }
-
     /* 
-    FOUNDRY_PROFILE=core_test forge test --mt test_xData --ffi -vvv
+    FOUNDRY_PROFILE=core_test forge test --mt test_skip_xData_markets --ffi -vvv
     */
-    function test_xData_markets() public {
+    function test_skip_xData_markets() public {
         _check_xData_markets(MARKETS_FILE);
     }
 
     /* 
-    FOUNDRY_PROFILE=core_test forge test --mt test_xData_vaults --ffi -vvv
+    FOUNDRY_PROFILE=core_test forge test --mt test_skip_xData_vaults --ffi -vvv
     */
-    function test_xData_vaults() public {
+    function test_skip_xData_vaults() public {
         _check_xData_markets(VAULTS_FILE);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --mt test_skip_check_manually --ffi -vvv
+    */
+    function test_skip_check_manually() public {
+        _fork(42161, 397731469);
+
+        ISilo silo = ISilo(0xACb7432a4BB15402CE2afe0A7C9D5b738604F6F9);
+        address account = 0xF4Db2E9d49817EE4D1B89C214a0Dd76b603f9C33;
+
+        SiloLens siloLens = SiloLens(0xB627bdf951889deaAFbE4CF1E8a8aE6DED8338F8);
+
+        uint256 ltv = siloLens.getLtv(silo, account);
+        emit log_named_decimal_uint("ltv %", ltv, 16);
     }
 
     function _check_xData_markets(string memory _fileName) public {
