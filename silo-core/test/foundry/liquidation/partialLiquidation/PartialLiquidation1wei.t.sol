@@ -3,13 +3,14 @@ pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
+import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
-import {IERC20Errors} from "openzeppelin5/interfaces/draft-IERC6093.sol";
 
 import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
 import {SiloConfigOverride, SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
@@ -50,13 +51,19 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_collateral_borrowNotPossible_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 10000
-    function test_1wei_collateral_borrowNotPossible_fuzz(uint32 _amount, uint32 _burn) public {
+    function test_1wei_collateral_borrowNotPossible_fuzz()
+        // uint32 _amount, uint32 _burn
+        public
+    {
+        (uint32 _amount, uint32 _burn) = (46200, 46171517);
         _depositAndBurn(_amount, _burn, ISilo.CollateralType.Collateral);
 
-        _mockQuote(1, 1e10);
+        uint256 minAmount = _findMinDepositAmount(ISilo.CollateralType.Collateral);
+        _mockQuote(minAmount, 1e10 * minAmount);
+
         address borrower = makeAddr("Borrower");
         vm.prank(borrower);
-        uint256 shares = silo0.deposit(1, borrower);
+        uint256 shares = silo0.deposit(minAmount, borrower);
         vm.stopPrank();
 
         _depositForBorrow(1e18, address(3));
@@ -89,11 +96,13 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         // in BTC/USDC 1e8 BTC == 100000e18 USDC,
         // so 1 wei BTC = 100000e18 USDC / 1e8 = 1e10 USDC
         uint256 price = 1e10;
-        _mockQuote(1, price);
+
+        uint256 minAmount = _findMinDepositAmount(ISilo.CollateralType.Protected);
+        _mockQuote(minAmount, price * minAmount);
 
         address borrower = makeAddr("Borrower");
         vm.prank(borrower);
-        uint256 shares = silo0.deposit(1, borrower, ISilo.CollateralType.Protected);
+        uint256 shares = silo0.deposit(minAmount, borrower, ISilo.CollateralType.Protected);
         vm.stopPrank();
 
         uint256 maxWithdraw = silo0.maxWithdraw(borrower, ISilo.CollateralType.Protected);
@@ -121,7 +130,7 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         IShareToken(protectedShareToken).transfer(address(1), 1);
         vm.stopPrank();
 
-        _mockQuote(1, 8e9); // price DROP
+        _mockQuote(minAmount, 8e9 * minAmount); // price DROP
         assertFalse(silo1.isSolvent(borrower), "borrower should be ready to liquidate");
 
         (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired) =
@@ -191,5 +200,20 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
             vm.prank(address(silo0));
             IShareToken(token).burn(address(this), address(this), _burn);
         }
+    }
+
+    function _findMinDepositAmount(ISilo.CollateralType _collateralType) internal view returns (uint256 minAmount) {
+        uint256 assets = 1e18;
+        uint256 shares = silo0.previewDeposit(assets, _collateralType);
+
+        if (shares >= assets) return 1;
+
+        console2.log("shares", shares);
+        console2.log("assets", assets);
+        console2.log("previewDeposit(1)", silo0.previewDeposit(1, _collateralType));
+        console2.log("previewDeposit(10)", silo0.previewDeposit(10, _collateralType));
+
+        minAmount = Math.ceilDiv(assets, shares);
+        assertEq(silo0.previewDeposit(minAmount - 1, _collateralType), 0, "we can deposit less");
     }
 }
