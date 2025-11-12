@@ -219,6 +219,7 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     function _defaultingPossible(address _user) internal view returns (bool) {
         uint256 margin = defaulting.LT_MARGIN_FOR_DEFAULTING();
         uint256 lt = silo0.config().getConfig(address(silo0)).lt;
+
         return silo0.getLtv(_user) >= lt + margin;
     }
 
