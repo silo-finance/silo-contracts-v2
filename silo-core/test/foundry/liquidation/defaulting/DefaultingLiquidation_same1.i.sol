@@ -31,7 +31,11 @@ contract DefaultingLiquidationSame1Test is DefaultingLiquidationCommon {
         super.setUp();
 
         (address collateralAsset, address debtAsset) = _getTokens();
-        assertEq(collateralAsset, debtAsset, "[crosscheck] collateral and debt assets should be the same for same asset case");
+        assertEq(
+            collateralAsset,
+            debtAsset,
+            "[crosscheck] collateral and debt assets should be the same for same asset case"
+        );
 
         (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
         assertEq(address(collateralSilo), address(debtSilo), "[crosscheck] silos must be the same for this case");

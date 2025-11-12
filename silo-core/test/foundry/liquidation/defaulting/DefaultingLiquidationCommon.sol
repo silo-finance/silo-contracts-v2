@@ -25,27 +25,27 @@ import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncen
 
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 
-
 /*
 
+- should work exactly the same for same asset positions, that's why we have 4 cases
+
+- anything todo with decimals?
+
+
 defaulting should not change protected collateral ratio
-everyone should be able to withdraw protected after defaulting liquidation
 
 delay should be tested
-
-should work exactly the same for same asset positions
-
-revert for two way markets
 
 should work for both collaterals (collateral and protected) in same way
 
 
 TODO test if we revert with TooHigh error on repay because of delegate call
 
-anything todo with decimals?
 
 incentive distribution: 
 - does everyone can claim? its shares so even 1 wei should be claimable
+
+
 
 
 */
@@ -111,8 +111,8 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
         bool success = _createPosition({_collateral: _collateral, _protected: _protected, _maxOut: true});
         vm.assume(success);
 
-        // this will help with interest 
-        _removeLiquidity(); 
+        // this will help with interest
+        _removeLiquidity();
 
         _setCollateralPrice(1e18); // drop price 1000x
 
@@ -139,8 +139,8 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
         bool success = _createPosition({_collateral: 1e18, _protected: 1, _maxOut: true});
         vm.assume(success);
 
-        // this will help with interest 
-        _removeLiquidity(); 
+        // this will help with interest
+        _removeLiquidity();
 
         _setCollateralPrice(1e18); // drop price 1000x
 
@@ -148,7 +148,7 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
 
         _printLtv(borrower);
 
-        // first do normal liquidation with sTokens, to remove whole collateral, 
+        // first do normal liquidation with sTokens, to remove whole collateral,
         // price is set 1:1 so we can use collateral as max debt
         (uint256 collateralToLiquidate,,) = partialLiquidation.maxLiquidation(borrower);
         (address collateralAsset, address debtAsset) = _getTokens();
@@ -158,7 +158,7 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
         assertEq(collateralToLiquidate, 0, "collateral taken by regular liquidation");
 
         assertTrue(_defaultingPossible(borrower), "defaulting not possible??");
-        assertFalse(debtSilo.isSolvent(borrower), "borrower should be insolvent");
+        assertFalse(silo0.isSolvent(borrower), "borrower should be insolvent");
 
         _createIncentiveController();
 
@@ -170,8 +170,91 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     }
 
     /*
-    if _defaultingPossible() we never revert otherwise we do revert
+    everyone should be able to withdraw protected after defaulting liquidation
+    TODO echidna candidate
+
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_protectedCanBeFullyWithdrawn_fuzz -vv
     */
+    function test_defaulting_protectedCanBeFullyWithdrawn_fuzz(
+        uint24[] memory _protectedDeposits,
+        uint64 _initialPrice,
+        uint64 _changePrice,
+        uint32 _warp,
+        uint96 _collateral,
+        uint96 _protected
+    ) public {
+        (, ISilo debtSilo) = _getSilos();
+
+        for (uint256 i; i < _protectedDeposits.length; i++) {
+            address user = makeAddr(string.concat("user", vm.toString(i+1)));
+            vm.prank(user);
+            debtSilo.deposit(Math.max(_protectedDeposits[i], 1), user, ISilo.CollateralType.Protected);
+        }
+
+        _setCollateralPrice(_initialPrice);
+        bool success = _createPosition({_collateral: _collateral, _protected: _protected, _maxOut: true});
+        vm.assume(success);
+
+        assertGt(silo0.getLtv(borrower), 0, "double check that user does have position");
+
+        _removeLiquidity();
+
+        _setCollateralPrice(_changePrice);
+
+        vm.warp(block.timestamp + _warp);
+
+        _createIncentiveController();
+
+        try defaulting.liquidationCallByDefaulting(borrower) {
+            // nothing to do
+        } catch {
+            // does not matter what happened, user should be able to withdraw protected
+        }
+
+        for (uint256 i; i < _protectedDeposits.length; i++) {
+            address user = makeAddr(string.concat("user", vm.toString(i+1)));
+            vm.prank(user);
+            debtSilo.withdraw(Math.max(_protectedDeposits[i], 1), user, user, ISilo.CollateralType.Protected);
+        }
+    }
+
+    /*
+    if _defaultingPossible() we never revert otherwise we do revert
+
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test__defaultingPossible_fuzz -vv --mc DefaultingLiquidationTwo1Test
+    */
+    function test__defaultingPossible_fuzz(
+        uint64 _initialPrice,
+        uint64 _changePrice,
+        uint32 _warp,
+        uint96 _collateral,
+        uint96 _protected
+    ) public {
+        _setCollateralPrice(_initialPrice);
+        bool success = _createPosition({_collateral: _collateral, _protected: _protected, _maxOut: true});
+        vm.assume(success);
+
+        assertGt(silo0.getLtv(borrower), 0, "double check that user does have position");
+
+        // this will help with interest
+        _removeLiquidity();
+
+        _setCollateralPrice(_changePrice);
+
+        vm.warp(block.timestamp + _warp);
+
+        _printLtv(borrower);
+
+        _createIncentiveController();
+
+        if (!_defaultingPossible(borrower)) vm.expectRevert(IPartialLiquidation.UserIsSolvent.selector);
+
+        defaulting.liquidationCallByDefaulting(borrower);
+
+        _printLtv(borrower);
+
+        assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
+    }
 
     /*
     bad debt scenario: everybody can exit with the same loss
@@ -185,9 +268,6 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     fee is corectly splitted 
     */
 
-    /*
-    NoControllerForCollateral error should revert
-    */
 
     function _mockQuote(uint256 _amountIn, uint256 _price) public {
         vm.mockCall(
@@ -224,12 +304,12 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
         vm.stopPrank();
     }
 
-    function _createPosition(uint256 _collateral, uint256 _protected, bool _maxOut) internal returns (bool success){
+    function _createPosition(uint256 _collateral, uint256 _protected, bool _maxOut) internal returns (bool success) {
         (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
 
         uint256 forBorrow = Math.max(_collateral, _protected);
         if (forBorrow == 0) return false;
-        
+
         vm.prank(depositor);
         debtSilo.deposit(forBorrow, depositor);
 
@@ -259,7 +339,9 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
             if (maxWithdraw != 0) collateralSilo.withdraw(maxWithdraw, borrower, borrower);
 
             maxWithdraw = collateralSilo.maxWithdraw(borrower, ISilo.CollateralType.Protected);
-            if (maxWithdraw != 0) collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.CollateralType.Protected);
+            if (maxWithdraw != 0) {
+                collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.CollateralType.Protected);
+            }
             vm.stopPrank();
 
             _printLtv(borrower);
@@ -312,9 +394,11 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     function _setCollateralPrice(uint256 _price) internal {
         (ISilo collateralSilo,) = _getSilos();
         if (address(collateralSilo) == address(silo0)) oracle0.setPrice(_price);
-        else oracle0.setPrice(1e36 / _price); 
+        else oracle0.setPrice(1e36 / _price);
 
-        emit log_named_decimal_uint("value of token 0", oracle0.quote(10 ** token0.decimals(), address(token0)), token1.decimals());
+        emit log_named_decimal_uint(
+            "value of token 0", oracle0.quote(10 ** token0.decimals(), address(token0)), token1.decimals()
+        );
     }
 
     function _siloLp() internal view returns (string memory lp) {

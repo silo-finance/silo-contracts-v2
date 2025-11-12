@@ -31,7 +31,11 @@ contract DefaultingLiquidationTwo1Test is DefaultingLiquidationCommon {
         super.setUp();
 
         (address collateralAsset, address debtAsset) = _getTokens();
-        assertNotEq(collateralAsset, debtAsset, "[crosscheck] collateral and debt assets should be different for two assets case");
+        assertNotEq(
+            collateralAsset,
+            debtAsset,
+            "[crosscheck] collateral and debt assets should be different for two assets case"
+        );
 
         (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
         assertNotEq(address(collateralSilo), address(debtSilo), "[crosscheck] silos must be different for this case");

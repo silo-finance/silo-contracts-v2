@@ -21,7 +21,6 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {DefaultingLiquidationCommon} from "./DefaultingLiquidationCommon.sol";
 
-
 /*
 tests for two way markets, non-borrowable token is 0
 */
@@ -32,7 +31,11 @@ contract DefaultingLiquidationTwo0Test is DefaultingLiquidationCommon {
         super.setUp();
 
         (address collateralAsset, address debtAsset) = _getTokens();
-        assertNotEq(collateralAsset, debtAsset, "[crosscheck] collateral and debt assets should be different for two assets case");
+        assertNotEq(
+            collateralAsset,
+            debtAsset,
+            "[crosscheck] collateral and debt assets should be different for two assets case"
+        );
 
         (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
         assertNotEq(address(collateralSilo), address(debtSilo), "[crosscheck] silos must be different for this case");
