@@ -1,0 +1,114 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.28;
+
+import {Test} from "forge-std/Test.sol";
+
+import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
+
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
+import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IPartialLiquidationByDefaulting.sol";
+import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
+import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
+
+import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
+import {SiloConfigOverride, SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
+import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
+import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
+
+import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
+import {SiloHookV2} from "silo-core/contracts/hooks/SiloHookV2.sol";
+
+/*
+FOUNDRY_PROFILE=core_test forge test --ffi --mc DefaultingLiquidationInvalidConfig -vv
+*/
+contract DefaultingLiquidationInvalidConfigTest is Test {
+    ISiloConfig siloConfig = ISiloConfig(makeAddr("siloConfig"));
+    address silo0 = makeAddr("silo0");
+    address silo1 = makeAddr("silo1");
+
+    DummyOracle oracle;
+
+    IPartialLiquidationByDefaulting defaulting;
+    ISiloIncentivesController gauge;
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_twoWayMarket -vv
+    */
+    function test_defaulting_twoWayMarket() public {
+        ISiloConfig.ConfigData memory config;
+        config.maxLtv = 1;
+        config.lt = 1;
+
+        _mockSiloConfig(config, config);
+
+        SiloHookV2 implementation = new SiloHookV2();
+        SiloHookV2 defaulting = SiloHookV2(Clones.clone(address(implementation)));
+
+        vm.expectRevert(IPartialLiquidationByDefaulting.InvalidLT.selector);
+        defaulting.initialize(siloConfig, abi.encode(address(this)));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_validateDefaultingCollateral_InvalidLT -vv
+    */
+    function test_validateDefaultingCollateral_InvalidLT() public {
+        ISiloConfig.ConfigData memory config;
+        SiloHookV2 defaulting = _cloneHook(config);
+
+        config.maxLtv = 1;
+        config.lt = 1;
+        _mockSiloConfig(config, config);
+
+        vm.expectRevert(IPartialLiquidationByDefaulting.InvalidLT.selector);
+        defaulting.validateDefaultingCollateral(silo0, silo1);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_hookv2_constructor_InvalidInitialization -vv
+    */
+    function test_hookv2_constructor_InvalidInitialization() public {
+        SiloHookV2 defaulting = new SiloHookV2();
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        defaulting.initialize(ISiloConfig(address(1)), abi.encode(address(this)));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_hookv2_initTwice_InvalidInitialization -vv
+    */
+    function test_hookv2_initTwice_InvalidInitialization() public {
+        ISiloConfig.ConfigData memory config;
+        SiloHookV2 defaulting = _cloneHook(config);
+
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        defaulting.initialize(siloConfig, abi.encode(address(this)));
+    }
+
+    function _cloneHook(ISiloConfig.ConfigData memory _config) internal returns (SiloHookV2 defaulting) {
+        SiloHookV2 implementation = new SiloHookV2();
+        defaulting = SiloHookV2(Clones.clone(address(implementation)));
+
+        _mockSiloConfig(_config, _config);
+
+        defaulting.initialize(siloConfig, abi.encode(address(this)));
+    }
+
+    function _mockSiloConfig(ISiloConfig.ConfigData memory _config0, ISiloConfig.ConfigData memory _config1)
+        internal
+    {
+        vm.mockCall(
+            address(siloConfig), abi.encodeWithSelector(ISiloConfig.getSilos.selector), abi.encode(silo0, silo1)
+        );
+
+        vm.mockCall(
+            address(siloConfig), abi.encodeWithSelector(ISiloConfig.getConfig.selector, silo0), abi.encode(_config0)
+        );
+
+        vm.mockCall(
+            address(siloConfig), abi.encodeWithSelector(ISiloConfig.getConfig.selector, silo1), abi.encode(_config1)
+        );
+    }
+}

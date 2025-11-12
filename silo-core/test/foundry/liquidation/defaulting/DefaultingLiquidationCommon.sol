@@ -47,10 +47,13 @@ TODO test if we revert with TooHigh error on repay because of delegate call
 
 anything todo with decimals?
 
+incentive distribution: 
+- does everyone can claim? its shares so even 1 wei should be claimable
+
 
 */
 
-contract DefaultingLiquidationTest is SiloLittleHelper, Test {
+abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
 
     ISiloConfig siloConfig;
@@ -77,7 +80,7 @@ contract DefaultingLiquidationTest is SiloLittleHelper, Test {
         overrides.token1 = address(token1);
         overrides.solvencyOracle0 = address(oracle);
         overrides.maxLtvOracle0 = address(oracle);
-        overrides.configName = SiloConfigsNames.SILO_LOCAL_NO_ORACLE_DEFAULTING;
+        overrides.configName = _useConfigName();
 
         SiloFixture siloFixture = new SiloFixture();
 
@@ -86,8 +89,7 @@ contract DefaultingLiquidationTest is SiloLittleHelper, Test {
 
         partialLiquidation = IPartialLiquidation(hook);
         defaulting = IPartialLiquidationByDefaulting(hook);
-        // TODO test if revert for silo0
-        gauge = new SiloIncentivesController(address(this), hook, address(silo0));
+        
     }
 
     /*
@@ -166,7 +168,7 @@ contract DefaultingLiquidationTest is SiloLittleHelper, Test {
     }
 
     function _createPosition(uint256 _collateral, uint256 _protected, bool _maxOut) internal {
-        bool sameAssetPosition = _sameAssetPosition();
+        bool sameAssetPosition = _useSameAssetPosition();
 
         uint256 forBorrow = Math.max(_collateral, _protected);
 
@@ -202,10 +204,6 @@ contract DefaultingLiquidationTest is SiloLittleHelper, Test {
         }
     }
 
-    function _sameAssetPosition() internal pure virtual returns (bool) {
-        return false;
-    }
-
     function _printBalances(ISilo _silo, address _user) internal view {
         (address protectedShareToken, address collateralShareToken, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
         string memory siloName = string.concat("silo", address(_silo) == address(silo0) ? "0" : "1");
@@ -226,9 +224,18 @@ contract DefaultingLiquidationTest is SiloLittleHelper, Test {
     }
 
     function _createIncentiveController() internal {
+        // TODO test if revert for silo0
+        gauge = new SiloIncentivesController(address(this), address(partialLiquidation), address(silo0));
+
         address owner = Ownable(address(defaulting)).owner();
         vm.prank(owner);
         IGaugeHookReceiver(address(defaulting)).setGauge(gauge, IShareToken(address(silo0)));
         console2.log("gauge configured");
     }
+
+    // CONFIGURATION
+
+    function _useConfigName() internal view virtual returns (string memory);
+
+    function _useSameAssetPosition() internal pure virtual returns (bool);
 }
