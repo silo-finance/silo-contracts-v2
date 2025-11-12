@@ -25,10 +25,8 @@ import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncen
 
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 
-// import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
-/*
 
-when 0 collateral, defaulting should NOT revert
+/*
 
 defaulting should not change protected collateral ratio
 everyone should be able to withdraw protected after defaulting liquidation
@@ -65,7 +63,7 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     IPartialLiquidationByDefaulting defaulting;
     ISiloIncentivesController gauge;
 
-    function setUp() public {
+    function setUp() public virtual {
         token0 = new MintableToken(18);
         token1 = new MintableToken(18);
 
@@ -88,6 +86,12 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
 
         partialLiquidation = IPartialLiquidation(hook);
         defaulting = IPartialLiquidationByDefaulting(hook);
+
+        (address collateralAsset, address debtAsset) = _getTokens();
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
+
+        assertEq(collateralSilo.asset(), collateralAsset, "[crosscheck] asset must much silo asset");
+        assertEq(debtSilo.asset(), debtAsset, "[crosscheck] asset must much silo asset");
     }
 
     /*
@@ -116,6 +120,45 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
 
         _printLtv(borrower);
         vm.assume(_defaultingPossible(borrower));
+
+        _createIncentiveController();
+
+        defaulting.liquidationCallByDefaulting(borrower);
+
+        _printLtv(borrower);
+
+        assertEq(silo0.getLtv(borrower), 0, "position should be removed");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_0collateral -vv
+    */
+    function test_defaulting_neverReverts_0collateral() public {
+        _setCollateralPrice(1000e18);
+        // minimal collateral to create position is 2
+        bool success = _createPosition({_collateral: 1e18, _protected: 1, _maxOut: true});
+        vm.assume(success);
+
+        // this will help with interest 
+        _removeLiquidity(); 
+
+        _setCollateralPrice(1e18); // drop price 1000x
+
+        vm.warp(block.timestamp + 10000 days);
+
+        _printLtv(borrower);
+
+        // first do normal liquidation with sTokens, to remove whole collateral, 
+        // price is set 1:1 so we can use collateral as max debt
+        (uint256 collateralToLiquidate,,) = partialLiquidation.maxLiquidation(borrower);
+        (address collateralAsset, address debtAsset) = _getTokens();
+        partialLiquidation.liquidationCall(collateralAsset, debtAsset, borrower, collateralToLiquidate, true);
+
+        (collateralToLiquidate,,) = partialLiquidation.maxLiquidation(borrower);
+        assertEq(collateralToLiquidate, 0, "collateral taken by regular liquidation");
+
+        assertTrue(_defaultingPossible(borrower), "defaulting not possible??");
+        assertFalse(debtSilo.isSolvent(borrower), "borrower should be insolvent");
 
         _createIncentiveController();
 
@@ -244,9 +287,13 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
         uint256 ltv = collateralSilo.getLtv(_user);
 
         possible = ltv >= lt + margin;
-        emit log_named_decimal_uint("    lt", lt, 16);
-        emit log_named_decimal_uint("margin", margin, 16);
-        emit log_named_decimal_uint("   ltv", ltv, 16);
+
+        if (!possible) {
+            emit log_named_decimal_uint("    lt", lt, 16);
+            emit log_named_decimal_uint("margin", margin, 16);
+            emit log_named_decimal_uint("   ltv", ltv, 16);
+        }
+
         console2.log("defaulting possible: ", possible ? "yes" : "no");
     }
 
@@ -282,6 +329,8 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     function _useSameAssetPosition() internal pure virtual returns (bool);
 
     function _getSilos() internal view virtual returns (ISilo collateralSilo, ISilo debtSilo);
+
+    function _getTokens() internal view virtual returns (address collateralAsset, address debtAsset);
 
     function _maxBorrow(address _borrower) internal view virtual returns (uint256);
 

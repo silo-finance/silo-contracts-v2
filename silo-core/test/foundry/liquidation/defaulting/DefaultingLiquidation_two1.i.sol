@@ -27,11 +27,26 @@ tests for two way markets, non-borrowable token is 1
 contract DefaultingLiquidationTwo1Test is DefaultingLiquidationCommon {
     using SiloLensLib for ISilo;
 
+    function setUp() public override {
+        super.setUp();
+
+        (address collateralAsset, address debtAsset) = _getTokens();
+        assertNotEq(collateralAsset, debtAsset, "[crosscheck] collateral and debt assets should be different for two assets case");
+
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
+        assertNotEq(address(collateralSilo), address(debtSilo), "[crosscheck] silos must be different for this case");
+    }
+
     // CONFIGURATION
 
     function _getSilos() internal view override returns (ISilo collateralSilo, ISilo debtSilo) {
         collateralSilo = silo1;
         debtSilo = silo0;
+    }
+
+    function _getTokens() internal view override returns (address collateralAsset, address debtAsset) {
+        collateralAsset = address(token1);
+        debtAsset = address(token0);
     }
 
     function _maxBorrow(address _borrower) internal view override returns (uint256) {

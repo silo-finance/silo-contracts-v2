@@ -27,11 +27,26 @@ tests for same asset borrow, non-borrowable token is 1
 contract DefaultingLiquidationSame1Test is DefaultingLiquidationCommon {
     using SiloLensLib for ISilo;
 
+    function setUp() public override {
+        super.setUp();
+
+        (address collateralAsset, address debtAsset) = _getTokens();
+        assertEq(collateralAsset, debtAsset, "[crosscheck] collateral and debt assets should be the same for same asset case");
+
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
+        assertEq(address(collateralSilo), address(debtSilo), "[crosscheck] silos must be the same for this case");
+    }
+
     // CONFIGURATION
 
     function _getSilos() internal view override returns (ISilo collateralSilo, ISilo debtSilo) {
         collateralSilo = silo1;
         debtSilo = silo1;
+    }
+
+    function _getTokens() internal view override returns (address collateralAsset, address debtAsset) {
+        collateralAsset = address(token1);
+        debtAsset = address(token1);
     }
 
     function _maxBorrow(address _borrower) internal view override returns (uint256) {
