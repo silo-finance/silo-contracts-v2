@@ -166,38 +166,34 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     }
 
     function _createPosition(uint256 _collateral, uint256 _protected, bool _maxOut) internal {
-        bool sameAssetPosition = _useSameAssetPosition();
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
 
         uint256 forBorrow = Math.max(_collateral, _protected);
+        vm.prank(depositor);
+        debtSilo.deposit(forBorrow, depositor);
 
-        if (sameAssetPosition) _deposit(forBorrow, depositor);
-        else _depositForBorrow(forBorrow, depositor);
-
-        if (_collateral != 0) _deposit(_collateral, borrower);
-        if (_protected != 0) _deposit(_protected, borrower, ISilo.CollateralType.Protected);
+        vm.startPrank(borrower);
+        if (_collateral != 0) collateralSilo.deposit(_collateral, borrower);
+        if (_protected != 0) collateralSilo.deposit(_protected, borrower, ISilo.CollateralType.Protected);
+        vm.stopPrank();
 
         _printBalances(silo0, borrower);
         _printBalances(silo1, borrower);
 
-        uint256 maxBorrow = sameAssetPosition ? silo0.maxBorrowSameAsset(borrower) : silo1.maxBorrow(borrower);
+        uint256 maxBorrow = _maxBorrow(borrower);
         console2.log("maxBorrow", maxBorrow);
         assertGt(maxBorrow, 0, "maxBorrow should be > 0");
 
-        if (sameAssetPosition) {
-            vm.prank(borrower);
-            silo0.borrowSameAsset(maxBorrow, borrower, borrower);
-        } else {
-            _borrow(maxBorrow, borrower);
-        }
+        _executeBorrow(borrower, maxBorrow);
 
         _printLtv(borrower);
 
         if (_maxOut) {
-            uint256 maxWithdraw = silo0.maxWithdraw(borrower);
-            if (maxWithdraw != 0) _withdraw(maxWithdraw, borrower);
+            uint256 maxWithdraw = collateralSilo.maxWithdraw(borrower);
+            if (maxWithdraw != 0) collateralSilo.withdraw(maxWithdraw, borrower, borrower);
 
-            maxWithdraw = silo0.maxWithdraw(borrower, ISilo.CollateralType.Protected);
-            if (maxWithdraw != 0) _withdraw(maxWithdraw, borrower, ISilo.CollateralType.Protected);
+            maxWithdraw = collateralSilo.maxWithdraw(borrower, ISilo.CollateralType.Protected);
+            if (maxWithdraw != 0) collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.CollateralType.Protected);
             _printLtv(borrower);
         }
     }
@@ -238,4 +234,10 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     function _useConfigName() internal view virtual returns (string memory);
 
     function _useSameAssetPosition() internal pure virtual returns (bool);
+
+    function _getSilos() internal view virtual returns (ISilo collateralSilo, ISilo debtSilo);
+
+    function _maxBorrow(address _borrower) internal view virtual returns (uint256);
+
+    function _executeBorrow(address _borrower, uint256 _amount) internal virtual;
 }

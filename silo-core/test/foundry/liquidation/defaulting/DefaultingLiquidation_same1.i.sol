@@ -21,16 +21,35 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {DefaultingLiquidationCommon} from "./DefaultingLiquidationCommon.sol";
 
-contract DefaultingLiquidation1twoTest is DefaultingLiquidationCommon {
+/*
+tests for same asset borrow, non-borrowable token is 1
+*/
+contract DefaultingLiquidationSame1Test is DefaultingLiquidationCommon {
     using SiloLensLib for ISilo;
 
     // CONFIGURATION
+
+    function _getSilos() internal view override returns (ISilo collateralSilo, ISilo debtSilo) {
+        collateralSilo = silo1;
+        debtSilo = silo1;
+    }
+
+    function _maxBorrow(address _borrower) internal view override returns (uint256) {
+        (, ISilo debtSilo) = _getSilos();
+        return debtSilo.maxBorrowSameAsset(_borrower);
+    }
+
+    function _executeBorrow(address _borrower, uint256 _amount) internal override {
+        (, ISilo debtSilo) = _getSilos();
+        vm.prank(_borrower);
+        debtSilo.borrowSameAsset(_amount, _borrower, _borrower);
+    }
 
     function _useConfigName() internal pure override returns (string memory) {
         return SiloConfigsNames.SILO_LOCAL_NO_ORACLE_DEFAULTING1;
     }
 
     function _useSameAssetPosition() internal pure override returns (bool) {
-        return false;
+        return true;
     }
 }
