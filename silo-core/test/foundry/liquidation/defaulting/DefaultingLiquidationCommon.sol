@@ -25,7 +25,6 @@ import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncen
 
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 
-
 // import {SiloLittleHelper} from "../../../_common/SiloLittleHelper.sol";
 /*
 
@@ -89,7 +88,6 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
 
         partialLiquidation = IPartialLiquidation(hook);
         defaulting = IPartialLiquidationByDefaulting(hook);
-        
     }
 
     /*
@@ -120,7 +118,6 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
         _printLtv(borrower);
 
         // assertEq(silo0.getLtv(borrower), 1e18, "expected LTV for test");
-
     }
 
     /*
@@ -143,10 +140,11 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     NoControllerForCollateral error should revert
     */
 
-
     function _mockQuote(uint256 _amountIn, uint256 _price) public {
         vm.mockCall(
-            address(oracle), abi.encodeWithSelector(ISiloOracle.quote.selector, _amountIn, address(token0)), abi.encode(_price)
+            address(oracle),
+            abi.encodeWithSelector(ISiloOracle.quote.selector, _amountIn, address(token0)),
+            abi.encode(_price)
         );
     }
 
@@ -205,7 +203,8 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     }
 
     function _printBalances(ISilo _silo, address _user) internal view {
-        (address protectedShareToken, address collateralShareToken, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            _silo.config().getShareTokens(address(_silo));
         string memory siloName = string.concat("silo", address(_silo) == address(silo0) ? "0" : "1");
 
         console2.log(siloName, "balance", IShareToken(collateralShareToken).balanceOf(_user));

@@ -7,7 +7,6 @@ import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 
-
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -16,14 +15,8 @@ import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IP
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 
-import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
-import {SiloConfigOverride, SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
-import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
-import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
-import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 
-import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 import {SiloHookV2} from "silo-core/contracts/hooks/SiloHookV2.sol";
 
 /*
@@ -90,7 +83,7 @@ contract DefaultingLiquidation_IncentiveControllerSetupTest is Test {
 
         defaulting.validateControllerForCollateral(silo0);
     }
-    
+
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_validateControllerForCollateral_revertsWhenShareTokenDoesNotMatch -vv
     */
@@ -129,7 +122,7 @@ contract DefaultingLiquidation_IncentiveControllerSetupTest is Test {
     }
 
     function _mockGetShareTokens() internal {
-         vm.mockCall(
+        vm.mockCall(
             address(siloConfig),
             abi.encodeWithSelector(ISiloConfig.getShareTokens.selector, silo0),
             abi.encode(protectedShareToken, collateralShareToken, debtShareToken)
@@ -138,11 +131,15 @@ contract DefaultingLiquidation_IncentiveControllerSetupTest is Test {
         vm.mockCall(
             address(siloConfig),
             abi.encodeWithSelector(ISiloConfig.getShareTokens.selector, silo1),
-            abi.encode(makeAddr("protectedShareToken1"), makeAddr("collateralShareToken1"), makeAddr("debtShareToken1"))
+            abi.encode(
+                makeAddr("protectedShareToken1"), makeAddr("collateralShareToken1"), makeAddr("debtShareToken1")
+            )
         );
     }
 
-    function _mockSiloConfig(ISiloConfig.ConfigData memory _config0, ISiloConfig.ConfigData memory _config1) internal {
+    function _mockSiloConfig(ISiloConfig.ConfigData memory _config0, ISiloConfig.ConfigData memory _config1)
+        internal
+    {
         vm.mockCall(
             address(siloConfig), abi.encodeWithSelector(ISiloConfig.getSilos.selector), abi.encode(silo0, silo1)
         );
@@ -155,16 +152,10 @@ contract DefaultingLiquidation_IncentiveControllerSetupTest is Test {
             address(siloConfig), abi.encodeWithSelector(ISiloConfig.getConfig.selector, silo1), abi.encode(_config1)
         );
 
-        vm.mockCall(
-            collateralShareToken, abi.encodeWithSelector(IShareToken.silo.selector), abi.encode(silo0)
-        );
+        vm.mockCall(collateralShareToken, abi.encodeWithSelector(IShareToken.silo.selector), abi.encode(silo0));
 
-        vm.mockCall(
-            protectedShareToken, abi.encodeWithSelector(IShareToken.silo.selector), abi.encode(silo0)
-        );
+        vm.mockCall(protectedShareToken, abi.encodeWithSelector(IShareToken.silo.selector), abi.encode(silo0));
 
-        vm.mockCall(
-            debtShareToken, abi.encodeWithSelector(IShareToken.silo.selector), abi.encode(silo0)
-        );
+        vm.mockCall(debtShareToken, abi.encodeWithSelector(IShareToken.silo.selector), abi.encode(silo0));
     }
 }

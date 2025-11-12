@@ -19,7 +19,6 @@ import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookRecei
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
-
 import {DefaultingLiquidationCommon} from "./DefaultingLiquidationCommon.sol";
 
 contract DefaultingLiquidation1sameTest is DefaultingLiquidationCommon {

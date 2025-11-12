@@ -7,19 +7,9 @@ import {Initializable} from "openzeppelin5/proxy/utils/Initializable.sol";
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
-import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IPartialLiquidationByDefaulting.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
-import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 
-import {SiloLittleHelper} from "../../_common/SiloLittleHelper.sol";
-import {SiloConfigOverride, SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
-import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
-import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
-import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
-
-import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 import {SiloHookV2} from "silo-core/contracts/hooks/SiloHookV2.sol";
 
 /*
@@ -30,10 +20,7 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
     address silo0 = makeAddr("silo0");
     address silo1 = makeAddr("silo1");
 
-    DummyOracle oracle;
-
-    IPartialLiquidationByDefaulting defaulting;
-    ISiloIncentivesController gauge;
+    SiloHookV2 defaulting;
 
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_twoWayMarket -vv
@@ -46,7 +33,7 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
         _mockSiloConfig(config, config);
 
         SiloHookV2 implementation = new SiloHookV2();
-        SiloHookV2 defaulting = SiloHookV2(Clones.clone(address(implementation)));
+        defaulting = SiloHookV2(Clones.clone(address(implementation)));
 
         vm.expectRevert(IPartialLiquidationByDefaulting.InvalidLT.selector);
         defaulting.initialize(siloConfig, abi.encode(address(this)));
@@ -57,7 +44,7 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
     */
     function test_validateDefaultingCollateral_InvalidLT() public {
         ISiloConfig.ConfigData memory config;
-        SiloHookV2 defaulting = _cloneHook(config);
+        defaulting = _cloneHook(config);
 
         config.maxLtv = 1;
         config.lt = 1;
@@ -71,7 +58,7 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_hookv2_constructor_InvalidInitialization -vv
     */
     function test_hookv2_constructor_InvalidInitialization() public {
-        SiloHookV2 defaulting = new SiloHookV2();
+        defaulting = new SiloHookV2();
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         defaulting.initialize(ISiloConfig(address(1)), abi.encode(address(this)));
     }
