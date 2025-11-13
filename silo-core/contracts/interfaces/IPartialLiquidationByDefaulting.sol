@@ -3,14 +3,14 @@ pragma solidity >=0.5.0;
 
 interface IPartialLiquidationByDefaulting {
     struct CallParams {
-        uint256 collateralShares;
-        uint256 protectedShares;
+        uint256 collateralSharesTotal;
+        uint256 protectedSharesTotal;
         uint256 withdrawAssetsFromCollateral;
-        uint256 withdrawAssetsFromCollateralForKeeper;
-        uint256 withdrawAssetsFromCollateralForLenders;
         uint256 withdrawAssetsFromProtected;
-        uint256 withdrawAssetsFromProtectedForKeeper;
-        uint256 withdrawAssetsFromProtectedForLenders;
+        uint256 collateralSharesForKeeper;
+        uint256 collateralSharesForLenders;
+        uint256 protectedSharesForKeeper;
+        uint256 protectedSharesForLenders;
         bytes4 customError;
     }
 
