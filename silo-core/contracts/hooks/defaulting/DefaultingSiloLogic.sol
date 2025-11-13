@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
+import {SafeCast} from "openzeppelin-contracts/contracts/utils/math/SafeCast.sol";
 
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {DefaultingRepayLib} from "silo-core/contracts/hooks/defaulting/DefaultingRepayLib.sol";
@@ -11,6 +12,8 @@ import {DefaultingRepayLib} from "silo-core/contracts/hooks/defaulting/Defaultin
 /// @dev implements custom logic for Silo to do delegate calls
 contract DefaultingSiloLogic {
     using Math for uint256;
+    using Math for uint192;
+    using SafeCast for uint256;
 
     /// @dev This is a copy of Silo.sol repay() function with a single line changed.
     /// DefaultingRepayLib.actionsRepay() is used instead of Actions.repay().
@@ -41,7 +44,9 @@ contract DefaultingSiloLogic {
             // if there is more debt to cancel than collateral deposited, decrease daoAndDeployerRevenue
             // so that the revenue does not take from future deposits
             uint256 excessDebt = _assetsToRepay - totalCollateralAssets;
-            (, $.daoAndDeployerRevenue) = $.daoAndDeployerRevenue.trySub(excessDebt);
+            uint256 revenue = $.daoAndDeployerRevenue;
+            (, revenue) = revenue.trySub(excessDebt);
+            $.daoAndDeployerRevenue = revenue.toUint192();
         }
     }
 }
