@@ -32,4 +32,19 @@ interface IPartialLiquidationByDefaulting {
     function liquidationCallByDefaulting(address _user)
         external
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets);
+
+    /// @dev it can revert in case of huge _withdrawAssetsFromCollateral and when `_liquidationFee * KEEPER_FEE > 1e18` 
+    function getKeeperAndLenderSharesSplit(
+        address _silo,
+        address _shareToken,
+        uint256 _liquidationFee,
+        uint256 _withdrawAssets,
+        ISilo.AssetType _assetType
+    ) public view virtual returns (uint256 totalShares, uint256 keeperShares, uint256 lendersShares);
+
+    function LT_MARGIN_FOR_DEFAULTING() external view returns (uint256);
+
+    function LIQUIDATION_LOGIC() external view returns (address);
+
+    function KEEPER_FEE() external view returns (uint256);   
 }
