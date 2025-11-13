@@ -20,16 +20,16 @@ contract DefaultingLiquidationSplitMathTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderAssetsSplit_zeros -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderSharesSplit_zeros -vv
     */
-    function test_getKeeperAndLenderAssetsSplit_zeros() public view {
+    function test_getKeeperAndLenderSharesSplit_zeros() public view {
         _singleCheck({_id: 0, _collateralToSplit: 0, _liquidationFee: 0, _expectedKeepers: 0, _expectedLenders: 0});
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderAssetsSplit_pass -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderSharesSplit_pass -vv
     */
-    function test_getKeeperAndLenderAssetsSplit_pass() public view {
+    function test_getKeeperAndLenderSharesSplit_pass() public view {
         assertEq(defaulting.KEEPER_FEE(), 0.2e18, "this math expect 20% keeper fee, so 1/5 of liquidation fee");
 
         _singleCheck({
@@ -90,9 +90,9 @@ contract DefaultingLiquidationSplitMathTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderAssetsSplit_sumUp_fuzz -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderSharesSplit_sumUp_fuzz -vv
     */
-    function test_getKeeperAndLenderAssetsSplit_sumUp_fuzz(uint256 _collateralToSplit, uint64 _liquidationFee)
+    function test_getKeeperAndLenderSharesSplit_sumUp_fuzz(uint256 _collateralToSplit, uint64 _liquidationFee)
         public
         view
     {
@@ -100,7 +100,7 @@ contract DefaultingLiquidationSplitMathTest is Test {
         vm.assume(uint256(_liquidationFee) * defaulting.KEEPER_FEE() <= 1e18);
 
         (uint256 forKeeper, uint256 forLenders) =
-            defaulting.getKeeperAndLenderAssetsSplit(_collateralToSplit, _liquidationFee);
+            defaulting.getKeeperAndLenderSharesSplit(_collateralToSplit, _liquidationFee);
 
         if (forLenders == 0) assertEq(forKeeper, 0, "if lenders are 0, keeper should be 0");
         else assertLt(forKeeper, forLenders, "keeper part is always less lenders part");
@@ -109,27 +109,37 @@ contract DefaultingLiquidationSplitMathTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderAssetsSplit_neverReverts -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderSharesSplit_neverReverts -vv
     */
-    function test_getKeeperAndLenderAssetsSplit_neverReverts(uint256 _collateralToSplit, uint64 _liquidationFee)
+    function test_getKeeperAndLenderSharesSplit_neverReverts(uint256 _collateralToSplit, uint64 _liquidationFee)
         public
         view
     {
         // only in this case we can revert if `_collateralToSplit` is huge
         vm.assume(uint256(_liquidationFee) * defaulting.KEEPER_FEE() <= 1e18);
 
-        defaulting.getKeeperAndLenderAssetsSplit(_collateralToSplit, _liquidationFee);
+        defaulting.getKeeperAndLenderSharesSplit(_collateralToSplit, _liquidationFee);
     }
 
     function _singleCheck(
         uint8 _id,
-        uint256 _collateralToSplit,
-        uint64 _liquidationFee,
-        uint256 _expectedKeepers,
-        uint256 _expectedLenders
+        address _silo,
+        address _shareToken,
+        uint256 _liquidationFee,
+        uint256 _withdrawAssets,
+        ISilo.AssetType _assetType,
+        uint256 _expectedTotalShares, 
+        uint256 _expectedKeeperShares,
+        uint256 _expectedLendersShares
     ) public view {
-        (uint256 keepers, uint256 lenders) =
-            defaulting.getKeeperAndLenderAssetsSplit(_collateralToSplit, _liquidationFee);
+        (uint256 totalShares, uint256 keeperShares, uint256 lendersShares) =
+            defaulting.getKeeperAndLenderSharesSplit({
+                _silo: _silo,
+                _shareToken: _shareToken,
+                _liquidationFee: _liquidationFee,
+                _withdrawAssets: _withdrawAssets,
+                _assetType: _assetType
+            });
 
         assertEq(keepers, _expectedKeepers, string.concat("keepers failed for id: ", vm.toString(_id)));
         assertEq(lenders, _expectedLenders, string.concat("lenders failed for id: ", vm.toString(_id)));
