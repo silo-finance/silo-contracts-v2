@@ -13,6 +13,8 @@ import {PartialLiquidationLib} from "silo-core/contracts/hooks/liquidation/lib/P
 
 import {
     PartialLiquidation,
+    Rounding,
+    SiloMathLib,
     ISiloConfig,
     ISilo,
     IShareToken,
@@ -91,51 +93,57 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         RevertLib.revertIfError(params.customError);
 
         // calculate split between keeper and lenders
-        (params.withdrawAssetsFromCollateralForKeeper, params.withdrawAssetsFromCollateralForLenders) =
-            getKeeperAndLenderAssetsSplit(params.withdrawAssetsFromCollateral, collateralConfig.liquidationFee);
+        (
+            params.collateralSharesTotal,
+            params.collateralSharesForKeeper,
+            params.collateralSharesForLenders
+        ) = getKeeperAndLenderSharesSplit({
+            _silo: collateralConfig.silo,
+            _shareToken: collateralConfig.silo,
+            _liquidationFee: collateralConfig.liquidationFee,
+            _withdrawAssets: params.withdrawAssetsFromCollateral,
+            _assetType: ISilo.AssetType.Collateral
+        });
 
-        (params.withdrawAssetsFromProtectedForKeeper, params.withdrawAssetsFromProtectedForLenders) =
-            getKeeperAndLenderAssetsSplit(params.withdrawAssetsFromProtected, collateralConfig.liquidationFee);
+        (
+            params.protectedSharesTotal,
+            params.protectedSharesForKeeper,
+            params.protectedSharesForLenders
+        ) = getKeeperAndLenderSharesSplit({
+            _silo: collateralConfig.silo,
+            _shareToken: collateralConfig.protectedShareToken,
+            _liquidationFee: collateralConfig.liquidationFee,
+            _withdrawAssets: params.withdrawAssetsFromProtected,
+            _assetType: ISilo.AssetType.Protected
+        });
 
-        // transfer share tokens to incentive controller for distribution to lenders
+        _liquidateByDistributingCollateral({
+            _borrower: _borrower,
+            _debtSilo: debtConfig.silo,
+            _shareToken: collateralConfig.collateralShareToken,
+            _withdrawSharesForLenders: params.collateralSharesForLenders,
+            _withdrawSharesForKeeper: params.collateralSharesForKeeper
+        });
 
-        params.collateralShares = _liquidateByDistributingCollateral(
-            collateralConfig.silo,
-            _borrower,
-            params.withdrawAssetsFromCollateralForLenders,
-            debtConfig.silo,
-            collateralConfig.collateralShareToken,
-            ISilo.AssetType.Collateral
-        );
+        _liquidateByDistributingCollateral({
+            _borrower: _borrower,
+            _debtSilo: debtConfig.silo,
+            _shareToken: collateralConfig.protectedShareToken,
+            _withdrawSharesForLenders: params.protectedSharesForLenders,
+            _withdrawSharesForKeeper: params.protectedSharesForKeeper
+        });
 
-        params.protectedShares = _liquidateByDistributingCollateral(
-            collateralConfig.silo,
-            _borrower,
-            params.withdrawAssetsFromProtectedForLenders,
-            debtConfig.silo,
-            collateralConfig.protectedShareToken,
-            ISilo.AssetType.Protected
-        );
+        // calculate total withdrawn collateral
 
-        // transfer keeper's rewards
+        if (params.collateralSharesTotal != 0) {
+            withdrawCollateral =
+                ISilo(collateralConfig.silo).previewRedeem(params.collateralSharesTotal, ISilo.CollateralType.Collateral);
+        }
 
-        params.collateralShares += _callShareTokenForwardTransferNoChecks(
-            collateralConfig.silo,
-            _borrower,
-            msg.sender,
-            params.withdrawAssetsFromCollateralForKeeper,
-            collateralConfig.collateralShareToken,
-            ISilo.AssetType.Collateral
-        );
-
-        params.protectedShares += _callShareTokenForwardTransferNoChecks(
-            collateralConfig.silo,
-            _borrower,
-            msg.sender,
-            params.withdrawAssetsFromProtectedForKeeper,
-            collateralConfig.protectedShareToken,
-            ISilo.AssetType.Protected
-        );
+        if (params.protectedSharesTotal != 0) {
+            withdrawCollateral +=
+                ISilo(collateralConfig.silo).previewRedeem(params.protectedSharesTotal, ISilo.CollateralType.Protected);
+        }
 
         _deductDefaultedDebtFromCollateral(debtConfig.silo, repayDebtAssets);
 
@@ -147,30 +155,25 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         // TODO: test that if repay reverts, all reverts
 
-        if (params.collateralShares != 0) {
-            withdrawCollateral =
-                ISilo(collateralConfig.silo).previewRedeem(params.collateralShares, ISilo.CollateralType.Collateral);
-        }
-
-        if (params.protectedShares != 0) {
-            unchecked {
-                // protected and collateral values were split from total collateral to withdraw,
-                // so we will not overflow when we sum them back, especially that on redeem, we rounding down
-                withdrawCollateral +=
-                    ISilo(collateralConfig.silo).previewRedeem(params.protectedShares, ISilo.CollateralType.Protected);
-            }
-        }
-
         emit LiquidationCall(msg.sender, debtConfig.silo, _borrower, repayDebtAssets, withdrawCollateral, true);
     }
 
-    function getKeeperAndLenderAssetsSplit(uint256 withdrawAssetsFromCollateral, uint256 _liquidationFee)
-        public
-        view
-        virtual
-        returns (uint256 withdrawAssetsFromCollateralForKeeper, uint256 withdrawAssetsFromCollateralForLenders)
-    {
-        if (withdrawAssetsFromCollateral == 0) return (0, 0);
+    function getKeeperAndLenderSharesSplit(
+        address _silo,
+        address _shareToken,
+        uint256 _liquidationFee,
+        uint256 _withdrawAssets,
+        ISilo.AssetType _assetType
+    ) public view virtual returns (uint256 totalShares, uint256 keeperShares, uint256 lendersShares) {
+        if (_withdrawAssets == 0) return (0, 0, 0);
+
+        totalShares = SiloMathLib.convertToShares({
+            _assets: _withdrawAssets,
+            _totalAssets: ISilo(_silo).getTotalAssetsStorage(_assetType),
+            _totalShares: IShareToken(_shareToken).totalSupply(),
+            _rounding: Rounding.LIQUIDATE_TO_SHARES,
+            _assetType: _assetType
+        });
 
         // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds 
         // using some kind of 1 wei rounding attack loop
@@ -194,14 +197,14 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         // kw = f * kf * wc / (1 + f) / D
         // kw = muldiv(f * kf, wc, (1 + f), Floor) / D
-        withdrawAssetsFromCollateralForKeeper = Math.mulDiv(
-            withdrawAssetsFromCollateral,
+        keeperShares = Math.mulDiv(
+            totalShares,
             _liquidationFee * KEEPER_FEE,
             PartialLiquidationLib._PRECISION_DECIMALS,
             Math.Rounding.Floor
         ) / (PartialLiquidationLib._PRECISION_DECIMALS + _liquidationFee);
 
-        withdrawAssetsFromCollateralForLenders = withdrawAssetsFromCollateral - withdrawAssetsFromCollateralForKeeper;
+        lendersShares = totalShares - keeperShares;
     }
 
     function validateControllerForCollateral(address _silo)
@@ -251,26 +254,23 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     }
 
     function _liquidateByDistributingCollateral(
-        address _silo,
         address _borrower,
-        uint256 _withdrawAssetsForLenders,
         address _debtSilo,
-        address _collateralShareToken,
-        ISilo.AssetType _assetType
-    ) internal virtual returns (uint256 collateralShares) {
-        ISiloIncentivesController controllerCollateral = validateControllerForCollateral(_silo);
+        address _shareToken,
+        uint256 _withdrawSharesForLenders,
+        uint256 _withdrawSharesForKeeper
+    ) internal virtual {
+        ISiloIncentivesController controllerCollateral = validateControllerForCollateral(_debtSilo);
 
-        collateralShares = _callShareTokenForwardTransferNoChecks(
-            _silo,
-            _borrower,
-            address(controllerCollateral),
-            _withdrawAssetsForLenders,
-            _collateralShareToken,
-            _assetType
-        );
+        // distribute collateral shares to lenders
+        if (_withdrawSharesForLenders > 0) {
+            IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, address(controllerCollateral), _withdrawSharesForLenders);
+            controllerCollateral.immediateDistribution(_shareToken, SafeCast.toUint104(_withdrawSharesForLenders));
+        }
 
-        if (collateralShares != 0) {
-            controllerCollateral.immediateDistribution(_collateralShareToken, SafeCast.toUint104(collateralShares));
+        // distribute collateral shares to keeper
+        if (_withdrawSharesForKeeper > 0) {
+            IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, msg.sender, _withdrawSharesForKeeper);
         }
     }
 
