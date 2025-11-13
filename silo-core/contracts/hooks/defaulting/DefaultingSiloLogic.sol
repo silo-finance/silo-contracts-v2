@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {DefaultingRepayLib} from "silo-core/contracts/hooks/defaulting/DefaultingRepayLib.sol";
@@ -9,6 +10,8 @@ import {DefaultingRepayLib} from "silo-core/contracts/hooks/defaulting/Defaultin
 /// @title DefaultingSiloLogic
 /// @dev implements custom logic for Silo to do delegate calls
 contract DefaultingSiloLogic {
+    using Math for uint256;
+
     /// @dev This is a copy of Silo.sol repay() function with a single line changed.
     /// DefaultingRepayLib.actionsRepay() is used instead of Actions.repay().
     function repayDebtByDefaulting(uint256 _assets, address _borrower) external virtual returns (uint256 shares) {
@@ -27,9 +30,18 @@ contract DefaultingSiloLogic {
     function deductDefaultedDebtFromCollateral(uint256 _assetsToRepay) external virtual {
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
 
+        bool success;
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
-        require(totalCollateralAssets >= _assetsToRepay, ISilo.RepayTooHigh());
 
-        $.totalAssets[ISilo.AssetType.Collateral] = totalCollateralAssets - _assetsToRepay;
+        // if underflow happens, $.totalAssets[ISilo.AssetType.Collateral] is set to 0
+        (success, $.totalAssets[ISilo.AssetType.Collateral]) = totalCollateralAssets.trySub(_assetsToRepay);
+        
+        if (!success) {
+            // TODO: what happens when totalCollateralAssets is 0 but there are shares? What are side effects?
+            // if there is more debt to cancel than collateral deposited, decrease daoAndDeployerRevenue
+            // so that the revenue does not take from future deposits
+            uint256 excessDebt = _assetsToRepay - totalCollateralAssets;
+            (, $.daoAndDeployerRevenue) = $.daoAndDeployerRevenue.trySub(excessDebt);
+        }
     }
 }
