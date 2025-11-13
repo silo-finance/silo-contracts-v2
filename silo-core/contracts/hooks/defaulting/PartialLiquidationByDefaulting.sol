@@ -93,29 +93,23 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         RevertLib.revertIfError(params.customError);
 
         // calculate split between keeper and lenders
-        (
-            params.collateralSharesTotal,
-            params.collateralSharesForKeeper,
-            params.collateralSharesForLenders
-        ) = getKeeperAndLenderSharesSplit({
-            _silo: collateralConfig.silo,
-            _shareToken: collateralConfig.silo,
-            _liquidationFee: collateralConfig.liquidationFee,
-            _withdrawAssets: params.withdrawAssetsFromCollateral,
-            _assetType: ISilo.AssetType.Collateral
-        });
+        (params.collateralSharesTotal, params.collateralSharesForKeeper, params.collateralSharesForLenders) =
+            getKeeperAndLenderSharesSplit({
+                _silo: collateralConfig.silo,
+                _shareToken: collateralConfig.silo,
+                _liquidationFee: collateralConfig.liquidationFee,
+                _withdrawAssets: params.withdrawAssetsFromCollateral,
+                _assetType: ISilo.AssetType.Collateral
+            });
 
-        (
-            params.protectedSharesTotal,
-            params.protectedSharesForKeeper,
-            params.protectedSharesForLenders
-        ) = getKeeperAndLenderSharesSplit({
-            _silo: collateralConfig.silo,
-            _shareToken: collateralConfig.protectedShareToken,
-            _liquidationFee: collateralConfig.liquidationFee,
-            _withdrawAssets: params.withdrawAssetsFromProtected,
-            _assetType: ISilo.AssetType.Protected
-        });
+        (params.protectedSharesTotal, params.protectedSharesForKeeper, params.protectedSharesForLenders) =
+            getKeeperAndLenderSharesSplit({
+                _silo: collateralConfig.silo,
+                _shareToken: collateralConfig.protectedShareToken,
+                _liquidationFee: collateralConfig.liquidationFee,
+                _withdrawAssets: params.withdrawAssetsFromProtected,
+                _assetType: ISilo.AssetType.Protected
+            });
 
         _liquidateByDistributingCollateral({
             _borrower: _borrower,
@@ -136,13 +130,15 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         // calculate total withdrawn collateral
 
         if (params.collateralSharesTotal != 0) {
-            withdrawCollateral =
-                ISilo(collateralConfig.silo).previewRedeem(params.collateralSharesTotal, ISilo.CollateralType.Collateral);
+            withdrawCollateral = ISilo(collateralConfig.silo).previewRedeem(
+                params.collateralSharesTotal, ISilo.CollateralType.Collateral
+            );
         }
 
         if (params.protectedSharesTotal != 0) {
-            withdrawCollateral +=
-                ISilo(collateralConfig.silo).previewRedeem(params.protectedSharesTotal, ISilo.CollateralType.Protected);
+            withdrawCollateral += ISilo(collateralConfig.silo).previewRedeem(
+                params.protectedSharesTotal, ISilo.CollateralType.Protected
+            );
         }
 
         _deductDefaultedDebtFromCollateral(debtConfig.silo, repayDebtAssets);
@@ -175,7 +171,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             _assetType: _assetType
         });
 
-        // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds 
+        // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds
         // using some kind of 1 wei rounding attack loop
 
         // c - collateral
@@ -218,11 +214,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         require(address(controllerCollateral) != address(0), NoControllerForCollateral());
     }
 
-    function validateDefaultingCollateral(address _silo0, address _silo1)
-        public
-        view
-        virtual
-    {
+    function validateDefaultingCollateral(address _silo0, address _silo1) public view virtual {
         ISiloConfig.ConfigData memory config0 = siloConfig.getConfig(_silo0);
         ISiloConfig.ConfigData memory config1 = siloConfig.getConfig(_silo1);
 
@@ -264,7 +256,9 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         // distribute collateral shares to lenders
         if (_withdrawSharesForLenders > 0) {
-            IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, address(controllerCollateral), _withdrawSharesForLenders);
+            IShareToken(_shareToken).forwardTransferFromNoChecks(
+                _borrower, address(controllerCollateral), _withdrawSharesForLenders
+            );
             controllerCollateral.immediateDistribution(_shareToken, SafeCast.toUint104(_withdrawSharesForLenders));
         }
 
