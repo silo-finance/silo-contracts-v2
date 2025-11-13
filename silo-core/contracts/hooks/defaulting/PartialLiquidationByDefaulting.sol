@@ -96,7 +96,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         (params.collateralSharesTotal, params.collateralSharesForKeeper, params.collateralSharesForLenders) =
             getKeeperAndLenderSharesSplit({
                 _silo: collateralConfig.silo,
-                _shareToken: collateralConfig.silo,
+                _shareToken: collateralConfig.collateralShareToken,
                 _liquidationFee: collateralConfig.liquidationFee,
                 _withdrawAssets: params.withdrawAssetsFromCollateral,
                 _assetType: ISilo.AssetType.Collateral
