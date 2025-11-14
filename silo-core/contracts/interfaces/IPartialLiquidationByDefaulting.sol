@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
+import {ISilo} from "./ISilo.sol";
+
 interface IPartialLiquidationByDefaulting {
     struct CallParams {
         uint256 collateralSharesTotal;
