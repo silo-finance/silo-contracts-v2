@@ -42,7 +42,7 @@ interface IPartialLiquidationByDefaulting {
         uint256 _liquidationFee,
         uint256 _withdrawAssets,
         ISilo.AssetType _assetType
-    ) public view virtual returns (uint256 totalShares, uint256 keeperShares, uint256 lendersShares);
+    ) external view returns (uint256 totalShares, uint256 keeperShares, uint256 lendersShares);
 
     function LT_MARGIN_FOR_DEFAULTING() external view returns (uint256);
 
