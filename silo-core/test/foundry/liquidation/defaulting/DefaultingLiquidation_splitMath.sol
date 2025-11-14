@@ -141,8 +141,10 @@ contract DefaultingLiquidationSplitMathTest is Test {
                 _assetType: _assetType
             });
 
-        assertEq(keepers, _expectedKeepers, string.concat("keepers failed for id: ", vm.toString(_id)));
-        assertEq(lenders, _expectedLenders, string.concat("lenders failed for id: ", vm.toString(_id)));
-        assertEq(keepers + lenders, _collateralToSplit, string.concat("sum failed for id: ", vm.toString(_id)));
+        assertEq(keeperShares, _expectedKeeperShares, string.concat("keeper shares failed for id: ", vm.toString(_id)));
+        assertEq(lendersShares, _expectedLendersShares, string.concat("lenders shares failed for id: ", vm.toString(_id)));
+        assertEq(totalShares, _expectedTotalShares, string.concat("total shares failed for id: ", vm.toString(_id)));
+
+        assertEq(keeperShares + lendersShares, totalShares, string.concat("sum failed for id: ", vm.toString(_id)));
     }
 }

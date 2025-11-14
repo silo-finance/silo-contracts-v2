@@ -46,7 +46,7 @@ incentive distribution:
 - does everyone can claim? its shares so even 1 wei should be claimable
 
 
-
+- fes should be able to withdraw
 
 */
 
