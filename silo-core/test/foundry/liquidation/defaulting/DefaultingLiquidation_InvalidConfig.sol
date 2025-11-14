@@ -68,7 +68,7 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
     */
     function test_hookv2_initTwice_InvalidInitialization() public {
         ISiloConfig.ConfigData memory config;
-        SiloHookV2 defaulting = _cloneHook(config);
+        defaulting = _cloneHook(config);
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         defaulting.initialize(siloConfig, abi.encode(address(this)));
