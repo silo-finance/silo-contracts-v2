@@ -48,6 +48,8 @@ incentive distribution:
 
 - fes should be able to withdraw
 
+- if there is no bad debt, asset/share ratio should never go < 1.0
+
 */
 
 abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
@@ -57,6 +59,8 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
 
     address borrower = makeAddr("borrower");
     address depositor = makeAddr("depositor");
+
+    address[] internal depositors;
 
     DummyOracle oracle0;
 
@@ -99,19 +103,19 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     */
     function test_defaulting_setup() public {
         _setCollateralPrice(3e18);
+        // minimal collateral to create position is 2
         assertTrue(_createPosition({_collateral: 0, _protected: 2, _maxOut: true}));
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_fuzz -vv --mc DefaultingLiquidationTwo1Test
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_fuzz -vv --mc DefaultingLiquidationSame1Test
     */
     function test_defaulting_neverReverts_fuzz(uint32 _collateral, uint32 _protected) public {
         _setCollateralPrice(1000e18);
-        // minimal collateral to create position is 2
         bool success = _createPosition({_collateral: _collateral, _protected: _protected, _maxOut: true});
         vm.assume(success);
 
-        // this will help with interest
+        // this will help with high interest
         _removeLiquidity();
 
         _setCollateralPrice(1e18); // drop price 1000x
@@ -123,11 +127,28 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
 
         _createIncentiveController();
 
+        _printBalances(silo0, borrower);
+        _printBalances(silo1, borrower);
+
+        console2.log("\tdefaulting.liquidationCallByDefaulting(borrower)");
+
+        _printMaxLiquidation(borrower);
+
         defaulting.liquidationCallByDefaulting(borrower);
 
-        // _printLtv(borrower);
+        _printBalances(silo0, borrower);
+        _printBalances(silo1, borrower);
 
-        // assertEq(silo0.getLtv(borrower), 0, "position should be removed");
+        _printLtv(borrower);
+
+        assertEq(silo0.getLtv(borrower), 0, "position should be removed");
+
+        _assertNoShareTokens(silo0, borrower);
+        _assertNoShareTokens(silo1, borrower);
+  
+        // we can not assert for silo exit, because defaulting will make share value lower,
+        // so there might be users who can not withdraw because convertion to assets will give 0
+        //_exitSilo();
     }
 
     /*
@@ -135,7 +156,6 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     */
     function test_defaulting_neverReverts_0collateral() public {
         _setCollateralPrice(1000e18);
-        // minimal collateral to create position is 2
         bool success = _createPosition({_collateral: 1e18, _protected: 1, _maxOut: true});
         vm.assume(success);
 
@@ -167,6 +187,9 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
         _printLtv(borrower);
 
         assertEq(silo0.getLtv(borrower), 0, "position should be removed");
+        _assertNoShareTokens(silo0, borrower);
+        _assertNoShareTokens(silo1, borrower);
+        _assertWithdrawableFees();
     }
 
     /*
@@ -312,6 +335,7 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
 
         vm.prank(depositor);
         debtSilo.deposit(forBorrow, depositor);
+        depositors.push(depositor);
 
         vm.startPrank(borrower);
         if (_collateral != 0) collateralSilo.deposit(_collateral, borrower);
@@ -335,31 +359,94 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
 
         if (_maxOut) {
             vm.startPrank(borrower);
+
             uint256 maxWithdraw = collateralSilo.maxWithdraw(borrower);
             if (maxWithdraw != 0) collateralSilo.withdraw(maxWithdraw, borrower, borrower);
 
             maxWithdraw = collateralSilo.maxWithdraw(borrower, ISilo.CollateralType.Protected);
+
             if (maxWithdraw != 0) {
                 collateralSilo.withdraw(maxWithdraw, borrower, borrower, ISilo.CollateralType.Protected);
             }
+
             vm.stopPrank();
 
             _printLtv(borrower);
         }
     }
 
+    function _assertNoShareTokens(ISilo _silo, address _user) internal view {
+        console2.log("asserting no share tokens for silo %s, user %s", vm.getLabel(address(_silo)), vm.getLabel(_user));
+        (address collateralShareToken, address protectedShareToken, address debtShareToken) = siloConfig.getShareTokens(address(_silo));
+        
+        assertEq(IShareToken(protectedShareToken).balanceOf(_user), 0, "[_assertNoShareTokens] protected");
+        assertEq(IShareToken(collateralShareToken).balanceOf(_user), 0, "[_assertNoShareTokens] collateral");
+        assertEq(IShareToken(debtShareToken).balanceOf(_user), 0, "[_assertNoShareTokens] debt");
+    }
+
+    function _assertWithdrawableFees() internal {
+        silo0.withdrawFees();
+        silo1.withdrawFees();
+    }
+
+    function _assertEveryoneCanExit(ISilo _silo) internal {
+        assertGt(depositors.length, 0, "[_assertEveryoneCanExit] no depositors");
+
+        (address protectedShareToken,, ) = siloConfig.getShareTokens(address(_silo));
+
+        for (uint256 i; i < depositors.length; i++) {
+            address depositor = depositors[i];
+            _assertUserCanExit(_silo, IShareToken(protectedShareToken), depositor);
+        }
+    }
+    
+    function _assertUserCanExit(ISilo _silo, IShareToken _protected, address _user) internal {
+        vm.startPrank(_user);
+        uint256 balance = _silo.balanceOf(_user);
+        if (balance != 0) _silo.redeem(balance, _user, _user);
+
+        balance = _protected.balanceOf(_user);
+        if (balance != 0) _silo.withdraw(balance, _user, _user, ISilo.CollateralType.Protected);
+        vm.stopPrank();
+
+        _assertNoShareTokens(_silo, _user);
+    }
+
+    function _exitSilo() internal {
+        _assertEveryoneCanExit(silo0);
+        _assertEveryoneCanExit(silo1);
+        _assertWithdrawableFees();
+
+        _assertShareTokensAreEmpty(silo0);
+        _assertShareTokensAreEmpty(silo1);
+    }
+
+    function _assertShareTokensAreEmpty(ISilo _silo) internal view {
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) = siloConfig.getShareTokens(address(_silo));
+        assertEq(IShareToken(protectedShareToken).balanceOf(address(this)), 0, "[_assertShareTokensAreEmpty] protected share token should be 0");
+        assertEq(IShareToken(collateralShareToken).balanceOf(address(this)), 0, "[_assertShareTokensAreEmpty] collateral share token should be 0");
+        assertEq(IShareToken(debtShareToken).balanceOf(address(this)), 0, "[_assertShareTokensAreEmpty] debt share token should be 0");
+    }
+
     function _printBalances(ISilo _silo, address _user) internal view {
         (address protectedShareToken, address collateralShareToken, address debtShareToken) =
             _silo.config().getShareTokens(address(_silo));
-        string memory siloName = string.concat("silo", address(_silo) == address(silo0) ? "0" : "1");
 
-        console2.log(siloName, "balance", IShareToken(collateralShareToken).balanceOf(_user));
-        console2.log(siloName, "protected balance", IShareToken(protectedShareToken).balanceOf(_user));
-        console2.log(siloName, "debt balance", IShareToken(debtShareToken).balanceOf(_user));
+        string memory userLabel = vm.getLabel(_user);
+
+        console2.log("%s.balanceOf(%s)", vm.getLabel(collateralShareToken), userLabel, IShareToken(collateralShareToken).balanceOf(_user));
+        console2.log("%s.balanceOf(%s)", vm.getLabel(protectedShareToken), userLabel, IShareToken(protectedShareToken).balanceOf(_user));
+        console2.log("%s.balanceOf(%s)", vm.getLabel(debtShareToken), userLabel, IShareToken(debtShareToken).balanceOf(_user));
     }
 
     function _printLtv(address _user) internal {
         emit log_named_decimal_uint("LTV [%]", silo0.getLtv(_user), 16);
+    }
+
+    function _printMaxLiquidation(address _user) internal {
+        (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(_user);
+        console2.log("maxLiquidation: collateralToLiquidate", collateralToLiquidate);
+        console2.log("maxLiquidation: debtToRepay", debtToRepay);
     }
 
     function _defaultingPossible(address _user) internal returns (bool possible) {
