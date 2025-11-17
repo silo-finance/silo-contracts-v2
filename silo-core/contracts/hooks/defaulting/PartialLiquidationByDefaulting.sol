@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
@@ -102,6 +104,10 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             _liquidationFee: collateralConfig.liquidationFee
         });
 
+        console2.log("params.withdrawAssetsFromCollateral", params.withdrawAssetsFromCollateral);
+        console2.log("params.withdrawAssetsFromProtected", params.withdrawAssetsFromProtected);
+        console2.log("repayDebtAssets", repayDebtAssets);
+
         RevertLib.revertIfError(params.customError);
 
         // calculate split between keeper and lenders
@@ -113,6 +119,10 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
                 _assetsToLiquidate: params.withdrawAssetsFromCollateral,
                 _collateralType: ISilo.CollateralType.Collateral
             });
+
+        console2.log("params.collateralSharesTotal", params.collateralSharesTotal);
+        console2.log("params.collateralSharesForKeeper", params.collateralSharesForKeeper);
+        console2.log("params.collateralSharesForLenders", params.collateralSharesForLenders);
 
         (params.protectedSharesTotal, params.protectedSharesForKeeper, params.protectedSharesForLenders) =
             _getKeeperAndLenderSharesSplit({
