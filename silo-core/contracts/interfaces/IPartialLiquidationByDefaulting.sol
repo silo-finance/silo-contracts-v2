@@ -18,7 +18,8 @@ interface IPartialLiquidationByDefaulting {
 
     error NoControllerForCollateral();
     error CollateralNotSupportedForDefaulting();
-    error InvalidLT();
+    error TwoWayMarketNotAllowed();
+    error EmptyCollateralShareToken();
 
     /// @notice Function to liquidate insolvent position by distributing user's collateral to lenders
     /// - The caller (liquidator) does not cover any debt. `debtToCover` is amount of debt being liquidated

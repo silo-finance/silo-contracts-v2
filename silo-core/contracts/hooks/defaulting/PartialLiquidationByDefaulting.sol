@@ -218,7 +218,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         ISiloConfig.ConfigData memory config0 = siloConfig.getConfig(_silo0);
         ISiloConfig.ConfigData memory config1 = siloConfig.getConfig(_silo1);
 
-        require(config0.maxLtv == 0 || config1.maxLtv == 0, InvalidLT());
+        require(config0.maxLtv == 0 || config1.maxLtv == 0, TwoWayMarketNotAllowed());
     }
 
     function _deductDefaultedDebtFromCollateral(address _silo, uint256 _assetsToRepay) internal virtual {
