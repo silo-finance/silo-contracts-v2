@@ -38,11 +38,9 @@ interface IPartialLiquidationByDefaulting {
 
     /// @dev it can revert in case of huge _withdrawAssetsFromCollateral and when `_liquidationFee * KEEPER_FEE > 1e18` 
     function getKeeperAndLenderSharesSplit(
-        address _silo,
-        address _shareToken,
         uint256 _liquidationFee,
-        uint256 _withdrawAssets,
-        ISilo.AssetType _assetType
+        uint256 _assetsToLiquidate,
+        ISilo.CollateralType _collateralType
     ) external view returns (uint256 totalShares, uint256 keeperShares, uint256 lendersShares);
 
     function LT_MARGIN_FOR_DEFAULTING() external view returns (uint256);
