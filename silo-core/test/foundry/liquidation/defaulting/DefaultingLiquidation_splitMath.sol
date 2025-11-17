@@ -5,8 +5,12 @@ import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
+
 import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IPartialLiquidationByDefaulting.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 import {SiloHookV2} from "silo-core/contracts/hooks/SiloHookV2.sol";
 
@@ -17,7 +21,9 @@ contract DefaultingLiquidationSplitMathTest is Test {
     IPartialLiquidationByDefaulting defaulting;
 
     function setUp() public {
-        defaulting = IPartialLiquidationByDefaulting(address(new SiloHookV2()));
+        ISiloConfig.ConfigData memory config;
+        config.lt = 1;
+        defaulting = _cloneHook(config);
     }
 
     /*
@@ -112,40 +118,64 @@ contract DefaultingLiquidationSplitMathTest is Test {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderSharesSplit_neverReverts -vv
     */
-    function test_getKeeperAndLenderSharesSplit_neverReverts(uint256 _collateralToSplit, uint64 _liquidationFee)
+    function test_getKeeperAndLenderSharesSplit_neverReverts(
+        uint64 _liquidationFee,
+        uint256 _assetsToLiquidate, 
+        ISilo.CollateralType _collateralType,
+        uint256 _totalAssets,
+        uint256 _totalShares
+    )
         public
-        view
     {
-        // only in this case we can revert if `_collateralToSplit` is huge
-        // vm.assume(uint256(_liquidationFee) * defaulting.KEEPER_FEE() <= 1e18);
+        // defaulting = IPartialLiquidationByDefaulting(address(new SiloHookV2()));
 
-        // defaulting.getKeeperAndLenderSharesSplit(_collateralToSplit, _liquidationFee);
+        // we can revert only if muldiv revert, so when result will be oner 256 bits
+        //  this case: if `_assetsToLiquidate` is huge
+        vm.assume(uint256(_liquidationFee) * defaulting.KEEPER_FEE() > type(uint256).max / _totalShares);
+
+        // address silo = makeAddr("silo");
+        // address shareToken = makeAddr("shareToken");
+
+        // vm.mockCall(address(silo), abi.encodeWithSelector(ISilo.getTotalAssetsStorage.selector, _collateralType), abi.encode(_totalAssets));
+        // vm.mockCall(address(shareToken), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(_totalShares));
+
+        defaulting.getKeeperAndLenderSharesSplit({
+            _liquidationFee: _liquidationFee,
+            _assetsToLiquidate: _assetsToLiquidate,
+            _collateralType: _collateralType
+        });
     }
 
     function _singleCheck(
         uint8 _id,
-        address _silo,
-        address _shareToken,
         uint256 _liquidationFee,
-        uint256 _withdrawAssets,
-        ISilo.AssetType _assetType,
+        uint256 _assetsToLiquidate,
+        ISilo.CollateralType _collateralType,
         uint256 _expectedTotalShares, 
         uint256 _expectedKeeperShares,
         uint256 _expectedLendersShares
     ) public view {
-        // (uint256 totalShares, uint256 keeperShares, uint256 lendersShares) =
-        //     defaulting.getKeeperAndLenderSharesSplit({
-        //         _silo: _silo,
-        //         _shareToken: _shareToken,
-        //         _liquidationFee: _liquidationFee,
-        //         _withdrawAssets: _withdrawAssets,
-        //         _assetType: _assetType
-        //     });
+        (uint256 totalShares, uint256 keeperShares, uint256 lendersShares) =
+            defaulting.getKeeperAndLenderSharesSplit({
+                _liquidationFee: _liquidationFee,
+                _assetsToLiquidate: _assetsToLiquidate,
+                _collateralType: _collateralType
+            });
 
-        // assertEq(keeperShares, _expectedKeeperShares, string.concat("keeper shares failed for id: ", vm.toString(_id)));
-        // assertEq(lendersShares, _expectedLendersShares, string.concat("lenders shares failed for id: ", vm.toString(_id)));
-        // assertEq(totalShares, _expectedTotalShares, string.concat("total shares failed for id: ", vm.toString(_id)));
+        string memory id = vm.toString(_id);
 
-        // assertEq(keeperShares + lendersShares, totalShares, string.concat("sum failed for id: ", vm.toString(_id)));
+        assertEq(keeperShares, _expectedKeeperShares, string.concat("keeper shares failed for id: ", id));
+        assertEq(lendersShares, _expectedLendersShares, string.concat("lenders shares failed for id: ", id));
+        assertEq(totalShares, _expectedTotalShares, string.concat("total shares failed for id: ", id));
+        assertEq(keeperShares + lendersShares, totalShares, string.concat("sum failed for id: ", id));
+    }
+
+    function _cloneHook(ISiloConfig.ConfigData memory _config) internal returns (SiloHookV2 hook) {
+        SiloHookV2 implementation = new SiloHookV2();
+        hook = SiloHookV2(Clones.clone(address(implementation)));
+
+        _mockSiloConfig(_config, _config);
+
+        hook.initialize(siloConfig, abi.encode(address(this)));
     }
 }

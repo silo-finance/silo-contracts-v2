@@ -35,14 +35,14 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
         SiloHookV2 implementation = new SiloHookV2();
         defaulting = SiloHookV2(Clones.clone(address(implementation)));
 
-        vm.expectRevert(IPartialLiquidationByDefaulting.InvalidLT.selector);
+        vm.expectRevert(IPartialLiquidationByDefaulting.TwoWayMarketNotAllowed.selector);
         defaulting.initialize(siloConfig, abi.encode(address(this)));
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_validateDefaultingCollateral_InvalidLT -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_validateDefaultingCollateral_TwoWayMarketNotAllowed -vv
     */
-    function test_validateDefaultingCollateral_InvalidLT() public {
+    function test_validateDefaultingCollateral_TwoWayMarketNotAllowed() public {
         ISiloConfig.ConfigData memory config;
         defaulting = _cloneHook(config);
 
@@ -50,7 +50,7 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
         config.lt = 1;
         _mockSiloConfig(config, config);
 
-        vm.expectRevert(IPartialLiquidationByDefaulting.InvalidLT.selector);
+        vm.expectRevert(IPartialLiquidationByDefaulting.TwoWayMarketNotAllowed.selector);
         defaulting.validateDefaultingCollateral(silo0, silo1);
     }
 
