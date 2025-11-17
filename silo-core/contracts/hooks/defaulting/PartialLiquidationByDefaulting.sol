@@ -94,21 +94,21 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         // calculate split between keeper and lenders
         (params.collateralSharesTotal, params.collateralSharesForKeeper, params.collateralSharesForLenders) =
-            getKeeperAndLenderSharesSplit({
+            _getKeeperAndLenderSharesSplit({
                 _silo: collateralConfig.silo,
                 _shareToken: collateralConfig.collateralShareToken,
                 _liquidationFee: collateralConfig.liquidationFee,
-                _withdrawAssets: params.withdrawAssetsFromCollateral,
-                _assetType: ISilo.AssetType.Collateral
+                _assetsToLiquidate: params.withdrawAssetsFromCollateral,
+                _collateralType: ISilo.CollateralType.Collateral
             });
 
         (params.protectedSharesTotal, params.protectedSharesForKeeper, params.protectedSharesForLenders) =
-            getKeeperAndLenderSharesSplit({
+            _getKeeperAndLenderSharesSplit({
                 _silo: collateralConfig.silo,
                 _shareToken: collateralConfig.protectedShareToken,
                 _liquidationFee: collateralConfig.liquidationFee,
-                _withdrawAssets: params.withdrawAssetsFromProtected,
-                _assetType: ISilo.AssetType.Protected
+                _assetsToLiquidate: params.withdrawAssetsFromProtected,
+                _collateralType: ISilo.CollateralType.Protected
             });
 
         _liquidateByDistributingCollateral({
@@ -155,52 +155,19 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     }
 
     function getKeeperAndLenderSharesSplit(
-        address _silo,
-        address _shareToken,
         uint256 _liquidationFee,
-        uint256 _withdrawAssets,
-        ISilo.AssetType _assetType
-    ) public view virtual returns (uint256 totalShares, uint256 keeperShares, uint256 lendersShares) {
-        if (_withdrawAssets == 0) return (0, 0, 0);
+        uint256 _assetsToLiquidate,
+        ISilo.CollateralType _collateralType
+    ) external view virtual returns (uint256 totalShares, uint256 keeperShares, uint256 lendersShares) {
+        (address silo, address shareToken) = _resolveSiloAndShareToken(_collateralType);
 
-        totalShares = SiloMathLib.convertToShares({
-            _assets: _withdrawAssets,
-            _totalAssets: ISilo(_silo).getTotalAssetsStorage(_assetType),
-            _totalShares: IShareToken(_shareToken).totalSupply(),
-            _rounding: Rounding.LIQUIDATE_TO_SHARES,
-            _assetType: _assetType
+        _getKeeperAndLenderSharesSplit({
+            _silo: silo,
+            _shareToken: shareToken,
+            _liquidationFee: _liquidationFee,
+            _assetsToLiquidate: _assetsToLiquidate,
+            _collateralType: _collateralType
         });
-
-        // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds
-        // using some kind of 1 wei rounding attack loop
-
-        // c - collateral
-        // wc - withdrawCollateral
-        // f - liquidation fee
-        // kf - keeper Fee
-        // kw - keeper withdrawal
-        // D - normalization divider
-
-        // c + c * f = wc
-        // c * (1 + f) = wc
-        // c = wc / ( 1 + f)
-
-        // kw =  c * f * kf => f * kf * wc / ( 1 + f)
-
-        // at the end we need to normalize, but we see we have only mul and div operations, so we can do
-        // normalization at the end no problem, assuming D is our normalization Divider based on fees
-        // decimals final pseudo code is:
-
-        // kw = f * kf * wc / (1 + f) / D
-        // kw = muldiv(f * kf, wc, (1 + f), Floor) / D
-        keeperShares = Math.mulDiv(
-            totalShares,
-            _liquidationFee * KEEPER_FEE,
-            PartialLiquidationLib._PRECISION_DECIMALS,
-            Math.Rounding.Floor
-        ) / (PartialLiquidationLib._PRECISION_DECIMALS + _liquidationFee);
-
-        lendersShares = totalShares - keeperShares;
     }
 
     function validateControllerForCollateral(address _silo)
@@ -284,5 +251,75 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             collateralConfig.callSolvencyOracleBeforeQuote();
             debtConfig.callSolvencyOracleBeforeQuote();
         }
+    }
+
+    function _getKeeperAndLenderSharesSplit(
+        address _silo,
+        address _shareToken,
+        uint256 _liquidationFee,
+        uint256 _assetsToLiquidate,
+        ISilo.CollateralType _collateralType
+    ) internal view virtual returns (uint256 totalShares, uint256 keeperShares, uint256 lendersShares) {
+        if (_assetsToLiquidate == 0) return (0, 0, 0);
+
+        // assets were calculating with rounding down for withdraw,
+        // if we want to go back to shares, we can round up
+        totalShares = SiloMathLib.convertToShares({
+            _assets: _assetsToLiquidate,
+            _totalAssets: ISilo(_silo).getTotalAssetsStorage(ISilo.AssetType(uint8(_collateralType))),
+            _totalShares: IShareToken(_shareToken).totalSupply(),
+            _rounding: Rounding.UP,
+            _assetType: ISilo.AssetType(uint8(_collateralType))
+        });
+
+        // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds
+        // using some kind of 1 wei rounding attack loop
+
+        // c - collateral
+        // wc - withdrawCollateral
+        // f - liquidation fee
+        // kf - keeper Fee
+        // kw - keeper withdrawal
+        // D - normalization divider
+
+        // c + c * f = wc
+        // c * (1 + f) = wc
+        // c = wc / ( 1 + f)
+
+        // kw =  c * f * kf => f * kf * wc / ( 1 + f)
+
+        // at the end we need to normalize, but we see we have only mul and div operations, so we can do
+        // normalization at the end no problem, assuming D is our normalization Divider based on fees
+        // decimals final pseudo code is:
+
+        // kw = f * kf * wc / (1 + f) / D
+        // kw = muldiv(f * kf, wc, (1 + f), Floor) / D
+        keeperShares = Math.mulDiv(
+            totalShares, _liquidationFee * KEEPER_FEE, PartialLiquidationLib._PRECISION_DECIMALS, Math.Rounding.Floor
+        ) / (PartialLiquidationLib._PRECISION_DECIMALS + _liquidationFee);
+
+        lendersShares = totalShares - keeperShares;
+    }
+
+    function _resolveSiloAndShareToken(ISilo.CollateralType _collateralType)
+        internal
+        view
+        virtual
+        returns (address silo, address shareToken)
+    {
+        ISiloConfig configCached = siloConfig;
+        (address silo0, address silo1) = configCached.getSilos();
+        silo = silo0;
+        ISiloConfig.ConfigData memory collateralConfig = configCached.getConfig(silo0);
+
+        if (collateralConfig.lt == 0) {
+            // if LT is 0, then this can not be collateral, so we pull other config
+            collateralConfig = configCached.getConfig(silo1);
+            silo = silo1;
+        }
+
+        shareToken = _collateralType == ISilo.CollateralType.Collateral
+            ? collateralConfig.collateralShareToken
+            : collateralConfig.protectedShareToken;
     }
 }
