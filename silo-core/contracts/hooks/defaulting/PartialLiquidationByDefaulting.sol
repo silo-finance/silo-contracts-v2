@@ -163,7 +163,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             );
         }
 
-        _deductDefaultedDebtFromCollateral(debtConfig.silo, repayDebtAssets);
+        _deductDefaultedDebtFromCollateral(collateralConfig.silo, repayDebtAssets);
 
         siloConfigCached.turnOffReentrancyProtection();
 
