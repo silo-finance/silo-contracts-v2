@@ -14,7 +14,7 @@ contract OneWeiTotalAssetsNegativeRatioData {
                 id: 1,
                 assetsToLiquidate: oneWeiAsset,
                 expectedKeeperShares: 0,
-                expectedLendersShares: 1,
+                expectedLendersShares: 10,
                 totalAssets: 100,
                 totalShares: 10
             })

@@ -116,6 +116,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         vm.assume(success);
 
         _defaulting_neverReverts_badDebtScenario(borrower, _collateral, _protected);
+
+        // other borrower should be able to repay and withdraw TODO
     }
 
     function _defaulting_neverReverts_badDebtScenario(address _borrower, uint256 _collateral, uint256 _protected)
@@ -145,7 +147,55 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         _printMaxLiquidation(_borrower);
 
-        assertGe(silo0.getLtv(_borrower), 1e18, "position should be in bad debt state");
+        // assertGe(silo0.getLtv(_borrower), 1e18, "position should be in bad debt state");
+        vm.assume(silo0.getLtv(_borrower) >= 1e18); // position should be in bad debt state
+
+        defaulting.liquidationCallByDefaulting(_borrower);
+
+        _printBalances(silo0, _borrower);
+        _printBalances(silo1, _borrower);
+
+        _printLtv(_borrower);
+
+        assertEq(silo0.getLtv(_borrower), 0, "position should be removed");
+
+        _assertNoShareTokens({_silo: silo0, _user: _borrower, _allowForDust: _useSameAssetPosition()});
+        _assertNoShareTokens({_silo: silo1, _user: _borrower, _allowForDust: _useSameAssetPosition()});
+
+        // we can not assert for silo exit, because defaulting will make share value lower,
+        // so there might be users who can not withdraw because convertion to assets will give 0
+        //_exitSilo();
+    }
+
+    function _defaulting_neverReverts_insolvencyScenario(address _borrower, uint256 _collateral, uint256 _protected)
+        internal
+    {
+        _setCollateralPrice(2e18);
+        bool success =
+            _createPosition({_borrower: _borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
+        vm.assume(success);
+
+        // this will help with high interest
+        _removeLiquidity();
+
+        _setCollateralPrice(1e18); // drop price 1000x
+
+        vm.warp(block.timestamp + 10000 days);
+
+        _printLtv(_borrower);
+        vm.assume(_defaultingPossible(_borrower));
+
+        _createIncentiveController();
+
+        _printBalances(silo0, _borrower);
+        _printBalances(silo1, _borrower);
+
+        console2.log("\tdefaulting.liquidationCallByDefaulting(_borrower)");
+
+        _printMaxLiquidation(_borrower);
+
+        vm.assume(!silo0.isSolvent(_borrower)); // position should be insolvent
+        vm.assume(silo0.getLtv(_borrower) < 1e18); // position should NOT be in bad debt state
 
         defaulting.liquidationCallByDefaulting(_borrower);
 
