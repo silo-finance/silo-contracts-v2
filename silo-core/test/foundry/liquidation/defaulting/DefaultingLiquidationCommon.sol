@@ -46,6 +46,8 @@ incentive distribution:
 
 add test taht are checking numbers: how much we repay, how mych debt reduced, collatera reduced
 
+TODO make sure we added EXIT when we can
+
 */
 
 abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
@@ -92,23 +94,25 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_fuzz -vv --mc DefaultingLiquidationSame1Test
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_fuzz -vv
     */
+    /// forge-config: core_test.fuzz.runs = 10000
     function test_defaulting_neverReverts_fuzz(uint32 _collateral, uint32 _protected) public {
         _defaulting_neverReverts_badDebtScenario(borrower, _collateral, _protected);
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_withOtherBorrowers_fuzz -vv --mc DefaultingLiquidationSame0Test
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_withOtherBorrowers_fuzz -vv
     */
+    /// forge-config: core_test.fuzz.runs = 10000
     function test_defaulting_neverReverts_withOtherBorrowers_fuzz(uint32 _collateral, uint32 _protected) public {
-        // [6, 0] - fails
         bool success = _createPosition({
             _borrower: makeAddr("otherBorrower"),
             _collateral: _collateral,
             _protected: _protected,
             _maxOut: true
         });
+
         vm.assume(success);
 
         _defaulting_neverReverts_badDebtScenario(borrower, _collateral, _protected);
@@ -152,8 +156,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         assertEq(silo0.getLtv(_borrower), 0, "position should be removed");
 
-        _assertNoShareTokens(silo0, _borrower);
-        _assertNoShareTokens(silo1, _borrower);
+        _assertNoShareTokens({_silo: silo0, _user: _borrower, _allowForDust: _useSameAssetPosition()});
+        _assertNoShareTokens({_silo: silo1, _user: _borrower, _allowForDust: _useSameAssetPosition()});
 
         // we can not assert for silo exit, because defaulting will make share value lower,
         // so there might be users who can not withdraw because convertion to assets will give 0

@@ -129,21 +129,21 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
         string memory userLabel = vm.getLabel(_user);
 
-        console2.log(
-            "%s.balanceOf(%s)",
-            vm.getLabel(collateralShareToken),
-            userLabel,
-            IShareToken(collateralShareToken).balanceOf(_user)
-        );
-        console2.log(
-            "%s.balanceOf(%s)",
-            vm.getLabel(protectedShareToken),
-            userLabel,
-            IShareToken(protectedShareToken).balanceOf(_user)
-        );
-        console2.log(
-            "%s.balanceOf(%s)", vm.getLabel(debtShareToken), userLabel, IShareToken(debtShareToken).balanceOf(_user)
-        );
+        uint256 balance = IShareToken(collateralShareToken).balanceOf(_user);
+        console2.log("%s.balanceOf(%s)", vm.getLabel(collateralShareToken), userLabel, balance);
+        uint256 assets = _silo.previewRedeem(balance);
+        console2.log("\tbalance to assets", assets);
+        console2.log("\tback to shares", _silo.convertToShares(assets));
+
+        balance = IShareToken(protectedShareToken).balanceOf(_user);
+        console2.log("%s.balanceOf(%s)", vm.getLabel(protectedShareToken), userLabel, balance);
+        assets = _silo.previewRedeem(balance, ISilo.CollateralType.Protected);
+        console2.log("\tbalance to assets", assets);
+        console2.log("\tback to shares", _silo.convertToShares(assets));
+
+        balance = IShareToken(debtShareToken).balanceOf(_user);
+        console2.log("%s.balanceOf(%s)", vm.getLabel(debtShareToken), userLabel, balance);
+        console2.log("\tbalance to assets", _silo.previewRepay(balance));
     }
 
     function _printLtv(address _user) internal returns (uint256 ltv) {

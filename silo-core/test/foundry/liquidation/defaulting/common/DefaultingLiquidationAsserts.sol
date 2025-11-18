@@ -11,15 +11,43 @@ import {DefaultingLiquidationHelpers} from "./DefaultingLiquidationHelpers.sol";
 
 abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
     function _assertNoShareTokens(ISilo _silo, address _user) internal view {
+        _assertNoShareTokens(_silo, _user, false);
+    }
+
+    /// @param _allowForDust if true, we assert that the user is dead, NO dust is allowed
+    /// why? eg. if we have 4000 shares this give us 11 assets ot withdraw, but when we convert
+    /// 11 assets back to shares, we will get eg 3929 (with rounding up), bacause of that dust will be left
+    /// this case was observed so far in same assets positions.
+    function _assertNoShareTokens(ISilo _silo, address _user, bool _allowForDust) internal view {
         console2.log(
             "asserting no share tokens for silo %s, user %s", vm.getLabel(address(_silo)), vm.getLabel(_user)
         );
+
         (address collateralShareToken, address protectedShareToken, address debtShareToken) =
             siloConfig.getShareTokens(address(_silo));
 
-        assertEq(IShareToken(protectedShareToken).balanceOf(_user), 0, "[_assertNoShareTokens] protected");
-        assertEq(IShareToken(collateralShareToken).balanceOf(_user), 0, "[_assertNoShareTokens] collateral");
-        assertEq(IShareToken(debtShareToken).balanceOf(_user), 0, "[_assertNoShareTokens] debt");
+        uint256 balance = IShareToken(protectedShareToken).balanceOf(_user);
+
+        if (_allowForDust) {
+            assertEq(
+                _silo.previewRedeem(balance, ISilo.CollateralType.Protected),
+                0,
+                "[_assertNoShareTokens] no protected dust"
+            );
+        } else {
+            assertEq(balance, 0, "[_assertNoShareTokens] protected");
+        }
+
+        balance = IShareToken(collateralShareToken).balanceOf(_user);
+
+        if (_allowForDust) {
+            assertEq(_silo.previewRedeem(balance), 0, "[_assertNoShareTokens] no collateral dust");
+        } else {
+            assertEq(balance, 0, "[_assertNoShareTokens] collateral");
+        }
+
+        balance = IShareToken(debtShareToken).balanceOf(_user);
+        assertEq(balance, 0, "[_assertNoShareTokens] debt");
     }
 
     function _assertWithdrawableFees() internal {
