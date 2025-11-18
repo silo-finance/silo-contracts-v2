@@ -22,6 +22,7 @@ import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {SiloConfigsNames} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
+import {DefaultingSiloLogic} from "silo-core/contracts/hooks/defaulting/DefaultingSiloLogic.sol";
 
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 
@@ -39,7 +40,6 @@ delay should be tested
 should work for both collaterals (collateral and protected) in same way
 
 
-TODO test if we revert with TooHigh error on repay because of delegate call
 
 
 incentive distribution: 
@@ -49,6 +49,8 @@ incentive distribution:
 - fes should be able to withdraw
 
 - if there is no bad debt, asset/share ratio should never go < 1.0
+
+add test taht are checking numbers: how much we repay, how mych debt reduced, collatera reduced
 
 */
 
@@ -307,6 +309,91 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_delegatecall_whenRepayReverts -vv --mc DefaultingLiquidationTwo0Test
+    */
+    function test_defaulting_delegatecall_whenRepayReverts() public {
+        _setCollateralPrice(100e18);
+        bool success = _createPosition({_borrower: borrower, _collateral: 10, _protected: 10, _maxOut: true});
+        vm.assume(success);
+
+        _setCollateralPrice(1e18);
+        _removeLiquidity();
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 ltv = _printLtv(borrower);
+
+        assertTrue(_defaultingPossible(borrower), "explect not solvent ready for defaulting");
+
+        _createIncentiveController();
+
+        (, ISilo debtSilo) = _getSilos();
+
+        // mock revert inside repay process to test if whole tx reverts
+        vm.mockCallRevert(
+            address(siloConfig),
+            abi.encodeWithSelector(ISiloConfig.getDebtShareTokenAndAsset.selector, address(debtSilo)),
+            abi.encode("repayDidNotWork")
+        );
+
+        vm.expectRevert("repayDidNotWork");
+        defaulting.liquidationCallByDefaulting(borrower);
+
+        assertEq(ltv, silo0.getLtv(borrower), "ltv should be unchanged because no liquidation happened");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_delegatecall_whenDecuctReverts -vv
+    */
+    function test_defaulting_delegatecall_whenDecuctReverts() public {
+        _setCollateralPrice(100e18);
+        bool success = _createPosition({_borrower: borrower, _collateral: 10, _protected: 10, _maxOut: true});
+        vm.assume(success);
+
+        _setCollateralPrice(1e18);
+        _removeLiquidity();
+
+        vm.warp(block.timestamp + 10 days);
+
+        uint256 ltv = _printLtv(borrower);
+
+        assertTrue(_defaultingPossible(borrower), "explect not solvent ready for defaulting");
+
+        _createIncentiveController();
+
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
+
+        uint256 maxRepay = debtSilo.maxRepay(borrower);
+        console2.log("debtSilo.maxRepay(borrower)", maxRepay);
+
+        if (_useSameAssetPosition() && address(collateralSilo) == address(silo0)) {
+            // maxRepay does not give us precise data for this case, that's why hardcoding
+            // TODO looks like another bug for max method? 
+            maxRepay = 14;
+        }
+
+        // mock revert inside collateral reduction process to test if whole tx reverts
+        bytes memory deductDefaultedDebtFromCollateralCalldata = abi.encodeWithSelector(
+            DefaultingSiloLogic.deductDefaultedDebtFromCollateral.selector, maxRepay
+        );
+
+        bytes memory callOnBehalfOfSiloCalldata = abi.encodeWithSelector(
+            ISilo.callOnBehalfOfSilo.selector,
+            address(defaulting.LIQUIDATION_LOGIC()),
+            0,
+            ISilo.CallType.Delegatecall,
+            deductDefaultedDebtFromCollateralCalldata
+        );
+
+        vm.mockCallRevert(address(collateralSilo), callOnBehalfOfSiloCalldata, abi.encode("deductDidNotWork"));
+
+        vm.expectRevert("deductDidNotWork");
+        defaulting.liquidationCallByDefaulting(borrower);
+
+        assertEq(ltv, silo0.getLtv(borrower), "ltv should be unchanged because no liquidation happened");
+    }
+
+    /*
     bad debt scenario: everybody can exit with the same loss
     */
 
@@ -496,8 +583,9 @@ abstract contract DefaultingLiquidationCommon is SiloLittleHelper, Test {
         );
     }
 
-    function _printLtv(address _user) internal {
-        emit log_named_decimal_uint("LTV [%]", silo0.getLtv(_user), 16);
+    function _printLtv(address _user) internal returns (uint256 ltv) {
+        ltv = silo0.getLtv(_user);
+        emit log_named_decimal_uint("LTV [%]", ltv, 16);
     }
 
     function _printMaxLiquidation(address _user) internal view {
