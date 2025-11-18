@@ -21,10 +21,10 @@ abstract contract CloneHookV2 is Test {
 
     SiloHookV2 defaulting;
 
-    function _cloneHook(
-        ISiloConfig.ConfigData memory _config0,
-        ISiloConfig.ConfigData memory _config1
-    ) internal returns (SiloHookV2 hook) {
+    function _cloneHook(ISiloConfig.ConfigData memory _config0, ISiloConfig.ConfigData memory _config1)
+        internal
+        returns (SiloHookV2 hook)
+    {
         SiloHookV2 implementation = new SiloHookV2();
         hook = SiloHookV2(Clones.clone(address(implementation)));
 
