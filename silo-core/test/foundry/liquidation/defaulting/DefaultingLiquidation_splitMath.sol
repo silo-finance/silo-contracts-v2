@@ -19,6 +19,7 @@ import {Rounding} from "silo-core/contracts/lib/Rounding.sol";
 import {CloneHookV2} from "./common/CloneHookV2.sol";
 import {OneWeiTotalAssetsNegativeRatioData, SplitInputData} from "./common/OneWeiTotalAssetsNegativeRatioData.sol";
 import {OneWeiTotalAssetsPositiveRatioData} from "./common/OneWeiTotalAssetsPositiveRatioData.sol";
+import {PositiveRatioData} from "./common/PositiveRatioData.sol";
 
 /*
 FOUNDRY_PROFILE=core_test forge test --ffi --mc DefaultingLiquidationSplitMathTest -vv
@@ -127,10 +128,7 @@ contract DefaultingLiquidationSplitMathTest is CloneHookV2 {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderSharesSplit_distributeAllShares_protected_fuzz -vv
     */
     /// forge-config: core_test.fuzz.runs = 10000
-    function test_getKeeperAndLenderSharesSplit_distributeAllShares_protected_fuzz(
-        uint128 _assets, 
-        uint128 _shares
-    )
+    function test_getKeeperAndLenderSharesSplit_distributeAllShares_protected_fuzz(uint128 _assets, uint128 _shares)
         public
     {
         // (uint128 _assets, uint128 _shares) = (0, 693422931604088900224037312120240515);
@@ -170,10 +168,23 @@ contract DefaultingLiquidationSplitMathTest is CloneHookV2 {
         assertLt(keeperShares, lendersShares, "keeper shares should be less than lenders shares");
     }
 
-    // tests where assets:share ratio is < 1.0 (when assets are less than shares)
-    function test_getKeeperAndLenderSharesSplit_TODOnot1wei_positiveRatio(ISilo.CollateralType _collateralType) public {
-        
-        
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderSharesSplit_positive_pass -vv
+    */
+    function test_getKeeperAndLenderSharesSplit_positive_pass() public {
+        SplitInputData[] memory data = new PositiveRatioData().getData();
+
+        for (uint256 i = 0; i < data.length; i++) {
+            _singleCheckWithMock({
+                _id: data[i].id,
+                _assetsToLiquidate: data[i].assetsToLiquidate,
+                _collateralType: ISilo.CollateralType.Protected,
+                _expectedKeeperShares: data[i].expectedKeeperShares,
+                _expectedLendersShares: data[i].expectedLendersShares,
+                _totalAssets: data[i].totalAssets,
+                _totalShares: data[i].totalShares
+            });
+        }
     }
 
     /*
