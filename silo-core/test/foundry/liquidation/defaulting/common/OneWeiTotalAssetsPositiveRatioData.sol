@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
+import {Strings} from "openzeppelin5/utils/Strings.sol";
+
 struct SplitInputData {
     uint8 id;
     uint256 assetsToLiquidate;
@@ -11,6 +13,13 @@ struct SplitInputData {
 }
 
 contract OneWeiTotalAssetsPositiveRatioData {
+    using Strings for uint8;
+    using Strings for uint256;
+
+    uint256 internal constant _PRECISION_DECIMALS = 1e18;
+    uint256 internal constant _KEEPER_FEE = 0.2e18;
+    uint256 internal constant _LIQUIDATION_FEE = 0.1e18;
+
     SplitInputData[] public data;
 
     constructor() {
@@ -118,7 +127,11 @@ contract OneWeiTotalAssetsPositiveRatioData {
 
     function add(SplitInputData memory _data) public {
         require(_data.totalAssets <= _data.totalShares, "totalAssets must be less than totalShares (positive ratio)");
-
+        require(
+            _data.id == data.length + 1,
+            string.concat("id got ", _data.id.toString(), " expected ", (data.length + 1).toString())
+        );
+        require(_data.assetsToLiquidate == 1, "assetsToLiquidate must be 1 for this cases");
         data.push(_data);
     }
 
