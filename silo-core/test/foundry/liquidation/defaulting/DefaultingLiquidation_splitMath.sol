@@ -125,13 +125,41 @@ contract DefaultingLiquidationSplitMathTest is CloneHookV2 {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderSharesSplit_collateralEqProtected_fuzz -vv
+    */
+    function test_getKeeperAndLenderSharesSplit_collateralEqProtected_fuzz(uint128 _assets, uint128 _shares) public {
+        _ensureNoOverflowsAndMockCall({
+            _assetsToLiquidate: _assets,
+            _useProtected: true,
+            _totalAssets: _assets,
+            _totalShares: _shares
+        });
+
+        _ensureNoOverflowsAndMockCall({
+            _assetsToLiquidate: _assets,
+            _useProtected: false,
+            _totalAssets: _assets,
+            _totalShares: _shares
+        });
+
+        (uint256 totalSharesToLiquidate1, uint256 keeperShares1, uint256 lendersShares1) = defaulting
+            .getKeeperAndLenderSharesSplit({_assetsToLiquidate: _assets, _collateralType: ISilo.CollateralType.Protected});
+
+        (uint256 totalSharesToLiquidate2, uint256 keeperShares2, uint256 lendersShares2) = defaulting
+            .getKeeperAndLenderSharesSplit({_assetsToLiquidate: _assets, _collateralType: ISilo.CollateralType.Collateral});
+
+        assertEq(totalSharesToLiquidate1, totalSharesToLiquidate2, "total shares to liquidate should be the same");
+        assertEq(keeperShares1, keeperShares2, "keeper shares should be the same");
+        assertEq(lendersShares1, lendersShares2, "lenders shares should be the same");
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderSharesSplit_distributeAllShares_protected_fuzz -vv
     */
     /// forge-config: core_test.fuzz.runs = 10000
     function test_getKeeperAndLenderSharesSplit_distributeAllShares_protected_fuzz(uint128 _assets, uint128 _shares)
         public
     {
-        // (uint128 _assets, uint128 _shares) = (0, 693422931604088900224037312120240515);
         _getKeeperAndLenderSharesSplit_distributeAllShares(_assets, _shares, ISilo.CollateralType.Protected);
     }
 
@@ -150,8 +178,8 @@ contract DefaultingLiquidationSplitMathTest is CloneHookV2 {
         uint128 _shares,
         ISilo.CollateralType _collateralType
     ) internal {
-        vm.assume(_assets < _shares);
         vm.assume(_assets > 0);
+        vm.assume(_shares > 0);
 
         _ensureNoOverflowsAndMockCall({
             _assetsToLiquidate: _assets,
@@ -160,11 +188,43 @@ contract DefaultingLiquidationSplitMathTest is CloneHookV2 {
             _totalShares: _shares
         });
 
-        (uint256 totalShares, uint256 keeperShares, uint256 lendersShares) =
+        (uint256 totalSharesToLiquidate, uint256 keeperShares, uint256 lendersShares) =
             defaulting.getKeeperAndLenderSharesSplit({_assetsToLiquidate: _assets, _collateralType: _collateralType});
 
-        assertEq(totalShares, _shares, "all shares should be distributed when assetsto liquidate == total");
-        assertEq(keeperShares + lendersShares, totalShares, "we should split 100%");
+        // in extreame cases, when ration is way off, we can expect math to produce higher shares than total shares,
+        // this case will revert tx, so we expliding it here
+        vm.assume(totalSharesToLiquidate <= _shares);
+
+        uint256 sharesLeft = _shares - totalSharesToLiquidate;
+        console2.log("shares diff", sharesLeft);
+
+        // because of offset, this rule can be violated, so instead of expecting all shares to be distributed,
+        // we allow for dust that can not ve converted to assets,
+        // and distributed shares must be converted to liquidated assets
+
+        if (sharesLeft > 0) {
+            uint256 dustAssets = SiloMathLib.convertToAssets({
+                _shares: sharesLeft,
+                _totalAssets: _assets,
+                _totalShares: _shares,
+                _rounding: Rounding.DOWN,
+                _assetType: ISilo.AssetType(uint8(_collateralType))
+            });
+
+            assertEq(dustAssets, 0, "dust can not be converted to assets");
+        }
+
+        uint256 backToAssets = SiloMathLib.convertToAssets({
+            _shares: totalSharesToLiquidate,
+            _totalAssets: _assets,
+            _totalShares: _shares,
+            _rounding: Rounding.DOWN,
+            _assetType: ISilo.AssetType(uint8(_collateralType))
+        });
+
+        assertEq(backToAssets, _assets, "all assets should be distributed when assets to liquidate == total");
+
+        assertEq(keeperShares + lendersShares, totalSharesToLiquidate, "we should split 100%");
         assertLt(keeperShares, lendersShares, "keeper shares should be less than lenders shares");
     }
 

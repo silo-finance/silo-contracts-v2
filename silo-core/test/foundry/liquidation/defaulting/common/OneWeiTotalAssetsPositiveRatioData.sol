@@ -29,8 +29,8 @@ contract OneWeiTotalAssetsPositiveRatioData {
             SplitInputData({
                 id: 1,
                 assetsToLiquidate: oneWeiAsset,
-                expectedKeeperShares: 200,
-                expectedLendersShares: 11000 - 200,
+                expectedKeeperShares: 109,
+                expectedLendersShares: 5891, // because of offset
                 totalAssets: oneWeiAsset,
                 totalShares: 11000
             })
@@ -40,8 +40,8 @@ contract OneWeiTotalAssetsPositiveRatioData {
             SplitInputData({
                 id: 2,
                 assetsToLiquidate: oneWeiAsset,
-                expectedKeeperShares: 20,
-                expectedLendersShares: 1100 - 20,
+                expectedKeeperShares: 19,
+                expectedLendersShares: 1031,
                 totalAssets: oneWeiAsset,
                 totalShares: 1100
             })
@@ -51,8 +51,8 @@ contract OneWeiTotalAssetsPositiveRatioData {
             SplitInputData({
                 id: 3,
                 assetsToLiquidate: oneWeiAsset,
-                expectedKeeperShares: 2,
-                expectedLendersShares: 108,
+                expectedKeeperShares: 10,
+                expectedLendersShares: 545, // because of offset
                 totalAssets: oneWeiAsset,
                 totalShares: 110
             })
@@ -62,10 +62,10 @@ contract OneWeiTotalAssetsPositiveRatioData {
             SplitInputData({
                 id: 4,
                 assetsToLiquidate: oneWeiAsset,
-                expectedKeeperShares: 0,
-                expectedLendersShares: 11,
+                expectedKeeperShares: 18,
+                expectedLendersShares: 982,
                 totalAssets: oneWeiAsset,
-                totalShares: 11
+                totalShares: 1000
             })
         );
 
@@ -73,8 +73,8 @@ contract OneWeiTotalAssetsPositiveRatioData {
             SplitInputData({
                 id: 5,
                 assetsToLiquidate: oneWeiAsset,
-                expectedKeeperShares: 0,
-                expectedLendersShares: 1,
+                expectedKeeperShares: 9,
+                expectedLendersShares: 492,
                 totalAssets: oneWeiAsset,
                 totalShares: 1
             })
@@ -84,8 +84,8 @@ contract OneWeiTotalAssetsPositiveRatioData {
             SplitInputData({
                 id: 6,
                 assetsToLiquidate: oneWeiAsset,
-                expectedKeeperShares: 0,
-                expectedLendersShares: 2,
+                expectedKeeperShares: 9,
+                expectedLendersShares: 492,
                 totalAssets: oneWeiAsset,
                 totalShares: 2
             })
@@ -95,8 +95,8 @@ contract OneWeiTotalAssetsPositiveRatioData {
             SplitInputData({
                 id: 7,
                 assetsToLiquidate: oneWeiAsset,
-                expectedKeeperShares: 1,
-                expectedLendersShares: 54,
+                expectedKeeperShares: 9,
+                expectedLendersShares: 519,
                 totalAssets: oneWeiAsset,
                 totalShares: 55
             })
@@ -106,8 +106,8 @@ contract OneWeiTotalAssetsPositiveRatioData {
             SplitInputData({
                 id: 8,
                 assetsToLiquidate: oneWeiAsset,
-                expectedKeeperShares: 1,
-                expectedLendersShares: 86,
+                expectedKeeperShares: 9,
+                expectedLendersShares: 535,
                 totalAssets: oneWeiAsset,
                 totalShares: 87
             })
@@ -117,8 +117,8 @@ contract OneWeiTotalAssetsPositiveRatioData {
             SplitInputData({
                 id: 9,
                 assetsToLiquidate: oneWeiAsset,
-                expectedKeeperShares: 1,
-                expectedLendersShares: 108,
+                expectedKeeperShares: 10,
+                expectedLendersShares: 545,
                 totalAssets: oneWeiAsset,
                 totalShares: 109
             })
@@ -126,12 +126,15 @@ contract OneWeiTotalAssetsPositiveRatioData {
     }
 
     function add(SplitInputData memory _data) public {
-        require(_data.totalAssets <= _data.totalShares, "totalAssets must be less than totalShares (positive ratio)");
         require(
             _data.id == data.length + 1,
             string.concat("id got ", _data.id.toString(), " expected ", (data.length + 1).toString())
         );
+
+        require(_data.totalAssets <= _data.totalShares, "totalAssets must be less than totalShares (positive ratio)");
         require(_data.assetsToLiquidate == 1, "assetsToLiquidate must be 1 for this cases");
+        require(_data.totalAssets == 1, "totalAssets must be 1 for this cases");
+
         data.push(_data);
     }
 
