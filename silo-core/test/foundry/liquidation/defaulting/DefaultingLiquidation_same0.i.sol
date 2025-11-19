@@ -31,6 +31,7 @@ contract DefaultingLiquidationSame0Test is DefaultingLiquidationCommon {
         super.setUp();
 
         (address collateralAsset, address debtAsset) = _getTokens();
+        
         assertEq(
             collateralAsset,
             debtAsset,

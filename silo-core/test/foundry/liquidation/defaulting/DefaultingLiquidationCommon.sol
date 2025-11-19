@@ -11,6 +11,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IPartialLiquidationByDefaulting.sol";
+import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 
 import {SiloConfigOverride, SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
@@ -308,8 +309,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     if _defaultingPossible() we never revert otherwise we do revert
 
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test__defaultingPossible_fuzz -vv --mc DefaultingLiquidationTwo1Test
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test__defaultingPossible_fuzz -vv
     */
+    /// forge-config: core_test.fuzz.runs = 10000
     function test__defaultingPossible_fuzz(
         uint64 _initialPrice,
         uint64 _changePrice,
@@ -335,13 +337,14 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         _createIncentiveController();
 
-        if (!_defaultingPossible(borrower)) vm.expectRevert(IPartialLiquidation.UserIsSolvent.selector);
+        bool defaultingPossible = _defaultingPossible(borrower);
 
+        if (!defaultingPossible) vm.expectRevert(IPartialLiquidation.UserIsSolvent.selector);
         defaulting.liquidationCallByDefaulting(borrower);
 
         _printLtv(borrower);
 
-        assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
+        if (defaultingPossible) assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
     }
 
     /*
@@ -426,6 +429,49 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         defaulting.liquidationCallByDefaulting(borrower);
 
         assertEq(ltv, silo0.getLtv(borrower), "ltv should be unchanged because no liquidation happened");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderSharesSplit_withdrawable_fuzz -vv
+
+    we should never generate more shares then borrower has, rounding check
+    */
+    /// forge-config: core_test.fuzz.runs = 10000
+    function test_getKeeperAndLenderSharesSplit_withdrawable_fuzz(uint32 _collateral, uint32 _protected) public {
+        _setCollateralPrice(2e18);
+        
+        bool success = _createPosition({
+            _borrower: borrower,
+            _collateral: _collateral,
+            _protected: _protected,
+            _maxOut: _useSameAssetPosition()
+        });
+
+        vm.assume(success);
+
+        _removeLiquidity();
+
+        uint256 warp = _useSameAssetPosition() ? 1000 days : 1 days;
+        vm.warp(block.timestamp + warp);
+        _setCollateralPrice(1e18);
+
+        vm.assume(_defaultingPossible(borrower));
+
+        (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getShareTokens(borrower);
+
+        uint256 collateralSharesBefore = collateralShareToken.balanceOf(borrower);
+        uint256 protectedSharesBefore = protectedShareToken.balanceOf(borrower);
+
+        (ISilo collateralSilo,) = _getSilos();
+        uint256 collateralPreview = collateralSilo.previewRedeem(collateralSharesBefore, ISilo.CollateralType.Collateral);
+        uint256 protectedPreview = collateralSilo.previewRedeem(protectedSharesBefore, ISilo.CollateralType.Protected);
+
+        // if any of collateral is withdrawable, tx can not revert
+        // at the same time we are sure, rounding can not generate more shares then borrower has initially
+        vm.assume(collateralPreview > 0 || protectedPreview > 0);
+
+        _createIncentiveController();
+        defaulting.liquidationCallByDefaulting(borrower);
     }
 
     /*

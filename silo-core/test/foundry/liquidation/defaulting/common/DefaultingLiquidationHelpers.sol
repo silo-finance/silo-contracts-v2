@@ -201,6 +201,11 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         lp = address(collateralSilo) == address(silo0) ? "0" : "1";
     }
 
+    function _getShareTokens(address _borrower) internal view virtual returns (IShareToken collateralShareToken, IShareToken protectedShareToken, IShareToken debtShareToken) {
+        (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) = siloConfig.getConfigsForSolvency(_borrower);
+        return (IShareToken(collateralConfig.protectedShareToken), IShareToken(collateralConfig.collateralShareToken), IShareToken(debtConfig.debtShareToken));
+    }
+
     // CONFIGURATION
 
     function _useConfigName() internal view virtual returns (string memory);
