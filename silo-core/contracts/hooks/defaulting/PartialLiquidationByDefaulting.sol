@@ -351,7 +351,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             _liquidationFee * KEEPER_FEE,
             totalSharesToLiquidate, 
             PartialLiquidationLib._PRECISION_DECIMALS, 
-            Math.Rounding.Floor
+            Math.Rounding.Ceil
         ) / (PartialLiquidationLib._PRECISION_DECIMALS + _liquidationFee);
 
         lendersShares = totalSharesToLiquidate - keeperShares;
