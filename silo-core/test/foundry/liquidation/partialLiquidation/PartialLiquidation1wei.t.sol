@@ -26,7 +26,7 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
 
     function setUp() public {
         token0 = new MintableToken(8);
-        token1 = new MintableToken(10);
+        token1 = new MintableToken(18);
 
         token0.setOnDemand(true);
         token1.setOnDemand(true);
@@ -42,24 +42,38 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         SiloFixture siloFixture = new SiloFixture();
 
         address hook;
-        (, silo0, silo1,,, hook) = siloFixture.deploy_local(overrides);
+        (siloConfig, silo0, silo1,,, hook) = siloFixture.deploy_local(overrides);
 
         partialLiquidation = IPartialLiquidation(hook);
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_collateral_borrowNotPossible_fuzz
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_collateral_borrowNotPossible_burn_fuzz
     */
-    /// forge-config: core_test.fuzz.runs = 10000
-    function test_1wei_collateral_borrowNotPossible_fuzz()
-        // uint32 _amount, uint32 _burn
-        public
-    {
-        (uint32 _amount, uint32 _burn) = (46200, 46171517);
+    /// forge-config: core_test.fuzz.runs = 9998
+    function test_1wei_collateral_borrowNotPossible_burn_fuzz(uint32 _amount) public {
+        // (uint32 _amount, uint32 _burn) = (46200, 0);
+        _1wei_collateral_borrowNotPossible_fuzz(_amount, 1);
+    }
+    
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_collateral_borrowNotPossible_noBurn_fuzz
+    */
+    /// forge-config: core_test.fuzz.runs = 9999
+    function test_1wei_collateral_borrowNotPossible_noBurn_fuzz(uint32 _amount) public {
+        // (uint32 _amount, uint32 _burn) = (46200, 0);
+        _1wei_collateral_borrowNotPossible_fuzz(_amount, 0);
+    }
+
+    function _1wei_collateral_borrowNotPossible_fuzz(uint32 _amount, uint32 _burn) internal {
+        // if _burn != 0 then we will break 1:1000 ratio
         _depositAndBurn(_amount, _burn, ISilo.CollateralType.Collateral);
 
+        uint256 price = 1e10;
+
         uint256 minAmount = _findMinDepositAmount(ISilo.CollateralType.Collateral);
-        _mockQuote(minAmount, 1e10 * minAmount);
+        _mockQuote(minAmount, price * minAmount);
+        console2.log("minAmount", minAmount);
 
         address borrower = makeAddr("Borrower");
         vm.prank(borrower);
@@ -68,24 +82,33 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
 
         _depositForBorrow(1e18, address(3));
 
-        console2.log("shares", silo0.balanceOf(borrower));
-        console2.log("ratio", silo0.convertToShares(1));
+        console2.log("got shares after deposit", shares);
+        uint256 decimals0 = token0.decimals();
+        emit log_named_decimal_uint("ratio 1.0 assets : %s shares", silo0.convertToShares(10 ** decimals0), decimals0);
+
+        emit log_named_decimal_uint("collateral value", siloLens.calculateCollateralValue(siloConfig, borrower), decimals0);
 
         uint256 maxWithdraw = silo0.maxWithdraw(borrower);
-        uint256 maxRedeem = silo0.maxRedeem(borrower);
-        uint256 maxBorrow = silo1.maxBorrow(borrower);
-
         console2.log("maxWithdraw", maxWithdraw);
+        // if we burn 1 wei, then getting max withdraw of 1 is not possible
+        if (_burn == 0) vm.assume(maxWithdraw == 1);
+
+        uint256 maxRedeem = silo0.maxRedeem(borrower);
         console2.log("maxRedeem", maxRedeem);
+        uint256 maxBorrow = silo1.maxBorrow(borrower);
         console2.log("maxBorrow", maxBorrow);
 
-        assertLe(maxWithdraw, 1, "maxWithdraw should be 0 or 1");
-        assertLe(maxRedeem, shares, "maxRedeem should be not more than actual shares");
-        assertEq(maxBorrow, 0, "maxBorrow should be 0");
+        assertLe(maxWithdraw, minAmount, "maxWithdraw should be less or equal to deposit");
+        assertLe(maxRedeem, shares, "maxRedeem should NOT be more than actual shares");
+        assertEq(maxBorrow, 0, "maxBorrow should be 0, because collateral value will be rounded down to 0");
     }
 
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_asset_protected
+    
+    this test fail with `NoRepayAssets` error and make liquidation not possible
+    when we have 1 wei of protected collateral and we borrow agains it.
+    with fix in `valueToAssetsByRatio` we can liquidate.
     */
     /// forge-config: core_test.fuzz.runs = 10000
     function test_1wei_asset_protected_fuzz(uint32 _amount, uint32 _burn) public {
@@ -98,7 +121,9 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         uint256 price = 1e10;
 
         uint256 minAmount = _findMinDepositAmount(ISilo.CollateralType.Protected);
+        vm.assume(minAmount == 1);
         _mockQuote(minAmount, price * minAmount);
+        console2.log("minAmount for quote(%s) = %s", minAmount, price * minAmount);
 
         address borrower = makeAddr("Borrower");
         vm.prank(borrower);
@@ -109,6 +134,9 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         uint256 maxRedeem = silo0.maxRedeem(borrower, ISilo.CollateralType.Protected);
         console2.log("maxWithdraw", maxWithdraw);
         console2.log("maxRedeem", maxRedeem);
+
+        // maxWithdraw might be 1 wei less than minAmount, so we have to cover it too
+        _mockQuote(maxWithdraw, price * maxWithdraw);
 
         assertLe(maxWithdraw, 1, "maxWithdraw should be <= 1");
         assertLe(maxRedeem, shares, "maxRedeem should be not more than actual shares");
@@ -131,6 +159,7 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         vm.stopPrank();
 
         _mockQuote(minAmount, 8e9 * minAmount); // price DROP
+        _mockQuote(maxWithdraw, 8e9 * maxWithdraw); // price DROP
         assertFalse(silo1.isSolvent(borrower), "borrower should be ready to liquidate");
 
         (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired) =
@@ -158,7 +187,8 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
     */
     /// forge-config: core_test.fuzz.runs = 10000
     function test_1wei_shares_protected_fuzz(uint32 _amount, uint32 _burn) public {
-        // we should not have any situatio nwhere ratio for protected changes, but just for the sake of the test
+        // we should not have any situation, where ratio for protected changes, 
+        // but just for the sake of the test we do that
         _depositAndBurn(_amount, _burn, ISilo.CollateralType.Protected);
 
         _depositForBorrow(1e18, address(3));
