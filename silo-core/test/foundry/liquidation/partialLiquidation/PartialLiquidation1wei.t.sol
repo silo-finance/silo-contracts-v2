@@ -176,23 +176,23 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         _mockQuote(maxWithdraw, 8e9 * maxWithdraw); // price DROP
         assertFalse(silo1.isSolvent(borrower), "borrower should be ready to liquidate");
 
-        (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
-
-        console2.log("collateralToLiquidate", collateralToLiquidate);
-        console2.log("debtToRepay", debtToRepay);
-
         {
             uint256 ltv = siloLens.getLtv(silo0, borrower);
             emit log_named_decimal_uint("ltv", ltv, 16);
         }
 
-        partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debtToRepay, _receiveSToken);
+        partialLiquidation.liquidationCall(
+            address(token0), address(token1), borrower, type(uint256).max, _receiveSToken
+        );
 
-        {
+        if (_receiveSToken) {
+            assertGt(IShareToken(protectedShareToken).balanceOf(address(this)), 0, "protected liquidated");
+            assertEq(IShareToken(protectedShareToken).balanceOf(borrower), 0, "borrower liquidated");
+        } else {
             uint256 btcBalance = token0.balanceOf(address(this));
             console2.log("BTC balance", btcBalance);
             assertEq(btcBalance, 1, "BTC balance is collateral after liquidation");
-        }
+        }   
 
         assertEq(IShareToken(protectedShareToken).balanceOf(borrower), 0, "protected shares are liquidated fully");
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt repaid fully");
