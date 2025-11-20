@@ -55,7 +55,7 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         // (uint32 _amount, uint32 _burn) = (46200, 0);
         _1wei_collateral_borrowNotPossible_fuzz(_amount, 1);
     }
-    
+
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_collateral_borrowNotPossible_noBurn_fuzz
     */
@@ -86,7 +86,9 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         uint256 decimals0 = token0.decimals();
         emit log_named_decimal_uint("ratio 1.0 assets : %s shares", silo0.convertToShares(10 ** decimals0), decimals0);
 
-        emit log_named_decimal_uint("collateral value", siloLens.calculateCollateralValue(siloConfig, borrower), decimals0);
+        emit log_named_decimal_uint(
+            "collateral value", siloLens.calculateCollateralValue(siloConfig, borrower), decimals0
+        );
 
         uint256 maxWithdraw = silo0.maxWithdraw(borrower);
         console2.log("maxWithdraw", maxWithdraw);
@@ -105,13 +107,25 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
 
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_asset_protected
-    
+
     this test fail with `NoRepayAssets` error and make liquidation not possible
     when we have 1 wei of protected collateral and we borrow agains it.
     with fix in `valueToAssetsByRatio` we can liquidate.
     */
     /// forge-config: core_test.fuzz.runs = 10000
     function test_1wei_asset_protected_fuzz(uint32 _amount, uint32 _burn) public {
+        _1wei_asset_protected_liquidation(_amount, _burn, false);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_asset_protected_receiveSToken_fuzz
+    */
+    /// forge-config: core_test.fuzz.runs = 10000
+    function test_1wei_asset_protected_receiveSToken_fuzz(uint32 _amount, uint32 _burn) public {
+        _1wei_asset_protected_liquidation(_amount, _burn, true);
+    }
+
+    function _1wei_asset_protected_liquidation(uint32 _amount, uint32 _burn, bool _receiveSToken) public {
         _depositAndBurn(_amount, _burn, ISilo.CollateralType.Protected);
 
         _depositForBorrow(1e18, address(3));
@@ -162,51 +176,26 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         _mockQuote(maxWithdraw, 8e9 * maxWithdraw); // price DROP
         assertFalse(silo1.isSolvent(borrower), "borrower should be ready to liquidate");
 
-        (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired) =
-            partialLiquidation.maxLiquidation(borrower);
+        (uint256 collateralToLiquidate, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
 
         console2.log("collateralToLiquidate", collateralToLiquidate);
         console2.log("debtToRepay", debtToRepay);
-        console2.log("sTokenRequired", sTokenRequired);
 
-        uint256 ltv = siloLens.getLtv(silo0, borrower);
-        emit log_named_decimal_uint("ltv", ltv, 16);
+        {
+            uint256 ltv = siloLens.getLtv(silo0, borrower);
+            emit log_named_decimal_uint("ltv", ltv, 16);
+        }
 
-        partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debtToRepay, false);
+        partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debtToRepay, _receiveSToken);
 
-        uint256 btcBalance = token0.balanceOf(address(this));
-        console2.log("BTC balance", btcBalance);
-        assertEq(btcBalance, 1, "BTC balance is collateral after liquidation");
+        {
+            uint256 btcBalance = token0.balanceOf(address(this));
+            console2.log("BTC balance", btcBalance);
+            assertEq(btcBalance, 1, "BTC balance is collateral after liquidation");
+        }
 
         assertEq(IShareToken(protectedShareToken).balanceOf(borrower), 0, "protected shares are liquidated fully");
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt repaid fully");
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_shares_protected
-    */
-    /// forge-config: core_test.fuzz.runs = 10000
-    function test_1wei_shares_protected_fuzz(uint32 _amount, uint32 _burn) public {
-        // we should not have any situation, where ratio for protected changes, 
-        // but just for the sake of the test we do that
-        _depositAndBurn(_amount, _burn, ISilo.CollateralType.Protected);
-
-        _depositForBorrow(1e18, address(3));
-
-        address borrower = makeAddr("Borrower");
-        vm.prank(borrower);
-        silo0.mint(1, borrower, ISilo.CollateralType.Protected);
-        vm.stopPrank();
-
-        uint256 maxWithdraw = silo0.maxWithdraw(borrower, ISilo.CollateralType.Protected);
-        uint256 maxRedeem = silo0.maxRedeem(borrower, ISilo.CollateralType.Protected);
-        uint256 maxBorrow = silo1.maxBorrow(borrower);
-
-        console2.log("maxWithdraw", maxWithdraw);
-        console2.log("maxRedeem", maxRedeem);
-        console2.log("maxBorrow", maxBorrow);
-
-        assertEq(maxBorrow, 0, "maxBorrow should be 0");
     }
 
     function _mockQuote(uint256 _amountIn, uint256 _price) public {
