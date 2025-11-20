@@ -121,11 +121,15 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_asset_protected_receiveSToken_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 10000
-    function test_1wei_asset_protected_receiveSToken_fuzz(uint32 _amount, uint32 _burn) public {
+    function test_1wei_asset_protected_receiveSToken_fuzz(
+        uint32 _amount, uint32 _burn
+    ) public {
+        // (uint32 _amount, uint32 _burn) = (1, 1000);
         _1wei_asset_protected_liquidation(_amount, _burn, true);
     }
 
     function _1wei_asset_protected_liquidation(uint32 _amount, uint32 _burn, bool _receiveSToken) public {
+        _deposit(100, makeAddr("to always have some deposit"), ISilo.CollateralType.Protected);
         _depositAndBurn(_amount, _burn, ISilo.CollateralType.Protected);
 
         _depositForBorrow(1e18, address(3));
@@ -167,18 +171,23 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
 
         (address protectedShareToken,, address debtShareToken) = silo0.config().getShareTokens(address(silo0));
 
+        emit log_named_decimal_uint("ltv", siloLens.getLtv(silo0, borrower), 16);
+        console2.log("shares", IShareToken(protectedShareToken).balanceOf(borrower));
+
         vm.prank(borrower);
         vm.expectRevert(IShareToken.SenderNotSolventAfterTransfer.selector);
         IShareToken(protectedShareToken).transfer(address(1), 1);
         vm.stopPrank();
+
+        emit log_named_decimal_uint("ltv after transfer", siloLens.getLtv(silo0, borrower), 16);
+        console2.log("shares", IShareToken(protectedShareToken).balanceOf(borrower));
 
         _mockQuote(minAmount, 8e9 * minAmount); // price DROP
         _mockQuote(maxWithdraw, 8e9 * maxWithdraw); // price DROP
         assertFalse(silo1.isSolvent(borrower), "borrower should be ready to liquidate");
 
         {
-            uint256 ltv = siloLens.getLtv(silo0, borrower);
-            emit log_named_decimal_uint("ltv", ltv, 16);
+            emit log_named_decimal_uint("ltv", siloLens.getLtv(silo0, borrower), 16);
         }
 
         partialLiquidation.liquidationCall(
