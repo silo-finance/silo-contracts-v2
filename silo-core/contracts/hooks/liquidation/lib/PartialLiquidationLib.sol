@@ -145,7 +145,9 @@ library PartialLiquidationLib {
     {
         require(_totalValue != 0, IPartialLiquidation.UnknownRatio());
 
-        assets = _value * _totalAssets / _totalValue;
+        // rounding direction was discavered based on set of tests, 
+        // especially with 1 wei collateral and borrow agains it
+        assets = Math.mulDiv(_value, _totalAssets, _totalValue, Rounding.UP);
     }
 
     /// @notice this function never reverts
