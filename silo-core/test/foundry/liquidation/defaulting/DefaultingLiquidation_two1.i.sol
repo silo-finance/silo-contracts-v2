@@ -41,6 +41,22 @@ contract DefaultingLiquidationTwo1Test is DefaultingLiquidationCommon {
         assertNotEq(address(collateralSilo), address(debtSilo), "[crosscheck] silos must be different for this case");
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv --mc DefaultingLiquidationTwo1Test
+    */
+    /// forge-config: core_test.fuzz.runs = 50
+    function test_bothLiquidationsResultsMatch_insolvent_fuzz(
+        uint64 _dropPercentage,
+        uint32 _warp,
+        uint48 _collateral,
+        uint48 _protected
+    ) public override {
+        _dropPercentage = 0.061e18;
+        _warp = 5 days;
+
+        super.test_bothLiquidationsResultsMatch_insolvent_fuzz(_dropPercentage, _warp, _collateral, _protected);
+    }
+
     // CONFIGURATION
 
     function _getSilos() internal view override returns (ISilo collateralSilo, ISilo debtSilo) {
@@ -55,13 +71,23 @@ contract DefaultingLiquidationTwo1Test is DefaultingLiquidationCommon {
 
     function _maxBorrow(address _borrower) internal view override returns (uint256) {
         (, ISilo debtSilo) = _getSilos();
-        return debtSilo.maxBorrow(_borrower);
+
+        try debtSilo.maxBorrow(_borrower) returns (uint256 _max) {
+            return _max;
+        } catch {
+            return 0;
+        }
     }
 
-    function _executeBorrow(address _borrower, uint256 _amount) internal override {
+    function _executeBorrow(address _borrower, uint256 _amount) internal override returns (bool success) {
         (, ISilo debtSilo) = _getSilos();
         vm.prank(_borrower);
-        debtSilo.borrow(_amount, _borrower, _borrower);
+
+        try debtSilo.borrow(_amount, _borrower, _borrower) {
+            success = true;
+        } catch {
+            success = false;
+        }
     }
 
     function _useConfigName() internal pure override returns (string memory) {

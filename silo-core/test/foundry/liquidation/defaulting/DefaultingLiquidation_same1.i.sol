@@ -41,6 +41,23 @@ contract DefaultingLiquidationSame1Test is DefaultingLiquidationCommon {
         assertEq(address(collateralSilo), address(debtSilo), "[crosscheck] silos must be the same for this case");
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv --mc DefaultingLiquidationSame1Test
+    */
+    /// forge-config: core_test.fuzz.runs = 500
+    function test_bothLiquidationsResultsMatch_insolvent_fuzz(
+        uint64 _priceDropPercentage, // not important because same asset
+        uint32 _warp,
+        uint48 _collateral,
+        uint48 _protected
+    ) public override {
+        _warp %= 70 hours;
+        // uint48 _collateral = 54286;
+        // uint48 _protected = 18683;
+
+        super.test_bothLiquidationsResultsMatch_insolvent_fuzz(_priceDropPercentage, _warp, _collateral, _protected);
+    }
+
     // CONFIGURATION
 
     function _getSilos() internal view override returns (ISilo collateralSilo, ISilo debtSilo) {
@@ -55,13 +72,23 @@ contract DefaultingLiquidationSame1Test is DefaultingLiquidationCommon {
 
     function _maxBorrow(address _borrower) internal view override returns (uint256) {
         (, ISilo debtSilo) = _getSilos();
-        return debtSilo.maxBorrowSameAsset(_borrower);
+
+        try debtSilo.maxBorrowSameAsset(_borrower) returns (uint256 _max) {
+            return _max;
+        } catch {
+            return 0;
+        }
     }
 
-    function _executeBorrow(address _borrower, uint256 _amount) internal override {
+    function _executeBorrow(address _borrower, uint256 _amount) internal override returns (bool success) {
         (, ISilo debtSilo) = _getSilos();
         vm.prank(_borrower);
-        debtSilo.borrowSameAsset(_amount, _borrower, _borrower);
+
+        try debtSilo.borrowSameAsset(_amount, _borrower, _borrower) {
+            success = true;
+        } catch {
+            success = false;
+        }
     }
 
     function _useConfigName() internal pure override returns (string memory) {

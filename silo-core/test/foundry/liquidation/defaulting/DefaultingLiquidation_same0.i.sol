@@ -31,7 +31,7 @@ contract DefaultingLiquidationSame0Test is DefaultingLiquidationCommon {
         super.setUp();
 
         (address collateralAsset, address debtAsset) = _getTokens();
-        
+
         assertEq(
             collateralAsset,
             debtAsset,
@@ -56,13 +56,23 @@ contract DefaultingLiquidationSame0Test is DefaultingLiquidationCommon {
 
     function _maxBorrow(address _borrower) internal view override returns (uint256) {
         (, ISilo debtSilo) = _getSilos();
-        return debtSilo.maxBorrowSameAsset(_borrower);
+
+        try debtSilo.maxBorrowSameAsset(_borrower) returns (uint256 _max) {
+            return _max;
+        } catch {
+            return 0;
+        }
     }
 
-    function _executeBorrow(address _borrower, uint256 _amount) internal override {
+    function _executeBorrow(address _borrower, uint256 _amount) internal override returns (bool success) {
         (, ISilo debtSilo) = _getSilos();
         vm.prank(_borrower);
-        debtSilo.borrowSameAsset(_amount, _borrower, _borrower);
+
+        try debtSilo.borrowSameAsset(_amount, _borrower, _borrower) {
+            success = true;
+        } catch {
+            success = false;
+        }
     }
 
     function _useConfigName() internal pure override returns (string memory) {
