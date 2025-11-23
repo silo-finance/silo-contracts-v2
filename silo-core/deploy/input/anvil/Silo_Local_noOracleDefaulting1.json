@@ -20,9 +20,9 @@
     "maxLtvOracle1": "NO_ORACLE",
     "interestRateModel1": "InterestRateModelV2Factory.sol",
     "interestRateModelConfig1": "defaultAsset",
-    "maxLtv1": 9700,
-    "lt1": 9800,
-    "liquidationTargetLtv1": 9700,
+    "maxLtv1": 9600,
+    "lt1": 9700,
+    "liquidationTargetLtv1": 9600,
     "liquidationFee1": 100,
     "flashloanFee1": 0,
     "callBeforeQuote1": false
