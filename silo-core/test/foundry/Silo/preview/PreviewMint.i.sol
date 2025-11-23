@@ -29,7 +29,7 @@ contract PreviewMintTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_previewMint_beforeInterest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_previewMint_beforeInterest
     */
     /// forge-config: core_test.fuzz.runs = 10000
     function test_previewMint_beforeInterest_fuzz(uint256 _shares, bool _defaultType, uint8 _type) public {

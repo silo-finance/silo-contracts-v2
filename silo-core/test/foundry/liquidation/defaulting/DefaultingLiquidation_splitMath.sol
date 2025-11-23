@@ -291,6 +291,37 @@ contract DefaultingLiquidationSplitMathTest is CloneHookV2 {
             _collateralType: collateralType
         });
     }
+    
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderSharesSplit_neverReverts -vv
+    */
+    /// forge-config: core_test.fuzz.runs = 10000
+    function test_getKeeperAndLenderSharesSplit_neverGaveUpMoreAssets_fuzz(
+        uint256 _assetsToLiquidate,
+        bool _useProtected,
+        uint256 _totalAssets,
+        uint256 _totalShares
+    ) public {
+        _ensureNoOverflowsAndMockCall(_assetsToLiquidate, _useProtected, _totalAssets, _totalShares);
+
+        ISilo.CollateralType collateralType =
+            _useProtected ? ISilo.CollateralType.Protected : ISilo.CollateralType.Collateral;
+
+        (uint256 totalSharesToLiquidate,,) = defaulting.getKeeperAndLenderSharesSplit({
+            _assetsToLiquidate: _assetsToLiquidate,
+            _collateralType: collateralType
+        });
+
+        uint256 backToAssets = SiloMathLib.convertToAssets({
+            _shares: totalSharesToLiquidate,
+            _totalAssets: _totalAssets,
+            _totalShares: _totalShares,
+            _rounding: Rounding.WITHDRAW_TO_ASSETS,
+            _assetType: ISilo.AssetType(uint8(collateralType))
+        });
+
+        assertEq(backToAssets, _assetsToLiquidate, "withdraw shares should gave us exact assets to liquidate");
+    }
 
     function _singleCheckWithMock(
         uint8 _id,

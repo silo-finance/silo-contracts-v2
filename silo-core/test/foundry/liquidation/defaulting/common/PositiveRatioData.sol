@@ -33,7 +33,7 @@ contract PositiveRatioData {
                 id: 2,
                 assetsToLiquidate: 1,
                 expectedKeeperShares: 2,
-                expectedLendersShares: 134, // because of offset
+                expectedLendersShares: 135, // because of offset
                 totalAssets: 10,
                 totalShares: 500
             })
@@ -55,7 +55,7 @@ contract PositiveRatioData {
                 id: 4,
                 assetsToLiquidate: 2,
                 expectedKeeperShares: 24,
-                expectedLendersShares: 1309, // because of offset
+                expectedLendersShares: 1310, // because of offset
                 totalAssets: 2,
                 totalShares: 1000
             })
