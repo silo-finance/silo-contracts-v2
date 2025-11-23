@@ -4,6 +4,8 @@ pragma solidity ^0.8.28;
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 contract DummyOracle is ISiloOracle {
+    error ZeroQuote();
+    
     uint256 internal price;
     address public quoteToken;
 
@@ -34,6 +36,8 @@ contract DummyOracle is ISiloOracle {
         if (_oracleBroken) revert("quote: oracle is broken");
 
         quoteAmount = _baseAmount * price / 1e18;
+
+        if (quoteAmount == 0) revert ZeroQuote();
     }
 
     function breakOracle() external {
