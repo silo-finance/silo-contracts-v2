@@ -42,6 +42,22 @@ contract DefaultingLiquidationSame0Test is DefaultingLiquidationCommon {
         assertEq(address(collateralSilo), address(debtSilo), "[crosscheck] silos must be the same for this case");
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv --mc DefaultingLiquidationSame1Test
+    */
+    /// forge-config: core_test.fuzz.runs = 50
+    function test_bothLiquidationsResultsMatch_insolvent_fuzz(
+        uint64 _priceDropPercentage, // not important because same asset
+        uint32 _warp,
+        uint48 _collateral,
+        uint48 _protected
+    ) public override {
+        // uint48 _collateral = 54286;
+        // uint48 _protected = 18683;
+
+        super.test_bothLiquidationsResultsMatch_insolvent_fuzz(_priceDropPercentage, _warp, _collateral, _protected);
+    }
+
     // CONFIGURATION
 
     function _getSilos() internal view override returns (ISilo collateralSilo, ISilo debtSilo) {
