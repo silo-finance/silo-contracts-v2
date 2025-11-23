@@ -207,7 +207,7 @@ contract DefaultingLiquidationSplitMathTest is CloneHookV2 {
                 _shares: sharesLeft,
                 _totalAssets: _assets,
                 _totalShares: _shares,
-                _rounding: Rounding.DOWN,
+                _rounding: Rounding.WITHDRAW_TO_ASSETS,
                 _assetType: ISilo.AssetType(uint8(_collateralType))
             });
 
@@ -218,7 +218,7 @@ contract DefaultingLiquidationSplitMathTest is CloneHookV2 {
             _shares: totalSharesToLiquidate,
             _totalAssets: _assets,
             _totalShares: _shares,
-            _rounding: Rounding.DOWN,
+            _rounding: Rounding.WITHDRAW_TO_ASSETS,
             _assetType: ISilo.AssetType(uint8(_collateralType))
         });
 
