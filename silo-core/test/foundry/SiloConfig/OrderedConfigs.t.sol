@@ -23,8 +23,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 //
 // FOUNDRY_PROFILE=core_test forge test -vv --mc OrderedConfigsTest
 contract OrderedConfigsTest is Test {
-    bool internal constant _SAME_ASSET = true;
-
     address internal _siloUser = makeAddr("siloUser");
     address internal _wrongSilo = makeAddr("wrongSilo");
     address internal _silo0 = makeAddr("silo0");

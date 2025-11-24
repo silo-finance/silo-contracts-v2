@@ -17,9 +17,6 @@ import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
 import {SiloFixture} from "./fixtures/SiloFixture.sol";
 
 abstract contract SiloLittleHelper is CommonBase {
-    bool constant SAME_ASSET = true; // _depositForBorrow()
-    bool constant TWO_ASSETS = false; // _deposit()
-
     SiloLens immutable siloLens;
 
     MintableToken token0;
