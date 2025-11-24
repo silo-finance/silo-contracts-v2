@@ -49,7 +49,7 @@ contract LiquidationCall999caseTest is SiloLittleHelper, Test {
         _depositForBorrow(COLLATERAL_FOR_BORROW, DEPOSITOR);
         emit log_named_decimal_uint("COLLATERAL_FOR_BORROW", COLLATERAL_FOR_BORROW, 18);
 
-        _depositCollateral(COLLATERAL, BORROWER, false);
+        _deposit(COLLATERAL, BORROWER);
         _borrow(DEBT, BORROWER);
         emit log_named_decimal_uint("DEBT", DEBT, 18);
         debtStart = block.timestamp;
@@ -69,9 +69,9 @@ contract LiquidationCall999caseTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_NoCollateralToLiquidate_2tokens
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_NoCollateralToLiquidate
     */
-    function test_liquidationCall_NoCollateralToLiquidate_2tokens() public {
+    function test_liquidationCall_NoCollateralToLiquidate() public {
         vm.warp(block.timestamp + 365 days);
         uint256 ltv = siloLens.getLtv(silo0, BORROWER);
         assertGt(ltv, 1e18, "expect bad debt for this test");
@@ -93,67 +93,29 @@ contract LiquidationCall999caseTest is SiloLittleHelper, Test {
     }
 
     /* 
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999protected_2tokens
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999protected
 
     this is test for 999 case bug 
     scenario is: borrower has protected collateral and 999 regular collateral, 
     on liquidation we use both collaterals but protected can not be translated to assets, so tx reverts
     this test fails for v3.12.0
     */
-    function test_liquidationCall_999protected_2tokens() public {
-        _liquidationCall_999case(ISilo.CollateralType.Protected, _executeLiquidation2tokens);
+    function test_liquidationCall_999protected() public {
+        _liquidationCall_999case(ISilo.CollateralType.Protected);
     }
 
     /* 
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999collateral_2tokens
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999collateral
     */
-    function test_liquidationCall_999collateral_2tokens() public {
+    function test_liquidationCall_999collateral() public {
         vm.startPrank(BORROWER);
         silo0.transitionCollateral(silo0.balanceOf(BORROWER), BORROWER, ISilo.CollateralType.Collateral);
         vm.stopPrank();
 
-        _liquidationCall_999case(ISilo.CollateralType.Collateral, _executeLiquidation2tokens);
+        _liquidationCall_999case(ISilo.CollateralType.Collateral);
     }
 
-    /* 
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999collateral_1token
-    */
-    function test_liquidationCall_999collateral_1token() public {
-        _borrowSameAsset();
-
-        vm.startPrank(BORROWER);
-        silo0.transitionCollateral(silo0.balanceOf(BORROWER), BORROWER, ISilo.CollateralType.Collateral);
-        vm.stopPrank();
-
-        _liquidationCall_999case(ISilo.CollateralType.Collateral, _executeLiquidation1token);
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_liquidationCall_999protected_1token
-    */
-    function test_liquidationCall_999protected_1token() public {
-        _borrowSameAsset();
-
-        _liquidationCall_999case(ISilo.CollateralType.Protected, _executeLiquidation1token);
-    }
-
-    function _borrowSameAsset() internal {
-        _repay(silo1.maxRepay(BORROWER), BORROWER);
-
-        // we need liquidity for borrow
-        _deposit(COLLATERAL, makeAddr("any"));
-
-        vm.startPrank(BORROWER);
-        silo0.borrowSameAsset(silo0.maxBorrowSameAsset(BORROWER), BORROWER, BORROWER);
-        vm.stopPrank();
-
-        assertGt(silo0.maxRepay(BORROWER), 0, "we want debt in silo 0");
-        assertEq(silo1.maxRepay(BORROWER), 0, "expect no debt on silo1");
-    }
-
-    function _liquidationCall_999case(ISilo.CollateralType _generateDustForType, function() _liquidationCallFn)
-        internal
-    {
+    function _liquidationCall_999case(ISilo.CollateralType _generateDustForType) internal {
         (IShareToken shareToken, IShareToken otherShareToken) = _generateDustForType == ISilo.CollateralType.Protected
             ? (IShareToken(silo0Config.protectedShareToken), IShareToken(silo0Config.collateralShareToken))
             : (IShareToken(silo0Config.collateralShareToken), IShareToken(silo0Config.protectedShareToken));
@@ -174,7 +136,7 @@ contract LiquidationCall999caseTest is SiloLittleHelper, Test {
 
         console2.log("--- LIQUIDATION CALL ---");
 
-        _liquidationCallFn();
+        _executeLiquidation();
 
         uint256 sharesBalanceAfter = shareToken.balanceOf(address(this));
         emit log_named_string("shares token", shareToken.symbol());
@@ -194,17 +156,9 @@ contract LiquidationCall999caseTest is SiloLittleHelper, Test {
         assertEq(otherSharesBalanceAfter, 0, "liquidator should have no other shares after liquidation");
     }
 
-    function _executeLiquidation2tokens() internal {
+    function _executeLiquidation() internal {
         partialLiquidation.liquidationCall(
             address(token0), address(token1), BORROWER, type(uint256).max, false /* receiveSToken */
-        );
-    }
-
-    function _executeLiquidation1token() internal {
-        (uint256 collateralToLiquidate,,) = partialLiquidation.maxLiquidation(BORROWER);
-
-        partialLiquidation.liquidationCall(
-            address(token0), address(token0), BORROWER, collateralToLiquidate, false /* receiveSToken */
         );
     }
 

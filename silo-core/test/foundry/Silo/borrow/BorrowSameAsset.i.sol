@@ -140,9 +140,9 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_borrowSameAsset_frontRun_pass_1token
+    forge test -vv --ffi --mt test_borrowSameAsset_frontRun_pass
     */
-    function test_borrowSameAsset_frontRun_pass_1token() public {
+    function test_borrowSameAsset_frontRun_pass() public {
         uint256 assets = 1e18;
         address borrower = address(this);
 
@@ -169,8 +169,8 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
 
         (address protectedShareToken, address collateralShareToken,) = siloConfig.getShareTokens(address(silo0));
 
-        _depositCollateral(5, frontrunner, false);
-        _depositCollateral(3, frontrunner, false, ISilo.CollateralType.Protected);
+        _deposit(5, frontrunner);
+        _deposit(3, frontrunner, ISilo.CollateralType.Protected);
 
         vm.prank(frontrunner);
         IShareToken(collateralShareToken).transfer(borrower, 5);
@@ -191,7 +191,7 @@ contract BorrowSameAssetTest is SiloLittleHelper, Test {
         _deposit(assets, makeAddr("depositor"));
 
         uint256 notCollateral = 123;
-        _depositCollateral(notCollateral, borrower, true /* to silo1 */ );
+        _depositForBorrow(notCollateral, borrower);
         _deposit(assets, borrower, ISilo.CollateralType.Protected);
 
         vm.expectEmit(address(silo0));

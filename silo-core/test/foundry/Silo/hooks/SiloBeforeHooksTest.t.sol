@@ -111,7 +111,7 @@ contract SiloBeforeHooksTest is SiloLittleHelper, Test {
 
         (_siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
 
-        _depositCollateral(1e18, BORROWER, TWO_ASSETS);
+        _deposit(1e18, BORROWER);
         _depositForBorrow(10, DEPOSITOR);
 
         _hookReceiver.initialize(_siloConfig, "");

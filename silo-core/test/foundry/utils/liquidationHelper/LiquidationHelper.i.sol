@@ -8,9 +8,9 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {LiquidationHelperCommon} from "./LiquidationHelperCommon.sol";
 
 /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc LiquidationHelper1TokenTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc LiquidationHelperTest
 */
-contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
+contract LiquidationHelperTest is LiquidationHelperCommon {
     uint256 constant LIQUIDATION_UNDERESTIMATION = 2;
 
     function setUp() public {
@@ -18,8 +18,8 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
         siloConfig = _setUpLocalFixture();
 
         _depositForBorrow(DEBT + COLLATERAL, makeAddr("depositor"));
-        _depositCollateral(COLLATERAL, BORROWER, TWO_ASSETS);
-        _borrow(DEBT, BORROWER, TWO_ASSETS);
+        _deposit(COLLATERAL, BORROWER);
+        _borrow(DEBT, BORROWER);
 
         ISiloConfig.ConfigData memory collateralConfig = siloConfig.getConfig(address(silo0));
 
@@ -34,9 +34,9 @@ contract LiquidationHelper2TokensTest is LiquidationHelperCommon {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_executeLiquidation_2_tokens -vvv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_executeLiquidation -vvv
     */
-    function test_executeLiquidation_2_tokens(uint64 _addTimestamp) public {
+    function test_executeLiquidation(uint64 _addTimestamp) public {
         vm.assume(block.timestamp + _addTimestamp < 2 ** 64 - 1);
         vm.warp(block.timestamp + _addTimestamp);
 
