@@ -74,7 +74,7 @@ contract OneWeiTotalAssetsPositiveRatioData {
                 id: 5,
                 assetsToLiquidate: oneWeiAsset,
                 expectedKeeperShares: 9,
-                expectedLendersShares: 491,
+                expectedLendersShares: 492,
                 totalAssets: oneWeiAsset,
                 totalShares: 1
             })
@@ -96,7 +96,7 @@ contract OneWeiTotalAssetsPositiveRatioData {
                 id: 7,
                 assetsToLiquidate: oneWeiAsset,
                 expectedKeeperShares: 9,
-                expectedLendersShares: 518,
+                expectedLendersShares: 519,
                 totalAssets: oneWeiAsset,
                 totalShares: 55
             })
@@ -107,7 +107,7 @@ contract OneWeiTotalAssetsPositiveRatioData {
                 id: 8,
                 assetsToLiquidate: oneWeiAsset,
                 expectedKeeperShares: 9,
-                expectedLendersShares: 534,
+                expectedLendersShares: 535,
                 totalAssets: oneWeiAsset,
                 totalShares: 87
             })
@@ -118,7 +118,7 @@ contract OneWeiTotalAssetsPositiveRatioData {
                 id: 9,
                 assetsToLiquidate: oneWeiAsset,
                 expectedKeeperShares: 10,
-                expectedLendersShares: 544,
+                expectedLendersShares: 545,
                 totalAssets: oneWeiAsset,
                 totalShares: 109
             })

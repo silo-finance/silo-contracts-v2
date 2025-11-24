@@ -44,7 +44,7 @@ contract DefaultingLiquidationTwo1Test is DefaultingLiquidationCommon {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv --mc DefaultingLiquidationTwo1Test
     */
-    /// forge-config: core_test.fuzz.runs = 50
+    /// forge-config: core_test.fuzz.runs = 100
     function test_bothLiquidationsResultsMatch_insolvent_fuzz(
         uint64 _dropPercentage,
         uint32 _warp,

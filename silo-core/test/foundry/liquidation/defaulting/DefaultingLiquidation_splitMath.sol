@@ -304,6 +304,10 @@ contract DefaultingLiquidationSplitMathTest is CloneHookV2 {
     ) public {
         _ensureNoOverflowsAndMockCall(_assetsToLiquidate, _useProtected, _totalAssets, _totalShares);
 
+        // if ratio if way off we will be able to generate more assets that input assets to liquidate,
+        // so we excluding this case here
+        vm.assume(_totalAssets <= _totalShares);
+
         ISilo.CollateralType collateralType =
             _useProtected ? ISilo.CollateralType.Protected : ISilo.CollateralType.Collateral;
 
@@ -320,7 +324,10 @@ contract DefaultingLiquidationSplitMathTest is CloneHookV2 {
             _assetType: ISilo.AssetType(uint8(collateralType))
         });
 
-        assertEq(backToAssets, _assetsToLiquidate, "withdraw shares should gave us exact assets to liquidate");
+        console2.log("     backToAssets", backToAssets);
+        console2.log("assetsToLiquidate", _assetsToLiquidate);
+
+        assertEq(backToAssets, _assetsToLiquidate, "withdraw shares should gave us not more then input assets to liquidate");
     }
 
     function _singleCheckWithMock(

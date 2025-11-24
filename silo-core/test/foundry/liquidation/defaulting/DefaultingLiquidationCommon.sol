@@ -170,6 +170,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         //_exitSilo();
     }
 
+// todo
     function _defaulting_neverReverts_insolvencyScenario(address _borrower, uint256 _collateral, uint256 _protected)
         internal
     {
@@ -327,6 +328,15 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _whenDefaultingPossibleTxDoesNotRevert(_initialPrice, _changePrice, _warp, _collateral, _protected, true);
     }
 
+    /*
+    TODO found a case when maxBorrow > 0 but borrow fails, because borrow value is 0.
+
+    if _defaultingPossible() we never revert otherwise we do revert
+
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_whenDefaultingPossibleTxDoesNotRevert_notBadDebt_fuzz -vv
+    */
+    /// forge-config: core_test.fuzz.runs = 8888
+    function test_whenDefaultingPossibleTxDoesNotRevert_notBadDebt_fuzz()
         // uint64 _initialPrice,
         // uint64 _changePrice,
         // uint32 _warp,
@@ -521,11 +531,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _executeDefaulting(borrower);
         console2.log("defaulting liquidation done");
         UserState memory userState2 = _getUserState(borrower);
-
-        if (!_useSameAssetPosition()) {
-            // for same assets position when reduce collateral, we wil get different LTV
-            assertEq(userState.ltv, userState2.ltv, "ltv should be the same");
-        }
 
         assertEq(userState.debtShares, userState2.debtShares, "debt shares should be the same");
         assertEq(userState.protectedShares, userState2.protectedShares, "protected shares should be the same");

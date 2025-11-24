@@ -28,7 +28,6 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
 
     struct UserState {
-        uint256 ltv;
         uint256 debtShares;
         uint256 protectedShares;
         uint256 colalteralShares;
@@ -364,18 +363,17 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     }
 
     function _getUserState(address _borrower) internal returns (UserState memory userState) {
-        userState.ltv = silo0.getLtv(_borrower);
-
         (IShareToken protectedShareToken, IShareToken collateralShareToken, IShareToken debtShareToken) =
             _getShareTokens(_borrower);
 
         userState.debtShares = (address(debtShareToken) != address(0)) ? debtShareToken.balanceOf(_borrower) : 0;
+        
         userState.protectedShares =
             (address(protectedShareToken) != address(0)) ? protectedShareToken.balanceOf(_borrower) : 0;
+        
         userState.colalteralShares =
             (address(collateralShareToken) != address(0)) ? collateralShareToken.balanceOf(_borrower) : 0;
 
-        emit log_named_decimal_uint("userState.ltv", userState.ltv, 16);
         console2.log("userState.debtShares", userState.debtShares);
         console2.log("userState.protectedShares", userState.protectedShares);
         console2.log("userState.colalteralShares", userState.colalteralShares);
