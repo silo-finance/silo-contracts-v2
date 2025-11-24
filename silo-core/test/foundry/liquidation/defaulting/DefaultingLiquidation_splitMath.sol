@@ -222,7 +222,8 @@ contract DefaultingLiquidationSplitMathTest is CloneHookV2 {
             _assetType: ISilo.AssetType(uint8(_collateralType))
         });
 
-        assertEq(backToAssets, _assets, "all assets should be distributed when assets to liquidate == total");
+        uint256 diff = _assets - backToAssets;
+        assertLe(diff, 1, "all assets should be distributed when assets to liquidate == total (we allow for 1 wei less for rounding error on withdraw)");
 
         assertEq(keeperShares + lendersShares, totalSharesToLiquidate, "we should split 100%");
         assertLt(keeperShares, lendersShares, "keeper shares should be less than lenders shares");
@@ -327,7 +328,7 @@ contract DefaultingLiquidationSplitMathTest is CloneHookV2 {
         console2.log("     backToAssets", backToAssets);
         console2.log("assetsToLiquidate", _assetsToLiquidate);
 
-        assertEq(backToAssets, _assetsToLiquidate, "withdraw shares should gave us not more then input assets to liquidate");
+        assertLe(backToAssets, _assetsToLiquidate, "withdraw shares should gave us not more then input assets to liquidate");
     }
 
     function _singleCheckWithMock(
