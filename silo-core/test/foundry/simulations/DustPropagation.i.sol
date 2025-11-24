@@ -27,7 +27,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     ISiloConfig siloConfig;
 
     /*
-    this test is based on: test_liquidationCall_badDebt_partial_1token_noDepositors
+    this test is based on: test_liquidationCall_badDebt_partial_noDepositors
     */
     function setUp() public {
         siloConfig = _setUpLocalFixture();

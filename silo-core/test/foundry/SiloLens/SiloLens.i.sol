@@ -59,7 +59,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         assertEq(siloLens.getRawLiquidity(silo0), deposit0, "getRawLiquidity 0");
         assertEq(siloLens.getRawLiquidity(silo1), deposit1, "getRawLiquidity 1");
 
-        _depositCollateral(collateral, borrower, TWO_ASSETS);
+        _deposit(collateral, borrower);
 
         assertFalse(siloLens.inDebt(siloConfig, borrower), "borrower has no debt");
         assertEq(siloLens.getUserLT(silo0, borrower), 0, "LT is 0 when borrower has no debt");
@@ -230,7 +230,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
 
         _deposit(deposit0, depositor);
         _depositForBorrow(deposit1, depositor);
-        _depositCollateral(collateral, borrower, TWO_ASSETS);
+        _deposit(collateral, borrower);
 
         uint256 toBorrow = collateral * _utilization / 1e18;
         _borrow(toBorrow, borrower);

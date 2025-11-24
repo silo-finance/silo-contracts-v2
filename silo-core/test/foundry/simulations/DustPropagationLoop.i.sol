@@ -73,7 +73,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     /*
     forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_withInterest_borrowers
     */
-    function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers_1token() public {
+    function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers() public {
         _dustPropagation_deposit_borrow(INIT_ASSETS, 3, 60 * 60 * 24);
     }
 
