@@ -408,7 +408,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function maxBorrow(address _borrower) external view virtual returns (uint256 maxAssets) {
-        (maxAssets,) = Views.maxBorrow({_borrower: _borrower, _sameAsset: false});
+        (maxAssets,) = Views.maxBorrow({_borrower: _borrower});
     }
 
     /// @inheritdoc ISilo
@@ -447,7 +447,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function maxBorrowShares(address _borrower) external view virtual returns (uint256 maxShares) {
-        (,maxShares) = Views.maxBorrow({_borrower: _borrower, _sameAsset: false});
+        (,maxShares) = Views.maxBorrow({_borrower: _borrower});
     }
 
     /// @inheritdoc ISilo
