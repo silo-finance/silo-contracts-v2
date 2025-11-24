@@ -22,9 +22,9 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {DefaultingLiquidationCommon} from "./DefaultingLiquidationCommon.sol";
 
 /*
-tests for two way markets, non-borrowable token is 1
+tests for one way markets, borrowable token is 1
 */
-contract DefaultingLiquidationTwo1Test is DefaultingLiquidationCommon {
+contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
     using SiloLensLib for ISilo;
 
     function setUp() public override {
@@ -41,32 +41,16 @@ contract DefaultingLiquidationTwo1Test is DefaultingLiquidationCommon {
         assertNotEq(address(collateralSilo), address(debtSilo), "[crosscheck] silos must be different for this case");
     }
 
-    /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv --mc DefaultingLiquidationTwo1Test
-    */
-    /// forge-config: core_test.fuzz.runs = 100
-    function test_bothLiquidationsResultsMatch_insolvent_fuzz(
-        uint64 _dropPercentage,
-        uint32 _warp,
-        uint48 _collateral,
-        uint48 _protected
-    ) public override {
-        _dropPercentage = 0.061e18;
-        _warp = 5 days;
-
-        super.test_bothLiquidationsResultsMatch_insolvent_fuzz(_dropPercentage, _warp, _collateral, _protected);
-    }
-
     // CONFIGURATION
 
     function _getSilos() internal view override returns (ISilo collateralSilo, ISilo debtSilo) {
-        collateralSilo = silo1;
-        debtSilo = silo0;
+        collateralSilo = silo0;
+        debtSilo = silo1;
     }
 
     function _getTokens() internal view override returns (address collateralAsset, address debtAsset) {
-        collateralAsset = address(token1);
-        debtAsset = address(token0);
+        collateralAsset = address(token0);
+        debtAsset = address(token1);
     }
 
     function _maxBorrow(address _borrower) internal view override returns (uint256) {
@@ -91,7 +75,7 @@ contract DefaultingLiquidationTwo1Test is DefaultingLiquidationCommon {
     }
 
     function _useConfigName() internal pure override returns (string memory) {
-        return SiloConfigsNames.SILO_LOCAL_NO_ORACLE_DEFAULTING1;
+        return SiloConfigsNames.SILO_LOCAL_NO_ORACLE_DEFAULTING0;
     }
 
     function _useSameAssetPosition() internal pure override returns (bool) {

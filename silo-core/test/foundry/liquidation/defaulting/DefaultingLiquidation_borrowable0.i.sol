@@ -22,56 +22,57 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {DefaultingLiquidationCommon} from "./DefaultingLiquidationCommon.sol";
 
 /*
-tests for same asset borrow, non-borrowable token is 1
+tests for one way markets, borrowable token is 0
 */
-contract DefaultingLiquidationSame1Test is DefaultingLiquidationCommon {
+contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
     using SiloLensLib for ISilo;
 
     function setUp() public override {
         super.setUp();
 
         (address collateralAsset, address debtAsset) = _getTokens();
-        assertEq(
+        assertNotEq(
             collateralAsset,
             debtAsset,
-            "[crosscheck] collateral and debt assets should be the same for same asset case"
+            "[crosscheck] collateral and debt assets should be different for two assets case"
         );
 
         (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
-        assertEq(address(collateralSilo), address(debtSilo), "[crosscheck] silos must be the same for this case");
+        assertNotEq(address(collateralSilo), address(debtSilo), "[crosscheck] silos must be different for this case");
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv --mc DefaultingLiquidationSame1Test
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv --mc DefaultingLiquidationTwo1Test
     */
     /// forge-config: core_test.fuzz.runs = 100
     function test_bothLiquidationsResultsMatch_insolvent_fuzz(
-        uint64 _priceDropPercentage, // not important because same asset
+        uint64 _dropPercentage,
         uint32 _warp,
         uint48 _collateral,
         uint48 _protected
     ) public override {
-        _warp %= 70 hours;
+        _dropPercentage = 0.061e18;
+        _warp = 5 days;
 
-        super.test_bothLiquidationsResultsMatch_insolvent_fuzz(_priceDropPercentage, _warp, _collateral, _protected);
+        super.test_bothLiquidationsResultsMatch_insolvent_fuzz(_dropPercentage, _warp, _collateral, _protected);
     }
 
     // CONFIGURATION
 
     function _getSilos() internal view override returns (ISilo collateralSilo, ISilo debtSilo) {
         collateralSilo = silo1;
-        debtSilo = silo1;
+        debtSilo = silo0;
     }
 
     function _getTokens() internal view override returns (address collateralAsset, address debtAsset) {
         collateralAsset = address(token1);
-        debtAsset = address(token1);
+        debtAsset = address(token0);
     }
 
     function _maxBorrow(address _borrower) internal view override returns (uint256) {
         (, ISilo debtSilo) = _getSilos();
 
-        try debtSilo.maxBorrowSameAsset(_borrower) returns (uint256 _max) {
+        try debtSilo.maxBorrow(_borrower) returns (uint256 _max) {
             return _max;
         } catch {
             return 0;
@@ -82,7 +83,7 @@ contract DefaultingLiquidationSame1Test is DefaultingLiquidationCommon {
         (, ISilo debtSilo) = _getSilos();
         vm.prank(_borrower);
 
-        try debtSilo.borrowSameAsset(_amount, _borrower, _borrower) {
+        try debtSilo.borrow(_amount, _borrower, _borrower) {
             success = true;
         } catch {
             success = false;
@@ -94,6 +95,6 @@ contract DefaultingLiquidationSame1Test is DefaultingLiquidationCommon {
     }
 
     function _useSameAssetPosition() internal pure override returns (bool) {
-        return true;
+        return false;
     }
 }

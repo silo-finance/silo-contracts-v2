@@ -362,7 +362,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         }
     }
 
-    function _getUserState(address _borrower) internal returns (UserState memory userState) {
+    function _getUserState(address _borrower) internal view returns (UserState memory userState) {
         (IShareToken protectedShareToken, IShareToken collateralShareToken, IShareToken debtShareToken) =
             _getShareTokens(_borrower);
 

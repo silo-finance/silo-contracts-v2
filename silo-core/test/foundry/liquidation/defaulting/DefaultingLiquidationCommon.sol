@@ -51,6 +51,10 @@ TODO make sure we added EXIT when we can
 
 TODO test with many borrowers
 
+TODO double check same assets with protected - does it increase LTV?
+
+TODO test with setOnDemand(false)
+
 */
 
 abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
@@ -470,6 +474,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint48 _collateral,
         uint48 _protected
     ) public virtual {
+        // vm.assume(_collateral == 0); // DEBUG
+        // _protected += _collateral;
+        _protected = 0;
+
         // (uint64 _priceDropPercentage,
         // uint32 _warp,
         // uint48 _collateral,
@@ -540,6 +548,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             // for same position, LTV depends on type of collateral.
             // if user has protected - LTV drops, if collateral LTV grows
             // if (userState.ltv != 0) assertFalse(silo0.isSolvent(borrower), "same borrow position will grow LTV");
+            assertTrue(silo0.isSolvent(borrower), "CHECK PROTECTED - DEBUG");
         } else {
             // TODO make separate test just to see, if whatever happen user will be solvent?
             // assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
