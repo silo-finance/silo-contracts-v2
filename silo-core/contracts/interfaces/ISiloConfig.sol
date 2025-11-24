@@ -130,6 +130,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     error OnlyDebtShareToken();
     error DebtExistInOtherSilo();
     error FeeTooHigh();
+    error Deprecated();
 
     /// @dev It should be called on debt transfer (debt share token transfer).
     /// In the case if the`_recipient` doesn't have configured a collateral silo,
@@ -138,11 +139,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @param _recipient recipient address
     function onDebtTransfer(address _sender, address _recipient) external;
 
-    /// @notice Set collateral silo.
-    /// @dev Revert if msg.sender is not a SILO_0 or SILO_1.
-    /// @dev Always set collateral silo the same as msg.sender.
-    /// @param _borrower borrower address
-    /// @return collateralSiloChanged TRUE if collateral silo changed
+    /// @notice deprecated
     function setThisSiloAsCollateralSilo(address _borrower) external returns (bool collateralSiloChanged);
 
     /// @notice Set collateral silo

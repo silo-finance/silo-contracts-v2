@@ -485,31 +485,13 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function maxBorrowSameAsset(address _borrower) external view virtual returns (uint256 maxAssets) {
-        (maxAssets,) = Views.maxBorrow({_borrower: _borrower, _sameAsset: true});
+    function maxBorrowSameAsset(address) external view virtual returns (uint256) {
+        revert Deprecated();
     }
 
     /// @inheritdoc ISilo
-    function borrowSameAsset(uint256 _assets, address _receiver, address _borrower)
-        external
-        virtual
-        returns (uint256 shares)
-    {
-        uint256 assets;
-        bool collateralTypeChanged;
-
-        (assets, shares, collateralTypeChanged) = Actions.borrowSameAsset(
-            BorrowArgs({
-                assets: _assets,
-                shares: 0,
-                receiver: _receiver,
-                borrower: _borrower
-            })
-        );
-
-        emit Borrow(msg.sender, _receiver, _borrower, assets, shares);
-
-        if (collateralTypeChanged) emit CollateralTypeChanged(msg.sender);
+    function borrowSameAsset(uint256, address, address) external virtual returns (uint256) {
+        revert Deprecated();
     }
 
     /// @inheritdoc ISilo
@@ -543,8 +525,7 @@ contract Silo is ISilo, ShareCollateralToken {
 
     /// @inheritdoc ISilo
     function switchCollateralToThisSilo() external virtual {
-        Actions.switchCollateralToThisSilo();
-        emit CollateralTypeChanged(msg.sender);
+        revert Deprecated();
     }
 
     /// @inheritdoc ISilo
