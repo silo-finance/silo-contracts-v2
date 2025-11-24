@@ -12,7 +12,6 @@ import {AssetReentrancyTest} from "../methods/silo/AssetReentrancyTest.sol";
 import {BalanceOfAndTotalSupplyReentrancyTest} from "../methods/silo/BalanceOfAndTotalSupplyReentrancyTest.sol";
 import {BalanceOfReentrancyTest} from "../methods/silo/BalanceOfReentrancyTest.sol";
 import {BorrowReentrancyTest} from "../methods/silo/BorrowReentrancyTest.sol";
-import {BorrowSameAssetReentrancyTest} from "../methods/silo/BorrowSameAssetReentrancyTest.sol";
 import {BorrowSharesReentrancyTest} from "../methods/silo/BorrowSharesReentrancyTest.sol";
 import {BurnReentrancyTest} from "../methods/silo/BurnReentrancyTest.sol";
 import {CallOnBehalfOfSiloReentrancyTest} from "../methods/silo/CallOnBehalfOfSiloReentrancyTest.sol";
@@ -43,7 +42,6 @@ import {HookSetupReentrancyTest} from "../methods/silo/HookSetupReentrancyTest.s
 import {InitializeReentrancyTest} from "../methods/silo/InitializeReentrancyTest.sol";
 import {IsSolventReentrancyTest} from "../methods/silo/IsSolventReentrancyTest.sol";
 import {MaxBorrowReentrancyTest} from "../methods/silo/MaxBorrowReentrancyTest.sol";
-import {MaxBorrowSameAssetReentrancyTest} from "../methods/silo/MaxBorrowSameAssetReentrancyTest.sol";
 import {MaxBorrowSharesReentrancyTest} from "../methods/silo/MaxBorrowSharesReentrancyTest.sol";
 import {MaxDepositReentrancyTest} from "../methods/silo/MaxDepositReentrancyTest.sol";
 import {MaxDepositWithTypeReentrancyTest} from "../methods/silo/MaxDepositWithTypeReentrancyTest.sol";
@@ -112,7 +110,6 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new BalanceOfAndTotalSupplyReentrancyTest());
         _registerMethod(new BalanceOfReentrancyTest());
         _registerMethod(new BorrowReentrancyTest());
-        _registerMethod(new BorrowSameAssetReentrancyTest());
         _registerMethod(new BorrowSharesReentrancyTest());
         _registerMethod(new BurnReentrancyTest());
         _registerMethod(new CallOnBehalfOfSiloReentrancyTest());
@@ -141,7 +138,6 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new InitializeReentrancyTest());
         _registerMethod(new IsSolventReentrancyTest());
         _registerMethod(new MaxBorrowReentrancyTest());
-        _registerMethod(new MaxBorrowSameAssetReentrancyTest());
         _registerMethod(new MaxBorrowSharesReentrancyTest());
         _registerMethod(new MaxDepositReentrancyTest());
         _registerMethod(new MaxDepositWithTypeReentrancyTest());
