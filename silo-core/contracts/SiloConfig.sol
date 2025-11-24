@@ -141,7 +141,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     /// @inheritdoc ISiloConfig
     function setThisSiloAsCollateralSilo(address _borrower) external virtual returns (bool collateralSiloChanged) {
-        collateralSiloChanged = _setSiloAsCollateralSilo(msg.sender, _borrower);
+        revert Deprecated();
     }
 
     /// @inheritdoc ISiloConfig
