@@ -39,22 +39,7 @@ contract HookReceiver is IHookReceiver, Test {
 
             // create debt in two silos
             vm.prank(receiver);
-            ISilo(silo0).borrowSameAsset(1, receiver, receiver);
-        } else if (Hook.matchAction(Hook.BORROW_SAME_ASSET, _action)) {
-            Hook.BeforeBorrowInput memory input = Hook.beforeBorrowDecode(_input);
-            receiver = input.receiver;
-
-            // create debt in two silos
-            vm.prank(receiver);
-            ISilo(silo1).borrow(1, receiver, receiver);
-        } else if (Hook.matchAction(Hook.SWITCH_COLLATERAL, _action)) {
-            Hook.SwitchCollateralInput memory input = Hook.switchCollateralDecode(_input);
-            receiver = input.user;
-
-            // we want to use higher collateral, to create debt, and then when we back from hook,
-            // we want to try to switch
-            vm.prank(receiver);
-            ISilo(silo1).borrow(10, receiver, receiver);
+            ISilo(silo0).borrow(1, receiver, receiver);
         } else {
             revert("should not happen");
         }
@@ -112,15 +97,16 @@ contract SiloBeforeHooksTest is SiloLittleHelper, Test {
         (_siloConfig, silo0, silo1,,,) = siloFixture.deploy_local(configOverride);
 
         _deposit(1e18, BORROWER);
+        _depositForBorrow(1e18, BORROWER);
         _depositForBorrow(10, DEPOSITOR);
 
         _hookReceiver.initialize(_siloConfig, "");
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_borrow_2debt
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_borrow_beforeHook_createDebt
     */
-    function test_borrow_2debt() public {
+    function test_borrow_beforeHook_createDebt() public {
         _hookReceiver.setBefore(uint24(Hook.BORROW));
         silo1.updateHooks();
 
