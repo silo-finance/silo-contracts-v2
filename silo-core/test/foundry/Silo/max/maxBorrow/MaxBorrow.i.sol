@@ -220,7 +220,9 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = silo1.maxBorrow(borrower);
         assertGt(maxBorrow, 0, "we can borrow again after repay");
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow);
+        emit log_named_decimal_uint("ratio", silo1.convertToShares(1e18, ISilo.AssetType.Debt), 18);
+
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 33);
         _assertMaxBorrowIsZeroAtTheEnd(29);
     }
 
