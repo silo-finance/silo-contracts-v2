@@ -485,8 +485,8 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc ISilo
-    function maxBorrowSameAsset(address) external view virtual returns (uint256) {
-        revert Deprecated();
+    function maxBorrowSameAsset(address) external pure virtual returns (uint256) {
+        return 0;
     }
 
     /// @inheritdoc ISilo

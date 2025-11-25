@@ -31,6 +31,8 @@ import {HasDebtInOtherSiloReentrancyTest} from "../methods/silo-config/HasDebtIn
 import {OnDebtTransferReentrancyTest} from "../methods/silo-config/OnDebtTransferReentrancyTest.sol";
 import {SetOtherSiloAsCollateralSiloReentrancyTest} from
     "../methods/silo-config/SetOtherSiloAsCollateralSiloReentrancyTest.sol";
+import {SetThisSiloAsCollateralSiloReentrancyTest} from
+    "../methods/silo-config/SetThisSiloAsCollateralSiloReentrancyTest.sol";
 
 contract SiloConfigMethodsRegistry is IMethodsRegistry {
     mapping(bytes4 methodSig => IMethodReentrancyTest) public methods;
@@ -56,6 +58,7 @@ contract SiloConfigMethodsRegistry is IMethodsRegistry {
         _registerMethod(new HasDebtInOtherSiloReentrancyTest());
         _registerMethod(new OnDebtTransferReentrancyTest());
         _registerMethod(new SetOtherSiloAsCollateralSiloReentrancyTest());
+        _registerMethod(new SetThisSiloAsCollateralSiloReentrancyTest());
         _registerMethod(new TurnOffReentrancyProtectionReentrancyTest());
         _registerMethod(new TurnOnReentrancyProtectionReentrancyTest());
     }
