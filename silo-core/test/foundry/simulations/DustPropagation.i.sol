@@ -11,7 +11,7 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc DustPropagationTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc DustPropagationTest
 
     conclusions: when assets:shares are 1:1 there is no dust
 */
@@ -22,7 +22,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     uint256 constant COLLATERAL = 10e18;
     uint256 constant DEBT = 7.5e18;
     bool constant SAME_TOKEN = true;
-    uint256 constant DUST_LEFT = 5;
+    uint256 constant DUST_LEFT = 4;
 
     ISiloConfig siloConfig;
 
@@ -34,9 +34,10 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
         _printState("initial state");
 
+        // provide liquidity to silo0
         token0.mint(address(this), COLLATERAL);
         token0.approve(address(silo0), COLLATERAL);
-        silo0.deposit(COLLATERAL, BORROWER);
+        silo0.deposit(COLLATERAL, address(this));
 
         // we cresting debt on silo0, because lt there is 85 and in silo0 95, so it is easier to test because of dust
         vm.startPrank(BORROWER);
@@ -58,12 +59,16 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         token0.approve(address(partialLiquidation), debtToRepay);
         bool receiveSToken;
 
-        partialLiquidation.liquidationCall(address(token0), address(token0), BORROWER, debtToRepay, receiveSToken);
+        partialLiquidation.liquidationCall(address(token1), address(token0), BORROWER, debtToRepay, receiveSToken);
         _printState("after liquidation");
 
         assertTrue(silo0.isSolvent(BORROWER), "user is solvent after liquidation");
 
         silo0.withdrawFees();
+        uint256 maxRedeem = silo0.maxRedeem(address(this));
+        emit log_named_uint("maxRedeem for liquidity provider", maxRedeem);
+        if (maxRedeem != 0) silo0.redeem(maxRedeem, address(this), address(this));
+
         _printState("after withdrawFees");
 
         ISiloConfig.ConfigData memory configData = siloConfig.getConfig(address(silo0));
@@ -91,10 +96,13 @@ contract DustPropagationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_dustPropagation_oneUser
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_dustPropagation_oneUser
     */
     function test_dustPropagation_oneUser() public {
         address user1 = makeAddr("user1");
+
+        emit log_named_uint("total supply", silo0.totalSupply());
+        emit log_named_uint("liquidity", silo0.getLiquidity());
 
         /*
             user must deposit at least dust + 1, because otherwise math revert with zeroShares
@@ -113,23 +121,28 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
             ^ we never enter into this `if` for non debt assets, because we always adding +1 for both variables
             and this is why this dust will be forever locked in silo.
-            Atm the only downside I noticed: it creates "minimal deposit" situation, when you actually can
+            Atm the only downside I noticed: it creates "minimal deposit" situation
         */
         uint256 shares1 = _deposit(1, user1);
         emit log_named_uint("[user1] shares1", shares1);
+        emit log_named_uint("total supply", silo0.totalSupply());
+        emit log_named_uint("liquidity", silo0.getLiquidity());
 
-        assertEq(silo0.maxWithdraw(user1), 0, "[user1] maxWithdraw 0 - not enough shares to withdraw asset");
+        assertEq(silo0.maxWithdraw(user1), 3, "[user1] maxWithdraw 3 - more than deposit, because dust was propagated");
 
         shares1 += _deposit(1, user1);
-        emit log_named_uint("[user1] shares1", shares1);
-        assertEq(silo0.maxWithdraw(user1), 1, "[user1] maxWithdraw 1");
+        emit log_named_uint("[user1] shares1 #2", shares1);
+        emit log_named_uint("total supply #2", silo0.totalSupply());
+        emit log_named_uint("liquidity #2", silo0.getLiquidity());
+
+        assertEq(silo0.maxWithdraw(user1), 3, "[user1] maxWithdraw 3 - still more than deposit, because dust was propagated");
 
         // +2 because we deposited it
         assertEq(silo0.getLiquidity(), DUST_LEFT + 2, "getLiquidity == 1, dust left");
     }
 
     /*
-    forge test -vv --ffi --mt test_dustPropagation_twoUsers
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_dustPropagation_twoUsers
     */
     function test_dustPropagation_twoUsers() public {
         address user1 = makeAddr("user1");
