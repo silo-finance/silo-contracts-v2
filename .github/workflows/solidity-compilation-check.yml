@@ -207,8 +207,7 @@ jobs:
         set -e  # Re-enable exit on error
         
         # Clean up the log: remove generic messages
-        grep -v "Compiler run successful with warnings:" core_tests_compilation.log > temp_step1.log
-        grep -v "Warning (4591): There are more than 256 warnings. Ignoring the rest" temp_step1.log > temp_clean.log
+        grep -v "Compiler run successful with warnings:" core_tests_compilation.log > temp_clean.log
         
         # Check for warnings in the output
         if grep -i "warning" temp_clean.log; then
@@ -220,7 +219,7 @@ jobs:
         fi
         
         # Clean up
-        rm -f temp_step1.log temp_clean.log
+        rm -f temp_clean.log
         
         echo "core_tests_exit_code=$COMPILE_EXIT_CODE" >> $GITHUB_OUTPUT
         

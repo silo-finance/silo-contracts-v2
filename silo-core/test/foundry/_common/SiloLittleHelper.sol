@@ -27,7 +27,10 @@ abstract contract SiloLittleHelper is CommonBase {
     IPartialLiquidation partialLiquidation;
     ISiloFactory siloFactory;
 
+    SiloFixture private _defaultFixture;
+
     constructor() {
+        _defaultFixture = new SiloFixture();
         siloLens = new SiloLens();
     }
 
@@ -39,33 +42,27 @@ abstract contract SiloLittleHelper is CommonBase {
     }
 
     function _setUpLocalFixture() internal returns (ISiloConfig siloConfig) {
-        SiloFixture siloFixture = new SiloFixture();
-        return _localFixture("", SiloFixture(address(siloFixture)));
+        return _localFixture("", _defaultFixture);
     }
 
     function _setUpLocalFixtureNoOverrides(string memory _configName) internal returns (ISiloConfig siloConfig) {
-        SiloFixture siloFixture = new SiloFixture();
-
         address hook;
-        (siloConfig, silo0, silo1,,, hook) = siloFixture.deploy_local(_configName);
+        (siloConfig, silo0, silo1,,, hook) = _defaultFixture.deploy_local(_configName);
 
         partialLiquidation = IPartialLiquidation(hook);
         siloFactory = silo0.factory();
     }
 
     function _setUpLocalFixture(string memory _configName) internal returns (ISiloConfig siloConfig) {
-        SiloFixture siloFixture = new SiloFixture();
-        return _localFixture(_configName, SiloFixture(address(siloFixture)));
+        return _localFixture(_configName, _defaultFixture);
     }
 
     function _setUpLocalFixtureNoMocks() internal returns (ISiloConfig siloConfig) {
-        SiloFixture siloFixture = new SiloFixture();
-        return _localFixture("", siloFixture);
+        return _localFixture("", _defaultFixture);
     }
 
     function _setUpLocalFixtureNoMocks(string memory _configName) internal returns (ISiloConfig siloConfig) {
-        SiloFixture siloFixture = new SiloFixture();
-        return _localFixture(_configName, siloFixture);
+        return _localFixture(_configName, _defaultFixture);
     }
 
     function _depositForBorrowRevert(uint256 _assets, address _depositor, bytes4 _error) internal {
