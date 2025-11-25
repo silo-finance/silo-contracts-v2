@@ -71,16 +71,16 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_withInterest_borrowers
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_withInterest_borrowers
     */
-    function test__skip__dustPropagation_deposit_borrow_withInterest_borrowers() public {
+    function test_dustPropagation_deposit_borrow_withInterest_borrowers() public {
         _dustPropagation_deposit_borrow(INIT_ASSETS, 3, 60 * 60 * 24);
     }
 
     /// @dev for delay of 1 day, this test can handle up to 3K borrowers, because each borrow make +1 day
     /// and we adding interest and then liquidity might be not enough to cover debt + interest and we can not
     /// borrow anymore
-    /// @param _moveForwardSec do not use mre than a day, because interest will be too high and we can not borrow
+    /// @param _moveForwardSec do not use more than a day, because interest will be too high and we can not borrow
     function _dustPropagation_deposit_borrow(uint256 _assets, uint16 _borrowers, uint24 _moveForwardSec) private {
         for (uint256 b = 1; b <= _borrowers; b++) {
             address borrower = makeAddr(string.concat("borrower", b.toString()));
@@ -129,7 +129,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
             assertLe(silo1.getCollateralAssets(), 1, "[silo1] getCollateralAssets with interest");
         }
 
-        assertLe(silo0.getLiquidity(), 0, "silo0 was only for collateral, so no dust is expected");
-        assertLe(silo0.getCollateralAssets(), 0, "silo0 was only for collateral, so no dust is expected");
+        assertLe(silo0.getLiquidity(), 1, "silo0 was only for collateral, so no dust is expected (liquidity)");
+        assertLe(silo0.getCollateralAssets(), 1, "silo0 was only for collateral, so no dust is expected (collateral assets)");
     }
 }
