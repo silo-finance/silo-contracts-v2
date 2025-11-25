@@ -13,7 +13,9 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc DustPropagationTest
 
-    conclusions: when assets:shares are 1:1 there is no dust
+    conclusions: 
+    - when assets:shares are 1:1 there is no dust
+    - not whole dust is propagated, offset makes it harder to distribute fully
 
 */
 contract DustPropagationTest is SiloLittleHelper, Test {
@@ -196,10 +198,10 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         emit log_named_uint("dust was", DUST_LEFT);
         emit log_named_uint("silo0.getLiquidity() is now", silo0.getLiquidity());
 
-        assertLe(
-            silo0.getLiquidity() - DUST_LEFT,
-            1,
-            "no interest, so expecting no dust on deposit-withdraw, only rounding down is expected"
+        assertLt(
+            silo0.getLiquidity(),
+            DUST_LEFT,
+            "some dust was propagated"
         );
     }
 
