@@ -166,13 +166,11 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// In the SiloConfig collateral silo is set by the following functions:
     /// `onDebtTransfer` - only if the recipient doesn't have collateral silo set (inherits it from the sender)
     /// This function is called on debt share token transfer (debt transfer).
-    /// `setThisSiloAsCollateralSilo` - sets the same silo as the one that calls the function.
     /// `setOtherSiloAsCollateralSilo` - sets the opposite silo as collateral from the one that calls the function.
     ///
     /// In the Silo collateral silo is set by the following functions:
     /// `borrow` - always sets opposite silo as collateral.
     /// If Silo0 borrows, then Silo1 will be collateral and vice versa.
-    /// `switchCollateralToThisSilo` - always sets the same silo as collateral.
     /// @param _borrower The address of the borrower for which the collateral silo is being retrieved
     /// @return collateralSilo The address of the collateral silo for the specified borrower
     function borrowerCollateralSilo(address _borrower) external view returns (address collateralSilo);

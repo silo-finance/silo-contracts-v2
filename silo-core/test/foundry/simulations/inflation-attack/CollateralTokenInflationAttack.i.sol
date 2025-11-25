@@ -209,8 +209,9 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         uint256 depositAmount = _toBorrow * 12 / 8;
 
         _makeDeposit(silo0, token0, depositAmount, _borrower, ISilo.CollateralType.Collateral);
+        _makeDeposit(silo1, token0, depositAmount, _borrower, ISilo.CollateralType.Collateral);
         vm.prank(_borrower);
-        uint256 shares = silo0.borrowSameAsset(_toBorrow, _borrower, _borrower);
+        uint256 shares = silo0.borrow(_toBorrow, _borrower, _borrower);
 
         vm.warp(block.timestamp + 70 days);
 

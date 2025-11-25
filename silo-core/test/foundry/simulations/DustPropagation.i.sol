@@ -34,18 +34,17 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
         _printState("initial state");
 
-        // we cresting debt on silo0, because lt there is 85 and in silo0 95, so it is easier to test because of dust
-        vm.prank(BORROWER);
-        token0.mint(BORROWER, COLLATERAL);
-
-        vm.prank(BORROWER);
+        token0.mint(address(this), COLLATERAL);
         token0.approve(address(silo0), COLLATERAL);
-
-        vm.prank(BORROWER);
         silo0.deposit(COLLATERAL, BORROWER);
 
-        vm.prank(BORROWER);
-        silo0.borrowSameAsset(DEBT, BORROWER, BORROWER);
+        // we cresting debt on silo0, because lt there is 85 and in silo0 95, so it is easier to test because of dust
+        vm.startPrank(BORROWER);
+        token1.mint(BORROWER, COLLATERAL);
+        token1.approve(address(silo1), COLLATERAL);
+        silo1.deposit(COLLATERAL, BORROWER);
+        silo0.borrow(DEBT, BORROWER, BORROWER);
+        vm.stopPrank();
 
         uint256 timeForward = 120 days;
         vm.warp(block.timestamp + timeForward);

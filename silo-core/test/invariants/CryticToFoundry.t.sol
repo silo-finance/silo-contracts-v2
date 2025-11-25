@@ -134,26 +134,6 @@ contract CryticToFoundry is Invariants, Setup {
         Tester.transitionCollateral(679, RandomGenerator(0, 0, 0));
     }
 
-    function test_replayredeem() public {
-        // Mint on silo 0 protected collateral
-        Tester.mint(1025, 0, 0, 0);
-        Tester.setOraclePrice(282879448546642360938617676663071922922812, 0);
-
-        // Mint on silo 1 collateral
-        Tester.mint(36366106112624882, 0, 1, 1);
-
-        // Borrow shares on silo 1 using silo 0 protected collateral as collateral
-        Tester.borrowShares(315, 0, 1);
-
-        // Switch collateral from 0 silo 1
-        Tester.switchCollateralToThisSilo(1);
-
-        // Max Withdraw from silo 1
-        Tester.assert_LENDING_INVARIANT_B(1, 1);
-        _delay(345519);
-        Tester.redeem(694, 0, 0, 0);
-    }
-
     function test_replaytransitionCollateral2() public {
         Tester.mint(4003, 0, 0, 0);
         Tester.mint(4142174, 0, 1, 1);

@@ -144,21 +144,6 @@ contract BorrowingHandler is BaseHandler {
         }
     }
 
-    function switchCollateralToThisSilo(uint8 i) external setupRandomActor(0) {
-        bool success;
-        bytes memory returnData;
-
-        address target = _getRandomSilo(i);
-
-        _before();
-        (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(ISilo.switchCollateralToThisSilo.selector));
-
-        if (success) {
-            _after();
-        }
-    }
-
     function transitionCollateral(uint256 _shares, RandomGenerator memory r) external setupRandomActor(r.i) {
         bool success;
         bytes memory returnData;

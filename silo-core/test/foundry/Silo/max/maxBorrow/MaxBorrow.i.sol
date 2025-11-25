@@ -242,7 +242,6 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         _mintForBorrow(1, 57553484963063775982514231325194206610732636, user2);
         token1.setOnDemand(false);
 
-        emit log_named_uint("User 1 max borrow same asset on silo1", silo0.maxBorrowSameAsset(user1));
         emit log_named_uint("User 1 max borrow on silo2", silo1.maxBorrow(user1));
 
         emit log("User 1 borrows the maximum returned from maxBorrow from Silo 1");
