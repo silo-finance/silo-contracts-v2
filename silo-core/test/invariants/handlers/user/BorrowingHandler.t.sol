@@ -62,36 +62,6 @@ contract BorrowingHandler is BaseHandler {
         }
     }
 
-    function borrowSameAsset(uint256 _assets, uint8 i, uint8 j) external setupRandomActor(i) {
-        bool success;
-        bytes memory returnData;
-
-        // Get one of the three actors randomly
-        address receiver = _getRandomActor(i);
-
-        address target = _getRandomSilo(j);
-
-        _before();
-        (success, returnData) = actor.proxy(
-            target, abi.encodeWithSelector(ISilo.borrowSameAsset.selector, _assets, receiver, address(actor))
-        );
-
-        if (success) {
-            _after();
-
-            assertApproxEqAbs(
-                defaultVarsBefore[target].debtAssets + _assets,
-                defaultVarsAfter[target].debtAssets,
-                1,
-                BORROWING_HSPOST_M
-            );
-
-            assertEq(
-                defaultVarsAfter[target].balance + _assets, defaultVarsBefore[target].balance, BORROWING_HSPOST_O
-            );
-        }
-    }
-
     function borrowShares(uint256 _shares, uint8 i, uint8 j) external setupRandomActor(i) {
         bool success;
         bytes memory returnData;
