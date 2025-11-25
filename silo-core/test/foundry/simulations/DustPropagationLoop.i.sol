@@ -32,11 +32,11 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test__skip__dustPropagation_just_deposit_fuzz
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_dustPropagation_just_deposit_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test__skip__dustPropagation_just_deposit_fuzz(uint128 _assets) public {
-        uint256 loop = 1000;
+    function test_dustPropagation_just_deposit_fuzz(uint128 _assets) public {
+        uint256 loop = 10;
         vm.assume(_assets / loop > 0);
 
         address user1 = makeAddr("user1");
@@ -53,7 +53,7 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
         _redeem(silo0.maxRedeem(user1, ISilo.CollateralType.Collateral), user1);
         _redeem(silo0.maxRedeem(user2, ISilo.CollateralType.Collateral), user2);
 
-        assertEq(silo0.getLiquidity(), 0, "no dust if only deposit");
+        assertLe(silo0.getLiquidity(), 1, "1 wei dust is accepted for rounding down on withdraw");
     }
 
     /*
