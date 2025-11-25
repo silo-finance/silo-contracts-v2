@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
@@ -125,7 +126,7 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_debt_ratio --gas-limit 40000000000
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_debt_ratio --gas-limit 40000000000
     */
     function test_debt_ratio() public {
         _depositForBorrow(3e18, makeAddr("depositor"));
@@ -222,7 +223,7 @@ contract ShareManipulationTest is SiloLittleHelper, Test {
     function _borrow1wei() internal {
         address user = address(2);
         _depositForBorrow(100, user);
-        _deposit(2, user);
+        _deposit(3, user);
         _borrow(1, user);
 
         (,, address debtShare) = siloConfig.getShareTokens(address(silo1));
