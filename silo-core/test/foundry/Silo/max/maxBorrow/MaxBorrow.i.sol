@@ -42,7 +42,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxBorrow_withCollateral_
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_withCollateral_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxBorrow_withCollateral_fuzz(uint128 _collateral, uint128 _liquidity) public {
