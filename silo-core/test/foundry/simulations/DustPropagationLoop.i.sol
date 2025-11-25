@@ -11,12 +11,11 @@ import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
 
 /*
-    forge test -vv --ffi --mc DustPropagationLoopTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc DustPropagationLoopTest
 
     conclusions:
-    - multiple deposits does not generate dust
-    - multiple borrowers does not generate dust if no interest
-    - looks like dust is generated based on assets-shares relation
+    - multiple deposits does generate dust (up to 1 wei based on rounding policy)
+    - multiple borrowers does generate dust if no interest (up to 1 wei based on rounding policy)
     - the highest dust in this simulation was 1 wei for 1000 users and 1 day gap between borrows
 */
 contract DustPropagationLoopTest is SiloLittleHelper, Test {
@@ -57,16 +56,16 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrowers
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_noInterest_oneBorrowers
     */
-    function test__skip__dustPropagation_deposit_borrow_noInterest_oneBorrowers() public {
+    function test_dustPropagation_deposit_borrow_noInterest_oneBorrowers() public {
         _dustPropagation_deposit_borrow(INIT_ASSETS, 1, 0);
     }
 
     /*
-    forge test -vv --ffi --mt test__skip__dustPropagation_deposit_borrow_noInterest_borrowers
+    forge test -vv --ffi --mt test_dustPropagation_deposit_borrow_noInterest_borrowers
     */
-    function test__skip__dustPropagation_deposit_borrow_noInterest_borrowers() public {
+    function test_dustPropagation_deposit_borrow_noInterest_borrowers() public {
         _dustPropagation_deposit_borrow(INIT_ASSETS, 3, 0);
     }
 
@@ -121,15 +120,10 @@ contract DustPropagationLoopTest is SiloLittleHelper, Test {
             silo1.withdrawFees();
         }
 
-        if (_moveForwardSec == 0) {
-            assertEq(silo1.getLiquidity(), 0, "[silo1] generated dust");
-            assertEq(silo1.getCollateralAssets(), 0, "[silo1] getCollateralAssets");
-        } else {
-            assertLe(silo1.getLiquidity(), 1, "[silo1] generated dust with interest");
-            assertLe(silo1.getCollateralAssets(), 1, "[silo1] getCollateralAssets with interest");
-        }
+        assertLe(silo1.getLiquidity(), 1, "[silo1] generated dust with interest (liquidity)");
+        assertLe(silo1.getCollateralAssets(), 1, "[silo1] generated dust with interest (collateral assets)");
 
-        assertLe(silo0.getLiquidity(), 1, "silo0 was only for collateral, so no dust is expected (liquidity)");
-        assertLe(silo0.getCollateralAssets(), 1, "silo0 was only for collateral, so no dust is expected (collateral assets)");
+        assertLe(silo0.getLiquidity(), 1, "silo0 was only for collateral, 1 wei dust accepted (liquidity)");
+        assertLe(silo0.getCollateralAssets(), 1, "silo0 was only for collateral, 1 wei dust accepted (collateral assets)");
     }
 }
