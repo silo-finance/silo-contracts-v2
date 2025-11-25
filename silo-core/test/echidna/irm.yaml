@@ -1,0 +1,5 @@
+corpusDir: corpus/IRMv2
+coverage: true
+testMode: assertion
+codeSize: 0x9000
+testLimit: 10000000
