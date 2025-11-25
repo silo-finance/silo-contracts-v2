@@ -68,6 +68,9 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
         emit log("-- _depositForBorrow --");
         _depositForBorrow(200e18, depositor);
 
+        emit log("-- _deposit collateral --");
+        _deposit(3, depositor);
+
         emit log("-- _depositCollateral --");
         _deposit(200e18, borrower);
 
@@ -131,11 +134,17 @@ contract HookCallsOutsideActionTest is PartialLiquidation, IERC3156FlashBorrower
 
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
 
-        vm.warp(block.timestamp + 200 days);
+        uint256 maxWithdraw = silo1.maxWithdraw(borrower);
+        vm.prank(borrower);
+        emit log_named_uint("max withdraw", maxWithdraw);
+        silo1.withdraw(maxWithdraw, borrower, borrower);
+
+        vm.warp(block.timestamp + 20000 days);
+
         emit log_named_decimal_uint("borrower LTV", silo0.getLtv(borrower), 16);
 
         partialLiquidation.liquidationCall(
-            address(token1),
+            address(token0),
             address(token1),
             borrower,
             type(uint256).max,
