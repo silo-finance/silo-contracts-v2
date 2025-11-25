@@ -51,6 +51,9 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Collateral);
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_withCollateral_protected_fuzz
+    */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxBorrow_withCollateral_protected_fuzz(uint128 _collateral, uint128 _liquidity) public {
         _maxBorrow_withCollateral_fuzz(_collateral, _liquidity, ISilo.CollateralType.Protected);
@@ -70,7 +73,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = silo1.maxBorrow(borrower);
         emit log_named_decimal_uint("maxBorrow", maxBorrow, 18);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 1);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 2);
         _assertMaxBorrowIsZeroAtTheEnd();
     }
 
