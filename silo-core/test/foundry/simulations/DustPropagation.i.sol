@@ -14,6 +14,7 @@ import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc DustPropagationTest
 
     conclusions: when assets:shares are 1:1 there is no dust
+
 */
 contract DustPropagationTest is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
@@ -121,7 +122,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
             ^ we never enter into this `if` for non debt assets, because we always adding +1 for both variables
             and this is why this dust will be forever locked in silo.
-            Atm the only downside I noticed: it creates "minimal deposit" situation
+            Atm the only downside I noticed: it creates "minimal deposit" situation in some cases
         */
         uint256 shares1 = _deposit(1, user1);
         emit log_named_uint("[user1] shares1", shares1);
@@ -148,7 +149,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         address user1 = makeAddr("user1");
         address user2 = makeAddr("user2");
 
-        uint256 assets = DUST_LEFT + 1;
+        uint256 assets = 1;
         uint256 shares1 = _deposit(assets, user1);
         emit log_named_uint("[user1] shares1", shares1);
 
@@ -158,17 +159,21 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         uint256 maxWithdraw1 = silo0.maxWithdraw(user1);
         uint256 maxWithdraw2 = silo0.maxWithdraw(user2);
 
-        assertEq(maxWithdraw1, assets, "[user1] maxWithdraw");
-        assertEq(maxWithdraw2, assets, "[user2] maxWithdraw");
+        assertEq(maxWithdraw1, assets + DUST_LEFT / 2, "[user1] maxWithdraw - more than deposit, because dust was propagated");
+        assertEq(maxWithdraw2, 0, "[user2] maxWithdraw 0, because dust was propagated so we 'back to normal' and -1 for rounding");
 
-        assertEq(_redeem(shares1, user1), assets, "[user1] withdrawn assets");
-        assertEq(_redeem(shares2, user2), assets, "[user2] withdrawn assets");
+        shares2 += _deposit(1, user2);
+        emit log_named_uint("[user2] shares2 #2", shares2);
+        assertEq(silo0.maxWithdraw(user2), 1, "[user2] maxWithdraw 1, dust propagated, user lost 1 wei because of rounding");
 
-        assertEq(silo0.getLiquidity(), DUST_LEFT, "getLiquidity == 1, dust");
+        assertEq(_redeem(shares1, user1), assets + DUST_LEFT / 2, "[user1] withdrawn assets - more than deposit, because dust was propagated");
+        assertEq(_redeem(shares2, user2), 1, "[user2] withdrawn assets - less than deposit, because dust was propagated already");
+
+        assertEq(silo0.getLiquidity(), DUST_LEFT - 1, "getLiquidity == 1, 1 wei of dust propagated");
     }
 
     /*
-    forge test -vv --ffi --mt test_dustPropagation_noInterest_twoUsers_fuzz
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_dustPropagation_noInterest_twoUsers_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_dustPropagation_noInterest_twoUsers_fuzz(uint128 deposit1, uint128 deposit2) public {
