@@ -214,9 +214,9 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_skip_siloLens_apr_fuzz -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_siloLens_apr_fuzz -vv
     */
-    function test_skip_siloLens_apr_fuzz(uint8 _utilization) public {
+    function test_siloLens_apr_fuzz(uint8 _utilization) public {
         // 50 because `defaultAsset` config optimal utilization is 50
         vm.assume(_utilization > 0 && _utilization <= 50);
 
@@ -236,7 +236,7 @@ contract SiloLensIntegrationTest is SiloLittleHelper, Test {
         _borrow(toBorrow, borrower);
 
         assertEq(siloLens.getUtilization(silo0), 0, "getUtilization #0");
-        assertEq(siloLens.getUtilization(silo1), _utilization - 1, "getUtilization #1");
+        assertEq(siloLens.getUtilization(silo1), _utilization, "getUtilization #1");
 
         _assertInterest(toBorrow);
     }
