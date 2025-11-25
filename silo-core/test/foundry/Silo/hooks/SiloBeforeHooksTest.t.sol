@@ -28,7 +28,7 @@ contract HookReceiver is IHookReceiver, Test {
         // return to not create infinite loop
         if (imIn) return;
 
-        (address silo0, address silo1) = siloConfig.getSilos();
+        (address silo0,) = siloConfig.getSilos();
 
         imIn = true;
         address receiver;
