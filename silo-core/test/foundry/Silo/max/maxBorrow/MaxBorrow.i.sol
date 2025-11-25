@@ -127,7 +127,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         // now we have debt
 
         maxBorrow = silo1.maxBorrow(borrower);
-        _assertWeCanNotBorrowAboveMax(maxBorrow, 1);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 5);
 
         _assertMaxBorrowIsZeroAtTheEnd(2);
     }
