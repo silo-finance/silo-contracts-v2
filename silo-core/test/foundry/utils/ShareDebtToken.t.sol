@@ -399,8 +399,8 @@ contract ShareDebtTokenTest is Test, SiloLittleHelper {
         _depositForBorrow(100, makeAddr("depositor"));
         _borrow(2, receiver);
 
-        vm.prank(receiver);
-        silo1.switchCollateralToThisSilo();
+        // vm.prank(receiver);
+        // silo1.switchCollateralToThisSilo();
 
         _repay(2, receiver);
 

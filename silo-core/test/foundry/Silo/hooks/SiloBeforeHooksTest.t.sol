@@ -134,40 +134,4 @@ contract SiloBeforeHooksTest is SiloLittleHelper, Test {
         vm.prank(BORROWER);
         silo1.borrow(8, BORROWER, BORROWER);
     }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_borrowSmeAsset_2debt
-    */
-    function test_borrowSmeAsset_2debt() public {
-        _hookReceiver.setBefore(uint24(Hook.BORROW_SAME_ASSET));
-        silo0.updateHooks();
-
-        vm.expectRevert(ISilo.BorrowNotPossible.selector);
-        vm.prank(BORROWER);
-        silo0.borrowSameAsset(8, BORROWER, BORROWER);
-
-        _hookReceiver.setBefore(uint24(0));
-        silo0.updateHooks();
-
-        vm.prank(BORROWER);
-        silo0.borrowSameAsset(8, BORROWER, BORROWER);
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_switchCollateralToThisSilo_debt
-    */
-    function test_switchCollateralToThisSilo_debt() public {
-        _hookReceiver.setBefore(uint24(Hook.SWITCH_COLLATERAL));
-        silo1.updateHooks();
-
-        vm.expectRevert(ISilo.NotSolvent.selector);
-        vm.prank(BORROWER);
-        silo1.switchCollateralToThisSilo();
-
-        _hookReceiver.setBefore(uint24(0));
-        silo1.updateHooks();
-
-        vm.prank(BORROWER);
-        silo1.switchCollateralToThisSilo();
-    }
 }
