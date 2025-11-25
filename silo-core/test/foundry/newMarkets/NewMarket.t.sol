@@ -206,7 +206,7 @@ contract NewMarketTest is Test {
             assertGt(maxRepayBefore, 0, "maxRepayBefore should be greater than 0");
 
             vm.warp(block.timestamp + _scenario.warpTimeBeforeRepay);
-            console2.log("\t- warp ", _scenario.warpTimeBeforeRepay);
+            console2.log("\t- warp %s days to get interest", _scenario.warpTimeBeforeRepay / 1 days);
 
             assertLt(maxRepayBefore, _scenario.debtSilo.maxRepay(borrower), "we have to generate interest");
         }
