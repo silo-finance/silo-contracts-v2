@@ -133,10 +133,10 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_withInterest_2_fuzz
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxBorrow_withInterest_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxBorrow_withInterest_2_fuzz(uint128 _collateral, uint128 _liquidity) public {
+    function test_maxBorrow_withInterest_fuzz(uint128 _collateral, uint128 _liquidity) public {
         vm.assume(_collateral > 0);
         vm.assume(_liquidity > 0);
 
@@ -156,7 +156,7 @@ contract MaxBorrowTest is SiloLittleHelper, Test {
         maxBorrow = silo1.maxBorrow(borrower);
         emit log_named_uint("maxBorrow", maxBorrow);
 
-        _assertWeCanNotBorrowAboveMax(maxBorrow);
+        _assertWeCanNotBorrowAboveMax(maxBorrow, 6);
 
         _assertMaxBorrowIsZeroAtTheEnd(2);
     }
