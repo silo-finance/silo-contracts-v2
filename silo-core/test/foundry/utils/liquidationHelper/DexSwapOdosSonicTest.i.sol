@@ -10,7 +10,7 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {DexSwap} from "silo-core/contracts/utils/liquidationHelper/DexSwap.sol";
 
 /*
-AGGREGATOR=ODOS FOUNDRY_PROFILE=core_test forge test --gas-price 1 --ffi -vv --mc DexSwapOdosSonicTest
+FOUNDRY_PROFILE=core_test forge test --gas-price 1 --ffi -vv --mc DexSwapOdosSonicTest
 */
 contract DexSwapOdosSonicTest is IntegrationTest {
     DexSwap dex; // solhint-disable-line var-name-mixedcase
