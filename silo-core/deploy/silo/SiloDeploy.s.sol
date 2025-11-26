@@ -330,31 +330,19 @@ abstract contract SiloDeploy is CommonDeploy {
         irmConfigData = abi.encode(dkinkIRMConfig);
     }
 
-    function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {
-        contractAddress = SiloCoreDeployments.get(_name, ChainsLib.chainAlias());
-        console2.log(string.concat("[SiloCommonDeploy] ", _name, " @ %s resolved "), contractAddress);
+    function _resolveDeployedContract(string memory) internal returns (address) {
+        
     }
 
-    function _isUniswapOracle(string memory _oracleConfigName) internal returns (bool isUniswapOracle) {
-        address pool = KV.getAddress(UniswapV3OraclesConfigsParser.configFile(), _oracleConfigName, "pool");
-
-        isUniswapOracle = pool != address(0);
+    function _isUniswapOracle(string memory) internal returns (bool) {
     }
 
-    function _isChainlinkOracle(string memory _oracleConfigName) internal returns (bool isChainlinkOracle) {
-        address baseToken = KV.getAddress(
-            ChainlinkV3OraclesConfigsParser.configFile(),
-            _oracleConfigName,
-            "baseToken"
-        );
-
-        isChainlinkOracle = baseToken != address(0);
+    function _isChainlinkOracle(string memory) internal returns (bool) {
+        
     }
 
-    function _isDiaOracle(string memory _oracleConfigName) internal returns (bool isDiaOracle) {
-        address diaOracle = KV.getAddress(DIAOraclesConfigsParser.configFile(), _oracleConfigName, "diaOracle");
-
-        isDiaOracle = diaOracle != address(0);
+    function _isDiaOracle(string memory) internal returns (bool) {
+        
     }
 
     function beforeCreateSilo(ISiloConfig.InitData memory, address _hookReceiverImplementation)
