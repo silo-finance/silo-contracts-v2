@@ -55,6 +55,37 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_validateDefaultingCollateral_InvalidLT -vv
+    */
+    function test_validateDefaultingCollateral_InvalidLT() public {
+        ISiloConfig.ConfigData memory config0;
+        ISiloConfig.ConfigData memory config1;
+        defaulting = _cloneHook(config0);
+
+        config0.lt = 1e18 - defaulting.LT_MARGIN_FOR_DEFAULTING() + 1;
+        _mockSiloConfig(config0, config1);
+
+        vm.expectRevert(IPartialLiquidationByDefaulting.InvalidLTConfig0.selector);
+        defaulting.validateDefaultingCollateral(silo0, silo1);
+
+        config0.lt = 0;
+        config1.lt = 1e18 - defaulting.LT_MARGIN_FOR_DEFAULTING() + 1;
+        _mockSiloConfig(config0, config1);
+
+
+        vm.expectRevert(IPartialLiquidationByDefaulting.InvalidLTConfig1.selector);
+        defaulting.validateDefaultingCollateral(silo0, silo1);
+
+        // counterexample
+        config0.lt = 0;
+        config1.lt = 1e18 - defaulting.LT_MARGIN_FOR_DEFAULTING();
+        _mockSiloConfig(config0, config1);
+
+        // pass
+        defaulting.validateDefaultingCollateral(silo0, silo1);
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_hookv2_constructor_InvalidInitialization -vv
     */
     function test_hookv2_constructor_InvalidInitialization() public {
@@ -74,13 +105,13 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
         defaulting.initialize(siloConfig, abi.encode(address(this)));
     }
 
-    function _cloneHook(ISiloConfig.ConfigData memory _config) internal returns (SiloHookV2 defaulting) {
+    function _cloneHook(ISiloConfig.ConfigData memory _config) internal returns (SiloHookV2 hook) {
         SiloHookV2 implementation = new SiloHookV2();
-        defaulting = SiloHookV2(Clones.clone(address(implementation)));
+        hook = SiloHookV2(Clones.clone(address(implementation)));
 
         _mockSiloConfig(_config, _config);
 
-        defaulting.initialize(siloConfig, abi.encode(address(this)));
+        hook.initialize(siloConfig, abi.encode(address(this)));
     }
 
     function _mockSiloConfig(ISiloConfig.ConfigData memory _config0, ISiloConfig.ConfigData memory _config1)
