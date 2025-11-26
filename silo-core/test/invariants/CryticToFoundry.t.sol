@@ -14,6 +14,6 @@ contract CryticToFoundry is Setup {
         _setUp();
 
         // Deploy actors
-        _setUpActors();
+        // _setUpActors();
     }
 }

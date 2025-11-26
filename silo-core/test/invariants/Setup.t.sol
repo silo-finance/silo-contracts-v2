@@ -59,9 +59,6 @@ contract Setup is BaseTest {
 
         // Deploy Silos
         _deploySilos();
-
-        // Deploy External contracts
-        _deployExternalContracts();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,11 +130,6 @@ contract Setup is BaseTest {
 
         protectedTokens.push(protectedCollateralToken0);
         protectedTokens.push(protectedCollateralToken1);
-    }
-
-    /// @notice Setup liquidation module and flashLoan receiver
-    function _deployExternalContracts() internal {
-        flashLoanReceiver = address(new MockFlashLoanReceiver());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
