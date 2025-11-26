@@ -561,17 +561,8 @@ abstract contract SiloDeploy is CommonDeploy {
         percent = string.concat(percent, "%");
     }
 
-    function _assertAndGetDecimals(address _token) internal view returns (uint256) {
-        (bool hasMetadata, bytes memory data) =
-            _tokenMetadataCall(_token, abi.encodeCall(IERC20Metadata.decimals, ()));
-
-        // decimals() is optional in the ERC20 standard, so if metadata is not accessible
-        // we assume there are no decimals and use 0.
-        if (!hasMetadata) {
-            return 0;
-        }
-
-        return abi.decode(data, (uint8));
+    function _assertAndGetDecimals(address) internal view returns (uint256) {
+        
     }
 
     /// @dev Performs a staticcall to the token to get its metadata (symbol, decimals, name)
