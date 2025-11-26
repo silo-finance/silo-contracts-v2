@@ -20,6 +20,11 @@ interface IPartialLiquidationByDefaulting {
     error CollateralNotSupportedForDefaulting();
     error TwoWayMarketNotAllowed();
     error EmptyCollateralShareToken();
+    error DeductDefaultedDebtFromCollateralFailed();
+    error RepayDebtByDefaultingFailed();
+    error InvalidLTConfig0();
+    error InvalidLTConfig1();
+    error WithdrawSharesForLendersTooHighForDistribution();
 
     /// @notice Function to liquidate insolvent position by distributing user's collateral to lenders
     /// - The caller (liquidator) does not cover any debt. `debtToCover` is amount of debt being liquidated
@@ -36,12 +41,11 @@ interface IPartialLiquidationByDefaulting {
         external
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets);
 
-    /// @dev it can revert in case of huge _withdrawAssetsFromCollateral and when `_liquidationFee * KEEPER_FEE > 1e18` 
+    /// @dev it can revert in case of assets or shares values close to max uint256
     function getKeeperAndLenderSharesSplit(
-        uint256 _liquidationFee,
         uint256 _assetsToLiquidate,
         ISilo.CollateralType _collateralType
-    ) external view returns (uint256 totalShares, uint256 keeperShares, uint256 lendersShares);
+    ) external view returns (uint256 totalSharesToLiquidate, uint256 keeperShares, uint256 lendersShares);
 
     function LT_MARGIN_FOR_DEFAULTING() external view returns (uint256);
 
