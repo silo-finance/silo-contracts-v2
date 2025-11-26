@@ -92,7 +92,7 @@ contract SiloFixture is StdCheats, CommonBase {
         // return _deploy(new SiloDeployWithDeployerOwner(), SiloConfigsNames.SILO_ETH_USDC_UNI_V3);
     }
 
-    function deploy_local(string memory _configName)
+    function deploy_local(string memory)
         external
         returns (
             ISiloConfig,
@@ -103,7 +103,7 @@ contract SiloFixture is StdCheats, CommonBase {
             address
         )
     {
-        SiloConfigOverride memory overrideArgs;
+        // SiloConfigOverride memory overrideArgs;
         // return _deploy(new SiloDeploy_Local(overrideArgs), _configName);
     }
 
