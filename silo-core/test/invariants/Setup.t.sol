@@ -43,7 +43,7 @@ import {DynamicKinkModelFactory} from "silo-core/contracts/interestRateModel/kin
 import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
 import {DynamicKinkModel} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModel.sol";
 
-import "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract Setup is BaseTest {

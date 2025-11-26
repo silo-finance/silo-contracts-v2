@@ -6,7 +6,7 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 
 // Libraries
-import "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 
 // Test Contracts
 import {Actor} from "../../utils/Actor.sol";

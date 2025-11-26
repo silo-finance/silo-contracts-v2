@@ -151,33 +151,4 @@ contract ShareTokenHandler is BaseHandler {
             assert(true);
         }
     }
-
-    function receiveAllowance(uint256, /* _addedValue */ uint8 i, uint8 j, uint8 k) external setupRandomActor(i) {
-        bool success;
-        bytes memory returnData;
-
-        // Get one of the three actors randomly
-        address owner = _getRandomActor(i);
-
-        address recipient = _getRandomActor(j);
-
-        address target = _getRandomDebtToken(k);
-
-        (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(ShareDebtToken.receiveAllowance.selector, owner, recipient));
-
-        if (success) {
-            assert(true);
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                         OWNER ACTIONS                                     //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    // rescueTokens
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                           HELPERS                                         //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 }
