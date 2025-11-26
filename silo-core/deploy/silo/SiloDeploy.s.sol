@@ -50,14 +50,14 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     function run() public virtual returns (ISiloConfig siloConfig) {
-        console2.log("[SiloCommonDeploy] run()");
+        // console2.log("[SiloCommonDeploy] run()");
 
         SiloConfigData siloData = new SiloConfigData();
-        console2.log("[SiloCommonDeploy] SiloConfigData deployed");
+        // console2.log("[SiloCommonDeploy] SiloConfigData deployed");
 
-        configName = bytes(configName).length == 0 ? vm.envString("CONFIG") : configName;
+        // configName = bytes(configName).length == 0 ? vm.envString("CONFIG") : configName;
 
-        console2.log("[SiloCommonDeploy] using CONFIG: ", configName);
+        // console2.log("[SiloCommonDeploy] using CONFIG: ", configName);
 
         // (
         //     SiloConfigData.ConfigData memory config,
