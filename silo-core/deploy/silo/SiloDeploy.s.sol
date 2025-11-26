@@ -4,11 +4,9 @@ pragma solidity ^0.8.28;
 import {console2} from "forge-std/console2.sol";
 import {KeyValueStorage as KV} from "silo-foundry-utils/key-value/KeyValueStorage.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
-import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {CommonDeploy} from "../_CommonDeploy.sol";
 import {SiloCoreContracts, SiloCoreDeployments} from "silo-core/common/SiloCoreContracts.sol";
-import {IInterestRateModelV2} from "silo-core/contracts/interfaces/IInterestRateModelV2.sol";
 import {IDynamicKinkModel} from "silo-core/contracts/interfaces/IDynamicKinkModel.sol";
 import {InterestRateModelConfigData} from "../input-readers/InterestRateModelConfigData.sol";
 import {DKinkIRMConfigData} from "../input-readers/DKinkIRMConfigData.sol";
@@ -30,16 +28,10 @@ import {
     SiloOraclesFactoriesDeployments
 } from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 import {OraclesDeployments} from "silo-oracles/deploy/OraclesDeployments.sol";
-import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
-import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
-import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 import {PTLinearOracleTxLib} from "../lib/PTLinearOracleTxLib.sol";
 
 /// @dev use `SiloDeployWithDeployerOwner` or `SiloDeployWithHookReceiverOwner`
 abstract contract SiloDeploy is CommonDeploy {
-    uint256 private constant _BYTES32_SIZE = 32;
-
     string public configName;
     uint256 public privateKey;
 
@@ -314,38 +306,11 @@ abstract contract SiloDeploy is CommonDeploy {
         txData.txInput = abi.encodeCall(IDIAOracleFactory.create, (config, bytes32(0)));
     }
 
-    function _getIRMConfigData(SiloConfigData.ConfigData memory _config, ISiloConfig.InitData memory _siloInitData)
+    function _getIRMConfigData(SiloConfigData.ConfigData memory, ISiloConfig.InitData memory)
         internal
-        returns (bytes memory irmConfigData0, bytes memory irmConfigData1)
+        returns (bytes memory, bytes memory)
     {
-        InterestRateModelConfigData irmModelData = new InterestRateModelConfigData();
-
-        address irmConfigFactory = _resolveDeployedContract(SiloCoreContracts.INTEREST_RATE_MODEL_V2_FACTORY);
-        address dkinkIRMConfigFactory = _resolveDeployedContract(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY);
-
-        if (_siloInitData.interestRateModel0 == irmConfigFactory) {
-            console2.log("\tIRM model #0: InterestRateModelV2");
-            irmConfigData0 = abi.encode(irmModelData.getConfigData(_config.interestRateModelConfig0));
-        } else if (_siloInitData.interestRateModel0 == dkinkIRMConfigFactory) {
-            console2.log("\tIRM model #0: DynamicKinkModel");
-            irmConfigData0 = _prepareDKinkIRMConfig(_config.interestRateModelConfig0);
-        } else {
-            revert UnknownInterestRateModelFactory();
-        }
-
-        console2.log("\tIRM config#0: ", _config.interestRateModelConfig0);
-
-        if (_siloInitData.interestRateModel1 == irmConfigFactory) {
-            console2.log("\tIRM model #1: InterestRateModelV2");
-            irmConfigData1 = abi.encode(irmModelData.getConfigData(_config.interestRateModelConfig1));
-        } else if (_siloInitData.interestRateModel1 == dkinkIRMConfigFactory) {
-            console2.log("\tIRM model #1: DynamicKinkModel");
-            irmConfigData1 = _prepareDKinkIRMConfig(_config.interestRateModelConfig1);
-        } else {
-            revert UnknownInterestRateModelFactory();
-        }
-
-        console2.log("\tIRM config#1: ", _config.interestRateModelConfig1);
+        
     }
 
     function _prepareDKinkIRMConfig(string memory _configName) internal returns (bytes memory irmConfigData) {
