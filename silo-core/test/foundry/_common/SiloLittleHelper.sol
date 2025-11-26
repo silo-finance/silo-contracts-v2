@@ -225,29 +225,32 @@ abstract contract SiloLittleHelper is CommonBase {
 
     function _localFixture(string memory _configName)
         private
+        
         returns (ISiloConfig siloConfig)
     {
         return _localFixture(_configName, new SiloFixture());
     }
 
-    function _localFixture(string memory _configName, SiloFixture _siloFixture)
+    function _localFixture(string memory, SiloFixture)
         private
-        returns (ISiloConfig siloConfig)
+        pure
+        returns (ISiloConfig)
     {
-        siloLens = new SiloLens();
+        // siloLens = new SiloLens();
 
-        token0 = new MintableToken(18);
-        token1 = new MintableToken(18);
+        // token0 = new MintableToken(18);
+        // token1 = new MintableToken(18);
 
-        SiloConfigOverride memory overrides;
-        overrides.token0 = address(token0);
-        overrides.token1 = address(token1);
-        overrides.configName = _configName;
+        // SiloConfigOverride memory overrides;
+        // overrides.token0 = address(token0);
+        // overrides.token1 = address(token1);
+        // overrides.configName = _configName;
 
-        address hook;
-        (siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(overrides);
+        // siloConfig = ISiloConfig(address(0));
+        // address hook;
+        // (siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(overrides);
 
-        partialLiquidation = IPartialLiquidation(hook);
+        // partialLiquidation = IPartialLiquidation(hook);
         // siloFactory = silo0.factory();
     }
 
