@@ -66,19 +66,6 @@ contract SiloDeploy_Local is SiloDeployWithDeployerOwner {
 
             _config.maxLtvOracle0 = _siloConfigOverride.maxLtvOracle0;
         }
-
-        if (
-            _siloConfigOverride.hookReceiver != address(0)
-                || _siloConfigOverride.hookReceiverImplementation != address(0)
-        ) {
-            console2.log("[override] hookReceiver %s -> %s", _config.hookReceiver, _siloConfigOverride.hookReceiver);
-            console2.log("[override] hookImplementation -> %s", _siloConfigOverride.hookReceiverImplementation);
-
-            _config.hookReceiver = _siloConfigOverride.hookReceiver;
-            hookImplementation = _siloConfigOverride.hookReceiverImplementation;
-        } else {
-            hookImplementation = _hookReceiverImplementation;
-        }
     }
 }
 
