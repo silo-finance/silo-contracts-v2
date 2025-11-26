@@ -169,13 +169,11 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
             if (defaultVarsBefore[silo].borrowerCollateralSilo == defaultVarsAfter[silo].borrowerCollateralSilo) {
                 assertFalse(
                     msg.sig == IBorrowingHandler.borrow.selector
-                        || msg.sig == IBorrowingHandler.borrowSameAsset.selector
                         || msg.sig == IBorrowingHandler.borrowShares.selector,
                     BASE_GPOST_D
                 );
             } else if (
                 msg.sig == IBorrowingHandler.borrow.selector
-                    || msg.sig == IBorrowingHandler.borrowSameAsset.selector
                     || msg.sig == IBorrowingHandler.borrowShares.selector
             ) {
                 assertTrue(defaultVarsAfter[silo].isSolvent, BASE_GPOST_D);

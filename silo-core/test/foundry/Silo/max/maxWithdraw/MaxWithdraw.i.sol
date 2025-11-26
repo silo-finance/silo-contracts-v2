@@ -45,14 +45,10 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxWithdraw_withDebt_
+    forge test -vv --ffi --mt test_maxWithdraw_withDebt
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxWithdraw_withDebt_1token_fuzz(uint128 _collateral, uint128 _toBorrow) public {
-        _maxWithdraw_withDebt(_collateral, _toBorrow);
-    }
-
-    function _maxWithdraw_withDebt(uint128 _collateral, uint128 _toBorrow) private {
+    function test_maxWithdraw_withDebt_fuzz(uint128 _collateral, uint128 _toBorrow) public {
         _createDebtOnSilo1(_collateral, _toBorrow);
 
         ISilo collateralSilo = silo0;
@@ -90,7 +86,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
 
         if (borrowOnSilo0 > 0) {
             address any = makeAddr("yet another user");
-            _depositCollateral(borrowOnSilo0 * 2, any, true /* to silo 1 */ );
+            _depositForBorrow(borrowOnSilo0 * 2, any);
             vm.prank(any);
             collateralSilo.borrow(borrowOnSilo0, any, any);
             emit log_named_decimal_uint("LTV any", silo1.getLtv(any), 16);
@@ -106,14 +102,10 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxWithdraw_whenInterest_
+    forge test -vv --ffi --mt test_maxWithdraw_whenInterest
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxWithdraw_whenInterest_1token_fuzz(uint128 _collateral, uint128 _toBorrow) public {
-        _maxWithdraw_whenInterest(_collateral, _toBorrow);
-    }
-
-    function _maxWithdraw_whenInterest(uint128 _collateral, uint128 _toBorrow) private {
+    function test_maxWithdraw_whenInterest_fuzz(uint128 _collateral, uint128 _toBorrow) public {
         _createDebtOnSilo1(_collateral, _toBorrow);
 
         vm.warp(block.timestamp + 100 days);
