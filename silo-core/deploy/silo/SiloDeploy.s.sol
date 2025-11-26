@@ -254,56 +254,25 @@ abstract contract SiloDeploy is CommonDeploy {
         require(txData.txInput.length != 0, string.concat("[_getOracleTxData] missing tx data for oracle: ", _oracleConfigName));
     }
 
-    function _uniswapV3TxData(string memory _oracleConfigName)
+    function _uniswapV3TxData(string memory)
         internal
-        returns (ISiloDeployer.OracleCreationTxData memory txData)
+        returns (ISiloDeployer.OracleCreationTxData memory)
     {
-        string memory chainAlias = ChainsLib.chainAlias();
-
-        txData.factory =
-            SiloOraclesFactoriesDeployments.get(SiloOraclesFactoriesContracts.UNISWAP_V3_ORACLE_FACTORY, chainAlias);
-
-        IUniswapV3Oracle.UniswapV3DeploymentConfig memory config =
-            UniswapV3OraclesConfigsParser.getConfig(chainAlias, _oracleConfigName);
-
-        // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
-        txData.txInput = abi.encodeCall(IUniswapV3Factory.create, (config, bytes32(0)));
+        
     }
 
-    function _chainLinkTxData(string memory _oracleConfigName)
+    function _chainLinkTxData(string memory)
         internal
-        returns (ISiloDeployer.OracleCreationTxData memory txData)
+        returns (ISiloDeployer.OracleCreationTxData memory)
     {
-        string memory chainAlias = ChainsLib.chainAlias();
-
-        txData.factory =
-            SiloOraclesFactoriesDeployments.get(SiloOraclesFactoriesContracts.CHAINLINK_V3_ORACLE_FACTORY, chainAlias);
-
-        IChainlinkV3Oracle.ChainlinkV3DeploymentConfig memory config =
-            ChainlinkV3OraclesConfigsParser.getConfig(chainAlias, _oracleConfigName);
-
-        // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
-        txData.txInput = abi.encodeCall(IChainlinkV3Factory.create, (config, bytes32(0)));
+        
     }
 
-    function _diaTxData(string memory _oracleConfigName)
+    function _diaTxData(string memory)
         internal
-        returns (ISiloDeployer.OracleCreationTxData memory txData)
+        returns (ISiloDeployer.OracleCreationTxData memory)
     {
-        string memory chainAlias = ChainsLib.chainAlias();
-
-        txData.factory = SiloOraclesFactoriesDeployments.get(
-            SiloOraclesFactoriesContracts.DIA_ORACLE_FACTORY,
-            chainAlias
-        );
-
-        IDIAOracle.DIADeploymentConfig memory config = DIAOraclesConfigsParser.getConfig(
-            chainAlias,
-            _oracleConfigName
-        );
-
-        // bytes32(0) is the salt for the create2 call and it will be overridden by the SiloDeployer
-        txData.txInput = abi.encodeCall(IDIAOracleFactory.create, (config, bytes32(0)));
+        
     }
 
     function _getIRMConfigData(SiloConfigData.ConfigData memory, ISiloConfig.InitData memory)
@@ -313,21 +282,8 @@ abstract contract SiloDeploy is CommonDeploy {
         
     }
 
-    function _prepareDKinkIRMConfig(string memory _configName) internal returns (bytes memory irmConfigData) {
-        DKinkIRMConfigData dkinkIRMModelData = new DKinkIRMConfigData();
-
-        (
-            IDynamicKinkModel.Config memory dkinkIRMConfigData, 
-            IDynamicKinkModel.ImmutableArgs memory immutableArgs
-        ) = dkinkIRMModelData.getConfigData(_configName);
-
-        ISiloDeployer.DKinkIRMConfig memory dkinkIRMConfig = ISiloDeployer.DKinkIRMConfig({
-            config: dkinkIRMConfigData,
-            immutableArgs: immutableArgs,
-            initialOwner: _getDKinkIRMInitialOwner()
-        });
-
-        irmConfigData = abi.encode(dkinkIRMConfig);
+    function _prepareDKinkIRMConfig(string memory) internal returns (bytes memory) {
+        
     }
 
     function _resolveDeployedContract(string memory) internal returns (address) {
@@ -345,12 +301,11 @@ abstract contract SiloDeploy is CommonDeploy {
         
     }
 
-    function beforeCreateSilo(ISiloConfig.InitData memory, address _hookReceiverImplementation)
+    function beforeCreateSilo(ISiloConfig.InitData memory, address)
         internal
         virtual
-        returns (address hookImplementation)
+        returns (address)
     {
-        hookImplementation = _hookReceiverImplementation;
     }
 
     function _getClonableHookReceiverConfig(address _implementation)
