@@ -175,83 +175,19 @@ abstract contract SiloDeploy is CommonDeploy {
         OraclesDeployments.save(chainAlias, _oracleConfigName, _oracle);
     }
 
-    function _getOracles(SiloConfigData.ConfigData memory _config, SiloConfigData _siloData)
+    function _getOracles(SiloConfigData.ConfigData memory, SiloConfigData)
         internal
-        returns (ISiloDeployer.Oracles memory oracles)
+        returns (ISiloDeployer.Oracles memory)
     {
-        bytes32 noOracleKey = _siloData.NO_ORACLE_KEY();
-        bytes32 placeHolderKey = _siloData.PLACEHOLDER_KEY();
-
-        oracles = ISiloDeployer.Oracles({
-            solvencyOracle0: _getOracleTxData(_config.solvencyOracle0, noOracleKey, placeHolderKey),
-            maxLtvOracle0: _getOracleTxData(_config.maxLtvOracle0, noOracleKey, placeHolderKey),
-            solvencyOracle1: _getOracleTxData(_config.solvencyOracle1, noOracleKey, placeHolderKey),
-            maxLtvOracle1: _getOracleTxData(_config.maxLtvOracle1, noOracleKey, placeHolderKey)
-        });
+        
     }
 
     function _getOracleTxData(
-        string memory _oracleConfigName,
-        bytes32 _noOracleKey,
-        bytes32 placeHolderKey
-    ) internal returns (ISiloDeployer.OracleCreationTxData memory txData) {
-        console2.log("[SiloCommonDeploy] _getOracleTxData for config: ", _oracleConfigName);
-
-        bytes32 configHashedKey = keccak256(bytes(_oracleConfigName));
-
-        if (configHashedKey == _noOracleKey || configHashedKey == placeHolderKey) {
-            console2.log("\t[SiloCommonDeploy] no deployment required for", _oracleConfigName);
-            return txData;
-        }
-
-        address deployed = SiloCoreDeployments.parseAddress(_oracleConfigName);
-        console2.log("\ttry to parse name to address: %s", deployed);
-
-        if (deployed != address(0)) {
-            txData.deployed = deployed;
-            console2.log("\tusing already deployed oracle with fixed address: %s", _oracleConfigName, deployed);
-            return txData;
-        }
-
-        deployed = OraclesDeployments.get(ChainsLib.chainAlias(), _oracleConfigName);
-        console2.log("\tOraclesDeployments: %s", deployed);
-
-        if (deployed != address(0)) {
-            txData.deployed = deployed;
-            console2.log("\tusing already deployed oracle %s: %s", _oracleConfigName, deployed);
-            return txData;
-        }
-
-        require(txData.deployed == address(0), "[_getOracleTxData] at this point we need to create NEW deployment");
-
-        if (_isUniswapOracle(_oracleConfigName)) {
-            console2.log(
-                "\t[SiloCommonDeploy] NEW oracle will be deployed using UniswapV3OracleTxData for: ",
-                _oracleConfigName
-            );
-
-            txData = _uniswapV3TxData(_oracleConfigName);
-        } else if (_isChainlinkOracle(_oracleConfigName)) {
-            console2.log(
-                "\t[SiloCommonDeploy] NEW oracle will be deployed using ChainlinkV3OracleTxData for: ",
-                _oracleConfigName
-            );
-
-            txData = _chainLinkTxData(_oracleConfigName);
-        } else if (PTLinearOracleTxLib.isPendleLinearOracle(_oracleConfigName)) {
-            console2.log(
-                "\t[SiloCommonDeploy] NEW oracle will be deployed using PendleLinearOracleTxData for: ",
-                _oracleConfigName
-            );
-
-            txData = PTLinearOracleTxLib.pendleLinearOracleTxData(_oracleConfigName);
-        } else {
-            revert(string.concat("[_getOracleTxData] ERROR unknown oracle type: ", _oracleConfigName));
-        }
-
-        require(txData.deployed == address(0), "[_getOracleTxData] expect tx data, not deployed address");
-        require(txData.factory != address(0), string.concat("[_getOracleTxData] empty factory for oracle: ", _oracleConfigName));
-        require(txData.txInput.length != 0, string.concat("[_getOracleTxData] missing tx data for oracle: ", _oracleConfigName));
+        string memory,
+        bytes32,
+        bytes32
+    ) internal returns (ISiloDeployer.OracleCreationTxData memory) {
+        
     }
 
     function _uniswapV3TxData(string memory)
