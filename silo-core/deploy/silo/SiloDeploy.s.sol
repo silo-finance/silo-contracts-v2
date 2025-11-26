@@ -87,13 +87,13 @@ abstract contract SiloDeploy is CommonDeploy {
 
         hookReceiverImplementation = beforeCreateSilo(siloInitData, hookReceiverImplementation);
 
-        console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
+        // console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
-        ISiloDeployer siloDeployer = ISiloDeployer(_resolveDeployedContract(SiloCoreContracts.SILO_DEPLOYER));
+        // ISiloDeployer siloDeployer = ISiloDeployer(_resolveDeployedContract(SiloCoreContracts.SILO_DEPLOYER));
 
-        console2.log("[SiloCommonDeploy] siloInitData.token0", siloInitData.token0);
-        console2.log("[SiloCommonDeploy] siloInitData.token1", siloInitData.token1);
-        console2.log("[SiloCommonDeploy] hookReceiverImplementation", hookReceiverImplementation);
+        // console2.log("[SiloCommonDeploy] siloInitData.token0", siloInitData.token0);
+        // console2.log("[SiloCommonDeploy] siloInitData.token1", siloInitData.token1);
+        // console2.log("[SiloCommonDeploy] hookReceiverImplementation", hookReceiverImplementation);
 
         // ISiloDeployer.ClonableHookReceiver memory hookReceiver;
         // hookReceiver = _getClonableHookReceiverConfig(hookReceiverImplementation);
