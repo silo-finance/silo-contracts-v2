@@ -95,30 +95,30 @@ abstract contract SiloDeploy is CommonDeploy {
         console2.log("[SiloCommonDeploy] siloInitData.token1", siloInitData.token1);
         console2.log("[SiloCommonDeploy] hookReceiverImplementation", hookReceiverImplementation);
 
-        ISiloDeployer.ClonableHookReceiver memory hookReceiver;
-        hookReceiver = _getClonableHookReceiverConfig(hookReceiverImplementation);
+        // ISiloDeployer.ClonableHookReceiver memory hookReceiver;
+        // hookReceiver = _getClonableHookReceiverConfig(hookReceiverImplementation);
 
-        vm.startBroadcast(deployerPrivateKey);
+        // vm.startBroadcast(deployerPrivateKey);
 
-        siloConfig = siloDeployer.deploy(
-            oracles,
-            irmConfigData0,
-            irmConfigData1,
-            hookReceiver,
-            siloInitData
-        );
+        // siloConfig = siloDeployer.deploy(
+        //     oracles,
+        //     irmConfigData0,
+        //     irmConfigData1,
+        //     hookReceiver,
+        //     siloInitData
+        // );
 
-        vm.stopBroadcast();
+        // vm.stopBroadcast();
 
-        console2.log("[SiloCommonDeploy] deploy done");
+        // console2.log("[SiloCommonDeploy] deploy done");
 
-        _saveSilo(siloConfig, configName);
+        // _saveSilo(siloConfig, configName);
 
-        _saveOracles(siloConfig, config, siloData.NO_ORACLE_KEY());
+        // _saveOracles(siloConfig, config, siloData.NO_ORACLE_KEY());
 
-        console2.log("[SiloCommonDeploy] run() finished.");
+        // console2.log("[SiloCommonDeploy] run() finished.");
 
-        _printAndValidateDetails(siloConfig, siloInitData);
+        // _printAndValidateDetails(siloConfig, siloInitData);
     }
 
     function _saveSilo(ISiloConfig, string memory) internal {
