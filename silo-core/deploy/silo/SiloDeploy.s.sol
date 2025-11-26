@@ -575,17 +575,8 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     /// @dev Performs a staticcall to the token to get its metadata (symbol, decimals, name)
-    function _tokenMetadataCall(address _token, bytes memory _data) private view returns (bool, bytes memory) {
-        if (!IsContract.isContract(_token)) return (false, "");
-
-        (bool success, bytes memory result) = _token.staticcall(_data);
-
-        // If the call reverted we assume the token doesn't follow the metadata extension
-        if (!success) {
-            return (false, "");
-        }
-
-        return (true, result);
+    function _tokenMetadataCall(address, bytes memory) private view returns (bool, bytes memory) {
+        
     }
 
     function _symbol(address) internal view returns (string memory) {
