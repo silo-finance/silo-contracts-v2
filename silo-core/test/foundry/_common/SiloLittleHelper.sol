@@ -17,7 +17,7 @@ import {SiloFixture, SiloConfigOverride} from "./fixtures/SiloFixture.sol";
 import {SiloFixture} from "./fixtures/SiloFixture.sol";
 
 abstract contract SiloLittleHelper is CommonBase {
-    SiloLens immutable siloLens;
+    SiloLens siloLens;
 
     MintableToken token0;
     MintableToken token1;
@@ -27,13 +27,6 @@ abstract contract SiloLittleHelper is CommonBase {
     IPartialLiquidation partialLiquidation;
     ISiloFactory siloFactory;
 
-    SiloFixture private _defaultFixture;
-
-    constructor() {
-        _defaultFixture = new SiloFixture();
-        siloLens = new SiloLens();
-    }
-
     function __init(MintableToken _token0, MintableToken _token1, ISilo _silo0, ISilo _silo1) internal {
         token0 = _token0;
         token1 = _token1;
@@ -42,27 +35,27 @@ abstract contract SiloLittleHelper is CommonBase {
     }
 
     function _setUpLocalFixture() internal returns (ISiloConfig siloConfig) {
-        return _localFixture("", _defaultFixture);
+        return _localFixture("");
     }
 
     function _setUpLocalFixtureNoOverrides(string memory _configName) internal returns (ISiloConfig siloConfig) {
         address hook;
-        (siloConfig, silo0, silo1,,, hook) = _defaultFixture.deploy_local(_configName);
+        (siloConfig, silo0, silo1,,, hook) = new SiloFixture().deploy_local(_configName);
 
         partialLiquidation = IPartialLiquidation(hook);
         siloFactory = silo0.factory();
     }
 
     function _setUpLocalFixture(string memory _configName) internal returns (ISiloConfig siloConfig) {
-        return _localFixture(_configName, _defaultFixture);
+        return _localFixture(_configName);
     }
 
     function _setUpLocalFixtureNoMocks() internal returns (ISiloConfig siloConfig) {
-        return _localFixture("", _defaultFixture);
+        return _localFixture("");
     }
 
     function _setUpLocalFixtureNoMocks(string memory _configName) internal returns (ISiloConfig siloConfig) {
-        return _localFixture(_configName, _defaultFixture);
+        return _localFixture(_configName);
     }
 
     function _depositForBorrowRevert(uint256 _assets, address _depositor, bytes4 _error) internal {
@@ -230,10 +223,19 @@ abstract contract SiloLittleHelper is CommonBase {
         debtShares = _borrow(_amount, _borrower);
     }
 
+    function _localFixture(string memory _configName)
+        private
+        returns (ISiloConfig siloConfig)
+    {
+        return _localFixture(_configName, new SiloFixture());
+    }
+
     function _localFixture(string memory _configName, SiloFixture _siloFixture)
         private
         returns (ISiloConfig siloConfig)
     {
+        siloLens = new SiloLens();
+
         token0 = new MintableToken(18);
         token1 = new MintableToken(18);
 
@@ -246,7 +248,7 @@ abstract contract SiloLittleHelper is CommonBase {
         (siloConfig, silo0, silo1,,, hook) = _siloFixture.deploy_local(overrides);
 
         partialLiquidation = IPartialLiquidation(hook);
-        siloFactory = silo0.factory();
+        // siloFactory = silo0.factory();
     }
 
     function _mockIRM(ISilo _silo, address _irm) internal {
