@@ -431,80 +431,12 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     function _printSiloDetails(
-        address _silo,
-        ISiloConfig.ConfigData memory _siloConfig,
-        ISiloConfig.InitData memory _siloInitData,
-        bool _isSilo0
+        address,
+        ISiloConfig.ConfigData memory,
+        ISiloConfig.InitData memory,
+        bool
     ) internal view {
-        string memory tokenSymbol = TokenHelper.symbol(_siloConfig.token);
-
-        string memory tokenStr = vm.toString(_siloConfig.token);
-
-        uint256 tokenDecimals = TokenHelper.assertAndGetDecimals(_siloConfig.token);
-
-        console2.log(_silo);
-        console2.log("\n");
-
-        console2.log(
-            "\tasset", string.concat(tokenStr, " (", tokenSymbol, ", ", vm.toString(tokenDecimals), " decimals)")
-        );
-
-        console2.log("\n");
-        console2.log("\tdecimals      ", IERC20Metadata(_silo).decimals());
-
-        string memory icon;
-        uint256 configValueUint256 = _siloInitData.daoFee;
-        icon = _siloConfig.daoFee != configValueUint256 ? _x_() : _ok_();
-
-        console2.log("\tdaoFee        ", _representAsPercent(_siloConfig.daoFee), icon);
-
-        configValueUint256 = _siloInitData.deployerFee;
-        icon = _siloConfig.deployerFee != configValueUint256 ? _x_() : _ok_();
-
-        console2.log("\tdeployerFee   ", _representAsPercent(_siloConfig.deployerFee), icon);
-
-        configValueUint256 = _isSilo0 ? _siloInitData.liquidationFee0 : _siloInitData.liquidationFee1;
-        icon = _siloConfig.liquidationFee != configValueUint256 ? _x_() : _ok_();
-
-        console2.log("\tliquidationFee", _representAsPercent(_siloConfig.liquidationFee), icon);
-
-        configValueUint256 = _isSilo0 ? _siloInitData.flashloanFee0 : _siloInitData.flashloanFee1;
-        icon = _siloConfig.flashloanFee != configValueUint256 ? _x_() : _ok_();
-
-        console2.log("\tflashloanFee  ", _representAsPercent(_siloConfig.flashloanFee), icon);
-        console2.log("\n");
-
-        configValueUint256 = _isSilo0 ? _siloInitData.maxLtv0 : _siloInitData.maxLtv1;
-        icon = _siloConfig.maxLtv != configValueUint256 ? _x_() : _ok_();
-
-        console2.log("\tmaxLtv              ", _representAsPercent(_siloConfig.maxLtv), icon);
-
-        configValueUint256 = _isSilo0 ? _siloInitData.lt0 : _siloInitData.lt1;
-        icon = _siloConfig.lt != configValueUint256 ? _x_() : _ok_();
-
-        console2.log("\tlt                  ", _representAsPercent(_siloConfig.lt), icon);
-
-        configValueUint256 = _isSilo0 ? _siloInitData.liquidationTargetLtv0 : _siloInitData.liquidationTargetLtv1;
-        icon = _siloConfig.liquidationTargetLtv != configValueUint256 ? _x_() : _ok_();
-
-        if (_siloConfig.liquidationTargetLtv == _siloConfig.lt) {
-            icon = string.concat(_warn_(), "!!! WARNING !!!");
-        }
-
-        console2.log("\tliquidationTargetLtv", _representAsPercent(_siloConfig.liquidationTargetLtv), icon);
-
-        console2.log("\n");
-        console2.log("\tsolvencyOracle", _siloConfig.solvencyOracle);
-
-        if (_siloConfig.solvencyOracle != address(0)) {
-            _printOracleInfo(_siloConfig.solvencyOracle, _siloConfig.token);
-        }
-
-        console2.log("\tmaxLtvOracle", _siloConfig.maxLtvOracle);
-
-        if (_siloConfig.maxLtvOracle != address(0)) {
-            _printOracleInfo(_siloConfig.maxLtvOracle, _siloConfig.token);
-        }
+        
     }
 
     function _printOracleInfo(address, address) internal view {
