@@ -26,13 +26,16 @@ FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloReentrancyTest
 contract SiloReentrancyTest is Test {
     ISiloConfig public siloConfig;
 
-    // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_coverage_for_reentrancy
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_coverage_for_reentrancy
+    */
     function test_coverage_for_reentrancy() public {
         Registries registries = new Registries();
         IMethodsRegistry[] memory methodRegistries = registries.list();
 
         bool allCovered = true;
         string memory root = vm.projectRoot();
+        string memory notFound;
 
         for (uint256 j = 0; j < methodRegistries.length; j++) {
             string memory abiPath = string.concat(root, methodRegistries[j].abiFile());
@@ -49,14 +52,17 @@ contract SiloReentrancyTest is Test {
 
                     emit log_string(string.concat("\nABI: ", methodRegistries[j].abiFile()));
                     emit log_string(string.concat("Method not found: ", keys[i]));
+                    notFound = string.concat(notFound, string.concat(keys[i], ", "));
                 }
             }
         }
 
-        assertTrue(allCovered, "All methods should be covered");
+        assertTrue(allCovered, string.concat("All methods should be covered, not found: ", notFound));
     }
 
-    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_reentrancy
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_reentrancy
+    */
     function test_reentrancy() public {
         _deploySiloWithOverrides();
         Registries registries = new Registries();
