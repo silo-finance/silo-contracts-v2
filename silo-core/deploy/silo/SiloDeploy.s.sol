@@ -59,16 +59,16 @@ abstract contract SiloDeploy is CommonDeploy {
 
         console2.log("[SiloCommonDeploy] using CONFIG: ", configName);
 
-        (
-            SiloConfigData.ConfigData memory config,
-            ISiloConfig.InitData memory siloInitData,
-            address hookReceiverImplementation
-        ) = siloData.getConfigData(configName);
+        // (
+        //     SiloConfigData.ConfigData memory config,
+        //     ISiloConfig.InitData memory siloInitData,
+        //     address hookReceiverImplementation
+        // ) = siloData.getConfigData(configName);
 
-        console2.log("[SiloCommonDeploy] Config prepared");
+        // console2.log("[SiloCommonDeploy] Config prepared");
 
-        bytes memory irmConfigData0;
-        bytes memory irmConfigData1;
+        // bytes memory irmConfigData0;
+        // bytes memory irmConfigData1;
 
         // (irmConfigData0, irmConfigData1) = _getIRMConfigData(config, siloInitData);
 
