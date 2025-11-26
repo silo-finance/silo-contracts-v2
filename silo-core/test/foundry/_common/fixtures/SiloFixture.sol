@@ -83,8 +83,6 @@ contract SiloDeploy_Local is SiloDeployWithDeployerOwner {
 }
 
 contract SiloFixture is StdCheats, CommonBase {
-    uint256 internal constant _FORKING_BLOCK_NUMBER = 17336000;
-
     bool internal _mainNetDeployed;
 
     function deploy_ETH_USDC()
@@ -168,12 +166,5 @@ contract SiloFixture is StdCheats, CommonBase {
         hookReceiver = siloConfig0.hookReceiver;
         if (hookReceiver == address(0)) revert("hookReceiver address is empty");
 
-        _labelSiloMarketContracts(siloConfig, createdSilo0, createdSilo1);
-    }
-
-    function _labelSiloMarketContracts(ISiloConfig, address, address) internal pure {
-    }
-
-    function _labelSiloContracts(ISiloConfig, address, string memory) internal pure {
     }
 }
