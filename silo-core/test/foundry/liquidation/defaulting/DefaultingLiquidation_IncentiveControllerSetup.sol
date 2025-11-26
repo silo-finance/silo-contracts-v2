@@ -15,10 +15,10 @@ import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookRecei
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 
 import {CloneHookV2} from "./common/CloneHookV2.sol";
+
 /*
 FOUNDRY_PROFILE=core_test forge test --ffi --mc DefaultingLiquidation_IncentiveControllerSetupTest -vv
 */
-
 contract DefaultingLiquidation_IncentiveControllerSetupTest is CloneHookV2 {
     ISiloIncentivesController gauge;
 

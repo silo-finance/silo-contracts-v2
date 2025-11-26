@@ -57,6 +57,9 @@ TODO test with setOnDemand(false)
 
 */
 
+/*
+FOUNDRY_PROFILE=core_test forge test --ffi --mc DefaultingLiquidationBorrowable -vv
+*/
 abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     using SiloLensLib for ISilo;
 
