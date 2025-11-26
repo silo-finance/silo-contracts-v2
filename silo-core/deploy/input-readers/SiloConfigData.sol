@@ -51,14 +51,14 @@ contract SiloConfigData {
         string token1;
     }
 
-    function _readInput(string memory _input) internal view returns (string memory data) {
-        string memory inputDir = string.concat(VmLib.vm().projectRoot(), "/silo-core/deploy/input/");
-        string memory chainDir = string.concat(ChainsLib.chainAlias(block.chainid), "/");
-        string memory file = string.concat(_input, ".json");
+    function _readInput(string memory) internal view returns (string memory) {
+        // string memory inputDir = string.concat(VmLib.vm().projectRoot(), "/silo-core/deploy/input/");
+        // string memory chainDir = string.concat(ChainsLib.chainAlias(block.chainid), "/");
+        // string memory file = string.concat(_input, ".json");
 
-        console2.log("reading from %s", string.concat(inputDir, chainDir, file));
-        data = VmLib.vm().readFile(string.concat(inputDir, chainDir, file));
-        console2.log("reading successful, read bytes: %s", bytes(data).length);
+        // console2.log("reading from %s", string.concat(inputDir, chainDir, file));
+        // data = VmLib.vm().readFile(string.concat(inputDir, chainDir, file));
+        // console2.log("reading successful, read bytes: %s", bytes(data).length);
     }
 
     function _readDataFromJson(string memory _name) internal view returns (ConfigData memory) {
