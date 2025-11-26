@@ -28,44 +28,17 @@ contract SiloDeploy_Local is SiloDeployWithDeployerOwner {
 
     SiloConfigOverride internal _siloConfigOverride;
 
-    error SiloFixtureHookReceiverImplNotFound(string hookReceiver);
-
     constructor(SiloConfigOverride memory _override) {
         _siloConfigOverride = _override;
     }
 
-    function beforeCreateSilo(ISiloConfig.InitData memory _config, address _hookReceiverImplementation)
+    function beforeCreateSilo(ISiloConfig.InitData memory, address)
         internal
-        view
+        pure
         override
-        returns (address hookImplementation)
+        returns (address)
     {
-        // Override the default values if overrides are provided
-        if (_siloConfigOverride.token0 != address(0)) {
-            console2.log("[override] token0 %s -> %s", _config.token0, _siloConfigOverride.token0);
-            _config.token0 = _siloConfigOverride.token0;
-        }
-
-        if (_siloConfigOverride.token1 != address(0)) {
-            console2.log("[override] token1 %s -> %s", _config.token1, _siloConfigOverride.token1);
-            _config.token1 = _siloConfigOverride.token1;
-        }
-
-        if (_siloConfigOverride.solvencyOracle0 != address(0)) {
-            console2.log(
-                "[override] solvencyOracle0 %s -> %s", _config.solvencyOracle0, _siloConfigOverride.solvencyOracle0
-            );
-
-            _config.solvencyOracle0 = _siloConfigOverride.solvencyOracle0;
-        }
-
-        if (_siloConfigOverride.maxLtvOracle0 != address(0)) {
-            console2.log(
-                "[override] maxLtvOracle0 %s -> %s", _config.maxLtvOracle0, _siloConfigOverride.maxLtvOracle0
-            );
-
-            _config.maxLtvOracle0 = _siloConfigOverride.maxLtvOracle0;
-        }
+        return address(0);
     }
 }
 
