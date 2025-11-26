@@ -507,26 +507,8 @@ abstract contract SiloDeploy is CommonDeploy {
         }
     }
 
-    function _printOracleInfo(address _oracle, address _asset) internal view {
-        ISiloOracle oracle = ISiloOracle(_oracle);
-
-        address quoteToken = oracle.quoteToken();
-        string memory quoteTokenSymbol = _symbol(quoteToken);
-        uint256 quoteTokenDecimals = _assertAndGetDecimals(quoteToken);
-
-        console2.log(
-            "\t\tquoteToken",
-            string.concat(
-                vm.toString(quoteToken), " (", quoteTokenSymbol, ", ", vm.toString(quoteTokenDecimals), " decimals)"
-            )
-        );
-
-        uint256 assetDecimals = _assertAndGetDecimals(_asset);
-
-        if (assetDecimals != 0) {
-            uint256 quoteTokenPrice = oracle.quote(10 ** assetDecimals, _asset);
-            console2.log("\t\tquote %s\n", PriceFormatter.formatPriceInE18(quoteTokenPrice));
-        }
+    function _printOracleInfo(address, address) internal view {
+        
     }
 
     function _representAsPercent(uint256) internal pure returns (string memory) {
