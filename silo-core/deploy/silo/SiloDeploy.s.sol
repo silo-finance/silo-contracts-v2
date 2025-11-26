@@ -129,50 +129,14 @@ abstract contract SiloDeploy is CommonDeploy {
         });
     }
 
-    function _saveOracles(ISiloConfig _siloConfig, SiloConfigData.ConfigData memory _config, bytes32 _noOracleKey)
-        internal
+    function _saveOracles(ISiloConfig, SiloConfigData.ConfigData memory, bytes32)
+        internal pure
     {
-        (address silo0, address silo1) = _siloConfig.getSilos();
-
-        ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
-        ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
-
-        _saveOracle(siloConfig0.solvencyOracle, _config.solvencyOracle0, _noOracleKey);
-        _saveOracle(siloConfig0.maxLtvOracle, _config.maxLtvOracle0, _noOracleKey);
-        _saveOracle(siloConfig1.solvencyOracle, _config.solvencyOracle1, _noOracleKey);
-        _saveOracle(siloConfig1.maxLtvOracle, _config.maxLtvOracle1, _noOracleKey);
+        
     }
 
-    function _saveOracle(address _oracle, string memory _oracleConfigName, bytes32 _noOracleKey) internal {
-        console2.log("[_saveOracle] _oracle", _oracle);
-        console2.log("[_saveOracle] _oracleConfigName", _oracleConfigName);
-
-        bytes32 configHashedKey = keccak256(bytes(_oracleConfigName));
-
-        if (configHashedKey == _noOracleKey) return;
-
-        string memory chainAlias = ChainsLib.chainAlias();
-        address oracleFromDeployments = OraclesDeployments.get(chainAlias, _oracleConfigName);
-
-        if (oracleFromDeployments != address(0)) {
-            if (oracleFromDeployments != _oracle) {
-                console2.log(
-                    string.concat(_warn_(), "we have deployment address for %s, but it was deployed again at %s"),
-                    _oracleConfigName,
-                    _oracle,
-                    _warn_()
-                );
-
-                revert(string.concat("unnecessary redeployment of ", _oracleConfigName));
-            }
-        }
-
-        if (_oracle == address(0)) {
-            console2.log("missing deployment for %s", _oracleConfigName, _x_());
-            return;
-        }
-
-        OraclesDeployments.save(chainAlias, _oracleConfigName, _oracle);
+    function _saveOracle(address, string memory, bytes32) internal pure {
+        
     }
 
     function _getOracles(SiloConfigData.ConfigData memory, SiloConfigData)
