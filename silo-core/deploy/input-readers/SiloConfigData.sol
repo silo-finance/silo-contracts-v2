@@ -106,8 +106,8 @@ contract SiloConfigData {
         }
     }
 
-    function _resolveDeployedContract(string memory _name) internal returns (address contractAddress) {
-        contractAddress = SiloCoreDeployments.get(_name, ChainsLib.chainAlias(block.chainid));
-        if (contractAddress == address(0)) revert DeployedContractNotFound(_name);
+    function _resolveDeployedContract(string memory) internal returns (address) {
+        // contractAddress = SiloCoreDeployments.get(_name, ChainsLib.chainAlias(block.chainid));
+        // if (contractAddress == address(0)) revert DeployedContractNotFound(_name);
     }
 }
