@@ -70,22 +70,22 @@ abstract contract SiloDeploy is CommonDeploy {
         bytes memory irmConfigData0;
         bytes memory irmConfigData1;
 
-        (irmConfigData0, irmConfigData1) = _getIRMConfigData(config, siloInitData);
+        // (irmConfigData0, irmConfigData1) = _getIRMConfigData(config, siloInitData);
 
-        console2.log("[SiloCommonDeploy] IRM configs prepared");
+        // console2.log("[SiloCommonDeploy] IRM configs prepared");
 
-        ISiloDeployer.Oracles memory oracles = _getOracles(config, siloData);
-        siloInitData.solvencyOracle0 = oracles.solvencyOracle0.deployed;
-        siloInitData.maxLtvOracle0 = oracles.maxLtvOracle0.deployed;
-        siloInitData.solvencyOracle1 = oracles.solvencyOracle1.deployed;
-        siloInitData.maxLtvOracle1 = oracles.maxLtvOracle1.deployed;
+        // ISiloDeployer.Oracles memory oracles = _getOracles(config, siloData);
+        // siloInitData.solvencyOracle0 = oracles.solvencyOracle0.deployed;
+        // siloInitData.maxLtvOracle0 = oracles.maxLtvOracle0.deployed;
+        // siloInitData.solvencyOracle1 = oracles.solvencyOracle1.deployed;
+        // siloInitData.maxLtvOracle1 = oracles.maxLtvOracle1.deployed;
 
-        uint256 deployerPrivateKey = privateKey == 0 ? uint256(vm.envBytes32("PRIVATE_KEY")) : privateKey;
+        // uint256 deployerPrivateKey = privateKey == 0 ? uint256(vm.envBytes32("PRIVATE_KEY")) : privateKey;
 
-        console2.log("[SiloCommonDeploy] siloInitData.token0 before", siloInitData.token0);
-        console2.log("[SiloCommonDeploy] siloInitData.token1 before", siloInitData.token1);
+        // console2.log("[SiloCommonDeploy] siloInitData.token0 before", siloInitData.token0);
+        // console2.log("[SiloCommonDeploy] siloInitData.token1 before", siloInitData.token1);
 
-        hookReceiverImplementation = beforeCreateSilo(siloInitData, hookReceiverImplementation);
+        // hookReceiverImplementation = beforeCreateSilo(siloInitData, hookReceiverImplementation);
 
         // console2.log("[SiloCommonDeploy] `beforeCreateSilo` executed");
 
