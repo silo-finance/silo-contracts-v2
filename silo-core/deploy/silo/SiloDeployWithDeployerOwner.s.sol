@@ -24,8 +24,8 @@ contract SiloDeployWithDeployerOwner is SiloDeploy {
         });
     }
 
-    function _getDKinkIRMInitialOwner() internal view override returns (address owner) {
-        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        owner = vm.addr(deployerPrivateKey);
+    function _getDKinkIRMInitialOwner() internal view override returns (address) {
+        // uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
+        // owner = vm.addr(deployerPrivateKey);
     }
 }
