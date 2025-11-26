@@ -87,84 +87,42 @@ contract SiloFixture is StdCheats, CommonBase {
 
     function deploy_ETH_USDC()
         external
-        returns (ISiloConfig siloConfig, ISilo silo0, ISilo silo1, address weth, address usdc, address hookReceiver)
+        returns (ISiloConfig, ISilo, ISilo, address, address, address)
     {
-        return _deploy(new SiloDeployWithDeployerOwner(), SiloConfigsNames.SILO_ETH_USDC_UNI_V3);
+        // return _deploy(new SiloDeployWithDeployerOwner(), SiloConfigsNames.SILO_ETH_USDC_UNI_V3);
     }
 
     function deploy_local(string memory _configName)
         external
         returns (
-            ISiloConfig siloConfig,
-            ISilo silo0,
-            ISilo silo1,
-            address token0,
-            address token1,
-            address hookReceiver
+            ISiloConfig,
+            ISilo,
+            ISilo,
+            address,
+            address,
+            address
         )
     {
         SiloConfigOverride memory overrideArgs;
-        return _deploy(new SiloDeploy_Local(overrideArgs), _configName);
+        // return _deploy(new SiloDeploy_Local(overrideArgs), _configName);
     }
 
     function deploy_local(SiloConfigOverride memory _override)
         external
         returns (
-            ISiloConfig siloConfig,
-            ISilo silo0,
-            ISilo silo1,
-            address token0,
-            address token1,
-            address hookReceiver
+            ISiloConfig,
+            ISilo,
+            ISilo,
+            address,
+            address,
+            address
         )
     {
-        return _deploy(
-            new SiloDeploy_Local(_override),
-            bytes(_override.configName).length == 0
-                ? SiloConfigsNames.SILO_LOCAL_NO_ORACLE_SILO
-                : _override.configName
-        );
-    }
-
-    function _deploy(SiloDeployWithDeployerOwner _siloDeploy, string memory _configName)
-        internal
-        returns (
-            ISiloConfig siloConfig,
-            ISilo silo0,
-            ISilo silo1,
-            address token0,
-            address token1,
-            address hookReceiver
-        )
-    {
-        if (!_mainNetDeployed) {
-            MainnetDeploy mainnetDeploy = new MainnetDeploy();
-            mainnetDeploy.disableDeploymentsSync();
-            mainnetDeploy.run();
-            console2.log("[SiloFixture] _deploy: mainnetDeploy.run() done.");
-
-            _mainNetDeployed = true;
-        }
-
-        siloConfig = _siloDeploy.useConfig(_configName).run();
-        console2.log("[SiloFixture] _deploy: _siloDeploy(", _configName, ").run() done.");
-
-        (address createdSilo0, address createdSilo1) = siloConfig.getSilos();
-
-        ISiloConfig.ConfigData memory siloConfig0 = siloConfig.getConfig(createdSilo0);
-        ISiloConfig.ConfigData memory siloConfig1 = siloConfig.getConfig(createdSilo1);
-
-        silo0 = ISilo(siloConfig0.silo);
-        silo1 = ISilo(siloConfig1.silo);
-        console2.log("[SiloFixture] silo0", address(silo0));
-        console2.log("[SiloFixture] silo1", address(silo1));
-        console2.log("[SiloFixture] siloConfig", address(siloConfig));
-
-        token0 = siloConfig0.token;
-        token1 = siloConfig1.token;
-
-        hookReceiver = siloConfig0.hookReceiver;
-        if (hookReceiver == address(0)) revert("hookReceiver address is empty");
-
+        
+            new SiloDeploy_Local(_override);
+            // bytes(_override.configName).length == 0
+            //     ? SiloConfigsNames.SILO_LOCAL_NO_ORACLE_SILO
+            //     : _override.configName
+        
     }
 }
