@@ -121,12 +121,8 @@ abstract contract SiloDeploy is CommonDeploy {
         _printAndValidateDetails(siloConfig, siloInitData);
     }
 
-    function _saveSilo(ISiloConfig _siloConfig, string memory _configName) internal {
-        SiloDeployments.save({
-            _chain: ChainsLib.chainAlias(),
-            _name: string.concat(_configName, "_id_", vm.toString(_siloConfig.SILO_ID())),
-            _deployed: address(_siloConfig)
-        });
+    function _saveSilo(ISiloConfig, string memory) internal {
+        
     }
 
     function _saveOracles(ISiloConfig, SiloConfigData.ConfigData memory, bytes32)
