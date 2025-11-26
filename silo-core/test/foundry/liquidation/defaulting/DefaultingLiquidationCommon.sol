@@ -98,9 +98,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_setup -vv
     */
     function test_defaulting_setup() public {
-        _setCollateralPrice(3e18);
         // minimal collateral to create position is 2
-        assertTrue(_createPosition({_borrower: borrower, _collateral: 0, _protected: 2, _maxOut: true}));
+        assertTrue(_createPosition({_borrower: borrower, _collateral: 0, _protected: 2, _maxOut: true}), "create position failed");
     }
 
     /*
