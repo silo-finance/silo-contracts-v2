@@ -588,16 +588,8 @@ abstract contract SiloDeploy is CommonDeploy {
         return (true, result);
     }
 
-    function _symbol(address _token) internal view returns (string memory assetSymbol) {
-        (bool hasMetadata, bytes memory data) = _tokenMetadataCall(_token, abi.encodeCall(IERC20Metadata.symbol, ()));
-
-        if (!hasMetadata || data.length == 0) {
-            return "?";
-        } else if (data.length == _BYTES32_SIZE) {
-            return string(TokenHelper.removeZeros(data));
-        } else {
-            return abi.decode(data, (string));
-        }
+    function _symbol(address) internal view returns (string memory) {
+        
     }
 
     function _x_() internal pure virtual returns (string memory) {
