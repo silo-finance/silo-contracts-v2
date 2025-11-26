@@ -529,36 +529,8 @@ abstract contract SiloDeploy is CommonDeploy {
         }
     }
 
-    function _representAsPercent(uint256 _fee) internal pure returns (string memory percent) {
-        if (_fee == 0) return "0%";
-
-        uint256 biasPoints = _fee * 1e4 / 1e18;
-
-        if (biasPoints == 0) return "0%";
-
-        if (biasPoints < 10) {
-            percent = string.concat("0.0", vm.toString(biasPoints));
-        } else if (biasPoints < 100) {
-            uint256 biasPointsInTenths = biasPoints / 10;
-            uint256 reminder = biasPoints - biasPointsInTenths * 10;
-
-            percent = string.concat("0.", vm.toString(biasPointsInTenths));
-
-            if (reminder != 0) {
-                percent = string.concat(percent, vm.toString(reminder));
-            }
-        } else {
-            uint256 biasPointsInHundredths = biasPoints / 100;
-            uint256 reminder = biasPoints - biasPointsInHundredths * 100;
-
-            percent = vm.toString(biasPointsInHundredths);
-
-            if (reminder != 0) {
-                percent = string.concat(percent, ".", vm.toString(reminder));
-            }
-        }
-
-        percent = string.concat(percent, "%");
+    function _representAsPercent(uint256) internal pure returns (string memory) {
+        
     }
 
     function _assertAndGetDecimals(address) internal view returns (uint256) {
