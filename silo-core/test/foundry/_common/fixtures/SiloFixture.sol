@@ -26,12 +26,12 @@ struct SiloConfigOverride {
 contract SiloDeploy_Local is SiloDeployWithDeployerOwner {
     bytes32 public constant CLONE_IMPLEMENTATION_KEY = keccak256(bytes("CLONE_IMPLEMENTATION"));
 
-    SiloConfigOverride internal siloConfigOverride;
+    SiloConfigOverride internal _siloConfigOverride;
 
     error SiloFixtureHookReceiverImplNotFound(string hookReceiver);
 
     constructor(SiloConfigOverride memory _override) {
-        siloConfigOverride = _override;
+        _siloConfigOverride = _override;
     }
 
     function beforeCreateSilo(ISiloConfig.InitData memory _config, address _hookReceiverImplementation)
@@ -41,41 +41,41 @@ contract SiloDeploy_Local is SiloDeployWithDeployerOwner {
         returns (address hookImplementation)
     {
         // Override the default values if overrides are provided
-        if (siloConfigOverride.token0 != address(0)) {
-            console2.log("[override] token0 %s -> %s", _config.token0, siloConfigOverride.token0);
-            _config.token0 = siloConfigOverride.token0;
+        if (_siloConfigOverride.token0 != address(0)) {
+            console2.log("[override] token0 %s -> %s", _config.token0, _siloConfigOverride.token0);
+            _config.token0 = _siloConfigOverride.token0;
         }
 
-        if (siloConfigOverride.token1 != address(0)) {
-            console2.log("[override] token1 %s -> %s", _config.token1, siloConfigOverride.token1);
-            _config.token1 = siloConfigOverride.token1;
+        if (_siloConfigOverride.token1 != address(0)) {
+            console2.log("[override] token1 %s -> %s", _config.token1, _siloConfigOverride.token1);
+            _config.token1 = _siloConfigOverride.token1;
         }
 
-        if (siloConfigOverride.solvencyOracle0 != address(0)) {
+        if (_siloConfigOverride.solvencyOracle0 != address(0)) {
             console2.log(
-                "[override] solvencyOracle0 %s -> %s", _config.solvencyOracle0, siloConfigOverride.solvencyOracle0
+                "[override] solvencyOracle0 %s -> %s", _config.solvencyOracle0, _siloConfigOverride.solvencyOracle0
             );
 
-            _config.solvencyOracle0 = siloConfigOverride.solvencyOracle0;
+            _config.solvencyOracle0 = _siloConfigOverride.solvencyOracle0;
         }
 
-        if (siloConfigOverride.maxLtvOracle0 != address(0)) {
+        if (_siloConfigOverride.maxLtvOracle0 != address(0)) {
             console2.log(
-                "[override] maxLtvOracle0 %s -> %s", _config.maxLtvOracle0, siloConfigOverride.maxLtvOracle0
+                "[override] maxLtvOracle0 %s -> %s", _config.maxLtvOracle0, _siloConfigOverride.maxLtvOracle0
             );
 
-            _config.maxLtvOracle0 = siloConfigOverride.maxLtvOracle0;
+            _config.maxLtvOracle0 = _siloConfigOverride.maxLtvOracle0;
         }
 
         if (
-            siloConfigOverride.hookReceiver != address(0)
-                || siloConfigOverride.hookReceiverImplementation != address(0)
+            _siloConfigOverride.hookReceiver != address(0)
+                || _siloConfigOverride.hookReceiverImplementation != address(0)
         ) {
-            console2.log("[override] hookReceiver %s -> %s", _config.hookReceiver, siloConfigOverride.hookReceiver);
-            console2.log("[override] hookImplementation -> %s", siloConfigOverride.hookReceiverImplementation);
+            console2.log("[override] hookReceiver %s -> %s", _config.hookReceiver, _siloConfigOverride.hookReceiver);
+            console2.log("[override] hookImplementation -> %s", _siloConfigOverride.hookReceiverImplementation);
 
-            _config.hookReceiver = siloConfigOverride.hookReceiver;
-            hookImplementation = siloConfigOverride.hookReceiverImplementation;
+            _config.hookReceiver = _siloConfigOverride.hookReceiver;
+            hookImplementation = _siloConfigOverride.hookReceiverImplementation;
         } else {
             hookImplementation = _hookReceiverImplementation;
         }
