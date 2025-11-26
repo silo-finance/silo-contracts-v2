@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
-import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IGaugeHookReceiver, IHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
@@ -42,7 +41,9 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
     /// @dev Additional liquidation threshold (LT) margin applied during defaulting liquidations
     /// to give priority to traditional liquidations over defaulting ones. Expressed in 18 decimals.
-    uint256 public constant LT_MARGIN_FOR_DEFAULTING = 0.25e18;
+    uint256 public constant LT_MARGIN_FOR_DEFAULTING = 0.025e18;
+
+    uint256 internal constant _DECIMALS_PRECISION = 1e18;
 
     constructor() {
         LIQUIDATION_LOGIC = address(new DefaultingSiloLogic());
@@ -59,7 +60,15 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         validateDefaultingCollateral(silo0, silo1);
     }
+    
+    // TODO
+    // function liquidationCallByDefaulting(address _borrower, uint256 _maxDebtToCover);
 
+    /// @dev reverts when:
+    /// - `_borrower` is solvent in terms of defaulting (might be insolvent for standard liquidation)
+    /// - when asset:share ratio is changes so much 
+    ///   that `convertToShares` returns more shares to liquidate than totalShares in system, eg: 
+    ///   totalAssets = 100, totalShares = 10, assetsToLiquidate = 1
     function liquidationCallByDefaulting(address _borrower) // solhint-disable-line function-max-lines, code-complexity
         external
         virtual
@@ -155,16 +164,15 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     }
 
     function getKeeperAndLenderSharesSplit(
-        uint256 _liquidationFee,
         uint256 _assetsToLiquidate,
         ISilo.CollateralType _collateralType
-    ) external view virtual returns (uint256 totalShares, uint256 keeperShares, uint256 lendersShares) {
-        (address silo, address shareToken) = _resolveSiloAndShareToken(_collateralType);
+    ) external view virtual returns (uint256 totalSharesToLiquidate, uint256 keeperShares, uint256 lendersShares) {
+        (address silo, address shareToken, uint256 liquidationFee) = _resolveSplitData(_collateralType);
 
-        _getKeeperAndLenderSharesSplit({
+        (totalSharesToLiquidate, keeperShares, lendersShares) = _getKeeperAndLenderSharesSplit({
             _silo: silo,
             _shareToken: shareToken,
-            _liquidationFee: _liquidationFee,
+            _liquidationFee: liquidationFee,
             _assetsToLiquidate: _assetsToLiquidate,
             _collateralType: _collateralType
         });
@@ -177,6 +185,8 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         returns (ISiloIncentivesController controllerCollateral)
     {
         (, address collateralShareToken,) = siloConfig.getShareTokens(_silo);
+        require(collateralShareToken != address(0), EmptyCollateralShareToken());
+
         controllerCollateral = IGaugeHookReceiver(address(this)).configuredGauges(IShareToken(collateralShareToken));
         require(address(controllerCollateral) != address(0), NoControllerForCollateral());
     }
@@ -186,30 +196,39 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         ISiloConfig.ConfigData memory config1 = siloConfig.getConfig(_silo1);
 
         require(config0.maxLtv == 0 || config1.maxLtv == 0, TwoWayMarketNotAllowed());
+        
+        require(config0.lt + LT_MARGIN_FOR_DEFAULTING < _DECIMALS_PRECISION, InvalidLTConfig0());
+        require(config1.lt + LT_MARGIN_FOR_DEFAULTING < _DECIMALS_PRECISION, InvalidLTConfig1());
     }
 
     function _deductDefaultedDebtFromCollateral(address _silo, uint256 _assetsToRepay) internal virtual {
         bytes memory input =
             abi.encodeWithSelector(DefaultingSiloLogic.deductDefaultedDebtFromCollateral.selector, _assetsToRepay);
 
-        ISilo(_silo).callOnBehalfOfSilo({
-            _target: LIQUIDATION_LOGIC,
-            _value: 0,
-            _callType: ISilo.CallType.Delegatecall,
-            _input: input
+        _callOnBehalfOfSilo({
+            _silo: ISilo(_silo),
+            _calldata: input,
+            _errorWhenRevert: DeductDefaultedDebtFromCollateralFailed.selector
         });
     }
 
     function _repayDebtByDefaulting(address _silo, uint256 _assets, address _borrower) internal virtual {
-        bytes memory input =
-            abi.encodeWithSelector(DefaultingSiloLogic.repayDebtByDefaulting.selector, _assets, _borrower);
+        _callOnBehalfOfSilo({
+            _silo: ISilo(_silo), 
+            _calldata: abi.encodeWithSelector(DefaultingSiloLogic.repayDebtByDefaulting.selector, _assets, _borrower), 
+            _errorWhenRevert: RepayDebtByDefaultingFailed.selector
+        });
+    }
 
-        ISilo(_silo).callOnBehalfOfSilo({
+    function _callOnBehalfOfSilo(ISilo _silo, bytes memory _calldata, bytes4 _errorWhenRevert) internal virtual {
+        (bool success, bytes memory data) = _silo.callOnBehalfOfSilo({
             _target: LIQUIDATION_LOGIC,
             _value: 0,
             _callType: ISilo.CallType.Delegatecall,
-            _input: input
+            _input: _calldata
         });
+
+        if (!success) RevertLib.revertBytes(data, _errorWhenRevert);
     }
 
     function _liquidateByDistributingCollateral(
@@ -226,7 +245,9 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             IShareToken(_shareToken).forwardTransferFromNoChecks(
                 _borrower, address(controllerCollateral), _withdrawSharesForLenders
             );
-            controllerCollateral.immediateDistribution(_shareToken, SafeCast.toUint104(_withdrawSharesForLenders));
+
+            require(_withdrawSharesForLenders <= type(uint104).max, WithdrawSharesForLendersTooHighForDistribution());
+            controllerCollateral.immediateDistribution(_shareToken, uint104(_withdrawSharesForLenders));
         }
 
         // distribute collateral shares to keeper
@@ -259,53 +280,60 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         uint256 _liquidationFee,
         uint256 _assetsToLiquidate,
         ISilo.CollateralType _collateralType
-    ) internal view virtual returns (uint256 totalShares, uint256 keeperShares, uint256 lendersShares) {
+    ) internal view virtual returns (uint256 totalSharesToLiquidate, uint256 keeperShares, uint256 lendersShares) {
         if (_assetsToLiquidate == 0) return (0, 0, 0);
 
+        uint256 totalAssets = ISilo(_silo).getTotalAssetsStorage(ISilo.AssetType(uint8(_collateralType)));
+        uint256 totalShares = IShareToken(_shareToken).totalSupply();
+            
         // assets were calculating with rounding down for withdraw,
-        // if we want to go back to shares, we can round up
-        totalShares = SiloMathLib.convertToShares({
+        // if we want to go back to shares, we can round up, 
+        // however we choose to have exact results as we get via original liquidation, so we are using same direction
+        totalSharesToLiquidate = SiloMathLib.convertToShares({
             _assets: _assetsToLiquidate,
-            _totalAssets: ISilo(_silo).getTotalAssetsStorage(ISilo.AssetType(uint8(_collateralType))),
-            _totalShares: IShareToken(_shareToken).totalSupply(),
-            _rounding: Rounding.UP,
+            _totalAssets: totalAssets,
+            _totalShares: totalShares,
+            _rounding: Rounding.LIQUIDATE_TO_SHARES,
             _assetType: ISilo.AssetType(uint8(_collateralType))
         });
 
         // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds
         // using some kind of 1 wei rounding attack loop
 
-        // c - collateral
-        // wc - withdrawCollateral
+        // c - collateral that equals debt value
         // f - liquidation fee
-        // kf - keeper Fee
-        // kw - keeper withdrawal
+        // CL - total collateral to liquidate
+        // kf - keeper fee
+        // kp - keeper part
         // D - normalization divider
 
-        // c + c * f = wc
-        // c * (1 + f) = wc
-        // c = wc / ( 1 + f)
+        // c + c * f = CL
+        // c * (1 + f) = CL
+        // c = CL / (1 + f)
 
-        // kw =  c * f * kf => f * kf * wc / ( 1 + f)
+        // kp = c * f * kf => f * kf * CL / (1 + f)
 
-        // at the end we need to normalize, but we see we have only mul and div operations, so we can do
-        // normalization at the end no problem, assuming D is our normalization Divider based on fees
-        // decimals final pseudo code is:
+        // final pseudo code is:
 
-        // kw = f * kf * wc / (1 + f) / D
-        // kw = muldiv(f * kf, wc, (1 + f), Floor) / D
+        // kp = f * kf * CL / (1 + f)
+        // kp = muldiv(f * kf, CL, (1 + f), R)
+
+        // R - rounding, we want to round down for keeper
         keeperShares = Math.mulDiv(
-            totalShares, _liquidationFee * KEEPER_FEE, PartialLiquidationLib._PRECISION_DECIMALS, Math.Rounding.Floor
+            _liquidationFee * KEEPER_FEE,
+            totalSharesToLiquidate, 
+            PartialLiquidationLib._PRECISION_DECIMALS, 
+            Math.Rounding.Floor
         ) / (PartialLiquidationLib._PRECISION_DECIMALS + _liquidationFee);
 
-        lendersShares = totalShares - keeperShares;
+        lendersShares = totalSharesToLiquidate - keeperShares;
     }
 
-    function _resolveSiloAndShareToken(ISilo.CollateralType _collateralType)
+    function _resolveSplitData(ISilo.CollateralType _collateralType)
         internal
         view
         virtual
-        returns (address silo, address shareToken)
+        returns (address silo, address shareToken, uint256 liquidationFee)
     {
         ISiloConfig configCached = siloConfig;
         (address silo0, address silo1) = configCached.getSilos();
@@ -321,5 +349,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         shareToken = _collateralType == ISilo.CollateralType.Collateral
             ? collateralConfig.collateralShareToken
             : collateralConfig.protectedShareToken;
+
+        liquidationFee = collateralConfig.liquidationFee;
     }
 }
