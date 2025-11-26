@@ -9,19 +9,13 @@ FOUNDRY_PROFILE=core CONFIG=solvBTC.BBN_solvBTC \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract SiloDeployWithDeployerOwner is SiloDeploy {
-    function _getClonableHookReceiverConfig(address _implementation)
+    function _getClonableHookReceiverConfig(address)
         internal
         view
         override
-        returns (ISiloDeployer.ClonableHookReceiver memory hookReceiver)
+        returns (ISiloDeployer.ClonableHookReceiver memory)
     {
-        uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
-        address owner = vm.addr(deployerPrivateKey);
-
-        hookReceiver = ISiloDeployer.ClonableHookReceiver({
-            implementation: _implementation,
-            initializationData: abi.encode(owner)
-        });
+    
     }
 
     function _getDKinkIRMInitialOwner() internal view override returns (address) {
