@@ -100,10 +100,10 @@ contract SiloConfigData {
         });
     }
 
-    function _resolveHookReceiverImpl(string memory _requiredHookReceiver) internal returns (address hookReceiver) {
-        if (keccak256(bytes(_requiredHookReceiver)) != CLONE_IMPLEMENTATION_KEY) {
-            hookReceiver = _resolveDeployedContract(_requiredHookReceiver);
-        }
+    function _resolveHookReceiverImpl(string memory) internal returns (address) {
+        // if (keccak256(bytes(_requiredHookReceiver)) != CLONE_IMPLEMENTATION_KEY) {
+        //     hookReceiver = _resolveDeployedContract(_requiredHookReceiver);
+        // }
     }
 
     function _resolveDeployedContract(string memory) internal returns (address) {
