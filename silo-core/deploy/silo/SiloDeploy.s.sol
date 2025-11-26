@@ -407,27 +407,11 @@ abstract contract SiloDeploy is CommonDeploy {
 
     function _getDKinkIRMInitialOwner() internal virtual returns (address);
 
-    function _printAndValidateDetails(ISiloConfig _siloConfig, ISiloConfig.InitData memory siloInitData)
+    function _printAndValidateDetails(ISiloConfig, ISiloConfig.InitData memory)
         internal
         view
     {
-        string memory chainAlias = ChainsLib.chainAlias();
-
-        if (keccak256(bytes(chainAlias)) == keccak256(bytes(ChainsLib.ANVIL_ALIAS))) return;
-
-        (address silo0, address silo1) = _siloConfig.getSilos();
-
-        ISiloConfig.ConfigData memory siloConfig0 = _siloConfig.getConfig(silo0);
-        ISiloConfig.ConfigData memory siloConfig1 = _siloConfig.getConfig(silo1);
-
-        console2.log(string.concat("\nDeployed market details [", chainAlias, "]"));
-        console2.log("SiloConfig", address(_siloConfig));
-        console2.log("\n");
-        console2.log("silo0");
-        _printSiloDetails(silo0, siloConfig0, siloInitData, true);
-        console2.log("\n");
-        console2.log("silo1");
-        _printSiloDetails(silo1, siloConfig1, siloInitData, false);
+        
     }
 
     function _printSiloDetails(
