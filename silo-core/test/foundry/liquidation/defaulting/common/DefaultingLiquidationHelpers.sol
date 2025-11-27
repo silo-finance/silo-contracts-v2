@@ -28,9 +28,21 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
 
     struct UserState {
-        uint256 debtShares;
-        uint256 protectedShares;
         uint256 colalteralShares;
+        uint256 collateralAssets;
+        uint256 protectedShares;
+        uint256 protectedAssets;
+        uint256 debtShares;
+        uint256 debtAssets;
+    }
+
+    struct SiloState {
+        uint256 totalCollateral;
+        uint256 totalProtected;
+        uint256 totalDebt;
+        uint256 totalCollateralShares;
+        uint256 totalProtectedShares;
+        uint256 totalDebtShares;
     }
 
     ISiloConfig siloConfig;
@@ -72,18 +84,19 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
     function _removeLiquidity() internal {
         console2.log("\tremoving liquidity");
+        address lpProvider = makeAddr("lpProvider");
 
-        vm.startPrank(depositor);
+        vm.startPrank(lpProvider);
         uint256 amount;
 
-        try silo0.maxWithdraw(depositor) returns (uint256 _amount) {
+        try silo0.maxWithdraw(lpProvider) returns (uint256 _amount) {
             amount = _amount;
         } catch {
             console2.log("\t[_removeLiquidity] maxWithdraw #0 failed");
         }
 
         if (amount != 0) {
-            try silo0.withdraw(amount, depositor, depositor) {
+            try silo0.withdraw(amount, lpProvider, lpProvider) {
                 // nothing to do
             } catch {
                 console2.log("\t[_removeLiquidity] withdraw #0 failed");
@@ -92,14 +105,14 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
         amount = 0;
 
-        try silo1.maxWithdraw(depositor) returns (uint256 _amount) {
+        try silo1.maxWithdraw(lpProvider) returns (uint256 _amount) {
             amount = _amount;
         } catch {
             console2.log("\t[_removeLiquidity] maxWithdraw #1 failed");
         }
 
         if (amount != 0) {
-            try silo1.withdraw(amount, depositor, depositor) {
+            try silo1.withdraw(amount, lpProvider, lpProvider) {
                 // nothing to do
             } catch {
                 console2.log("\t[_removeLiquidity] withdraw #1 failed");
@@ -107,6 +120,9 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         }
 
         vm.stopPrank();
+
+        (, ISilo debtSilo) = _getSilos();
+        assertLe(debtSilo.getLiquidity(), 1, "[_removeLiquidity] liquidity should be ~0");
     }
 
     // function _calculateLiquidityForBorrow(uint256 _collateral, uint256 _protected) internal view returns (uint256 forBorrow) {
@@ -125,26 +141,31 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     //     return  (10 ** decimals0) * maxCollateral / valueOfOne;
     // }
 
+    function _addLiquidity(uint256 _amount) internal {
+        if (_amount == 0) return;
+        console2.log("\tadding liquidity", _amount);
+
+        address lpProvider = makeAddr("lpProvider");
+        (, ISilo debtSilo) = _getSilos();
+        vm.prank(lpProvider);
+        debtSilo.deposit(_amount, lpProvider);
+
+        depositors.push(lpProvider);
+    }
+
     function _createPosition(address _borrower, uint256 _collateral, uint256 _protected, bool _maxOut)
         internal
         returns (bool success)
     {
         console2.log("\tcreating position");
-        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
-
-        // we want to provide random liquidaity but let it be at least 70% of required for max borrow
-        uint256 forBorrow = Math.max(_collateral, _protected);
-        if (forBorrow == 0) return false;
-        console2.log("_calculateLiquidityForBorrow", forBorrow);
-
-        vm.prank(depositor);
-        debtSilo.deposit(forBorrow, depositor);
-        depositors.push(depositor);
+        (ISilo collateralSilo,) = _getSilos();
 
         vm.startPrank(_borrower);
         if (_collateral != 0) collateralSilo.deposit(_collateral, _borrower);
         if (_protected != 0) collateralSilo.deposit(_protected, _borrower, ISilo.CollateralType.Protected);
         vm.stopPrank();
+
+        depositors.push(_borrower);
 
         _printBalances(silo0, _borrower);
         _printBalances(silo1, _borrower);
@@ -286,12 +307,12 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
     function _createIncentiveController() internal {
         // TODO test if revert for silo0
-        (ISilo collateralSilo,) = _getSilos();
-        gauge = new SiloIncentivesController(address(this), address(partialLiquidation), address(collateralSilo));
+        (, ISilo debtSilo) = _getSilos();
+        gauge = new SiloIncentivesController(address(this), address(partialLiquidation), address(debtSilo));
 
         address owner = Ownable(address(defaulting)).owner();
         vm.prank(owner);
-        IGaugeHookReceiver(address(defaulting)).setGauge(gauge, IShareToken(address(collateralSilo)));
+        IGaugeHookReceiver(address(defaulting)).setGauge(gauge, IShareToken(address(debtSilo)));
         console2.log("gauge configured");
     }
 
@@ -314,6 +335,22 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     function _siloLp() internal view returns (string memory lp) {
         (ISilo collateralSilo,) = _getSilos();
         lp = address(collateralSilo) == address(silo0) ? "0" : "1";
+    }
+
+    function _printFractions(ISilo _silo) internal {
+        (ISilo.Fractions memory fractions) = _silo.getFractionsStorage();
+        
+        emit log_named_decimal_uint(
+            string.concat(vm.getLabel(address(_silo)), " fractions.interest"), fractions.interest, 18
+        );
+        emit log_named_decimal_uint(
+            string.concat(vm.getLabel(address(_silo)), " fractions.revenue"), fractions.revenue, 18
+        );
+    }
+
+    function _printRevenue(ISilo _silo) internal view returns (uint256 revenue) {
+        (revenue,,,,) = _silo.getSiloStorage();
+        console2.log(vm.getLabel(address(_silo)), "revenue", revenue);
     }
 
     function _getShareTokens(address _borrower)
@@ -362,21 +399,30 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         }
     }
 
-    function _getUserState(address _borrower) internal view returns (UserState memory userState) {
-        (IShareToken protectedShareToken, IShareToken collateralShareToken, IShareToken debtShareToken) =
-            _getShareTokens(_borrower);
+    function _getSiloState(ISilo _silo) internal view returns (SiloState memory siloState) {
+        siloState.totalCollateral = _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
+        siloState.totalProtected = _silo.getTotalAssetsStorage(ISilo.AssetType.Protected);
+        siloState.totalDebt = _silo.getTotalAssetsStorage(ISilo.AssetType.Debt);
 
-        userState.debtShares = (address(debtShareToken) != address(0)) ? debtShareToken.balanceOf(_borrower) : 0;
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            siloConfig.getShareTokens(address(_silo));
 
-        userState.protectedShares =
-            (address(protectedShareToken) != address(0)) ? protectedShareToken.balanceOf(_borrower) : 0;
+        siloState.totalCollateralShares = IShareToken(collateralShareToken).totalSupply();
+        siloState.totalProtectedShares = IShareToken(protectedShareToken).totalSupply();
+        siloState.totalDebtShares = IShareToken(debtShareToken).totalSupply();
+    }
 
-        userState.colalteralShares =
-            (address(collateralShareToken) != address(0)) ? collateralShareToken.balanceOf(_borrower) : 0;
+    function _getUserState(ISilo _silo, address _user) internal view returns (UserState memory userState) {
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
+            siloConfig.getShareTokens(address(_silo));
 
-        console2.log("userState.debtShares", userState.debtShares);
-        console2.log("userState.protectedShares", userState.protectedShares);
-        console2.log("userState.colalteralShares", userState.colalteralShares);
+        userState.debtShares = IShareToken(debtShareToken).balanceOf(_user);
+        userState.protectedShares = IShareToken(protectedShareToken).balanceOf(_user);
+        userState.colalteralShares = IShareToken(collateralShareToken).balanceOf(_user);
+
+        userState.collateralAssets = _silo.previewRedeem(userState.colalteralShares);
+        userState.protectedAssets = _silo.previewRedeem(userState.protectedShares, ISilo.CollateralType.Protected);
+        userState.debtAssets = _silo.maxRepay(_user);
     }
 
     function _calculateNewPrice(uint64 _initialPrice, int64 _changePricePercentage)

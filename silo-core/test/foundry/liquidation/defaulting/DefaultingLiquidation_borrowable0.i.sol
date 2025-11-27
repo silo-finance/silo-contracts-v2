@@ -42,6 +42,17 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_happyPath -vv
+    */
+    function test_defaulting_happyPath() public override {
+        _defaulting_happyPath();
+
+        assertEq(silo0.getLtv(borrower), 0, "config for this market is lt 97%, so we expect here full liquidation");
+
+        revert("TODO asertions");
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv --mc DefaultingLiquidationTwo1Test
     */
     /// forge-config: core_test.fuzz.runs = 100

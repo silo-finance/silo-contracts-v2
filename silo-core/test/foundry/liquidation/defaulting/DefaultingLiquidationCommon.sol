@@ -55,6 +55,8 @@ TODO double check same assets with protected - does it increase LTV?
 
 TODO test with setOnDemand(false)
 
+TODO test if tehre is diff when we configure gauge
+
 */
 
 /*
@@ -98,11 +100,104 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_setup -vv
     */
     function test_defaulting_setup() public {
+        _addLiquidity(2);
+
         // minimal collateral to create position is 2
         assertTrue(
             _createPosition({_borrower: borrower, _collateral: 0, _protected: 2, _maxOut: true}),
             "create position failed"
         );
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_happyPath -vv
+    */
+    function test_defaulting_happyPath() public virtual;
+
+    /*
+    - borrower deposit 1e18 assets, 50% collateral, 50% protected
+    - price is 1.02e18 at begin and the drop to 1e18, so at the moment of liquidation is 1:1 so we can easily use collateral/debt
+    */
+    function _defaulting_happyPath()
+        internal
+        returns (
+            UserState memory collateralState,
+            UserState memory debtState,
+            SiloState memory collateralSiloState,
+            SiloState memory debtSiloState,
+            uint256 collateralToLiquidate,
+            uint256 debtToRepay
+        )
+    {
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
+
+                _createIncentiveController();
+
+
+        uint256 assets = 1e18;
+        _addLiquidity(assets);
+
+        _setCollateralPrice(1.02e18);
+
+        address protectedUser = makeAddr("protectedUser");
+        vm.prank(protectedUser);
+        debtSilo.deposit(assets, protectedUser, ISilo.CollateralType.Protected);
+        depositors.push(protectedUser);
+
+        // TODO do it with other borrower
+        // bool success = _createPosition({_borrower: makeAddr("randomBorrower"), _collateral: assets / 2, _protected: assets / 2, _maxOut: false});
+        // assertTrue(success, "create position 1 failed");
+        // _addLiquidity(assets);
+
+        bool success =
+            _createPosition({_borrower: borrower, _collateral: assets / 2, _protected: assets / 2, _maxOut: true});
+        assertTrue(success, "create position failed");
+
+        // DO NOT REMOVE LIQUIDITY, we need to check how much provider loose§
+
+        _setCollateralPrice(1e18); // 2% down
+
+        do {
+            vm.warp(block.timestamp + 2 hours);
+        } while (!_defaultingPossible(borrower));
+
+        _printLtv(borrower);
+
+        debtSilo.accrueInterest();
+        assertGt(_printRevenue(debtSilo), 0, "we need case with fees");
+
+        // _createIncentiveController();
+
+        collateralState = _getUserState(collateralSilo, borrower);
+        debtState = _getUserState(debtSilo, borrower);
+        collateralSiloState = _getSiloState(collateralSilo);
+        debtSiloState = _getSiloState(debtSilo);
+
+        (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
+
+        defaulting.liquidationCallByDefaulting(borrower);
+        console2.log("AFTER DEFAULTING what happened?");
+
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
+
+        //
+        assertTrue(silo0.isSolvent(borrower), "borrower is solvent");
+
+        // _printLtv(borrower);
+
+        // assertEq(silo0.getLtv(borrower), 0, "position should be removed");
+
+        // _assertNoShareTokens(silo0, borrower);
+        // _assertNoShareTokens(silo1, borrower);
+
+        // _assertNoWithdrawableFees(collateralSilo);
+        // _assertWithdrawableFees(debtSilo);
+
+        // // TODO exit
+        // _assertEveryoneCanExit();
+
+        // TODO fees should be zero in this case, because we didnt accrue in a middle, do test with accrue interest
     }
 
     /*
@@ -127,6 +222,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint32 _protected,
         uint32 _warp
     ) public {
+        _addLiquidity(Math.max(_collateral, _protected));
+
         address otherBorrower = makeAddr("otherBorrower");
 
         bool success = _createPosition({
@@ -170,6 +267,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint256 _protected,
         uint32 _warp
     ) internal {
+        _addLiquidity(Math.max(_collateral, _protected));
+
         bool success =
             _createPosition({_borrower: _borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
 
@@ -222,23 +321,17 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_fuzz -vv
     */
-    function test_defaulting_neverReverts_insolvency_fuzz(uint32 _collateral, uint32 _protected)
-        public
-    {
-        _defaulting_neverReverts_insolvency({
-            _borrower: borrower,
-            _collateral: _collateral,
-            _protected: _protected
-        });
+    function test_defaulting_neverReverts_insolvency_fuzz(uint32 _collateral, uint32 _protected) public {
+        _defaulting_neverReverts_insolvency({_borrower: borrower, _collateral: _collateral, _protected: _protected});
     }
 
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_withOtherBorrowers_fuzz -vv
     */
-    function test_defaulting_neverReverts_insolvency_withOtherBorrowers_fuzz(
-        uint32 _collateral,
-        uint32 _protected
-    ) public {
+    function test_defaulting_neverReverts_insolvency_withOtherBorrowers_fuzz(uint32 _collateral, uint32 _protected)
+        public
+    {
+        _addLiquidity(Math.max(_collateral, _protected));
         address otherBorrower = makeAddr("otherBorrower");
 
         bool success = _createPosition({
@@ -255,11 +348,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         uint256 debtBalanceBefore = debtShareToken.balanceOf(otherBorrower);
 
-        _defaulting_neverReverts_insolvency({
-            _borrower: borrower,
-            _collateral: _collateral,
-            _protected: _protected
-        });
+        _defaulting_neverReverts_insolvency({_borrower: borrower, _collateral: _collateral, _protected: _protected});
 
         assertEq(
             debtBalanceBefore,
@@ -274,11 +363,11 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         // collateralSilo.redeem(protectedShareToken.balanceOf(otherBorrower), otherBorrower, otherBorrower, ISilo.CollateralType.Protected);
     }
 
-    function _defaulting_neverReverts_insolvency(
-        address _borrower,
-        uint256 _collateral,
-        uint256 _protected
-    ) internal {
+    function _defaulting_neverReverts_insolvency(address _borrower, uint256 _collateral, uint256 _protected)
+        internal
+    {
+        _addLiquidity(Math.max(_collateral, _protected));
+
         bool success =
             _createPosition({_borrower: _borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
 
@@ -324,43 +413,69 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_0collateral -vv
     */
-    function test_defaulting_neverReverts_0collateral(uint256 _collateral, uint256 _protected) public {
-        _setCollateralPrice(10e18); // we need high price at begin for this test, because we need to end up wit 1:1
-        bool success = _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
+    function test_defaulting_neverReverts_0collateral(uint96 _collateral, uint96 _protected) public {
+        _setCollateralPrice(1.3e18); // we need high price at begin for this test, because we need to end up wit 1:1
+        _addLiquidity(uint256(_collateral) + _protected);
+
+        bool success =
+            _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
         vm.assume(success);
+
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
 
         // this will help with interest
         _removeLiquidity();
+        assertLe(debtSilo.getLiquidity(), 1, "liquidity should be ~0");
+
+        uint256 repayBefore = debtSilo.maxRepay(borrower);
+
         _setCollateralPrice(1e18);
 
         do {
-            vm.warp(block.timestamp + 1 days);
-        } while (silo0.getLtv(borrower) < 1e18);
+            vm.warp(block.timestamp + 10 days);
+        } while (silo0.getLtv(borrower) < 1.01e18); // 1.01 because when we do normla liquidation +2 it can be no debt after that
 
         _printLtv(borrower);
+        // we need case, where we do not oveflow on interest, so we can apply interest
+        // vm.assume(debtSilo.maxRepay(borrower) > repayBefore);
+        debtSilo.accrueInterest();
+        vm.assume(_printRevenue(debtSilo) > 0); // we need case with fees
 
         // first do normal liquidation with sTokens, to remove whole collateral,
         // price is set 1:1 so we can use collateral as max debt
         (uint256 collateralToLiquidate,,) = partialLiquidation.maxLiquidation(borrower);
         (address collateralAsset, address debtAsset) = _getTokens();
-        partialLiquidation.liquidationCall(collateralAsset, debtAsset, borrower, collateralToLiquidate, true);
+        // +2 to make sure we will get all the shares
+        partialLiquidation.liquidationCall(collateralAsset, debtAsset, borrower, collateralToLiquidate + 2, true);
 
-        (collateralToLiquidate,,) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateralToLiquidate, 0, "collateral must be taken by regular liquidation");
+        console2.log("AFTER NORMAL LIQUIDATION");
+        assertEq(silo0.getLtv(borrower), type(uint256).max, "ltv must be max if we liquidate all collateral");
+
+        (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getShareTokens(borrower);
+        assertEq(collateralShareToken.balanceOf(borrower), 0, "collateral shares must be 0");
+        assertEq(protectedShareToken.balanceOf(borrower), 0, "protected shares must be 0");
 
         assertTrue(_defaultingPossible(borrower), "defaulting should be possible even without collateral");
-        assertFalse(silo0.isSolvent(borrower), "borrower should be insolvent");
 
         _createIncentiveController();
 
         defaulting.liquidationCallByDefaulting(borrower);
+        console2.log("AFTER DEFAULTING");
 
         _printLtv(borrower);
 
         assertEq(silo0.getLtv(borrower), 0, "position should be removed");
+
         _assertNoShareTokens(silo0, borrower);
         _assertNoShareTokens(silo1, borrower);
-        _assertWithdrawableFees();
+
+        _assertNoWithdrawableFees(collateralSilo);
+        _assertWithdrawableFees(debtSilo);
+
+        // TODO exit
+        _assertEveryoneCanExit();
+
+        // TODO fees should be zero in this case, because we didnt accrue in a middle, do test with accrue interest
     }
 
     /*
@@ -387,6 +502,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         }
 
         _setCollateralPrice(_initialPrice);
+        _addLiquidity(Math.max(_collateral, _protected));
+
         bool success =
             _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
         vm.assume(success);
@@ -450,6 +567,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     {
         (uint64 _initialPrice, uint64 _changePrice, uint32 _warp, uint96 _collateral, uint96 _protected) =
             (1220675810644933940, 12095630249335940, 3116951, 2963863702, 763645);
+
+        _addLiquidity(Math.max(_collateral, _protected));
 
         bool success = _createPosition({
             _borrower: makeAddr("borrower2"),
@@ -623,18 +742,28 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         _executeMaxLiquidation(borrower);
         console2.log("regular liquidation done");
-        UserState memory userState = _getUserState(borrower);
+        UserState memory userState0 = _getUserState(silo0, borrower);
+        UserState memory userState1 = _getUserState(silo1, borrower);
 
         vm.revertToState(snapshot);
         console2.log("snapshot reverted");
 
         _executeDefaulting(borrower);
         console2.log("defaulting liquidation done");
-        UserState memory userState2 = _getUserState(borrower);
+        UserState memory userStateAfter0 = _getUserState(silo0, borrower);
+        UserState memory userStateAfter1 = _getUserState(silo1, borrower);
 
-        assertEq(userState.debtShares, userState2.debtShares, "debt shares should be the same");
-        assertEq(userState.protectedShares, userState2.protectedShares, "protected shares should be the same");
-        assertEq(userState.colalteralShares, userState2.colalteralShares, "collateral shares should be the same");
+        assertEq(userState0.debtShares, userStateAfter0.debtShares, "debt0 shares should be the same");
+        assertEq(userState0.protectedShares, userStateAfter0.protectedShares, "protected0 shares should be the same");
+        assertEq(
+            userState0.colalteralShares, userStateAfter0.colalteralShares, "collateral0 shares should be the same"
+        );
+
+        assertEq(userState1.debtShares, userStateAfter1.debtShares, "debt1 shares should be the same");
+        assertEq(userState1.protectedShares, userStateAfter1.protectedShares, "protected1 shares should be the same");
+        assertEq(
+            userState1.colalteralShares, userStateAfter1.colalteralShares, "collateral1 shares should be the same"
+        );
 
         // TODO make separate test just to see, if whatever happen user will be solvent?
         // assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");

@@ -50,13 +50,64 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
         assertEq(balance, 0, "[_assertNoShareTokens] debt");
     }
 
-    function _assertWithdrawableFees() internal {
-        silo0.withdrawFees();
-        silo1.withdrawFees();
+    function _assertWithdrawableFees(ISilo _silo) internal {
+        _silo.accrueInterest();
+
+        _printFractions(_silo);
+
+        (uint256 fees,,,,) = _silo.getSiloStorage();
+
+        assertGt(
+            fees,
+            0,
+            string.concat(
+                "[_assertWithdrawableFees] expect fees to be greater than 0 for ", vm.getLabel(address(_silo))
+            )
+        );
+
+        _silo.withdrawFees();
     }
 
-    function _assertEveryoneCanExit(ISilo _silo) internal {
-        assertGt(depositors.length, 0, "[_assertEveryoneCanExit] no depositors");
+    function _assertNoWithdrawableFees(ISilo _silo) internal {
+        _silo.accrueInterest();
+
+        vm.expectRevert(ISilo.EarnedZero.selector);
+        _silo.withdrawFees();
+
+        (uint256 fees,,,,) = _silo.getSiloStorage();
+        assertEq(
+            fees, 0, string.concat("[_assertNoWithdrawableFees] expect NO fees for ", vm.getLabel(address(_silo)))
+        );
+    }
+
+    function _assertEveryoneCanExit() internal {
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
+        // assertGt(depositors.length, 0, "[_assertEveryoneCanExit] no depositors to check");
+
+        _assertEveryoneCanExitFromSilo(collateralSilo);
+        _assertEveryoneCanExitFromSilo(debtSilo);
+
+        (address protectedShareToken,,) = siloConfig.getShareTokens(address(collateralSilo));
+
+        uint256 gaugeCollateral = collateralSilo.balanceOf(address(gauge));
+        uint256 gaugeProtected = IShareToken(protectedShareToken).balanceOf(address(gauge));
+
+        assertEq(
+            collateralSilo.totalSupply(),
+            gaugeCollateral,
+            "[_assertEveryoneCanExit] silo should have only gauge collateral"
+        );
+        assertEq(
+            IShareToken(protectedShareToken).totalSupply(),
+            gaugeProtected,
+            "[_assertEveryoneCanExit] protected share token should have only gauge protected"
+        );
+
+        assertEq(debtSilo.totalSupply(), 0, "[_assertEveryoneCanExit] debt silo should have no shares, liquidity");
+    }
+
+    function _assertEveryoneCanExitFromSilo(ISilo _silo) internal {
+        // assertGt(depositors.length, 0, "[_assertEveryoneCanExit] no depositors to check");
 
         (address protectedShareToken,,) = siloConfig.getShareTokens(address(_silo));
 
@@ -78,14 +129,14 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
         _assertNoShareTokens(_silo, _user);
     }
 
-    function _exitSilo() internal {
-        _assertEveryoneCanExit(silo0);
-        _assertEveryoneCanExit(silo1);
-        _assertWithdrawableFees();
+    // function _exitSilo() internal {
+    //     _assertEveryoneCanExit();
+    //     _assertWithdrawableFees(silo0);
+    //     _assertWithdrawableFees(silo1);
 
-        _assertShareTokensAreEmpty(silo0);
-        _assertShareTokensAreEmpty(silo1);
-    }
+    //     _assertShareTokensAreEmpty(silo0);
+    //     _assertShareTokensAreEmpty(silo1);
+    // }
 
     function _assertShareTokensAreEmpty(ISilo _silo) internal view {
         (address protectedShareToken, address collateralShareToken, address debtShareToken) =
