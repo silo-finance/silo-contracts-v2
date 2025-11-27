@@ -367,10 +367,10 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
             _getShareTokens(_borrower);
 
         userState.debtShares = (address(debtShareToken) != address(0)) ? debtShareToken.balanceOf(_borrower) : 0;
-        
+
         userState.protectedShares =
             (address(protectedShareToken) != address(0)) ? protectedShareToken.balanceOf(_borrower) : 0;
-        
+
         userState.colalteralShares =
             (address(collateralShareToken) != address(0)) ? collateralShareToken.balanceOf(_borrower) : 0;
 
