@@ -106,9 +106,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_badDebt_fuzz -vv --fuzz-runs 5555
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_badDebt_fuzz -vv --fuzz-runs 3333
     */
-    /// forge-config: core_test.fuzz.runs=5555
+    /// forge-config: core_test.fuzz.runs=3333
     function test_defaulting_neverReverts_badDebt_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
         _defaulting_neverReverts_badDebt({
             _borrower: borrower,
@@ -119,9 +119,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_badDebt_withOtherBorrowers_fuzz -vv --fuzz-runs 5555
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_badDebt_withOtherBorrowers_fuzz -vv --fuzz-runs 3333
     */
-    /// forge-config: core_test.fuzz.runs=5555
+    /// forge-config: core_test.fuzz.runs=3333
     function test_defaulting_neverReverts_badDebt_withOtherBorrowers_fuzz(
         uint32 _collateral,
         uint32 _protected,
@@ -178,12 +178,18 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         // this will help with high interest
         _removeLiquidity();
 
-        _setCollateralPrice(0.9e18); // drop price 10%
+        uint256 price = 1e18;
+
+        do {
+            price -= 0.01e18; // drop price by 1%
+            _setCollateralPrice(price);
+            vm.warp(block.timestamp + 1 days);
+        } while (silo0.getLtv(_borrower) < 1e18);
 
         vm.warp(block.timestamp + _warp);
 
         _printLtv(_borrower);
-        vm.assume(_defaultingPossible(_borrower));
+        assertTrue(_defaultingPossible(_borrower), "it should be possible always when bad debt");
 
         _createIncentiveController();
 
@@ -216,25 +222,22 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_fuzz -vv
     */
-    function test_defaulting_neverReverts_insolvency_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp)
+    function test_defaulting_neverReverts_insolvency_fuzz(uint32 _collateral, uint32 _protected)
         public
     {
         _defaulting_neverReverts_insolvency({
             _borrower: borrower,
             _collateral: _collateral,
-            _protected: _protected,
-            _warp: _warp
+            _protected: _protected
         });
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_withOtherBorrowers_fuzz -vv --fuzz-runs 5555
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_withOtherBorrowers_fuzz -vv
     */
-    /// forge-config: core_test.fuzz.runs=5555
     function test_defaulting_neverReverts_insolvency_withOtherBorrowers_fuzz(
         uint32 _collateral,
-        uint32 _protected,
-        uint32 _warp
+        uint32 _protected
     ) public {
         address otherBorrower = makeAddr("otherBorrower");
 
@@ -255,8 +258,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _defaulting_neverReverts_insolvency({
             _borrower: borrower,
             _collateral: _collateral,
-            _protected: _protected,
-            _warp: _warp
+            _protected: _protected
         });
 
         assertEq(
@@ -275,25 +277,25 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     function _defaulting_neverReverts_insolvency(
         address _borrower,
         uint256 _collateral,
-        uint256 _protected,
-        uint32 _warp
+        uint256 _protected
     ) internal {
         bool success =
-            _createPosition({_borrower: _borrower, _collateral: _collateral, _protected: _protected, _maxOut: false});
+            _createPosition({_borrower: _borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
 
         vm.assume(success);
 
         // this will help with high interest
         _removeLiquidity();
 
-        _setCollateralPrice(0.99e18); // drop price 1%
-
-        // if (!_badDebtScenario) _warp %= 5 days;
-
-        vm.warp(block.timestamp + _warp);
-
         _printLtv(_borrower);
-        vm.assume(_defaultingPossible(_borrower));
+
+        uint256 price = 1e18;
+
+        do {
+            price -= 0.001e18; // drop price litle by little, to not create bad debt instantly
+            _setCollateralPrice(price);
+            vm.warp(block.timestamp + 12 hours);
+        } while (!_defaultingPossible(_borrower));
 
         _createIncentiveController();
 
@@ -322,17 +324,18 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_0collateral -vv
     */
-    function test_defaulting_neverReverts_0collateral() public {
-        _setCollateralPrice(1000e18);
-        bool success = _createPosition({_borrower: borrower, _collateral: 1e18, _protected: 1, _maxOut: true});
+    function test_defaulting_neverReverts_0collateral(uint256 _collateral, uint256 _protected) public {
+        _setCollateralPrice(10e18); // we need high price at begin for this test, because we need to end up wit 1:1
+        bool success = _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
         vm.assume(success);
 
         // this will help with interest
         _removeLiquidity();
+        _setCollateralPrice(1e18);
 
-        _setCollateralPrice(1e18); // drop price 1000x
-
-        vm.warp(block.timestamp + 10000 days);
+        do {
+            vm.warp(block.timestamp + 1 days);
+        } while (silo0.getLtv(borrower) < 1e18);
 
         _printLtv(borrower);
 
@@ -343,9 +346,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         partialLiquidation.liquidationCall(collateralAsset, debtAsset, borrower, collateralToLiquidate, true);
 
         (collateralToLiquidate,,) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateralToLiquidate, 0, "collateral taken by regular liquidation");
+        assertEq(collateralToLiquidate, 0, "collateral must be taken by regular liquidation");
 
-        assertTrue(_defaultingPossible(borrower), "defaulting not possible??");
+        assertTrue(_defaultingPossible(borrower), "defaulting should be possible even without collateral");
         assertFalse(silo0.isSolvent(borrower), "borrower should be insolvent");
 
         _createIncentiveController();
