@@ -122,7 +122,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         _liquidateByDistributingCollateral({
             _borrower: _borrower,
-            _collateralSilo: collateralConfig.silo,
+            _debtSilo: debtConfig.silo,
             _shareToken: collateralConfig.collateralShareToken,
             _withdrawSharesForLenders: params.collateralSharesForLenders,
             _withdrawSharesForKeeper: params.collateralSharesForKeeper
@@ -130,7 +130,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         _liquidateByDistributingCollateral({
             _borrower: _borrower,
-            _collateralSilo: collateralConfig.silo,
+            _debtSilo: debtConfig.silo,
             _shareToken: collateralConfig.protectedShareToken,
             _withdrawSharesForLenders: params.protectedSharesForLenders,
             _withdrawSharesForKeeper: params.protectedSharesForKeeper
@@ -233,12 +233,12 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
     function _liquidateByDistributingCollateral(
         address _borrower,
-        address _collateralSilo,
+        address _debtSilo,
         address _shareToken,
         uint256 _withdrawSharesForLenders,
         uint256 _withdrawSharesForKeeper
     ) internal virtual {
-        ISiloIncentivesController controllerCollateral = validateControllerForCollateral(_collateralSilo);
+        ISiloIncentivesController controllerCollateral = validateControllerForCollateral(_debtSilo);
 
         // distribute collateral shares to lenders
         if (_withdrawSharesForLenders > 0) {
