@@ -107,12 +107,11 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     */
     /// forge-config: core_test.fuzz.runs=5555
     function test_defaulting_neverReverts_badDebt_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
-        _defaulting_neverReverts({
+        _defaulting_neverReverts_badDebt({
             _borrower: borrower,
             _collateral: _collateral,
             _protected: _protected,
-            _warp: _warp,
-            _badDebtScenario: true
+            _warp: _warp
         });
     }
 
@@ -121,41 +120,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     */
     /// forge-config: core_test.fuzz.runs=5555
     function test_defaulting_neverReverts_badDebt_withOtherBorrowers_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
-        _defaulting_neverReverts_withOtherBorrowers({
-            _collateral: _collateral,
-            _protected: _protected,
-            _warp: _warp,
-            _badDebtScenario: true
-        });
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_fuzz -vv
-    */
-    function test_defaulting_neverReverts_insolvency_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
-        _defaulting_neverReverts({
-            _borrower: borrower,
-            _collateral: _collateral,
-            _protected: _protected,
-            _warp: _warp,
-            _badDebtScenario: false
-        });
-    }
-    
-    /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_fuzz -vv
-    */
-    function test_defaulting_neverReverts_insolvency_withOtherBorrowers_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
-        _defaulting_neverReverts_withOtherBorrowers({
-            _collateral: _collateral,
-            _protected: _protected,
-            _warp: _warp,
-            _badDebtScenario: false
-        });
-    }
-
-    function _defaulting_neverReverts_withOtherBorrowers(uint32 _collateral, uint32 _protected, uint32 _warp, bool _badDebtScenario) public {
-        address otherBorrower = makeAddr("otherBorrower");
+       address otherBorrower = makeAddr("otherBorrower");
 
         bool success = _createPosition({
             _borrower: otherBorrower,
@@ -171,12 +136,11 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         uint256 debtBalanceBefore = debtShareToken.balanceOf(otherBorrower);
 
-        _defaulting_neverReverts({
+        _defaulting_neverReverts_badDebt({
             _borrower: borrower,
             _collateral: _collateral,
             _protected: _protected,
-            _warp: _warp,
-            _badDebtScenario: _badDebtScenario
+            _warp: _warp
         });
         
         assertEq(debtBalanceBefore, debtShareToken.balanceOf(otherBorrower), "other borrower debt should be the same before and after defaulting");
@@ -232,6 +196,55 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         // we can not assert for silo exit, because defaulting will make share value lower,
         // so there might be users who can not withdraw because convertion to assets will give 0
         //_exitSilo();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_fuzz -vv
+    */
+    function test_defaulting_neverReverts_insolvency_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
+        _defaulting_neverReverts_insolvency({
+            _borrower: borrower,
+            _collateral: _collateral,
+            _protected: _protected,
+            _warp: _warp
+        });
+    }
+    
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_withOtherBorrowers_fuzz -vv --fuzz-runs 5555
+    */
+    /// forge-config: core_test.fuzz.runs=5555
+    function test_defaulting_neverReverts_insolvency_withOtherBorrowers_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
+       address otherBorrower = makeAddr("otherBorrower");
+
+        bool success = _createPosition({
+            _borrower: otherBorrower,
+            _collateral: _collateral,
+            _protected: _protected,
+            _maxOut: false
+        });
+
+        vm.assume(success);
+
+        (,, IShareToken debtShareToken) = _getShareTokens(otherBorrower);
+        (, ISilo debtSilo) = _getSilos();
+
+        uint256 debtBalanceBefore = debtShareToken.balanceOf(otherBorrower);
+
+        _defaulting_neverReverts_insolvency({
+            _borrower: borrower,
+            _collateral: _collateral,
+            _protected: _protected,
+            _warp: _warp
+        });
+        
+        assertEq(debtBalanceBefore, debtShareToken.balanceOf(otherBorrower), "other borrower debt should be the same before and after defaulting");
+        debtSilo.repayShares(debtBalanceBefore, otherBorrower);
+        assertEq(debtShareToken.balanceOf(otherBorrower), 0, "other borrower should be able fully repay");
+
+        // TODO exit should covver that
+        // collateralSilo.redeem(collateralShareToken.balanceOf(otherBorrower), otherBorrower, otherBorrower, ISilo.CollateralType.Collateral);
+        // collateralSilo.redeem(protectedShareToken.balanceOf(otherBorrower), otherBorrower, otherBorrower, ISilo.CollateralType.Protected);
     }
     
     function _defaulting_neverReverts_insolvency(address _borrower, uint256 _collateral, uint256 _protected, uint32 _warp)
