@@ -394,8 +394,6 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
     function _useConfigName() internal view virtual returns (string memory);
 
-    function _useSameAssetPosition() internal pure virtual returns (bool);
-
     function _getSilos() internal view virtual returns (ISilo collateralSilo, ISilo debtSilo);
 
     function _getTokens() internal view virtual returns (address collateralAsset, address debtAsset);

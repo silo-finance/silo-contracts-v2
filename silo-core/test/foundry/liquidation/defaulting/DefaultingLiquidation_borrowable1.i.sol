@@ -77,8 +77,4 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
     function _useConfigName() internal pure override returns (string memory) {
         return SiloConfigsNames.SILO_LOCAL_NO_ORACLE_DEFAULTING0;
     }
-
-    function _useSameAssetPosition() internal pure override returns (bool) {
-        return false;
-    }
 }

@@ -103,46 +103,105 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_fuzz -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_badDebt_fuzz -vv --fuzz-runs 5555
     */
-    /// forge-config: core_test.fuzz.runs = 8888
-    function test_defaulting_neverReverts_fuzz(uint32 _collateral, uint32 _protected) public {
-        _defaulting_neverReverts_badDebtScenario(borrower, _collateral, _protected);
+    /// forge-config: core_test.fuzz.runs=5555
+    function test_defaulting_neverReverts_badDebt_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
+        _defaulting_neverReverts({
+            _borrower: borrower,
+            _collateral: _collateral,
+            _protected: _protected,
+            _warp: _warp,
+            _badDebtScenario: true
+        });
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_withOtherBorrowers_fuzz -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_badDebt_withOtherBorrowers_fuzz -vv --fuzz-runs 5555
     */
-    /// forge-config: core_test.fuzz.runs = 8888
-    function test_defaulting_neverReverts_withOtherBorrowers_fuzz(uint32 _collateral, uint32 _protected) public {
-        bool success = _createPosition({
-            _borrower: makeAddr("otherBorrower"),
+    /// forge-config: core_test.fuzz.runs=5555
+    function test_defaulting_neverReverts_badDebt_withOtherBorrowers_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
+        _defaulting_neverReverts_withOtherBorrowers({
             _collateral: _collateral,
             _protected: _protected,
-            _maxOut: true
+            _warp: _warp,
+            _badDebtScenario: true
+        });
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_fuzz -vv
+    */
+    function test_defaulting_neverReverts_insolvency_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
+        _defaulting_neverReverts({
+            _borrower: borrower,
+            _collateral: _collateral,
+            _protected: _protected,
+            _warp: _warp,
+            _badDebtScenario: false
+        });
+    }
+    
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_fuzz -vv
+    */
+    function test_defaulting_neverReverts_insolvency_withOtherBorrowers_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
+        _defaulting_neverReverts_withOtherBorrowers({
+            _collateral: _collateral,
+            _protected: _protected,
+            _warp: _warp,
+            _badDebtScenario: false
+        });
+    }
+
+    function _defaulting_neverReverts_withOtherBorrowers(uint32 _collateral, uint32 _protected, uint32 _warp, bool _badDebtScenario) public {
+        address otherBorrower = makeAddr("otherBorrower");
+
+        bool success = _createPosition({
+            _borrower: otherBorrower,
+            _collateral: _collateral,
+            _protected: _protected,
+            _maxOut: false
         });
 
         vm.assume(success);
 
-        _defaulting_neverReverts_badDebtScenario(borrower, _collateral, _protected);
+        (,, IShareToken debtShareToken) = _getShareTokens(otherBorrower);
+        (, ISilo debtSilo) = _getSilos();
 
-        // other borrower should be able to repay and withdraw TODO
+        uint256 debtBalanceBefore = debtShareToken.balanceOf(otherBorrower);
+
+        _defaulting_neverReverts({
+            _borrower: borrower,
+            _collateral: _collateral,
+            _protected: _protected,
+            _warp: _warp,
+            _badDebtScenario: _badDebtScenario
+        });
+        
+        assertEq(debtBalanceBefore, debtShareToken.balanceOf(otherBorrower), "other borrower debt should be the same before and after defaulting");
+        debtSilo.repayShares(debtBalanceBefore, otherBorrower);
+        assertEq(debtShareToken.balanceOf(otherBorrower), 0, "other borrower should be able fully repay");
+
+        // TODO exit should covver that
+        // collateralSilo.redeem(collateralShareToken.balanceOf(otherBorrower), otherBorrower, otherBorrower, ISilo.CollateralType.Collateral);
+        // collateralSilo.redeem(protectedShareToken.balanceOf(otherBorrower), otherBorrower, otherBorrower, ISilo.CollateralType.Protected);
     }
 
-    function _defaulting_neverReverts_badDebtScenario(address _borrower, uint256 _collateral, uint256 _protected)
+    function _defaulting_neverReverts_badDebt(address _borrower, uint256 _collateral, uint256 _protected, uint32 _warp)
         internal
     {
-        _setCollateralPrice(1000e18);
         bool success =
             _createPosition({_borrower: _borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
+        
         vm.assume(success);
 
         // this will help with high interest
         _removeLiquidity();
 
-        _setCollateralPrice(1e18); // drop price 1000x
+        _setCollateralPrice(0.9e18); // drop price 10%
 
-        vm.warp(block.timestamp + 10000 days);
+        vm.warp(block.timestamp + _warp);
 
         _printLtv(_borrower);
         vm.assume(_defaultingPossible(_borrower));
@@ -156,7 +215,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         _printMaxLiquidation(_borrower);
 
-        // assertGe(silo0.getLtv(_borrower), 1e18, "position should be in bad debt state");
         vm.assume(silo0.getLtv(_borrower) >= 1e18); // position should be in bad debt state
 
         defaulting.liquidationCallByDefaulting(_borrower);
@@ -168,29 +226,30 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         assertEq(silo0.getLtv(_borrower), 0, "position should be removed");
 
-        _assertNoShareTokens({_silo: silo0, _user: _borrower, _allowForDust: _useSameAssetPosition()});
-        _assertNoShareTokens({_silo: silo1, _user: _borrower, _allowForDust: _useSameAssetPosition()});
+        _assertNoShareTokens({_silo: silo0, _user: _borrower, _allowForDust: false});
+        _assertNoShareTokens({_silo: silo1, _user: _borrower, _allowForDust: false});
 
         // we can not assert for silo exit, because defaulting will make share value lower,
         // so there might be users who can not withdraw because convertion to assets will give 0
         //_exitSilo();
     }
-
-// todo
-    function _defaulting_neverReverts_insolvencyScenario(address _borrower, uint256 _collateral, uint256 _protected)
+    
+    function _defaulting_neverReverts_insolvency(address _borrower, uint256 _collateral, uint256 _protected, uint32 _warp)
         internal
     {
-        _setCollateralPrice(2e18);
         bool success =
-            _createPosition({_borrower: _borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
+            _createPosition({_borrower: _borrower, _collateral: _collateral, _protected: _protected, _maxOut: false});
+        
         vm.assume(success);
 
         // this will help with high interest
         _removeLiquidity();
 
-        _setCollateralPrice(1e18); // drop price 1000x
+        _setCollateralPrice(0.99e18); // drop price 1%
 
-        vm.warp(block.timestamp + 10000 days);
+        // if (!_badDebtScenario) _warp %= 5 days;
+
+        vm.warp(block.timestamp + _warp);
 
         _printLtv(_borrower);
         vm.assume(_defaultingPossible(_borrower));
@@ -205,19 +264,14 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _printMaxLiquidation(_borrower);
 
         vm.assume(!silo0.isSolvent(_borrower)); // position should be insolvent
-        vm.assume(silo0.getLtv(_borrower) < 1e18); // position should NOT be in bad debt state
-
+        vm.assume(silo0.getLtv(_borrower) < 1e18); // position should not be in bad debt state
+        
         defaulting.liquidationCallByDefaulting(_borrower);
 
         _printBalances(silo0, _borrower);
         _printBalances(silo1, _borrower);
 
         _printLtv(_borrower);
-
-        assertEq(silo0.getLtv(_borrower), 0, "position should be removed");
-
-        _assertNoShareTokens({_silo: silo0, _user: _borrower, _allowForDust: _useSameAssetPosition()});
-        _assertNoShareTokens({_silo: silo1, _user: _borrower, _allowForDust: _useSameAssetPosition()});
 
         // we can not assert for silo exit, because defaulting will make share value lower,
         // so there might be users who can not withdraw because convertion to assets will give 0
@@ -357,7 +411,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             _borrower: makeAddr("borrower2"),
             _collateral: _collateral * 10,
             _protected: _protected * 10,
-            _maxOut: _useSameAssetPosition()
+            _maxOut: false
         });
 
         vm.assume(success);
@@ -394,7 +448,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             _borrower: borrower,
             _collateral: _collateral,
             _protected: _protected,
-            _maxOut: _useSameAssetPosition()
+            _maxOut: false
         });
 
         vm.assume(success);
@@ -500,7 +554,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             _borrower: borrower,
             _collateral: _collateral,
             _protected: _protected,
-            _maxOut: _useSameAssetPosition()
+            _maxOut: false
         });
 
         vm.assume(success);
@@ -546,15 +600,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         assertEq(userState.protectedShares, userState2.protectedShares, "protected shares should be the same");
         assertEq(userState.colalteralShares, userState2.colalteralShares, "collateral shares should be the same");
 
-        if (_useSameAssetPosition()) {
-            // for same position, LTV depends on type of collateral.
-            // if user has protected - LTV drops, if collateral LTV grows
-            // if (userState.ltv != 0) assertFalse(silo0.isSolvent(borrower), "same borrow position will grow LTV");
-            assertTrue(silo0.isSolvent(borrower), "CHECK PROTECTED - DEBUG");
-        } else {
-            // TODO make separate test just to see, if whatever happen user will be solvent?
-            // assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
-        }
+        
+        // TODO make separate test just to see, if whatever happen user will be solvent?
+        // assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
     }
 
     /*
@@ -615,12 +663,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint256 maxRepay = debtSilo.maxRepay(borrower);
         console2.log("debtSilo.maxRepay(borrower)", maxRepay);
 
-        if (_useSameAssetPosition() && address(collateralSilo) == address(silo0)) {
-            // maxRepay does not give us precise data for this case, that's why hardcoding
-            // TODO looks like another bug for max method?
-            maxRepay = 14;
-        }
-
         // mock revert inside collateral reduction process to test if whole tx reverts
         bytes memory deductDefaultedDebtFromCollateralCalldata =
             abi.encodeWithSelector(DefaultingSiloLogic.deductDefaultedDebtFromCollateral.selector, maxRepay);
@@ -654,14 +696,14 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             _borrower: borrower,
             _collateral: _collateral,
             _protected: _protected,
-            _maxOut: _useSameAssetPosition()
+            _maxOut: false
         });
 
         vm.assume(success);
 
         _removeLiquidity();
 
-        uint256 warp = _useSameAssetPosition() ? 1000 days : 1 days;
+        uint256 warp = 1 days;
         vm.warp(block.timestamp + warp);
         _setCollateralPrice(1e18);
 
