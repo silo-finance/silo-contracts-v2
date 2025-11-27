@@ -31,12 +31,18 @@ contract SiloDeployerIntegrationTest is Test {
     /*
     FOUNDRY_PROFILE=core_test RPC_URL=$RPC_INK forge test -vv --ffi --mt test_compateToOldDeployer
     */
-    function test_compateToOldDeployer() public view {
+    function test_compateToOldDeployer() public {
         string memory i = " (This is verification test, adjust it when needed)";
         SiloDeployer oldDeployer = _getPreviousDeployer();
 
         console2.log("chain alias", ChainsLib.chainAlias());
-        assertNotEq(address(oldDeployer), address(0), string.concat("Previous deployer not found", i));
+
+        if(address(oldDeployer) == address(0)) {
+            console2.log("Previous deployer not found, ignoring test");
+            return;
+        }
+
+        assertNotEq(address(oldDeployer), address(siloDeployer), string.concat("Update old deployer address, it is the same as new one", i));
 
         bool irmConfigFactoryMatch = oldDeployer.IRM_CONFIG_FACTORY() == siloDeployer.IRM_CONFIG_FACTORY();
         bool dynamicKinkModelFactoryMatch;
@@ -61,7 +67,7 @@ contract SiloDeployerIntegrationTest is Test {
         _printMatch(shareDebtTokenImplMatch, SiloCoreContracts.SHARE_DEBT_TOKEN);
     }
 
-    function _getPreviousDeployer() internal view returns (SiloDeployer) {
+    function _getPreviousDeployer() internal returns (SiloDeployer) {
         uint256 chainId = ChainsLib.getChainId();
 
         if (chainId == ChainsLib.AVALANCHE_CHAIN_ID) {
@@ -76,6 +82,12 @@ contract SiloDeployerIntegrationTest is Test {
             return SiloDeployer(address(0));
         } else if (chainId == ChainsLib.ARBITRUM_ONE_CHAIN_ID) {
             return SiloDeployer(0x1bdeBe3C773452e1f8FBE338fF4139539D9bC2f4);
+        } else if (chainId == ChainsLib.INJECTIVE_CHAIN_ID) {
+            // we have fresh deployment on Injective, no need to use old deployer
+            // so if current is this address we return address(0)
+            address current = _getDeployedAddress(SiloCoreContracts.SILO_DEPLOYER);
+            if (current == address(0xc4832aEbD785d9A35608E9Abc5d644A2e616311d)) return SiloDeployer(address(0));
+            else return SiloDeployer(current);
         }
 
         revert("Chain not supported");
