@@ -437,6 +437,8 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
             price -= _priceDrop;
             _setCollateralPrice(price);
             vm.warp(block.timestamp + _warp);
+
+            // vm.assume(!_isOracleThrowing(_borrower));
         }
     }
 

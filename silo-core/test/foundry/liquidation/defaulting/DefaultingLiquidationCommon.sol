@@ -597,6 +597,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         if (_badDebtCasesOnly) {
             _removeLiquidity();
             _setCollateralPrice(changePrice);
+            vm.assume(!_isOracleThrowing(borrower));
             vm.warp(block.timestamp + _warp);
         } else {
             vm.assume(_printLtv(borrower) < 1e18);
@@ -608,7 +609,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         // if oracle is throwing, we can not test anything
         vm.assume(!_isOracleThrowing(borrower));
-
 
         _createIncentiveController();
 
