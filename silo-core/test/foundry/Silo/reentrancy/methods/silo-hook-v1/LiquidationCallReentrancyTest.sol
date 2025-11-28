@@ -29,13 +29,13 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
 
         (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
 
-        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
+        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
 
-        token1.mint(borrower, debtToRepay); // mint extra
+        token0.mint(borrower, debtToRepay); // mint extra
 
         vm.prank(borrower);
-        token1.approve(address(partialLiquidation), type(uint256).max);
+        token0.approve(address(partialLiquidation), type(uint256).max);
 
         // Enable reentrancy to check in the test so we can check it during the liquidation.
         TestStateLib.enableReentrancy();
@@ -44,15 +44,15 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         bool receiveSTokens = true;
 
         vm.prank(borrower);
-        partialLiquidation.liquidationCall(address(token0), address(token1), borrower, debtToRepay, receiveSTokens);
+        partialLiquidation.liquidationCall(address(token1), address(token0), borrower, debtToRepay, receiveSTokens);
 
         TestStateLib.setReenterViaLiquidationCall(false);
     }
 
     function verifyReentrancy() external {
         ISiloConfig siloConfig = TestStateLib.siloConfig();
-        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
+        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         address hookReceiver = TestStateLib.hookReceiver();
         bool receiveSTokens = true;
 
@@ -69,9 +69,10 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
 
         IPartialLiquidation partialLiquidation = IPartialLiquidation(hookReceiver);
 
+        uint256 collateralToLiquidate;
         uint256 debtToRepay;
 
-        (, debtToRepay,) = partialLiquidation.maxLiquidation(borrowerOnReentrancy);
+        (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrowerOnReentrancy);
 
         vm.prank(borrowerOnReentrancy);
 
@@ -82,7 +83,7 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         }
 
         partialLiquidation.liquidationCall(
-            address(token0), address(token1), borrowerOnReentrancy, debtToRepay, receiveSTokens
+            address(token1), address(token0), borrowerOnReentrancy, debtToRepay, receiveSTokens
         );
     }
 
@@ -91,71 +92,67 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
     }
 
     function _createInsolventBorrower(address _depositor, address _borrower) internal {
-        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
-        ISilo silo1 = TestStateLib.silo1();
+        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
         uint256 liquidityForBorrow = 100e18;
         uint256 collateralAmount = liquidityForBorrow;
 
-        token1.mint(_depositor, liquidityForBorrow);
+        token0.mint(_depositor, liquidityForBorrow);
 
         vm.prank(_depositor);
-        token1.approve(address(silo1), liquidityForBorrow);
+        token0.approve(address(silo0), liquidityForBorrow);
 
         vm.prank(_depositor);
-        silo1.deposit(liquidityForBorrow, _depositor);
+        silo0.deposit(liquidityForBorrow, _depositor);
 
-        token0.mint(_borrower, collateralAmount);
-
-        vm.prank(_borrower);
-        token0.approve(address(silo0), collateralAmount);
+        token1.mint(_borrower, collateralAmount);
 
         vm.prank(_borrower);
-        silo0.deposit(collateralAmount, _borrower);
+        token1.approve(address(silo1), collateralAmount);
 
-        uint256 siloBalance = token1.balanceOf(address(silo1));
-        uint256 maxBorrow = silo1.maxBorrow(_borrower);
+        vm.prank(_borrower);
+        silo1.deposit(collateralAmount, _borrower);
+
+        uint256 siloBalance = token0.balanceOf(address(silo0));
+        uint256 maxBorrow = silo0.maxBorrow(_borrower);
 
         if (maxBorrow == 0) {
             liquidityForBorrow *= 200;
 
-            token1.mint(_depositor, liquidityForBorrow);
+            token0.mint(_depositor, liquidityForBorrow);
 
             vm.prank(_depositor);
-            token1.approve(address(silo1), liquidityForBorrow);
+            token0.approve(address(silo0), liquidityForBorrow);
 
             vm.prank(_depositor);
-            silo1.deposit(liquidityForBorrow, _depositor);
+            silo0.deposit(liquidityForBorrow, _depositor);
 
-            maxBorrow = silo1.maxBorrow(_borrower);
+            maxBorrow = silo0.maxBorrow(_borrower);
         }
-
-        assertGt(maxBorrow, 0, "maxBorrow is still 0, something is wrong - check json config for silo");
 
         if (maxBorrow > siloBalance) {
             maxBorrow = siloBalance;
         }
 
-        assertGt(maxBorrow, 0.2e18, "maxBorrow is less than 0.2e18");
-
         maxBorrow -= 0.2e18;
 
         vm.prank(_borrower);
-        silo1.borrow(maxBorrow, _borrower, _borrower);
+        silo0.borrow(maxBorrow, _borrower, _borrower);
 
         _makeUserInsolvent(_borrower);
     }
 
     function _makeUserInsolvent(address _borrower) internal {
-        ISilo silo1 = TestStateLib.silo1();
+        ISilo silo0 = TestStateLib.silo0();
 
-        bool isSolvent = silo1.isSolvent(_borrower);
+        bool isSolvent = silo0.isSolvent(_borrower);
 
         while (isSolvent) {
             vm.warp(block.timestamp + 200 days);
 
-            isSolvent = silo1.isSolvent(_borrower);
+            isSolvent = silo0.isSolvent(_borrower);
         }
     }
 }
