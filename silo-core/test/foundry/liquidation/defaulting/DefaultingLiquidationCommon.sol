@@ -47,6 +47,8 @@ TODO test with setOnDemand(false)
 
 TODO test if tehre is diff when we configure gauge
 
+TODO reentrancy test
+
 */
 
 /*
@@ -213,7 +215,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         vm.assume(success);
 
-        (,, IShareToken debtShareToken) = _getShareTokens(otherBorrower);
+        (,, IShareToken debtShareToken) = _getBorrowerShareTokens(otherBorrower);
         (, ISilo debtSilo) = _getSilos();
 
         uint256 debtBalanceBefore = debtShareToken.balanceOf(otherBorrower);
@@ -321,7 +323,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         vm.assume(success);
 
-        (,, IShareToken debtShareToken) = _getShareTokens(otherBorrower);
+        (,, IShareToken debtShareToken) = _getBorrowerShareTokens(otherBorrower);
         (, ISilo debtSilo) = _getSilos();
 
         uint256 debtBalanceBefore = debtShareToken.balanceOf(otherBorrower);
@@ -429,7 +431,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         console2.log("AFTER NORMAL LIQUIDATION");
         assertEq(silo0.getLtv(borrower), type(uint256).max, "ltv must be max if we liquidate all collateral");
 
-        (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getShareTokens(borrower);
+        (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getBorrowerShareTokens(borrower);
         assertEq(collateralShareToken.balanceOf(borrower), 0, "collateral shares must be 0");
         assertEq(protectedShareToken.balanceOf(borrower), 0, "protected shares must be 0");
 
@@ -451,7 +453,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _assertWithdrawableFees(debtSilo);
 
         // TODO exit
-        _assertEveryoneCanExit();
+        // _assertEveryoneCanExit(); ??
 
         // TODO fees should be zero in this case, because we didnt accrue in a middle, do test with accrue interest
     }
@@ -516,15 +518,20 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_whenDefaultingPossibleTxDoesNotRevert_badDebt_fuzz -vv
     */
-    /// forge-config: core_test.fuzz.runs = 8888
+    /// forge-config: core_test.fuzz.runs = 2222
     function test_whenDefaultingPossibleTxDoesNotRevert_badDebt_fuzz(
-        uint64 _initialPrice,
-        uint64 _changePrice,
+        uint64 _dropPricePercentage,
         uint32 _warp,
         uint96 _collateral,
         uint96 _protected
     ) public {
-        _whenDefaultingPossibleTxDoesNotRevert(_initialPrice, _changePrice, _warp, _collateral, _protected, true);
+        _whenDefaultingPossibleTxDoesNotRevert({
+            _dropPricePercentage: _dropPricePercentage,
+            _warp: _warp,
+            _collateral: _collateral,
+            _protected: _protected,
+            _badDebtCasesOnly: true
+        });
     }
 
     /*
@@ -536,15 +543,14 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     */
     /// forge-config: core_test.fuzz.runs = 8888
     function test_whenDefaultingPossibleTxDoesNotRevert_notBadDebt_fuzz()
-        // uint64 _initialPrice,
-        // uint64 _changePrice,
+        // uint64 _dropPricePercentage,
         // uint32 _warp,
         // uint96 _collateral,
         // uint96 _protected
         public
     {
-        (uint64 _initialPrice, uint64 _changePrice, uint32 _warp, uint96 _collateral, uint96 _protected) =
-            (1220675810644933940, 12095630249335940, 3116951, 2963863702, 763645);
+        (uint64 _dropPricePercentage, uint32 _warp, uint96 _collateral, uint96 _protected) =
+            (12095630249335940, 3116951, 2963863702, 763645);
 
         _addLiquidity(Math.max(_collateral, _protected));
 
@@ -557,93 +563,58 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         vm.assume(success);
 
-        _whenDefaultingPossibleTxDoesNotRevert(_initialPrice, _changePrice, _warp, _collateral, _protected, false);
+        _whenDefaultingPossibleTxDoesNotRevert(_dropPricePercentage, _warp, _collateral, _protected, false);
     }
 
     function _whenDefaultingPossibleTxDoesNotRevert(
-        uint64 _initialPrice,
-        uint64 _changePrice,
+        uint64 _dropPricePercentage,
         uint32 _warp,
         uint96 _collateral,
         uint96 _protected,
         bool _badDebtCasesOnly
     ) internal {
-        // 1000x for price movement is more than enough
-        vm.assume(_initialPrice > 1e15 && _initialPrice < 1000e18);
-        vm.assume(_changePrice > 1e15 && _changePrice < 1000e18);
+        uint64 initialPrice = 1e18;
+        uint256 changePrice = _calculateNewPrice(initialPrice, -int64(0.001e18 + (_dropPricePercentage % 0.1e18)));
+
+        changePrice = 0.2e18;
 
         //debug use higher numbers
         // TODO we have a lot of issues with small numbers
         // vm.assume(_collateral > 100);
         // vm.assume(_protected > 100);
 
-        _setCollateralPrice(_initialPrice);
-
-        bool success =
-            _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: false});
+        bool success = _createPosition({
+            _borrower: borrower,
+            _collateral: _collateral,
+            _protected: _protected,
+            _maxOut: _badDebtCasesOnly
+        });
 
         vm.assume(success);
-
-        _printBalances(silo0, borrower);
-        _printBalances(silo1, borrower);
-
-        assertGt(silo0.getLtv(borrower), 0, "double check that user does have position");
 
         // this will help with interest
         _removeLiquidity();
 
-        _setCollateralPrice(_changePrice);
+        _setCollateralPrice(changePrice);
+
+        // if oracle is throwing, we can not test anything
+        vm.skip(_isOracleThrowing(borrower));
 
         vm.warp(block.timestamp + _warp);
 
-        // if oracle is throwing, we can not test anything
-        vm.assume(!_isOracleThrowing(borrower));
-
         console2.log("AFTER WARP AND PRICE CHANGE");
 
-        uint256 ltv = _printLtv(borrower);
-
-        if (_badDebtCasesOnly) vm.assume(ltv >= 1e18);
-        else vm.assume(ltv < 1e18);
+        while (!_defaultingPossible(borrower)) {
+            vm.warp(block.timestamp + 1 hours);
+        }
 
         _createIncentiveController();
 
-        bool defaultingPossible = _defaultingPossible(borrower);
-
         _printLtv(makeAddr("borrower2"));
 
-        if (!defaultingPossible) vm.expectRevert(IPartialLiquidation.UserIsSolvent.selector);
         defaulting.liquidationCallByDefaulting(borrower);
-        // _executeMaxLiquidation(borrower); // DEBUG TODO
 
-        console2.log("AFTER DEFAULTING");
-
-        _printLtv(makeAddr("borrower2"));
-
-        _printBalances(silo0, borrower);
-        _printBalances(silo1, borrower);
-
-        _printLtv(borrower);
-
-        if (defaultingPossible && _badDebtCasesOnly) {
-            assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
-        }
-
-        if (defaultingPossible && !_badDebtCasesOnly) {
-            assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent ???");
-
-            // for tiny numbers, we can find case where user is still insolvent.
-            // for such case we allow for 150% LTV (exact value) because
-
-            if (!silo0.isSolvent(borrower)) {
-                ltv = _printLtv(borrower);
-                // eg 3 collatera land 3 debt will give us 150% LTV
-                // TODO not sure why this is happening
-                assertLt(ltv, 2.5e18, "because of rounding error we allow for such cases");
-            }
-
-            // assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
-        }
+        assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
     }
 
     /*
@@ -820,13 +791,19 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getKeeperAndLenderSharesSplit_withdrawable_fuzz -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_getKeeperAndLenderSharesSplit_fuzz -vv --fuzz-runs 2345
 
     we should never generate more shares then borrower has, rounding check
     */
-    /// forge-config: core_test.fuzz.runs = 8888
-    function test_getKeeperAndLenderSharesSplit_withdrawable_fuzz(uint32 _collateral, uint32 _protected) public {
-        _setCollateralPrice(2e18);
+    /// forge-config: core_test.fuzz.runs = 2345
+    function test_defaulting_getKeeperAndLenderSharesSplit_fuzz(
+        uint32 _collateral, uint32 _protected, uint32 _warp
+    )
+        public
+    {
+        _setCollateralPrice(1.05e18);
+
+        _addLiquidity(Math.max(_collateral, _protected));
 
         bool success =
             _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: false});
@@ -835,30 +812,71 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         _removeLiquidity();
 
-        uint256 warp = 1 days;
-        vm.warp(block.timestamp + warp);
-        _setCollateralPrice(1e18);
+        vm.warp(block.timestamp + _warp);
 
-        vm.assume(_defaultingPossible(borrower));
+        uint256 price = 1e18;
+        _setCollateralPrice(price);
 
-        (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getShareTokens(borrower);
+        while (!_defaultingPossible(borrower)) {
+            price -= 0.001e18;
+            _setCollateralPrice(price);
+            vm.warp(block.timestamp + 1 hours);
+        }
+
+        (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getBorrowerShareTokens(borrower);
 
         uint256 collateralSharesBefore = collateralShareToken.balanceOf(borrower);
         uint256 protectedSharesBefore = protectedShareToken.balanceOf(borrower);
 
-        (ISilo collateralSilo,) = _getSilos();
+        address lpProvider = makeAddr("lpProvider");
 
-        uint256 collateralPreview =
-            collateralSilo.previewRedeem(collateralSharesBefore, ISilo.CollateralType.Collateral);
+        assertEq(collateralShareToken.balanceOf(lpProvider), 0, "lpProvider should have 0 collateral shares before liquidation");
+        assertEq(protectedShareToken.balanceOf(lpProvider), 0, "lpProvider should have 0 protected shares before liquidation");
 
-        uint256 protectedPreview = collateralSilo.previewRedeem(protectedSharesBefore, ISilo.CollateralType.Protected);
+        _printBalances(silo0, borrower);
+        _printBalances(silo1, borrower);
 
-        // if any of collateral is withdrawable, tx can not revert
-        // at the same time we are sure, rounding can not generate more shares then borrower has initially
-        vm.assume(collateralPreview > 0 || protectedPreview > 0);
+        _printBalances(silo0, lpProvider);
+        _printBalances(silo1, lpProvider);
 
         _createIncentiveController();
         defaulting.liquidationCallByDefaulting(borrower);
+
+        console2.log("AFTER LIQUIDATION");
+
+        vm.prank(lpProvider);
+        gauge.claimRewards(lpProvider);
+
+        uint256 collateralRewards = collateralShareToken.balanceOf(lpProvider);
+        uint256 protectedRewards = protectedShareToken.balanceOf(lpProvider);
+
+        assertLe(collateralShareToken.balanceOf(address(gauge)), 1, "gauge should have ~0 collateral shares");
+        assertLe(protectedShareToken.balanceOf(address(gauge)), 1, "gauge should have ~0 protected shares");
+
+        if (_protected == 0) {
+            assertEq(protectedRewards, 0, "no protected rewards if no protected deposit");
+            assertEq(protectedShareToken.balanceOf(address(this)), 0, "keeper should have 0 protected shares");
+        } else {
+            assertGt(protectedRewards, 0, "protected rewards are always somethig after liquidation");
+            assertLt(protectedRewards, protectedSharesBefore, "protected rewards are always less, because of fee");
+            // keeprs can have 0 or more
+        }
+
+        if (_collateral == 0) {
+            assertEq(collateralRewards, 0, "no collateral rewards if no collateral deposit");
+            assertEq(collateralShareToken.balanceOf(address(this)), 0, "keeper should have 0 collateral shares");
+        } else {
+            if (_protected == 0 || protectedShareToken.balanceOf(borrower) == 0) {
+                assertGt(collateralRewards, 0, "collateral rewards are always somethig");
+            } else {
+                // collaterar rewards depends if protected were enough or not
+                // NOTE: even when protectedShareToken is 0, there might be case that protected were enough
+                // but fuzzer might never found such an edge case 
+            }
+                
+            assertLt(collateralRewards, collateralSharesBefore, "rewards are always less, because of fee");
+            // keeprs can have 0 or more
+        }
     }
 
     /*

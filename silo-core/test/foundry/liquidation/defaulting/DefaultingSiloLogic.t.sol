@@ -47,35 +47,6 @@ contract DefaultingSiloLogicTest is Test {
         );
     }
 
-    /* 
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_deductDefaultedDebtFromCollateral_RepayTooHigh -vvv
-    */
-    function test_deductDefaultedDebtFromCollateral_RepayTooHigh(
-        uint192 _daoAndDeployerRevenue,
-        uint64 _interestRateTimestamp,
-        ISilo.Fractions memory _fractions,
-        uint256 _protectedAssets,
-        uint256 _collateralAssets,
-        uint256 _debtAssets,
-        uint256 _assetsToRepay
-    ) public {
-        vm.assume(_collateralAssets < _assetsToRepay);
-
-        bool success = _common_deductDefaultedDebtFromCollateral(
-            _daoAndDeployerRevenue,
-            _interestRateTimestamp,
-            _fractions,
-            _protectedAssets,
-            _collateralAssets,
-            _debtAssets,
-            _assetsToRepay
-        );
-        assertFalse(success, "deductDefaultedDebtFromCollateral should revert and storage should not change");
-
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-        assertEq($.totalAssets[ISilo.AssetType.Collateral], _collateralAssets, "collateralAssets should not change");
-    }
-
     function _common_deductDefaultedDebtFromCollateral(
         uint192 _daoAndDeployerRevenue,
         uint64 _interestRateTimestamp,

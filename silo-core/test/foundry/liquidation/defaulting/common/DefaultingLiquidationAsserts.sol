@@ -19,9 +19,7 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
     /// 11 assets back to shares, we will get eg 3929 (with rounding up), bacause of that dust will be left
     /// this case was observed so far in same assets positions.
     function _assertNoShareTokens(ISilo _silo, address _user, bool _allowForDust) internal view {
-        console2.log(
-            "[_assertNoShareTokens] on silo %s for user %s", vm.getLabel(address(_silo)), vm.getLabel(_user)
-        );
+        console2.log("[_assertNoShareTokens] on silo %s for user %s", vm.getLabel(address(_silo)), vm.getLabel(_user));
 
         (address collateralShareToken, address protectedShareToken, address debtShareToken) =
             siloConfig.getShareTokens(address(_silo));
@@ -120,14 +118,22 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
     function _assertUserCanExit(ISilo _silo, IShareToken _protected, address _user) internal {
         vm.startPrank(_user);
         uint256 balance = _silo.balanceOf(_user);
-        emit log_named_decimal_uint(string.concat("[", vm.getLabel(address(_silo)), "] ", vm.getLabel(_user), " shares"), balance, 18);
+        emit log_named_decimal_uint(
+            string.concat("[", vm.getLabel(address(_silo)), "] ", vm.getLabel(_user), " shares"), balance, 18
+        );
         emit log_named_decimal_uint("preview to assets", _silo.previewRedeem(balance), 18);
         emit log_named_decimal_uint("liquidity", _silo.getLiquidity(), 18);
         if (balance != 0) _silo.redeem(balance, _user, _user);
 
         balance = _protected.balanceOf(_user);
-        emit log_named_decimal_uint(string.concat("[", vm.getLabel(address(_silo)), "] ", vm.getLabel(_user), " protected shares"), balance, 18);
-        emit log_named_decimal_uint("preview to assets", _silo.previewRedeem(balance, ISilo.CollateralType.Protected), 18);
+        emit log_named_decimal_uint(
+            string.concat("[", vm.getLabel(address(_silo)), "] ", vm.getLabel(_user), " protected shares"),
+            balance,
+            18
+        );
+        emit log_named_decimal_uint(
+            "preview to assets", _silo.previewRedeem(balance, ISilo.CollateralType.Protected), 18
+        );
         if (balance != 0) _silo.redeem(balance, _user, _user, ISilo.CollateralType.Protected);
         vm.stopPrank();
 

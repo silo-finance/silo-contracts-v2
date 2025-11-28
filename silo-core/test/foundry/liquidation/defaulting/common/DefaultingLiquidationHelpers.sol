@@ -167,14 +167,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
         depositors.push(_borrower);
 
-        _printBalances(silo0, _borrower);
-        _printBalances(silo1, _borrower);
-
         uint256 maxBorrow = _maxBorrow(_borrower);
-        console2.log("maxBorrow", maxBorrow);
-        console2.log("liquidity0", silo0.getLiquidity());
-        console2.log("liquidity1", silo1.getLiquidity());
-
         if (maxBorrow == 0) return false;
 
         success = _executeBorrow(_borrower, maxBorrow);
@@ -182,46 +175,36 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
         _printLtv(_borrower);
 
-        if (_maxOut) {
-            vm.startPrank(_borrower);
+        if (!_maxOut) return success;
 
-            uint256 maxWithdraw;
-            try collateralSilo.maxWithdraw(_borrower) returns (uint256 _maxWithdraw) {
-                maxWithdraw = _maxWithdraw;
-            } catch {
-                // this can happen when price change and we will get ZeroQuote
-                console2.log("\tmaxWithdraw #1 failed");
-            }
+        _tryWithdrawMax(_borrower, collateralSilo, ISilo.CollateralType.Collateral);
+        _tryWithdrawMax(_borrower, collateralSilo, ISilo.CollateralType.Protected);
 
-            if (maxWithdraw != 0) {
-                try collateralSilo.withdraw(maxWithdraw, _borrower, _borrower) {
-                    // nothing to do
-                } catch {
-                    // this can happen when price change and we will get ZeroQuote
-                    console2.log("\twithdraw #1 failed");
-                }
-            }
+        _printLtv(_borrower);
+    }
 
-            try collateralSilo.maxWithdraw(_borrower, ISilo.CollateralType.Protected) returns (uint256 _maxWithdraw) {
-                maxWithdraw = _maxWithdraw;
-            } catch {
-                // this can happen when price change and we will get ZeroQuote
-                console2.log("\tmaxWithdraw #2 failed");
-            }
+    function _tryWithdrawMax(address _user, ISilo _silo, ISilo.CollateralType _collateralType) internal {
+        uint256 amount;
 
-            if (maxWithdraw != 0) {
-                try collateralSilo.withdraw(maxWithdraw, _borrower, _borrower, ISilo.CollateralType.Protected) {
-                    // nothing to do
-                } catch {
-                    // this can happen when price change and we will get ZeroQuote
-                    console2.log("\twithdraw #2 failed");
-                }
-            }
-
-            vm.stopPrank();
-
-            _printLtv(_borrower);
+        try _silo.maxRedeem(_user, _collateralType) returns (uint256 _maxWithdraw) {
+            amount = _maxWithdraw;
+        } catch {
+            // this can happen when price change and we will get ZeroQuote
+            console2.log("\tmmaxRedeem failed", vm.getLabel(address(_silo)));
         }
+
+        if (amount == 0) return;
+
+        vm.startPrank(_user);
+
+        try _silo.redeem(amount, _user, _user, _collateralType) {
+            // nothing to do
+        } catch {
+            // this can happen when price change and we will get ZeroQuote
+            console2.log("\tredeem failed", vm.getLabel(address(_silo)));
+        }
+
+        vm.stopPrank();
     }
 
     function _printBalances(ISilo _silo, address _user) internal view {
@@ -353,7 +336,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         console2.log(vm.getLabel(address(_silo)), "revenue", revenue);
     }
 
-    function _getShareTokens(address _borrower)
+    function _getBorrowerShareTokens(address _borrower)
         internal
         view
         virtual
@@ -362,11 +345,11 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         (ISiloConfig.ConfigData memory collateralConfig, ISiloConfig.ConfigData memory debtConfig) =
             siloConfig.getConfigsForSolvency(_borrower);
 
-        return (
-            IShareToken(collateralConfig.protectedShareToken),
-            IShareToken(collateralConfig.collateralShareToken),
-            IShareToken(debtConfig.debtShareToken)
-        );
+        require(debtConfig.silo != address(0), "NOT A BORROWER");
+
+        protectedShareToken = IShareToken(collateralConfig.protectedShareToken);
+        collateralShareToken = IShareToken(collateralConfig.collateralShareToken);
+        debtShareToken = IShareToken(debtConfig.debtShareToken);
     }
 
     function _executeDefaulting(address _borrower) internal returns (bool success) {
@@ -436,6 +419,17 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         newPrice = uint64(int64(int256(uint256(_initialPrice)) + diff));
     }
 
+    /// @dev make sure it does not throw!
+    function _maxBorrow(address _borrower) internal view returns (uint256) {
+        (, ISilo debtSilo) = _getSilos();
+
+        try debtSilo.maxBorrow(_borrower) returns (uint256 _max) {
+            return _max;
+        } catch {
+            return 0;
+        }
+    }
+
     // CONFIGURATION
 
     function _useConfigName() internal view virtual returns (string memory);
@@ -443,9 +437,6 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     function _getSilos() internal view virtual returns (ISilo collateralSilo, ISilo debtSilo);
 
     function _getTokens() internal view virtual returns (address collateralAsset, address debtAsset);
-
-    /// @dev make sure it does not throw!
-    function _maxBorrow(address _borrower) internal view virtual returns (uint256);
 
     function _executeBorrow(address _borrower, uint256 _amount) internal virtual returns (bool success);
 }
