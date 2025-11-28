@@ -547,9 +547,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint32 _warp,
         uint48 _collateral,
         uint48 _protected
-    )
-        public
-    {
+    ) public {
         // (uint64 _dropPricePercentage, uint32 _warp, uint96 _collateral, uint96 _protected) =
         //     (12095630249335940, 3116951, 2963863702, 763645);
 
@@ -564,7 +562,13 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         vm.assume(success);
 
-        _whenDefaultingPossibleTxDoesNotRevert({_dropPricePercentage: _dropPricePercentage, _warp: _warp, _collateral: _collateral, _protected: _protected, _badDebtCasesOnly: false});
+        _whenDefaultingPossibleTxDoesNotRevert({
+            _dropPricePercentage: _dropPricePercentage,
+            _warp: _warp,
+            _collateral: _collateral,
+            _protected: _protected,
+            _badDebtCasesOnly: false
+        });
     }
 
     function _whenDefaultingPossibleTxDoesNotRevert(
@@ -579,7 +583,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         changePrice = 0.2e18;
 
-       _addLiquidity(Math.max(_collateral, _protected));
+        _addLiquidity(Math.max(_collateral, _protected));
 
         bool success = _createPosition({
             _borrower: borrower,
@@ -590,18 +594,21 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         vm.assume(success);
 
-        // this will help with interest
-        _removeLiquidity();
-        _setCollateralPrice(changePrice);
+        if (_badDebtCasesOnly) {
+            _removeLiquidity();
+            _setCollateralPrice(changePrice);
+            vm.warp(block.timestamp + _warp);
+        } else {
+            vm.assume(_printLtv(borrower) < 1e18);
+        }
+
+        console2.log("AFTER WARP AND PRICE CHANGE");
+
+        _makeDefaultingPossible(borrower, 0.001e18, 1 hours);
 
         // if oracle is throwing, we can not test anything
         vm.assume(!_isOracleThrowing(borrower));
 
-        vm.warp(block.timestamp + _warp);
-
-        console2.log("AFTER WARP AND PRICE CHANGE");
-
-        _makeDefaultingPossible(borrower, 0, 1 hours);
 
         _createIncentiveController();
 
@@ -737,7 +744,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         bool success = _createPosition({_borrower: borrower, _collateral: 1e18, _protected: 1e18, _maxOut: true});
         vm.assume(success);
 
-        _setCollateralPrice(0.01e18); 
+        _setCollateralPrice(0.01e18);
 
         uint256 ltv = _printLtv(borrower);
 
@@ -779,9 +786,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     we should never generate more shares then borrower has, rounding check
     */
     /// forge-config: core_test.fuzz.runs = 2345
-    function test_defaulting_getKeeperAndLenderSharesSplit_fuzz(
-        uint32 _collateral, uint32 _protected, uint32 _warp
-    )
+    function test_defaulting_getKeeperAndLenderSharesSplit_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp)
         public
     {
         _setCollateralPrice(1.05e18);
@@ -809,8 +814,16 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         address lpProvider = makeAddr("lpProvider");
 
-        assertEq(collateralShareToken.balanceOf(lpProvider), 0, "lpProvider should have 0 collateral shares before liquidation");
-        assertEq(protectedShareToken.balanceOf(lpProvider), 0, "lpProvider should have 0 protected shares before liquidation");
+        assertEq(
+            collateralShareToken.balanceOf(lpProvider),
+            0,
+            "lpProvider should have 0 collateral shares before liquidation"
+        );
+        assertEq(
+            protectedShareToken.balanceOf(lpProvider),
+            0,
+            "lpProvider should have 0 protected shares before liquidation"
+        );
 
         _printBalances(silo0, borrower);
         _printBalances(silo1, borrower);
@@ -850,7 +863,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             } else {
                 // collaterar rewards depends if protected were enough or not
             }
-                
+
             assertLt(collateralRewards, collateralSharesBefore, "rewards are always less, because of fee");
             // keeprs can have 0 or more
         }
