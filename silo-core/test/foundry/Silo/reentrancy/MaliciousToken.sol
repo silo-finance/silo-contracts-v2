@@ -67,6 +67,8 @@ contract MaliciousToken is MintableToken, Test {
             _callOnlyLeverageMethods();
             TestStateLib.enableLeverageReentrancy();
         }
+
+        emit log_string("\tTrying to reenter - done");
     }
 
     function _callAllMethods() internal {
@@ -90,6 +92,8 @@ contract MaliciousToken is MintableToken, Test {
                 vm.revertToState(stateBeforeReentrancyTest);
             }
         }
+
+        emit log_string("[MaliciousToken] calling all methods - done");
     }
 
     function _callOnlyLeverageMethods() internal {
@@ -109,5 +113,7 @@ contract MaliciousToken is MintableToken, Test {
 
             vm.revertToState(stateBeforeReentrancyTest);
         }
+
+        emit log_string("[MaliciousToken] calling only leverage methods - done");
     }
 }
