@@ -713,17 +713,14 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_delegatecall_whenRepayReverts -vv --mc DefaultingLiquidationTwo0Test
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_delegatecall_whenRepayReverts -vv
     */
     function test_defaulting_delegatecall_whenRepayReverts() public {
-        _setCollateralPrice(100e18);
-        bool success = _createPosition({_borrower: borrower, _collateral: 10, _protected: 10, _maxOut: true});
+        _addLiquidity(1e18);
+        bool success = _createPosition({_borrower: borrower, _collateral: 1e18, _protected: 10, _maxOut: true});
         vm.assume(success);
 
-        _setCollateralPrice(1e18);
-        _removeLiquidity();
-
-        vm.warp(block.timestamp + 10 days);
+        _makeDefaultingPossible(borrower, 0.001e18, 1 days);
 
         uint256 ltv = _printLtv(borrower);
 
@@ -732,6 +729,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _createIncentiveController();
 
         (, ISilo debtSilo) = _getSilos();
+        (,, IShareToken debtShareToken) = _getBorrowerShareTokens(borrower);
+        uint256 debtBalanceBefore = debtShareToken.balanceOf(borrower);
 
         // mock revert inside repay process to test if whole tx reverts
         vm.mockCallRevert(
@@ -744,6 +743,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         defaulting.liquidationCallByDefaulting(borrower);
 
         assertEq(ltv, silo0.getLtv(borrower), "ltv should be unchanged because no liquidation happened");
+        assertEq(debtBalanceBefore, debtShareToken.balanceOf(borrower), "debt balance should be the same");
     }
 
     /*
