@@ -5,10 +5,9 @@ pragma solidity ^0.8.19;
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 // Libraries
-import "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 
 // Test Contracts
-import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
 // Contracts

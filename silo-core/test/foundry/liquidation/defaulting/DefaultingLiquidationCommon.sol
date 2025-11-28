@@ -405,7 +405,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _removeLiquidity();
         assertLe(debtSilo.getLiquidity(), 1, "liquidity should be ~0");
 
-        uint256 repayBefore = debtSilo.maxRepay(borrower);
+        // uint256 repayBefore = debtSilo.maxRepay(borrower);
 
         _setCollateralPrice(1e18);
 
