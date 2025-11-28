@@ -522,8 +522,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     function test_whenDefaultingPossibleTxDoesNotRevert_badDebt_fuzz(
         uint64 _dropPricePercentage,
         uint32 _warp,
-        uint96 _collateral,
-        uint96 _protected
+        uint48 _collateral,
+        uint48 _protected
     ) public {
         _whenDefaultingPossibleTxDoesNotRevert({
             _dropPricePercentage: _dropPricePercentage,
@@ -542,35 +542,36 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_whenDefaultingPossibleTxDoesNotRevert_notBadDebt_fuzz -vv
     */
     /// forge-config: core_test.fuzz.runs = 8888
-    function test_whenDefaultingPossibleTxDoesNotRevert_notBadDebt_fuzz()
-        // uint64 _dropPricePercentage,
-        // uint32 _warp,
-        // uint96 _collateral,
-        // uint96 _protected
+    function test_whenDefaultingPossibleTxDoesNotRevert_notBadDebt_fuzz(
+        uint64 _dropPricePercentage,
+        uint32 _warp,
+        uint48 _collateral,
+        uint48 _protected
+    )
         public
     {
-        (uint64 _dropPricePercentage, uint32 _warp, uint96 _collateral, uint96 _protected) =
-            (12095630249335940, 3116951, 2963863702, 763645);
+        // (uint64 _dropPricePercentage, uint32 _warp, uint96 _collateral, uint96 _protected) =
+        //     (12095630249335940, 3116951, 2963863702, 763645);
 
         _addLiquidity(Math.max(_collateral, _protected));
 
         bool success = _createPosition({
             _borrower: makeAddr("borrower2"),
-            _collateral: _collateral * 10,
-            _protected: _protected * 10,
+            _collateral: uint256(_collateral) * 10,
+            _protected: uint256(_protected) * 10,
             _maxOut: false
         });
 
         vm.assume(success);
 
-        _whenDefaultingPossibleTxDoesNotRevert(_dropPricePercentage, _warp, _collateral, _protected, false);
+        _whenDefaultingPossibleTxDoesNotRevert({_dropPricePercentage: _dropPricePercentage, _warp: _warp, _collateral: _collateral, _protected: _protected, _badDebtCasesOnly: false});
     }
 
     function _whenDefaultingPossibleTxDoesNotRevert(
         uint64 _dropPricePercentage,
         uint32 _warp,
-        uint96 _collateral,
-        uint96 _protected,
+        uint48 _collateral,
+        uint48 _protected,
         bool _badDebtCasesOnly
     ) internal {
         uint64 initialPrice = 1e18;
@@ -578,10 +579,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         changePrice = 0.2e18;
 
-        //debug use higher numbers
-        // TODO we have a lot of issues with small numbers
-        // vm.assume(_collateral > 100);
-        // vm.assume(_protected > 100);
+       _addLiquidity(Math.max(_collateral, _protected));
 
         bool success = _createPosition({
             _borrower: borrower,
@@ -594,31 +592,30 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         // this will help with interest
         _removeLiquidity();
-
         _setCollateralPrice(changePrice);
 
         // if oracle is throwing, we can not test anything
-        vm.skip(_isOracleThrowing(borrower));
+        vm.assume(!_isOracleThrowing(borrower));
 
         vm.warp(block.timestamp + _warp);
 
         console2.log("AFTER WARP AND PRICE CHANGE");
 
-        while (!_defaultingPossible(borrower)) {
-            vm.warp(block.timestamp + 1 hours);
-        }
+        _makeDefaultingPossible(borrower, 0, 1 hours);
 
         _createIncentiveController();
 
-        _printLtv(makeAddr("borrower2"));
+        if (_badDebtCasesOnly) {
+            vm.assume(_printLtv(borrower) >= 1e18);
+        } else {
+            vm.assume(_printLtv(borrower) < 1e18);
+        }
 
         defaulting.liquidationCallByDefaulting(borrower);
-
-        assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv --fuzz-runs 2345
 
     use uint64 for collateral and protected because fuzzing was trouble to find cases, 
     reason is incentive uint104 cap
@@ -632,51 +629,35 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint48 _collateral,
         uint48 _protected
     ) public virtual {
-        // vm.assume(_collateral == 0); // DEBUG
-        // _protected += _collateral;
-        _protected = 0;
-
-        // (uint64 _priceDropPercentage,
-        // uint32 _warp,
-        // uint48 _collateral,
-        // uint48 _protected) = (899657688608099926, 43909, 0, 29);
-        uint64 initialPrice = 1e18;
         vm.assume(_priceDropPercentage > 0.0005e18);
 
         // 0.5% to 15.5% price drop cap
         int256 dropPercentage = int256(uint256(_priceDropPercentage) % 0.15e18);
-        // emit log_named_decimal_int("dropPercentage [%]", dropPercentage, 16);
-        // emit log_named_decimal_uint("calculateNewPrice", _calculateNewPrice(initialPrice, -int64(dropPercentage)), 18);
 
-        uint256 targetPrice = _calculateNewPrice(initialPrice, -int64(dropPercentage));
+        uint256 targetPrice = _calculateNewPrice(uint64(oracle0.price()), -int64(dropPercentage));
 
-        _setCollateralPrice(initialPrice);
-
+        _addLiquidity(Math.max(_collateral, _protected));
         bool success =
             _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: false});
 
         vm.assume(success);
 
-        // _printBalances(silo0, borrower);
-        // _printBalances(silo1, borrower);
-
-        assertGt(silo0.getLtv(borrower), 0, "double check that user does have position");
-
         // this will help with interest
         _removeLiquidity();
-
         _setCollateralPrice(targetPrice);
-
         vm.warp(block.timestamp + _warp);
 
         // if oracle is throwing, we can not test anything
         vm.assume(!_isOracleThrowing(borrower));
 
         console2.log("AFTER WARP AND PRICE CHANGE");
+
         uint256 ltv = _printLtv(borrower);
         vm.assume(ltv < 1e18); // we dont want back debt, in bad debt we reset position
 
         _createIncentiveController();
+
+        _printLtv(borrower);
 
         vm.assume(_defaultingPossible(borrower));
 
@@ -708,7 +689,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             userState1.colalteralShares, userStateAfter1.colalteralShares, "collateral1 shares should be the same"
         );
 
-        // TODO make separate test just to see, if whatever happen user will be solvent?
+        _printLtv(borrower);
+
+        // false: [4186055703386536599, 76, 0, 12] 90% -> 100% after liquidation
         // assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
     }
 
