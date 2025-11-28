@@ -254,6 +254,19 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
             uint256 deployerBalance = IERC20(debtSilo.asset()).balanceOf(deployerFeeReceiver);
             assertEq(daoBalance + deployerBalance, revenue, "dao and deployer should receive whole revenue");
         }
+
+        {
+            //exit from debt silo
+            (address protectedShareToken,,) = siloConfig.getShareTokens(address(debtSilo));
+            _assertUserCanExit(debtSilo, IShareToken(protectedShareToken), makeAddr("protectedUser"));
+
+            // this case is partial liquidation, so we need to repay the debt to exit
+            token1.setOnDemand(true);
+            debtSilo.repayShares(debtUserAfter.debtShares, borrower);
+            token1.setOnDemand(false);
+
+            _assertUserCanExit(debtSilo, IShareToken(protectedShareToken), makeAddr("lpProvider"));
+        }
     }
 
     // CONFIGURATION

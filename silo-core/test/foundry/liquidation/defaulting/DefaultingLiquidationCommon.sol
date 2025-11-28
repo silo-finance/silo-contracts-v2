@@ -180,18 +180,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         token0.setOnDemand(false);
         token1.setOnDemand(false);
 
-        //
         assertTrue(silo0.isSolvent(borrower), "borrower is solvent");
-
-        // _printLtv(borrower);
-
-        // assertEq(silo0.getLtv(borrower), 0, "position should be removed");
-
-        // _assertNoShareTokens(silo0, borrower);
-        // _assertNoShareTokens(silo1, borrower);
-
-        // _assertNoWithdrawableFees(collateralSilo);
-        // _assertWithdrawableFees(debtSilo);
 
         // // TODO exit
         // _assertEveryoneCanExit();

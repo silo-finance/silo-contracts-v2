@@ -265,6 +265,13 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
             uint256 deployerBalance = IERC20(debtSilo.asset()).balanceOf(deployerFeeReceiver);
             assertEq(daoBalance + deployerBalance, revenue, "dao and deployer should receive whole revenue");
         }
+
+        {
+            //exit from debt silo
+            (address protectedShareToken,,) = siloConfig.getShareTokens(address(debtSilo));
+            _assertUserCanExit(debtSilo, IShareToken(protectedShareToken), makeAddr("protectedUser"));
+            _assertUserCanExit(debtSilo, IShareToken(protectedShareToken), makeAddr("lpProvider"));
+        }
     }
 
     /*
