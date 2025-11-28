@@ -97,7 +97,6 @@ contract DefaultingSiloLogicTest is Test {
 
         console2.log("collateralAssets before", $.totalAssets[ISilo.AssetType.Collateral]);
 
-        // TODO test if we revert with TooHigh error on repay!
         (success,) = logic.delegatecall(
             abi.encodeWithSelector(DefaultingSiloLogic.deductDefaultedDebtFromCollateral.selector, _assetsToRepay)
         );

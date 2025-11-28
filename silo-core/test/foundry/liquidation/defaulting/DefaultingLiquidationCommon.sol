@@ -23,18 +23,10 @@ import {DefaultingLiquidationAsserts} from "./common/DefaultingLiquidationAssert
 
 /*
 
-- should work exactly the same for same asset positions, that's why we have 4 cases
-
 - anything todo with decimals?
 
 
-defaulting should not change protected collateral ratio
-
-delay should be tested
-
-should work for both collaterals (collateral and protected) in same way
-
-
+- defaulting should not change protected collateral ratio (rule candidate)
 
 
 incentive distribution: 
@@ -44,8 +36,6 @@ incentive distribution:
 - fes should be able to withdraw
 
 - if there is no bad debt, asset/share ratio should never go < 1.0
-
-add test taht are checking numbers: how much we repay, how mych debt reduced, collatera reduced
 
 TODO make sure we added EXIT when we can
 
@@ -570,12 +560,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _whenDefaultingPossibleTxDoesNotRevert(_initialPrice, _changePrice, _warp, _collateral, _protected, false);
     }
 
-    /* 
-    TODO defaulting will not bring LTV to the target LT because total collaterla decrease
-    impact on other positions eg with position is 10x bigger then position we are liquidating 
-    other position that is 10x bigger: position 92.7% -> 100.2
-    liquidated position by defaulting: 92.7% -> 82.7%, normal liquidation result: 76%
-    */
     function _whenDefaultingPossibleTxDoesNotRevert(
         uint64 _initialPrice,
         uint64 _changePrice,
