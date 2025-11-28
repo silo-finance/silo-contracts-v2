@@ -751,20 +751,18 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     */
     function test_defaulting_delegatecall_whenDecuctReverts() public {
         _addLiquidity(1e18);
-        bool success = _createPosition({_borrower: borrower, _collateral: 10, _protected: 10, _maxOut: true});
+        bool success = _createPosition({_borrower: borrower, _collateral: 1e18, _protected: 1e18, _maxOut: true});
         vm.assume(success);
 
-        _removeLiquidity();
-
-        _makeDefaultingPossible(borrower, 0.003e18, 1 days);
+        _setCollateralPrice(0.01e18); 
 
         uint256 ltv = _printLtv(borrower);
 
-        assertTrue(_defaultingPossible(borrower), "explect not solvent ready for defaulting");
+        assertTrue(ltv > 1e18, "we need bad debt so we can use max repay for mocking call");
 
         _createIncentiveController();
 
-        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
+        (, ISilo debtSilo) = _getSilos();
         (,, IShareToken debtShareToken) = _getBorrowerShareTokens(borrower);
         uint256 debtBalanceBefore = debtShareToken.balanceOf(borrower);
 
@@ -783,7 +781,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             deductDefaultedDebtFromCollateralCalldata
         );
 
-        vm.mockCallRevert(address(collateralSilo), callOnBehalfOfSiloCalldata, abi.encode("deductDidNotWork"));
+        vm.mockCallRevert(address(debtSilo), callOnBehalfOfSiloCalldata, abi.encode("deductDidNotWork"));
 
         vm.expectRevert("deductDidNotWork");
         defaulting.liquidationCallByDefaulting(borrower);
