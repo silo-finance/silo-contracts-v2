@@ -131,8 +131,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     {
         (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
 
-                _createIncentiveController();
-
+        _createIncentiveController();
 
         uint256 assets = 1e18;
         _addLiquidity(assets);

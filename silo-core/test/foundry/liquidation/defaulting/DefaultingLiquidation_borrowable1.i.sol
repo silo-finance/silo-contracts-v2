@@ -147,7 +147,6 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
         {
             // borrower checks
 
-            
             uint256 underestimation = 2;
 
             assertEq(
@@ -155,54 +154,88 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
                 collateralUserAfter.collateralAssets + collateralLiquidated,
                 "[collateralUser] borrower collateral taken"
             );
+            
             assertEq(
                 collateralUserBefore.protectedAssets,
                 collateralUserAfter.protectedAssets + protectedLiquidated + underestimation,
                 "[collateralUser] borrower protected taken (more by understimation)"
             );
+
             assertEq(
                 debtUserBefore.debtAssets - debtToRepay, debtUserAfter.debtAssets, "[debtUser] borrower debt canceled"
             );
         }
 
-        { 
+        {
             // lpProvider checks
 
-            uint256 totalGaugeRewards = 0.018535128812241097829e21;
-            uint256 totalProtectedRewards = 0.495238095238095238096e21;
+            uint256 totalGaugeRewards = 0.018535128812241097829e21; // hardcoded based on logs
+            uint256 totalProtectedRewards = 0.495238095238095238096e21; // hardcoded based on logs
             (address protectedShareToken,,) = siloConfig.getShareTokens(address(collateralSilo));
-                
-            assertEq(collateralSilo.balanceOf(address(gauge)), totalGaugeRewards, "gauge shares/rewards");
-            assertEq(IShareToken(protectedShareToken).balanceOf(address(gauge)), totalProtectedRewards, "protected shares/rewards");
 
             assertEq(collateralSilo.balanceOf(address(gauge)), totalGaugeRewards, "gauge shares/rewards");
+
+            assertEq(
+                IShareToken(protectedShareToken).balanceOf(address(gauge)),
+                totalProtectedRewards,
+                "protected shares/rewards"
+            );
 
             address lpProvider = makeAddr("lpProvider");
             UserState memory depositorDebt = _getUserState(debtSilo, lpProvider);
 
-            assertEq(depositorDebt.collateralAssets, 0.511385035888068675e18, "[lpProvider] collateral cut by liquidated collateral");
-            assertEq(collateralSilo.balanceOf(lpProvider), 0, "[lpProvider] shares are not in lp wallet, they are in gauge");
+            assertEq(
+                depositorDebt.collateralAssets,
+                0.511385035888068675e18,
+                "[lpProvider] collateral cut by liquidated collateral"
+            );
+
+            assertEq(
+                collateralSilo.balanceOf(lpProvider), 0, "[lpProvider] shares are not in lp wallet, they are in gauge"
+            );
+            
+            assertEq(
+                IShareToken(protectedShareToken).balanceOf(lpProvider),
+                0,
+                "[lpProvider] protected shares are not in lp wallet, they are in gauge"
+            );
 
             vm.prank(lpProvider);
             gauge.claimRewards(lpProvider);
 
-            assertEq(collateralSilo.balanceOf(lpProvider), totalGaugeRewards, "[lpProvider] rewards claimed, value should be close to debt value (minus fees)");
+            assertEq(collateralSilo.balanceOf(lpProvider), totalGaugeRewards, "[lpProvider] rewards claimed");
+            assertEq(
+                IShareToken(protectedShareToken).balanceOf(lpProvider),
+                totalProtectedRewards,
+                "[lpProvider] protected rewards claimed"
+            );
 
             uint256 collateralAssets = collateralSilo.previewRedeem(totalGaugeRewards);
-            uint256 protectedAssets = collateralSilo.previewRedeem(totalProtectedRewards, ISilo.CollateralType.Protected);
+            uint256 protectedAssets =
+                collateralSilo.previewRedeem(totalProtectedRewards, ISilo.CollateralType.Protected);
             uint256 lpAssets = debtSilo.previewRedeem(debtSilo.balanceOf(lpProvider));
-            assertGt(collateralAssets + protectedAssets + lpAssets, 1e18, "[lpProvider] because there was no bad debt and price is 1:1 we expect total assets as return + interest");
+
+            assertGt(
+                collateralAssets + protectedAssets + lpAssets,
+                1e18,
+                "[lpProvider] because there was no bad debt and price is 1:1 we expect total assets as return + interest"
+            );
         }
 
         {
             // protected user check
-            assertEq(silo1.maxWithdraw(makeAddr("protectedUser"), ISilo.CollateralType.Protected), 1e18, "protected user should be able to withdraw all");
+            assertEq(
+                silo1.maxWithdraw(makeAddr("protectedUser"), ISilo.CollateralType.Protected),
+                1e18,
+                "protected user should be able to withdraw all"
+            );
         }
 
         {
             // fees checks - expect whole amount to be transfered
             uint256 revenue = _printRevenue(debtSilo);
-            (address daoFeeReceiver, address deployerFeeReceiver) = debtSilo.factory().getFeeReceivers(address(debtSilo));
+            (address daoFeeReceiver, address deployerFeeReceiver) =
+                debtSilo.factory().getFeeReceivers(address(debtSilo));
 
             console2.log("liquidity", debtSilo.getLiquidity());
 

@@ -339,7 +339,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
     function _printFractions(ISilo _silo) internal {
         (ISilo.Fractions memory fractions) = _silo.getFractionsStorage();
-        
+
         emit log_named_decimal_uint(
             string.concat(vm.getLabel(address(_silo)), " fractions.interest"), fractions.interest, 18
         );
