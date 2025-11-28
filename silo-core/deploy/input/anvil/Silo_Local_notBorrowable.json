@@ -10,7 +10,7 @@
     "interestRateModel0": "InterestRateModelV2Factory.sol",
     "interestRateModelConfig0": "defaultAsset",
     "maxLtv0": 0,
-    "lt0": 8500,
+    "lt0": 0,
     "liquidationTargetLtv0": 7650,
     "liquidationFee0": 500,
     "flashloanFee0": 100,
