@@ -66,9 +66,6 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
         UserState memory collateralUserAfter = _getUserState(collateralSilo, borrower);
         UserState memory debtUserAfter = _getUserState(debtSilo, borrower);
 
-        // address protectedUser = makeAddr("protectedUser");
-        uint256 debtShares = debtUserBefore.debtShares - debtUserAfter.debtShares;
-
         {
             // silo check
 
@@ -80,26 +77,31 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
                 collateralSiloAfter.totalCollateralShares,
                 "[collateralSilo] collateral total shares did not change, we distribute"
             );
+
             assertEq(
                 collateralSiloBefore.totalProtectedShares,
                 collateralSiloAfter.totalProtectedShares,
                 "[collateralSilo] total protected shares did not change, we distribute"
             );
+
             assertEq(
                 collateralSiloBefore.totalCollateral,
                 collateralSiloAfter.totalCollateral,
                 "[collateralSilo] collateral total assets did not changed, we distribute"
             );
+
             assertEq(
                 collateralSiloBefore.totalProtected,
                 collateralSiloAfter.totalProtected,
                 "[collateralSilo] total protected assets did not changed, we distribute"
             );
+
             assertEq(
                 collateralSiloBefore.totalDebt + collateralSiloAfter.totalDebt,
                 0,
                 "[collateralSilo] total debt on collateral side should not exist"
             );
+
             assertEq(
                 collateralSiloBefore.totalDebtShares + collateralSiloAfter.totalDebtShares,
                 0,
@@ -111,6 +113,7 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
                 debtSiloAfter.totalCollateralShares,
                 "[debtSilo] collateral total shares did not change, value did change"
             );
+
             assertEq(
                 debtSiloBefore.totalCollateral,
                 debtSiloAfter.totalCollateral + debtToRepay,
@@ -122,18 +125,21 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
                 debtSiloAfter.totalProtectedShares,
                 "[debtSilo] total protected shares must stay protected!"
             );
+
             assertEq(
                 debtSiloBefore.totalProtected,
                 debtSiloAfter.totalProtected,
                 "[debtSilo] total protected assets must stay protected!"
             );
+
             assertEq(debtSiloBefore.totalProtected, 1e18, "[debtSilo] total protected assets exists");
 
             assertEq(
-                debtSiloBefore.totalDebt,
-                debtSiloAfter.totalDebt + debtToRepay,
-                "[debtSilo] total debt on collateral side should not exist"
+                debtSiloBefore.totalDebt, debtSiloAfter.totalDebt + debtToRepay, "[debtSilo] total debt was canceled"
             );
+
+            uint256 debtShares = debtUserBefore.debtShares - debtUserAfter.debtShares;
+
             assertEq(
                 debtSiloBefore.totalDebtShares,
                 debtSiloAfter.totalDebtShares + debtShares,
@@ -154,7 +160,7 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
                 collateralUserAfter.collateralAssets + collateralLiquidated,
                 "[collateralUser] borrower collateral taken"
             );
-            
+
             assertEq(
                 collateralUserBefore.protectedAssets,
                 collateralUserAfter.protectedAssets + protectedLiquidated + underestimation,
@@ -193,7 +199,7 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
             assertEq(
                 collateralSilo.balanceOf(lpProvider), 0, "[lpProvider] shares are not in lp wallet, they are in gauge"
             );
-            
+
             assertEq(
                 IShareToken(protectedShareToken).balanceOf(lpProvider),
                 0,
@@ -225,7 +231,7 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
         {
             // protected user check
             assertEq(
-                silo1.maxWithdraw(makeAddr("protectedUser"), ISilo.CollateralType.Protected),
+                debtSilo.maxWithdraw(makeAddr("protectedUser"), ISilo.CollateralType.Protected),
                 1e18,
                 "protected user should be able to withdraw all"
             );

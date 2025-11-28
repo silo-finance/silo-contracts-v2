@@ -6,6 +6,7 @@ import {console2} from "forge-std/console2.sol";
 
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -45,11 +46,225 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_happyPath -vv
     */
     function test_defaulting_happyPath() public override {
-        _defaulting_happyPath();
+        (
+            UserState memory collateralUserBefore,
+            UserState memory debtUserBefore,
+            SiloState memory collateralSiloBefore,
+            SiloState memory debtSiloBefore,
+            uint256 collateralToLiquidate,
+            uint256 debtToRepay
+        ) = _defaulting_happyPath();
 
-        assertEq(silo0.getLtv(borrower), 0, "config for this market is lt 97%, so we expect here full liquidation");
+        assertEq(silo0.getLtv(borrower), 0, "LT config for this market is 97%, so we expect here full liquidation");
 
-        revert("TODO asertions");
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
+
+        UserState memory collateralUserAfter = _getUserState(collateralSilo, borrower);
+        UserState memory debtUserAfter = _getUserState(debtSilo, borrower);
+
+        uint256 debtShares = debtUserBefore.debtShares - debtUserAfter.debtShares;
+
+        {
+            // silo check
+
+            SiloState memory collateralSiloAfter = _getSiloState(collateralSilo);
+            SiloState memory debtSiloAfter = _getSiloState(debtSilo);
+
+            assertEq(
+                collateralSiloBefore.totalCollateralShares,
+                collateralSiloAfter.totalCollateralShares,
+                "[collateralSilo] collateral total shares did not change, we distribute"
+            );
+
+            assertEq(
+                collateralSiloBefore.totalProtectedShares,
+                collateralSiloAfter.totalProtectedShares,
+                "[collateralSilo] total protected shares did not change, we distribute"
+            );
+
+            assertEq(
+                collateralSiloBefore.totalCollateral,
+                collateralSiloAfter.totalCollateral,
+                "[collateralSilo] collateral total assets did not changed, we distribute"
+            );
+
+            assertEq(
+                collateralSiloBefore.totalProtected,
+                collateralSiloAfter.totalProtected,
+                "[collateralSilo] total protected assets did not changed, we distribute"
+            );
+
+            assertEq(
+                collateralSiloBefore.totalDebt + collateralSiloAfter.totalDebt,
+                0,
+                "[collateralSilo] total debt on collateral side should not exist"
+            );
+
+            assertEq(
+                collateralSiloBefore.totalDebtShares + collateralSiloAfter.totalDebtShares,
+                0,
+                "[collateralSilo] total debt shares on collateral side should not exist"
+            );
+
+            assertEq(
+                debtSiloBefore.totalCollateralShares,
+                debtSiloAfter.totalCollateralShares,
+                "[debtSilo] collateral total shares did not change, value did change"
+            );
+
+            assertEq(
+                debtSiloBefore.totalCollateral,
+                debtSiloAfter.totalCollateral + debtToRepay,
+                "[debtSilo] total collateralassets deducted"
+            );
+
+            assertEq(
+                debtSiloBefore.totalProtectedShares,
+                debtSiloAfter.totalProtectedShares,
+                "[debtSilo] total protected shares must stay protected!"
+            );
+
+            assertEq(
+                debtSiloBefore.totalProtected,
+                debtSiloAfter.totalProtected,
+                "[debtSilo] total protected assets must stay protected!"
+            );
+
+            assertEq(debtSiloBefore.totalProtected, 1e18, "[debtSilo] total protected assets exists");
+
+            assertEq(
+                debtSiloBefore.totalDebt, debtSiloAfter.totalDebt + debtToRepay, "[debtSilo] total debt was canceled"
+            );
+
+            assertEq(debtSiloAfter.totalDebt, 0, "[debtSilo] total debt is 0 now, because of full liquidation");
+
+            assertEq(
+                debtSiloBefore.totalDebtShares,
+                debtSiloAfter.totalDebtShares + debtShares,
+                "[debtSilo] total debt shares canceled by liquidated user debt"
+            );
+
+            assertEq(
+                debtSiloAfter.totalDebtShares, 0, "[debtSilo] total debt shares is 0 now, because of full liquidation"
+            );
+        }
+
+        uint256 collateralLiquidated = 0.489690721649484537e18; // hardcoded based on liquidation
+        uint256 protectedLiquidated = collateralToLiquidate - collateralLiquidated;
+
+        {
+            // borrower checks
+
+            uint256 underestimation = 2;
+
+            assertEq(
+                collateralUserBefore.collateralAssets,
+                collateralLiquidated,
+                "[collateralUser] borrower collateral before liquidation"
+            );
+
+            assertEq(
+                collateralUserAfter.collateralAssets, 0, "[collateralUser] borrower collateral was fully liquidated"
+            );
+
+            assertEq(
+                collateralUserBefore.protectedAssets,
+                protectedLiquidated + underestimation,
+                "[collateralUser] borrower protected before liquidation"
+            );
+
+            assertEq(
+                collateralUserAfter.protectedAssets, 0, "[collateralUser] borrower protected was fully liquidated"
+            );
+
+            assertEq(debtUserBefore.debtAssets, debtToRepay, "[debtUser] debt amount canceled");
+
+            assertEq(debtUserAfter.debtAssets, 0, "[debtUser] borrower debt canceled");
+        }
+
+        {
+            // lpProvider checks
+
+            uint256 totalGaugeRewards = 0.488721037052158825046e21; // hardcoded based on logs
+            uint256 totalProtectedRewards = 0.499009900990099009901e21; // hardcoded based on logs
+            (address protectedShareToken,,) = siloConfig.getShareTokens(address(collateralSilo));
+
+            assertEq(collateralSilo.balanceOf(address(gauge)), totalGaugeRewards, "gauge shares/rewards");
+
+            assertEq(
+                IShareToken(protectedShareToken).balanceOf(address(gauge)),
+                totalProtectedRewards,
+                "gauge protected shares/rewards"
+            );
+
+            address lpProvider = makeAddr("lpProvider");
+            UserState memory depositorDebt = _getUserState(debtSilo, lpProvider);
+
+            assertEq(
+                depositorDebt.collateralAssets,
+                0.019396119484670633e18, // hardcoded based on logs
+                "[lpProvider] collateral cut by liquidated collateral"
+            );
+
+            assertEq(
+                collateralSilo.balanceOf(lpProvider), 0, "[lpProvider] shares are not in lp wallet, they are in gauge"
+            );
+
+            assertEq(
+                IShareToken(protectedShareToken).balanceOf(lpProvider),
+                0,
+                "[lpProvider] protected shares are not in lp wallet, they are in gauge"
+            );
+
+            vm.prank(lpProvider);
+            gauge.claimRewards(lpProvider);
+
+            assertEq(collateralSilo.balanceOf(lpProvider), totalGaugeRewards, "[lpProvider] rewards claimed");
+
+            assertEq(
+                IShareToken(protectedShareToken).balanceOf(lpProvider),
+                totalProtectedRewards,
+                "[lpProvider] protected rewards claimed"
+            );
+
+            uint256 collateralAssets = collateralSilo.previewRedeem(totalGaugeRewards);
+            uint256 protectedAssets =
+                collateralSilo.previewRedeem(totalProtectedRewards, ISilo.CollateralType.Protected);
+            uint256 lpAssets = debtSilo.previewRedeem(debtSilo.balanceOf(lpProvider));
+
+            assertGt(
+                collateralAssets + protectedAssets + lpAssets,
+                1e18,
+                "[lpProvider] because there was no bad debt and price is 1:1 we expect total assets as return + interest"
+            );
+        }
+
+        {
+            // protected user check
+            assertEq(
+                debtSilo.maxWithdraw(makeAddr("protectedUser"), ISilo.CollateralType.Protected),
+                1e18,
+                "protected user should be able to withdraw all"
+            );
+        }
+
+        {
+            // fees checks - expect whole amount to be transfered
+            uint256 revenue = _printRevenue(debtSilo);
+            (address daoFeeReceiver, address deployerFeeReceiver) =
+                debtSilo.factory().getFeeReceivers(address(debtSilo));
+
+            console2.log("liquidity", debtSilo.getLiquidity());
+
+            _assertWithdrawableFees(debtSilo);
+            _assertNoWithdrawableFees(debtSilo);
+
+            _printRevenue(debtSilo);
+
+            uint256 daoBalance = IERC20(debtSilo.asset()).balanceOf(daoFeeReceiver);
+            uint256 deployerBalance = IERC20(debtSilo.asset()).balanceOf(deployerFeeReceiver);
+            assertEq(daoBalance + deployerBalance, revenue, "dao and deployer should receive whole revenue");
+        }
     }
 
     /*
