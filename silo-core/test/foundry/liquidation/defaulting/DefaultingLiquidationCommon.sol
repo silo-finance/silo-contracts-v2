@@ -750,14 +750,13 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_delegatecall_whenDecuctReverts -vv
     */
     function test_defaulting_delegatecall_whenDecuctReverts() public {
-        _setCollateralPrice(100e18);
+        _addLiquidity(1e18);
         bool success = _createPosition({_borrower: borrower, _collateral: 10, _protected: 10, _maxOut: true});
         vm.assume(success);
 
-        _setCollateralPrice(1e18);
         _removeLiquidity();
 
-        vm.warp(block.timestamp + 10 days);
+        _makeDefaultingPossible(borrower, 0.003e18, 1 days);
 
         uint256 ltv = _printLtv(borrower);
 
@@ -766,6 +765,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _createIncentiveController();
 
         (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
+        (,, IShareToken debtShareToken) = _getBorrowerShareTokens(borrower);
+        uint256 debtBalanceBefore = debtShareToken.balanceOf(borrower);
 
         uint256 maxRepay = debtSilo.maxRepay(borrower);
         console2.log("debtSilo.maxRepay(borrower)", maxRepay);
@@ -788,6 +789,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         defaulting.liquidationCallByDefaulting(borrower);
 
         assertEq(ltv, silo0.getLtv(borrower), "ltv should be unchanged because no liquidation happened");
+        assertEq(debtBalanceBefore, debtShareToken.balanceOf(borrower), "debt balance should be the same");
     }
 
     /*
@@ -817,11 +819,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint256 price = 1e18;
         _setCollateralPrice(price);
 
-        while (!_defaultingPossible(borrower)) {
-            price -= 0.001e18;
-            _setCollateralPrice(price);
-            vm.warp(block.timestamp + 1 hours);
-        }
+        _makeDefaultingPossible(borrower, 0.001e18, 1 hours);
 
         (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getBorrowerShareTokens(borrower);
 
@@ -866,12 +864,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             assertEq(collateralRewards, 0, "no collateral rewards if no collateral deposit");
             assertEq(collateralShareToken.balanceOf(address(this)), 0, "keeper should have 0 collateral shares");
         } else {
-            if (_protected == 0 || protectedShareToken.balanceOf(borrower) == 0) {
+            if (_protected == 0) {
                 assertGt(collateralRewards, 0, "collateral rewards are always somethig");
             } else {
                 // collaterar rewards depends if protected were enough or not
-                // NOTE: even when protectedShareToken is 0, there might be case that protected were enough
-                // but fuzzer might never found such an edge case 
             }
                 
             assertLt(collateralRewards, collateralSharesBefore, "rewards are always less, because of fee");

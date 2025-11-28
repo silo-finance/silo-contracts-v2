@@ -6,7 +6,7 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 contract DummyOracle is ISiloOracle {
     error ZeroQuote();
     
-    uint256 internal price;
+    uint256 public price;
     address public quoteToken;
 
     bool _expectBeforeQuote;
