@@ -173,14 +173,12 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         success = _executeBorrow(_borrower, maxBorrow);
         if (!success) return false;
 
-        _printLtv(_borrower);
+        console2.log("borrowing", maxBorrow);
 
         if (!_maxOut) return success;
 
         _tryWithdrawMax(_borrower, collateralSilo, ISilo.CollateralType.Collateral);
         _tryWithdrawMax(_borrower, collateralSilo, ISilo.CollateralType.Protected);
-
-        _printLtv(_borrower);
     }
 
     function _tryWithdrawMax(address _user, ISilo _silo, ISilo.CollateralType _collateralType) internal {
@@ -223,11 +221,11 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         console2.log("%s.balanceOf(%s)", vm.getLabel(protectedShareToken), userLabel, balance);
         assets = _silo.previewRedeem(balance, ISilo.CollateralType.Protected);
         console2.log("\tbalance to assets", assets);
-        console2.log("\tback to shares", _silo.convertToShares(assets));
+        console2.log("\tback to shares", _silo.convertToShares(assets, ISilo.AssetType.Protected));
 
         balance = IShareToken(debtShareToken).balanceOf(_user);
         console2.log("%s.balanceOf(%s)", vm.getLabel(debtShareToken), userLabel, balance);
-        console2.log("\tbalance to assets", _silo.previewRepay(balance));
+        console2.log("\tbalance to assets", _silo.convertToAssets(balance, ISilo.AssetType.Debt));
     }
 
     function _printOraclePrice(ISilo _silo) internal view {

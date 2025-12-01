@@ -254,8 +254,6 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
             (address daoFeeReceiver, address deployerFeeReceiver) =
                 debtSilo.factory().getFeeReceivers(address(debtSilo));
 
-            console2.log("liquidity", debtSilo.getLiquidity());
-
             _assertWithdrawableFees(debtSilo);
             _assertNoWithdrawableFees(debtSilo);
 

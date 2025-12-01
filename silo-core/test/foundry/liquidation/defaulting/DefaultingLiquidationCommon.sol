@@ -393,21 +393,23 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_0collateral -vv
     */
-    function test_defaulting_neverReverts_0collateral(uint96 _collateral, uint96 _protected) public {
+    function test_defaulting_neverReverts_0collateral(
+        uint96 _collateral, uint96 _protected
+    ) public {
         _setCollateralPrice(1.3e18); // we need high price at begin for this test, because we need to end up wit 1:1
         _addLiquidity(uint256(_collateral) + _protected);
+
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
 
         bool success =
             _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
         vm.assume(success);
 
-        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
-
         // this will help with interest
         _removeLiquidity();
         assertLe(debtSilo.getLiquidity(), 1, "liquidity should be ~0");
 
-        // uint256 repayBefore = debtSilo.maxRepay(borrower);
+        console2.log("AFTER REMOVE LIQUIDITY");
 
         _setCollateralPrice(1e18);
 
@@ -416,7 +418,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             // 1.01 because when we do normal liquidation it can be no debt after that
         } while (silo0.getLtv(borrower) < 1.01e18); 
 
-        _printLtv(borrower);
         // we need case, where we do not oveflow on interest, so we can apply interest
         // vm.assume(debtSilo.maxRepay(borrower) > repayBefore);
         debtSilo.accrueInterest();
@@ -424,27 +425,36 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         // first do normal liquidation with sTokens, to remove whole collateral,
         // price is set 1:1 so we can use collateral as max debt
-        (uint256 collateralToLiquidate,,) = partialLiquidation.maxLiquidation(borrower);
-        (address collateralAsset, address debtAsset) = _getTokens();
-        // +2 to make sure we will get all the shares, because of underestimation
-        partialLiquidation.liquidationCall(collateralAsset, debtAsset, borrower, collateralToLiquidate + 2, true);
+        (IShareToken collateralShareToken, IShareToken protectedShareToken, IShareToken debtShareToken) = _getBorrowerShareTokens(borrower);
+        uint256 collateralPreview = collateralSilo.previewRedeem(collateralShareToken.balanceOf(borrower), ISilo.CollateralType.Collateral);
+        uint256 protectedPreview = collateralSilo.previewRedeem(protectedShareToken.balanceOf(borrower), ISilo.CollateralType.Protected);
+        (address collateralToken, address debtToken) = _getTokens();
+        // we need to create 0 collateral, +1 should cover full collateral and price is 1:1 so we can use as maxDebt
+        partialLiquidation.liquidationCall(collateralToken, debtToken, borrower, collateralPreview + protectedPreview + 1, true);
 
-        console2.log("AFTER NORMAL LIQUIDATION");
-        assertEq(silo0.getLtv(borrower), type(uint256).max, "ltv must be max if we liquidate all collateral");
+        depositors.push(address(this)); // liquidator got shares
 
-        (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getBorrowerShareTokens(borrower);
         assertEq(collateralShareToken.balanceOf(borrower), 0, "collateral shares must be 0");
         assertEq(protectedShareToken.balanceOf(borrower), 0, "protected shares must be 0");
+        assertGt(debtShareToken.balanceOf(borrower), 0, "we need bad debt");
+
+        console2.log("AFTER NORMAL LIQUIDATION");
 
         assertTrue(_defaultingPossible(borrower), "defaulting should be possible even without collateral");
+
+        _printBalances(silo0, borrower);
+        _printBalances(silo1, borrower);
+        _printBalances(silo1, makeAddr("lpProvider"));
 
         _createIncentiveController();
 
         defaulting.liquidationCallByDefaulting(borrower);
         console2.log("AFTER DEFAULTING");
-        revert();
 
         _printLtv(borrower);
+
+        _printBalances(silo0, borrower);
+        _printBalances(silo1, makeAddr("lpProvider"));
 
         assertEq(silo0.getLtv(borrower), 0, "position should be removed");
 
@@ -456,8 +466,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         // borrower is fully liquidated
         _assertEveryoneCanExit();
-
-        // TODO fees should be zero in this case, because we didnt accrue in a middle, do test with accrue interest
     }
 
     /*

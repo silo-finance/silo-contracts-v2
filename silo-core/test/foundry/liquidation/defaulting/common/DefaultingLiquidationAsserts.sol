@@ -81,23 +81,34 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
     function _assertEveryoneCanExit() internal {
         (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
 
-        _printDepositors();
-
         _assertEveryoneCanExitFromSilo(collateralSilo);
         _assertEveryoneCanExitFromSilo(debtSilo);
+    }
 
-        assertEq(debtSilo.totalSupply(), 0, "[_assertEveryoneCanExit] debt silo should have no shares");
+    function _assertEveryoneCanExitFromSilo(ISilo _silo) internal {
+        assertGt(depositors.length, 0, "[_assertEveryoneCanExit] no depositors to check");
 
-        (address protectedShareToken,,) = siloConfig.getShareTokens(address(collateralSilo));
+        (address protectedShareToken,, address debtShareToken) = siloConfig.getShareTokens(address(_silo));
 
-        uint256 gaugeCollateral = collateralSilo.balanceOf(address(gauge));
+        assertEq(
+            IShareToken(debtShareToken).totalSupply(),
+            0,
+            "[_assertEveryoneCanExit] debt must be 0 in order exit to work"
+        );
+
+        for (uint256 i; i < depositors.length; i++) {
+            address depositor = depositors[i];
+            _assertUserCanExit(_silo, IShareToken(protectedShareToken), depositor);
+        }
+
+        uint256 gaugeCollateral = _silo.balanceOf(address(gauge));
         uint256 gaugeProtected = IShareToken(protectedShareToken).balanceOf(address(gauge));
 
         console2.log("gaugeCollateral", gaugeCollateral);
         console2.log("gaugeProtected", gaugeProtected);
 
         assertEq(
-            collateralSilo.totalSupply(),
+            _silo.totalSupply(),
             gaugeCollateral,
             "[_assertEveryoneCanExit] silo should have only gauge collateral"
         );
@@ -109,17 +120,6 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
         );
     }
 
-    function _assertEveryoneCanExitFromSilo(ISilo _silo) internal {
-        assertGt(depositors.length, 0, "[_assertEveryoneCanExit] no depositors to check");
-
-        (address protectedShareToken,,) = siloConfig.getShareTokens(address(_silo));
-
-        for (uint256 i; i < depositors.length; i++) {
-            address depositor = depositors[i];
-            _assertUserCanExit(_silo, IShareToken(protectedShareToken), depositor);
-        }
-    }
-
     function _assertUserCanExit(ISilo _silo, IShareToken _protected, address _user) internal {
         vm.startPrank(_user);
         uint256 balance = _silo.balanceOf(_user);
@@ -128,7 +128,6 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
             string.concat("[", vm.getLabel(address(_silo)), "] ", vm.getLabel(_user), " collateral shares"), balance, 18
         );
         emit log_named_decimal_uint("\tpreview to assets", _silo.previewRedeem(balance), 18);
-        emit log_named_decimal_uint("\tliquidity", _silo.getLiquidity(), 18);
         if (balance != 0) _silo.redeem(balance, _user, _user);
 
         balance = _protected.balanceOf(_user);
