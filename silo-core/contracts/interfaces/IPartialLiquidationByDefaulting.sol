@@ -11,6 +11,11 @@ import {ISilo} from "./ISilo.sol";
 /// Partial liquidation by defaulting can deduct collateral by 1 wei more than debt. This can happen 
 /// when we doing full liquidation and conversion assets -> shares -> assets loses 1 wei.
 interface IPartialLiquidationByDefaulting {
+    /// @param canceledDebt amount of debt that was canceled by liquidation
+    /// @param deductedFromCollateral amount of collateral that was deducted from collateral, 
+    /// it might be lower then debt eg in case of bad debt
+    event DefaultingLiquidation(uint256 canceledDebt, uint256 deductedFromCollateral);
+
     struct CallParams {
         uint256 collateralSharesTotal;
         uint256 protectedSharesTotal;
