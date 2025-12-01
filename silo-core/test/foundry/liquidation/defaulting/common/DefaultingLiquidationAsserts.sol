@@ -80,32 +80,37 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
 
     function _assertEveryoneCanExit() internal {
         (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
-        // assertGt(depositors.length, 0, "[_assertEveryoneCanExit] no depositors to check");
+
+        _printDepositors();
 
         _assertEveryoneCanExitFromSilo(collateralSilo);
         _assertEveryoneCanExitFromSilo(debtSilo);
+
+        assertEq(debtSilo.totalSupply(), 0, "[_assertEveryoneCanExit] debt silo should have no shares");
 
         (address protectedShareToken,,) = siloConfig.getShareTokens(address(collateralSilo));
 
         uint256 gaugeCollateral = collateralSilo.balanceOf(address(gauge));
         uint256 gaugeProtected = IShareToken(protectedShareToken).balanceOf(address(gauge));
 
+        console2.log("gaugeCollateral", gaugeCollateral);
+        console2.log("gaugeProtected", gaugeProtected);
+
         assertEq(
             collateralSilo.totalSupply(),
             gaugeCollateral,
             "[_assertEveryoneCanExit] silo should have only gauge collateral"
         );
+
         assertEq(
             IShareToken(protectedShareToken).totalSupply(),
             gaugeProtected,
             "[_assertEveryoneCanExit] protected share token should have only gauge protected"
         );
-
-        assertEq(debtSilo.totalSupply(), 0, "[_assertEveryoneCanExit] debt silo should have no shares, liquidity");
     }
 
     function _assertEveryoneCanExitFromSilo(ISilo _silo) internal {
-        // assertGt(depositors.length, 0, "[_assertEveryoneCanExit] no depositors to check");
+        assertGt(depositors.length, 0, "[_assertEveryoneCanExit] no depositors to check");
 
         (address protectedShareToken,,) = siloConfig.getShareTokens(address(_silo));
 
@@ -118,11 +123,12 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
     function _assertUserCanExit(ISilo _silo, IShareToken _protected, address _user) internal {
         vm.startPrank(_user);
         uint256 balance = _silo.balanceOf(_user);
+
         emit log_named_decimal_uint(
-            string.concat("[", vm.getLabel(address(_silo)), "] ", vm.getLabel(_user), " shares"), balance, 18
+            string.concat("[", vm.getLabel(address(_silo)), "] ", vm.getLabel(_user), " collateral shares"), balance, 18
         );
-        emit log_named_decimal_uint("preview to assets", _silo.previewRedeem(balance), 18);
-        emit log_named_decimal_uint("liquidity", _silo.getLiquidity(), 18);
+        emit log_named_decimal_uint("\tpreview to assets", _silo.previewRedeem(balance), 18);
+        emit log_named_decimal_uint("\tliquidity", _silo.getLiquidity(), 18);
         if (balance != 0) _silo.redeem(balance, _user, _user);
 
         balance = _protected.balanceOf(_user);
@@ -132,22 +138,13 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
             18
         );
         emit log_named_decimal_uint(
-            "preview to assets", _silo.previewRedeem(balance, ISilo.CollateralType.Protected), 18
+            "\tpreview to assets", _silo.previewRedeem(balance, ISilo.CollateralType.Protected), 18
         );
         if (balance != 0) _silo.redeem(balance, _user, _user, ISilo.CollateralType.Protected);
         vm.stopPrank();
 
         _assertNoShareTokens(_silo, _user);
     }
-
-    // function _exitSilo() internal {
-    //     _assertEveryoneCanExit();
-    //     _assertWithdrawableFees(silo0);
-    //     _assertWithdrawableFees(silo1);
-
-    //     _assertShareTokensAreEmpty(silo0);
-    //     _assertShareTokensAreEmpty(silo1);
-    // }
 
     function _assertShareTokensAreEmpty(ISilo _silo) internal view {
         (address protectedShareToken, address collateralShareToken, address debtShareToken) =

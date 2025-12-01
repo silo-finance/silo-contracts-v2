@@ -442,6 +442,12 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         }
     }
 
+    function _printDepositors() internal view {
+        for (uint256 i; i < depositors.length; i++) {
+            console2.log("depositor", i, ":", vm.getLabel(depositors[i]));
+        }
+    }
+
     // CONFIGURATION
 
     function _useConfigName() internal view virtual returns (string memory);

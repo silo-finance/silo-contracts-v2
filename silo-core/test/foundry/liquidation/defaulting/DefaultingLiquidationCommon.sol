@@ -413,7 +413,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         do {
             vm.warp(block.timestamp + 10 days);
-        } while (silo0.getLtv(borrower) < 1.01e18); // 1.01 because when we do normla liquidation +2 it can be no debt after that
+            // 1.01 because when we do normal liquidation it can be no debt after that
+        } while (silo0.getLtv(borrower) < 1.01e18); 
 
         _printLtv(borrower);
         // we need case, where we do not oveflow on interest, so we can apply interest
@@ -425,7 +426,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         // price is set 1:1 so we can use collateral as max debt
         (uint256 collateralToLiquidate,,) = partialLiquidation.maxLiquidation(borrower);
         (address collateralAsset, address debtAsset) = _getTokens();
-        // +2 to make sure we will get all the shares
+        // +2 to make sure we will get all the shares, because of underestimation
         partialLiquidation.liquidationCall(collateralAsset, debtAsset, borrower, collateralToLiquidate + 2, true);
 
         console2.log("AFTER NORMAL LIQUIDATION");
@@ -441,6 +442,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         defaulting.liquidationCallByDefaulting(borrower);
         console2.log("AFTER DEFAULTING");
+        revert();
 
         _printLtv(borrower);
 
@@ -452,8 +454,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _assertNoWithdrawableFees(collateralSilo);
         _assertWithdrawableFees(debtSilo);
 
-        // TODO exit
-        // _assertEveryoneCanExit(); ??
+        // borrower is fully liquidated
+        _assertEveryoneCanExit();
 
         // TODO fees should be zero in this case, because we didnt accrue in a middle, do test with accrue interest
     }
@@ -512,8 +514,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    TODO found a case when maxBorrow > 0 but borrow fails, because borrow value is 0.
-
     if _defaultingPossible() we never revert otherwise we do revert
 
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_whenDefaultingPossibleTxDoesNotRevert_badDebt_fuzz -vv
@@ -535,8 +535,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    TODO found a case when maxBorrow > 0 but borrow fails, because borrow value is 0.
-
     if _defaultingPossible() we never revert otherwise we do revert
 
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_whenDefaultingPossibleTxDoesNotRevert_notBadDebt_fuzz -vv
@@ -548,9 +546,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint48 _collateral,
         uint48 _protected
     ) public {
-        // (uint64 _dropPricePercentage, uint32 _warp, uint96 _collateral, uint96 _protected) =
-        //     (12095630249335940, 3116951, 2963863702, 763645);
-
         _addLiquidity(Math.max(_collateral, _protected));
 
         bool success = _createPosition({
@@ -698,8 +693,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         _printLtv(borrower);
 
-        // false: [4186055703386536599, 76, 0, 12] 90% -> 100% after liquidation
-        // assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
+        assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
     }
 
     /*
