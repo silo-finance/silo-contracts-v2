@@ -266,9 +266,8 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
 
         {
             //exit from debt silo
-            (address protectedShareToken,,) = siloConfig.getShareTokens(address(debtSilo));
-            _assertUserCanExit(debtSilo, IShareToken(protectedShareToken), makeAddr("protectedUser"));
-            _assertUserCanExit(debtSilo, IShareToken(protectedShareToken), makeAddr("lpProvider"));
+            _assertUserCanExit(debtSilo, makeAddr("protectedUser"));
+            _assertUserCanExit(debtSilo, makeAddr("lpProvider"));
         }
     }
 

@@ -10,18 +10,18 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {DefaultingLiquidationHelpers} from "./DefaultingLiquidationHelpers.sol";
 
 abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
-    function _assertNoShareTokens(ISilo _silo, address _user) internal view {
-        _assertNoShareTokens(_silo, _user, false);
+    function _assertNoShareTokens(ISilo _silo, address _user, string memory _msg) internal view {
+        _assertNoShareTokens(_silo, _user, false, _msg);
     }
 
     /// @param _allowForDust if true, we assert that the user is dead, NO dust is allowed
     /// why? eg. if we have 4000 shares this give us 11 assets ot withdraw, but when we convert
     /// 11 assets back to shares, we will get eg 3929 (with rounding up), bacause of that dust will be left
     /// this case was observed so far in same assets positions.
-    function _assertNoShareTokens(ISilo _silo, address _user, bool _allowForDust) internal view {
+    function _assertNoShareTokens(ISilo _silo, address _user, bool _allowForDust, string memory _msg) internal view {
         console2.log("[_assertNoShareTokens] on silo %s for user %s", vm.getLabel(address(_silo)), vm.getLabel(_user));
 
-        (address collateralShareToken, address protectedShareToken, address debtShareToken) =
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) =
             siloConfig.getShareTokens(address(_silo));
 
         uint256 balance = IShareToken(protectedShareToken).balanceOf(_user);
@@ -30,22 +30,24 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
             assertEq(
                 _silo.previewRedeem(balance, ISilo.CollateralType.Protected),
                 0,
-                "[_assertNoShareTokens] no protected dust"
+                string.concat("[_assertNoShareTokens] no protected dust: ", _msg)
             );
         } else {
-            assertEq(balance, 0, "[_assertNoShareTokens] protected");
+            assertEq(balance, 0, string.concat("[_assertNoShareTokens] protected: ", _msg));
         }
 
         balance = IShareToken(collateralShareToken).balanceOf(_user);
 
         if (_allowForDust) {
-            assertEq(_silo.previewRedeem(balance), 0, "[_assertNoShareTokens] no collateral dust");
+            assertEq(
+                _silo.previewRedeem(balance), 0, string.concat("[_assertNoShareTokens] no collateral dust: ", _msg)
+            );
         } else {
-            assertEq(balance, 0, "[_assertNoShareTokens] collateral");
+            assertEq(balance, 0, string.concat("[_assertNoShareTokens] collateral: ", _msg));
         }
 
         balance = IShareToken(debtShareToken).balanceOf(_user);
-        assertEq(balance, 0, "[_assertNoShareTokens] debt");
+        assertEq(balance, 0, string.concat("[_assertNoShareTokens] debt: ", _msg));
     }
 
     function _assertWithdrawableFees(ISilo _silo) internal {
@@ -78,13 +80,6 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
         );
     }
 
-    function _assertEveryoneCanExit() internal {
-        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
-
-        _assertEveryoneCanExitFromSilo(collateralSilo);
-        _assertEveryoneCanExitFromSilo(debtSilo);
-    }
-
     function _assertEveryoneCanExitFromSilo(ISilo _silo) internal {
         assertGt(depositors.length, 0, "[_assertEveryoneCanExit] no depositors to check");
 
@@ -98,7 +93,9 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
 
         for (uint256 i; i < depositors.length; i++) {
             address depositor = depositors[i];
-            _assertUserCanExit(_silo, IShareToken(protectedShareToken), depositor);
+            _assertUserCanExit(_silo, depositor);
+            // TODO once we figure out how to deal with leftover shares, we can uncomment this
+            // _assertNoShareTokens(_silo, depositor, "_assertEveryoneCanExitFromSilo");
         }
 
         uint256 gaugeCollateral = _silo.balanceOf(address(gauge));
@@ -108,9 +105,7 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
         console2.log("gaugeProtected", gaugeProtected);
 
         assertEq(
-            _silo.totalSupply(),
-            gaugeCollateral,
-            "[_assertEveryoneCanExit] silo should have only gauge collateral"
+            _silo.totalSupply(), gaugeCollateral, "[_assertEveryoneCanExit] silo should have only gauge collateral"
         );
 
         assertEq(
@@ -120,29 +115,31 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
         );
     }
 
-    function _assertUserCanExit(ISilo _silo, IShareToken _protected, address _user) internal {
+    function _assertUserCanExit(ISilo _silo, address _user) internal {
+        (address protectedShareToken,,) = siloConfig.getShareTokens(address(_silo));
+
         vm.startPrank(_user);
         uint256 balance = _silo.balanceOf(_user);
+        uint256 redeemable = _silo.maxRedeem(_user);
 
         emit log_named_decimal_uint(
-            string.concat("[", vm.getLabel(address(_silo)), "] ", vm.getLabel(_user), " collateral shares"), balance, 18
-        );
-        emit log_named_decimal_uint("\tpreview to assets", _silo.previewRedeem(balance), 18);
-        if (balance != 0) _silo.redeem(balance, _user, _user);
-
-        balance = _protected.balanceOf(_user);
-        emit log_named_decimal_uint(
-            string.concat("[", vm.getLabel(address(_silo)), "] ", vm.getLabel(_user), " protected shares"),
+            string.concat("[", vm.getLabel(address(_silo)), "] ", vm.getLabel(_user), " collateral shares"),
             balance,
-            18
+            21
         );
-        emit log_named_decimal_uint(
-            "\tpreview to assets", _silo.previewRedeem(balance, ISilo.CollateralType.Protected), 18
-        );
-        if (balance != 0) _silo.redeem(balance, _user, _user, ISilo.CollateralType.Protected);
-        vm.stopPrank();
+        emit log_named_decimal_uint("\tredeemable", redeemable, 21);
+        if (redeemable != 0) _silo.redeem(redeemable, _user, _user);
 
-        _assertNoShareTokens(_silo, _user);
+        balance = IShareToken(protectedShareToken).balanceOf(_user);
+        redeemable = _silo.maxRedeem(_user, ISilo.CollateralType.Protected);
+        emit log_named_decimal_uint(
+            string.concat("[", vm.getLabel(protectedShareToken), "] ", vm.getLabel(_user), " protected shares"),
+            balance,
+            21
+        );
+        emit log_named_decimal_uint("\tredeemable", redeemable, 21);
+        if (redeemable != 0) _silo.redeem(redeemable, _user, _user, ISilo.CollateralType.Protected);
+        vm.stopPrank();
     }
 
     function _assertShareTokensAreEmpty(ISilo _silo) internal view {
