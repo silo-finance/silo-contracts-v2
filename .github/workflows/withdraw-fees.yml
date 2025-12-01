@@ -2,6 +2,9 @@ name: Withdraw Fees (Claim Revenue)
 
 on:
     workflow_dispatch:
+    schedule:
+        # Run on the 1st day of every month at 00:00 UTC
+        - cron: '0 0 1 * *'
 
 env:
     RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
