@@ -190,4 +190,9 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
             "[_assertShareTokensAreEmpty] debt share token should be 0"
         );
     }
+
+    function _assertProtectedRatioDidNotchanged() internal view {
+        assertEq(silo0.convertToShares(1e18, ISilo.AssetType.Protected), 1e21, "silo0 protected ratio");
+        assertEq(silo1.convertToShares(1e18, ISilo.AssetType.Protected), 1e21, "silo1 protected ratio");
+    }
 }

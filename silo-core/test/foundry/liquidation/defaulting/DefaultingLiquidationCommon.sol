@@ -26,14 +26,11 @@ import {DefaultingLiquidationAsserts} from "./common/DefaultingLiquidationAssert
 - anything todo with decimals?
 
 
-- defaulting should not change protected collateral ratio (rule candidate)
-
-
 incentive distribution: 
 - does everyone can claim? its shares so even 1 wei should be claimable
 
 
-- fes should be able to withdraw always?
+- fees should be able to withdraw always? no, we might need liquidity or repay
 
 - if there is no bad debt, asset/share ratio should never go < 1.0
 
@@ -181,6 +178,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         (collateralToLiquidate, debtToRepay) = defaulting.liquidationCallByDefaulting(borrower);
         console2.log("AFTER DEFAULTING what happened?");
 
+        _assertProtectedRatioDidNotchanged();
+
         console2.log("maxRepay borrower:", debtSilo.maxRepay(borrower));
         console2.log("maxRepay other borrower:", debtSilo.maxRepay(makeAddr("otherBorrower")));
 
@@ -292,6 +291,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         defaulting.liquidationCallByDefaulting(_borrower);
 
+        _assertProtectedRatioDidNotchanged();
+
         _printBalances(silo0, _borrower);
         _printBalances(silo1, _borrower);
 
@@ -305,6 +306,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             _allowForDust: false,
             _msg: "position should be removed on silo0"
         });
+
         _assertNoShareTokens({
             _silo: silo1,
             _user: _borrower,
@@ -352,14 +354,20 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         assertEq(
             debtBalanceBefore,
             debtShareToken.balanceOf(otherBorrower),
-            "other borrower debt should be the same before and after defaulting"
+            "other borrower debt shares should be the same before and after defaulting"
         );
+
         debtSilo.repayShares(debtBalanceBefore, otherBorrower);
         assertEq(debtShareToken.balanceOf(otherBorrower), 0, "other borrower should be able fully repay");
 
-        // TODO exit should covver that
-        // collateralSilo.redeem(collateralShareToken.balanceOf(otherBorrower), otherBorrower, otherBorrower, ISilo.CollateralType.Collateral);
-        // collateralSilo.redeem(protectedShareToken.balanceOf(otherBorrower), otherBorrower, otherBorrower, ISilo.CollateralType.Protected);
+        uint256 debtBalance = debtShareToken.balanceOf(borrower);
+
+        if (debtBalance != 0) {
+            debtSilo.repayShares(debtShareToken.balanceOf(borrower), borrower);
+        }
+
+        _assertEveryoneCanExitFromSilo(silo0, true);
+        _assertEveryoneCanExitFromSilo(silo1, true);
     }
 
     function _defaulting_neverReverts_insolvency(address _borrower, uint256 _collateral, uint256 _protected)
@@ -403,6 +411,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _printBalances(silo1, _borrower);
 
         _printLtv(_borrower);
+
+        _assertProtectedRatioDidNotchanged();
 
         // we can not assert for silo exit, because defaulting will make share value lower,
         // so there might be users who can not withdraw because convertion to assets will give 0
@@ -468,6 +478,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         defaulting.liquidationCallByDefaulting(borrower);
         console2.log("AFTER DEFAULTING");
+
+        _assertProtectedRatioDidNotchanged();
 
         // NOTE: turns out, even with bad debt collateral not neccessarly is reset
 
@@ -563,6 +575,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         defaulting.liquidationCallByDefaulting(borrower);
         console2.log("AFTER DEFAULTING");
 
+        _assertProtectedRatioDidNotchanged();
+
         _assertNoWithdrawableFees(collateralSilo);
         _assertWithdrawableFees(debtSilo);
 
@@ -577,11 +591,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_twice_0collateral -vv
     */
-    function test_defaulting_twice_0collateral()
-        // uint48 _collateral, uint48 _protected
-        public
-    {
-        (uint48 _collateral, uint48 _protected) = (10, 10);
+    function test_defaulting_twice_0collateral(uint48 _collateral, uint48 _protected) public {
+        // (uint48 _collateral, uint48 _protected) = (1, 2);
         _createIncentiveController();
 
         _setCollateralPrice(1.3e18); // we need high price at begin for this test, because we need to end up wit 1:1
@@ -619,8 +630,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             collateralSilo.previewRedeem(collateralShareToken.balanceOf(borrower), ISilo.CollateralType.Collateral);
         uint256 protectedPreview =
             collateralSilo.previewRedeem(protectedShareToken.balanceOf(borrower), ISilo.CollateralType.Protected);
-        // we need to create 0 collateral, +1 should cover full collateral and price is 1:1 so we can use as maxDebt
-        defaulting.liquidationCallByDefaulting(borrower, collateralPreview + protectedPreview + 1);
+        // we need to create 0 collateral, +2 should cover full collateral and price is 1:1 so we can use as maxDebt
+        uint256 maxDebtToCover = collateralPreview + protectedPreview + 2;
+        defaulting.liquidationCallByDefaulting(borrower, maxDebtToCover);
 
         depositors.push(address(this)); // liquidator got shares
 
@@ -629,11 +641,13 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         vm.assume(debtShareToken.balanceOf(borrower) != 0); // we need bad debt
 
         console2.log("AFTER DEFAULTING #1");
+        _assertProtectedRatioDidNotchanged();
 
         assertTrue(_defaultingPossible(borrower), "defaulting should be possible even without collateral");
 
         defaulting.liquidationCallByDefaulting(borrower);
         console2.log("AFTER DEFAULTING #2");
+        _assertProtectedRatioDidNotchanged();
 
         _printLtv(borrower);
 
@@ -818,6 +832,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         }
 
         defaulting.liquidationCallByDefaulting(borrower);
+        _assertProtectedRatioDidNotchanged();
     }
 
     /*
