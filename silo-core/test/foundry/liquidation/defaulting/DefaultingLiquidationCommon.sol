@@ -140,7 +140,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         bool success;
 
-        // TODO do it with other borrower
         if (_withOtherBorrower) {
             success = _createPosition({
                 _borrower: makeAddr("otherBorrower"),
@@ -189,8 +188,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         token1.setOnDemand(false);
 
         assertTrue(silo0.isSolvent(borrower), "borrower is solvent");
-
-        // TODO fees should be zero in this case, because we didnt accrue in a middle, do test with accrue interest
     }
 
     /*
@@ -249,9 +246,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         debtSilo.repayShares(debtBalanceBefore, otherBorrower);
         assertEq(debtShareToken.balanceOf(otherBorrower), 0, "other borrower should be able fully repay");
 
-        // TODO exit should covver that
-        // collateralSilo.redeem(collateralShareToken.balanceOf(otherBorrower), otherBorrower, otherBorrower, ISilo.CollateralType.Collateral);
-        // collateralSilo.redeem(protectedShareToken.balanceOf(otherBorrower), otherBorrower, otherBorrower, ISilo.CollateralType.Protected);
+        _assertEveryoneCanExitFromSilo(silo0, true);
+        _assertEveryoneCanExitFromSilo(silo1, true);
     }
 
     function _defaulting_neverReverts_badDebt(

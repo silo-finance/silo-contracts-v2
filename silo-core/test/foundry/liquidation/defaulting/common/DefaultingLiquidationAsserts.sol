@@ -125,7 +125,7 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
             assertEq(
                 _silo.totalSupply(),
                 gaugeCollateral,
-                "[_assertEveryoneCanExit] silo should have only gauge collateral"
+                "[_assertTotalSharesZero] silo should have only gauge collateral"
             );
         }
 
