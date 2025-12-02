@@ -23,12 +23,7 @@ import {DefaultingLiquidationAsserts} from "./common/DefaultingLiquidationAssert
 
 /*
 
-- anything todo with decimals?
-
-
-incentive distribution: 
-- does everyone can claim? its shares so even 1 wei should be claimable
-
+- anything todo with decimals? don;t think so, we only transfer shares
 
 - fees should be able to withdraw always? no, we might need liquidity or repay
 
@@ -1109,6 +1104,167 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             assertLt(collateralRewards, collateralSharesBefore, "rewards are always less, because of fee");
             // keeprs can have 0 or more
         }
+    }
+
+    /*
+    incentive distribution: 
+    - does everyone can claim? its shares so even 1 wei should be claimable
+
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_everyoneCanClaim_badDebt -vv
+    */
+    /// forge-config: core_test.fuzz.runs = 2345
+    function test_incentiveDistribution_everyoneCanClaim_badDebt(uint48 _collateral, uint48 _protected) public {
+        _incentiveDistribution_everyoneCanClaim(_collateral, _protected, true);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_everyoneCanClaim_insolvent -vv --fuzz-runs 2345
+    */
+    /// forge-config: core_test.fuzz.runs = 2345
+    function test_incentiveDistribution_everyoneCanClaim_insolvent(uint64 _collateral, uint64 _protected) public {
+        _incentiveDistribution_everyoneCanClaim(_collateral, _protected, false);
+    }
+
+    function _incentiveDistribution_everyoneCanClaim(uint256 _collateral, uint256 _protected, bool _badDebt) public {
+        (, ISilo debtSilo) = _getSilos();
+
+        uint256 shares1 = debtSilo.deposit(1, makeAddr("lpProvider1"));
+        debtSilo.deposit(1, makeAddr("lpProvider3"), ISilo.CollateralType.Protected);
+
+        _createIncentiveController();
+
+        debtSilo.deposit(Math.max(_collateral, 1), makeAddr("lpProvider2"));
+        debtSilo.deposit(Math.max(_protected, 1), makeAddr("lpProvider4"), ISilo.CollateralType.Protected);
+
+        depositors.push(makeAddr("lpProvider1"));
+        depositors.push(makeAddr("lpProvider2"));
+        depositors.push(makeAddr("lpProvider3"));
+        depositors.push(makeAddr("lpProvider4"));
+
+        bool success = _createPosition({
+            _borrower: borrower,
+            _collateral: _collateral,
+            _protected: _protected,
+            _maxOut: true
+        });
+        vm.assume(success);
+
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
+
+        uint256 price = oracle0.price();
+
+        do {
+            price -= (_badDebt ? 0.005e18 : 0.001e18); // drop price litle by little, to not create bad debt instantly
+            _setCollateralPrice(price);
+            uint256 warp = _badDebt ? 24 hours : 5 hours;
+            vm.warp(block.timestamp + warp);
+
+            vm.assume(!_isOracleThrowing(borrower));
+
+            if (_badDebt && debtSilo.getLtv(borrower) >= 1e18) {
+                break;
+            } else if (!_badDebt && _defaultingPossible(borrower)) {
+                break;
+            }
+        } while (true);
+
+        (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getBorrowerShareTokens(borrower);
+
+        defaulting.liquidationCallByDefaulting(borrower);
+
+        uint256 collateralRewards = collateralShareToken.balanceOf(address(gauge));
+        uint256 protectedRewards = protectedShareToken.balanceOf(address(gauge));
+
+        vm.prank(makeAddr("lpProvider1"));
+        gauge.claimRewards(makeAddr("lpProvider1"));
+        vm.prank(makeAddr("lpProvider2"));
+        gauge.claimRewards(makeAddr("lpProvider2"));
+        vm.prank(makeAddr("lpProvider3"));
+        gauge.claimRewards(makeAddr("lpProvider3"));
+        vm.prank(makeAddr("lpProvider4"));
+        gauge.claimRewards(makeAddr("lpProvider4"));
+
+        bool oneWeiRewardsCollateral = shares1 * collateralRewards / debtSilo.totalSupply() > 0;
+        bool oneWeiRewardsProtected = shares1 * protectedRewards / debtSilo.totalSupply() > 0;
+
+        console2.log("1 wei shares", collateralShareToken.balanceOf(makeAddr("lpProvider1")));
+        console2.log("lpProvider2 shares", collateralShareToken.balanceOf(makeAddr("lpProvider2")));
+
+        console2.log(
+            "oneWeiRewardsCollateral", shares1 * collateralRewards / debtSilo.totalSupply()
+        );
+        console2.log("oneWeiRewardsProtected", shares1 * protectedRewards / debtSilo.totalSupply());
+
+        if (_protected != 0) {
+            if (oneWeiRewardsProtected) {
+                assertGt(
+                    protectedShareToken.balanceOf(makeAddr("lpProvider1")),
+                    0,
+                    "[lpProvider1] expect protected rewards"
+                );
+            } else {
+                assertEq(
+                    protectedShareToken.balanceOf(makeAddr("lpProvider1")),
+                    0,
+                    "[lpProvider1] 1 wei should not generate protected rewards"
+                );
+            }
+
+            assertGt(
+                protectedShareToken.balanceOf(makeAddr("lpProvider2")),
+                0,
+                "[lpProvider2] expect protected rewards always"
+            );
+        }
+
+        if (_badDebt && _collateral != 0) {
+            if (oneWeiRewardsCollateral) {
+                assertGt(
+                    collateralShareToken.balanceOf(makeAddr("lpProvider1")),
+                    0,
+                    "[lpProvider1] expect collateral rewards"
+                );
+            } else {
+                assertEq(
+                    collateralShareToken.balanceOf(makeAddr("lpProvider1")),
+                    0,
+                    "[lpProvider1] 1 wei should not generate collateral rewards"
+                );
+            }
+
+            assertGt(
+                collateralShareToken.balanceOf(makeAddr("lpProvider2")),
+                0,
+                "[lpProvider2] expect collateral rewards always"
+            );
+        } else {
+            // we dont know for sure if collateral rewards were distributed
+        }
+
+        assertEq(
+            protectedShareToken.balanceOf(makeAddr("lpProvider3")),
+            0,
+            "[lpProvider3] protected deposit is not rewarded (protected)"
+        );
+
+        assertEq(
+            protectedShareToken.balanceOf(makeAddr("lpProvider4")),
+            0,
+            "[lpProvider4] protected deposit is not rewarded (protected)"
+        );
+
+        assertEq(
+            collateralShareToken.balanceOf(makeAddr("lpProvider3")),
+            0,
+            "[lpProvider3] protected deposit is not rewarded (collateral)"
+        );
+
+        assertEq(
+            collateralShareToken.balanceOf(makeAddr("lpProvider4")),
+            0,
+            "[lpProvider4] protected deposit is not rewarded (collateral)"
+        );
     }
 
     /*
