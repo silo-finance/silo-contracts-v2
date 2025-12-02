@@ -37,9 +37,7 @@ incentive distribution:
 
 TODO test with many borrowers
 
-TODO test with setOnDemand(false)
-
-TODO test if tehre is diff when we configure gauge
+TODO test if there is diff when we configure gauge
 
 TODO reentrancy test
 
@@ -242,6 +240,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             "other borrower debt should be the same before and after defaulting"
         );
 
+        MintableToken(debtSilo.asset()).setOnDemand(true);
+
         debtSilo.repayShares(debtBalanceBefore, otherBorrower);
         assertEq(debtShareToken.balanceOf(otherBorrower), 0, "other borrower should be able fully repay");
 
@@ -288,6 +288,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _printMaxLiquidation(_borrower);
 
         vm.assume(silo0.getLtv(_borrower) >= 1e18); // position should be in bad debt state
+
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
 
         defaulting.liquidationCallByDefaulting(_borrower);
 
@@ -357,6 +360,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             "other borrower debt shares should be the same before and after defaulting"
         );
 
+        MintableToken(debtSilo.asset()).setOnDemand(true);
+
         debtSilo.repayShares(debtBalanceBefore, otherBorrower);
         assertEq(debtShareToken.balanceOf(otherBorrower), 0, "other borrower should be able fully repay");
 
@@ -404,6 +409,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         vm.assume(!silo0.isSolvent(_borrower)); // position should be insolvent
         vm.assume(silo0.getLtv(_borrower) < 1e18); // position should not be in bad debt state
+
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
 
         defaulting.liquidationCallByDefaulting(_borrower);
 
@@ -475,6 +483,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         assertTrue(_defaultingPossible(borrower), "defaulting should be possible even without collateral");
 
         _createIncentiveController();
+
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
 
         defaulting.liquidationCallByDefaulting(borrower);
         console2.log("AFTER DEFAULTING");
@@ -572,6 +583,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         _createIncentiveController();
 
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
+
         defaulting.liquidationCallByDefaulting(borrower);
         console2.log("AFTER DEFAULTING");
 
@@ -632,6 +646,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             collateralSilo.previewRedeem(protectedShareToken.balanceOf(borrower), ISilo.CollateralType.Protected);
         // we need to create 0 collateral, +2 should cover full collateral and price is 1:1 so we can use as maxDebt
         uint256 maxDebtToCover = collateralPreview + protectedPreview + 2;
+
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
+
         defaulting.liquidationCallByDefaulting(borrower, maxDebtToCover);
 
         depositors.push(address(this)); // liquidator got shares
@@ -661,6 +679,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         _assertNoWithdrawableFees(collateralSilo);
         _assertWithdrawableFees(debtSilo);
+
+        token0.setOnDemand(true);
+        token1.setOnDemand(true);
 
         collateralSilo.deposit(1e18, makeAddr("anyUser"));
         debtSilo.deposit(2, makeAddr("anyUser2"));
@@ -717,6 +738,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         vm.warp(block.timestamp + _warp);
 
         _createIncentiveController();
+
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
 
         try defaulting.liquidationCallByDefaulting(borrower) {
             // nothing to do
@@ -830,6 +854,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         } else {
             vm.assume(_printLtv(borrower) < 1e18);
         }
+
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
 
         defaulting.liquidationCallByDefaulting(borrower);
         _assertProtectedRatioDidNotchanged();
@@ -1043,6 +1070,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _printBalances(silo1, lpProvider);
 
         _createIncentiveController();
+
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
+
         defaulting.liquidationCallByDefaulting(borrower);
 
         console2.log("AFTER LIQUIDATION");
