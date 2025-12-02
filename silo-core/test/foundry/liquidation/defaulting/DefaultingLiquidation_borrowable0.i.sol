@@ -46,29 +46,40 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_happyPath -vv
     */
     function test_defaulting_happyPath_oneBorrower() public override {
+        _check_defaulting_happyPath_oneBorrower(false);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_happyPath_twoBorrowers -vv --mc DefaultingLiquidationBorrowable0Test
+    */
+    function test_defaulting_happyPath_twoBorrowers() public override {
+        _check_defaulting_happyPath_oneBorrower(true);
+    }
+
+    function _check_defaulting_happyPath_oneBorrower(bool _withOtherBorrower) internal {
         (
-            UserState memory collateralUserBefore,
-            UserState memory debtUserBefore,
+            UserState memory borrowerCollateralBefore,
+            UserState memory borrowerDebtBefore,
             SiloState memory collateralSiloBefore,
             SiloState memory debtSiloBefore,
             uint256 collateralToLiquidate,
             uint256 debtToRepay
-        ) = _defaulting_happyPath(false);
+        ) = _defaulting_happyPath(_withOtherBorrower);
 
         assertEq(silo0.getLtv(borrower), 0, "LT config for this market is 97%, so we expect here full liquidation");
 
         (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
 
-        UserState memory collateralUserAfter = _getUserState(collateralSilo, borrower);
-        UserState memory debtUserAfter = _getUserState(debtSilo, borrower);
-
-        uint256 debtShares = debtUserBefore.debtShares - debtUserAfter.debtShares;
+        UserState memory borrowerCollateralAfter = _getUserState(collateralSilo, borrower);
+        UserState memory borrowerDebtAfter = _getUserState(debtSilo, borrower);
 
         {
             // silo check
 
             SiloState memory collateralSiloAfter = _getSiloState(collateralSilo);
             SiloState memory debtSiloAfter = _getSiloState(debtSilo);
+
+            uint256 debtShares = borrowerDebtBefore.debtShares - borrowerDebtAfter.debtShares;
 
             assertEq(
                 collateralSiloBefore.totalCollateralShares,
@@ -136,7 +147,11 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
                 debtSiloBefore.totalDebt, debtSiloAfter.totalDebt + debtToRepay, "[debtSilo] total debt was canceled"
             );
 
-            assertEq(debtSiloAfter.totalDebt, 0, "[debtSilo] total debt is 0 now, because of full liquidation");
+            assertEq(
+                debtSiloAfter.totalDebt,
+                debtSilo.maxRepay(makeAddr("otherBorrower")),
+                "[debtSilo] total debt is 0 (or just other debt) now, because of full liquidation"
+            );
 
             assertEq(
                 debtSiloBefore.totalDebtShares,
@@ -145,48 +160,55 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
             );
 
             assertEq(
-                debtSiloAfter.totalDebtShares, 0, "[debtSilo] total debt shares is 0 now, because of full liquidation"
+                debtSiloAfter.totalDebtShares,
+                debtSilo.maxRepayShares(makeAddr("otherBorrower")),
+                "[debtSilo] total debt shares is 0 (or only other debt shares) now, because of full liquidation"
             );
         }
-
-        uint256 collateralLiquidated = 0.489690721649484537e18; // hardcoded based on liquidation
-        uint256 protectedLiquidated = collateralToLiquidate - collateralLiquidated;
 
         {
             // borrower checks
 
-            uint256 underestimation = 2;
+            uint256 collateralLiquidated = 0.489690721649484537e18; // hardcoded based on liquidation
+            if (_withOtherBorrower) collateralLiquidated -= 1;
+
+            uint256 protectedLiquidated = collateralToLiquidate - collateralLiquidated;
 
             assertEq(
-                collateralUserBefore.collateralAssets,
+                borrowerCollateralBefore.collateralAssets,
                 collateralLiquidated,
                 "[collateralUser] borrower collateral before liquidation"
             );
 
             assertEq(
-                collateralUserAfter.collateralAssets, 0, "[collateralUser] borrower collateral was fully liquidated"
+                borrowerCollateralAfter.collateralAssets,
+                0,
+                "[collateralUser] borrower collateral was fully liquidated"
             );
 
             assertEq(
-                collateralUserBefore.protectedAssets,
-                protectedLiquidated + underestimation,
+                borrowerCollateralBefore.protectedAssets,
+                protectedLiquidated,
                 "[collateralUser] borrower protected before liquidation"
             );
 
             assertEq(
-                collateralUserAfter.protectedAssets, 0, "[collateralUser] borrower protected was fully liquidated"
+                borrowerCollateralAfter.protectedAssets, 0, "[collateralUser] borrower protected was fully liquidated"
             );
 
-            assertEq(debtUserBefore.debtAssets, debtToRepay, "[debtUser] debt amount canceled");
+            assertEq(borrowerDebtBefore.debtAssets, debtToRepay, "[debtUser] debt amount canceled");
 
-            assertEq(debtUserAfter.debtAssets, 0, "[debtUser] borrower debt canceled");
+            assertEq(borrowerDebtAfter.debtAssets, 0, "[debtUser] borrower debt canceled");
         }
 
         {
             // lpProvider checks
 
             uint256 totalGaugeRewards = 0.488721037052158825046e21; // hardcoded based on logs
+            if (_withOtherBorrower) totalGaugeRewards -= 998;
+
             uint256 totalProtectedRewards = 0.499009900990099009901e21; // hardcoded based on logs
+
             (address protectedShareToken,,) = siloConfig.getShareTokens(address(collateralSilo));
 
             assertEq(collateralSilo.balanceOf(address(gauge)), totalGaugeRewards, "gauge shares/rewards");
@@ -198,13 +220,17 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
             );
 
             address lpProvider = makeAddr("lpProvider");
-            UserState memory depositorDebt = _getUserState(debtSilo, lpProvider);
 
-            assertEq(
-                depositorDebt.collateralAssets,
-                0.019396119484670633e18, // hardcoded based on logs
-                "[lpProvider] collateral cut by liquidated collateral"
-            );
+            {
+                uint256 lpProviderCollateralLeft = 0.019396119484670633e18; // hardcoded based on logs
+                if (_withOtherBorrower) lpProviderCollateralLeft += 1.004211641545988107e18;
+
+                assertEq(
+                    _getUserState(debtSilo, lpProvider).collateralAssets,
+                    lpProviderCollateralLeft, // hardcoded based on logs
+                    "[lpProvider] collateral cut by liquidated collateral"
+                );
+            }
 
             assertEq(
                 collateralSilo.balanceOf(lpProvider), 0, "[lpProvider] shares are not in lp wallet, they are in gauge"
@@ -265,14 +291,16 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
         }
 
         {
+            if (_withOtherBorrower) {
+                token0.setOnDemand(true);
+                debtSilo.repayShares(debtSilo.maxRepayShares(makeAddr("otherBorrower")), makeAddr("otherBorrower"));
+                token0.setOnDemand(false);
+            }
+
             //exit from debt silo
             _assertUserCanExit(debtSilo, makeAddr("protectedUser"));
             _assertUserCanExit(debtSilo, makeAddr("lpProvider"));
         }
-    }
-
-    function test_defaulting_happyPath_twoBorrowers() public override {
-        // TODO
     }
 
     /*

@@ -116,10 +116,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     function _defaulting_happyPath(bool _withOtherBorrower)
         internal
         returns (
-            UserState memory collateralState,
-            UserState memory debtState,
-            SiloState memory collateralSiloState,
-            SiloState memory debtSiloState,
+            UserState memory borrowerCollateralBefore,
+            UserState memory borrowerDebtBefore,
+            SiloState memory collateralSiloBefore,
+            SiloState memory debtSiloBefore,
             uint256 collateralToLiquidate,
             uint256 debtToRepay
         )
@@ -138,14 +138,21 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         debtSilo.deposit(assets, protectedUser, ISilo.CollateralType.Protected);
         depositors.push(protectedUser);
 
+        bool success;
+
         // TODO do it with other borrower
         if (_withOtherBorrower) {
-            bool success = _createPosition({_borrower: makeAddr("randomBorrower"), _collateral: assets / 2, _protected: assets / 2, _maxOut: false});
+            success = _createPosition({
+                _borrower: makeAddr("otherBorrower"),
+                _collateral: assets / 2,
+                _protected: assets / 2,
+                _maxOut: false
+            });
             vm.assume(success);
             _addLiquidity(assets);
         }
 
-        bool success =
+        success =
             _createPosition({_borrower: borrower, _collateral: assets / 2, _protected: assets / 2, _maxOut: true});
         assertTrue(success, "create position failed");
 
@@ -162,15 +169,21 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         debtSilo.accrueInterest();
         assertGt(_printRevenue(debtSilo), 0, "we need case with fees");
 
-        collateralState = _getUserState(collateralSilo, borrower);
-        debtState = _getUserState(debtSilo, borrower);
-        collateralSiloState = _getSiloState(collateralSilo);
-        debtSiloState = _getSiloState(debtSilo);
+        borrowerCollateralBefore = _getUserState(collateralSilo, borrower);
+        borrowerDebtBefore = _getUserState(debtSilo, borrower);
+        collateralSiloBefore = _getSiloState(collateralSilo);
+        debtSiloBefore = _getSiloState(debtSilo);
 
-        (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
+        partialLiquidation.maxLiquidation(borrower);
 
-        defaulting.liquidationCallByDefaulting(borrower);
+        console2.log("maxRepay borrower:", debtSilo.maxRepay(borrower));
+        console2.log("maxRepay other borrower:", debtSilo.maxRepay(makeAddr("otherBorrower")));
+
+        (collateralToLiquidate, debtToRepay) = defaulting.liquidationCallByDefaulting(borrower);
         console2.log("AFTER DEFAULTING what happened?");
+
+        console2.log("maxRepay borrower:", debtSilo.maxRepay(borrower));
+        console2.log("maxRepay other borrower:", debtSilo.maxRepay(makeAddr("otherBorrower")));
 
         token0.setOnDemand(false);
         token1.setOnDemand(false);
