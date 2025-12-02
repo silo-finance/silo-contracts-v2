@@ -61,19 +61,22 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         validateDefaultingCollateral(silo0, silo1);
     }
     
-    // TODO
-    // function liquidationCallByDefaulting(address _borrower, uint256 _maxDebtToCover);
-
-    /// @dev reverts when:
-    /// - `_borrower` is solvent in terms of defaulting (might be insolvent for standard liquidation)
-    /// - when asset:share ratio is changes so much 
-    ///   that `convertToShares` returns more shares to liquidate than totalShares in system, eg: 
-    ///   totalAssets = 100, totalShares = 10, assetsToLiquidate = 1
-    function liquidationCallByDefaulting(address _borrower) // solhint-disable-line function-max-lines, code-complexity
-        external
+    /// @inheritdoc IPartialLiquidationByDefaulting
+    function liquidationCallByDefaulting(address _borrower) 
+        external 
         virtual
-        nonReentrant
-        onlyAllowedOrPublic
+        returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
+    {
+        (withdrawCollateral, repayDebtAssets) = liquidationCallByDefaulting(_borrower, type(uint256).max);
+    }
+
+    /// @inheritdoc IPartialLiquidationByDefaulting
+    // solhint-disable-next-line function-max-lines, code-complexity
+    function liquidationCallByDefaulting(address _borrower, uint256 _maxDebtToCover)
+        public
+        virtual
+        nonReentrant // TODO test
+        onlyAllowedOrPublic // TODO test
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
         ISiloConfig siloConfigCached = siloConfig;
@@ -95,7 +98,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             _collateralConfig: collateralConfig,
             _debtConfig: debtConfig,
             _user: _borrower,
-            _maxDebtToCover: type(uint256).max,
+            _maxDebtToCover: _maxDebtToCover,
             _liquidationFee: collateralConfig.liquidationFee
         });
 
@@ -156,9 +159,9 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
 
         // settle debt without transferring tokens to silo, by defaulting on debt repayment
 
-        _repayDebtByDefaulting(debtConfig.silo, repayDebtAssets, _borrower);
-
-        // TODO: test that if repay reverts, all reverts
+        // during actual repay we have conversion assets -> shares -> assets, so we can loose some precision
+        // it is possible to deduct 1 wei less from debtTotalAssets than from collateralTotalAssets because of rounding
+        (, repayDebtAssets) = _repayDebtByDefaulting(debtConfig.silo, repayDebtAssets, _borrower);
 
         emit LiquidationCall(msg.sender, debtConfig.silo, _borrower, repayDebtAssets, withdrawCollateral, true);
     }
@@ -195,7 +198,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         ISiloConfig.ConfigData memory config0 = siloConfig.getConfig(_silo0);
         ISiloConfig.ConfigData memory config1 = siloConfig.getConfig(_silo1);
 
-        require(config0.maxLtv == 0 || config1.maxLtv == 0, TwoWayMarketNotAllowed());
+        require(config0.lt == 0 || config1.lt == 0, TwoWayMarketNotAllowed());
         
         require(config0.lt + LT_MARGIN_FOR_DEFAULTING < _DECIMALS_PRECISION, InvalidLTConfig0());
         require(config1.lt + LT_MARGIN_FOR_DEFAULTING < _DECIMALS_PRECISION, InvalidLTConfig1());
@@ -212,16 +215,30 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         });
     }
 
-    function _repayDebtByDefaulting(address _silo, uint256 _assets, address _borrower) internal virtual {
-        _callOnBehalfOfSilo({
+    function _repayDebtByDefaulting(address _silo, uint256 _assets, address _borrower) 
+        internal 
+        virtual 
+        returns (uint256 shares, uint256 assets) 
+    { 
+        (bytes memory data) = _callOnBehalfOfSilo({
             _silo: ISilo(_silo), 
-            _calldata: abi.encodeWithSelector(DefaultingSiloLogic.repayDebtByDefaulting.selector, _assets, _borrower), 
+            _calldata: abi.encodeWithSelector(
+                DefaultingSiloLogic.repayDebtByDefaulting.selector, _assets, _borrower
+            ), 
             _errorWhenRevert: RepayDebtByDefaultingFailed.selector
         });
+
+        (shares, assets) = abi.decode(data, (uint256, uint256));
     }
 
-    function _callOnBehalfOfSilo(ISilo _silo, bytes memory _calldata, bytes4 _errorWhenRevert) internal virtual {
-        (bool success, bytes memory data) = _silo.callOnBehalfOfSilo({
+    function _callOnBehalfOfSilo(ISilo _silo, bytes memory _calldata, bytes4 _errorWhenRevert) 
+        internal
+        virtual
+        returns (bytes memory data) 
+    {
+        bool success;
+
+        (success, data) = _silo.callOnBehalfOfSilo({
             _target: LIQUIDATION_LOGIC,
             _value: 0,
             _callType: ISilo.CallType.Delegatecall,
@@ -274,6 +291,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         }
     }
 
+    // solhint-disable function-max-lines
     function _getKeeperAndLenderSharesSplit(
         address _silo,
         address _shareToken,

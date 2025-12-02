@@ -3,6 +3,13 @@ pragma solidity >=0.5.0;
 
 import {ISilo} from "./ISilo.sol";
 
+/// @notice Partial liquidation by defaulting will cancel borrower debt and distribute collateral shares 
+/// to lenders via incentive contract. Lenders have to claim their shares to get them. 
+/// Executor will get liquidation fee directly on his wallet.
+/// Partial liquidation by defaulting can reset total assets completely while leaving shares behind. 
+/// In that case, all shares will be worth 0 and next deposit will lose the value of that left shares.
+/// Partial liquidation by defaulting can deduct collateral by 1 wei more than debt. This can happen 
+/// when we doing full liquidation and conversion assets -> shares -> assets loses 1 wei.
 interface IPartialLiquidationByDefaulting {
     struct CallParams {
         uint256 collateralSharesTotal;
@@ -15,6 +22,11 @@ interface IPartialLiquidationByDefaulting {
         uint256 protectedSharesForLenders;
         bytes4 customError;
     }
+    
+    /// @param canceledDebt amount of debt that was canceled by liquidation
+    /// @param deductedFromCollateral amount of collateral that was deducted from collateral, 
+    /// it might be lower then debt eg in case of bad debt
+    event DefaultingLiquidation(uint256 canceledDebt, uint256 deductedFromCollateral);
 
     error NoControllerForCollateral();
     error CollateralNotSupportedForDefaulting();
@@ -33,10 +45,20 @@ interface IPartialLiquidationByDefaulting {
     /// @dev this method reverts when:
     /// - `_maxDebtToCover` is zero
     /// - `_user` is solvent and there is no debt to cover
+    /// - `_borrower` is solvent in terms of defaulting (might be insolvent for standard liquidation)
+    /// - when asset:share ratio is changes so much 
+    ///   that `convertToShares` returns more shares to liquidate than totalShares in system, eg: 
+    ///   totalAssets = 100, totalShares = 10, assetsToLiquidate = 1
     /// @param _user The address of the borrower getting liquidated
+    /// @param _maxDebtToCover The maximum debt amount of borrowed `asset` the liquidator wants to cover
     /// @return withdrawCollateral collateral that was send to `msg.sender`, in case of `_receiveSToken` is TRUE,
     /// `withdrawCollateral` will be estimated, on redeem one can expect this value to be rounded down
     /// @return repayDebtAssets actual debt value that was repaid by `msg.sender`
+    function liquidationCallByDefaulting(address _user, uint256 _maxDebtToCover)
+        external
+        returns (uint256 withdrawCollateral, uint256 repayDebtAssets);
+    
+    /// @notice check `liquidationCallByDefaulting(address _user, uint256 _maxDebtToCover)` for details
     function liquidationCallByDefaulting(address _user)
         external
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets);
@@ -47,9 +69,12 @@ interface IPartialLiquidationByDefaulting {
         ISilo.CollateralType _collateralType
     ) external view returns (uint256 totalSharesToLiquidate, uint256 keeperShares, uint256 lendersShares);
 
+    // solhint-disable-next-line func-name-mixedcase
     function LT_MARGIN_FOR_DEFAULTING() external view returns (uint256);
 
+    // solhint-disable-next-line func-name-mixedcase
     function LIQUIDATION_LOGIC() external view returns (address);
 
+    // solhint-disable-next-line func-name-mixedcase
     function KEEPER_FEE() external view returns (uint256);   
 }
