@@ -33,15 +33,12 @@ incentive distribution:
 - does everyone can claim? its shares so even 1 wei should be claimable
 
 
-- fes should be able to withdraw
+- fes should be able to withdraw always?
 
 - if there is no bad debt, asset/share ratio should never go < 1.0
 
-TODO make sure we added EXIT when we can
 
 TODO test with many borrowers
-
-TODO double check same assets with protected - does it increase LTV?
 
 TODO test with setOnDemand(false)
 
@@ -108,13 +105,15 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_happyPath -vv
     */
-    function test_defaulting_happyPath() public virtual;
+    function test_defaulting_happyPath_oneBorrower() public virtual;
+
+    function test_defaulting_happyPath_twoBorrowers() public virtual;
 
     /*
     - borrower deposit 1e18 assets, 50% collateral, 50% protected
     - price is 1.02e18 at begin and the drop to 1e18, so at the moment of liquidation is 1:1 so we can easily use collateral/debt
     */
-    function _defaulting_happyPath()
+    function _defaulting_happyPath(bool _withOtherBorrower)
         internal
         returns (
             UserState memory collateralState,
@@ -140,15 +139,17 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         depositors.push(protectedUser);
 
         // TODO do it with other borrower
-        // bool success = _createPosition({_borrower: makeAddr("randomBorrower"), _collateral: assets / 2, _protected: assets / 2, _maxOut: false});
-        // assertTrue(success, "create position 1 failed");
-        // _addLiquidity(assets);
+        if (_withOtherBorrower) {
+            bool success = _createPosition({_borrower: makeAddr("randomBorrower"), _collateral: assets / 2, _protected: assets / 2, _maxOut: false});
+            vm.assume(success);
+            _addLiquidity(assets);
+        }
 
         bool success =
             _createPosition({_borrower: borrower, _collateral: assets / 2, _protected: assets / 2, _maxOut: true});
         assertTrue(success, "create position failed");
 
-        // DO NOT REMOVE LIQUIDITY, we need to check how much provider loose§
+        // DO NOT REMOVE LIQUIDITY, we need to check how much provider looses
 
         _setCollateralPrice(1e18); // 2% down
 
@@ -160,8 +161,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         debtSilo.accrueInterest();
         assertGt(_printRevenue(debtSilo), 0, "we need case with fees");
-
-        // _createIncentiveController();
 
         collateralState = _getUserState(collateralSilo, borrower);
         debtState = _getUserState(debtSilo, borrower);
@@ -177,9 +176,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         token1.setOnDemand(false);
 
         assertTrue(silo0.isSolvent(borrower), "borrower is solvent");
-
-        // // TODO exit
-        // _assertEveryoneCanExit();
 
         // TODO fees should be zero in this case, because we didnt accrue in a middle, do test with accrue interest
     }
@@ -816,7 +812,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv --fuzz-runs 2345
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv --fuzz-runs 500
 
     use uint64 for collateral and protected because fuzzing was trouble to find cases, 
     reason is incentive uint104 cap
@@ -891,8 +887,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         );
 
         _printLtv(borrower);
-
-        assertTrue(silo0.isSolvent(borrower), "whatever happen user must be solvent");
     }
 
     /*

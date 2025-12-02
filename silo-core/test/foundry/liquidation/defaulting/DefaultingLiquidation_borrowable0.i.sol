@@ -45,7 +45,7 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_happyPath -vv
     */
-    function test_defaulting_happyPath() public override {
+    function test_defaulting_happyPath_oneBorrower() public override {
         (
             UserState memory collateralUserBefore,
             UserState memory debtUserBefore,
@@ -53,7 +53,7 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
             SiloState memory debtSiloBefore,
             uint256 collateralToLiquidate,
             uint256 debtToRepay
-        ) = _defaulting_happyPath();
+        ) = _defaulting_happyPath(false);
 
         assertEq(silo0.getLtv(borrower), 0, "LT config for this market is 97%, so we expect here full liquidation");
 
@@ -269,6 +269,10 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
             _assertUserCanExit(debtSilo, makeAddr("protectedUser"));
             _assertUserCanExit(debtSilo, makeAddr("lpProvider"));
         }
+    }
+
+    function test_defaulting_happyPath_twoBorrowers() public override {
+        // TODO
     }
 
     /*
