@@ -393,6 +393,16 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         siloState.totalDebtShares = IShareToken(debtShareToken).totalSupply();
     }
 
+    function _printSiloState(ISilo _silo) internal view {
+        SiloState memory siloState = _getSiloState(_silo);
+        console2.log("total collateral", siloState.totalCollateral);
+        console2.log("total protected", siloState.totalProtected);
+        console2.log("total debt", siloState.totalDebt);
+        console2.log("total collateral shares", siloState.totalCollateralShares);
+        console2.log("total protected shares", siloState.totalProtectedShares);
+        console2.log("total debt shares", siloState.totalDebtShares);
+    }
+
     function _getUserState(ISilo _silo, address _user) internal view returns (UserState memory userState) {
         (address protectedShareToken, address collateralShareToken, address debtShareToken) =
             siloConfig.getShareTokens(address(_silo));
