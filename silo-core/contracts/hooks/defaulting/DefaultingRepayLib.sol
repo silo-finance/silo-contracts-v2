@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.28;
 
+import {console2} from "forge-std/console2.sol";
+
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
@@ -31,6 +33,7 @@ library DefaultingRepayLib {
         external
         returns (uint256 assets, uint256 shares)
     {
+        console2.log("actionsRepay input:", _assets);
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
         if (_shareStorage.hookSetup.hooksBefore.matchAction(Hook.REPAY)) {
@@ -48,6 +51,8 @@ library DefaultingRepayLib {
         (assets, shares) = siloLendingLibRepay(
             IShareToken(debtShareToken), debtAsset, _assets, _shares, _borrower, _repayer
         );
+
+        console2.log("actionsRepay siloLendingLibRepay:", _assets);
 
         siloConfig.turnOffReentrancyProtection();
 
