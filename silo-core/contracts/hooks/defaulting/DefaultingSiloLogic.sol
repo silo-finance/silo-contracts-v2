@@ -7,6 +7,9 @@ import {SafeCast} from "openzeppelin-contracts/contracts/utils/math/SafeCast.sol
 
 import {SiloStorageLib} from "silo-core/contracts/lib/SiloStorageLib.sol";
 import {DefaultingRepayLib} from "silo-core/contracts/hooks/defaulting/DefaultingRepayLib.sol";
+import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IPartialLiquidationByDefaulting.sol";
+
+
 
 /// @title DefaultingSiloLogic
 /// @dev implements custom logic for Silo to do delegate calls
@@ -15,11 +18,14 @@ contract DefaultingSiloLogic {
     using Math for uint192;
     using SafeCast for uint256;
 
-    /// @dev This is a copy of Silo.sol repay() function with a single line changed.
-    /// DefaultingRepayLib.actionsRepay() is used instead of Actions.repay().
-    function repayDebtByDefaulting(uint256 _assets, address _borrower) external virtual returns (uint256 shares) {
-        uint256 assets;
-
+    /// @dev This is a copy of Silo.sol repay() function with this changes:
+    /// - DefaultingRepayLib.actionsRepay() is used instead of Actions.repay()
+    /// - returns shares and assets instead only shares
+    function repayDebtByDefaulting(uint256 _assets, address _borrower) 
+        external
+        virtual
+        returns (uint256 shares, uint256 assets) 
+    {
         (assets, shares) = DefaultingRepayLib.actionsRepay({
             _assets: _assets,
             _shares: 0,
@@ -36,17 +42,17 @@ contract DefaultingSiloLogic {
         bool success;
         uint256 totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
 
-        // if underflow happens, $.totalAssets[ISilo.AssetType.Collateral] is set to 0
+        // if underflow happens, $.totalAssets[ISilo.AssetType.Collateral] is set to 0 and success is false
         (success, $.totalAssets[ISilo.AssetType.Collateral]) = totalCollateralAssets.trySub(_assetsToRepay);
+        uint256 deductedFromCollateral = _assetsToRepay;
         
         if (!success) {
-            // TODO: what happens when totalCollateralAssets is 0 but there are shares? What are side effects?
-            // if there is more debt to cancel than collateral deposited, decrease daoAndDeployerRevenue
-            // so that the revenue does not take from future deposits
             uint256 excessDebt = _assetsToRepay - totalCollateralAssets;
-            uint256 revenue = $.daoAndDeployerRevenue;
-            (, revenue) = revenue.trySub(excessDebt);
+            deductedFromCollateral = totalCollateralAssets;
+            (, uint256 revenue) = uint256($.daoAndDeployerRevenue).trySub(excessDebt);
             $.daoAndDeployerRevenue = revenue.toUint192();
         }
+
+        emit IPartialLiquidationByDefaulting.DefaultingLiquidation(_assetsToRepay, deductedFromCollateral);
     }
 }
