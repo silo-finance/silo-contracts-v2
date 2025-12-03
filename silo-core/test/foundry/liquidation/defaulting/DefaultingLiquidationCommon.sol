@@ -837,7 +837,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         console2.log("AFTER WARP AND PRICE CHANGE");
 
-        _makeDefaultingPossible(borrower, 0.001e18, 1 hours);
+        _moveUntillDefaultingPossible(borrower, 0.001e18, 1 hours);
 
         // if oracle is throwing, we can not test anything
         vm.assume(!_isOracleThrowing(borrower));
@@ -943,7 +943,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         bool success = _createPosition({_borrower: borrower, _collateral: 1e18, _protected: 10, _maxOut: true});
         vm.assume(success);
 
-        _makeDefaultingPossible(borrower, 0.001e18, 1 days);
+        _moveUntillDefaultingPossible(borrower, 0.001e18, 1 days);
 
         uint256 ltv = _printLtv(borrower);
 
@@ -1038,7 +1038,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint256 price = 1e18;
         _setCollateralPrice(price);
 
-        _makeDefaultingPossible(borrower, 0.001e18, 1 hours);
+        _moveUntillDefaultingPossible(borrower, 0.001e18, 1 hours);
 
         (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getBorrowerShareTokens(borrower);
 
@@ -1268,14 +1268,103 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_defaultingIsProRata_badDebt -vv
+    */
+    function test_incentiveDistribution_defaultingIsProRata_badDebt(uint64 _collateral, uint64 _protected) public {
+        _incentiveDistribution_defaultingIsProRata(_collateral, _protected, true);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_defaultingIsProRata_insolvent -vv
+    */
+    function test_incentiveDistribution_defaultingIsProRata_insolvent(uint64 _collateral, uint64 _protected) public {
+        _incentiveDistribution_defaultingIsProRata(_collateral, _protected, false);
+    }
+
+    /*
     bad debt scenario: everybody can exit with the same loss
     */
+    function _incentiveDistribution_defaultingIsProRata(uint256 _collateral, uint256 _protected, bool _badDebt) internal {
+        (, ISilo debtSilo) = _getSilos();
+
+        uint256 shares1 = debtSilo.deposit(1e18, makeAddr("lpProvider1"));
+        uint256 shares2 = debtSilo.deposit(0.5e18, makeAddr("lpProvider2"));
+
+        uint256 totalSupplyBefore = debtSilo.totalSupply();
+
+        _createIncentiveController();
+
+        bool success = _createPosition({
+            _borrower: borrower,
+            _collateral: _collateral,
+            _protected: _protected,
+            _maxOut: true
+        });
+
+        vm.assume(success);
+
+        uint256 price = oracle0.price();
+
+        if (_badDebt) {
+            _moveUntillBadDebt(borrower, 0.005e18, 24 hours);
+        } else {
+            _moveUntillDefaultingPossible(borrower, 0.001e18, 1 hours);
+        }
+
+        (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getBorrowerShareTokens(borrower);
+
+        defaulting.liquidationCallByDefaulting(borrower);
+
+        uint256 shares3 = debtSilo.deposit(10e18, makeAddr("lpProvider3"));
+
+        uint256 collateralRewards = collateralShareToken.balanceOf(address(gauge));
+        uint256 protectedRewards = protectedShareToken.balanceOf(address(gauge));
+
+        vm.prank(makeAddr("lpProvider1"));
+        gauge.claimRewards(makeAddr("lpProvider1"));
+        vm.prank(makeAddr("lpProvider2"));
+        gauge.claimRewards(makeAddr("lpProvider2"));
+        vm.prank(makeAddr("lpProvider3"));
+        gauge.claimRewards(makeAddr("lpProvider3"));
+
+        assertEq(
+            protectedShareToken.balanceOf(makeAddr("lpProvider1")),
+            shares1 * protectedRewards / totalSupplyBefore,
+            "[lpProvider1] protected rewards are pro rata"
+        );
+
+        assertEq(
+            protectedShareToken.balanceOf(makeAddr("lpProvider2")),
+            shares2 * protectedRewards / totalSupplyBefore,
+            "[lpProvider2] protected rewards are pro rata"
+        );
+
+        assertEq(
+            protectedShareToken.balanceOf(makeAddr("lpProvider3")),
+            0,
+            "[lpProvider3] no protected rewards because deposit after liquidation"
+        );
+
+        assertEq(
+            collateralShareToken.balanceOf(makeAddr("lpProvider1")),
+            shares1 * collateralRewards / totalSupplyBefore,
+            "[lpProvider1] collateral rewards are pro rata"
+        );
+
+        assertEq(
+            collateralShareToken.balanceOf(makeAddr("lpProvider2")),
+            shares2 * collateralRewards / totalSupplyBefore,
+            "[lpProvider2] collateral rewards are pro rata"
+        );
+
+        assertEq(
+            collateralShareToken.balanceOf(makeAddr("lpProvider3")),
+            0,
+            "[lpProvider3] no collateral rewards because deposit after liquidation"
+        );
+    }
 
     /*
-    if no bad debt, both liquidations are the same
-    */
-
-    /*
-    fee is corectly splitted 
+    few liquidations in a row give us same result (when distrubution cap is reached)
     */
 }

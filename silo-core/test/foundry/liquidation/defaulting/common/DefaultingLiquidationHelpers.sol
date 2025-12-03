@@ -438,10 +438,23 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         }
     }
 
-    function _makeDefaultingPossible(address _borrower, uint64 _priceDrop, uint64 _warp) internal {
+    function _moveUntillDefaultingPossible(address _borrower, uint64 _priceDrop, uint64 _warp) internal {
         uint256 price = oracle0.price();
 
         while (!_defaultingPossible(_borrower)) {
+            price -= _priceDrop;
+            _setCollateralPrice(price);
+            vm.warp(block.timestamp + _warp);
+
+            // vm.assume(!_isOracleThrowing(_borrower));
+        }
+    }
+    
+    function _moveUntillBadDebt(address _borrower, uint64 _priceDrop, uint64 _warp) internal {
+        uint256 price = oracle0.price();
+        (, ISilo debtSilo) = _getSilos();
+
+        while (debtSilo.getLtv(_borrower) < 1e18) {
             price -= _priceDrop;
             _setCollateralPrice(price);
             vm.warp(block.timestamp + _warp);

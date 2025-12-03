@@ -178,8 +178,6 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
                 "[collateralUser] borrower protected taken"
             );
 
-            console2.log("debtToRepay", debtToRepay);
-
             // with two borrowers 1 wei was transfered to the one that is doing repay
             // because we alwasy repay "more"
             assertEq(
@@ -268,8 +266,6 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
 
             _assertWithdrawableFees(debtSilo);
             _assertNoWithdrawableFees(debtSilo);
-
-            _printRevenue(debtSilo);
 
             uint256 daoBalance = IERC20(debtSilo.asset()).balanceOf(daoFeeReceiver);
             uint256 deployerBalance = IERC20(debtSilo.asset()).balanceOf(deployerFeeReceiver);
