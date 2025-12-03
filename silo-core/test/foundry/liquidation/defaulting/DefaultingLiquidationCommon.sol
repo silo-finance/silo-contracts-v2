@@ -1112,15 +1112,13 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_everyoneCanClaim_badDebt -vv
     */
-    /// forge-config: core_test.fuzz.runs = 2345
     function test_incentiveDistribution_everyoneCanClaim_badDebt(uint48 _collateral, uint48 _protected) public {
         _incentiveDistribution_everyoneCanClaim(_collateral, _protected, true);
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_everyoneCanClaim_insolvent -vv --fuzz-runs 2345
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_everyoneCanClaim_insolvent -vv
     */
-    /// forge-config: core_test.fuzz.runs = 2345
     function test_incentiveDistribution_everyoneCanClaim_insolvent(uint64 _collateral, uint64 _protected) public {
         _incentiveDistribution_everyoneCanClaim(_collateral, _protected, false);
     }
@@ -1152,22 +1150,12 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         token0.setOnDemand(false);
         token1.setOnDemand(false);
 
-        uint256 price = oracle0.price();
 
-        do {
-            price -= (_badDebt ? 0.005e18 : 0.001e18); // drop price litle by little, to not create bad debt instantly
-            _setCollateralPrice(price);
-            uint256 warp = _badDebt ? 24 hours : 5 hours;
-            vm.warp(block.timestamp + warp);
-
-            vm.assume(!_isOracleThrowing(borrower));
-
-            if (_badDebt && debtSilo.getLtv(borrower) >= 1e18) {
-                break;
-            } else if (!_badDebt && _defaultingPossible(borrower)) {
-                break;
-            }
-        } while (true);
+        if (_badDebt) {
+            _moveUntillBadDebt(borrower, 0.005e18, 24 hours);
+        } else {
+            _moveUntillDefaultingPossible(borrower, 0.001e18, 1 hours);
+        }
 
         (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getBorrowerShareTokens(borrower);
 
@@ -1185,8 +1173,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         vm.prank(makeAddr("lpProvider4"));
         gauge.claimRewards(makeAddr("lpProvider4"));
 
-        bool oneWeiRewardsCollateral = shares1 * collateralRewards / debtSilo.totalSupply() > 0;
-        bool oneWeiRewardsProtected = shares1 * protectedRewards / debtSilo.totalSupply() > 0;
+        bool oneWeiRewardsCollateral = shares1 * collateralRewards / debtSilo.totalSupply();
+        bool oneWeiRewardsProtected = shares1 * protectedRewards / debtSilo.totalSupply();
 
         console2.log("1 wei shares", collateralShareToken.balanceOf(makeAddr("lpProvider1")));
         console2.log("lpProvider2 shares", collateralShareToken.balanceOf(makeAddr("lpProvider2")));
@@ -1197,7 +1185,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         console2.log("oneWeiRewardsProtected", shares1 * protectedRewards / debtSilo.totalSupply());
 
         if (_protected != 0) {
-            if (oneWeiRewardsProtected) {
+            if (oneWeiRewardsProtected != 0) {
                 assertGt(
                     protectedShareToken.balanceOf(makeAddr("lpProvider1")),
                     0,
@@ -1219,7 +1207,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         }
 
         if (_badDebt && _collateral != 0) {
-            if (oneWeiRewardsCollateral) {
+            if (oneWeiRewardsCollateral != 0) {
                 assertGt(
                     collateralShareToken.balanceOf(makeAddr("lpProvider1")),
                     0,
@@ -1303,8 +1291,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         vm.assume(success);
 
-        uint256 price = oracle0.price();
-
         if (_badDebt) {
             _moveUntillBadDebt(borrower, 0.005e18, 24 hours);
         } else {
@@ -1315,7 +1301,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         defaulting.liquidationCallByDefaulting(borrower);
 
-        uint256 shares3 = debtSilo.deposit(10e18, makeAddr("lpProvider3"));
+        debtSilo.deposit(10e18, makeAddr("lpProvider3"));
 
         uint256 collateralRewards = collateralShareToken.balanceOf(address(gauge));
         uint256 protectedRewards = protectedShareToken.balanceOf(address(gauge));
