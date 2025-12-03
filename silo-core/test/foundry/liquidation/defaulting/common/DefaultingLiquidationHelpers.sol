@@ -279,9 +279,9 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         possible = ltv > lt + margin;
 
         // if (!possible) {
-            // emit log_named_decimal_uint("    lt", lt, 16);
-            // emit log_named_decimal_uint("margin", margin, 16);
-            // emit log_named_decimal_uint("   ltv", ltv, 16);
+        // emit log_named_decimal_uint("    lt", lt, 16);
+        // emit log_named_decimal_uint("margin", margin, 16);
+        // emit log_named_decimal_uint("   ltv", ltv, 16);
         // }
 
         // console2.log("defaulting possible: ", possible ? "yes" : "no");
@@ -301,7 +301,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     function _getProgramIdForAddress(address _addressAsName) internal pure virtual returns (bytes32) {
         return bytes32(uint256(uint160(_addressAsName)));
     }
-    
+
     function _getProgramNameForAddress(address _address) internal pure virtual returns (string memory) {
         return Strings.toHexString(_address);
     }

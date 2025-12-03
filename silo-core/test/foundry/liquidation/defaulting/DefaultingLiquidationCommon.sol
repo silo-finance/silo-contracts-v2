@@ -1344,10 +1344,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_twoRewardsReceivers -vv
     */
-    function test_incentiveDistribution_twoRewardsReceivers(
-        uint64 _collateral, uint64 _protected
-    ) public {
-        // (uint64 _collateral, uint64 _protected) = (120, 2);
+    function test_incentiveDistribution_twoRewardsReceivers(uint64 _collateral, uint64 _protected) public {
+        // (uint64 _collateral, uint64 _protected) = (14516, 14941);
         vm.assume(uint256(_collateral) + _protected > 0);
 
         (, ISilo debtSilo) = _getSilos();
@@ -1359,7 +1357,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
 
         vm.assume(success);
-
 
         (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getBorrowerShareTokens(borrower);
         string[] memory programNames = new string[](2);
@@ -1380,35 +1377,33 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         assertGt(collateralRewards1 + protectedRewards1, 0, "expect ANY rewards from first liquidation");
 
-        uint256 lpPrivider1Assets = debtSilo.previewRedeem(debtSilo.balanceOf(makeAddr("lpProvider1")));
+        uint256 lpPrivider1Assets = debtSilo.previewRedeem(shares1);
         vm.assume(lpPrivider1Assets > 0); // we need be able to redeem, so lpProvider1 exit
-        debtSilo.deposit(lpPrivider1Assets, makeAddr("lpProvider2"));
+        // 20% to cover fees
+        debtSilo.deposit(lpPrivider1Assets * 12 / 10, makeAddr("lpProvider2"));
 
-        vm.prank(makeAddr("lpProvider1"));
+        vm.startPrank(makeAddr("lpProvider1"));
         debtSilo.redeem(shares1, makeAddr("lpProvider1"), makeAddr("lpProvider1"));
+        vm.stopPrank();
 
-        success =
-            _createPosition({_borrower: makeAddr("borrower2"), _collateral: _collateral, _protected: _protected, _maxOut: true});
+        success = _createPosition({
+            _borrower: makeAddr("borrower2"),
+            _collateral: _collateral,
+            _protected: _protected,
+            _maxOut: true
+        });
 
         vm.assume(success);
 
         uint256 rewardsBalanceCollateral1 = gauge.getRewardsBalance(makeAddr("lpProvider1"), programNames[0]);
         uint256 rewardsBalanceProtected1 = gauge.getRewardsBalance(makeAddr("lpProvider1"), programNames[1]);
-        console2.log("rewardsBalanceCollateral1", rewardsBalanceCollateral1);
-        console2.log("rewardsBalanceProtected1", rewardsBalanceProtected1);
-        console2.log("collateralRewards1", collateralRewards1);
-        console2.log("protectedRewards1", protectedRewards1);
 
         assertGt(rewardsBalanceCollateral1 + rewardsBalanceProtected1, 0, "[lpProvider1] has claimable rewards");
 
         vm.prank(makeAddr("lpProvider1"));
         gauge.claimRewards(makeAddr("lpProvider1"));
 
-        console2.log("debug 1");
-
         _moveUntillDefaultingPossible(makeAddr("borrower2"), 0.001e18, 1 hours);
-
-        console2.log("debug 2");
 
         vm.assume(_tryDefaulting(makeAddr("borrower2")));
 
