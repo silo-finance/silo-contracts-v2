@@ -1139,17 +1139,12 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         depositors.push(makeAddr("lpProvider3"));
         depositors.push(makeAddr("lpProvider4"));
 
-        bool success = _createPosition({
-            _borrower: borrower,
-            _collateral: _collateral,
-            _protected: _protected,
-            _maxOut: true
-        });
+        bool success =
+            _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
         vm.assume(success);
 
         token0.setOnDemand(false);
         token1.setOnDemand(false);
-
 
         if (_badDebt) {
             _moveUntillBadDebt(borrower, 0.005e18, 24 hours);
@@ -1173,15 +1168,13 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         vm.prank(makeAddr("lpProvider4"));
         gauge.claimRewards(makeAddr("lpProvider4"));
 
-        bool oneWeiRewardsCollateral = shares1 * collateralRewards / debtSilo.totalSupply();
-        bool oneWeiRewardsProtected = shares1 * protectedRewards / debtSilo.totalSupply();
+        uint256 oneWeiRewardsCollateral = shares1 * collateralRewards / debtSilo.totalSupply();
+        uint256 oneWeiRewardsProtected = shares1 * protectedRewards / debtSilo.totalSupply();
 
         console2.log("1 wei shares", collateralShareToken.balanceOf(makeAddr("lpProvider1")));
         console2.log("lpProvider2 shares", collateralShareToken.balanceOf(makeAddr("lpProvider2")));
 
-        console2.log(
-            "oneWeiRewardsCollateral", shares1 * collateralRewards / debtSilo.totalSupply()
-        );
+        console2.log("oneWeiRewardsCollateral", shares1 * collateralRewards / debtSilo.totalSupply());
         console2.log("oneWeiRewardsProtected", shares1 * protectedRewards / debtSilo.totalSupply());
 
         if (_protected != 0) {
@@ -1272,7 +1265,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     bad debt scenario: everybody can exit with the same loss
     */
-    function _incentiveDistribution_defaultingIsProRata(uint256 _collateral, uint256 _protected, bool _badDebt) internal {
+    function _incentiveDistribution_defaultingIsProRata(uint256 _collateral, uint256 _protected, bool _badDebt)
+        internal
+    {
         (, ISilo debtSilo) = _getSilos();
 
         uint256 shares1 = debtSilo.deposit(1e18, makeAddr("lpProvider1"));
@@ -1282,12 +1277,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         _createIncentiveController();
 
-        bool success = _createPosition({
-            _borrower: borrower,
-            _collateral: _collateral,
-            _protected: _protected,
-            _maxOut: true
-        });
+        bool success =
+            _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
 
         vm.assume(success);
 
@@ -1351,6 +1342,129 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    few liquidations in a row give us same result (when distrubution cap is reached)
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_twoRewardsReceivers -vv
     */
+    function test_incentiveDistribution_twoRewardsReceivers(
+        uint64 _collateral, uint64 _protected
+    ) public {
+        // (uint64 _collateral, uint64 _protected) = (120, 2);
+        vm.assume(uint256(_collateral) + _protected > 0);
+
+        (, ISilo debtSilo) = _getSilos();
+        uint256 shares1 = debtSilo.deposit(Math.max(_collateral, _protected), makeAddr("lpProvider1"));
+
+        _createIncentiveController();
+
+        bool success =
+            _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
+
+        vm.assume(success);
+
+
+        (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getBorrowerShareTokens(borrower);
+        string[] memory programNames = new string[](2);
+        programNames[0] = _getProgramNameForAddress(address(collateralShareToken));
+        programNames[1] = _getProgramNameForAddress(address(protectedShareToken));
+
+        console2.log("programNames[0]", programNames[0]);
+        console2.logBytes32(_getProgramIdForAddress(address(collateralShareToken)));
+        console2.log("programNames[1]", programNames[1]);
+        console2.logBytes32(_getProgramIdForAddress(address(protectedShareToken)));
+
+        _moveUntillDefaultingPossible(borrower, 0.001e18, 1 hours);
+
+        vm.assume(_tryDefaulting(borrower));
+
+        uint256 collateralRewards1 = collateralShareToken.balanceOf(address(gauge));
+        uint256 protectedRewards1 = protectedShareToken.balanceOf(address(gauge));
+
+        assertGt(collateralRewards1 + protectedRewards1, 0, "expect ANY rewards from first liquidation");
+
+        uint256 lpPrivider1Assets = debtSilo.previewRedeem(debtSilo.balanceOf(makeAddr("lpProvider1")));
+        vm.assume(lpPrivider1Assets > 0); // we need be able to redeem, so lpProvider1 exit
+        debtSilo.deposit(lpPrivider1Assets, makeAddr("lpProvider2"));
+
+        vm.prank(makeAddr("lpProvider1"));
+        debtSilo.redeem(shares1, makeAddr("lpProvider1"), makeAddr("lpProvider1"));
+
+        success =
+            _createPosition({_borrower: makeAddr("borrower2"), _collateral: _collateral, _protected: _protected, _maxOut: true});
+
+        vm.assume(success);
+
+        uint256 rewardsBalanceCollateral1 = gauge.getRewardsBalance(makeAddr("lpProvider1"), programNames[0]);
+        uint256 rewardsBalanceProtected1 = gauge.getRewardsBalance(makeAddr("lpProvider1"), programNames[1]);
+        console2.log("rewardsBalanceCollateral1", rewardsBalanceCollateral1);
+        console2.log("rewardsBalanceProtected1", rewardsBalanceProtected1);
+        console2.log("collateralRewards1", collateralRewards1);
+        console2.log("protectedRewards1", protectedRewards1);
+
+        assertGt(rewardsBalanceCollateral1 + rewardsBalanceProtected1, 0, "[lpProvider1] has claimable rewards");
+
+        vm.prank(makeAddr("lpProvider1"));
+        gauge.claimRewards(makeAddr("lpProvider1"));
+
+        console2.log("debug 1");
+
+        _moveUntillDefaultingPossible(makeAddr("borrower2"), 0.001e18, 1 hours);
+
+        console2.log("debug 2");
+
+        vm.assume(_tryDefaulting(makeAddr("borrower2")));
+
+        uint256 collateralRewards2 = collateralShareToken.balanceOf(address(gauge));
+        uint256 protectedRewards2 = protectedShareToken.balanceOf(address(gauge));
+
+        assertGt(collateralRewards2 + protectedRewards2, 0, "expect ANY rewards from second liquidation");
+
+        vm.warp(block.timestamp + 1 hours);
+
+        uint256 rewardsBalanceCollateral2 = gauge.getRewardsBalance(makeAddr("lpProvider2"), programNames[0]);
+        uint256 rewardsBalanceProtected2 = gauge.getRewardsBalance(makeAddr("lpProvider2"), programNames[1]);
+        console2.log("rewardsBalanceCollateral2", rewardsBalanceCollateral2);
+        console2.log("rewardsBalanceProtected2", rewardsBalanceProtected2);
+        console2.log("collateralRewards2", collateralRewards2);
+        console2.log("protectedRewards2", protectedRewards2);
+
+        assertEq(
+            gauge.getRewardsBalance(makeAddr("lpProvider1"), programNames[0]),
+            0,
+            "[lpProvider1] no collateral rewards after redeem all collateral"
+        );
+
+        assertEq(
+            gauge.getRewardsBalance(makeAddr("lpProvider1"), programNames[1]),
+            0,
+            "[lpProvider1] no protected rewards after redeem all collateral"
+        );
+
+        assertGt(rewardsBalanceCollateral2 + rewardsBalanceProtected2, 0, "[lpProvider2] has claimable rewards");
+
+        vm.prank(makeAddr("lpProvider2"));
+        gauge.claimRewards(makeAddr("lpProvider2"));
+
+        assertLe(
+            collateralRewards1 - collateralShareToken.balanceOf(makeAddr("lpProvider1")),
+            1,
+            "[lpProvider1] collateral rewards from first liquidation"
+        );
+
+        assertLe(
+            protectedRewards1 - protectedShareToken.balanceOf(makeAddr("lpProvider1")),
+            1,
+            "[lpProvider1] protected rewards from first liquidation"
+        );
+
+        assertLe(
+            collateralRewards2 - collateralShareToken.balanceOf(makeAddr("lpProvider2")),
+            2, // 1 leftover from first + 1 from second liquidation
+            "[lpProvider2] collateral rewards from second liquidation"
+        );
+
+        assertLe(
+            protectedRewards2 - protectedShareToken.balanceOf(makeAddr("lpProvider2")),
+            2, // 1 leftover from first + 1 from second liquidation
+            "[lpProvider2] protected rewards from second liquidation"
+        );
+    }
 }

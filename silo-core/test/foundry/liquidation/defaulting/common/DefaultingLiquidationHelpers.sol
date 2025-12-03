@@ -7,6 +7,7 @@ import {console2} from "forge-std/console2.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -269,7 +270,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         console2.log("maxLiquidation: debtToRepay", debtToRepay);
     }
 
-    function _defaultingPossible(address _user) internal returns (bool possible) {
+    function _defaultingPossible(address _user) internal view returns (bool possible) {
         uint256 margin = defaulting.LT_MARGIN_FOR_DEFAULTING();
         (ISilo collateralSilo,) = _getSilos();
         uint256 lt = collateralSilo.config().getConfig(address(collateralSilo)).lt;
@@ -277,13 +278,13 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
         possible = ltv > lt + margin;
 
-        if (!possible) {
-            emit log_named_decimal_uint("    lt", lt, 16);
-            emit log_named_decimal_uint("margin", margin, 16);
-            emit log_named_decimal_uint("   ltv", ltv, 16);
-        }
+        // if (!possible) {
+            // emit log_named_decimal_uint("    lt", lt, 16);
+            // emit log_named_decimal_uint("margin", margin, 16);
+            // emit log_named_decimal_uint("   ltv", ltv, 16);
+        // }
 
-        console2.log("defaulting possible: ", possible ? "yes" : "no");
+        // console2.log("defaulting possible: ", possible ? "yes" : "no");
     }
 
     function _createIncentiveController() internal {
@@ -297,9 +298,21 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         console2.log("gauge configured");
     }
 
-    /// @param _price 1e18 will make collateral:debt 1:1, 2e18 will make collateral to be 2x more valuable than debt
+    function _getProgramIdForAddress(address _addressAsName) internal pure virtual returns (bytes32) {
+        return bytes32(uint256(uint160(_addressAsName)));
+    }
+    
+    function _getProgramNameForAddress(address _address) internal pure virtual returns (string memory) {
+        return Strings.toHexString(_address);
+    }
+
     function _setCollateralPrice(uint256 _price) internal {
-        emit log_named_decimal_uint("\t[_setCollateralPrice] setting price to", _price, 18);
+        _setCollateralPrice(_price, true);
+    }
+
+    /// @param _price 1e18 will make collateral:debt 1:1, 2e18 will make collateral to be 2x more valuable than debt
+    function _setCollateralPrice(uint256 _price, bool _printLogs) internal {
+        if (_printLogs) emit log_named_decimal_uint("\t[_setCollateralPrice] setting price to", _price, 18);
 
         (ISilo collateralSilo,) = _getSilos();
 
@@ -307,7 +320,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         else oracle0.setPrice(_price == 0 ? 0 : 1e36 / _price);
 
         try oracle0.quote(10 ** token0.decimals(), address(token0)) returns (uint256 _quote) {
-            emit log_named_decimal_uint("token 0 value", _quote, token1.decimals());
+            if (_printLogs) emit log_named_decimal_uint("token 0 value", _quote, token1.decimals());
         } catch {
             console2.log("\t[_setCollateralPrice] quote failed");
         }
@@ -367,6 +380,22 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
             }
 
             RevertLib.revertBytes(e, "executeDefaulting failed");
+        }
+    }
+
+    function _tryDefaulting(address _borrower) internal returns (bool success) {
+        try defaulting.liquidationCallByDefaulting(_borrower) {
+            success = true;
+        } catch {
+            success = false;
+        }
+    }
+
+    function _tryDefaulting(address _borrower, uint256 _maxDebtToCover) internal returns (bool success) {
+        try defaulting.liquidationCallByDefaulting(_borrower, _maxDebtToCover) {
+            success = true;
+        } catch {
+            success = false;
         }
     }
 
@@ -443,24 +472,30 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
         while (!_defaultingPossible(_borrower)) {
             price -= _priceDrop;
-            _setCollateralPrice(price);
+            _setCollateralPrice(price, false);
             vm.warp(block.timestamp + _warp);
 
-            // vm.assume(!_isOracleThrowing(_borrower));
+            vm.assume(!_isOracleThrowing(_borrower));
         }
+
+        _printLtv(_borrower);
+        emit log_named_decimal_uint("price", oracle0.price(), 18);
     }
-    
+
     function _moveUntillBadDebt(address _borrower, uint64 _priceDrop, uint64 _warp) internal {
         uint256 price = oracle0.price();
         (, ISilo debtSilo) = _getSilos();
 
         while (debtSilo.getLtv(_borrower) < 1e18) {
             price -= _priceDrop;
-            _setCollateralPrice(price);
+            _setCollateralPrice(price, false);
             vm.warp(block.timestamp + _warp);
 
             // vm.assume(!_isOracleThrowing(_borrower));
         }
+
+        _printLtv(_borrower);
+        emit log_named_decimal_uint("price", oracle0.price(), 18);
     }
 
     function _printDepositors() internal view {
