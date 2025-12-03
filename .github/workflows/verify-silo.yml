@@ -21,8 +21,8 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    # Skip on PRs from release or hotfix branches
-    if: ${{ !startsWith(github.head_ref, 'release/') && !startsWith(github.head_ref, 'hotfix/') }}
+    # Skip on PRs from release branches
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
 
     permissions:
       pull-requests: write  # Required to post a comment on the PR

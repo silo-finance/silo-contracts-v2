@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [3.13.0] - 2025-12-03
+### Updated
+- silo-core: `PT-iUSD-19FEB2026 / USDC` new market on Mainnet
+
 ## [3.12.0] - 2025-10-28
 ### Updated
 - silo-core: calculate debt to cover for profitable liquidation (#1693)
