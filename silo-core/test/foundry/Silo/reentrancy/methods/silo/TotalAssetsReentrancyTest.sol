@@ -20,7 +20,7 @@ contract TotalAssetsReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        Silo(payable(address(TestStateLib.silo1()))).totalAssets();
         Silo(payable(address(TestStateLib.silo0()))).totalAssets();
+        Silo(payable(address(TestStateLib.silo1()))).totalAssets();
     }
 }

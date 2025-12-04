@@ -21,7 +21,7 @@ contract MaxRedeemReentrancyTest is MethodReentrancyTest {
     function _ensureItWillNotRevert() internal {
         address anyAddr = makeAddr("Any address");
 
-        TestStateLib.silo1().maxRedeem(anyAddr);
         TestStateLib.silo0().maxRedeem(anyAddr);
+        TestStateLib.silo1().maxRedeem(anyAddr);
     }
 }

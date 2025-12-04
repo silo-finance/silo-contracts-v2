@@ -19,7 +19,7 @@ contract ConfigReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo1().config();
         TestStateLib.silo0().config();
+        TestStateLib.silo1().config();
     }
 }

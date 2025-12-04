@@ -11,8 +11,8 @@ import {TestStateLib} from "../../TestState.sol";
 
 contract TransferFromReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
-        MaliciousToken token = MaliciousToken(TestStateLib.token1());
-        ISilo silo = TestStateLib.silo1();
+        MaliciousToken token = MaliciousToken(TestStateLib.token0());
+        ISilo silo = TestStateLib.silo0();
         address depositor = makeAddr("Depositor");
         address receiver = makeAddr("Receiver");
         address spender = makeAddr("Spender");
@@ -52,10 +52,10 @@ contract TransferFromReentrancyTest is MethodReentrancyTest {
 
     function verifyReentrancy() external {
         ISiloConfig config = TestStateLib.siloConfig();
-        ISilo silo1 = TestStateLib.silo1();
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
-        (address protected, address collateral,) = config.getShareTokens(address(silo1));
+        (address protected, address collateral,) = config.getShareTokens(address(silo0));
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareToken(collateral).transferFrom(address(0), address(0), 0);
@@ -63,7 +63,7 @@ contract TransferFromReentrancyTest is MethodReentrancyTest {
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareToken(protected).transferFrom(address(0), address(0), 0);
 
-        (protected, collateral,) = config.getShareTokens(address(silo0));
+        (protected, collateral,) = config.getShareTokens(address(silo1));
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareToken(collateral).transferFrom(address(0), address(0), 0);

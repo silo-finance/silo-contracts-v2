@@ -22,10 +22,10 @@ contract MaxWithdrawWithTypeReentrancyTest is MethodReentrancyTest {
     function _ensureItWillNotRevert() internal {
         address anyAddr = makeAddr("Any address");
 
-        TestStateLib.silo1().maxWithdraw(anyAddr, ISilo.CollateralType.Collateral);
         TestStateLib.silo0().maxWithdraw(anyAddr, ISilo.CollateralType.Collateral);
+        TestStateLib.silo1().maxWithdraw(anyAddr, ISilo.CollateralType.Collateral);
 
-        TestStateLib.silo1().maxWithdraw(anyAddr, ISilo.CollateralType.Protected);
         TestStateLib.silo0().maxWithdraw(anyAddr, ISilo.CollateralType.Protected);
+        TestStateLib.silo1().maxWithdraw(anyAddr, ISilo.CollateralType.Protected);
     }
 }

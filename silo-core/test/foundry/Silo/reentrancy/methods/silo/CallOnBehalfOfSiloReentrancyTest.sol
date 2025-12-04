@@ -22,24 +22,24 @@ contract CallOnBehalfOfSiloReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal {
-        ISilo silo1 = TestStateLib.silo1();
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
         ISiloConfig config = TestStateLib.siloConfig();
 
-        ISiloConfig.ConfigData memory config0 = config.getConfig(address(silo1));
+        ISiloConfig.ConfigData memory config0 = config.getConfig(address(silo0));
 
         address anyAddress = makeAddr("Any address");
         bytes memory payload = abi.encodeWithSelector(IShareToken.balanceOfAndTotalSupply.selector, anyAddress);
 
         vm.prank(address(config0.hookReceiver));
         (bool success,) =
-            silo1.callOnBehalfOfSilo(config0.protectedShareToken, 0, /* eth value */ ISilo.CallType.Call, payload);
+            silo0.callOnBehalfOfSilo(config0.protectedShareToken, 0, /* eth value */ ISilo.CallType.Call, payload);
 
         if (!success) revert();
 
         vm.prank(address(config0.hookReceiver));
         (success,) =
-            silo0.callOnBehalfOfSilo(config0.protectedShareToken, 0, /* eth value */ ISilo.CallType.Call, payload);
+            silo1.callOnBehalfOfSilo(config0.protectedShareToken, 0, /* eth value */ ISilo.CallType.Call, payload);
 
         if (!success) revert();
     }

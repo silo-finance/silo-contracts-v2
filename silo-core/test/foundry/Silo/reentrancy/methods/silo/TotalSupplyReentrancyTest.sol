@@ -20,7 +20,7 @@ contract TotalSupplyReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo1().totalSupply();
         TestStateLib.silo0().totalSupply();
+        TestStateLib.silo1().totalSupply();
     }
 }

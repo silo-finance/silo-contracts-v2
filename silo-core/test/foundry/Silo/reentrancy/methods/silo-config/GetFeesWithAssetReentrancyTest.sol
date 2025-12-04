@@ -19,10 +19,10 @@ contract GetFeesWithAssetReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        address silo1 = address(TestStateLib.silo1());
         address silo0 = address(TestStateLib.silo0());
+        address silo1 = address(TestStateLib.silo1());
 
-        TestStateLib.siloConfig().getFeesWithAsset(silo1);
         TestStateLib.siloConfig().getFeesWithAsset(silo0);
+        TestStateLib.siloConfig().getFeesWithAsset(silo1);
     }
 }

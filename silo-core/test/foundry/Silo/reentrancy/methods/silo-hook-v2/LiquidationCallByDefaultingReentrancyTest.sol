@@ -77,32 +77,32 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
     }
 
     function _createInsolventBorrower(address _depositor, address _borrower) internal {
-        MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
         MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
-        ISilo silo0 = TestStateLib.silo0();
+        MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
         ISilo silo1 = TestStateLib.silo1();
+        ISilo silo0 = TestStateLib.silo0();
         // in case we in reentrancy, we can have case with 0 liquidity, so we need to make sure
         // we deposit enough to be able to borrow
-        uint256 liquidityForBorrow = 10e18 + silo1.totalAssets();
+        uint256 liquidityForBorrow = 10e18 + silo0.totalAssets();
         uint256 collateralAmount = 10e18;
 
-        token1.mint(_depositor, liquidityForBorrow);
+        token0.mint(_depositor, liquidityForBorrow);
 
         vm.prank(_depositor);
-        token1.approve(address(silo1), liquidityForBorrow);
+        token0.approve(address(silo0), liquidityForBorrow);
 
         vm.prank(_depositor);
-        silo1.deposit(liquidityForBorrow, _depositor);
+        silo0.deposit(liquidityForBorrow, _depositor);
 
-        token0.mint(_borrower, collateralAmount);
-
-        vm.prank(_borrower);
-        token0.approve(address(silo0), collateralAmount);
+        token1.mint(_borrower, collateralAmount);
 
         vm.prank(_borrower);
-        silo0.deposit(collateralAmount, _borrower);
+        token1.approve(address(silo1), collateralAmount);
 
-        uint256 maxBorrow = silo1.maxBorrow(_borrower);
+        vm.prank(_borrower);
+        silo1.deposit(collateralAmount, _borrower);
+
+        uint256 maxBorrow = silo0.maxBorrow(_borrower);
 
         if (maxBorrow == 0) {
             console2.log("[LiquidationCallByDefaultingReentrancyTest] we can't borrow");
@@ -110,32 +110,32 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
         }
 
         vm.prank(_borrower);
-        silo1.borrow(maxBorrow, _borrower, _borrower);
+        silo0.borrow(maxBorrow, _borrower, _borrower);
 
         _makeUserInsolvent(_borrower, _depositor);
     }
 
     function _makeUserInsolvent(address _borrower, address _depositor) internal {
-        ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
+        ISilo silo0 = TestStateLib.silo0();
 
-        uint256 maxWithdraw = silo0.maxWithdraw(_borrower);
+        uint256 maxWithdraw = silo1.maxWithdraw(_borrower);
 
         if (maxWithdraw != 0) {
             vm.prank(_borrower);
-            silo0.withdraw(maxWithdraw, _borrower, _borrower);
+            silo1.withdraw(maxWithdraw, _borrower, _borrower);
         }
         
-        maxWithdraw = silo1.maxWithdraw(_depositor);
+        maxWithdraw = silo0.maxWithdraw(_depositor);
 
         if (maxWithdraw != 0) {
             vm.prank(_depositor);
-            silo1.withdraw(maxWithdraw, _depositor, _depositor);
+            silo0.withdraw(maxWithdraw, _depositor, _depositor);
         }
 
         uint256 y;
 
-        while (silo1.isSolvent(_borrower)) {
+        while (silo0.isSolvent(_borrower)) {
             y++;
             vm.warp(block.timestamp + 365 days);
         }

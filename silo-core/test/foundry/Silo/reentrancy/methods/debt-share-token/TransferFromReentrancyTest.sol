@@ -11,10 +11,10 @@ import {TestStateLib} from "../../TestState.sol";
 
 contract TransferFromReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
-        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
-        ISilo silo1 = TestStateLib.silo1();
+        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
         address receiver = makeAddr("Receiver");
@@ -25,26 +25,26 @@ contract TransferFromReentrancyTest is MethodReentrancyTest {
 
         TestStateLib.disableReentrancy();
 
-        token1.mint(depositor, depositAmount);
-        token0.mint(borrower, collateralAmount);
-        token0.mint(receiver, collateralAmount);
+        token0.mint(depositor, depositAmount);
+        token1.mint(borrower, collateralAmount);
+        token1.mint(receiver, collateralAmount);
 
         vm.prank(depositor);
-        token1.approve(address(silo1), depositAmount);
+        token0.approve(address(silo0), depositAmount);
 
         vm.prank(depositor);
-        silo1.deposit(depositAmount, depositor);
+        silo0.deposit(depositAmount, depositor);
 
         vm.prank(borrower);
-        token0.approve(address(silo0), collateralAmount);
+        token1.approve(address(silo1), collateralAmount);
 
         vm.prank(borrower);
-        silo0.deposit(collateralAmount, borrower);
+        silo1.deposit(collateralAmount, borrower);
 
         vm.prank(borrower);
-        silo1.borrow(borrowAmount, borrower, borrower);
+        silo0.borrow(borrowAmount, borrower, borrower);
 
-        (,, address debtToken) = TestStateLib.siloConfig().getShareTokens(address(silo1));
+        (,, address debtToken) = TestStateLib.siloConfig().getShareTokens(address(silo0));
 
         vm.prank(borrower);
         ShareDebtToken(debtToken).approve(spender, borrowAmount);
@@ -53,10 +53,10 @@ contract TransferFromReentrancyTest is MethodReentrancyTest {
         ShareDebtToken(debtToken).setReceiveApproval(borrower, borrowAmount);
 
         vm.prank(receiver);
-        token0.approve(address(silo0), collateralAmount);
+        token1.approve(address(silo1), collateralAmount);
 
         vm.prank(receiver);
-        silo0.deposit(collateralAmount, receiver);
+        silo1.deposit(collateralAmount, receiver);
 
         TestStateLib.enableReentrancy();
 
@@ -66,15 +66,15 @@ contract TransferFromReentrancyTest is MethodReentrancyTest {
 
     function verifyReentrancy() external {
         ISiloConfig config = TestStateLib.siloConfig();
-        ISilo silo1 = TestStateLib.silo1();
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
-        (,, address debtToken) = config.getShareTokens(address(silo1));
+        (,, address debtToken) = config.getShareTokens(address(silo0));
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareDebtToken(debtToken).transferFrom(address(0), address(0), 0);
 
-        (,, debtToken) = config.getShareTokens(address(silo0));
+        (,, debtToken) = config.getShareTokens(address(silo1));
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareDebtToken(debtToken).transferFrom(address(0), address(0), 0);

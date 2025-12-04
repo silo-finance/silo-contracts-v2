@@ -21,7 +21,7 @@ contract MaxBorrowSharesReentrancyTest is MethodReentrancyTest {
     function _ensureItWillNotRevert() internal {
         address anyAddr = makeAddr("Any address");
 
-        TestStateLib.silo1().maxBorrowShares(anyAddr);
         TestStateLib.silo0().maxBorrowShares(anyAddr);
+        TestStateLib.silo1().maxBorrowShares(anyAddr);
     }
 }

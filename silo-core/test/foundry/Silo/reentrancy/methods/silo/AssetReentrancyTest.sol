@@ -20,10 +20,10 @@ contract AssetReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        Silo silo1 = Silo(payable(address(TestStateLib.silo1())));
         Silo silo0 = Silo(payable(address(TestStateLib.silo0())));
+        Silo silo1 = Silo(payable(address(TestStateLib.silo1())));
 
-        silo1.asset();
         silo0.asset();
+        silo1.asset();
     }
 }

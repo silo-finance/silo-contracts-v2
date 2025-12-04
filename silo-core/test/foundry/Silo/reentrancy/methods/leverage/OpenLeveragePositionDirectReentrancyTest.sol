@@ -29,12 +29,12 @@ contract OpenLeveragePositionDirectReentrancyTest is MethodReentrancyTest {
 
         // Prepare test data
         ILeverageUsingSiloFlashloan.FlashArgs memory flashArgs =
-            ILeverageUsingSiloFlashloan.FlashArgs({flashloanTarget: address(TestStateLib.silo1()), amount: 100e18});
+            ILeverageUsingSiloFlashloan.FlashArgs({flashloanTarget: address(TestStateLib.silo0()), amount: 100e18});
 
         bytes memory swapArgs = "";
 
         ILeverageUsingSiloFlashloan.DepositArgs memory depositArgs = ILeverageUsingSiloFlashloan.DepositArgs({
-            silo: TestStateLib.silo0(),
+            silo: TestStateLib.silo1(),
             amount: 100e18,
             collateralType: ISilo.CollateralType.Collateral
         });

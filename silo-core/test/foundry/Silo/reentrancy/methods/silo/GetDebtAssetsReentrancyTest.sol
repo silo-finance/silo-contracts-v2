@@ -19,7 +19,7 @@ contract GetDebtAssetsReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo1().getDebtAssets();
         TestStateLib.silo0().getDebtAssets();
+        TestStateLib.silo1().getDebtAssets();
     }
 }

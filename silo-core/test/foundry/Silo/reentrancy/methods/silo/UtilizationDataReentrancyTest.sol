@@ -19,7 +19,7 @@ contract UtilizationDataReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo1().utilizationData();
         TestStateLib.silo0().utilizationData();
+        TestStateLib.silo1().utilizationData();
     }
 }

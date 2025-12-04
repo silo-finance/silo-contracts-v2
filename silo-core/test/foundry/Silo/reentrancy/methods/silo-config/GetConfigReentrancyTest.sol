@@ -19,10 +19,10 @@ contract GetConfigReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        address silo1 = address(TestStateLib.silo1());
         address silo0 = address(TestStateLib.silo0());
+        address silo1 = address(TestStateLib.silo1());
 
-        TestStateLib.siloConfig().getConfig(silo1);
         TestStateLib.siloConfig().getConfig(silo0);
+        TestStateLib.siloConfig().getConfig(silo1);
     }
 }

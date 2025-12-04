@@ -10,20 +10,20 @@ contract UpdateHooksReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         emit log_string(_tabs(1, "Ensure it will not revert"));
 
-        TestStateLib.silo1().updateHooks();
         TestStateLib.silo0().updateHooks();
+        TestStateLib.silo1().updateHooks();
     }
 
     function verifyReentrancy() external {
-        ISilo silo1 = TestStateLib.silo1();
-
-        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo1.updateHooks();
-
         ISilo silo0 = TestStateLib.silo0();
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo0.updateHooks();
+
+        ISilo silo1 = TestStateLib.silo1();
+
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+        silo1.updateHooks();
     }
 
     function methodDescription() external pure returns (string memory description) {

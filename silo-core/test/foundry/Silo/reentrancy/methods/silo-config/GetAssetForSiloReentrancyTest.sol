@@ -19,10 +19,10 @@ contract GetAssetForSiloReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        address silo1 = address(TestStateLib.silo1());
         address silo0 = address(TestStateLib.silo0());
+        address silo1 = address(TestStateLib.silo1());
 
-        TestStateLib.siloConfig().getAssetForSilo(silo1);
         TestStateLib.siloConfig().getAssetForSilo(silo0);
+        TestStateLib.siloConfig().getAssetForSilo(silo1);
     }
 }

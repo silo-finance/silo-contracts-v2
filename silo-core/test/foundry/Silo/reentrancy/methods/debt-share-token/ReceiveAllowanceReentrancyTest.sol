@@ -23,16 +23,16 @@ contract ReceiveAllowanceReentrancyTest is MethodReentrancyTest {
 
     function _ensureItWillNotRevert() internal {
         ISiloConfig config = TestStateLib.siloConfig();
-        ISilo silo1 = TestStateLib.silo1();
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
         address borrower = makeAddr("Borrower");
         address receiver = makeAddr("Receiver");
 
-        (,, address debtToken) = config.getShareTokens(address(silo1));
+        (,, address debtToken) = config.getShareTokens(address(silo0));
         ShareDebtToken(debtToken).receiveAllowance(borrower, receiver);
 
-        (,, debtToken) = config.getShareTokens(address(silo0));
+        (,, debtToken) = config.getShareTokens(address(silo1));
         ShareDebtToken(debtToken).receiveAllowance(borrower, receiver);
     }
 }

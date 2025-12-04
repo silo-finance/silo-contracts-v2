@@ -20,10 +20,10 @@ contract GetFractionsStorageTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        ISilo silo1 = TestStateLib.silo1();
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
-        silo1.getFractionsStorage();
         silo0.getFractionsStorage();
+        silo1.getFractionsStorage();
     }
 }

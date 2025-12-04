@@ -130,7 +130,7 @@ contract SiloReentrancyTest is Test {
         leverageDeploy.disableDeploymentsSync();
         address leverageRouter = address(leverageDeploy.run());
 
-        _createIncentiveController(hookReceiver, address(silo1));
+        _createIncentiveController(hookReceiver, address(silo0));
 
         TestStateLib.init(
             address(siloConfig),

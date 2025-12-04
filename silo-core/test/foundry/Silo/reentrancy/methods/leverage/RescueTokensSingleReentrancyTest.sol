@@ -21,7 +21,7 @@ contract RescueTokensSingleReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
         RescueModule leverage = RescueModule(leverageRouter.LEVERAGE_IMPLEMENTATION());
-        address token = TestStateLib.token1();
+        address token = TestStateLib.token0();
 
         vm.expectRevert(RescueModule.OnlyLeverageUser.selector);
         leverage.rescueTokens(IERC20(token));
@@ -31,7 +31,7 @@ contract RescueTokensSingleReentrancyTest is MethodReentrancyTest {
         ILeverageRouter leverageRouter = ILeverageRouter(TestStateLib.leverageRouter());
         RescueModule module = RescueModule(leverageRouter.predictUserLeverageContract(wallet.addr));
 
-        address token = TestStateLib.token1();
+        address token = TestStateLib.token0();
 
         vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
         module.rescueTokens(IERC20(token));

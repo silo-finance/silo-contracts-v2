@@ -13,13 +13,13 @@ contract IncreaseReceiveAllowanceReentrancyTest is MethodReentrancyTest {
         emit log_string(_tabs(1, "Ensure it will not revert"));
 
         ISiloConfig config = TestStateLib.siloConfig();
-        ISilo silo1 = TestStateLib.silo1();
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
         address borrower = makeAddr("Borrower");
         address receiver = makeAddr("Receiver");
 
-        (,, address debtToken) = config.getShareTokens(address(silo1));
+        (,, address debtToken) = config.getShareTokens(address(silo0));
 
         uint256 allowance = 1000_0000e18;
 
@@ -29,7 +29,7 @@ contract IncreaseReceiveAllowanceReentrancyTest is MethodReentrancyTest {
         vm.prank(receiver);
         ShareDebtToken(debtToken).increaseReceiveAllowance(borrower, allowance * 2);
 
-        (,, debtToken) = config.getShareTokens(address(silo0));
+        (,, debtToken) = config.getShareTokens(address(silo1));
 
         vm.prank(receiver);
         ShareDebtToken(debtToken).setReceiveApproval(borrower, allowance);
@@ -40,15 +40,15 @@ contract IncreaseReceiveAllowanceReentrancyTest is MethodReentrancyTest {
 
     function verifyReentrancy() external {
         ISiloConfig config = TestStateLib.siloConfig();
-        ISilo silo1 = TestStateLib.silo1();
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
-        (,, address debtToken) = config.getShareTokens(address(silo1));
+        (,, address debtToken) = config.getShareTokens(address(silo0));
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareDebtToken(debtToken).increaseReceiveAllowance(address(0), 0);
 
-        (,, debtToken) = config.getShareTokens(address(silo0));
+        (,, debtToken) = config.getShareTokens(address(silo1));
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         ShareDebtToken(debtToken).increaseReceiveAllowance(address(0), 0);

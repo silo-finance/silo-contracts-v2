@@ -19,7 +19,7 @@ contract SymbolReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo1().symbol();
         TestStateLib.silo0().symbol();
+        TestStateLib.silo1().symbol();
     }
 }

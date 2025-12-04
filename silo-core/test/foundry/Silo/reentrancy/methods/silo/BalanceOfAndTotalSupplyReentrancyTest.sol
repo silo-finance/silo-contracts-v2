@@ -21,7 +21,7 @@ contract BalanceOfAndTotalSupplyReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        IShareToken(address(TestStateLib.silo1())).balanceOfAndTotalSupply(address(1));
         IShareToken(address(TestStateLib.silo0())).balanceOfAndTotalSupply(address(1));
+        IShareToken(address(TestStateLib.silo1())).balanceOfAndTotalSupply(address(1));
     }
 }

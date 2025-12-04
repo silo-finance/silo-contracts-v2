@@ -20,13 +20,13 @@ contract AllowanceReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal {
-        ISilo silo1 = TestStateLib.silo1();
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
         address anyAddr1 = makeAddr("Any address 1");
         address anyAddr2 = makeAddr("Any address 2");
 
-        silo1.allowance(anyAddr1, anyAddr2);
         silo0.allowance(anyAddr1, anyAddr2);
+        silo1.allowance(anyAddr1, anyAddr2);
     }
 }

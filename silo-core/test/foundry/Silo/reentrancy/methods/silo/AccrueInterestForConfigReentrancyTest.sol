@@ -23,15 +23,15 @@ contract AccrueInterestForConfigReentrancyTest is MethodReentrancyTest {
     function _ensureItWillNotRevert() internal {
         ISiloConfig config = TestStateLib.siloConfig();
 
-        ISilo silo1 = TestStateLib.silo1();
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
-        ISiloConfig.ConfigData memory config0 = config.getConfig(address(silo1));
-
-        vm.prank(address(config));
-        silo1.accrueInterestForConfig(config0.interestRateModel, 1e17, 1e17);
+        ISiloConfig.ConfigData memory config0 = config.getConfig(address(silo0));
 
         vm.prank(address(config));
         silo0.accrueInterestForConfig(config0.interestRateModel, 1e17, 1e17);
+
+        vm.prank(address(config));
+        silo1.accrueInterestForConfig(config0.interestRateModel, 1e17, 1e17);
     }
 }

@@ -21,7 +21,7 @@ contract HookSetupReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        IShareToken(address(TestStateLib.silo1())).hookSetup();
         IShareToken(address(TestStateLib.silo0())).hookSetup();
+        IShareToken(address(TestStateLib.silo1())).hookSetup();
     }
 }

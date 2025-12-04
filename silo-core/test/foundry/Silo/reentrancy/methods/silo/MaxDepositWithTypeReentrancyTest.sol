@@ -21,10 +21,10 @@ contract MaxDepositWithTypeReentrancyTest is MethodReentrancyTest {
     function _ensureItWillNotRevert() internal {
         address anyAddr = makeAddr("Any address");
 
-        TestStateLib.silo1().maxDeposit(anyAddr);
         TestStateLib.silo0().maxDeposit(anyAddr);
+        TestStateLib.silo1().maxDeposit(anyAddr);
 
-        TestStateLib.silo1().maxDeposit(anyAddr);
         TestStateLib.silo0().maxDeposit(anyAddr);
+        TestStateLib.silo1().maxDeposit(anyAddr);
     }
 }

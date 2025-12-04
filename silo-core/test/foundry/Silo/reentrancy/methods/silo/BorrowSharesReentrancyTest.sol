@@ -11,37 +11,37 @@ import {MaliciousToken} from "../../MaliciousToken.sol";
 
 contract BorrowSharesReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
-        MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
         MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
-        ISilo silo0 = TestStateLib.silo0();
+        MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
         ISilo silo1 = TestStateLib.silo1();
+        ISilo silo0 = TestStateLib.silo0();
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
         // in case silo is not empty and we have huge interest, 
         // depossiting totalAssetsAmount should create liquidity
-        uint256 depositAmount = 100e18; // + silo1.totalAssets();
+        uint256 depositAmount = 100e18; // + silo0.totalAssets();
         uint256 collateralAmount = 100e18;
 
         TestStateLib.disableReentrancy();
 
-        token1.mint(depositor, depositAmount);
-        token0.mint(borrower, collateralAmount);
+        token0.mint(depositor, depositAmount);
+        token1.mint(borrower, collateralAmount);
 
         vm.prank(depositor);
-        token1.approve(address(silo1), depositAmount);
+        token0.approve(address(silo0), depositAmount);
 
         vm.prank(depositor);
-        silo1.deposit(depositAmount, depositor);
+        silo0.deposit(depositAmount, depositor);
 
         vm.prank(borrower);
-        token0.approve(address(silo0), collateralAmount);
+        token1.approve(address(silo1), collateralAmount);
 
         vm.prank(borrower);
-        silo0.deposit(collateralAmount, borrower);
+        silo1.deposit(collateralAmount, borrower);
 
         TestStateLib.enableReentrancy();
 
-        uint256 borrowAmount = silo1.maxBorrowShares(borrower);
+        uint256 borrowAmount = silo0.maxBorrowShares(borrower);
 
         if (borrowAmount == 0) {
             console2.log("[BorrowSharesReentrancyTest] borrow amount is 0");
@@ -49,19 +49,19 @@ contract BorrowSharesReentrancyTest is MethodReentrancyTest {
         }
 
         vm.prank(borrower);
-        silo1.borrowShares(borrowAmount, borrower, borrower);
+        silo0.borrowShares(borrowAmount, borrower, borrower);
     }
 
     function verifyReentrancy() external {
-        ISilo silo0 = TestStateLib.silo0();
-
-        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo0.borrowShares(1000, address(0), address(0));
-
         ISilo silo1 = TestStateLib.silo1();
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo1.borrowShares(1000, address(0), address(0));
+
+        ISilo silo0 = TestStateLib.silo0();
+
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+        silo0.borrowShares(1000, address(0), address(0));
     }
 
     function methodDescription() external pure returns (string memory description) {

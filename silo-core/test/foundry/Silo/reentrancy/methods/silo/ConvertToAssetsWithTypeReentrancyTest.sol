@@ -20,13 +20,13 @@ contract ConvertToAssetsWithTypeReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo1().convertToAssets(100e18, ISilo.AssetType.Collateral);
         TestStateLib.silo0().convertToAssets(100e18, ISilo.AssetType.Collateral);
+        TestStateLib.silo1().convertToAssets(100e18, ISilo.AssetType.Collateral);
 
-        TestStateLib.silo1().convertToAssets(100e18, ISilo.AssetType.Protected);
         TestStateLib.silo0().convertToAssets(100e18, ISilo.AssetType.Protected);
+        TestStateLib.silo1().convertToAssets(100e18, ISilo.AssetType.Protected);
 
-        TestStateLib.silo1().convertToAssets(100e18, ISilo.AssetType.Debt);
         TestStateLib.silo0().convertToAssets(100e18, ISilo.AssetType.Debt);
+        TestStateLib.silo1().convertToAssets(100e18, ISilo.AssetType.Debt);
     }
 }

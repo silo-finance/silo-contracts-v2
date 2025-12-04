@@ -21,12 +21,12 @@ contract GetConfigsForWithdrawReentrancyTest is MethodReentrancyTest {
 
     function _ensureItWillRevertAsExpected() internal {
         ISiloConfig config = TestStateLib.siloConfig();
-        address silo1 = address(TestStateLib.silo1());
         address silo0 = address(TestStateLib.silo0());
+        address silo1 = address(TestStateLib.silo1());
         address wrongSilo = makeAddr("Wrong silo");
 
-        config.getConfigsForWithdraw(silo1, address(0));
         config.getConfigsForWithdraw(silo0, address(0));
+        config.getConfigsForWithdraw(silo1, address(0));
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         config.getConfigsForWithdraw(wrongSilo, address(0));

@@ -19,7 +19,7 @@ contract GetLiquidityReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo1().getLiquidity();
         TestStateLib.silo0().getLiquidity();
+        TestStateLib.silo1().getLiquidity();
     }
 }

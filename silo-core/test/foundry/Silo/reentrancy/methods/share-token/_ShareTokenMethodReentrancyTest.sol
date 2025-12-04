@@ -9,11 +9,11 @@ import {TestStateLib} from "../../TestState.sol";
 abstract contract ShareTokenMethodReentrancyTest is MethodReentrancyTest {
     function _executeForAllShareTokens(function(address) internal func) internal {
         ISiloConfig config = TestStateLib.siloConfig();
-        ISilo silo1 = TestStateLib.silo1();
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
-        (address protected0,, address debt0) = config.getShareTokens(address(silo1));
-        (address protected1,, address debt1) = config.getShareTokens(address(silo0));
+        (address protected0,, address debt0) = config.getShareTokens(address(silo0));
+        (address protected1,, address debt1) = config.getShareTokens(address(silo1));
 
         func(protected0);
         func(debt0);
@@ -24,16 +24,16 @@ abstract contract ShareTokenMethodReentrancyTest is MethodReentrancyTest {
 
     function _executeForAllShareTokensForSilo(function(address,address) internal func) internal {
         ISiloConfig config = TestStateLib.siloConfig();
-        address silo1 = address(TestStateLib.silo1());
         address silo0 = address(TestStateLib.silo0());
+        address silo1 = address(TestStateLib.silo1());
 
-        (address protected0,, address debt0) = config.getShareTokens(silo1);
-        (address protected1,, address debt1) = config.getShareTokens(silo0);
+        (address protected0,, address debt0) = config.getShareTokens(silo0);
+        (address protected1,, address debt1) = config.getShareTokens(silo1);
 
-        func(silo1, protected0);
-        func(silo1, debt0);
+        func(silo0, protected0);
+        func(silo0, debt0);
 
-        func(silo0, protected1);
-        func(silo0, debt1);
+        func(silo1, protected1);
+        func(silo1, debt1);
     }
 }
