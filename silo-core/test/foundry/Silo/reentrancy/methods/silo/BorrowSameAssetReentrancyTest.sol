@@ -14,15 +14,15 @@ contract BorrowSameAssetReentrancyTest is MethodReentrancyTest {
     }
 
     function verifyReentrancy() external {
-        ISilo silo1 = TestStateLib.silo1();
-
-        vm.expectRevert(ISilo.Deprecated.selector);
-        silo1.borrowSameAsset(1000, address(0), address(0));
-
         ISilo silo0 = TestStateLib.silo0();
 
         vm.expectRevert(ISilo.Deprecated.selector);
         silo0.borrowSameAsset(1000, address(0), address(0));
+        
+        ISilo silo1 = TestStateLib.silo1();
+
+        vm.expectRevert(ISilo.Deprecated.selector);
+        silo1.borrowSameAsset(1000, address(0), address(0));
     }
 
     function methodDescription() external pure returns (string memory description) {

@@ -3,7 +3,6 @@ pragma solidity ^0.8.28;
 
 import {console2} from "forge-std/console2.sol";
 
-
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
@@ -32,8 +31,8 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
 
         (collateralToLiquidate, debtToRepay,) = partialLiquidation.maxLiquidation(borrower);
 
-        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
+        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
 
         token0.mint(borrower, debtToRepay); // mint extra
 
@@ -54,8 +53,8 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
 
     function verifyReentrancy() external {
         ISiloConfig siloConfig = TestStateLib.siloConfig();
-        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
+        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         address hookReceiver = TestStateLib.hookReceiver();
         bool receiveSTokens = true;
 
@@ -97,10 +96,10 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
     }
 
     function _createInsolventBorrower(address _depositor, address _borrower) internal {
-        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
-        ISilo silo1 = TestStateLib.silo1();
+        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
         // in case we in reentrancy, we can have case with 0 liquidity, so we need to make sure
         // we deposit enough to be able to borrow
         uint256 liquidityForBorrow = 100e18; // + silo0.totalAssets();
@@ -125,18 +124,24 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         uint256 maxBorrow = silo0.maxBorrow(_borrower);
         
         if (maxBorrow == 0) {
-            if (silo0.getLiquidity() == 0) {
+            // if (silo0.getLiquidity() == 0) {
                 uint256 amount = silo0.getDebtAssets();
                 vm.prank(_depositor);
                 silo0.deposit(amount, _depositor);
-            } else {
-                silo1.deposit(collateralAmount, _borrower);
+            // } else {
+            //     // silo1.deposit(collateralAmount, _borrower);
+            // }
+
+            // console2.log("silo0.getLiquidity()", silo0.getLiquidity());
+            // console2.log("silo0.getDebtAssets()", silo0.getDebtAssets());
+            // console2.log("is solvent", silo0.isSolvent(_borrower));
+
+            maxBorrow = silo0.maxBorrow(_borrower) / 2;
+
+            if (maxBorrow == 0) {
+                console2.log("[LiquidationCallReentrancyTest] we can't borrow");
+                revert("[LiquidationCallReentrancyTest] we can't borrow");
             }
-
-            maxBorrow = silo0.maxBorrow(_borrower);
-
-            console2.log("[LiquidationCallReentrancyTest] we can't borrow");
-            revert("[LiquidationCallReentrancyTest] we can't borrow");
         }
 
         vm.prank(_borrower);
@@ -146,8 +151,8 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
     }
 
     function _makeUserInsolvent(address _borrower, address _depositor) internal {
-        ISilo silo1 = TestStateLib.silo1();
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
         uint256 maxWithdraw = silo1.maxWithdraw(_borrower);
 

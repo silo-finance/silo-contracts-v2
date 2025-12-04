@@ -78,20 +78,20 @@ library TestStateLib {
         ReentrancyTestState(_ADDRESS).setLeverageReenter(false);
     }
 
-    function silo1() internal view returns (ISilo) {
-        return ISilo(ReentrancyTestState(_ADDRESS).silo1());
-    }
-    
     function silo0() internal view returns (ISilo) {
         return ISilo(ReentrancyTestState(_ADDRESS).silo0());
     }
 
-    function token1() internal view returns (address) {
-        return ReentrancyTestState(_ADDRESS).token1();
+    function silo1() internal view returns (ISilo) {
+        return ISilo(ReentrancyTestState(_ADDRESS).silo1());
     }
 
     function token0() internal view returns (address) {
         return ReentrancyTestState(_ADDRESS).token0();
+    }
+
+    function token1() internal view returns (address) {
+        return ReentrancyTestState(_ADDRESS).token1();
     }
 
     function siloConfig() internal view returns (ISiloConfig) {

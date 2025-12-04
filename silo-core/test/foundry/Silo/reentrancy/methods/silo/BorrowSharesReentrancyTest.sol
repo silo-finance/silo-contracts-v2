@@ -41,7 +41,7 @@ contract BorrowSharesReentrancyTest is MethodReentrancyTest {
 
         TestStateLib.enableReentrancy();
 
-        uint256 borrowAmount = silo0.maxBorrowShares(borrower);
+        uint256 borrowAmount = silo0.maxBorrowShares(borrower) / 2;
 
         if (borrowAmount == 0) {
             console2.log("[BorrowSharesReentrancyTest] borrow amount is 0");

@@ -17,7 +17,11 @@ import {TestStateLib} from "./TestState.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {Tabs} from "../../_common/Tabs.sol";
 
+import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
+
 contract MaliciousToken is MintableToken, Test, Tabs {
+    using SiloLensLib for ISilo;
+
     IMethodsRegistry[] internal _methodRegistries;
     LeverageMethodsRegistry internal _leverageMethodsRegistry;
 
@@ -30,10 +34,13 @@ contract MaliciousToken is MintableToken, Test, Tabs {
     function transfer(address recipient, uint256 amount) public override returns (bool) {
         _tryToReenter();
 
-        _mint(msg.sender, amount); // ERC20InsufficientBalance fix
+        // _mint(msg.sender, amount); // ERC20InsufficientBalance fix
+        console2.log(_tabs(5), "[transfer] executed by ", vm.getLabel(msg.sender));
+        console2.log(_tabs(5), "LTV", TestStateLib.silo0().getUserLTV(msg.sender));
+
         super.transfer(recipient, amount);
 
-        console2.log(_tabs(5), "[transfer] done, executed by ", vm.getLabel(msg.sender));
+        console2.log(_tabs(5), "[transfer] done ", amount);
 
         return true;
     }
@@ -41,8 +48,14 @@ contract MaliciousToken is MintableToken, Test, Tabs {
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
         _tryToReenter();
 
-        _mint(sender, amount); // ERC20InsufficientBalance fix
+        // _mint(sender, amount); // ERC20InsufficientBalance fix
+        console2.log(_tabs(5), "[transferFrom] executed by ", vm.getLabel(sender));
+        console2.log(_tabs(5), "LTV", TestStateLib.silo0().getUserLTV(msg.sender));
+
+
         super.transferFrom(sender, recipient, amount);
+
+        console2.log(_tabs(5), "[transferFrom] done ", amount);
 
         return true;
     }

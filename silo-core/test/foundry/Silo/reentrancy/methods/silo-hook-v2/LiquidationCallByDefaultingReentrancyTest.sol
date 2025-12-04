@@ -77,10 +77,10 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
     }
 
     function _createInsolventBorrower(address _depositor, address _borrower) internal {
-        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
-        ISilo silo1 = TestStateLib.silo1();
+        MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
         // in case we in reentrancy, we can have case with 0 liquidity, so we need to make sure
         // we deposit enough to be able to borrow
         uint256 liquidityForBorrow = 10e18 + silo0.totalAssets();
@@ -102,7 +102,7 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
         vm.prank(_borrower);
         silo1.deposit(collateralAmount, _borrower);
 
-        uint256 maxBorrow = silo0.maxBorrow(_borrower);
+        uint256 maxBorrow = silo0.maxBorrow(_borrower) / 2;
 
         if (maxBorrow == 0) {
             console2.log("[LiquidationCallByDefaultingReentrancyTest] we can't borrow");
@@ -116,8 +116,8 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
     }
 
     function _makeUserInsolvent(address _borrower, address _depositor) internal {
-        ISilo silo1 = TestStateLib.silo1();
         ISilo silo0 = TestStateLib.silo0();
+        ISilo silo1 = TestStateLib.silo1();
 
         uint256 maxWithdraw = silo1.maxWithdraw(_borrower);
 
