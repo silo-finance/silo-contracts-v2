@@ -49,7 +49,7 @@ contract SiloHookV1MethodsRegistry is IMethodsRegistry {
         return supportedMethods.length;
     }
 
-    function abiFile() external pure returns (string memory) {
+    function abiFile() external pure virtual returns (string memory) {
         return "/cache/foundry/out/silo-core/SiloHookV1.sol/SiloHookV1.json";
     }
 

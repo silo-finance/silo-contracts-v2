@@ -2,6 +2,8 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+import {console2} from "forge-std/console2.sol";
+
 import {ERC20} from "openzeppelin5/token/ERC20/ERC20.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
@@ -13,8 +15,9 @@ import {IMethodsRegistry} from "./interfaces/IMethodsRegistry.sol";
 import {IMethodReentrancyTest} from "./interfaces/IMethodReentrancyTest.sol";
 import {TestStateLib} from "./TestState.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
+import {Tabs} from "../../_common/Tabs.sol";
 
-contract MaliciousToken is MintableToken, Test {
+contract MaliciousToken is MintableToken, Test, Tabs {
     IMethodsRegistry[] internal _methodRegistries;
     LeverageMethodsRegistry internal _leverageMethodsRegistry;
 
@@ -28,6 +31,8 @@ contract MaliciousToken is MintableToken, Test {
         _tryToReenter();
 
         super.transfer(recipient, amount);
+
+        console2.log(_tabs(5), "[transfer] done, executed by ", vm.getLabel(msg.sender));
 
         return true;
     }
@@ -44,7 +49,7 @@ contract MaliciousToken is MintableToken, Test {
         if (!TestStateLib.reenter() && !TestStateLib.leverageReenter()) return;
 
         // reenter before transfer
-        emit log_string("\tTrying to reenter:");
+        console2.log(_tabs(1), "Trying to reenter:");
 
         ISiloConfig config = TestStateLib.siloConfig();
 
@@ -68,15 +73,17 @@ contract MaliciousToken is MintableToken, Test {
             TestStateLib.enableLeverageReentrancy();
         }
 
-        emit log_string("\tTrying to reenter - done");
+        console2.log(_tabs(1), "Trying to reenter - done\n");
     }
 
     function _callAllMethods() internal {
-        emit log_string("[MaliciousToken] calling all methods");
+        console2.log(_tabs(2), "[MaliciousToken] calling all methods");
 
         uint256 stateBeforeReentrancyTest = vm.snapshotState();
 
         for (uint256 j = 0; j < _methodRegistries.length; j++) {
+            console2.log(_tabs(3, "[_callAllMethods] calling [%s] %s"), j, _methodRegistries[j].abiFile());
+
             if (Strings.equal(_methodRegistries[j].abiFile(), _leverageMethodsRegistry.abiFile())) continue;
 
             uint256 totalMethods = _methodRegistries[j].supportedMethodsLength();
@@ -84,20 +91,21 @@ contract MaliciousToken is MintableToken, Test {
             for (uint256 i = 0; i < totalMethods; i++) {
                 bytes4 methodSig = _methodRegistries[j].supportedMethods(i);
                 IMethodReentrancyTest method = _methodRegistries[j].methods(methodSig);
-
-                emit log_string(string.concat("\t  ", method.methodDescription()));
+                console2.log(_tabs(4, "[_callAllMethods] loop [%s] %s"), i, method.methodDescription());
 
                 method.verifyReentrancy();
 
                 vm.revertToState(stateBeforeReentrancyTest);
             }
+
+            console2.log(_tabs(3, "[_callAllMethods] calling abi done"));
         }
 
-        emit log_string("[MaliciousToken] calling all methods - done");
+        console2.log(_tabs(2), "[MaliciousToken] calling all methods - done\n");
     }
 
     function _callOnlyLeverageMethods() internal {
-        emit log_string("[MaliciousToken] calling only leverage methods");
+        console2.log(_tabs(2), "[MaliciousToken] calling only leverage methods");
 
         uint256 stateBeforeReentrancyTest = vm.snapshotState();
 
@@ -107,13 +115,13 @@ contract MaliciousToken is MintableToken, Test {
             bytes4 methodSig = _leverageMethodsRegistry.supportedMethods(i);
             IMethodReentrancyTest method = _leverageMethodsRegistry.methods(methodSig);
 
-            emit log_string(string.concat("\t  ", method.methodDescription()));
+            console2.log(_tabs(3), method.methodDescription());
 
             method.verifyReentrancy();
 
             vm.revertToState(stateBeforeReentrancyTest);
         }
 
-        emit log_string("[MaliciousToken] calling only leverage methods - done");
+        console2.log(_tabs(2), "[MaliciousToken] calling only leverage methods - done\n");
     }
 }
