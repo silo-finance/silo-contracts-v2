@@ -23,7 +23,7 @@ contract CalculateDebtReceiveApprovalReentrancyTest is MethodReentrancyTest {
 
     function _ensureItWillNotRevert() internal view {
         ILeverageRouter leverage = _getLeverage();
-        ISilo silo = TestStateLib.silo0();
+        ISilo silo = TestStateLib.silo1();
         leverage.calculateDebtReceiveApproval(silo, 1000e18);
     }
 

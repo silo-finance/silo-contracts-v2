@@ -103,8 +103,8 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         ISilo silo1 = TestStateLib.silo1();
         // in case we in reentrancy, we can have case with 0 liquidity, so we need to make sure
         // we deposit enough to be able to borrow
-        uint256 liquidityForBorrow = 1e18 + silo1.totalAssets();
-        uint256 collateralAmount = 10e18;
+        uint256 liquidityForBorrow = 10e18 + silo1.totalAssets();
+        uint256 collateralAmount = 1e18;
 
         token1.mint(_depositor, liquidityForBorrow);
 

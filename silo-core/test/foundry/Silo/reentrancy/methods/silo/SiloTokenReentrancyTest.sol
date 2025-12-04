@@ -21,7 +21,7 @@ contract SiloTokenReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        IShareToken(address(TestStateLib.silo0())).silo();
         IShareToken(address(TestStateLib.silo1())).silo();
+        IShareToken(address(TestStateLib.silo0())).silo();
     }
 }

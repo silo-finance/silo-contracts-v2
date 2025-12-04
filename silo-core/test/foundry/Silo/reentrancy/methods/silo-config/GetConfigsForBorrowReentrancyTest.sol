@@ -21,12 +21,12 @@ contract GetConfigsForBorrowReentrancyTest is MethodReentrancyTest {
 
     function _ensureItWillRevertAsExpected() internal {
         ISiloConfig config = TestStateLib.siloConfig();
-        address silo0 = address(TestStateLib.silo0());
         address silo1 = address(TestStateLib.silo1());
+        address silo0 = address(TestStateLib.silo0());
         address wrongSilo = makeAddr("Wrong silo");
 
-        config.getConfigsForBorrow(silo0);
         config.getConfigsForBorrow(silo1);
+        config.getConfigsForBorrow(silo0);
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         config.getConfigsForBorrow(wrongSilo);

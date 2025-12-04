@@ -19,7 +19,7 @@ contract NameReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().name();
         TestStateLib.silo1().name();
+        TestStateLib.silo0().name();
     }
 }

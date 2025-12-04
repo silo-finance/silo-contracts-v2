@@ -19,7 +19,7 @@ contract PreviewBorrowReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().previewBorrow(100_000e18);
         TestStateLib.silo1().previewBorrow(100_000e18);
+        TestStateLib.silo0().previewBorrow(100_000e18);
     }
 }

@@ -23,13 +23,13 @@ contract InitializeReentrancyTest is MethodReentrancyTest {
     function _ensureItWillRevert() internal {
         ISiloConfig config = ISiloConfig(address(0));
 
-        ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
-
-        vm.expectRevert(ISilo.SiloInitialized.selector);
-        silo0.initialize(config);
+        ISilo silo0 = TestStateLib.silo0();
 
         vm.expectRevert(ISilo.SiloInitialized.selector);
         silo1.initialize(config);
+
+        vm.expectRevert(ISilo.SiloInitialized.selector);
+        silo0.initialize(config);
     }
 }

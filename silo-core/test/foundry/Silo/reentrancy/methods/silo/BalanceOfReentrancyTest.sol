@@ -20,12 +20,12 @@ contract BalanceOfReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal {
-        ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
+        ISilo silo0 = TestStateLib.silo0();
 
         address anyAddr = makeAddr("Any address");
 
-        silo0.balanceOf(anyAddr);
         silo1.balanceOf(anyAddr);
+        silo0.balanceOf(anyAddr);
     }
 }

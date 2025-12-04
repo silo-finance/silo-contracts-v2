@@ -21,7 +21,7 @@ contract MaxWithdrawReentrancyTest is MethodReentrancyTest {
     function _ensureItWillNotRevert() internal {
         address anyAddr = makeAddr("Any address");
 
-        TestStateLib.silo0().maxWithdraw(anyAddr);
         TestStateLib.silo1().maxWithdraw(anyAddr);
+        TestStateLib.silo0().maxWithdraw(anyAddr);
     }
 }

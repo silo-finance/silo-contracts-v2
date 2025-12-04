@@ -20,7 +20,7 @@ contract ConvertToSharesReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        Silo(payable(address(TestStateLib.silo0()))).convertToShares(100e18);
         Silo(payable(address(TestStateLib.silo1()))).convertToShares(100e18);
+        Silo(payable(address(TestStateLib.silo0()))).convertToShares(100e18);
     }
 }

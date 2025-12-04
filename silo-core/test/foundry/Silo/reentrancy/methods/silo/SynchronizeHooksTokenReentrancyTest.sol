@@ -21,12 +21,12 @@ contract SynchronizeHooksTokenReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillRevertWithOnlySilo() internal {
-        address silo0 = address(TestStateLib.silo0());
-        vm.expectRevert(IShareToken.OnlySilo.selector);
-        IShareToken(silo0).synchronizeHooks(1, 2);
-
         address silo1 = address(TestStateLib.silo1());
         vm.expectRevert(IShareToken.OnlySilo.selector);
         IShareToken(silo1).synchronizeHooks(1, 2);
+
+        address silo0 = address(TestStateLib.silo0());
+        vm.expectRevert(IShareToken.OnlySilo.selector);
+        IShareToken(silo0).synchronizeHooks(1, 2);
     }
 }

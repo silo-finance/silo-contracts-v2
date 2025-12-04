@@ -19,7 +19,7 @@ contract GetCollateralAssetsReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().getCollateralAssets();
         TestStateLib.silo1().getCollateralAssets();
+        TestStateLib.silo0().getCollateralAssets();
     }
 }

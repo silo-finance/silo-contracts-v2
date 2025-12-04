@@ -19,7 +19,7 @@ contract GetSiloStorageReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().getSiloStorage();
         TestStateLib.silo1().getSiloStorage();
+        TestStateLib.silo0().getSiloStorage();
     }
 }

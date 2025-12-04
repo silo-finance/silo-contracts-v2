@@ -20,7 +20,7 @@ contract BorrowSharesReentrancyTest is MethodReentrancyTest {
         // in case silo is not empty and we have huge interest, 
         // depossiting totalAssetsAmount should create liquidity
         uint256 depositAmount = 1e18 + silo1.totalAssets();
-        uint256 collateralAmount = 1e18;
+        uint256 collateralAmount = 3e18;
 
         TestStateLib.disableReentrancy();
 

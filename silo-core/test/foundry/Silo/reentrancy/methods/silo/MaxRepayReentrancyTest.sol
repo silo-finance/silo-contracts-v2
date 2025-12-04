@@ -21,7 +21,7 @@ contract MaxRepayReentrancyTest is MethodReentrancyTest {
     function _ensureItWillNotRevert() internal {
         address anyAddr = makeAddr("Any address");
 
-        TestStateLib.silo0().maxRepay(anyAddr);
         TestStateLib.silo1().maxRepay(anyAddr);
+        TestStateLib.silo0().maxRepay(anyAddr);
     }
 }

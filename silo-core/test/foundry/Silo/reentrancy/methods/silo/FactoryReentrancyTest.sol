@@ -19,7 +19,7 @@ contract FactoryReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().factory();
         TestStateLib.silo1().factory();
+        TestStateLib.silo0().factory();
     }
 }

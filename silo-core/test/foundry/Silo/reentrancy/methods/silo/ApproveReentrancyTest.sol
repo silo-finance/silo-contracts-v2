@@ -21,23 +21,23 @@ contract ApproveReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal {
-        ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
+        ISilo silo0 = TestStateLib.silo0();
 
         address anyAddr = makeAddr("Any address");
 
-        silo0.approve(anyAddr, 1e18);
         silo1.approve(anyAddr, 1e18);
+        silo0.approve(anyAddr, 1e18);
     }
 
     function _ensureItWillRevertReentrancy() internal {
-        ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
-
-        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo0.approve(address(0), 1e18);
+        ISilo silo0 = TestStateLib.silo0();
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo1.approve(address(0), 1e18);
+
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+        silo0.approve(address(0), 1e18);
     }
 }

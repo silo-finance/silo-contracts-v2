@@ -22,8 +22,8 @@ contract PermitReentrancyTest is MethodReentrancyTest {
 
     function callMethod() external {
         emit log_string(_tabs(1, "Ensure it will not revert"));
-        _ensureItWillNotRevert(address(TestStateLib.silo0()));
         _ensureItWillNotRevert(address(TestStateLib.silo1()));
+        _ensureItWillNotRevert(address(TestStateLib.silo0()));
     }
 
     function verifyReentrancy() external {
@@ -35,13 +35,13 @@ contract PermitReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillRevertWithCrossReentrantCall() internal {
-        address silo0 = address(TestStateLib.silo0());
-        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        IERC20Permit(silo0).permit(address(1), address(1), 1, 2, 3, bytes32(0), bytes32(0));
-
         address silo1 = address(TestStateLib.silo1());
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         IERC20Permit(silo1).permit(address(1), address(1), 1, 2, 3, bytes32(0), bytes32(0));
+
+        address silo0 = address(TestStateLib.silo0());
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+        IERC20Permit(silo0).permit(address(1), address(1), 1, 2, 3, bytes32(0), bytes32(0));
     }
 
     function _ensureItWillNotRevert(address _token) internal {

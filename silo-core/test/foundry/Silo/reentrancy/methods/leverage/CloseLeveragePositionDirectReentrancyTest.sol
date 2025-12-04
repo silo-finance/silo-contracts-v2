@@ -31,8 +31,8 @@ contract CloseLeveragePositionDirectReentrancyTest is MethodReentrancyTest {
 
         ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs = ILeverageUsingSiloFlashloan
             .CloseLeverageArgs({
-            siloWithCollateral: TestStateLib.silo1(),
-            flashloanTarget: address(TestStateLib.silo0()),
+            siloWithCollateral: TestStateLib.silo0(),
+            flashloanTarget: address(TestStateLib.silo1()),
             collateralType: ISilo.CollateralType.Collateral
         });
 

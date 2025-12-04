@@ -22,12 +22,12 @@ contract ForwardTransferFromNoChecksTest is MethodReentrancyTest {
     }
 
     function _ensureItWillRevertWithOnlySilo() internal {
-        address silo0 = address(TestStateLib.silo0());
-        vm.expectRevert(ISilo.OnlyHookReceiver.selector);
-        IShareToken(silo0).forwardTransferFromNoChecks(address(1), address(2), 3);
-
         address silo1 = address(TestStateLib.silo1());
         vm.expectRevert(ISilo.OnlyHookReceiver.selector);
         IShareToken(silo1).forwardTransferFromNoChecks(address(1), address(2), 3);
+
+        address silo0 = address(TestStateLib.silo0());
+        vm.expectRevert(ISilo.OnlyHookReceiver.selector);
+        IShareToken(silo0).forwardTransferFromNoChecks(address(1), address(2), 3);
     }
 }

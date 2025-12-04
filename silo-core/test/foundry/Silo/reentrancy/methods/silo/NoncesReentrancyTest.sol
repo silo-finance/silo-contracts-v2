@@ -21,7 +21,7 @@ contract NoncesReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        IERC20Permit(address(TestStateLib.silo0())).nonces(address(1));
         IERC20Permit(address(TestStateLib.silo1())).nonces(address(1));
+        IERC20Permit(address(TestStateLib.silo0())).nonces(address(1));
     }
 }

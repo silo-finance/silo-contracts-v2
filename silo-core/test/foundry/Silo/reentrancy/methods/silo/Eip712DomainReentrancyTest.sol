@@ -21,7 +21,7 @@ contract Eip712DomainReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        IERC5267(address(TestStateLib.silo0())).eip712Domain();
         IERC5267(address(TestStateLib.silo1())).eip712Domain();
+        IERC5267(address(TestStateLib.silo0())).eip712Domain();
     }
 }

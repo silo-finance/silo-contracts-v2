@@ -19,7 +19,7 @@ contract AccrueInterestReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal {
-        TestStateLib.silo0().accrueInterest();
         TestStateLib.silo1().accrueInterest();
+        TestStateLib.silo0().accrueInterest();
     }
 }

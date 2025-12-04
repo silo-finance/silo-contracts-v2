@@ -19,7 +19,7 @@ contract PreviewRedeemReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().previewRedeem(1000_000e18);
         TestStateLib.silo1().previewRedeem(1000_000e18);
+        TestStateLib.silo0().previewRedeem(1000_000e18);
     }
 }

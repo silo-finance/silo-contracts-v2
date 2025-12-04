@@ -30,6 +30,7 @@ contract MaliciousToken is MintableToken, Test, Tabs {
     function transfer(address recipient, uint256 amount) public override returns (bool) {
         _tryToReenter();
 
+        _mint(msg.sender, amount); // ERC20InsufficientBalance fix
         super.transfer(recipient, amount);
 
         console2.log(_tabs(5), "[transfer] done, executed by ", vm.getLabel(msg.sender));
@@ -40,6 +41,7 @@ contract MaliciousToken is MintableToken, Test, Tabs {
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
         _tryToReenter();
 
+        _mint(sender, amount); // ERC20InsufficientBalance fix
         super.transferFrom(sender, recipient, amount);
 
         return true;
@@ -91,7 +93,7 @@ contract MaliciousToken is MintableToken, Test, Tabs {
             for (uint256 i = 0; i < totalMethods; i++) {
                 bytes4 methodSig = _methodRegistries[j].supportedMethods(i);
                 IMethodReentrancyTest method = _methodRegistries[j].methods(methodSig);
-                console2.log(_tabs(4, "[_callAllMethods] loop [%s] %s"), i, method.methodDescription());
+                // console2.log(_tabs(4, "[_callAllMethods] loop [%s] %s"), i, method.methodDescription());
 
                 method.verifyReentrancy();
 

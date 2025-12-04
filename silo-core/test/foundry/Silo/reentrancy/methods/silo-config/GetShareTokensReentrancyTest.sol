@@ -19,10 +19,10 @@ contract GetShareTokensReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        address silo0 = address(TestStateLib.silo0());
         address silo1 = address(TestStateLib.silo1());
+        address silo0 = address(TestStateLib.silo0());
 
-        TestStateLib.siloConfig().getShareTokens(silo0);
         TestStateLib.siloConfig().getShareTokens(silo1);
+        TestStateLib.siloConfig().getShareTokens(silo0);
     }
 }

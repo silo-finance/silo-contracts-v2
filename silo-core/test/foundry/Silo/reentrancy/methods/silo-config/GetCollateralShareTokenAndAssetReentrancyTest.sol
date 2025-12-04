@@ -23,15 +23,15 @@ contract GetCollateralShareTokenAndAssetReentrancyTest is MethodReentrancyTest {
     function _ensureItWillRevertAsExpected() internal {
         ISiloConfig config = TestStateLib.siloConfig();
 
-        address silo0 = address(TestStateLib.silo0());
         address silo1 = address(TestStateLib.silo1());
+        address silo0 = address(TestStateLib.silo0());
         address wrongSilo = makeAddr("Wrong silo");
-
-        config.getCollateralShareTokenAndAsset(silo0, ISilo.CollateralType.Collateral);
-        config.getCollateralShareTokenAndAsset(silo0, ISilo.CollateralType.Protected);
 
         config.getCollateralShareTokenAndAsset(silo1, ISilo.CollateralType.Collateral);
         config.getCollateralShareTokenAndAsset(silo1, ISilo.CollateralType.Protected);
+
+        config.getCollateralShareTokenAndAsset(silo0, ISilo.CollateralType.Collateral);
+        config.getCollateralShareTokenAndAsset(silo0, ISilo.CollateralType.Protected);
 
         vm.expectRevert(ISiloConfig.WrongSilo.selector);
         config.getCollateralShareTokenAndAsset(wrongSilo, ISilo.CollateralType.Protected);

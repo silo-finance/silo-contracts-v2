@@ -21,7 +21,7 @@ contract DomainSeparatorReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        IERC20Permit(address(TestStateLib.silo0())).DOMAIN_SEPARATOR();
         IERC20Permit(address(TestStateLib.silo1())).DOMAIN_SEPARATOR();
+        IERC20Permit(address(TestStateLib.silo0())).DOMAIN_SEPARATOR();
     }
 }

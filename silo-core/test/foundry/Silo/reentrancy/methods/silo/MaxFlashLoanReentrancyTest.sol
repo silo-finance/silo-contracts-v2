@@ -20,13 +20,13 @@ contract MaxFlashLoanReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        address token0 = TestStateLib.token0();
         address token1 = TestStateLib.token1();
+        address token0 = TestStateLib.token0();
 
-        IERC3156FlashLender(address(TestStateLib.silo0())).maxFlashLoan(token0);
-        IERC3156FlashLender(address(TestStateLib.silo1())).maxFlashLoan(token0);
-
-        IERC3156FlashLender(address(TestStateLib.silo0())).maxFlashLoan(token1);
         IERC3156FlashLender(address(TestStateLib.silo1())).maxFlashLoan(token1);
+        IERC3156FlashLender(address(TestStateLib.silo0())).maxFlashLoan(token1);
+
+        IERC3156FlashLender(address(TestStateLib.silo1())).maxFlashLoan(token0);
+        IERC3156FlashLender(address(TestStateLib.silo0())).maxFlashLoan(token0);
     }
 }

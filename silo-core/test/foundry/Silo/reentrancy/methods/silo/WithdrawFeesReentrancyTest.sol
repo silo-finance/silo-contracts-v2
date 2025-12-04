@@ -9,10 +9,10 @@ import {MaliciousToken} from "../../MaliciousToken.sol";
 
 contract WithdrawFeesReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
-        MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
         MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
-        ISilo silo0 = TestStateLib.silo0();
+        MaliciousToken token0 = MaliciousToken(TestStateLib.token0());
         ISilo silo1 = TestStateLib.silo1();
+        ISilo silo0 = TestStateLib.silo0();
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
         uint256 depositAmount = 100e18;
@@ -21,27 +21,27 @@ contract WithdrawFeesReentrancyTest is MethodReentrancyTest {
 
         TestStateLib.disableReentrancy();
 
-        token0.setOnDemand(true);
         token1.setOnDemand(true);
+        token0.setOnDemand(true);
 
         vm.prank(depositor);
-        silo0.deposit(depositAmount, depositor);
+        silo1.deposit(depositAmount, depositor);
 
         vm.startPrank(borrower);
-        silo1.deposit(collateralAmount, borrower);
-        uint256 shares = silo0.borrow(borrowAmount, borrower, borrower);
+        silo0.deposit(collateralAmount, borrower);
+        uint256 shares = silo1.borrow(borrowAmount, borrower, borrower);
 
         vm.warp(block.timestamp + 10 days);
 
-        silo0.repayShares(shares, borrower);
+        silo1.repayShares(shares, borrower);
         vm.stopPrank();
 
-        token0.setOnDemand(false);
         token1.setOnDemand(false);
+        token0.setOnDemand(false);
 
         TestStateLib.enableReentrancy();
 
-        silo0.withdrawFees();
+        silo1.withdrawFees();
     }
 
     function verifyReentrancy() external {
@@ -53,13 +53,13 @@ contract WithdrawFeesReentrancyTest is MethodReentrancyTest {
     }
 
     function _revertAsExpectedIfNoFees() internal {
-        ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
-
-        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo0.withdrawFees();
+        ISilo silo0 = TestStateLib.silo0();
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo1.withdrawFees();
+
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+        silo0.withdrawFees();
     }
 }

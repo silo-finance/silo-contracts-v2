@@ -19,7 +19,7 @@ contract PreviewRepaySharesReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().previewRepayShares(1000_000e18);
         TestStateLib.silo1().previewRepayShares(1000_000e18);
+        TestStateLib.silo0().previewRepayShares(1000_000e18);
     }
 }

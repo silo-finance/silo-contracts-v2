@@ -19,7 +19,7 @@ contract GetCollateralAndProtectedTotalsStorageReentrancyTest is MethodReentranc
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().getCollateralAndProtectedTotalsStorage();
         TestStateLib.silo1().getCollateralAndProtectedTotalsStorage();
+        TestStateLib.silo0().getCollateralAndProtectedTotalsStorage();
     }
 }

@@ -81,7 +81,7 @@ library TestStateLib {
     function silo0() internal view returns (ISilo) {
         return ISilo(ReentrancyTestState(_ADDRESS).silo0());
     }
-
+    
     function silo1() internal view returns (ISilo) {
         return ISilo(ReentrancyTestState(_ADDRESS).silo1());
     }

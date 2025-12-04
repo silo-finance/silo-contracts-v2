@@ -36,8 +36,8 @@ contract FlashLoanReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal {
-        MaliciousToken token = MaliciousToken(TestStateLib.token0());
-        ISilo silo = TestStateLib.silo0();
+        MaliciousToken token = MaliciousToken(TestStateLib.token1());
+        ISilo silo = TestStateLib.silo1();
         uint256 amount = 100e18;
         uint256 flashLoanAmount = 1e18;
         bytes memory data;

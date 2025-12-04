@@ -19,7 +19,7 @@ contract DecimalsReentrancyTest is MethodReentrancyTest {
     }
 
     function _ensureItWillNotRevert() internal view {
-        TestStateLib.silo0().decimals();
         TestStateLib.silo1().decimals();
+        TestStateLib.silo0().decimals();
     }
 }

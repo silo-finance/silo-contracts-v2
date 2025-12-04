@@ -21,7 +21,7 @@ contract IsSolventReentrancyTest is MethodReentrancyTest {
     function _ensureItWillNotRevert() internal {
         address anyAddr = makeAddr("Any address");
 
-        TestStateLib.silo0().isSolvent(anyAddr);
         TestStateLib.silo1().isSolvent(anyAddr);
+        TestStateLib.silo0().isSolvent(anyAddr);
     }
 }

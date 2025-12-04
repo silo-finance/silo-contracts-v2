@@ -9,8 +9,8 @@ import {MaliciousToken} from "../../MaliciousToken.sol";
 
 contract TransferReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
-        MaliciousToken token = MaliciousToken(TestStateLib.token0());
-        ISilo silo = TestStateLib.silo0();
+        MaliciousToken token = MaliciousToken(TestStateLib.token1());
+        ISilo silo = TestStateLib.silo1();
         address depositor = makeAddr("Depositor");
         address recipient = makeAddr("Recipient");
         uint256 amount = 100e18;
@@ -32,15 +32,15 @@ contract TransferReentrancyTest is MethodReentrancyTest {
     }
 
     function verifyReentrancy() external {
-        ISilo silo0 = TestStateLib.silo0();
-
-        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
-        silo0.transfer(address(0), 1000);
-
         ISilo silo1 = TestStateLib.silo1();
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo1.transfer(address(0), 1000);
+
+        ISilo silo0 = TestStateLib.silo0();
+
+        vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+        silo0.transfer(address(0), 1000);
     }
 
     function methodDescription() external pure returns (string memory description) {
