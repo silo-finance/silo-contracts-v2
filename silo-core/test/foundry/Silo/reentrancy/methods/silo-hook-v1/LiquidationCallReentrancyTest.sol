@@ -120,7 +120,7 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         silo1.deposit(collateralAmount, _borrower);
 
         uint256 maxBorrow = silo0.maxBorrow(_borrower);
-        
+
         if (maxBorrow == 0) {
             uint256 amount = silo0.getDebtAssets();
             vm.prank(_depositor);

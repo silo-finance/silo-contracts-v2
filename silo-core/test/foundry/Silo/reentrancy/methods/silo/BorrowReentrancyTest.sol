@@ -55,7 +55,7 @@ contract BorrowReentrancyTest is MethodReentrancyTest {
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         silo1.borrow(1000, address(0), address(0));
-        
+
         ISilo silo0 = TestStateLib.silo0();
 
         vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);

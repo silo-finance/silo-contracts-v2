@@ -98,7 +98,7 @@ contract MaliciousToken is MintableToken, Test, Tabs {
             for (uint256 i = 0; i < totalMethods; i++) {
                 bytes4 methodSig = _methodRegistries[j].supportedMethods(i);
                 IMethodReentrancyTest method = _methodRegistries[j].methods(methodSig);
-                
+
                 // console2.log(_tabs(4, "[_callAllMethods] loop [%s] %s"), i, method.methodDescription());
 
                 method.verifyReentrancy();

@@ -6,7 +6,6 @@ import {IMethodReentrancyTest} from "../interfaces/IMethodReentrancyTest.sol";
 import {LiquidationCallByDefaultingReentrancyTest} from "../methods/silo-hook-v2/LiquidationCallByDefaultingReentrancyTest.sol";
 import {SiloHookV1MethodsRegistry} from "./SiloHookV1MethodsRegistry.sol";
 
-
 contract SiloHookV2MethodsRegistry is SiloHookV1MethodsRegistry {
     constructor() {
         _registerMethod(new LiquidationCallByDefaultingReentrancyTest());

@@ -3,7 +3,6 @@ pragma solidity ^0.8.28;
 
 import {console2} from "forge-std/console2.sol";
 
-
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
@@ -125,7 +124,7 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
             vm.prank(_borrower);
             silo1.withdraw(maxWithdraw, _borrower, _borrower);
         }
-        
+
         maxWithdraw = silo0.maxWithdraw(_depositor);
 
         if (maxWithdraw != 0) {
