@@ -18,7 +18,7 @@ contract BorrowSameAssetReentrancyTest is MethodReentrancyTest {
 
         vm.expectRevert(ISilo.Deprecated.selector);
         silo0.borrowSameAsset(1000, address(0), address(0));
-        
+
         ISilo silo1 = TestStateLib.silo1();
 
         vm.expectRevert(ISilo.Deprecated.selector);

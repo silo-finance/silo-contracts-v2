@@ -17,9 +17,7 @@ contract BorrowReentrancyTest is MethodReentrancyTest {
         ISilo silo0 = TestStateLib.silo0();
         address depositor = makeAddr("Depositor");
         address borrower = makeAddr("Borrower");
-        // in case silo is not empty and we have huge interest, 
-        // depossiting totalAssetsAmount should create liquidity
-        uint256 depositAmount = 100e18; // + silo0.totalAssets();
+        uint256 depositAmount = 100e18;
         uint256 collateralAmount = 100e18;
 
         TestStateLib.disableReentrancy();

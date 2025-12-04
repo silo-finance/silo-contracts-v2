@@ -18,11 +18,7 @@ import {TestStateLib} from "./TestState.sol";
 import {MintableToken} from "../../_common/MintableToken.sol";
 import {Tabs} from "../../_common/Tabs.sol";
 
-import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-
 contract MaliciousToken is MintableToken, Test, Tabs {
-    using SiloLensLib for ISilo;
-
     IMethodsRegistry[] internal _methodRegistries;
     LeverageMethodsRegistry internal _leverageMethodsRegistry;
 

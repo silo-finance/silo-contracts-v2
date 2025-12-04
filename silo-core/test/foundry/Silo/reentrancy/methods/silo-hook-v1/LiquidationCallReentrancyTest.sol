@@ -100,9 +100,7 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         MaliciousToken token1 = MaliciousToken(TestStateLib.token1());
         ISilo silo0 = TestStateLib.silo0();
         ISilo silo1 = TestStateLib.silo1();
-        // in case we in reentrancy, we can have case with 0 liquidity, so we need to make sure
-        // we deposit enough to be able to borrow
-        uint256 liquidityForBorrow = 100e18; // + silo0.totalAssets();
+        uint256 liquidityForBorrow = 100e18;
         uint256 collateralAmount = 100e18;
 
         token0.mint(_depositor, liquidityForBorrow);
@@ -124,17 +122,9 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         uint256 maxBorrow = silo0.maxBorrow(_borrower);
         
         if (maxBorrow == 0) {
-            // if (silo0.getLiquidity() == 0) {
-                uint256 amount = silo0.getDebtAssets();
-                vm.prank(_depositor);
-                silo0.deposit(amount, _depositor);
-            // } else {
-            //     // silo1.deposit(collateralAmount, _borrower);
-            // }
-
-            // console2.log("silo0.getLiquidity()", silo0.getLiquidity());
-            // console2.log("silo0.getDebtAssets()", silo0.getDebtAssets());
-            // console2.log("is solvent", silo0.isSolvent(_borrower));
+            uint256 amount = silo0.getDebtAssets();
+            vm.prank(_depositor);
+            silo0.deposit(amount, _depositor);
 
             maxBorrow = silo0.maxBorrow(_borrower) / 2;
 
