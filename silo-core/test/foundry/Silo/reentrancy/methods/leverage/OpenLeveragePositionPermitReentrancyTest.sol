@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {console2} from "forge-std/console2.sol";
-
-
 import {LeverageUsingSiloFlashloanWithGeneralSwap} from
     "silo-core/contracts/leverage/LeverageUsingSiloFlashloanWithGeneralSwap.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
@@ -20,8 +17,7 @@ contract OpenLeveragePositionPermitReentrancyTest is OpenLeveragePositionReentra
         uint256 flashloanAmount = depositAmount * 1.08e18 / 1e18;
 
         _depositLiquidity();
-        console2.log("[OpenLeveragePositionPermitReentrancyTest] DEBUG _depositLiquidity");
-        _mintUserTokensAndApproveForFlashloan(user, depositAmount, flashloanAmount, swap, true);
+        _mintUserTokensAndApprove(user, depositAmount, flashloanAmount, swap, true);
 
         // Prepare leverage arguments
         (
@@ -39,9 +35,6 @@ contract OpenLeveragePositionPermitReentrancyTest is OpenLeveragePositionReentra
         LeverageRouter router = _getLeverageRouter();
         ILeverageUsingSiloFlashloan.Permit memory permit = _generatePermit(TestStateLib.token0());
 
-        emit log_string("[OpenLeveragePositionPermitReentrancyTest] DEBUG AAAA");
-        emit log_string(vm.getLabel(user));
-
         vm.prank(user);
         router.openLeveragePositionPermit({
             _flashArgs: flashArgs,
@@ -49,9 +42,6 @@ contract OpenLeveragePositionPermitReentrancyTest is OpenLeveragePositionReentra
             _depositArgs: depositArgs,
             _depositAllowance: permit
         });
-
-        emit log_string("[OpenLeveragePositionPermitReentrancyTest] DEBUG 3.....");
-
 
         TestStateLib.disableLeverageReentrancy();
     }
@@ -70,13 +60,9 @@ contract OpenLeveragePositionPermitReentrancyTest is OpenLeveragePositionReentra
 
         ILeverageUsingSiloFlashloan.Permit memory permit = _generatePermit(TestStateLib.token0());
 
-        emit log_string("[OpenLeveragePositionPermitReentrancyTest] DEBUG 5 expecting revert");
-
         vm.prank(user);
         vm.expectRevert(TransientReentrancy.ReentrancyGuardReentrantCall.selector);
         router.openLeveragePositionPermit(flashArgs, abi.encode(swapArgs), depositArgs, permit);
-
-        emit log_string("[OpenLeveragePositionPermitReentrancyTest] DEBUG 6 revert expected!!!");
     }
 
     function methodDescription() external pure override returns (string memory description) {

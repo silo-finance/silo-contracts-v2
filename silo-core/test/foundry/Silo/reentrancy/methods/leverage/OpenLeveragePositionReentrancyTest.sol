@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {console2} from "forge-std/console2.sol";
-
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/IERC20Permit.sol";
 import {MessageHashUtils} from "openzeppelin5/utils/cryptography/MessageHashUtils.sol";
@@ -53,8 +51,6 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         vm.prank(user);
         vm.expectRevert(TransientReentrancy.ReentrancyGuardReentrantCall.selector);
         router.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
-
-        console2.log("[OpenLeveragePositionReentrancyTest] DEBUG 66 revert expected!!!");
     }
 
     function methodDescription() external pure virtual returns (string memory description) {
@@ -76,7 +72,7 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         uint256 flashloanAmount = depositAmount * 1.08e18 / 1e18;
 
         _depositLiquidity();
-        _mintUserTokensAndApproveForFlashloan(user, depositAmount, flashloanAmount, swap, true);
+        _mintUserTokensAndApprove(user, depositAmount, flashloanAmount, swap, true);
 
         // Prepare leverage arguments
         (
@@ -93,10 +89,8 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         // Execute leverage position opening
         LeverageRouter router = _getLeverageRouter();
 
-        console2.log("[OpenLeveragePositionReentrancyTest] DEBUG 1");
         vm.prank(user);
         router.openLeveragePosition(flashArgs, abi.encode(swapArgs), depositArgs);
-        console2.log("[OpenLeveragePositionReentrancyTest] DEBUG 2 position opened");
 
         TestStateLib.disableLeverageReentrancy();
     }
@@ -121,7 +115,7 @@ contract OpenLeveragePositionReentrancyTest is MethodReentrancyTest {
         TestStateLib.enableReentrancy();
     }
 
-    function _mintUserTokensAndApproveForFlashloan(
+    function _mintUserTokensAndApprove(
         address _user,
         uint256 _depositAmount,
         uint256 _flashloanAmount,
