@@ -7,7 +7,7 @@ import {TestStateLib} from "../../TestState.sol";
 
 contract OnDebtTransferReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
-        emit log_string(_tabs(1, "Ensure it will not revert (permissions test)"));
+        emit log_string(_tabs(1, "Ensure it will revert (permissions test)"));
         _ensureItWillRevert();
     }
 
