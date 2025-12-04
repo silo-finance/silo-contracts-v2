@@ -49,7 +49,7 @@ contract CloseLeveragePositionReentrancyTest is OpenLeveragePositionReentrancyTe
     }
 
     function verifyReentrancy() external virtual override {
-        emit log_string("[CloseLeveragePositionReentrancyTest] before closeLeveragePosition");
+        emit log_string(_tabs(3, "[CloseLeveragePositionReentrancyTest] before closeLeveragePosition"));
         LeverageRouter router = _getLeverageRouter();
 
         bytes memory swapArgs = "";
