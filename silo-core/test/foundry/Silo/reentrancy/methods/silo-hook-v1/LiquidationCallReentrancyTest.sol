@@ -103,13 +103,13 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         ISilo silo1 = TestStateLib.silo1();
         // in case we in reentrancy, we can have case with 0 liquidity, so we need to make sure
         // we deposit enough to be able to borrow
-        uint256 liquidityForBorrow = 10e18 + silo1.totalAssets();
-        uint256 collateralAmount = 1e18;
+        uint256 liquidityForBorrow = 100e18; // + silo1.totalAssets();
+        uint256 collateralAmount = 100e18;
 
         token1.mint(_depositor, liquidityForBorrow);
 
         vm.prank(_depositor);
-        token1.approve(address(silo1), liquidityForBorrow);
+        token1.approve(address(silo1), type(uint256).max);
 
         vm.prank(_depositor);
         silo1.deposit(liquidityForBorrow, _depositor);
@@ -117,7 +117,7 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         token0.mint(_borrower, collateralAmount);
 
         vm.prank(_borrower);
-        token0.approve(address(silo0), collateralAmount);
+        token0.approve(address(silo0), type(uint256).max);
 
         vm.prank(_borrower);
         silo0.deposit(collateralAmount, _borrower);
@@ -125,6 +125,16 @@ contract LiquidationCallReentrancyTest is MethodReentrancyTest {
         uint256 maxBorrow = silo1.maxBorrow(_borrower);
         
         if (maxBorrow == 0) {
+            if (silo1.getLiquidity() == 0) {
+                uint256 amount = silo1.getDebtAssets();
+                vm.prank(_depositor);
+                silo1.deposit(amount, _depositor);
+            } else {
+                silo0.deposit(collateralAmount, _borrower);
+            }
+
+            maxBorrow = silo1.maxBorrow(_borrower);
+
             console2.log("[LiquidationCallReentrancyTest] we can't borrow");
             revert("[LiquidationCallReentrancyTest] we can't borrow");
         }
