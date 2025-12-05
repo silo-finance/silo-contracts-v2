@@ -56,9 +56,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     {
         __Whitelist_init(_owner);
 
-        (address silo0, address silo1) = siloConfig.getSilos();
-
-        validateDefaultingCollateral(silo0, silo1);
+        validateDefaultingCollateral();
     }
     
     /// @inheritdoc IPartialLiquidationByDefaulting
@@ -195,9 +193,12 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         require(address(controllerCollateral) != address(0), NoControllerForCollateral());
     }
 
-    function validateDefaultingCollateral(address _silo0, address _silo1) public view virtual {
-        ISiloConfig.ConfigData memory config0 = siloConfig.getConfig(_silo0);
-        ISiloConfig.ConfigData memory config1 = siloConfig.getConfig(_silo1);
+    /// @inheritdoc IPartialLiquidationByDefaulting
+    function validateDefaultingCollateral() public view virtual {
+        (address silo0, address silo1) = siloConfig.getSilos();
+
+        ISiloConfig.ConfigData memory config0 = siloConfig.getConfig(silo0);
+        ISiloConfig.ConfigData memory config1 = siloConfig.getConfig(silo1);
 
         require(config0.lt == 0 || config1.lt == 0, TwoWayMarketNotAllowed());
         

@@ -298,6 +298,15 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         console2.log("gauge configured");
     }
 
+    function _removeIncentiveController() internal {
+        (, ISilo debtSilo) = _getSilos();
+
+        address owner = Ownable(address(defaulting)).owner();
+        vm.prank(owner);
+        IGaugeHookReceiver(address(defaulting)).removeGauge(IShareToken(address(debtSilo)));
+        console2.log("gauge removed");
+    }
+
     function _getProgramIdForAddress(address _addressAsName) internal pure virtual returns (bytes32) {
         return bytes32(uint256(uint160(_addressAsName)));
     }

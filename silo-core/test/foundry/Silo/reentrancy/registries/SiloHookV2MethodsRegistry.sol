@@ -17,6 +17,11 @@ import {LiquidationLogicReentrancyTest} from "../methods/silo-hook-v2/Liquidatio
 import {LtMarginForDefaultingReentrancyTest} from "../methods/silo-hook-v2/LtMarginForDefaultingReentrancyTest.sol";
 import {GetKeeperAndLenderSharesSplitReentrancyTest} from "../methods/silo-hook-v2/GetKeeperAndLenderSharesSplitReentrancyTest.sol";
 import {ValidateControllerForCollateralReentrancyTest} from "../methods/silo-hook-v2/ValidateControllerForCollateralReentrancyTest.sol";
+import {GetRoleMemberReentrancyTest} from "../methods/silo-hook-v2/GetRoleMemberReentrancyTest.sol";
+import {GetRoleMemberCountReentrancyTest} from "../methods/silo-hook-v2/GetRoleMemberCountReentrancyTest.sol";
+import {GetRoleMembersReentrancyTest} from "../methods/silo-hook-v2/GetRoleMembersReentrancyTest.sol";
+import {ValidateDefaultingCollateralReentrancyTest} from "../methods/silo-hook-v2/ValidateDefaultingCollateralReentrancyTest.sol";
+
 import {SiloHookV1MethodsRegistry} from "./SiloHookV1MethodsRegistry.sol";
 
 contract SiloHookV2MethodsRegistry is SiloHookV1MethodsRegistry {
@@ -34,9 +39,13 @@ contract SiloHookV2MethodsRegistry is SiloHookV1MethodsRegistry {
         _registerMethod(new KeeperFeeReentrancyTest());
         _registerMethod(new LiquidationLogicReentrancyTest());
         _registerMethod(new LtMarginForDefaultingReentrancyTest());
+        _registerMethod(new GetRoleMemberReentrancyTest());
+        _registerMethod(new GetRoleMemberCountReentrancyTest());
+        _registerMethod(new GetRoleMembersReentrancyTest());
 
         _registerMethod(new GetKeeperAndLenderSharesSplitReentrancyTest());
         _registerMethod(new ValidateControllerForCollateralReentrancyTest());
+        _registerMethod(new ValidateDefaultingCollateralReentrancyTest());
     }
 
     function abiFile() external pure override returns (string memory) {

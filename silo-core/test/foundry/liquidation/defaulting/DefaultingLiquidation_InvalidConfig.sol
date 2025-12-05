@@ -51,7 +51,7 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
         _mockSiloConfig(config, config);
 
         vm.expectRevert(IPartialLiquidationByDefaulting.TwoWayMarketNotAllowed.selector);
-        defaulting.validateDefaultingCollateral(silo0, silo1);
+        defaulting.validateDefaultingCollateral();
     }
 
     /*
@@ -66,14 +66,14 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
         _mockSiloConfig(config0, config1);
 
         vm.expectRevert(IPartialLiquidationByDefaulting.InvalidLTConfig0.selector);
-        defaulting.validateDefaultingCollateral(silo0, silo1);
+        defaulting.validateDefaultingCollateral();
 
         config0.lt = 0;
         config1.lt = 1e18 - defaulting.LT_MARGIN_FOR_DEFAULTING();
         _mockSiloConfig(config0, config1);
 
         vm.expectRevert(IPartialLiquidationByDefaulting.InvalidLTConfig1.selector);
-        defaulting.validateDefaultingCollateral(silo0, silo1);
+        defaulting.validateDefaultingCollateral();
 
         // counterexample
         config0.lt = 0;
@@ -81,7 +81,7 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
         _mockSiloConfig(config0, config1);
 
         // pass
-        defaulting.validateDefaultingCollateral(silo0, silo1);
+        defaulting.validateDefaultingCollateral();
     }
 
     /*

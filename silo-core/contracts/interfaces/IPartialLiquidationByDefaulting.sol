@@ -70,6 +70,9 @@ interface IPartialLiquidationByDefaulting {
         ISilo.CollateralType _collateralType
     ) external view returns (uint256 totalSharesToLiquidate, uint256 keeperShares, uint256 lendersShares);
 
+    /// @notice Validate if market is supported by defaulting, reverts if not
+    function validateDefaultingCollateral() external view;
+
     /// @notice Validate if gauge controller (silo incentives controller) is set for debt silo, reverts if not
     /// @param _silo The address of the silo from which debt is borrowed
     /// @return controllerCollateral The address of the gauge for debt silo
