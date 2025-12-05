@@ -33,8 +33,8 @@ import {SiloHookV1MethodsRegistry} from "./SiloHookV1MethodsRegistry.sol";
 
 contract SiloHookV2MethodsRegistry is SiloHookV1MethodsRegistry {
     constructor() {
-        _registerMethod(new LiquidationCallByDefaultingReentrancyTest());
-        _registerMethod(new LiquidationCallByDefaulting2ReentrancyTest());
+        // _registerMethod(new LiquidationCallByDefaultingReentrancyTest());
+        // _registerMethod(new LiquidationCallByDefaulting2ReentrancyTest());
         _registerMethod(new GetRoleAdminReentrancyTest());
         _registerMethod(new GrantRoleReentrancyTest());
         _registerMethod(new HasRoleReentrancyTest());

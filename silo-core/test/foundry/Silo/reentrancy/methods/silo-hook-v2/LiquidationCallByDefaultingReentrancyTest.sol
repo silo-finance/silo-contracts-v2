@@ -73,6 +73,7 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
     function _liquidationCallByDefaulting(address _borrower) internal virtual {
         IPartialLiquidationByDefaulting partialLiquidation =
             IPartialLiquidationByDefaulting(TestStateLib.hookReceiver());
+            
         vm.prank(_borrower);
         partialLiquidation.liquidationCallByDefaulting(_borrower);
     }
