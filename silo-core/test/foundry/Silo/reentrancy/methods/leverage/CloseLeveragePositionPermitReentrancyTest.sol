@@ -14,10 +14,8 @@ contract CloseLeveragePositionPermitReentrancyTest is CloseLeveragePositionReent
     function callMethod() external override {
         _openLeverage();
 
-        (
-            ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs,
-            IGeneralSwapModule.SwapArgs memory swapArgs
-        ) = _closeLeverageArgs();
+        (ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs, IGeneralSwapModule.SwapArgs memory swapArgs)
+        = _closeLeverageArgs();
 
         uint256 flashAmount = TestStateLib.silo0().maxRepay(wallet.addr);
 
@@ -39,10 +37,8 @@ contract CloseLeveragePositionPermitReentrancyTest is CloseLeveragePositionReent
     function verifyReentrancy() external override {
         LeverageRouter router = _getLeverageRouter();
 
-        (
-            ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs,
-            IGeneralSwapModule.SwapArgs memory swapArgs
-        ) = _closeLeverageArgs();
+        (ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs, IGeneralSwapModule.SwapArgs memory swapArgs)
+        = _closeLeverageArgs();
 
         ILeverageUsingSiloFlashloan.Permit memory permit = _generatePermit(address(TestStateLib.silo0()));
 

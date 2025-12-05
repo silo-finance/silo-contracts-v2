@@ -21,10 +21,8 @@ contract CloseLeveragePositionReentrancyTest is OpenLeveragePositionReentrancyTe
 
         address user = wallet.addr;
 
-        (
-            ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs,
-            IGeneralSwapModule.SwapArgs memory swapArgs
-        ) = _closeLeverageArgs();
+        (ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs, IGeneralSwapModule.SwapArgs memory swapArgs)
+        = _closeLeverageArgs();
 
         uint256 flashAmount = TestStateLib.silo0().maxRepay(user);
 
@@ -54,8 +52,7 @@ contract CloseLeveragePositionReentrancyTest is OpenLeveragePositionReentrancyTe
 
         bytes memory swapArgs = "";
 
-        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs = ILeverageUsingSiloFlashloan
-            .CloseLeverageArgs({
+        ILeverageUsingSiloFlashloan.CloseLeverageArgs memory closeArgs = ILeverageUsingSiloFlashloan.CloseLeverageArgs({
             flashloanTarget: address(TestStateLib.silo0()),
             siloWithCollateral: TestStateLib.silo1(),
             collateralType: ISilo.CollateralType.Collateral
