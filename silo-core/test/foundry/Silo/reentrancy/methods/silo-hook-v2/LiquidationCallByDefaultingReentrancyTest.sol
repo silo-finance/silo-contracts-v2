@@ -25,9 +25,6 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
         TestStateLib.disableReentrancy();
         _createInsolventBorrower(depositor, borrower);
 
-        IPartialLiquidationByDefaulting partialLiquidation =
-            IPartialLiquidationByDefaulting(TestStateLib.hookReceiver());
-
         // Enable reentrancy to check in the test so we can check it during the liquidation.
         TestStateLib.enableReentrancy();
         TestStateLib.setReenterViaLiquidationCall(true);

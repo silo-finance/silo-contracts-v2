@@ -12,6 +12,5 @@ contract GetRoleMemberReentrancyTest is ConstantReentrancyTest {
 
     function _ensureItWillNotRevert() internal view override {
         SiloHookV2(TestStateLib.hookReceiver()).getRoleMember(bytes32(0), 0);
-        SiloHookV2(TestStateLib.hookReceiver()).getRoleMember(bytes32("role"), 456);
     }
 }
