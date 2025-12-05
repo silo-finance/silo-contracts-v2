@@ -115,7 +115,7 @@ contract SiloReentrancyTest is Test {
 
         configOverride.token0 = address(new MaliciousToken());
         configOverride.token1 = address(new MaliciousToken());
-        configOverride.configName = SiloConfigsNames.SILO_LOCAL_GAUGE_HOOK_RECEIVER;
+        configOverride.configName = SiloConfigsNames.SILO_LOCAL_NOT_BORROWABLE;
         ISilo silo0;
         ISilo silo1;
         address hookReceiver;
