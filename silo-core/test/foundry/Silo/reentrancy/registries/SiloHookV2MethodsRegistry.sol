@@ -4,11 +4,38 @@ pragma solidity ^0.8.28;
 import {IMethodReentrancyTest} from "../interfaces/IMethodReentrancyTest.sol";
 
 import {LiquidationCallByDefaultingReentrancyTest} from "../methods/silo-hook-v2/LiquidationCallByDefaultingReentrancyTest.sol";
+import {GetRoleAdminReentrancyTest} from "../methods/leverage/GetRoleAdminReentrancyTest.sol";
+import {GrantRoleReentrancyTest} from "../methods/leverage/GrantRoleReentrancyTest.sol";
+import {HasRoleReentrancyTest} from "../methods/leverage/HasRoleReentrancyTest.sol";
+import {RenounceRoleReentrancyTest} from "../methods/leverage/RenounceRoleReentrancyTest.sol";
+import {RevokeRoleReentrancyTest} from "../methods/leverage/RevokeRoleReentrancyTest.sol";
+import {SupportsInterfaceReentrancyTest} from "../methods/leverage/SupportsInterfaceReentrancyTest.sol";
+import {AllowedRoleReentrancyTest} from "../methods/silo-hook-v2/AllowedRoleReentrancyTest.sol";
+import {DefaultAdminRoleReentrancyTest} from "../methods/silo-hook-v2/DefaultAdminRoleReentrancyTest.sol";
+import {KeeperFeeReentrancyTest} from "../methods/silo-hook-v2/KeeperFeeReentrancyTest.sol";
+import {LiquidationLogicReentrancyTest} from "../methods/silo-hook-v2/LiquidationLogicReentrancyTest.sol";
+import {LtMarginForDefaultingReentrancyTest} from "../methods/silo-hook-v2/LtMarginForDefaultingReentrancyTest.sol";
+import {GetKeeperAndLenderSharesSplitReentrancyTest} from "../methods/silo-hook-v2/GetKeeperAndLenderSharesSplitReentrancyTest.sol";
+
 import {SiloHookV1MethodsRegistry} from "./SiloHookV1MethodsRegistry.sol";
 
 contract SiloHookV2MethodsRegistry is SiloHookV1MethodsRegistry {
     constructor() {
         _registerMethod(new LiquidationCallByDefaultingReentrancyTest());
+        _registerMethod(new GetRoleAdminReentrancyTest());
+        _registerMethod(new GrantRoleReentrancyTest());
+        _registerMethod(new HasRoleReentrancyTest());
+        _registerMethod(new RenounceRoleReentrancyTest());
+        _registerMethod(new RevokeRoleReentrancyTest());
+        _registerMethod(new SupportsInterfaceReentrancyTest());
+
+        _registerMethod(new AllowedRoleReentrancyTest());
+        _registerMethod(new DefaultAdminRoleReentrancyTest());
+        _registerMethod(new KeeperFeeReentrancyTest());
+        _registerMethod(new LiquidationLogicReentrancyTest());
+        _registerMethod(new LtMarginForDefaultingReentrancyTest());
+
+        _registerMethod(new GetKeeperAndLenderSharesSplitReentrancyTest());
     }
 
     function abiFile() external pure override returns (string memory) {

@@ -35,6 +35,8 @@ FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloReentrancyTest
 contract SiloReentrancyTest is Test {
     ISiloConfig public siloConfig;
 
+    mapping(string abiFile => string[] methods) public methodsNotFound;
+
     /*
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_coverage_for_reentrancy
     */
@@ -44,7 +46,6 @@ contract SiloReentrancyTest is Test {
 
         bool allCovered = true;
         string memory root = vm.projectRoot();
-        string memory notFound;
 
         for (uint256 j = 0; j < methodRegistries.length; j++) {
             string memory abiPath = string.concat(root, methodRegistries[j].abiFile());
@@ -59,14 +60,31 @@ contract SiloReentrancyTest is Test {
                 if (method == address(0)) {
                     allCovered = false;
 
-                    emit log_string(string.concat("\nABI: ", methodRegistries[j].abiFile()));
+                    emit log_string(string.concat("\nABI: ", abiPath));
                     emit log_string(string.concat("Method not found: ", keys[i]));
-                    notFound = string.concat(notFound, string.concat(keys[i], ", "));
+                    methodsNotFound[abiPath].push(keys[i]);
                 }
             }
         }
 
-        assertTrue(allCovered, string.concat("All methods should be covered, not found: ", notFound));
+        if (!allCovered) {  
+            console2.log("\n----------- All methods should be covered, not found: -------------\n");
+        }
+
+        for (uint256 j = 0; j < methodRegistries.length; j++) {
+            string memory abiPath = string.concat(root, methodRegistries[j].abiFile());
+
+            string[] memory methods = methodsNotFound[abiPath];
+            if (methods.length == 0) continue;
+
+            console2.log("\nABI: %s\nMethods not found:", abiPath);
+
+            for (uint256 i = 0; i < methods.length; i++) {
+                console2.log("- ", methods[i]);
+            }
+        }
+
+        assertTrue(allCovered, "All methods should be covered");
     }
 
     /*
