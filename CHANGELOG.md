@@ -6,9 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
-## [3.13.0] - 2025-12-03
-### Updated
+## [3.13.0] - 2025-12-05
+### Markets
 - silo-core: `PT-iUSD-19FEB2026 / USDC` new market on Mainnet
+- silo-core: `PT-sUSDai-19FEB2026 / USDC` new market on Arbitrum
 
 ## [3.12.0] - 2025-10-28
 ### Updated
