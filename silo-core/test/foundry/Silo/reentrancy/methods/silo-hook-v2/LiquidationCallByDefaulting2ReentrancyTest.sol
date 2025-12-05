@@ -6,9 +6,13 @@ import {LiquidationCallByDefaultingReentrancyTest} from "./LiquidationCallByDefa
 import {TestStateLib} from "../../TestState.sol";
 
 contract LiquidationCallByDefaulting2ReentrancyTest is LiquidationCallByDefaultingReentrancyTest {
-    function _liquidationCallByDefaulting(address _borrower) internal override {
+    function _liquidationCallByDefaulting(address _borrower, bytes4 _expectRevert) internal override {
         IPartialLiquidationByDefaulting partialLiquidation =
             IPartialLiquidationByDefaulting(TestStateLib.hookReceiver());
+
+        if (_expectRevert != bytes4(0)) {
+            vm.expectRevert(_expectRevert);
+        }
 
         vm.prank(_borrower);
         IPartialLiquidationByDefaulting(address(partialLiquidation)).liquidationCallByDefaulting(

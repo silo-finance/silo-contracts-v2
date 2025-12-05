@@ -29,7 +29,7 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
         TestStateLib.enableReentrancy();
         TestStateLib.setReenterViaLiquidationCall(true);
 
-        _liquidationCallByDefaulting(borrower);
+        _liquidationCallByDefaulting(borrower, bytes4(0));
 
         TestStateLib.setReenterViaLiquidationCall(false);
     }
@@ -58,18 +58,24 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
             revert(_logPrefix("user not ready for liquidation"));
         }
 
+        bytes4 expectRevert;
+
         if (TestStateLib.reenterViaLiquidationCall()) {
-            vm.expectRevert(TransientReentrancy.ReentrancyGuardReentrantCall.selector);
+            expectRevert = TransientReentrancy.ReentrancyGuardReentrantCall.selector;
         } else {
-            vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
+            expectRevert = ICrossReentrancyGuard.CrossReentrantCall.selector;
         }
 
-        _liquidationCallByDefaulting(borrowerOnReentrancy);
+        _liquidationCallByDefaulting(borrowerOnReentrancy, expectRevert);
     }
 
-    function _liquidationCallByDefaulting(address _borrower) internal virtual {
+    function _liquidationCallByDefaulting(address _borrower, bytes4 _expectRevert) internal virtual {
         IPartialLiquidationByDefaulting partialLiquidation =
             IPartialLiquidationByDefaulting(TestStateLib.hookReceiver());
+
+        if (_expectRevert != bytes4(0)) {
+            vm.expectRevert(_expectRevert);
+        }
             
         vm.prank(_borrower);
         partialLiquidation.liquidationCallByDefaulting(_borrower);
