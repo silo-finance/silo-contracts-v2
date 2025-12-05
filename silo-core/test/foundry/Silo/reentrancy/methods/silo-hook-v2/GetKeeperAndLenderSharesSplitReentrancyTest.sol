@@ -13,5 +13,6 @@ contract GetKeeperAndLenderSharesSplitReentrancyTest is ConstantReentrancyTest {
 
     function _ensureItWillNotRevert() internal view override {
         SiloHookV2(TestStateLib.hookReceiver()).getKeeperAndLenderSharesSplit(100, ISilo.CollateralType.Collateral);
+        SiloHookV2(TestStateLib.hookReceiver()).getKeeperAndLenderSharesSplit(100, ISilo.CollateralType.Protected);
     }
 }

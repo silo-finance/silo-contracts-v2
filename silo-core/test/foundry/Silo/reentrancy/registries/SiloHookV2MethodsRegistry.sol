@@ -16,7 +16,7 @@ import {KeeperFeeReentrancyTest} from "../methods/silo-hook-v2/KeeperFeeReentran
 import {LiquidationLogicReentrancyTest} from "../methods/silo-hook-v2/LiquidationLogicReentrancyTest.sol";
 import {LtMarginForDefaultingReentrancyTest} from "../methods/silo-hook-v2/LtMarginForDefaultingReentrancyTest.sol";
 import {GetKeeperAndLenderSharesSplitReentrancyTest} from "../methods/silo-hook-v2/GetKeeperAndLenderSharesSplitReentrancyTest.sol";
-
+import {ValidateControllerForCollateralReentrancyTest} from "../methods/silo-hook-v2/ValidateControllerForCollateralReentrancyTest.sol";
 import {SiloHookV1MethodsRegistry} from "./SiloHookV1MethodsRegistry.sol";
 
 contract SiloHookV2MethodsRegistry is SiloHookV1MethodsRegistry {
@@ -36,6 +36,7 @@ contract SiloHookV2MethodsRegistry is SiloHookV1MethodsRegistry {
         _registerMethod(new LtMarginForDefaultingReentrancyTest());
 
         _registerMethod(new GetKeeperAndLenderSharesSplitReentrancyTest());
+        _registerMethod(new ValidateControllerForCollateralReentrancyTest());
     }
 
     function abiFile() external pure override returns (string memory) {

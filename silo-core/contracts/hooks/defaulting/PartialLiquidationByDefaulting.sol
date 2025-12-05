@@ -181,6 +181,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         });
     }
 
+    /// @inheritdoc IPartialLiquidationByDefaulting
     function validateControllerForCollateral(address _silo)
         public
         view
