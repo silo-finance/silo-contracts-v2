@@ -25,14 +25,14 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
         TestStateLib.disableReentrancy();
         _createInsolventBorrower(depositor, borrower);
 
-        IPartialLiquidationByDefaulting partialLiquidation = IPartialLiquidationByDefaulting(TestStateLib.hookReceiver());
+        IPartialLiquidationByDefaulting partialLiquidation =
+            IPartialLiquidationByDefaulting(TestStateLib.hookReceiver());
 
         // Enable reentrancy to check in the test so we can check it during the liquidation.
         TestStateLib.enableReentrancy();
         TestStateLib.setReenterViaLiquidationCall(true);
 
-        vm.prank(borrower);
-        partialLiquidation.liquidationCallByDefaulting(borrower);
+        _liquidationCallByDefaulting(borrower);
 
         TestStateLib.setReenterViaLiquidationCall(false);
     }
@@ -57,8 +57,8 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
         (, uint256 debtToRepay,) = partialLiquidation.maxLiquidation(borrowerOnReentrancy);
 
         if (debtToRepay == 0) {
-            console2.log("[LiquidationCallByDefaultingReentrancyTest] user not ready for liquidation");
-            revert("[LiquidationCallByDefaultingReentrancyTest] user not ready for liquidation");
+            console2.log(_logPrefix("user not ready for liquidation"));
+            revert(_logPrefix("user not ready for liquidation"));
         }
 
         if (TestStateLib.reenterViaLiquidationCall()) {
@@ -67,11 +67,17 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
             vm.expectRevert(ICrossReentrancyGuard.CrossReentrantCall.selector);
         }
 
-        vm.prank(borrowerOnReentrancy);
-        IPartialLiquidationByDefaulting(address(partialLiquidation)).liquidationCallByDefaulting(borrowerOnReentrancy);
+        _liquidationCallByDefaulting(borrowerOnReentrancy);
     }
 
-    function methodDescription() external pure returns (string memory description) {
+    function _liquidationCallByDefaulting(address _borrower) internal virtual {
+        IPartialLiquidationByDefaulting partialLiquidation =
+            IPartialLiquidationByDefaulting(TestStateLib.hookReceiver());
+        vm.prank(_borrower);
+        partialLiquidation.liquidationCallByDefaulting(_borrower);
+    }
+
+    function methodDescription() external pure virtual returns (string memory description) {
         description = "liquidationCallByDefaulting(address)";
     }
 
@@ -104,8 +110,8 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
         uint256 maxBorrow = silo0.maxBorrow(_borrower) / 2;
 
         if (maxBorrow == 0) {
-            console2.log("[LiquidationCallByDefaultingReentrancyTest] we can't borrow");
-            revert("[LiquidationCallByDefaultingReentrancyTest] we can't borrow");
+            console2.log(_logPrefix("we can't borrow"));
+            revert(_logPrefix("we can't borrow"));
         }
 
         vm.prank(_borrower);
@@ -139,6 +145,10 @@ contract LiquidationCallByDefaultingReentrancyTest is MethodReentrancyTest {
             vm.warp(block.timestamp + 365 days);
         }
 
-        console2.log(_tabs(4), "[LiquidationCallByDefaultingReentrancyTest] years warp", y);
+        console2.log(_tabs(4), _logPrefix("years warp"), y);
+    }
+
+    function _logPrefix(string memory _msg) internal pure virtual returns (string memory) {
+        return string.concat("[LiquidationCallByDefaultingReentrancyTest] ", _msg);
     }
 }

@@ -3,7 +3,11 @@ pragma solidity ^0.8.28;
 
 import {IMethodReentrancyTest} from "../interfaces/IMethodReentrancyTest.sol";
 
-import {LiquidationCallByDefaultingReentrancyTest} from "../methods/silo-hook-v2/LiquidationCallByDefaultingReentrancyTest.sol";
+import {LiquidationCallByDefaultingReentrancyTest} from
+    "../methods/silo-hook-v2/LiquidationCallByDefaultingReentrancyTest.sol";
+import {LiquidationCallByDefaulting2ReentrancyTest} from
+    "../methods/silo-hook-v2/LiquidationCallByDefaulting2ReentrancyTest.sol";
+
 import {GetRoleAdminReentrancyTest} from "../methods/leverage/GetRoleAdminReentrancyTest.sol";
 import {GrantRoleReentrancyTest} from "../methods/leverage/GrantRoleReentrancyTest.sol";
 import {HasRoleReentrancyTest} from "../methods/leverage/HasRoleReentrancyTest.sol";
@@ -15,18 +19,22 @@ import {DefaultAdminRoleReentrancyTest} from "../methods/silo-hook-v2/DefaultAdm
 import {KeeperFeeReentrancyTest} from "../methods/silo-hook-v2/KeeperFeeReentrancyTest.sol";
 import {LiquidationLogicReentrancyTest} from "../methods/silo-hook-v2/LiquidationLogicReentrancyTest.sol";
 import {LtMarginForDefaultingReentrancyTest} from "../methods/silo-hook-v2/LtMarginForDefaultingReentrancyTest.sol";
-import {GetKeeperAndLenderSharesSplitReentrancyTest} from "../methods/silo-hook-v2/GetKeeperAndLenderSharesSplitReentrancyTest.sol";
-import {ValidateControllerForCollateralReentrancyTest} from "../methods/silo-hook-v2/ValidateControllerForCollateralReentrancyTest.sol";
+import {GetKeeperAndLenderSharesSplitReentrancyTest} from
+    "../methods/silo-hook-v2/GetKeeperAndLenderSharesSplitReentrancyTest.sol";
+import {ValidateControllerForCollateralReentrancyTest} from
+    "../methods/silo-hook-v2/ValidateControllerForCollateralReentrancyTest.sol";
 import {GetRoleMemberReentrancyTest} from "../methods/silo-hook-v2/GetRoleMemberReentrancyTest.sol";
 import {GetRoleMemberCountReentrancyTest} from "../methods/silo-hook-v2/GetRoleMemberCountReentrancyTest.sol";
 import {GetRoleMembersReentrancyTest} from "../methods/silo-hook-v2/GetRoleMembersReentrancyTest.sol";
-import {ValidateDefaultingCollateralReentrancyTest} from "../methods/silo-hook-v2/ValidateDefaultingCollateralReentrancyTest.sol";
+import {ValidateDefaultingCollateralReentrancyTest} from
+    "../methods/silo-hook-v2/ValidateDefaultingCollateralReentrancyTest.sol";
 
 import {SiloHookV1MethodsRegistry} from "./SiloHookV1MethodsRegistry.sol";
 
 contract SiloHookV2MethodsRegistry is SiloHookV1MethodsRegistry {
     constructor() {
         _registerMethod(new LiquidationCallByDefaultingReentrancyTest());
+        _registerMethod(new LiquidationCallByDefaulting2ReentrancyTest());
         _registerMethod(new GetRoleAdminReentrancyTest());
         _registerMethod(new GrantRoleReentrancyTest());
         _registerMethod(new HasRoleReentrancyTest());

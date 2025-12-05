@@ -67,7 +67,7 @@ contract SiloReentrancyTest is Test {
             }
         }
 
-        if (!allCovered) {  
+        if (!allCovered) {
             console2.log("\n----------- All methods should be covered, not found: -------------\n");
         }
 
