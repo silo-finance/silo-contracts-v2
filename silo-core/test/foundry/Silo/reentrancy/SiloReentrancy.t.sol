@@ -88,7 +88,7 @@ contract SiloReentrancyTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_reentrancy
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_reentrancy -vv
     */
     function test_reentrancy() public {
         _deploySiloWithOverrides();
