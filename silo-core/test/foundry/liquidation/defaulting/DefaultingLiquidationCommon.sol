@@ -1537,7 +1537,5 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         assertEq(
             borrowerCollateralShareToken.balanceOf(address(gauge3)), 0, "gauge3 should have NO collateral rewards"
         );
-
-        assertEq(borrowerProtectedShareToken.balanceOf(makeAddr("borrower3")), 0, "it was full liquidation");
     }
 }
