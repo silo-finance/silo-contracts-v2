@@ -287,7 +287,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         // console2.log("defaulting possible: ", possible ? "yes" : "no");
     }
 
-    function _createIncentiveController() internal {
+    function _createIncentiveController() internal returns (ISiloIncentivesController newGauge) {
         // TODO test if revert for silo0
         (, ISilo debtSilo) = _getSilos();
         gauge = new SiloIncentivesController(address(this), address(partialLiquidation), address(debtSilo));
@@ -296,6 +296,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         vm.prank(owner);
         IGaugeHookReceiver(address(defaulting)).setGauge(gauge, IShareToken(address(debtSilo)));
         console2.log("gauge configured");
+        return gauge;
     }
 
     function _removeIncentiveController() internal {

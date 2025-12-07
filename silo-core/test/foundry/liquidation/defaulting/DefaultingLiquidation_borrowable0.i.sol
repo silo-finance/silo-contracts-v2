@@ -319,6 +319,202 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
         super.test_bothLiquidationsResultsMatch_insolvent_fuzz(_dropPercentage, _warp, _collateral, _protected);
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_gaugeManagement_noWarp -vv --mc DefaultingLiquidationBorrowable0Test
+    */
+    function test_incentiveDistribution_gaugeManagement_noWarp() public override {
+        (
+            ISiloIncentivesController gauge2,
+            ISiloIncentivesController gauge3,
+            IShareToken borrowerCollateralShareToken,
+            IShareToken borrowerProtectedShareToken
+        ) = _incentiveDistribution_gaugeManagement({_warp: false});
+
+        string[] memory programNames = new string[](2);
+        programNames[0] = _getProgramNameForAddress(address(borrowerCollateralShareToken));
+        programNames[1] = _getProgramNameForAddress(address(borrowerProtectedShareToken));
+
+        assertEq(
+            borrowerCollateralShareToken.balanceOf(address(gauge2)),
+            987.725793610288865585e18,
+            "gauge2 should have only collateral rewards from borrower2 liquidation"
+        );
+        assertEq(
+            borrowerCollateralShareToken.balanceOf(makeAddr("keeper2")),
+            1.959773400020414415e18,
+            "keeper2 fee from borrower2 liquidation"
+        );
+        assertEq(
+            borrowerProtectedShareToken.balanceOf(makeAddr("keeper2")),
+            0,
+            "keeper2 fee from borrower2 liquidation (protected)"
+        );
+
+        uint256 gauge2CollateralRewards1 = gauge2.getRewardsBalance(makeAddr("lpProvider1"), programNames[0]);
+        uint256 gauge2CollateralRewards2 = gauge2.getRewardsBalance(makeAddr("lpProvider2"), programNames[0]);
+
+        assertEq(gauge2CollateralRewards1, 493.862896805144432792e18, "[lpProvider1] gauge2 has claimable rewards");
+        assertEq(gauge2CollateralRewards2, 493.862896805144432792e18, "[lpProvider2] gauge2 has claimable rewards");
+
+        assertEq(
+            borrowerProtectedShareToken.balanceOf(address(gauge3)),
+            98.773093804225783795e18,
+            "gauge3 should have only protected rewards"
+        );
+
+        vm.startPrank(makeAddr("lpProvider1"));
+        gauge2.claimRewards(makeAddr("lpProvider1"));
+        gauge3.claimRewards(makeAddr("lpProvider1"));
+        vm.stopPrank();
+
+        assertEq(
+            borrowerCollateralShareToken.balanceOf(makeAddr("lpProvider1")),
+            gauge2CollateralRewards1,
+            "[lpProvider1] gauge2 collateral rewards"
+        );
+
+        assertEq(
+            borrowerCollateralShareToken.balanceOf(makeAddr("lpProvider1")),
+            gauge2CollateralRewards1,
+            "[lpProvider1] gauge3 collateral rewards"
+        );
+
+        vm.startPrank(makeAddr("lpProvider2"));
+        gauge2.claimRewards(makeAddr("lpProvider2"));
+        gauge3.claimRewards(makeAddr("lpProvider2"));
+        vm.stopPrank();
+
+        assertEq(
+            borrowerCollateralShareToken.balanceOf(makeAddr("lpProvider1")),
+            gauge2CollateralRewards2,
+            "[lpProvider1] gauge2 collateral rewards, did not changed"
+        );
+
+        assertEq(
+            borrowerCollateralShareToken.balanceOf(makeAddr("lpProvider2")),
+            gauge2CollateralRewards2,
+            "[lpProvider2] gauge2 collateral rewards, did not changed"
+        );
+
+        assertEq(
+            borrowerProtectedShareToken.balanceOf(makeAddr("lpProvider1")),
+            49.386546902112891897e18,
+            "[lpProvider1] gauge3 protected rewards"
+        );
+
+        assertEq(
+            borrowerProtectedShareToken.balanceOf(makeAddr("lpProvider2")),
+            49.386546902112891897e18,
+            "[lpProvider2] gauge3 protected rewards"
+        );
+
+        assertEq(
+            borrowerProtectedShareToken.balanceOf(makeAddr("keeper3")),
+            0.195978360722670205e18,
+            "keeper3 fee from borrower3 liquidation (protected)"
+        );
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_gaugeManagement_warp -vv --mc DefaultingLiquidationBorrowable0Test
+    */
+    function test_incentiveDistribution_gaugeManagement_warp() public override {
+        // warp by 1h should increase rewards distribution a little bit
+        (
+            ISiloIncentivesController gauge2,
+            ISiloIncentivesController gauge3,
+            IShareToken borrowerCollateralShareToken,
+            IShareToken borrowerProtectedShareToken
+        ) = _incentiveDistribution_gaugeManagement({_warp: true});
+
+        string[] memory programNames = new string[](2);
+        programNames[0] = _getProgramNameForAddress(address(borrowerCollateralShareToken));
+        programNames[1] = _getProgramNameForAddress(address(borrowerProtectedShareToken));
+
+        assertEq(
+            borrowerCollateralShareToken.balanceOf(address(gauge2)),
+            987.725793610288865585e18,
+            "gauge2 should have only collateral rewards from borrower2 liquidation"
+        );
+        assertEq(
+            borrowerCollateralShareToken.balanceOf(makeAddr("keeper2")),
+            1.959773400020414415e18,
+            "keeper2 fee from borrower2 liquidation"
+        );
+        assertEq(
+            borrowerProtectedShareToken.balanceOf(makeAddr("keeper2")),
+            0,
+            "keeper2 fee from borrower2 liquidation (protected)"
+        );
+
+        uint256 gauge2CollateralRewards1 = gauge2.getRewardsBalance(makeAddr("lpProvider1"), programNames[0]);
+        uint256 gauge2CollateralRewards2 = gauge2.getRewardsBalance(makeAddr("lpProvider2"), programNames[0]);
+
+        assertEq(gauge2CollateralRewards1, 493.862896805144432792e18, "[lpProvider1] gauge2 has claimable rewards");
+        assertEq(gauge2CollateralRewards2, 493.862896805144432792e18, "[lpProvider2] gauge2 has claimable rewards");
+
+        // after creating position we have 1000 shares less in this case
+        // 98969072164948453000 vs 98969072164948454000 (no warp)
+        // so we liquidate less as well
+        assertEq(
+            borrowerProtectedShareToken.balanceOf(address(gauge3)),
+            98.773093804225783795e18 - 998,
+            "gauge3 should have only protected rewards"
+        );
+
+        vm.startPrank(makeAddr("lpProvider1"));
+        gauge2.claimRewards(makeAddr("lpProvider1"));
+        gauge3.claimRewards(makeAddr("lpProvider1"));
+        vm.stopPrank();
+
+        assertEq(
+            borrowerCollateralShareToken.balanceOf(makeAddr("lpProvider1")),
+            gauge2CollateralRewards1,
+            "[lpProvider1] gauge2 collateral rewards"
+        );
+
+        assertEq(
+            borrowerCollateralShareToken.balanceOf(makeAddr("lpProvider1")),
+            gauge2CollateralRewards1,
+            "[lpProvider1] gauge2 collateral rewards"
+        );
+
+        vm.startPrank(makeAddr("lpProvider2"));
+        gauge2.claimRewards(makeAddr("lpProvider2"));
+        gauge3.claimRewards(makeAddr("lpProvider2"));
+        vm.stopPrank();
+
+        assertEq(
+            borrowerCollateralShareToken.balanceOf(makeAddr("lpProvider1")),
+            gauge2CollateralRewards2,
+            "[lpProvider1] gauge2 collateral rewards, did not changed"
+        );
+
+        assertEq(
+            borrowerCollateralShareToken.balanceOf(makeAddr("lpProvider2")),
+            gauge2CollateralRewards2,
+            "[lpProvider2] gauge2 collateral rewards, did not changed"
+        );
+
+        assertEq(
+            borrowerProtectedShareToken.balanceOf(makeAddr("lpProvider1")),
+            49.386546902112891897e18 - 499,
+            "[lpProvider1] gauge3 protected rewards"
+        );
+
+        assertEq(
+            borrowerProtectedShareToken.balanceOf(makeAddr("lpProvider2")),
+            49.386546902112891897e18 - 499,
+            "[lpProvider2] gauge3 protected rewards"
+        );
+
+        assertEq(
+            borrowerProtectedShareToken.balanceOf(makeAddr("keeper3")),
+            0.195978360722670205e18 - 2,
+            "keeper3 fee from borrower3 liquidation (protected)"
+        );
+    }
+
     // CONFIGURATION
 
     function _getSilos() internal view override returns (ISilo collateralSilo, ISilo debtSilo) {

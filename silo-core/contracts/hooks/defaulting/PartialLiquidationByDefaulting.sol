@@ -26,6 +26,8 @@ import {Whitelist} from "silo-core/contracts/hooks/_common/Whitelist.sol";
 
 // solhint-disable ordering
 
+// TODO whitelist test, role(0) - check who is the member?
+
 /// @title PartialLiquidation module for executing liquidations
 /// @dev if we need additional hook functionality, this contract should be included as parent
 abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefaulting, PartialLiquidation, Whitelist {
