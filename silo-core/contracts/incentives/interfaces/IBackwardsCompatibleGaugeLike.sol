@@ -22,5 +22,4 @@ interface IBackwardsCompatibleGaugeLike {
     function share_token() external view returns (address);
 
     function is_killed() external view returns (bool);
-    // solhint-enable func-name-mixedcase
 }
