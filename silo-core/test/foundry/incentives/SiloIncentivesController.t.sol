@@ -7,7 +7,7 @@ import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
+import {ISiloIncentivesControllerFactory} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
@@ -22,7 +22,7 @@ contract SiloIncentivesControllerTest is Test {
     address internal _owner = makeAddr("Owner");
     address internal _notifier;
     address internal _rewardToken;
-    SiloIncentivesControllerFactory internal _factory;
+    ISiloIncentivesControllerFactory internal _factory;
 
     address internal user1 = makeAddr("User1");
     address internal user2 = makeAddr("User2");
