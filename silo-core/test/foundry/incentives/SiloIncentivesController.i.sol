@@ -144,7 +144,7 @@ contract SiloIncentivesControllerIntegrationTest is SiloLittleHelper, Test {
         assertEq(_controller.getRewardsBalance(user2, _PROGRAM_NAME), 0, "[user2] no rewards without deposit");
 
         bytes memory data = abi.encodeWithSelector(
-            SiloIncentivesController.afterTokenTransfer.selector,
+            ISiloIncentivesController.afterTokenTransfer.selector,
             address(0),
             0,
             user1,

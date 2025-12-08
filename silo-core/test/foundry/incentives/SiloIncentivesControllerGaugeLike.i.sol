@@ -11,20 +11,20 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
-import {SiloIncentivesControllerGaugeLike} from "silo-core/contracts/incentives/SiloIncentivesControllerGaugeLike.sol";
+import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 
 import {
-    SiloIncentivesControllerGaugeLikeFactoryDeploy
-} from "silo-core/deploy/SiloIncentivesControllerGaugeLikeFactoryDeploy.s.sol";
+    SiloIncentivesControllerFactoryDeploy
+} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 import {
-    ISiloIncentivesControllerGaugeLikeFactory
-} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerGaugeLikeFactory.sol";
+    ISiloIncentivesControllerFactory
+} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
 
 /**
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloIncentivesControllerGaugeLikeIntegrationTest
  */
 contract SiloIncentivesControllerGaugeLikeIntegrationTest is Test {
-    ISiloIncentivesControllerGaugeLikeFactory internal _factory;
+    ISiloIncentivesControllerFactory internal _factory;
     address internal _owner = makeAddr("Owner");
 
     error CantRemoveActiveGauge();
@@ -32,9 +32,9 @@ contract SiloIncentivesControllerGaugeLikeIntegrationTest is Test {
     function setUp() public {
         vm.createSelectFork(vm.envString("RPC_ARBITRUM"), 366902426);
 
-        SiloIncentivesControllerGaugeLikeFactoryDeploy deploy = new SiloIncentivesControllerGaugeLikeFactoryDeploy();
+        SiloIncentivesControllerFactoryDeploy deploy = new SiloIncentivesControllerFactoryDeploy();
         deploy.disableDeploymentsSync();
-        _factory = ISiloIncentivesControllerGaugeLikeFactory(deploy.run());
+        _factory = ISiloIncentivesControllerFactory(deploy.run());
     }
 
     /**
@@ -47,7 +47,7 @@ contract SiloIncentivesControllerGaugeLikeIntegrationTest is Test {
         IGaugeHookReceiver gaugeHookReceiver = IGaugeHookReceiver(IShareToken(address(silo0)).hookSetup().hookReceiver);
         (,, address debtShareToken) = siloConfig.getShareTokens(silo0);
 
-        address gaugeLikeController = _factory.createGaugeLike(_owner, address(gaugeHookReceiver), debtShareToken, bytes32(0));
+        address gaugeLikeController = _factory.create(_owner, address(gaugeHookReceiver), debtShareToken, bytes32(0));
 
         address hookOwner = Ownable(address(gaugeHookReceiver)).owner();
 
@@ -65,7 +65,7 @@ contract SiloIncentivesControllerGaugeLikeIntegrationTest is Test {
         gaugeHookReceiver.removeGauge(IShareToken(debtShareToken));
 
         vm.prank(_owner);
-        SiloIncentivesControllerGaugeLike(gaugeLikeController).killGauge();
+        SiloIncentivesController(gaugeLikeController).killGauge();
 
         vm.prank(hookOwner);
         gaugeHookReceiver.removeGauge(IShareToken(debtShareToken));

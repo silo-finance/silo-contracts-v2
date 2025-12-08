@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 
-import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
+import {ISiloIncentivesControllerFactory} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
@@ -38,7 +38,7 @@ contract CantinaTicket195 is CantinaTicket {
         SiloIncentivesControllerFactoryDeploy deployer = new SiloIncentivesControllerFactoryDeploy();
         deployer.disableDeploymentsSync();
 
-        SiloIncentivesControllerFactory factory = deployer.run();
+        ISiloIncentivesControllerFactory factory = deployer.run();
 
         _controller = SiloIncentivesController(factory.create(_owner, _notifier, _notifier, bytes32(0)));
 

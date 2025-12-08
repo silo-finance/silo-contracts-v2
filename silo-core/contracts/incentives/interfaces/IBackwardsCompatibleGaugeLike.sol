@@ -3,6 +3,15 @@ pragma solidity >=0.5.0;
 
 /// @dev Interface for incentives controller to be backwards compatible with older versions of GaugeLike controller
 interface IBackwardsCompatibleGaugeLike {
+    /**
+     * @dev Silo share token event handler
+     * @param _sender The address of the sender
+     * @param _senderBalance The balance of the sender
+     * @param _recipient The address of the recipient
+     * @param _recipientBalance The balance of the recipient
+     * @param _totalSupply The total supply of the asset in the lending pool
+     * @param _amount The amount of the transfer
+     */
     function afterTokenTransfer(
         address _sender,
         uint256 _senderBalance,
