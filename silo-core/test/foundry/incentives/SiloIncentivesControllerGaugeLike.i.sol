@@ -11,7 +11,7 @@ import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
-import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
+import {SiloIncentivesControllerCompatible} from "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
 
 import {
     SiloIncentivesControllerFactoryDeploy
@@ -65,7 +65,7 @@ contract SiloIncentivesControllerGaugeLikeIntegrationTest is Test {
         gaugeHookReceiver.removeGauge(IShareToken(debtShareToken));
 
         vm.prank(_owner);
-        SiloIncentivesController(gaugeLikeController).killGauge();
+        SiloIncentivesControllerCompatible(gaugeLikeController).killGauge();
 
         vm.prank(hookOwner);
         gaugeHookReceiver.removeGauge(IShareToken(debtShareToken));

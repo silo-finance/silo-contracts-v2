@@ -9,7 +9,7 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {ISiloIncentivesControllerFactory} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
-import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
+import {SiloIncentivesControllerCompatible} from "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
@@ -17,7 +17,7 @@ import {AddressUtilsLib} from "silo-core/contracts/lib/AddressUtilsLib.sol";
 
 // FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloIncentivesControllerTest
 contract SiloIncentivesControllerTest is Test {
-    SiloIncentivesController internal _controller;
+    SiloIncentivesControllerCompatible internal _controller;
 
     address internal _owner = makeAddr("Owner");
     address internal _notifier;
@@ -46,7 +46,7 @@ contract SiloIncentivesControllerTest is Test {
 
         _factory = deployer.run();
 
-        _controller = SiloIncentivesController(_factory.create(_owner, _notifier, _notifier, bytes32(0)));
+        _controller = SiloIncentivesControllerCompatible(_factory.create(_owner, _notifier, _notifier, bytes32(0)));
 
         assertTrue(
             _factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory"
@@ -865,7 +865,7 @@ contract SiloIncentivesControllerTest is Test {
     function test_wrong_notifier() public {
         // vm.expectRevert(abi.encodeWithSelector(IDistributionManager.WrongDecimals.selector));
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.ZeroAddress.selector));
-        SiloIncentivesController(_factory.create(_owner, address(0), address(0), bytes32(0)));
+        SiloIncentivesControllerCompatible(_factory.create(_owner, address(0), address(0), bytes32(0)));
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_setClaimer_success

@@ -5,7 +5,7 @@ import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 
 import {ISiloIncentivesControllerFactory} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
-import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
+import {SiloIncentivesControllerCompatible} from "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
 
 import {MintableToken} from "../../_common/MintableToken.sol";
@@ -15,7 +15,7 @@ import {CantinaTicket} from "./CantinaTicket.sol";
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc CantinaTicket195
 */
 contract CantinaTicket195 is CantinaTicket {
-    SiloIncentivesController internal _controller;
+    SiloIncentivesControllerCompatible internal _controller;
 
     address internal _owner = makeAddr("Owner");
     address internal _notifier;
@@ -40,7 +40,7 @@ contract CantinaTicket195 is CantinaTicket {
 
         ISiloIncentivesControllerFactory factory = deployer.run();
 
-        _controller = SiloIncentivesController(factory.create(_owner, _notifier, _notifier, bytes32(0)));
+        _controller = SiloIncentivesControllerCompatible(factory.create(_owner, _notifier, _notifier, bytes32(0)));
 
         assertTrue(
             factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory"

@@ -13,7 +13,7 @@ import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiv
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {SiloLittleHelper} from "silo-core/test/foundry/_common/SiloLittleHelper.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
-import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
+import {SiloIncentivesControllerCompatible} from "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
 
 import {
     SiloIncentivesControllerFactoryDeploy
@@ -64,7 +64,7 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
         address gaugeLike = _factory.create(_owner, _notifier, _shareToken, bytes32(0));
 
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
-        SiloIncentivesController(gaugeLike).killGauge();
+        SiloIncentivesControllerCompatible(gaugeLike).killGauge();
     }
 
     /**
@@ -74,10 +74,10 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
         address gaugeLike = _factory.create(_owner, _notifier, _shareToken, bytes32(0));
 
         vm.prank(_owner);
-        SiloIncentivesController(gaugeLike).killGauge();
+        SiloIncentivesControllerCompatible(gaugeLike).killGauge();
 
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
-        SiloIncentivesController(gaugeLike).unkillGauge();
+        SiloIncentivesControllerCompatible(gaugeLike).unkillGauge();
     }
 
     /**
@@ -86,15 +86,15 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     function test_killGauge_success() public {
         address gaugeLike = _factory.create(_owner, _notifier, _shareToken, bytes32(0));
 
-        assertFalse(SiloIncentivesController(gaugeLike).is_killed(), "GaugeLike should not be killed");
+        assertFalse(SiloIncentivesControllerCompatible(gaugeLike).is_killed(), "GaugeLike should not be killed");
 
         vm.expectEmit(true, true, true, true);
         emit GaugeKilled();
 
         vm.prank(_owner);
-        SiloIncentivesController(gaugeLike).killGauge();
+        SiloIncentivesControllerCompatible(gaugeLike).killGauge();
 
-        assertTrue(SiloIncentivesController(gaugeLike).is_killed(), "GaugeLike should be killed");
+        assertTrue(SiloIncentivesControllerCompatible(gaugeLike).is_killed(), "GaugeLike should be killed");
     }
 
     /**
@@ -104,17 +104,17 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
         address gaugeLike = _factory.create(_owner, _notifier, _shareToken, bytes32(0));
 
         vm.prank(_owner);
-        SiloIncentivesController(gaugeLike).killGauge();
+        SiloIncentivesControllerCompatible(gaugeLike).killGauge();
 
-        assertTrue(SiloIncentivesController(gaugeLike).is_killed(), "GaugeLike should be killed");
+        assertTrue(SiloIncentivesControllerCompatible(gaugeLike).is_killed(), "GaugeLike should be killed");
 
         vm.expectEmit(true, true, true, true);
         emit GaugeUnKilled();
 
         vm.prank(_owner);
-        SiloIncentivesController(gaugeLike).unkillGauge();
+        SiloIncentivesControllerCompatible(gaugeLike).unkillGauge();
 
-        assertFalse(SiloIncentivesController(gaugeLike).is_killed(), "GaugeLike should not be killed");
+        assertFalse(SiloIncentivesControllerCompatible(gaugeLike).is_killed(), "GaugeLike should not be killed");
     }
 
     /**
