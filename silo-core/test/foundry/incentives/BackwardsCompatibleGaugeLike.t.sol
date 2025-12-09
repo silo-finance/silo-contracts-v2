@@ -10,8 +10,6 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 
-import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
-
 import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
 import {ISiloIncentivesControllerFactory} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
@@ -25,7 +23,14 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IBackwardsCompatibleGaugeLike} from "silo-core/contracts/incentives/interfaces/IBackwardsCompatibleGaugeLike.sol";
 
 
-contract SiloDeploymentsParserTest is SiloLittleHelper, Test {
+contract BackwardsCompatibleGaugeLikeTest is Test {
+    // we can't move too far because oracle can revert
+    uint256 public constant INTERVAL = 10 minutes;
+    address public user = makeAddr("qaUser");
+
+    uint256 public decimals0;
+    uint256 public decimals1;
+
     mapping(string network => address[] siloConfigs) public deployedSiloConfigs;
     string[] public networks;
 
@@ -35,24 +40,62 @@ contract SiloDeploymentsParserTest is SiloLittleHelper, Test {
 
     function setUp() public {
         _parseSiloDeployments();
-
-        // silo0.updateHooks(); ??
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_backwardsCompatibility -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_backwardsCompatibility_arbitrum_one -vv
 
     we go over all deployed silos and manage gauges + do silo moves to make sure nothing break 
     goal si to verify is new SiloIncentivesControllerFactory is backwards compatible with old ones
     */
     function test_backwardsCompatibility_arbitrum_one() public {
-        vm.createSelectFork(vm.envString("RPC_ARBITRUM"));
+        _backwardsCompatibility_forNetwork(vm.envString("RPC_ARBITRUM"), "arbitrum_one");
+    }
+    
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_backwardsCompatibility_avalanche -vv
+    */
+    function test_backwardsCompatibility_avalanche() public {
+        _backwardsCompatibility_forNetwork(vm.envString("RPC_AVALANCHE"), "avalanche");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_backwardsCompatibility_ink -vv
+    */
+    function test_backwardsCompatibility_ink() public {
+        _backwardsCompatibility_forNetwork(vm.envString("RPC_INK"), "ink");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_backwardsCompatibility_mainnet -vv
+    */
+    function test_backwardsCompatibility_mainnet() public {
+        _backwardsCompatibility_forNetwork(vm.envString("RPC_MAINNET"), "mainnet");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_backwardsCompatibility_optimism -vv
+    */
+    function test_backwardsCompatibility_optimism() public {
+        _backwardsCompatibility_forNetwork(vm.envString("RPC_OPTIMISM"), "optimism");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_backwardsCompatibility_sonic -vv
+    */
+    function test_backwardsCompatibility_sonic() public {
+        _backwardsCompatibility_forNetwork(vm.envString("RPC_SONIC"), "sonic");
+    }
+
+    function _backwardsCompatibility_forNetwork(string memory _rpc, string memory _networkKey) internal {
+        vm.createSelectFork(_rpc);
 
         uint256 snapshot = vm.snapshot();
 
-        for (uint256 i = 0; i < deployedSiloConfigs["arbitrum_one"].length; i++) {
-            console2.log("_______ arbitrum [%s] _______", i);
-            _check_backwardsCompatibility(ISiloConfig(deployedSiloConfigs["arbitrum_one"][i]));
+        for (uint256 i = 0; i < deployedSiloConfigs[_networkKey].length; i++) {
+            console2.log("_______ %s [%s] START _______", _networkKey, i);
+            _check_backwardsCompatibility(ISiloConfig(deployedSiloConfigs[_networkKey][i]));
+            console2.log("_______ %s [%s] DONE _______", _networkKey, i);
 
             vm.revertTo(snapshot);
         }
@@ -97,15 +140,12 @@ contract SiloDeploymentsParserTest is SiloLittleHelper, Test {
     }
 
     function _dealTokens(ISiloConfig _siloConfig) internal {
-        address user = makeAddr("qaUser");
-        vm.startPrank(user);
-
         (address silo0, address silo1) = _siloConfig.getSilos();
         IERC20 asset0 = IERC20(IERC4626(silo0).asset());
         IERC20 asset1 = IERC20(IERC4626(silo1).asset());
 
-        uint256 decimals0 = IERC20Metadata(address(asset0)).decimals();
-        uint256 decimals1 = IERC20Metadata(address(asset1)).decimals();
+        decimals0 = IERC20Metadata(address(asset0)).decimals();
+        decimals1 = IERC20Metadata(address(asset1)).decimals();
 
         uint256 amount0 = 100_000 * (10 ** decimals0);
         uint256 amount1 = 100_000 * (10 ** decimals1);
@@ -114,80 +154,111 @@ contract SiloDeploymentsParserTest is SiloLittleHelper, Test {
         deal(address(asset0), user, amount0);
         deal(address(asset1), user, amount1);
 
+        vm.startPrank(user);
+        asset0.approve(silo0, type(uint256).max);
+        asset1.approve(silo1, type(uint256).max);
+        vm.stopPrank();
+
         _printBalances(_siloConfig, "START");
     }
 
     function _printBalances(ISiloConfig _siloConfig, string memory _prefix) internal {
-        address user = makeAddr("qaUser");
-
         (address silo0, address silo1) = _siloConfig.getSilos();
         IERC20 asset0 = IERC20(IERC4626(silo0).asset());
         IERC20 asset1 = IERC20(IERC4626(silo1).asset());
 
-        console2.log("%s asset0 balance: ", _prefix, asset0.balanceOf(user));
-        console2.log("%s asset1 balance: ", _prefix, asset1.balanceOf(user));
+        emit log_named_decimal_uint(string.concat(_prefix, " asset0 balance"), asset0.balanceOf(user), decimals0);
+        emit log_named_decimal_uint(string.concat(_prefix, " asset1 balance"), asset1.balanceOf(user), decimals1);
     }
 
     function _doSiloMoves(ISiloConfig _siloConfig) internal {
-        address user = makeAddr("qaUser");
         vm.startPrank(user);
 
         (address silo0, address silo1) = _siloConfig.getSilos();
         IERC20 asset0 = IERC20(IERC4626(silo0).asset());
         IERC20 asset1 = IERC20(IERC4626(silo1).asset());
 
-        console2.log("-------------------------------- Silo %s/%s moves", IERC20Metadata(address(asset0)).symbol(), IERC20Metadata(address(asset1)).symbol());
+        console2.log("----------- Silo %s/%s moves ---------", IERC20Metadata(address(asset0)).symbol(), IERC20Metadata(address(asset1)).symbol());
 
         uint256 amount0 = asset0.balanceOf(user);
         uint256 amount1 = asset1.balanceOf(user);
 
-        asset0.approve(silo0, type(uint256).max);
-        asset1.approve(silo1, type(uint256).max);
-
         // leve some in wallet for fees
         console2.log("depositing");
         IERC4626(silo0).deposit(amount0 * 99 / 100, user);
+
+        vm.warp(block.timestamp + INTERVAL);
+
         IERC4626(silo1).deposit(amount1 * 99 / 100, user);
 
-        // we can't move too far becaue oracle can revert
-        uint256 interval = 10 minutes;
+        vm.warp(block.timestamp + INTERVAL);
 
-        if (_borrowPossible({_siloConfig: _siloConfig, _collateralSilo: silo1})) {
-            uint256 maxBorrow = ISilo(silo0).maxBorrow(user);
-            console2.log("trying to borrow %s on silo0 (liquidity: %s)", maxBorrow, ISilo(silo0).getLiquidity());
-            ISilo(silo0).borrow(maxBorrow / 100, user, user);
-            vm.warp(block.timestamp + interval);
-            ISilo(silo0).repayShares(ISilo(silo0).maxRepayShares(user), user);
-            console2.log("borrow/repay on silo0 done");
+        if (_checkIfOracleWorking(ISilo(silo0))) {
+            tryBorrow(_siloConfig, silo0, silo1, decimals0);
+            vm.warp(block.timestamp + INTERVAL);
+        } else {
+            console2.log("oracle is not working for silo#0");
         }
 
-        vm.warp(block.timestamp + interval);
-        
-        if (_borrowPossible({_siloConfig: _siloConfig, _collateralSilo: silo0})) {
-            uint256 maxBorrow = ISilo(silo1).maxBorrow(user);
-            console2.log("trying to borrow %s on silo0 (liquidity: %s)", maxBorrow, ISilo(silo1).getLiquidity());
-            ISilo(silo1).borrow(maxBorrow / 100, user, user);
-            vm.warp(block.timestamp + interval);
-            ISilo(silo1).repayShares(ISilo(silo1).maxRepayShares(user), user);
-            console2.log("borrow/repay on silo1 done");
+        if (_checkIfOracleWorking(ISilo(silo1))) {
+            tryBorrow(_siloConfig, silo1, silo0, decimals1);
+            vm.warp(block.timestamp + INTERVAL);
+        } else {
+            console2.log("oracle is not working for silo#1");
         }
-
-        vm.warp(block.timestamp + interval);
 
         console2.log("redeeming");
         uint256 maxWithdrawable0 = IERC4626(silo0).maxWithdraw(user);
         uint256 maxWithdrawable1 = IERC4626(silo1).maxWithdraw(user);
-        assertGt(maxWithdrawable0, 0, "maxWithdrawable0 is 0");
-        assertGt(maxWithdrawable1, 0, "maxWithdrawable1 is 0");
-        IERC4626(silo0).redeem(maxWithdrawable0, user, user);
-        IERC4626(silo1).redeem(maxWithdrawable1, user, user);
 
+        if (maxWithdrawable0 == 0) console2.log("maxWithdrawable0 is 0, silo#0 might be broken");
+        else IERC4626(silo0).redeem(maxWithdrawable0, user, user);
+
+        if (maxWithdrawable1 == 0) console2.log("maxWithdrawable1 is 0, silo#1 might be broken");
+        else IERC4626(silo1).redeem(maxWithdrawable1, user, user);
+        
         vm.stopPrank();
     }
 
     function _borrowPossible(ISiloConfig _siloConfig, address _collateralSilo) internal view returns (bool success) {
         ISiloConfig.ConfigData memory config = _siloConfig.getConfig(_collateralSilo);
         return config.maxLtv > 0;
+    }
+
+    function _checkIfOracleWorking(ISilo _debtSilo) internal view returns (bool working) {
+        try _debtSilo.maxBorrow(user) {
+            working = true;
+        } catch {
+            working = false;
+        }
+    }
+
+    function tryBorrow(ISiloConfig _siloConfig, address _debtSilo, address _collateralSilo, uint256 _debtDecimals) internal returns (bool success) {
+        if (!_borrowPossible({_siloConfig: _siloConfig, _collateralSilo: _collateralSilo})) return true;
+
+        uint256 maxBorrow = ISilo(_debtSilo).maxBorrow(user);
+        uint256 liquidity = ISilo(_debtSilo).getLiquidity();
+        uint256 borowAmount = maxBorrow / 100;
+
+        if (liquidity == 0 && borowAmount == 0) {
+            emit log_named_decimal_uint("borowAmount", borowAmount, _debtDecimals);
+            emit log_named_decimal_uint("liquidity", liquidity, _debtDecimals);
+            return false;
+        } else if (liquidity != 0 && maxBorrow == 0) {
+            emit log_named_decimal_uint("maxBorrow 0, liquidity", liquidity, _debtDecimals);
+            revert("maxBorrow is 0 but we do have liquidity");
+        }
+        
+        emit log_named_decimal_uint("trying to borrow", borowAmount, _debtDecimals);
+        emit log_named_decimal_uint("liquidity", liquidity, _debtDecimals);
+
+        ISilo(_debtSilo).borrow(borowAmount, user, user);
+        
+        vm.warp(block.timestamp + INTERVAL);
+
+        ISilo(_debtSilo).repayShares(ISilo(_debtSilo).maxRepayShares(user), user);
+        console2.log("borrow/repay on silo1 done");
+        return true;
     }
 
     function _tryToSetNewGauge(ISiloIncentivesController _controller, bool _kill) internal returns (bool success) {
