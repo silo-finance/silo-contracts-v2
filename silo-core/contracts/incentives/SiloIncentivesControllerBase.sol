@@ -20,7 +20,7 @@ import {SiloIncentivesController} from "./SiloIncentivesController.sol";
  * The reference staked token implementation is at https://github.com/aave/aave-stake-v2
  * @author Aave
  */
-abstract contract SiloIncentivesControllerBase is BaseIncentivesController {
+abstract contract SiloIncentivesController is BaseIncentivesController, BAck {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using SafeERC20 for IERC20;
 

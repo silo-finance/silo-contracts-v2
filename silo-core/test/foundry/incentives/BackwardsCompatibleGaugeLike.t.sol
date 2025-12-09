@@ -41,6 +41,10 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
     string public symbol0;
     string public symbol1;
 
+    // if deal can't work, we steal tokens from Silo
+    bool public token1stolen;
+    bool public token0stolen;
+
     mapping(string network => address[] siloConfigs) public deployedSiloConfigs;
     string[] public networks;
 
@@ -103,9 +107,10 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
 
         uint256 snapshot = vm.snapshot();
 
-        for (uint256 i = 0; i < deployedSiloConfigs[_networkKey].length; i++) {
-            console2.log("_______ %s [%s] START _______", _networkKey, i);
-            _check_backwardsCompatibility(ISiloConfig(deployedSiloConfigs[_networkKey][i]));
+        for (uint256 i = 42; i < deployedSiloConfigs[_networkKey].length; i++) {
+            ISiloConfig siloConfig = ISiloConfig(deployedSiloConfigs[_networkKey][i]);
+            console2.log("_______ %s [%s] START SILO ID=%s_______", _networkKey, i, siloConfig.SILO_ID());
+            _check_backwardsCompatibility(siloConfig);
             console2.log("_______ %s [%s] DONE _______", _networkKey, i);
 
             vm.revertTo(snapshot);
@@ -159,6 +164,7 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
 
     function _dealTokens(ISiloConfig _siloConfig) internal {
         (address silo0, address silo1) = _siloConfig.getSilos();
+
         IERC20 asset0 = IERC20(IERC4626(silo0).asset());
         IERC20 asset1 = IERC20(IERC4626(silo1).asset());
 
@@ -167,8 +173,14 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
         symbol0 = IERC20Metadata(address(asset0)).symbol();
         symbol1 = IERC20Metadata(address(asset1)).symbol();
 
+        emit log_named_decimal_uint(string.concat("liquidity before deal ", symbol0), ISilo(silo0).getLiquidity(), decimals0);
+        emit log_named_decimal_uint(string.concat("liquidity before deal ", symbol1), ISilo(silo1).getLiquidity(), decimals1);
+
         uint256 amount0 = 100_000 * (10 ** decimals0);
         uint256 amount1 = 100_000 * (10 ** decimals1);
+
+        token0stolen = false;
+        token1stolen = false;
 
         // must be huge amount in case there is no enough liquidity
         try this.dealTokens(address(asset0), amount0) {
@@ -176,8 +188,10 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
         } catch {
             console2.log("failed to deal %s, try direct transfer from Silo", symbol0);
             uint256 siloBalance = IERC20(IERC4626(silo0).asset()).balanceOf(silo0);
+            emit log_named_decimal_uint("silo balance before stealing", siloBalance, decimals0);
             vm.prank(silo0);
             asset0.transfer(user, siloBalance / 1000);
+            token0stolen = true;
         }
 
         try this.dealTokens(address(asset1), amount1) {
@@ -185,8 +199,10 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
         } catch {
             console2.log("failed to deal %s, try direct transfer from Silo", symbol1);
             uint256 siloBalance = IERC20(IERC4626(silo1).asset()).balanceOf(silo1);
+            emit log_named_decimal_uint("silo balance before stealing", siloBalance, decimals1);
             vm.prank(silo1);
             asset1.transfer(user, siloBalance / 1000);
+            token1stolen = true;
         }
 
         vm.startPrank(user);
@@ -227,13 +243,17 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
         uint256 amount1 = asset1.balanceOf(user);
 
         // leve some in wallet for fees
-        console2.log("depositing %s", symbol0);
-        if (amount0 > 0) IERC4626(silo0).deposit(amount0 * 99 / 100, user);
+        if (amount0 > 0) {
+            console2.log("depositing %s", symbol0);
+            IERC4626(silo0).deposit(amount0 * 99 / 100, user);
+        }
 
         vm.warp(block.timestamp + INTERVAL);
 
-        console2.log("depositing %s", symbol1);
-        if (amount1 > 0) IERC4626(silo1).deposit(amount1 * 99 / 100, user);
+        if (amount1 > 0) {
+            console2.log("depositing %s", symbol1);
+            IERC4626(silo1).deposit(amount1 * 99 / 100, user);
+        }
 
         vm.warp(block.timestamp + INTERVAL);
 
@@ -251,15 +271,39 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
             console2.log("oracle is not working for silo#1");
         }
 
-        console2.log("redeeming");
         uint256 maxWithdrawable0 = IERC4626(silo0).maxWithdraw(user);
         uint256 maxWithdrawable1 = IERC4626(silo1).maxWithdraw(user);
 
-        if (maxWithdrawable0 == 0) console2.log("maxWithdrawable0 is 0, silo#0 might be broken");
-        else IERC4626(silo0).redeem(maxWithdrawable0, user, user);
+        emit log_named_decimal_uint(string.concat("maxWithdrawable0 ", symbol0), maxWithdrawable0, decimals0);
+        emit log_named_decimal_uint(string.concat("maxWithdrawable1 ", symbol1), maxWithdrawable1, decimals1);
 
-        if (maxWithdrawable1 == 0) console2.log("maxWithdrawable1 is 0, silo#1 might be broken");
-        else IERC4626(silo1).redeem(maxWithdrawable1, user, user);
+        if (maxWithdrawable0 != 0) {
+            try IERC4626(silo0).withdraw(maxWithdrawable0, user, user) {
+                // OK
+            } catch (bytes memory e) {
+                if (!token0stolen) {
+                    console2.log("failed to withdraw %s tokens on sil#0 %s", symbol0, vm.getLabel(address(silo0)));
+                    emit log_named_decimal_uint("      silo balance", IERC20(IERC4626(silo0).asset()).balanceOf(silo0), decimals0);
+                    emit log_named_decimal_uint("   total protected", ISilo(silo0).getTotalAssetsStorage(ISilo.AssetType.Protected), decimals0);
+                    emit log_named_decimal_uint("         liquidity", ISilo(silo0).getLiquidity(), decimals0);
+                    emit log_named_decimal_uint("  total collateral", ISilo(silo0).getCollateralAssets(), decimals0);
+                    emit log_named_decimal_uint("collateral storage", ISilo(silo0).getTotalAssetsStorage(ISilo.AssetType.Collateral), decimals0);
+                    emit log_named_decimal_uint("        total debt", ISilo(silo0).getDebtAssets(), decimals0);
+                    RevertLib.revertBytes(e, "withdraw");
+                }
+            }
+        }
+
+        if (maxWithdrawable1 != 0) {
+            try IERC4626(silo1).withdraw(maxWithdrawable1, user, user) {
+                // OK
+            } catch (bytes memory e) {
+                if (!token1stolen) {
+                    console2.log("failed to withdraw %s tokens ", symbol1);
+                    RevertLib.revertBytes(e, "withdraw");
+                }
+            }
+        }
 
         vm.stopPrank();
     }
@@ -292,17 +336,19 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
         if (!_borrowPossible({_siloConfig: _siloConfig, _collateralSilo: _collateralSilo})) return false;
 
         uint256 liquidity = ISilo(_debtSilo).getLiquidity();
-        emit log_named_decimal_uint(string.concat(_debtSymbol, "liquidity "), liquidity, _debtDecimals);
+        emit log_named_decimal_uint(string.concat(_debtSymbol, " liquidity on debt silo"), liquidity, _debtDecimals);
 
         uint256 maxBorrow = ISilo(_debtSilo).maxBorrow(user);
         uint256 borrowAmount = maxBorrow / 100;
 
         if (liquidity == 0 && borrowAmount == 0) {
+            console2.log("liquidity is 0 and borrowAmount is 0 (possible bad debt), skipping");
             return false;
         } else if (liquidity != 0 && maxBorrow == 0) {
             emit log_named_decimal_uint(
                 string.concat(_debtSymbol, " maxBorrow is 0, liquidity is "), liquidity, _debtDecimals
             );
+
             revert("maxBorrow is 0 but we do have liquidity");
         }
 
