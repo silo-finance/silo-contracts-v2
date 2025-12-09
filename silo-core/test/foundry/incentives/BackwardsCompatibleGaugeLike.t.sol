@@ -12,7 +12,8 @@ import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
-import {ISiloIncentivesControllerFactory} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
+import {ISiloIncentivesControllerFactory} from
+    "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
 import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -20,9 +21,15 @@ import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookRecei
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IBackwardsCompatibleGaugeLike} from "silo-core/contracts/incentives/interfaces/IBackwardsCompatibleGaugeLike.sol";
+import {IBackwardsCompatibleGaugeLike} from
+    "silo-core/contracts/incentives/interfaces/IBackwardsCompatibleGaugeLike.sol";
 
-
+/*
+this test will not check compatibility when:
+- deal can not grant tokens to user
+- oracle is not working
+- silo is empty (no totalSupply)
+*/
 contract BackwardsCompatibleGaugeLikeTest is Test {
     // we can't move too far because oracle can revert
     uint256 public constant INTERVAL = 10 minutes;
@@ -30,6 +37,9 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
 
     uint256 public decimals0;
     uint256 public decimals1;
+
+    string public symbol0;
+    string public symbol1;
 
     mapping(string network => address[] siloConfigs) public deployedSiloConfigs;
     string[] public networks;
@@ -51,7 +61,7 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
     function test_backwardsCompatibility_arbitrum_one() public {
         _backwardsCompatibility_forNetwork(vm.envString("RPC_ARBITRUM"), "arbitrum_one");
     }
-    
+
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_backwardsCompatibility_avalanche -vv
     */
@@ -62,8 +72,9 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_backwardsCompatibility_ink -vv
     */
-    function test_backwardsCompatibility_ink() public {
-        _backwardsCompatibility_forNetwork(vm.envString("RPC_INK"), "ink");
+    function test_backwardsCompatibility_ink() public pure {
+        console2.log("INK deprecated");
+        // _backwardsCompatibility_forNetwork(vm.envString("RPC_INK"), "ink");
     }
 
     /*
@@ -107,12 +118,19 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
         _deployFactory();
         (address silo0, address silo1) = _siloConfig.getSilos();
 
+        if (ISilo(silo0).totalSupply() == 0 && ISilo(silo1).totalSupply() == 0) {
+            console2.log("market is empty, skipping");
+            return;
+        }
+
         IGaugeHookReceiver hookReceiver = _getSiloHookReceiver(silo0);
 
-        ISiloIncentivesController controller0 = ISiloIncentivesController(_factory.create(address(this), address(hookReceiver), silo0, bytes32(0)));
-        ISiloIncentivesController controller1 = ISiloIncentivesController(_factory.create(address(this), address(hookReceiver), silo1, bytes32(0)));
+        ISiloIncentivesController controller0 =
+            ISiloIncentivesController(_factory.create(address(this), address(hookReceiver), silo0, bytes32(0)));
+        ISiloIncentivesController controller1 =
+            ISiloIncentivesController(_factory.create(address(this), address(hookReceiver), silo1, bytes32(0)));
 
-        // QA 
+        // QA
 
         _dealTokens(_siloConfig);
 
@@ -146,13 +164,30 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
 
         decimals0 = IERC20Metadata(address(asset0)).decimals();
         decimals1 = IERC20Metadata(address(asset1)).decimals();
+        symbol0 = IERC20Metadata(address(asset0)).symbol();
+        symbol1 = IERC20Metadata(address(asset1)).symbol();
 
         uint256 amount0 = 100_000 * (10 ** decimals0);
         uint256 amount1 = 100_000 * (10 ** decimals1);
 
         // must be huge amount in case there is no enough liquidity
-        deal(address(asset0), user, amount0);
-        deal(address(asset1), user, amount1);
+        try this.dealTokens(address(asset0), amount0) {
+            // OK
+        } catch {
+            console2.log("failed to deal %s, try direct transfer from Silo", symbol0);
+            uint256 siloBalance = IERC20(IERC4626(silo0).asset()).balanceOf(silo0);
+            vm.prank(silo0);
+            asset0.transfer(user, siloBalance / 1000);
+        }
+
+        try this.dealTokens(address(asset1), amount1) {
+            // OK
+        } catch {
+            console2.log("failed to deal %s, try direct transfer from Silo", symbol1);
+            uint256 siloBalance = IERC20(IERC4626(silo1).asset()).balanceOf(silo1);
+            vm.prank(silo1);
+            asset1.transfer(user, siloBalance / 1000);
+        }
 
         vm.startPrank(user);
         asset0.approve(silo0, type(uint256).max);
@@ -162,13 +197,21 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
         _printBalances(_siloConfig, "START");
     }
 
+    function dealTokens(address _asset, uint256 _amount) external {
+        deal(_asset, user, _amount);
+    }
+
     function _printBalances(ISiloConfig _siloConfig, string memory _prefix) internal {
         (address silo0, address silo1) = _siloConfig.getSilos();
         IERC20 asset0 = IERC20(IERC4626(silo0).asset());
         IERC20 asset1 = IERC20(IERC4626(silo1).asset());
 
-        emit log_named_decimal_uint(string.concat(_prefix, " asset0 balance"), asset0.balanceOf(user), decimals0);
-        emit log_named_decimal_uint(string.concat(_prefix, " asset1 balance"), asset1.balanceOf(user), decimals1);
+        emit log_named_decimal_uint(
+            string.concat(_prefix, " asset0 ", symbol0, " balance"), asset0.balanceOf(user), decimals0
+        );
+        emit log_named_decimal_uint(
+            string.concat(_prefix, " asset1 ", symbol1, " balance"), asset1.balanceOf(user), decimals1
+        );
     }
 
     function _doSiloMoves(ISiloConfig _siloConfig) internal {
@@ -178,30 +221,31 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
         IERC20 asset0 = IERC20(IERC4626(silo0).asset());
         IERC20 asset1 = IERC20(IERC4626(silo1).asset());
 
-        console2.log("----------- Silo %s/%s moves ---------", IERC20Metadata(address(asset0)).symbol(), IERC20Metadata(address(asset1)).symbol());
+        console2.log("----------- Silo %s/%s moves ---------", symbol0, symbol1);
 
         uint256 amount0 = asset0.balanceOf(user);
         uint256 amount1 = asset1.balanceOf(user);
 
         // leve some in wallet for fees
-        console2.log("depositing");
-        IERC4626(silo0).deposit(amount0 * 99 / 100, user);
+        console2.log("depositing %s", symbol0);
+        if (amount0 > 0) IERC4626(silo0).deposit(amount0 * 99 / 100, user);
 
         vm.warp(block.timestamp + INTERVAL);
 
-        IERC4626(silo1).deposit(amount1 * 99 / 100, user);
+        console2.log("depositing %s", symbol1);
+        if (amount1 > 0) IERC4626(silo1).deposit(amount1 * 99 / 100, user);
 
         vm.warp(block.timestamp + INTERVAL);
 
         if (_checkIfOracleWorking(ISilo(silo0))) {
-            tryBorrow(_siloConfig, silo0, silo1, decimals0);
+            tryBorrow(_siloConfig, silo0, silo1, decimals0, symbol0);
             vm.warp(block.timestamp + INTERVAL);
         } else {
             console2.log("oracle is not working for silo#0");
         }
 
         if (_checkIfOracleWorking(ISilo(silo1))) {
-            tryBorrow(_siloConfig, silo1, silo0, decimals1);
+            tryBorrow(_siloConfig, silo1, silo0, decimals1, symbol1);
             vm.warp(block.timestamp + INTERVAL);
         } else {
             console2.log("oracle is not working for silo#1");
@@ -216,48 +260,60 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
 
         if (maxWithdrawable1 == 0) console2.log("maxWithdrawable1 is 0, silo#1 might be broken");
         else IERC4626(silo1).redeem(maxWithdrawable1, user, user);
-        
+
         vm.stopPrank();
     }
 
     function _borrowPossible(ISiloConfig _siloConfig, address _collateralSilo) internal view returns (bool success) {
-        ISiloConfig.ConfigData memory config = _siloConfig.getConfig(_collateralSilo);
-        return config.maxLtv > 0;
+        try _siloConfig.getConfig(_collateralSilo) returns (ISiloConfig.ConfigData memory config) {
+            return config.maxLtv != 0;
+        } catch {
+            console2.log("config can not be pulled for silo#", vm.getLabel(address(_collateralSilo)));
+            return false;
+        }
     }
 
     function _checkIfOracleWorking(ISilo _debtSilo) internal view returns (bool working) {
         try _debtSilo.maxBorrow(user) {
             working = true;
         } catch {
+            console2.log("oracle is not working for silo#", vm.getLabel(address(_debtSilo)));
             working = false;
         }
     }
 
-    function tryBorrow(ISiloConfig _siloConfig, address _debtSilo, address _collateralSilo, uint256 _debtDecimals) internal returns (bool success) {
-        if (!_borrowPossible({_siloConfig: _siloConfig, _collateralSilo: _collateralSilo})) return true;
+    function tryBorrow(
+        ISiloConfig _siloConfig,
+        address _debtSilo,
+        address _collateralSilo,
+        uint256 _debtDecimals,
+        string memory _debtSymbol
+    ) internal returns (bool success) {
+        if (!_borrowPossible({_siloConfig: _siloConfig, _collateralSilo: _collateralSilo})) return false;
+
+        uint256 liquidity = ISilo(_debtSilo).getLiquidity();
+        emit log_named_decimal_uint(string.concat(_debtSymbol, "liquidity "), liquidity, _debtDecimals);
 
         uint256 maxBorrow = ISilo(_debtSilo).maxBorrow(user);
-        uint256 liquidity = ISilo(_debtSilo).getLiquidity();
-        uint256 borowAmount = maxBorrow / 100;
+        uint256 borrowAmount = maxBorrow / 100;
 
-        if (liquidity == 0 && borowAmount == 0) {
-            emit log_named_decimal_uint("borowAmount", borowAmount, _debtDecimals);
-            emit log_named_decimal_uint("liquidity", liquidity, _debtDecimals);
+        if (liquidity == 0 && borrowAmount == 0) {
             return false;
         } else if (liquidity != 0 && maxBorrow == 0) {
-            emit log_named_decimal_uint("maxBorrow 0, liquidity", liquidity, _debtDecimals);
+            emit log_named_decimal_uint(
+                string.concat(_debtSymbol, " maxBorrow is 0, liquidity is "), liquidity, _debtDecimals
+            );
             revert("maxBorrow is 0 but we do have liquidity");
         }
-        
-        emit log_named_decimal_uint("trying to borrow", borowAmount, _debtDecimals);
-        emit log_named_decimal_uint("liquidity", liquidity, _debtDecimals);
 
-        ISilo(_debtSilo).borrow(borowAmount, user, user);
-        
+        emit log_named_decimal_uint(string.concat(_debtSymbol, " borrowAmount "), borrowAmount, _debtDecimals);
+
+        ISilo(_debtSilo).borrow(borrowAmount, user, user);
+
         vm.warp(block.timestamp + INTERVAL);
 
         ISilo(_debtSilo).repayShares(ISilo(_debtSilo).maxRepayShares(user), user);
-        console2.log("borrow/repay on silo1 done");
+        console2.log("borrow/repay on silo %s done", _debtSymbol);
         return true;
     }
 
@@ -302,7 +358,8 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
             console2.log("Gauge set successfully!");
             return true;
         } catch (bytes memory e) {
-            bytes32 alreadyConfiguredHash = keccak256(abi.encodeWithSelector(IGaugeHookReceiver.GaugeAlreadyConfigured.selector));
+            bytes32 alreadyConfiguredHash =
+                keccak256(abi.encodeWithSelector(IGaugeHookReceiver.GaugeAlreadyConfigured.selector));
 
             if (keccak256(e) == alreadyConfiguredHash) {
                 console2.log("Gauge already configured on hook", address(hookReceiver));
@@ -384,4 +441,3 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
         return string.concat(_basePath, "['", _key, "']");
     }
 }
-
