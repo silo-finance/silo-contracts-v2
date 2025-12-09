@@ -75,7 +75,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     function liquidationCallByDefaulting(address _borrower, uint256 _maxDebtToCover)
         public
         virtual
-        nonReentrant // TODO test
+        nonReentrant
         onlyAllowedOrPublic // TODO test
         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)
     {
@@ -318,9 +318,6 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             _rounding: Rounding.LIQUIDATE_TO_SHARES,
             _assetType: ISilo.AssetType(uint8(_collateralType))
         });
-
-        // TODO: test for 0 and 1 wei results to make sure keeper cannot drain all proceeds
-        // using some kind of 1 wei rounding attack loop
 
         // c - collateral that equals debt value
         // f - liquidation fee
