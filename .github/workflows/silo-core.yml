@@ -129,7 +129,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: all fast test
-                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest|NewMarketTest|SiloDeployerIntegrationTest" --ffi -vv
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest|NewMarketTest|SiloDeployerIntegrationTest,BackwardsCompatibleGaugeLikeTest" --ffi -vv
 
     slow-contracts-tests:
         strategy:
@@ -140,7 +140,8 @@ jobs:
                     MaxLiquidationBadDebt,
                     PreviewTest,
                     PreviewDepositTest,
-                    PreviewMintTest
+                    PreviewMintTest,
+                    BackwardsCompatibleGaugeLikeTest
                ]
 
         runs-on: ubuntu-latest
