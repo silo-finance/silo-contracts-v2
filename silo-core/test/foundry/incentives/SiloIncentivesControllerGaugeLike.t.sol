@@ -21,6 +21,7 @@ import {
 import {
     ISiloIncentivesControllerFactory
 } from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
+import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 
 /**
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloIncentivesControllerGaugeLikeTest
@@ -58,7 +59,35 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     }
 
     /**
-     FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_killGauge_onlyOwner
+     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_afterTokenTransfer_onlyNotifier -vvv
+     */
+    function test_afterTokenTransfer_onlyNotifier() public {
+        address gaugeLike = _factory.create(_owner, _notifier, _shareToken, bytes32(0));
+
+        vm.expectRevert(abi.encodeWithSelector(IDistributionManager.OnlyNotifier.selector, address(this)));
+        SiloIncentivesControllerCompatible(gaugeLike).afterTokenTransfer({
+            _sender: address(this),
+            _senderBalance: 1,
+            _recipient: address(this),
+            _recipientBalance: 1,
+            _totalSupply: 1,
+            _amount: 1
+        });
+
+        // crosscheck
+        vm.prank(_notifier);
+        SiloIncentivesControllerCompatible(gaugeLike).afterTokenTransfer({
+            _sender: address(this),
+            _senderBalance: 1,
+            _recipient: address(this),
+            _recipientBalance: 1,
+            _totalSupply: 1,
+            _amount: 1
+        });
+    }
+
+    /**
+     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_killGauge_onlyOwner -vvv
      */
     function test_killGauge_onlyOwner() public {
         address gaugeLike = _factory.create(_owner, _notifier, _shareToken, bytes32(0));
@@ -118,7 +147,7 @@ contract SiloIncentivesControllerGaugeLikeTest is SiloLittleHelper, Test {
     }
 
     /**
-     FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_gaugeLikeIncentives_with_gaugeHookReceiver
+     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_gaugeLikeIncentives_with_gaugeHookReceiver -vvv
      */
     function test_gaugeLikeIncentives_with_gaugeHookReceiver() public {
         ISiloConfig siloConfig = _setUpLocalFixture(SiloConfigsNames.SILO_LOCAL_GAUGE_HOOK_RECEIVER);

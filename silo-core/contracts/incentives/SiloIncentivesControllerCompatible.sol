@@ -26,12 +26,12 @@ contract SiloIncentivesControllerCompatible is IBackwardsCompatibleGaugeLike, Si
     {
     }
 
-    function killGauge() external virtual {
+    function killGauge() external virtual onlyOwner {
         _isKilled = true;
         emit GaugeKilled();
     }
 
-    function unkillGauge() external virtual {
+    function unkillGauge() external virtual onlyOwner {
         _isKilled = false;
         emit GaugeUnKilled();
     }
