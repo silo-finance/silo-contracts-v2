@@ -12,13 +12,13 @@ contract SiloIncentivesControllerFactory is Create2Factory, ISiloIncentivesContr
     mapping(address => bool) public isSiloIncentivesController;
 
     /// @inheritdoc ISiloIncentivesControllerFactory
-    function create(
-        address _owner,
-        address _notifier,
-        address _shareToken,
-        bytes32 _externalSalt
-    ) external returns (address controller) {
-        controller = address(new SiloIncentivesControllerCompatible{salt: _salt(_externalSalt)}(_owner, _notifier, _shareToken));
+    function create(address _owner, address _notifier, address _shareToken, bytes32 _externalSalt)
+        external
+        returns (address controller)
+    {
+        controller = address(
+            new SiloIncentivesControllerCompatible{salt: _salt(_externalSalt)}(_owner, _notifier, _shareToken)
+        );
 
         isSiloIncentivesController[controller] = true;
 

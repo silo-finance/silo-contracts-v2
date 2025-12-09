@@ -26,17 +26,6 @@ contract SiloIncentivesControllerCompatible is IBackwardsCompatibleGaugeLike, Si
     {
     }
 
-    function afterTokenTransfer(
-        address _sender,
-        uint256 _senderBalance,
-        address _recipient,
-        uint256 _recipientBalance,
-        uint256 _totalSupply,
-        uint256 _amount
-    ) public virtual override(IBackwardsCompatibleGaugeLike, SiloIncentivesController) {
-        super.afterTokenTransfer(_sender, _senderBalance, _recipient, _recipientBalance, _totalSupply, _amount);
-    }
-
     function killGauge() external virtual {
         _isKilled = true;
         emit GaugeKilled();
@@ -55,5 +44,16 @@ contract SiloIncentivesControllerCompatible is IBackwardsCompatibleGaugeLike, Si
     // solhint-disable-next-line func-name-mixedcase
     function is_killed() external view returns (bool) {
         return _isKilled;
+    }
+
+    function afterTokenTransfer(
+        address _sender,
+        uint256 _senderBalance,
+        address _recipient,
+        uint256 _recipientBalance,
+        uint256 _totalSupply,
+        uint256 _amount
+    ) public virtual override(IBackwardsCompatibleGaugeLike, SiloIncentivesController) {
+        super.afterTokenTransfer(_sender, _senderBalance, _recipient, _recipientBalance, _totalSupply, _amount);
     }
 }
