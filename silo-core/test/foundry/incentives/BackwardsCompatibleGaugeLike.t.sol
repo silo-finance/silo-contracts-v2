@@ -107,9 +107,22 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
 
         uint256 snapshot = vm.snapshot();
 
-        for (uint256 i = 42; i < deployedSiloConfigs[_networkKey].length; i++) {
+        bytes32 sonicHash = keccak256(abi.encodePacked("sonic"));
+        bytes32 networkHash = keccak256(abi.encodePacked(_networkKey));
+
+        for (uint256 i = 0; i < deployedSiloConfigs[_networkKey].length; i++) {
             ISiloConfig siloConfig = ISiloConfig(deployedSiloConfigs[_networkKey][i]);
-            console2.log("_______ %s [%s] START SILO ID=%s_______", _networkKey, i, siloConfig.SILO_ID());
+            uint256 siloId = siloConfig.SILO_ID();
+
+            if (networkHash == sonicHash) {
+                if (siloId == 54) continue; // live controller is not backwards compatible, missing is_killed()
+                if (siloId == 121) continue; // wmetaUSD/USDC hacked token
+                if (siloId == 125) continue; // wmetaUSD/scUSD hacked token
+                if (siloId == 128) continue; // wmetaS/ wS hacked token
+            }
+
+            console2.log("_______ %s [%s] START SILO ID=%s _______", _networkKey, i, siloId);
+            console2.log("_______ silo config %s", address(siloConfig));
             _check_backwardsCompatibility(siloConfig);
             console2.log("_______ %s [%s] DONE _______", _networkKey, i);
 
@@ -225,6 +238,7 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
         emit log_named_decimal_uint(
             string.concat(_prefix, " asset0 ", symbol0, " balance"), asset0.balanceOf(user), decimals0
         );
+        
         emit log_named_decimal_uint(
             string.concat(_prefix, " asset1 ", symbol1, " balance"), asset1.balanceOf(user), decimals1
         );
@@ -241,18 +255,21 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
 
         uint256 amount0 = asset0.balanceOf(user);
         uint256 amount1 = asset1.balanceOf(user);
+        // leave some in wallet for fees
+        uint256 depositAmount = amount0 * 99 / 100;
 
-        // leve some in wallet for fees
-        if (amount0 > 0) {
-            console2.log("depositing %s", symbol0);
-            IERC4626(silo0).deposit(amount0 * 99 / 100, user);
+        
+        if (depositAmount != 0) {
+            console2.log("depositing %s %s", symbol0, depositAmount);
+            IERC4626(silo0).deposit(depositAmount, user);
         }
 
         vm.warp(block.timestamp + INTERVAL);
+        depositAmount = amount1 * 99 / 100;
 
-        if (amount1 > 0) {
-            console2.log("depositing %s", symbol1);
-            IERC4626(silo1).deposit(amount1 * 99 / 100, user);
+        if (depositAmount != 0) {
+            console2.log("depositing %s %s", symbol1, depositAmount);
+            IERC4626(silo1).deposit(depositAmount, user);
         }
 
         vm.warp(block.timestamp + INTERVAL);
@@ -272,10 +289,7 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
         }
 
         uint256 maxWithdrawable0 = IERC4626(silo0).maxWithdraw(user);
-        uint256 maxWithdrawable1 = IERC4626(silo1).maxWithdraw(user);
-
         emit log_named_decimal_uint(string.concat("maxWithdrawable0 ", symbol0), maxWithdrawable0, decimals0);
-        emit log_named_decimal_uint(string.concat("maxWithdrawable1 ", symbol1), maxWithdrawable1, decimals1);
 
         if (maxWithdrawable0 != 0) {
             try IERC4626(silo0).withdraw(maxWithdrawable0, user, user) {
@@ -294,12 +308,21 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
             }
         }
 
+        uint256 maxWithdrawable1 = IERC4626(silo1).maxWithdraw(user);
+        emit log_named_decimal_uint(string.concat("maxWithdrawable1 ", symbol1), maxWithdrawable1, decimals1);
+
         if (maxWithdrawable1 != 0) {
             try IERC4626(silo1).withdraw(maxWithdrawable1, user, user) {
                 // OK
             } catch (bytes memory e) {
                 if (!token1stolen) {
-                    console2.log("failed to withdraw %s tokens ", symbol1);
+                    console2.log("failed to withdraw %s tokens on silo#1 %s", symbol1, vm.getLabel(address(silo1)));
+                    emit log_named_decimal_uint("      silo balance", IERC20(IERC4626(silo1).asset()).balanceOf(silo1), decimals1);
+                    emit log_named_decimal_uint("   total protected", ISilo(silo1).getTotalAssetsStorage(ISilo.AssetType.Protected), decimals1);
+                    emit log_named_decimal_uint("         liquidity", ISilo(silo1).getLiquidity(), decimals1);
+                    emit log_named_decimal_uint("  total collateral", ISilo(silo1).getCollateralAssets(), decimals1);
+                    emit log_named_decimal_uint("collateral storage", ISilo(silo1).getTotalAssetsStorage(ISilo.AssetType.Collateral), decimals1);
+                    emit log_named_decimal_uint("        total debt", ISilo(silo1).getDebtAssets(), decimals1);
                     RevertLib.revertBytes(e, "withdraw");
                 }
             }
@@ -428,7 +451,7 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
             bytes32 cantRemoveActiveGaugeHash = keccak256(abi.encodeWithSelector(CantRemoveActiveGauge.selector));
 
             if (keccak256(e) == cantRemoveActiveGaugeHash) {
-                console2.log("Can't remove active gauge - OLD IMPLEMENTATION");
+                console2.log("Can't remove active gauge");
                 return false;
             } else {
                 RevertLib.revertBytes(e, "_removeGauge");
