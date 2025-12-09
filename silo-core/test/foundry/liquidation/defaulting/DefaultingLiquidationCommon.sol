@@ -18,6 +18,7 @@ import {SiloConfigOverride, SiloFixture} from "../../_common/fixtures/SiloFixtur
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {DefaultingSiloLogic} from "silo-core/contracts/hooks/defaulting/DefaultingSiloLogic.sol";
+import {Whitelist} from "silo-core/contracts/hooks/_common/Whitelist.sol";
 
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 import {DefaultingLiquidationAsserts} from "./common/DefaultingLiquidationAsserts.sol";
@@ -1537,5 +1538,24 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         assertEq(
             borrowerCollateralShareToken.balanceOf(address(gauge3)), 0, "gauge3 should have NO collateral rewards"
         );
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_onlyAllowedOrPublic -vv
+    */
+    function test_defaulting_onlyAllowedOrPublic() public {
+        Whitelist whitelist = Whitelist(address(defaulting));
+        bytes32 role = whitelist.ALLOWED_ROLE();
+        address allowed = makeAddr("allowed");
+
+        vm.prank(Ownable(address(defaulting)).owner());
+        whitelist.grantRole(role, allowed);
+
+        vm.expectRevert(Whitelist.OnlyAllowedRole.selector);
+        defaulting.liquidationCallByDefaulting(address(2));
+
+        vm.prank(allowed);
+        vm.expectRevert(IPartialLiquidation.UserIsSolvent.selector);
+        defaulting.liquidationCallByDefaulting(address(2));
     }
 }
