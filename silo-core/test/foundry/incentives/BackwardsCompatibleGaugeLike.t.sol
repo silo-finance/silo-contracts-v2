@@ -238,7 +238,7 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
         emit log_named_decimal_uint(
             string.concat(_prefix, " asset0 ", symbol0, " balance"), asset0.balanceOf(user), decimals0
         );
-        
+
         emit log_named_decimal_uint(
             string.concat(_prefix, " asset1 ", symbol1, " balance"), asset1.balanceOf(user), decimals1
         );
@@ -457,19 +457,6 @@ contract BackwardsCompatibleGaugeLikeTest is Test {
                 RevertLib.revertBytes(e, "_removeGauge");
             }
         }
-    }
-
-    function _printClaimable(ISiloIncentivesController _incentivesController)
-        internal
-        view
-        returns (uint256 claimable)
-    {
-        // TODO check if we can claim?
-        // string[] memory programNames = new string[](1);
-        // programNames[0] = "USDC-for-xSilo";
-
-        // claimable = _incentivesController.getRewardsBalance(qaUser, programNames);
-        // console2.log("claimable", claimable);
     }
 
     function _deployFactory() internal {
