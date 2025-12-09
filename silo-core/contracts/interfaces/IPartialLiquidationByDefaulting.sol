@@ -2,6 +2,7 @@
 pragma solidity >=0.5.0;
 
 import {ISilo} from "./ISilo.sol";
+import {ISiloIncentivesController} from "../incentives/interfaces/ISiloIncentivesController.sol";
 
 /// @notice Partial liquidation by defaulting will cancel borrower debt and distribute collateral shares 
 /// to lenders via incentive contract. Lenders have to claim their shares to get them. 
@@ -68,6 +69,17 @@ interface IPartialLiquidationByDefaulting {
         uint256 _assetsToLiquidate,
         ISilo.CollateralType _collateralType
     ) external view returns (uint256 totalSharesToLiquidate, uint256 keeperShares, uint256 lendersShares);
+
+    /// @notice Validate if market is supported by defaulting, reverts if not
+    function validateDefaultingCollateral() external view;
+
+    /// @notice Validate if gauge controller (silo incentives controller) is set for debt silo, reverts if not
+    /// @param _silo The address of the silo from which debt is borrowed
+    /// @return controllerCollateral The address of the gauge for debt silo
+    function validateControllerForCollateral(address _silo)
+        external
+        view
+        returns (ISiloIncentivesController controllerCollateral);
 
     // solhint-disable-next-line func-name-mixedcase
     function LT_MARGIN_FOR_DEFAULTING() external view returns (uint256);
