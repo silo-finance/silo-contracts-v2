@@ -277,18 +277,9 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         uint256 ltv = collateralSilo.getLtv(_user);
 
         possible = ltv > lt + margin;
-
-        // if (!possible) {
-        // emit log_named_decimal_uint("    lt", lt, 16);
-        // emit log_named_decimal_uint("margin", margin, 16);
-        // emit log_named_decimal_uint("   ltv", ltv, 16);
-        // }
-
-        // console2.log("defaulting possible: ", possible ? "yes" : "no");
     }
 
     function _createIncentiveController() internal returns (ISiloIncentivesController newGauge) {
-        // TODO test if revert for silo0
         (, ISilo debtSilo) = _getSilos();
         gauge = new SiloIncentivesController(address(this), address(partialLiquidation), address(debtSilo));
 

@@ -13,6 +13,8 @@ import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquid
 import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IPartialLiquidationByDefaulting.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
+import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
+import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
 
 import {SiloConfigOverride, SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
@@ -1557,5 +1559,22 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         vm.prank(allowed);
         vm.expectRevert(IPartialLiquidation.UserIsSolvent.selector);
         defaulting.liquidationCallByDefaulting(address(2));
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_createIncentiveController_forWrongToken_reverts -vv
+    */
+    function test_createIncentiveController_forWrongToken_reverts() public {
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
+        ISiloIncentivesController gauge =
+            new SiloIncentivesController(address(this), address(defaulting), address(collateralSilo));
+
+        address owner = Ownable(address(defaulting)).owner();
+
+        vm.prank(owner);
+        IGaugeHookReceiver(address(defaulting)).setGauge(gauge, IShareToken(address(collateralSilo)));
+
+        vm.expectRevert(IPartialLiquidationByDefaulting.NoControllerForCollateral.selector);
+        defaulting.validateControllerForCollateral(address(debtSilo));
     }
 }
