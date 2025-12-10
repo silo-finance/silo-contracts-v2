@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">56.8&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">111</td>
-            <td class="headerCovTableEntry">63</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 18:44:22</td>
+            <td class="headerValue">2025-12-10 18:53:54</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">25.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">16</td>
-            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
                   <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -216,7 +216,7 @@
 <span id="L154"><span class="lineNum">     154</span> <span class="tlaUNC">           0 :         totalDebtAssets = $.totalAssets[ISilo.AssetType.Debt];</span></span>
 <span id="L155"><span class="lineNum">     155</span>              :     }</span>
 <span id="L156"><span class="lineNum">     156</span>              : </span>
-<span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC tlaBgGNC">           8 :     function copySiloConfig(</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaUNC">           0 :     function copySiloConfig(</span></span>
 <span id="L158"><span class="lineNum">     158</span>              :         ISiloConfig.InitData memory _initData,</span>
 <span id="L159"><span class="lineNum">     159</span>              :         ISiloFactory.Range memory _daoFeeRange,</span>
 <span id="L160"><span class="lineNum">     160</span>              :         uint256 _maxDeployerFee,</span>
@@ -227,121 +227,121 @@
 <span id="L165"><span class="lineNum">     165</span>              :         view</span>
 <span id="L166"><span class="lineNum">     166</span>              :         returns (ISiloConfig.ConfigData memory configData0, ISiloConfig.ConfigData memory configData1)</span>
 <span id="L167"><span class="lineNum">     167</span>              :     {</span>
-<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">           8 :         validateSiloInitData(_initData, _daoFeeRange, _maxDeployerFee, _maxFlashloanFee, _maxLiquidationFee);</span></span>
+<span id="L168"><span class="lineNum">     168</span> <span class="tlaUNC">           0 :         validateSiloInitData(_initData, _daoFeeRange, _maxDeployerFee, _maxFlashloanFee, _maxLiquidationFee);</span></span>
 <span id="L169"><span class="lineNum">     169</span>              : </span>
-<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">           8 :         configData0.hookReceiver = _initData.hookReceiver;</span></span>
-<span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC">           8 :         configData0.token = _initData.token0;</span></span>
-<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">           8 :         configData0.solvencyOracle = _initData.solvencyOracle0;</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaUNC">           0 :         configData0.hookReceiver = _initData.hookReceiver;</span></span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaUNC">           0 :         configData0.token = _initData.token0;</span></span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaUNC">           0 :         configData0.solvencyOracle = _initData.solvencyOracle0;</span></span>
 <span id="L173"><span class="lineNum">     173</span>              :         // If maxLtv oracle is not set, fallback to solvency oracle</span>
-<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">           8 :         configData0.maxLtvOracle = _initData.maxLtvOracle0 == address(0)</span></span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaUNC">           0 :         configData0.maxLtvOracle = _initData.maxLtvOracle0 == address(0)</span></span>
 <span id="L175"><span class="lineNum">     175</span>              :             ? _initData.solvencyOracle0</span>
 <span id="L176"><span class="lineNum">     176</span>              :             : _initData.maxLtvOracle0;</span>
-<span id="L177"><span class="lineNum">     177</span> <span class="tlaGNC">           8 :         configData0.interestRateModel = _initData.interestRateModel0;</span></span>
-<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">           8 :         configData0.maxLtv = _initData.maxLtv0;</span></span>
-<span id="L179"><span class="lineNum">     179</span> <span class="tlaGNC">           8 :         configData0.lt = _initData.lt0;</span></span>
-<span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">           8 :         configData0.liquidationTargetLtv = _initData.liquidationTargetLtv0;</span></span>
-<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">           8 :         configData0.deployerFee = _initData.deployerFee;</span></span>
-<span id="L182"><span class="lineNum">     182</span> <span class="tlaGNC">           8 :         configData0.daoFee = _initData.daoFee;</span></span>
-<span id="L183"><span class="lineNum">     183</span> <span class="tlaGNC">           8 :         configData0.liquidationFee = _initData.liquidationFee0;</span></span>
-<span id="L184"><span class="lineNum">     184</span> <span class="tlaGNC">           8 :         configData0.flashloanFee = _initData.flashloanFee0;</span></span>
-<span id="L185"><span class="lineNum">     185</span> <span class="tlaGNC">           8 :         configData0.callBeforeQuote = _initData.callBeforeQuote0;</span></span>
+<span id="L177"><span class="lineNum">     177</span> <span class="tlaUNC">           0 :         configData0.interestRateModel = _initData.interestRateModel0;</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaUNC">           0 :         configData0.maxLtv = _initData.maxLtv0;</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaUNC">           0 :         configData0.lt = _initData.lt0;</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaUNC">           0 :         configData0.liquidationTargetLtv = _initData.liquidationTargetLtv0;</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaUNC">           0 :         configData0.deployerFee = _initData.deployerFee;</span></span>
+<span id="L182"><span class="lineNum">     182</span> <span class="tlaUNC">           0 :         configData0.daoFee = _initData.daoFee;</span></span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaUNC">           0 :         configData0.liquidationFee = _initData.liquidationFee0;</span></span>
+<span id="L184"><span class="lineNum">     184</span> <span class="tlaUNC">           0 :         configData0.flashloanFee = _initData.flashloanFee0;</span></span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaUNC">           0 :         configData0.callBeforeQuote = _initData.callBeforeQuote0;</span></span>
 <span id="L186"><span class="lineNum">     186</span>              : </span>
-<span id="L187"><span class="lineNum">     187</span> <span class="tlaGNC">           8 :         configData1.hookReceiver = _initData.hookReceiver;</span></span>
-<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">           8 :         configData1.token = _initData.token1;</span></span>
-<span id="L189"><span class="lineNum">     189</span> <span class="tlaGNC">           8 :         configData1.solvencyOracle = _initData.solvencyOracle1;</span></span>
+<span id="L187"><span class="lineNum">     187</span> <span class="tlaUNC">           0 :         configData1.hookReceiver = _initData.hookReceiver;</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaUNC">           0 :         configData1.token = _initData.token1;</span></span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaUNC">           0 :         configData1.solvencyOracle = _initData.solvencyOracle1;</span></span>
 <span id="L190"><span class="lineNum">     190</span>              :         // If maxLtv oracle is not set, fallback to solvency oracle</span>
-<span id="L191"><span class="lineNum">     191</span> <span class="tlaGNC">           8 :         configData1.maxLtvOracle = _initData.maxLtvOracle1 == address(0)</span></span>
+<span id="L191"><span class="lineNum">     191</span> <span class="tlaUNC">           0 :         configData1.maxLtvOracle = _initData.maxLtvOracle1 == address(0)</span></span>
 <span id="L192"><span class="lineNum">     192</span>              :             ? _initData.solvencyOracle1</span>
 <span id="L193"><span class="lineNum">     193</span>              :             : _initData.maxLtvOracle1;</span>
-<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">           8 :         configData1.interestRateModel = _initData.interestRateModel1;</span></span>
-<span id="L195"><span class="lineNum">     195</span> <span class="tlaGNC">           8 :         configData1.maxLtv = _initData.maxLtv1;</span></span>
-<span id="L196"><span class="lineNum">     196</span> <span class="tlaGNC">           8 :         configData1.lt = _initData.lt1;</span></span>
-<span id="L197"><span class="lineNum">     197</span> <span class="tlaGNC">           8 :         configData1.liquidationTargetLtv = _initData.liquidationTargetLtv1;</span></span>
-<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">           8 :         configData1.deployerFee = _initData.deployerFee;</span></span>
-<span id="L199"><span class="lineNum">     199</span> <span class="tlaGNC">           8 :         configData1.daoFee = _initData.daoFee;</span></span>
-<span id="L200"><span class="lineNum">     200</span> <span class="tlaGNC">           8 :         configData1.liquidationFee = _initData.liquidationFee1;</span></span>
-<span id="L201"><span class="lineNum">     201</span> <span class="tlaGNC">           8 :         configData1.flashloanFee = _initData.flashloanFee1;</span></span>
-<span id="L202"><span class="lineNum">     202</span> <span class="tlaGNC">           8 :         configData1.callBeforeQuote = _initData.callBeforeQuote1;</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaUNC">           0 :         configData1.interestRateModel = _initData.interestRateModel1;</span></span>
+<span id="L195"><span class="lineNum">     195</span> <span class="tlaUNC">           0 :         configData1.maxLtv = _initData.maxLtv1;</span></span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaUNC">           0 :         configData1.lt = _initData.lt1;</span></span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaUNC">           0 :         configData1.liquidationTargetLtv = _initData.liquidationTargetLtv1;</span></span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaUNC">           0 :         configData1.deployerFee = _initData.deployerFee;</span></span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaUNC">           0 :         configData1.daoFee = _initData.daoFee;</span></span>
+<span id="L200"><span class="lineNum">     200</span> <span class="tlaUNC">           0 :         configData1.liquidationFee = _initData.liquidationFee1;</span></span>
+<span id="L201"><span class="lineNum">     201</span> <span class="tlaUNC">           0 :         configData1.flashloanFee = _initData.flashloanFee1;</span></span>
+<span id="L202"><span class="lineNum">     202</span> <span class="tlaUNC">           0 :         configData1.callBeforeQuote = _initData.callBeforeQuote1;</span></span>
 <span id="L203"><span class="lineNum">     203</span>              :     }</span>
 <span id="L204"><span class="lineNum">     204</span>              : </span>
 <span id="L205"><span class="lineNum">     205</span>              :     // solhint-disable-next-line code-complexity, function-max-lines</span>
-<span id="L206"><span class="lineNum">     206</span> <span class="tlaGNC">           8 :     function validateSiloInitData(</span></span>
+<span id="L206"><span class="lineNum">     206</span> <span class="tlaUNC">           0 :     function validateSiloInitData(</span></span>
 <span id="L207"><span class="lineNum">     207</span>              :         ISiloConfig.InitData memory _initData,</span>
 <span id="L208"><span class="lineNum">     208</span>              :         ISiloFactory.Range memory _daoFeeRange,</span>
 <span id="L209"><span class="lineNum">     209</span>              :         uint256 _maxDeployerFee,</span>
 <span id="L210"><span class="lineNum">     210</span>              :         uint256 _maxFlashloanFee,</span>
 <span id="L211"><span class="lineNum">     211</span>              :         uint256 _maxLiquidationFee</span>
 <span id="L212"><span class="lineNum">     212</span>              :     ) internal view returns (bool) {</span>
-<span id="L213"><span class="lineNum">     213</span> <span class="tlaGNC">           8 :         require(_initData.hookReceiver != address(0), ISiloFactory.MissingHookReceiver());</span></span>
+<span id="L213"><span class="lineNum">     213</span> <span class="tlaUNC">           0 :         require(_initData.hookReceiver != address(0), ISiloFactory.MissingHookReceiver());</span></span>
 <span id="L214"><span class="lineNum">     214</span>              : </span>
-<span id="L215"><span class="lineNum">     215</span> <span class="tlaGNC">           8 :         require(_initData.token0 != address(0), ISiloFactory.EmptyToken0());</span></span>
-<span id="L216"><span class="lineNum">     216</span> <span class="tlaGNC">           8 :         require(_initData.token1 != address(0), ISiloFactory.EmptyToken1());</span></span>
+<span id="L215"><span class="lineNum">     215</span> <span class="tlaUNC">           0 :         require(_initData.token0 != address(0), ISiloFactory.EmptyToken0());</span></span>
+<span id="L216"><span class="lineNum">     216</span> <span class="tlaUNC">           0 :         require(_initData.token1 != address(0), ISiloFactory.EmptyToken1());</span></span>
 <span id="L217"><span class="lineNum">     217</span>              : </span>
-<span id="L218"><span class="lineNum">     218</span> <span class="tlaGNC">           8 :         require(_initData.token0 != _initData.token1, ISiloFactory.SameAsset());</span></span>
-<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC">           8 :         require(_initData.maxLtv0 != 0 || _initData.maxLtv1 != 0, ISiloFactory.InvalidMaxLtv());</span></span>
-<span id="L220"><span class="lineNum">     220</span> <span class="tlaGNC">           8 :         require(_initData.maxLtv0 &lt;= _initData.lt0, ISiloFactory.InvalidMaxLtv());</span></span>
-<span id="L221"><span class="lineNum">     221</span> <span class="tlaGNC">           8 :         require(_initData.maxLtv1 &lt;= _initData.lt1, ISiloFactory.InvalidMaxLtv());</span></span>
-<span id="L222"><span class="lineNum">     222</span> <span class="tlaGNC">           8 :         require(_initData.liquidationFee0 &lt;= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());</span></span>
-<span id="L223"><span class="lineNum">     223</span> <span class="tlaGNC">           8 :         require(_initData.liquidationFee1 &lt;= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());</span></span>
-<span id="L224"><span class="lineNum">     224</span> <span class="tlaGNC">           8 :         require(_initData.lt0 + _initData.liquidationFee0 &lt;= _100_PERCENT, ISiloFactory.InvalidLt());</span></span>
-<span id="L225"><span class="lineNum">     225</span> <span class="tlaGNC">           8 :         require(_initData.lt1 + _initData.liquidationFee1 &lt;= _100_PERCENT, ISiloFactory.InvalidLt());</span></span>
+<span id="L218"><span class="lineNum">     218</span> <span class="tlaUNC">           0 :         require(_initData.token0 != _initData.token1, ISiloFactory.SameAsset());</span></span>
+<span id="L219"><span class="lineNum">     219</span> <span class="tlaUNC">           0 :         require(_initData.maxLtv0 != 0 || _initData.maxLtv1 != 0, ISiloFactory.InvalidMaxLtv());</span></span>
+<span id="L220"><span class="lineNum">     220</span> <span class="tlaUNC">           0 :         require(_initData.maxLtv0 &lt;= _initData.lt0, ISiloFactory.InvalidMaxLtv());</span></span>
+<span id="L221"><span class="lineNum">     221</span> <span class="tlaUNC">           0 :         require(_initData.maxLtv1 &lt;= _initData.lt1, ISiloFactory.InvalidMaxLtv());</span></span>
+<span id="L222"><span class="lineNum">     222</span> <span class="tlaUNC">           0 :         require(_initData.liquidationFee0 &lt;= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());</span></span>
+<span id="L223"><span class="lineNum">     223</span> <span class="tlaUNC">           0 :         require(_initData.liquidationFee1 &lt;= _maxLiquidationFee, ISiloFactory.MaxLiquidationFeeExceeded());</span></span>
+<span id="L224"><span class="lineNum">     224</span> <span class="tlaUNC">           0 :         require(_initData.lt0 + _initData.liquidationFee0 &lt;= _100_PERCENT, ISiloFactory.InvalidLt());</span></span>
+<span id="L225"><span class="lineNum">     225</span> <span class="tlaUNC">           0 :         require(_initData.lt1 + _initData.liquidationFee1 &lt;= _100_PERCENT, ISiloFactory.InvalidLt());</span></span>
 <span id="L226"><span class="lineNum">     226</span>              : </span>
-<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">           8 :         require(</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaUNC">           0 :         require(</span></span>
 <span id="L228"><span class="lineNum">     228</span>              :             _initData.maxLtvOracle0 == address(0) || _initData.solvencyOracle0 != address(0),</span>
 <span id="L229"><span class="lineNum">     229</span>              :             ISiloFactory.OracleMisconfiguration()</span>
 <span id="L230"><span class="lineNum">     230</span>              :         );</span>
 <span id="L231"><span class="lineNum">     231</span>              : </span>
-<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">           8 :         require(</span></span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaUNC">           0 :         require(</span></span>
 <span id="L233"><span class="lineNum">     233</span>              :             !_initData.callBeforeQuote0 || _initData.solvencyOracle0 != address(0),</span>
 <span id="L234"><span class="lineNum">     234</span>              :             ISiloFactory.InvalidCallBeforeQuote()</span>
 <span id="L235"><span class="lineNum">     235</span>              :         );</span>
 <span id="L236"><span class="lineNum">     236</span>              : </span>
-<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC">           8 :         require(</span></span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaUNC">           0 :         require(</span></span>
 <span id="L238"><span class="lineNum">     238</span>              :             _initData.maxLtvOracle1 == address(0) || _initData.solvencyOracle1 != address(0),</span>
 <span id="L239"><span class="lineNum">     239</span>              :             ISiloFactory.OracleMisconfiguration()</span>
 <span id="L240"><span class="lineNum">     240</span>              :         );</span>
 <span id="L241"><span class="lineNum">     241</span>              : </span>
-<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">           8 :         require(</span></span>
+<span id="L242"><span class="lineNum">     242</span> <span class="tlaUNC">           0 :         require(</span></span>
 <span id="L243"><span class="lineNum">     243</span>              :             !_initData.callBeforeQuote1 || _initData.solvencyOracle1 != address(0),</span>
 <span id="L244"><span class="lineNum">     244</span>              :             ISiloFactory.InvalidCallBeforeQuote()</span>
 <span id="L245"><span class="lineNum">     245</span>              :         );</span>
 <span id="L246"><span class="lineNum">     246</span>              : </span>
-<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">           8 :         verifyQuoteTokens(_initData);</span></span>
+<span id="L247"><span class="lineNum">     247</span> <span class="tlaUNC">           0 :         verifyQuoteTokens(_initData);</span></span>
 <span id="L248"><span class="lineNum">     248</span>              : </span>
-<span id="L249"><span class="lineNum">     249</span> <span class="tlaGNC">           8 :         require(_initData.deployerFee == 0 || _initData.deployer != address(0), ISiloFactory.InvalidDeployer());</span></span>
-<span id="L250"><span class="lineNum">     250</span> <span class="tlaGNC">           8 :         require(_initData.deployerFee &lt;= _maxDeployerFee, ISiloFactory.MaxDeployerFeeExceeded());</span></span>
-<span id="L251"><span class="lineNum">     251</span> <span class="tlaGNC">           8 :         require(_daoFeeRange.min &lt;= _initData.daoFee, ISiloFactory.DaoMinRangeExceeded());</span></span>
-<span id="L252"><span class="lineNum">     252</span> <span class="tlaGNC">           8 :         require(_initData.daoFee &lt;= _daoFeeRange.max, ISiloFactory.DaoMaxRangeExceeded());</span></span>
-<span id="L253"><span class="lineNum">     253</span> <span class="tlaGNC">           8 :         require(_initData.flashloanFee0 &lt;= _maxFlashloanFee, ISiloFactory.MaxFlashloanFeeExceeded());</span></span>
-<span id="L254"><span class="lineNum">     254</span> <span class="tlaGNC">           8 :         require(_initData.flashloanFee1 &lt;= _maxFlashloanFee, ISiloFactory.MaxFlashloanFeeExceeded());</span></span>
-<span id="L255"><span class="lineNum">     255</span> <span class="tlaGNC">           8 :         require(_initData.liquidationTargetLtv0 &lt;= _initData.lt0, ISiloFactory.LiquidationTargetLtvTooHigh());</span></span>
-<span id="L256"><span class="lineNum">     256</span> <span class="tlaGNC">           8 :         require(_initData.liquidationTargetLtv1 &lt;= _initData.lt1, ISiloFactory.LiquidationTargetLtvTooHigh());</span></span>
+<span id="L249"><span class="lineNum">     249</span> <span class="tlaUNC">           0 :         require(_initData.deployerFee == 0 || _initData.deployer != address(0), ISiloFactory.InvalidDeployer());</span></span>
+<span id="L250"><span class="lineNum">     250</span> <span class="tlaUNC">           0 :         require(_initData.deployerFee &lt;= _maxDeployerFee, ISiloFactory.MaxDeployerFeeExceeded());</span></span>
+<span id="L251"><span class="lineNum">     251</span> <span class="tlaUNC">           0 :         require(_daoFeeRange.min &lt;= _initData.daoFee, ISiloFactory.DaoMinRangeExceeded());</span></span>
+<span id="L252"><span class="lineNum">     252</span> <span class="tlaUNC">           0 :         require(_initData.daoFee &lt;= _daoFeeRange.max, ISiloFactory.DaoMaxRangeExceeded());</span></span>
+<span id="L253"><span class="lineNum">     253</span> <span class="tlaUNC">           0 :         require(_initData.flashloanFee0 &lt;= _maxFlashloanFee, ISiloFactory.MaxFlashloanFeeExceeded());</span></span>
+<span id="L254"><span class="lineNum">     254</span> <span class="tlaUNC">           0 :         require(_initData.flashloanFee1 &lt;= _maxFlashloanFee, ISiloFactory.MaxFlashloanFeeExceeded());</span></span>
+<span id="L255"><span class="lineNum">     255</span> <span class="tlaUNC">           0 :         require(_initData.liquidationTargetLtv0 &lt;= _initData.lt0, ISiloFactory.LiquidationTargetLtvTooHigh());</span></span>
+<span id="L256"><span class="lineNum">     256</span> <span class="tlaUNC">           0 :         require(_initData.liquidationTargetLtv1 &lt;= _initData.lt1, ISiloFactory.LiquidationTargetLtvTooHigh());</span></span>
 <span id="L257"><span class="lineNum">     257</span>              : </span>
-<span id="L258"><span class="lineNum">     258</span> <span class="tlaGNC">           8 :         require(</span></span>
+<span id="L258"><span class="lineNum">     258</span> <span class="tlaUNC">           0 :         require(</span></span>
 <span id="L259"><span class="lineNum">     259</span>              :             _initData.interestRateModel0 != address(0) &amp;&amp; _initData.interestRateModel1 != address(0),</span>
 <span id="L260"><span class="lineNum">     260</span>              :             ISiloFactory.InvalidIrm()</span>
 <span id="L261"><span class="lineNum">     261</span>              :         );</span>
 <span id="L262"><span class="lineNum">     262</span>              : </span>
-<span id="L263"><span class="lineNum">     263</span> <span class="tlaGNC">           8 :         return true;</span></span>
+<span id="L263"><span class="lineNum">     263</span> <span class="tlaUNC">           0 :         return true;</span></span>
 <span id="L264"><span class="lineNum">     264</span>              :     }</span>
 <span id="L265"><span class="lineNum">     265</span>              : </span>
-<span id="L266"><span class="lineNum">     266</span> <span class="tlaGNC">           8 :     function verifyQuoteTokens(ISiloConfig.InitData memory _initData) internal view {</span></span>
-<span id="L267"><span class="lineNum">     267</span> <span class="tlaGNC">           8 :         address expectedQuoteToken;</span></span>
+<span id="L266"><span class="lineNum">     266</span> <span class="tlaUNC">           0 :     function verifyQuoteTokens(ISiloConfig.InitData memory _initData) internal view {</span></span>
+<span id="L267"><span class="lineNum">     267</span> <span class="tlaUNC">           0 :         address expectedQuoteToken;</span></span>
 <span id="L268"><span class="lineNum">     268</span>              : </span>
-<span id="L269"><span class="lineNum">     269</span> <span class="tlaGNC">           8 :         expectedQuoteToken = verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle0);</span></span>
-<span id="L270"><span class="lineNum">     270</span> <span class="tlaGNC">           8 :         expectedQuoteToken = verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle0);</span></span>
-<span id="L271"><span class="lineNum">     271</span> <span class="tlaGNC">           8 :         expectedQuoteToken = verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle1);</span></span>
-<span id="L272"><span class="lineNum">     272</span> <span class="tlaGNC">           8 :         expectedQuoteToken = verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle1);</span></span>
+<span id="L269"><span class="lineNum">     269</span> <span class="tlaUNC">           0 :         expectedQuoteToken = verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle0);</span></span>
+<span id="L270"><span class="lineNum">     270</span> <span class="tlaUNC">           0 :         expectedQuoteToken = verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle0);</span></span>
+<span id="L271"><span class="lineNum">     271</span> <span class="tlaUNC">           0 :         expectedQuoteToken = verifyQuoteToken(expectedQuoteToken, _initData.solvencyOracle1);</span></span>
+<span id="L272"><span class="lineNum">     272</span> <span class="tlaUNC">           0 :         expectedQuoteToken = verifyQuoteToken(expectedQuoteToken, _initData.maxLtvOracle1);</span></span>
 <span id="L273"><span class="lineNum">     273</span>              :     }</span>
 <span id="L274"><span class="lineNum">     274</span>              : </span>
-<span id="L275"><span class="lineNum">     275</span> <span class="tlaGNC">          32 :     function verifyQuoteToken(address _expectedQuoteToken, address _oracle)</span></span>
+<span id="L275"><span class="lineNum">     275</span> <span class="tlaUNC">           0 :     function verifyQuoteToken(address _expectedQuoteToken, address _oracle)</span></span>
 <span id="L276"><span class="lineNum">     276</span>              :         internal</span>
 <span id="L277"><span class="lineNum">     277</span>              :         view</span>
 <span id="L278"><span class="lineNum">     278</span>              :         returns (address quoteToken)</span>
 <span id="L279"><span class="lineNum">     279</span>              :     {</span>
-<span id="L280"><span class="lineNum">     280</span> <span class="tlaGNC">          32 :         if (_oracle == address(0)) return _expectedQuoteToken;</span></span>
+<span id="L280"><span class="lineNum">     280</span> <span class="tlaUNC">           0 :         if (_oracle == address(0)) return _expectedQuoteToken;</span></span>
 <span id="L281"><span class="lineNum">     281</span>              : </span>
-<span id="L282"><span class="lineNum">     282</span> <span class="tlaUNC tlaBgUNC">           0 :         quoteToken = ISiloOracle(_oracle).quoteToken();</span></span>
+<span id="L282"><span class="lineNum">     282</span> <span class="tlaUNC">           0 :         quoteToken = ISiloOracle(_oracle).quoteToken();</span></span>
 <span id="L283"><span class="lineNum">     283</span>              : </span>
 <span id="L284"><span class="lineNum">     284</span> <span class="tlaUNC">           0 :         if (_expectedQuoteToken == address(0)) return quoteToken;</span></span>
 <span id="L285"><span class="lineNum">     285</span> <span class="tlaUNC">           0 :         require(_expectedQuoteToken == quoteToken, ISiloFactory.InvalidQuoteToken());</span></span>

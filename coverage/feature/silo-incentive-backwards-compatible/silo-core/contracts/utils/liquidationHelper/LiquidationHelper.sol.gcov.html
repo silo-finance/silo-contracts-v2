@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">15.6&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">45</td>
-            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 18:44:22</td>
+            <td class="headerValue">2025-12-10 18:53:54</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">14.3&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">7</td>
-            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -102,24 +102,24 @@
 <span id="L40"><span class="lineNum">      40</span>              :     /// @param _nativeToken address of wrapped native blockchain token eg. WETH on Ethereum</span>
 <span id="L41"><span class="lineNum">      41</span>              :     /// @param _exchangeProxy exchange address, where to send swap data on liquidation</span>
 <span id="L42"><span class="lineNum">      42</span>              :     /// @param _tokensReceiver all leftover tokens (debt and collateral) will be send to this address after liquidation</span>
-<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC tlaBgGNC">           8 :     constructor (</span></span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaUNC tlaBgUNC">           0 :     constructor (</span></span>
 <span id="L44"><span class="lineNum">      44</span>              :         address _nativeToken,</span>
 <span id="L45"><span class="lineNum">      45</span>              :         address _exchangeProxy,</span>
 <span id="L46"><span class="lineNum">      46</span>              :         address payable _tokensReceiver</span>
 <span id="L47"><span class="lineNum">      47</span>              :     ) DexSwap(_exchangeProxy) {</span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">           8 :         require(_nativeToken != address(0), ZeroAddress());</span></span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">           8 :         require(_exchangeProxy != address(0), ZeroAddress());</span></span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">           8 :         require(address(_tokensReceiver) != address(0), ZeroAddress());</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaUNC">           0 :         require(_nativeToken != address(0), ZeroAddress());</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC">           0 :         require(_exchangeProxy != address(0), ZeroAddress());</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaUNC">           0 :         require(address(_tokensReceiver) != address(0), ZeroAddress());</span></span>
 <span id="L51"><span class="lineNum">      51</span>              : </span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">           8 :         NATIVE_TOKEN = _nativeToken;</span></span>
-<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">           8 :         EXCHANGE_PROXY = _exchangeProxy;</span></span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">           8 :         TOKENS_RECEIVER = _tokensReceiver;</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaUNC">           0 :         NATIVE_TOKEN = _nativeToken;</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaUNC">           0 :         EXCHANGE_PROXY = _exchangeProxy;</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaUNC">           0 :         TOKENS_RECEIVER = _tokensReceiver;</span></span>
 <span id="L55"><span class="lineNum">      55</span>              :     }</span>
 <span id="L56"><span class="lineNum">      56</span>              : </span>
 <span id="L57"><span class="lineNum">      57</span>              :     receive() external payable {}</span>
 <span id="L58"><span class="lineNum">      58</span>              : </span>
 <span id="L59"><span class="lineNum">      59</span>              :     /// @dev open method to rescue tokens, tokens will be transferred to `TOKENS_RECEIVER`</span>
-<span id="L60"><span class="lineNum">      60</span> <span class="tlaUNC tlaBgUNC">           0 :     function rescueTokens(IERC20 _token) external virtual {</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaUNC">           0 :     function rescueTokens(IERC20 _token) external virtual {</span></span>
 <span id="L61"><span class="lineNum">      61</span> <span class="tlaUNC">           0 :         _rescueTokens(TOKENS_RECEIVER, _token);</span></span>
 <span id="L62"><span class="lineNum">      62</span>              :     }</span>
 <span id="L63"><span class="lineNum">      63</span>              : </span>

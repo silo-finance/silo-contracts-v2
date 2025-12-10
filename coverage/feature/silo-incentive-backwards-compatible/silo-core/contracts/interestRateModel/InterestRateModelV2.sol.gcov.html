@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">19.7&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">132</td>
-            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 18:44:22</td>
+            <td class="headerValue">2025-12-10 18:53:54</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">18.8&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">16</td>
-            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
                   <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -140,17 +140,17 @@
 <span id="L78"><span class="lineNum">      78</span>              :     event Initialized(address indexed config);</span>
 <span id="L79"><span class="lineNum">      79</span>              : </span>
 <span id="L80"><span class="lineNum">      80</span>              :     /// @inheritdoc IInterestRateModel</span>
-<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC tlaBgGNC">           8 :     function initialize(address _irmConfig) external virtual {</span></span>
-<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">           8 :         require(_irmConfig != address(0), AddressZero());</span></span>
-<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">           8 :         require(address(irmConfig) == address(0), AlreadyInitialized());</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaUNC tlaBgUNC">           0 :     function initialize(address _irmConfig) external virtual {</span></span>
+<span id="L82"><span class="lineNum">      82</span> <span class="tlaUNC">           0 :         require(_irmConfig != address(0), AddressZero());</span></span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaUNC">           0 :         require(address(irmConfig) == address(0), AlreadyInitialized());</span></span>
 <span id="L84"><span class="lineNum">      84</span>              : </span>
-<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">           8 :         irmConfig = IInterestRateModelV2Config(_irmConfig);</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaUNC">           0 :         irmConfig = IInterestRateModelV2Config(_irmConfig);</span></span>
 <span id="L86"><span class="lineNum">      86</span>              : </span>
-<span id="L87"><span class="lineNum">      87</span> <span class="tlaGNC">           8 :         emit Initialized(_irmConfig);</span></span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaUNC">           0 :         emit Initialized(_irmConfig);</span></span>
 <span id="L88"><span class="lineNum">      88</span>              :     }</span>
 <span id="L89"><span class="lineNum">      89</span>              : </span>
 <span id="L90"><span class="lineNum">      90</span>              :     /// @inheritdoc IInterestRateModel</span>
-<span id="L91"><span class="lineNum">      91</span> <span class="tlaUNC tlaBgUNC">           0 :     function getCompoundInterestRateAndUpdate(</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaUNC">           0 :     function getCompoundInterestRateAndUpdate(</span></span>
 <span id="L92"><span class="lineNum">      92</span>              :         uint256 _collateralAssets,</span>
 <span id="L93"><span class="lineNum">      93</span>              :         uint256 _debtAssets,</span>
 <span id="L94"><span class="lineNum">      94</span>              :         uint256 _interestRateTimestamp</span>
@@ -436,41 +436,41 @@
 <span id="L374"><span class="lineNum">     374</span>              :     }</span>
 <span id="L375"><span class="lineNum">     375</span>              : </span>
 <span id="L376"><span class="lineNum">     376</span>              :     /// @dev this method is to detect possible overflow in math for provided config in next 50 years</span>
-<span id="L377"><span class="lineNum">     377</span> <span class="tlaGNC tlaBgGNC">           8 :     function configOverflowCheck(IInterestRateModelV2.Config calldata _config) external pure virtual {</span></span>
-<span id="L378"><span class="lineNum">     378</span> <span class="tlaGNC">           8 :         int256 YEAR = 365 days;</span></span>
-<span id="L379"><span class="lineNum">     379</span> <span class="tlaGNC">           8 :         int256 MAX_TIME = 50 * 365 days;</span></span>
-<span id="L380"><span class="lineNum">     380</span> <span class="tlaGNC">           8 :         int256 DP = int256(_DP);</span></span>
+<span id="L377"><span class="lineNum">     377</span> <span class="tlaUNC">           0 :     function configOverflowCheck(IInterestRateModelV2.Config calldata _config) external pure virtual {</span></span>
+<span id="L378"><span class="lineNum">     378</span> <span class="tlaUNC">           0 :         int256 YEAR = 365 days;</span></span>
+<span id="L379"><span class="lineNum">     379</span> <span class="tlaUNC">           0 :         int256 MAX_TIME = 50 * 365 days;</span></span>
+<span id="L380"><span class="lineNum">     380</span> <span class="tlaUNC">           0 :         int256 DP = int256(_DP);</span></span>
 <span id="L381"><span class="lineNum">     381</span>              : </span>
-<span id="L382"><span class="lineNum">     382</span> <span class="tlaGNC">           8 :         int256 rcur_max;</span></span>
+<span id="L382"><span class="lineNum">     382</span> <span class="tlaUNC">           0 :         int256 rcur_max;</span></span>
 <span id="L383"><span class="lineNum">     383</span>              : </span>
 <span id="L384"><span class="lineNum">     384</span>              :         {</span>
-<span id="L385"><span class="lineNum">     385</span> <span class="tlaGNC">           8 :             int256 Tcrit_max = _config.Tcrit + _config.beta * MAX_TIME;</span></span>
-<span id="L386"><span class="lineNum">     386</span> <span class="tlaGNC">           8 :             int256 rp_max = _config.kcrit * (DP + Tcrit_max) / DP * (DP - _config.ucrit) / DP;</span></span>
-<span id="L387"><span class="lineNum">     387</span> <span class="tlaGNC">           8 :             int256 rp_min = -_config.klow * _config.ulow / DP;</span></span>
-<span id="L388"><span class="lineNum">     388</span> <span class="tlaGNC">           8 :             int256 rlin_max = _config.klin * DP / DP;</span></span>
-<span id="L389"><span class="lineNum">     389</span> <span class="tlaGNC">           8 :             int256 ri_max = _max(_config.ri, rlin_max) +_config.ki * (DP - _config.uopt) * MAX_TIME / DP;</span></span>
-<span id="L390"><span class="lineNum">     390</span> <span class="tlaGNC">           8 :             int256 ri_min = -_config.ki * _config.uopt * MAX_TIME / DP;</span></span>
-<span id="L391"><span class="lineNum">     391</span> <span class="tlaGNC">           8 :             rcur_max = ri_max + rp_max;</span></span>
-<span id="L392"><span class="lineNum">     392</span> <span class="tlaGNC">           8 :             int256 rcur_min = ri_min + rp_min;</span></span>
-<span id="L393"><span class="lineNum">     393</span> <span class="tlaGNC">           8 :             int256 rcur_ann_max = rcur_max * YEAR;</span></span>
+<span id="L385"><span class="lineNum">     385</span> <span class="tlaUNC">           0 :             int256 Tcrit_max = _config.Tcrit + _config.beta * MAX_TIME;</span></span>
+<span id="L386"><span class="lineNum">     386</span> <span class="tlaUNC">           0 :             int256 rp_max = _config.kcrit * (DP + Tcrit_max) / DP * (DP - _config.ucrit) / DP;</span></span>
+<span id="L387"><span class="lineNum">     387</span> <span class="tlaUNC">           0 :             int256 rp_min = -_config.klow * _config.ulow / DP;</span></span>
+<span id="L388"><span class="lineNum">     388</span> <span class="tlaUNC">           0 :             int256 rlin_max = _config.klin * DP / DP;</span></span>
+<span id="L389"><span class="lineNum">     389</span> <span class="tlaUNC">           0 :             int256 ri_max = _max(_config.ri, rlin_max) +_config.ki * (DP - _config.uopt) * MAX_TIME / DP;</span></span>
+<span id="L390"><span class="lineNum">     390</span> <span class="tlaUNC">           0 :             int256 ri_min = -_config.ki * _config.uopt * MAX_TIME / DP;</span></span>
+<span id="L391"><span class="lineNum">     391</span> <span class="tlaUNC">           0 :             rcur_max = ri_max + rp_max;</span></span>
+<span id="L392"><span class="lineNum">     392</span> <span class="tlaUNC">           0 :             int256 rcur_min = ri_min + rp_min;</span></span>
+<span id="L393"><span class="lineNum">     393</span> <span class="tlaUNC">           0 :             int256 rcur_ann_max = rcur_max * YEAR;</span></span>
 <span id="L394"><span class="lineNum">     394</span>              :             rcur_min; // silence unused local variable warning</span>
 <span id="L395"><span class="lineNum">     395</span>              :             rcur_ann_max; // silence unused local variable warning </span>
 <span id="L396"><span class="lineNum">     396</span>              :         }</span>
 <span id="L397"><span class="lineNum">     397</span>              : </span>
 <span id="L398"><span class="lineNum">     398</span>              :         {</span>
-<span id="L399"><span class="lineNum">     399</span> <span class="tlaGNC">           8 :             int256 slopei_max = _config.ki * (DP - _config.uopt) / DP;</span></span>
-<span id="L400"><span class="lineNum">     400</span> <span class="tlaGNC">           8 :             int256 slopei_min = - _config.ki * _config.uopt / DP;</span></span>
-<span id="L401"><span class="lineNum">     401</span> <span class="tlaGNC">           8 :             int256 slope_max = slopei_max + _config.kcrit * _config.beta / DP * (DP - _config.ucrit) / DP;</span></span>
-<span id="L402"><span class="lineNum">     402</span> <span class="tlaGNC">           8 :             int256 slope_min = slopei_min;</span></span>
+<span id="L399"><span class="lineNum">     399</span> <span class="tlaUNC">           0 :             int256 slopei_max = _config.ki * (DP - _config.uopt) / DP;</span></span>
+<span id="L400"><span class="lineNum">     400</span> <span class="tlaUNC">           0 :             int256 slopei_min = - _config.ki * _config.uopt / DP;</span></span>
+<span id="L401"><span class="lineNum">     401</span> <span class="tlaUNC">           0 :             int256 slope_max = slopei_max + _config.kcrit * _config.beta / DP * (DP - _config.ucrit) / DP;</span></span>
+<span id="L402"><span class="lineNum">     402</span> <span class="tlaUNC">           0 :             int256 slope_min = slopei_min;</span></span>
 <span id="L403"><span class="lineNum">     403</span>              : </span>
-<span id="L404"><span class="lineNum">     404</span> <span class="tlaGNC">           8 :             int256 x_max = rcur_max * 2 * MAX_TIME / 2 + (_max(slope_max, -slope_min) * MAX_TIME)**2 / 2;</span></span>
+<span id="L404"><span class="lineNum">     404</span> <span class="tlaUNC">           0 :             int256 x_max = rcur_max * 2 * MAX_TIME / 2 + (_max(slope_max, -slope_min) * MAX_TIME)**2 / 2;</span></span>
 <span id="L405"><span class="lineNum">     405</span>              :             x_max; // silence unused local variable warning</span>
 <span id="L406"><span class="lineNum">     406</span>              :         }</span>
 <span id="L407"><span class="lineNum">     407</span>              :     }</span>
 <span id="L408"><span class="lineNum">     408</span>              : </span>
 <span id="L409"><span class="lineNum">     409</span>              :     /// @dev checks for the overflow in rcomp calculations, accruedInterest, totalDeposits and totalBorrowedAmount.</span>
 <span id="L410"><span class="lineNum">     410</span>              :     /// In case of the overflow, rcomp is reduced to make totalDeposits and totalBorrowedAmount &lt;= 2**196.</span>
-<span id="L411"><span class="lineNum">     411</span> <span class="tlaUNC tlaBgUNC">           0 :     function _calculateRComp(</span></span>
+<span id="L411"><span class="lineNum">     411</span> <span class="tlaUNC">           0 :     function _calculateRComp(</span></span>
 <span id="L412"><span class="lineNum">     412</span>              :         uint256 _totalDeposits,</span>
 <span id="L413"><span class="lineNum">     413</span>              :         uint256 _totalBorrowAmount,</span>
 <span id="L414"><span class="lineNum">     414</span>              :         int256 _x</span>
@@ -514,12 +514,12 @@
 <span id="L452"><span class="lineNum">     452</span>              :     }</span>
 <span id="L453"><span class="lineNum">     453</span>              : </span>
 <span id="L454"><span class="lineNum">     454</span>              :     /// @dev Returns the largest of two numbers</span>
-<span id="L455"><span class="lineNum">     455</span> <span class="tlaGNC tlaBgGNC">          16 :     function _max(int256 a, int256 b) internal pure virtual returns (int256) {</span></span>
-<span id="L456"><span class="lineNum">     456</span> <span class="tlaGNC">          16 :         return a &gt; b ? a : b;</span></span>
+<span id="L455"><span class="lineNum">     455</span> <span class="tlaUNC">           0 :     function _max(int256 a, int256 b) internal pure virtual returns (int256) {</span></span>
+<span id="L456"><span class="lineNum">     456</span> <span class="tlaUNC">           0 :         return a &gt; b ? a : b;</span></span>
 <span id="L457"><span class="lineNum">     457</span>              :     }</span>
 <span id="L458"><span class="lineNum">     458</span>              : </span>
 <span id="L459"><span class="lineNum">     459</span>              :     /// @dev Returns the smallest of two numbers</span>
-<span id="L460"><span class="lineNum">     460</span> <span class="tlaUNC tlaBgUNC">           0 :     function _min(int256 a, int256 b) internal pure virtual returns (int256) {</span></span>
+<span id="L460"><span class="lineNum">     460</span> <span class="tlaUNC">           0 :     function _min(int256 a, int256 b) internal pure virtual returns (int256) {</span></span>
 <span id="L461"><span class="lineNum">     461</span> <span class="tlaUNC">           0 :         return a &lt; b ? a : b;</span></span>
 <span id="L462"><span class="lineNum">     462</span>              :     }</span>
 <span id="L463"><span class="lineNum">     463</span>              : </span>

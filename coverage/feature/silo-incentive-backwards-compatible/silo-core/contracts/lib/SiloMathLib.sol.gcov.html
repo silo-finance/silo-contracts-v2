@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">16.1&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">87</td>
-            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 18:44:22</td>
+            <td class="headerValue">2025-12-10 18:53:54</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">23.1&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">13</td>
-            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
                   <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -199,7 +199,7 @@
 <span id="L137"><span class="lineNum">     137</span>              :         }</span>
 <span id="L138"><span class="lineNum">     138</span>              :     }</span>
 <span id="L139"><span class="lineNum">     139</span>              : </span>
-<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC tlaBgGNC">          10 :     function convertToAssetsOrToShares(</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaUNC">           0 :     function convertToAssetsOrToShares(</span></span>
 <span id="L141"><span class="lineNum">     141</span>              :         uint256 _assets,</span>
 <span id="L142"><span class="lineNum">     142</span>              :         uint256 _shares,</span>
 <span id="L143"><span class="lineNum">     143</span>              :         uint256 _totalAssets,</span>
@@ -208,41 +208,41 @@
 <span id="L146"><span class="lineNum">     146</span>              :         Math.Rounding _roundingToShares,</span>
 <span id="L147"><span class="lineNum">     147</span>              :         ISilo.AssetType _assetType</span>
 <span id="L148"><span class="lineNum">     148</span>              :     ) internal pure returns (uint256 assets, uint256 shares) {</span>
-<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">          10 :         if (_assets == 0) {</span></span>
-<span id="L150"><span class="lineNum">     150</span> <span class="tlaUNC tlaBgUNC">           0 :             require(_shares != 0, ISilo.InputZeroShares());</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaUNC">           0 :         if (_assets == 0) {</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaUNC">           0 :             require(_shares != 0, ISilo.InputZeroShares());</span></span>
 <span id="L151"><span class="lineNum">     151</span> <span class="tlaUNC">           0 :             shares = _shares;</span></span>
 <span id="L152"><span class="lineNum">     152</span> <span class="tlaUNC">           0 :             assets = convertToAssets(_shares, _totalAssets, _totalShares, _roundingToAssets, _assetType);</span></span>
 <span id="L153"><span class="lineNum">     153</span> <span class="tlaUNC">           0 :             require(assets != 0, ISilo.ReturnZeroAssets());</span></span>
-<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC tlaBgGNC">          10 :         } else if (_shares == 0) {</span></span>
-<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">          10 :             shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares, _assetType);</span></span>
-<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC">          10 :             assets = _assets;</span></span>
-<span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC">          10 :             require(shares != 0, ISilo.ReturnZeroShares());</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaUNC">           0 :         } else if (_shares == 0) {</span></span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaUNC">           0 :             shares = convertToShares(_assets, _totalAssets, _totalShares, _roundingToShares, _assetType);</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaUNC">           0 :             assets = _assets;</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaUNC">           0 :             require(shares != 0, ISilo.ReturnZeroShares());</span></span>
 <span id="L158"><span class="lineNum">     158</span>              :         } else {</span>
-<span id="L159"><span class="lineNum">     159</span> <span class="tlaUNC tlaBgUNC">           0 :             revert ISilo.InputCanBeAssetsOrShares();</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaUNC">           0 :             revert ISilo.InputCanBeAssetsOrShares();</span></span>
 <span id="L160"><span class="lineNum">     160</span>              :         }</span>
 <span id="L161"><span class="lineNum">     161</span>              :     }</span>
 <span id="L162"><span class="lineNum">     162</span>              : </span>
 <span id="L163"><span class="lineNum">     163</span>              :     /// @dev Math for collateral is exact copy of</span>
 <span id="L164"><span class="lineNum">     164</span>              :     ///      openzeppelin5/contracts/token/ERC20/extensions/ERC4626._convertToShares</span>
-<span id="L165"><span class="lineNum">     165</span> <span class="tlaGNC tlaBgGNC">          10 :     function convertToShares(</span></span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaUNC">           0 :     function convertToShares(</span></span>
 <span id="L166"><span class="lineNum">     166</span>              :         uint256 _assets,</span>
 <span id="L167"><span class="lineNum">     167</span>              :         uint256 _totalAssets,</span>
 <span id="L168"><span class="lineNum">     168</span>              :         uint256 _totalShares,</span>
 <span id="L169"><span class="lineNum">     169</span>              :         Math.Rounding _rounding,</span>
 <span id="L170"><span class="lineNum">     170</span>              :         ISilo.AssetType _assetType</span>
 <span id="L171"><span class="lineNum">     171</span>              :     ) internal pure returns (uint256 shares) {</span>
-<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">          10 :         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);</span></span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaUNC">           0 :         (uint256 totalShares, uint256 totalAssets) = _commonConvertTo(_totalAssets, _totalShares, _assetType);</span></span>
 <span id="L173"><span class="lineNum">     173</span>              : </span>
 <span id="L174"><span class="lineNum">     174</span>              :         // initially, in case of debt, if silo is empty we return shares==assets</span>
 <span id="L175"><span class="lineNum">     175</span>              :         // for collateral, this will never be the case, because we are adding `+1` and offset in `_commonConvertTo`</span>
-<span id="L176"><span class="lineNum">     176</span> <span class="tlaGNC">          10 :         if (totalShares == 0) return _assets;</span></span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaUNC">           0 :         if (totalShares == 0) return _assets;</span></span>
 <span id="L177"><span class="lineNum">     177</span>              : </span>
-<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">          10 :         shares = _assets.mulDiv(totalShares, totalAssets, _rounding);</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaUNC">           0 :         shares = _assets.mulDiv(totalShares, totalAssets, _rounding);</span></span>
 <span id="L179"><span class="lineNum">     179</span>              :     }</span>
 <span id="L180"><span class="lineNum">     180</span>              : </span>
 <span id="L181"><span class="lineNum">     181</span>              :     /// @dev Math for collateral is exact copy of</span>
 <span id="L182"><span class="lineNum">     182</span>              :     ///      openzeppelin5/contracts/token/ERC20/extensions/ERC4626._convertToAssets</span>
-<span id="L183"><span class="lineNum">     183</span> <span class="tlaUNC tlaBgUNC">           0 :     function convertToAssets(</span></span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaUNC">           0 :     function convertToAssets(</span></span>
 <span id="L184"><span class="lineNum">     184</span>              :         uint256 _shares,</span>
 <span id="L185"><span class="lineNum">     185</span>              :         uint256 _totalAssets,</span>
 <span id="L186"><span class="lineNum">     186</span>              :         uint256 _totalShares,</span>
@@ -377,19 +377,19 @@
 <span id="L315"><span class="lineNum">     315</span>              : </span>
 <span id="L316"><span class="lineNum">     316</span>              :     /// @dev Debt calculations should not lower the result. Debt is a liability so protocol should not take any for</span>
 <span id="L317"><span class="lineNum">     317</span>              :     /// itself. It should return actual result and round it up.</span>
-<span id="L318"><span class="lineNum">     318</span> <span class="tlaGNC tlaBgGNC">          10 :     function _commonConvertTo(</span></span>
+<span id="L318"><span class="lineNum">     318</span> <span class="tlaUNC">           0 :     function _commonConvertTo(</span></span>
 <span id="L319"><span class="lineNum">     319</span>              :         uint256 _totalAssets,</span>
 <span id="L320"><span class="lineNum">     320</span>              :         uint256 _totalShares,</span>
 <span id="L321"><span class="lineNum">     321</span>              :         ISilo.AssetType _assetType</span>
 <span id="L322"><span class="lineNum">     322</span>              :     ) private pure returns (uint256 totalShares, uint256 totalAssets) {</span>
-<span id="L323"><span class="lineNum">     323</span> <span class="tlaGNC">          10 :         if (_totalShares == 0) {</span></span>
+<span id="L323"><span class="lineNum">     323</span> <span class="tlaUNC">           0 :         if (_totalShares == 0) {</span></span>
 <span id="L324"><span class="lineNum">     324</span>              :             // silo is empty and we have dust to redistribute: this can only happen when everyone exits silo</span>
 <span id="L325"><span class="lineNum">     325</span>              :             // this case can happen only for collateral, because for collateral we rounding in favorite of protocol</span>
 <span id="L326"><span class="lineNum">     326</span>              :             // by resetting totalAssets, the dust that we have will go to first depositor and we starts from clean state</span>
-<span id="L327"><span class="lineNum">     327</span> <span class="tlaGNC">           7 :             _totalAssets = 0;</span></span>
+<span id="L327"><span class="lineNum">     327</span> <span class="tlaUNC">           0 :             _totalAssets = 0;</span></span>
 <span id="L328"><span class="lineNum">     328</span>              :         }</span>
 <span id="L329"><span class="lineNum">     329</span>              : </span>
-<span id="L330"><span class="lineNum">     330</span> <span class="tlaGNC">          10 :             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt</span></span>
+<span id="L330"><span class="lineNum">     330</span> <span class="tlaUNC">           0 :             (totalShares, totalAssets) = _assetType == ISilo.AssetType.Debt</span></span>
 <span id="L331"><span class="lineNum">     331</span>              :                 ? (_totalShares, _totalAssets)</span>
 <span id="L332"><span class="lineNum">     332</span>              :                 : (_totalShares + _DECIMALS_OFFSET_POW, _totalAssets + 1);</span>
 <span id="L333"><span class="lineNum">     333</span>              :     }</span>
@@ -400,7 +400,7 @@
 <span id="L338"><span class="lineNum">     338</span>              :     /// @param _currentFraction The current fraction to add to the result</span>
 <span id="L339"><span class="lineNum">     339</span>              :     /// @return integral The integral part of the fraction</span>
 <span id="L340"><span class="lineNum">     340</span>              :     /// @return fraction The fractional part of the fraction</span>
-<span id="L341"><span class="lineNum">     341</span> <span class="tlaUNC tlaBgUNC">           0 :     function calculateFraction(</span></span>
+<span id="L341"><span class="lineNum">     341</span> <span class="tlaUNC">           0 :     function calculateFraction(</span></span>
 <span id="L342"><span class="lineNum">     342</span>              :         uint256 _total,</span>
 <span id="L343"><span class="lineNum">     343</span>              :         uint256 _percent,</span>
 <span id="L344"><span class="lineNum">     344</span>              :         uint64 _currentFraction</span>

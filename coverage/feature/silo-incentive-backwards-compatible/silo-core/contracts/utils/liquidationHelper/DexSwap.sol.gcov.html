@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">37.5&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">8</td>
-            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 18:44:22</td>
+            <td class="headerValue">2025-12-10 18:53:54</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">50.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">2</td>
-            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -82,17 +82,17 @@
 <span id="L20"><span class="lineNum">      20</span>              : </span>
 <span id="L21"><span class="lineNum">      21</span>              :     error AddressZero();</span>
 <span id="L22"><span class="lineNum">      22</span>              : </span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">           8 :     constructor(address _exchangeProxy) {</span></span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">           8 :         if (_exchangeProxy == address(0)) revert AddressZero();</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaUNC tlaBgUNC">           0 :     constructor(address _exchangeProxy) {</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaUNC">           0 :         if (_exchangeProxy == address(0)) revert AddressZero();</span></span>
 <span id="L25"><span class="lineNum">      25</span>              : </span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">           8 :         EXCHANGE_PROXY = _exchangeProxy;</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaUNC">           0 :         EXCHANGE_PROXY = _exchangeProxy;</span></span>
 <span id="L27"><span class="lineNum">      27</span>              :     }</span>
 <span id="L28"><span class="lineNum">      28</span>              : </span>
 <span id="L29"><span class="lineNum">      29</span>              :     /// @dev Swaps ERC20-&gt;ERC20 tokens held by this contract using a 0x-API quote.</span>
 <span id="L30"><span class="lineNum">      30</span>              :     /// @param _sellToken The `sellTokenAddress` field from the API response.</span>
 <span id="L31"><span class="lineNum">      31</span>              :     /// @param _spender The `allowanceTarget` field from the API response.</span>
 <span id="L32"><span class="lineNum">      32</span>              :     /// @param _swapCallData The `data` field from the API response.</span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaUNC tlaBgUNC">           0 :     function fillQuote(address _sellToken, address _spender, bytes memory _swapCallData) public virtual {</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaUNC">           0 :     function fillQuote(address _sellToken, address _spender, bytes memory _swapCallData) public virtual {</span></span>
 <span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC">           0 :         IERC20(_sellToken).approve(_spender, type(uint256).max);</span></span>
 <span id="L35"><span class="lineNum">      35</span>              : </span>
 <span id="L36"><span class="lineNum">      36</span>              :         // Call the encoded swap function call on the contract at `swapTarget`</span>

@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">21.5&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">158</td>
-            <td class="headerCovTableEntry">34</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 18:44:22</td>
+            <td class="headerValue">2025-12-10 18:53:54</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">4.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">25</td>
-            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
                   <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -142,67 +142,67 @@
 <span id="L80"><span class="lineNum">      80</span>              :     /// @param _siloId ID of this pool assigned by factory</span>
 <span id="L81"><span class="lineNum">      81</span>              :     /// @param _configData0 silo configuration data for token0</span>
 <span id="L82"><span class="lineNum">      82</span>              :     /// @param _configData1 silo configuration data for token1</span>
-<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC tlaBgGNC">           8 :     constructor( // solhint-disable-line function-max-lines</span></span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaUNC tlaBgUNC">           0 :     constructor( // solhint-disable-line function-max-lines</span></span>
 <span id="L84"><span class="lineNum">      84</span>              :         uint256 _siloId,</span>
 <span id="L85"><span class="lineNum">      85</span>              :         ConfigData memory _configData0,</span>
 <span id="L86"><span class="lineNum">      86</span>              :         ConfigData memory _configData1</span>
 <span id="L87"><span class="lineNum">      87</span>              :     ) CrossReentrancyGuard() {</span>
-<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">           8 :         SILO_ID = _siloId;</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaUNC">           0 :         SILO_ID = _siloId;</span></span>
 <span id="L89"><span class="lineNum">      89</span>              : </span>
 <span id="L90"><span class="lineNum">      90</span>              :         // To make further computations in the Silo secure require DAO and deployer fees to be less than 100%</span>
-<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">           8 :         require(_configData0.daoFee + _configData0.deployerFee &lt; 1e18, FeeTooHigh());</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaUNC">           0 :         require(_configData0.daoFee + _configData0.deployerFee &lt; 1e18, FeeTooHigh());</span></span>
 <span id="L92"><span class="lineNum">      92</span>              : </span>
-<span id="L93"><span class="lineNum">      93</span> <span class="tlaGNC">           8 :         _DAO_FEE = _configData0.daoFee;</span></span>
-<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">           8 :         _DEPLOYER_FEE = _configData0.deployerFee;</span></span>
-<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">           8 :         _HOOK_RECEIVER = _configData0.hookReceiver;</span></span>
+<span id="L93"><span class="lineNum">      93</span> <span class="tlaUNC">           0 :         _DAO_FEE = _configData0.daoFee;</span></span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaUNC">           0 :         _DEPLOYER_FEE = _configData0.deployerFee;</span></span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaUNC">           0 :         _HOOK_RECEIVER = _configData0.hookReceiver;</span></span>
 <span id="L96"><span class="lineNum">      96</span>              : </span>
 <span id="L97"><span class="lineNum">      97</span>              :         // TOKEN #0</span>
 <span id="L98"><span class="lineNum">      98</span>              : </span>
-<span id="L99"><span class="lineNum">      99</span> <span class="tlaGNC">           8 :         _SILO0 = _configData0.silo;</span></span>
-<span id="L100"><span class="lineNum">     100</span> <span class="tlaGNC">           8 :         _TOKEN0 = _configData0.token;</span></span>
+<span id="L99"><span class="lineNum">      99</span> <span class="tlaUNC">           0 :         _SILO0 = _configData0.silo;</span></span>
+<span id="L100"><span class="lineNum">     100</span> <span class="tlaUNC">           0 :         _TOKEN0 = _configData0.token;</span></span>
 <span id="L101"><span class="lineNum">     101</span>              : </span>
-<span id="L102"><span class="lineNum">     102</span> <span class="tlaGNC">           8 :         _PROTECTED_COLLATERAL_SHARE_TOKEN0 = _configData0.protectedShareToken;</span></span>
-<span id="L103"><span class="lineNum">     103</span> <span class="tlaGNC">           8 :         _COLLATERAL_SHARE_TOKEN0 = _configData0.silo;</span></span>
-<span id="L104"><span class="lineNum">     104</span> <span class="tlaGNC">           8 :         _DEBT_SHARE_TOKEN0 = _configData0.debtShareToken;</span></span>
+<span id="L102"><span class="lineNum">     102</span> <span class="tlaUNC">           0 :         _PROTECTED_COLLATERAL_SHARE_TOKEN0 = _configData0.protectedShareToken;</span></span>
+<span id="L103"><span class="lineNum">     103</span> <span class="tlaUNC">           0 :         _COLLATERAL_SHARE_TOKEN0 = _configData0.silo;</span></span>
+<span id="L104"><span class="lineNum">     104</span> <span class="tlaUNC">           0 :         _DEBT_SHARE_TOKEN0 = _configData0.debtShareToken;</span></span>
 <span id="L105"><span class="lineNum">     105</span>              : </span>
-<span id="L106"><span class="lineNum">     106</span> <span class="tlaGNC">           8 :         _SOLVENCY_ORACLE0 = _configData0.solvencyOracle;</span></span>
-<span id="L107"><span class="lineNum">     107</span> <span class="tlaGNC">           8 :         _MAX_LTV_ORACLE0 = _configData0.maxLtvOracle;</span></span>
+<span id="L106"><span class="lineNum">     106</span> <span class="tlaUNC">           0 :         _SOLVENCY_ORACLE0 = _configData0.solvencyOracle;</span></span>
+<span id="L107"><span class="lineNum">     107</span> <span class="tlaUNC">           0 :         _MAX_LTV_ORACLE0 = _configData0.maxLtvOracle;</span></span>
 <span id="L108"><span class="lineNum">     108</span>              : </span>
-<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">           8 :         _INTEREST_RATE_MODEL0 = _configData0.interestRateModel;</span></span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaUNC">           0 :         _INTEREST_RATE_MODEL0 = _configData0.interestRateModel;</span></span>
 <span id="L110"><span class="lineNum">     110</span>              : </span>
-<span id="L111"><span class="lineNum">     111</span> <span class="tlaGNC">           8 :         _MAX_LTV0 = _configData0.maxLtv;</span></span>
-<span id="L112"><span class="lineNum">     112</span> <span class="tlaGNC">           8 :         _LT0 = _configData0.lt;</span></span>
-<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">           8 :         _LIQUIDATION_TARGET_LTV0 = _configData0.liquidationTargetLtv;</span></span>
-<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">           8 :         _LIQUIDATION_FEE0 = _configData0.liquidationFee;</span></span>
-<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">           8 :         _FLASHLOAN_FEE0 = _configData0.flashloanFee;</span></span>
+<span id="L111"><span class="lineNum">     111</span> <span class="tlaUNC">           0 :         _MAX_LTV0 = _configData0.maxLtv;</span></span>
+<span id="L112"><span class="lineNum">     112</span> <span class="tlaUNC">           0 :         _LT0 = _configData0.lt;</span></span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaUNC">           0 :         _LIQUIDATION_TARGET_LTV0 = _configData0.liquidationTargetLtv;</span></span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaUNC">           0 :         _LIQUIDATION_FEE0 = _configData0.liquidationFee;</span></span>
+<span id="L115"><span class="lineNum">     115</span> <span class="tlaUNC">           0 :         _FLASHLOAN_FEE0 = _configData0.flashloanFee;</span></span>
 <span id="L116"><span class="lineNum">     116</span>              : </span>
-<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">           8 :         _CALL_BEFORE_QUOTE0 = _configData0.callBeforeQuote;</span></span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaUNC">           0 :         _CALL_BEFORE_QUOTE0 = _configData0.callBeforeQuote;</span></span>
 <span id="L118"><span class="lineNum">     118</span>              : </span>
 <span id="L119"><span class="lineNum">     119</span>              :         // TOKEN #1</span>
 <span id="L120"><span class="lineNum">     120</span>              : </span>
-<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC">           8 :         _SILO1 = _configData1.silo;</span></span>
-<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">           8 :         _TOKEN1 = _configData1.token;</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaUNC">           0 :         _SILO1 = _configData1.silo;</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaUNC">           0 :         _TOKEN1 = _configData1.token;</span></span>
 <span id="L123"><span class="lineNum">     123</span>              : </span>
-<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">           8 :         _PROTECTED_COLLATERAL_SHARE_TOKEN1 = _configData1.protectedShareToken;</span></span>
-<span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">           8 :         _COLLATERAL_SHARE_TOKEN1 = _configData1.silo;</span></span>
-<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">           8 :         _DEBT_SHARE_TOKEN1 = _configData1.debtShareToken;</span></span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaUNC">           0 :         _PROTECTED_COLLATERAL_SHARE_TOKEN1 = _configData1.protectedShareToken;</span></span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaUNC">           0 :         _COLLATERAL_SHARE_TOKEN1 = _configData1.silo;</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaUNC">           0 :         _DEBT_SHARE_TOKEN1 = _configData1.debtShareToken;</span></span>
 <span id="L127"><span class="lineNum">     127</span>              : </span>
-<span id="L128"><span class="lineNum">     128</span> <span class="tlaGNC">           8 :         _SOLVENCY_ORACLE1 = _configData1.solvencyOracle;</span></span>
-<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">           8 :         _MAX_LTV_ORACLE1 = _configData1.maxLtvOracle;</span></span>
+<span id="L128"><span class="lineNum">     128</span> <span class="tlaUNC">           0 :         _SOLVENCY_ORACLE1 = _configData1.solvencyOracle;</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaUNC">           0 :         _MAX_LTV_ORACLE1 = _configData1.maxLtvOracle;</span></span>
 <span id="L130"><span class="lineNum">     130</span>              : </span>
-<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">           8 :         _INTEREST_RATE_MODEL1 = _configData1.interestRateModel;</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaUNC">           0 :         _INTEREST_RATE_MODEL1 = _configData1.interestRateModel;</span></span>
 <span id="L132"><span class="lineNum">     132</span>              : </span>
-<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">           8 :         _MAX_LTV1 = _configData1.maxLtv;</span></span>
-<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">           8 :         _LT1 = _configData1.lt;</span></span>
-<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">           8 :         _LIQUIDATION_TARGET_LTV1 = _configData1.liquidationTargetLtv;</span></span>
-<span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">           8 :         _LIQUIDATION_FEE1 = _configData1.liquidationFee;</span></span>
-<span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">           8 :         _FLASHLOAN_FEE1 = _configData1.flashloanFee;</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaUNC">           0 :         _MAX_LTV1 = _configData1.maxLtv;</span></span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaUNC">           0 :         _LT1 = _configData1.lt;</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaUNC">           0 :         _LIQUIDATION_TARGET_LTV1 = _configData1.liquidationTargetLtv;</span></span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaUNC">           0 :         _LIQUIDATION_FEE1 = _configData1.liquidationFee;</span></span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaUNC">           0 :         _FLASHLOAN_FEE1 = _configData1.flashloanFee;</span></span>
 <span id="L138"><span class="lineNum">     138</span>              : </span>
-<span id="L139"><span class="lineNum">     139</span> <span class="tlaGNC">           8 :         _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote;</span></span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaUNC">           0 :         _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote;</span></span>
 <span id="L140"><span class="lineNum">     140</span>              :     }</span>
 <span id="L141"><span class="lineNum">     141</span>              : </span>
 <span id="L142"><span class="lineNum">     142</span>              :     /// @inheritdoc ISiloConfig</span>
-<span id="L143"><span class="lineNum">     143</span> <span class="tlaUNC tlaBgUNC">           0 :     function setThisSiloAsCollateralSilo(address) external virtual returns (bool) {</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaUNC">           0 :     function setThisSiloAsCollateralSilo(address) external virtual returns (bool) {</span></span>
 <span id="L144"><span class="lineNum">     144</span> <span class="tlaUNC">           0 :         revert Deprecated();</span></span>
 <span id="L145"><span class="lineNum">     145</span>              :     }</span>
 <span id="L146"><span class="lineNum">     146</span>              : </span>
