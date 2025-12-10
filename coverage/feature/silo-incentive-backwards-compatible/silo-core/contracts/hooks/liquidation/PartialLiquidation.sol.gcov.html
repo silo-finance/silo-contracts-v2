@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">54</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">54</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 18:53:54</td>
+            <td class="headerValue">2025-12-10 19:29:52</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">6</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">6</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -98,7 +98,7 @@
 <span id="L36"><span class="lineNum">      36</span>              :     }</span>
 <span id="L37"><span class="lineNum">      37</span>              : </span>
 <span id="L38"><span class="lineNum">      38</span>              :     /// @inheritdoc IPartialLiquidation</span>
-<span id="L39"><span class="lineNum">      39</span> <span class="tlaUNC tlaBgUNC">           0 :     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC tlaBgGNC">       35215 :     function liquidationCall( // solhint-disable-line function-max-lines, code-complexity</span></span>
 <span id="L40"><span class="lineNum">      40</span>              :         address _collateralAsset,</span>
 <span id="L41"><span class="lineNum">      41</span>              :         address _debtAsset,</span>
 <span id="L42"><span class="lineNum">      42</span>              :         address _borrower,</span>
@@ -110,21 +110,21 @@
 <span id="L48"><span class="lineNum">      48</span>              :         nonReentrant</span>
 <span id="L49"><span class="lineNum">      49</span>              :         returns (uint256 withdrawCollateral, uint256 repayDebtAssets)</span>
 <span id="L50"><span class="lineNum">      50</span>              :     {</span>
-<span id="L51"><span class="lineNum">      51</span> <span class="tlaUNC">           0 :         ISiloConfig siloConfigCached = siloConfig;</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">       35213 :         ISiloConfig siloConfigCached = siloConfig;</span></span>
 <span id="L52"><span class="lineNum">      52</span>              : </span>
-<span id="L53"><span class="lineNum">      53</span> <span class="tlaUNC">           0 :         require(address(siloConfigCached) != address(0), EmptySiloConfig());</span></span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaUNC">           0 :         require(_maxDebtToCover != 0, NoDebtToCover());</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">       35213 :         require(address(siloConfigCached) != address(0), EmptySiloConfig());</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">       35213 :         require(_maxDebtToCover != 0, NoDebtToCover());</span></span>
 <span id="L55"><span class="lineNum">      55</span>              : </span>
-<span id="L56"><span class="lineNum">      56</span> <span class="tlaUNC">           0 :         siloConfigCached.turnOnReentrancyProtection();</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">       35212 :         siloConfigCached.turnOnReentrancyProtection();</span></span>
 <span id="L57"><span class="lineNum">      57</span>              : </span>
-<span id="L58"><span class="lineNum">      58</span> <span class="tlaUNC">           0 :         (</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">       35197 :         (</span></span>
 <span id="L59"><span class="lineNum">      59</span>              :             ISiloConfig.ConfigData memory collateralConfig,</span>
 <span id="L60"><span class="lineNum">      60</span>              :             ISiloConfig.ConfigData memory debtConfig</span>
-<span id="L61"><span class="lineNum">      61</span> <span class="tlaUNC">           0 :         ) = _fetchConfigs(siloConfigCached, _collateralAsset, _debtAsset, _borrower);</span></span>
+<span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC">       35197 :         ) = _fetchConfigs(siloConfigCached, _collateralAsset, _debtAsset, _borrower);</span></span>
 <span id="L62"><span class="lineNum">      62</span>              : </span>
-<span id="L63"><span class="lineNum">      63</span> <span class="tlaUNC">           0 :         LiquidationCallParams memory params;</span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">       35193 :         LiquidationCallParams memory params;</span></span>
 <span id="L64"><span class="lineNum">      64</span>              : </span>
-<span id="L65"><span class="lineNum">      65</span> <span class="tlaUNC">           0 :         (</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">       35193 :         (</span></span>
 <span id="L66"><span class="lineNum">      66</span>              :             params.withdrawAssetsFromCollateral, params.withdrawAssetsFromProtected, repayDebtAssets, params.customError</span>
 <span id="L67"><span class="lineNum">      67</span>              :         ) = PartialLiquidationExecLib.getExactLiquidationAmounts(</span>
 <span id="L68"><span class="lineNum">      68</span>              :             collateralConfig,</span>
@@ -134,17 +134,17 @@
 <span id="L72"><span class="lineNum">      72</span>              :             collateralConfig.liquidationFee</span>
 <span id="L73"><span class="lineNum">      73</span>              :         );</span>
 <span id="L74"><span class="lineNum">      74</span>              : </span>
-<span id="L75"><span class="lineNum">      75</span> <span class="tlaUNC">           0 :         RevertLib.revertIfError(params.customError);</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">       35193 :         RevertLib.revertIfError(params.customError);</span></span>
 <span id="L76"><span class="lineNum">      76</span>              : </span>
 <span id="L77"><span class="lineNum">      77</span>              :         // we do not allow dust so full liquidation is required</span>
-<span id="L78"><span class="lineNum">      78</span> <span class="tlaUNC">           0 :         require(repayDebtAssets &lt;= _maxDebtToCover, FullLiquidationRequired());</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">       35191 :         require(repayDebtAssets &lt;= _maxDebtToCover, FullLiquidationRequired());</span></span>
 <span id="L79"><span class="lineNum">      79</span>              : </span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaUNC">           0 :         IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);</span></span>
-<span id="L81"><span class="lineNum">      81</span> <span class="tlaUNC">           0 :         IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">       27190 :         IERC20(debtConfig.token).safeTransferFrom(msg.sender, address(this), repayDebtAssets);</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">       27190 :         IERC20(debtConfig.token).safeIncreaseAllowance(debtConfig.silo, repayDebtAssets);</span></span>
 <span id="L82"><span class="lineNum">      82</span>              : </span>
-<span id="L83"><span class="lineNum">      83</span> <span class="tlaUNC">           0 :         address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);</span></span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">       27190 :         address shareTokenReceiver = _receiveSToken ? msg.sender : address(this);</span></span>
 <span id="L84"><span class="lineNum">      84</span>              : </span>
-<span id="L85"><span class="lineNum">      85</span> <span class="tlaUNC">           0 :         params.collateralShares = _callShareTokenForwardTransferNoChecks(</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">       27190 :         params.collateralShares = _callShareTokenForwardTransferNoChecks(</span></span>
 <span id="L86"><span class="lineNum">      86</span>              :             collateralConfig.silo,</span>
 <span id="L87"><span class="lineNum">      87</span>              :             _borrower,</span>
 <span id="L88"><span class="lineNum">      88</span>              :             shareTokenReceiver,</span>
@@ -153,7 +153,7 @@
 <span id="L91"><span class="lineNum">      91</span>              :             ISilo.AssetType.Collateral</span>
 <span id="L92"><span class="lineNum">      92</span>              :         );</span>
 <span id="L93"><span class="lineNum">      93</span>              : </span>
-<span id="L94"><span class="lineNum">      94</span> <span class="tlaUNC">           0 :         params.protectedShares = _callShareTokenForwardTransferNoChecks(</span></span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">       27190 :         params.protectedShares = _callShareTokenForwardTransferNoChecks(</span></span>
 <span id="L95"><span class="lineNum">      95</span>              :             collateralConfig.silo,</span>
 <span id="L96"><span class="lineNum">      96</span>              :             _borrower,</span>
 <span id="L97"><span class="lineNum">      97</span>              :             shareTokenReceiver,</span>
@@ -162,26 +162,26 @@
 <span id="L100"><span class="lineNum">     100</span>              :             ISilo.AssetType.Protected</span>
 <span id="L101"><span class="lineNum">     101</span>              :         );</span>
 <span id="L102"><span class="lineNum">     102</span>              : </span>
-<span id="L103"><span class="lineNum">     103</span> <span class="tlaUNC">           0 :         siloConfigCached.turnOffReentrancyProtection();</span></span>
+<span id="L103"><span class="lineNum">     103</span> <span class="tlaGNC">       27190 :         siloConfigCached.turnOffReentrancyProtection();</span></span>
 <span id="L104"><span class="lineNum">     104</span>              : </span>
-<span id="L105"><span class="lineNum">     105</span> <span class="tlaUNC">           0 :         ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);</span></span>
+<span id="L105"><span class="lineNum">     105</span> <span class="tlaGNC">       27190 :         ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);</span></span>
 <span id="L106"><span class="lineNum">     106</span>              : </span>
 <span id="L107"><span class="lineNum">     107</span>              :         // without collateral this is not longer liquidation, it's repay</span>
-<span id="L108"><span class="lineNum">     108</span> <span class="tlaUNC">           0 :         require(params.collateralShares != 0 || params.protectedShares != 0, NoCollateralToLiquidate());</span></span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">       27189 :         require(params.collateralShares != 0 || params.protectedShares != 0, NoCollateralToLiquidate());</span></span>
 <span id="L109"><span class="lineNum">     109</span>              : </span>
-<span id="L110"><span class="lineNum">     110</span> <span class="tlaUNC">           0 :         if (_receiveSToken) {</span></span>
-<span id="L111"><span class="lineNum">     111</span> <span class="tlaUNC">           0 :             if (params.collateralShares != 0) {</span></span>
-<span id="L112"><span class="lineNum">     112</span> <span class="tlaUNC">           0 :                 withdrawCollateral = ISilo(collateralConfig.silo).previewRedeem(</span></span>
+<span id="L110"><span class="lineNum">     110</span> <span class="tlaGNC">       12381 :         if (_receiveSToken) {</span></span>
+<span id="L111"><span class="lineNum">     111</span> <span class="tlaGNC">       12381 :             if (params.collateralShares != 0) {</span></span>
+<span id="L112"><span class="lineNum">     112</span> <span class="tlaGNC">       11580 :                 withdrawCollateral = ISilo(collateralConfig.silo).previewRedeem(</span></span>
 <span id="L113"><span class="lineNum">     113</span>              :                     params.collateralShares,</span>
 <span id="L114"><span class="lineNum">     114</span>              :                     ISilo.CollateralType.Collateral</span>
 <span id="L115"><span class="lineNum">     115</span>              :                 );</span>
 <span id="L116"><span class="lineNum">     116</span>              :             }</span>
 <span id="L117"><span class="lineNum">     117</span>              : </span>
-<span id="L118"><span class="lineNum">     118</span> <span class="tlaUNC">           0 :             if (params.protectedShares != 0) {</span></span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">       12381 :             if (params.protectedShares != 0) {</span></span>
 <span id="L119"><span class="lineNum">     119</span>              :                 unchecked {</span>
 <span id="L120"><span class="lineNum">     120</span>              :                     // protected and collateral values were split from total collateral to withdraw,</span>
 <span id="L121"><span class="lineNum">     121</span>              :                     // so we will not overflow when we sum them back, especially that on redeem, we rounding down</span>
-<span id="L122"><span class="lineNum">     122</span> <span class="tlaUNC">           0 :                     withdrawCollateral += ISilo(collateralConfig.silo).previewRedeem(</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">         801 :                     withdrawCollateral += ISilo(collateralConfig.silo).previewRedeem(</span></span>
 <span id="L123"><span class="lineNum">     123</span>              :                         params.protectedShares,</span>
 <span id="L124"><span class="lineNum">     124</span>              :                         ISilo.CollateralType.Protected</span>
 <span id="L125"><span class="lineNum">     125</span>              :                     );</span>
@@ -194,7 +194,7 @@
 <span id="L132"><span class="lineNum">     132</span>              :             // if share token offset is more than 0, positive number of shares can generate 0 assets</span>
 <span id="L133"><span class="lineNum">     133</span>              :             // so there is a need to check assets before we withdraw collateral/protected</span>
 <span id="L134"><span class="lineNum">     134</span>              : </span>
-<span id="L135"><span class="lineNum">     135</span> <span class="tlaUNC">           0 :             withdrawCollateral = _tryRedeem({</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">       14805 :             withdrawCollateral = _tryRedeem({</span></span>
 <span id="L136"><span class="lineNum">     136</span>              :                 _silo: collateralConfig.silo,</span>
 <span id="L137"><span class="lineNum">     137</span>              :                 _shareToken: collateralConfig.collateralShareToken,</span>
 <span id="L138"><span class="lineNum">     138</span>              :                 _shares: params.collateralShares,</span>
@@ -204,7 +204,7 @@
 <span id="L142"><span class="lineNum">     142</span>              :             unchecked {</span>
 <span id="L143"><span class="lineNum">     143</span>              :                 // protected and collateral values were split from total collateral to withdraw,</span>
 <span id="L144"><span class="lineNum">     144</span>              :                 // so we will not overflow when we sum them back, especially that on redeem, we rounding down</span>
-<span id="L145"><span class="lineNum">     145</span> <span class="tlaUNC">           0 :                 withdrawCollateral += _tryRedeem({</span></span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">       14803 :                 withdrawCollateral += _tryRedeem({</span></span>
 <span id="L146"><span class="lineNum">     146</span>              :                     _silo: collateralConfig.silo,</span>
 <span id="L147"><span class="lineNum">     147</span>              :                     _shareToken: collateralConfig.protectedShareToken,</span>
 <span id="L148"><span class="lineNum">     148</span>              :                     _shares: params.protectedShares,</span>
@@ -213,22 +213,22 @@
 <span id="L151"><span class="lineNum">     151</span>              :             }</span>
 <span id="L152"><span class="lineNum">     152</span>              :         }</span>
 <span id="L153"><span class="lineNum">     153</span>              : </span>
-<span id="L154"><span class="lineNum">     154</span> <span class="tlaUNC">           0 :         emit LiquidationCall(</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">       27184 :         emit LiquidationCall(</span></span>
 <span id="L155"><span class="lineNum">     155</span>              :             msg.sender, debtConfig.silo, _borrower, repayDebtAssets, withdrawCollateral, _receiveSToken</span>
 <span id="L156"><span class="lineNum">     156</span>              :         );</span>
 <span id="L157"><span class="lineNum">     157</span>              :     }</span>
 <span id="L158"><span class="lineNum">     158</span>              : </span>
 <span id="L159"><span class="lineNum">     159</span>              :     /// @inheritdoc IPartialLiquidation</span>
-<span id="L160"><span class="lineNum">     160</span> <span class="tlaUNC">           0 :     function maxLiquidation(address _borrower)</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">       76048 :     function maxLiquidation(address _borrower)</span></span>
 <span id="L161"><span class="lineNum">     161</span>              :         external</span>
 <span id="L162"><span class="lineNum">     162</span>              :         view</span>
 <span id="L163"><span class="lineNum">     163</span>              :         virtual</span>
 <span id="L164"><span class="lineNum">     164</span>              :         returns (uint256 collateralToLiquidate, uint256 debtToRepay, bool sTokenRequired)</span>
 <span id="L165"><span class="lineNum">     165</span>              :     {</span>
-<span id="L166"><span class="lineNum">     166</span> <span class="tlaUNC">           0 :         return PartialLiquidationExecLib.maxLiquidation(siloConfig, _borrower);</span></span>
+<span id="L166"><span class="lineNum">     166</span> <span class="tlaGNC">       76048 :         return PartialLiquidationExecLib.maxLiquidation(siloConfig, _borrower);</span></span>
 <span id="L167"><span class="lineNum">     167</span>              :     }</span>
 <span id="L168"><span class="lineNum">     168</span>              : </span>
-<span id="L169"><span class="lineNum">     169</span> <span class="tlaUNC">           0 :     function _fetchConfigs(</span></span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC">       35197 :     function _fetchConfigs(</span></span>
 <span id="L170"><span class="lineNum">     170</span>              :         ISiloConfig _siloConfigCached,</span>
 <span id="L171"><span class="lineNum">     171</span>              :         address _collateralAsset,</span>
 <span id="L172"><span class="lineNum">     172</span>              :         address _debtAsset,</span>
@@ -241,22 +241,22 @@
 <span id="L179"><span class="lineNum">     179</span>              :             ISiloConfig.ConfigData memory debtConfig</span>
 <span id="L180"><span class="lineNum">     180</span>              :         )</span>
 <span id="L181"><span class="lineNum">     181</span>              :     {</span>
-<span id="L182"><span class="lineNum">     182</span> <span class="tlaUNC">           0 :         (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);</span></span>
+<span id="L182"><span class="lineNum">     182</span> <span class="tlaGNC">       35197 :         (collateralConfig, debtConfig) = _siloConfigCached.getConfigsForSolvency(_borrower);</span></span>
 <span id="L183"><span class="lineNum">     183</span>              : </span>
-<span id="L184"><span class="lineNum">     184</span> <span class="tlaUNC">           0 :         require(debtConfig.silo != address(0), UserIsSolvent());</span></span>
-<span id="L185"><span class="lineNum">     185</span> <span class="tlaUNC">           0 :         require(_collateralAsset == collateralConfig.token, UnexpectedCollateralToken());</span></span>
-<span id="L186"><span class="lineNum">     186</span> <span class="tlaUNC">           0 :         require(_debtAsset == debtConfig.token, UnexpectedDebtToken());</span></span>
+<span id="L184"><span class="lineNum">     184</span> <span class="tlaGNC">       35197 :         require(debtConfig.silo != address(0), UserIsSolvent());</span></span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaGNC">       35196 :         require(_collateralAsset == collateralConfig.token, UnexpectedCollateralToken());</span></span>
+<span id="L186"><span class="lineNum">     186</span> <span class="tlaGNC">       35194 :         require(_debtAsset == debtConfig.token, UnexpectedDebtToken());</span></span>
 <span id="L187"><span class="lineNum">     187</span>              : </span>
-<span id="L188"><span class="lineNum">     188</span> <span class="tlaUNC">           0 :         ISilo(debtConfig.silo).accrueInterest();</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">       35193 :         ISilo(debtConfig.silo).accrueInterest();</span></span>
 <span id="L189"><span class="lineNum">     189</span>              : </span>
-<span id="L190"><span class="lineNum">     190</span> <span class="tlaUNC">           0 :         if (collateralConfig.silo != debtConfig.silo) {</span></span>
-<span id="L191"><span class="lineNum">     191</span> <span class="tlaUNC">           0 :             ISilo(collateralConfig.silo).accrueInterest();</span></span>
-<span id="L192"><span class="lineNum">     192</span> <span class="tlaUNC">           0 :             collateralConfig.callSolvencyOracleBeforeQuote();</span></span>
-<span id="L193"><span class="lineNum">     193</span> <span class="tlaUNC">           0 :             debtConfig.callSolvencyOracleBeforeQuote();</span></span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaGNC">       35193 :         if (collateralConfig.silo != debtConfig.silo) {</span></span>
+<span id="L191"><span class="lineNum">     191</span> <span class="tlaGNC">       35193 :             ISilo(collateralConfig.silo).accrueInterest();</span></span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaGNC">       35193 :             collateralConfig.callSolvencyOracleBeforeQuote();</span></span>
+<span id="L193"><span class="lineNum">     193</span> <span class="tlaGNC">       35193 :             debtConfig.callSolvencyOracleBeforeQuote();</span></span>
 <span id="L194"><span class="lineNum">     194</span>              :         }</span>
 <span id="L195"><span class="lineNum">     195</span>              :     }</span>
 <span id="L196"><span class="lineNum">     196</span>              : </span>
-<span id="L197"><span class="lineNum">     197</span> <span class="tlaUNC">           0 :     function _callShareTokenForwardTransferNoChecks(</span></span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaGNC">       54380 :     function _callShareTokenForwardTransferNoChecks(</span></span>
 <span id="L198"><span class="lineNum">     198</span>              :         address _silo,</span>
 <span id="L199"><span class="lineNum">     199</span>              :         address _borrower,</span>
 <span id="L200"><span class="lineNum">     200</span>              :         address _receiver,</span>
@@ -264,9 +264,9 @@
 <span id="L202"><span class="lineNum">     202</span>              :         address _shareToken,</span>
 <span id="L203"><span class="lineNum">     203</span>              :         ISilo.AssetType _assetType</span>
 <span id="L204"><span class="lineNum">     204</span>              :     ) internal virtual returns (uint256 shares) {</span>
-<span id="L205"><span class="lineNum">     205</span> <span class="tlaUNC">           0 :         if (_withdrawAssets == 0) return 0;</span></span>
+<span id="L205"><span class="lineNum">     205</span> <span class="tlaGNC">       54380 :         if (_withdrawAssets == 0) return 0;</span></span>
 <span id="L206"><span class="lineNum">     206</span>              : </span>
-<span id="L207"><span class="lineNum">     207</span> <span class="tlaUNC">           0 :         shares = SiloMathLib.convertToShares(</span></span>
+<span id="L207"><span class="lineNum">     207</span> <span class="tlaGNC">       27189 :         shares = SiloMathLib.convertToShares(</span></span>
 <span id="L208"><span class="lineNum">     208</span>              :             _withdrawAssets,</span>
 <span id="L209"><span class="lineNum">     209</span>              :             ISilo(_silo).getTotalAssetsStorage(_assetType),</span>
 <span id="L210"><span class="lineNum">     210</span>              :             IShareToken(_shareToken).totalSupply(),</span>
@@ -274,38 +274,38 @@
 <span id="L212"><span class="lineNum">     212</span>              :             ISilo.AssetType(_assetType)</span>
 <span id="L213"><span class="lineNum">     213</span>              :         );</span>
 <span id="L214"><span class="lineNum">     214</span>              : </span>
-<span id="L215"><span class="lineNum">     215</span> <span class="tlaUNC">           0 :         if (shares == 0) return 0;</span></span>
+<span id="L215"><span class="lineNum">     215</span> <span class="tlaGNC">       27189 :         if (shares == 0) return 0;</span></span>
 <span id="L216"><span class="lineNum">     216</span>              : </span>
-<span id="L217"><span class="lineNum">     217</span> <span class="tlaUNC">           0 :         IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, _receiver, shares);</span></span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaGNC">       27189 :         IShareToken(_shareToken).forwardTransferFromNoChecks(_borrower, _receiver, shares);</span></span>
 <span id="L218"><span class="lineNum">     218</span>              :     }</span>
 <span id="L219"><span class="lineNum">     219</span>              : </span>
-<span id="L220"><span class="lineNum">     220</span> <span class="tlaUNC">           0 :     function _tryRedeem(</span></span>
+<span id="L220"><span class="lineNum">     220</span> <span class="tlaGNC">       29608 :     function _tryRedeem(</span></span>
 <span id="L221"><span class="lineNum">     221</span>              :         address _silo,</span>
 <span id="L222"><span class="lineNum">     222</span>              :         address _shareToken,</span>
 <span id="L223"><span class="lineNum">     223</span>              :         uint256 _shares,</span>
 <span id="L224"><span class="lineNum">     224</span>              :         ISilo.CollateralType _collateralType</span>
 <span id="L225"><span class="lineNum">     225</span>              :     ) internal returns (uint256 withdrawCollateral) {</span>
-<span id="L226"><span class="lineNum">     226</span> <span class="tlaUNC">           0 :         if (_shares == 0) return 0;</span></span>
+<span id="L226"><span class="lineNum">     226</span> <span class="tlaGNC">       29608 :         if (_shares == 0) return 0;</span></span>
 <span id="L227"><span class="lineNum">     227</span>              : </span>
-<span id="L228"><span class="lineNum">     228</span> <span class="tlaUNC">           0 :         try ISilo(_silo).redeem({</span></span>
+<span id="L228"><span class="lineNum">     228</span> <span class="tlaGNC">       14808 :         try ISilo(_silo).redeem({</span></span>
 <span id="L229"><span class="lineNum">     229</span>              :             _shares: _shares,</span>
 <span id="L230"><span class="lineNum">     230</span>              :             _receiver: msg.sender,</span>
 <span id="L231"><span class="lineNum">     231</span>              :             _owner: address(this),</span>
 <span id="L232"><span class="lineNum">     232</span>              :             _collateralType: _collateralType</span>
 <span id="L233"><span class="lineNum">     233</span>              :         }) returns (uint256 assets) {</span>
-<span id="L234"><span class="lineNum">     234</span> <span class="tlaUNC">           0 :             withdrawCollateral = assets;</span></span>
-<span id="L235"><span class="lineNum">     235</span> <span class="tlaUNC">           0 :         } catch (bytes memory e) {</span></span>
-<span id="L236"><span class="lineNum">     236</span> <span class="tlaUNC">           0 :             if (_isToAssetsConvertionError(e)) {</span></span>
-<span id="L237"><span class="lineNum">     237</span> <span class="tlaUNC">           0 :                 IERC20(_shareToken).transfer(msg.sender, _shares);</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">       14804 :             withdrawCollateral = assets;</span></span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">           4 :         } catch (bytes memory e) {</span></span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">           4 :             if (_isToAssetsConvertionError(e)) {</span></span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC">           2 :                 IERC20(_shareToken).transfer(msg.sender, _shares);</span></span>
 <span id="L238"><span class="lineNum">     238</span>              :             } else {</span>
-<span id="L239"><span class="lineNum">     239</span> <span class="tlaUNC">           0 :                 RevertLib.revertBytes(e, string(&quot;&quot;));</span></span>
+<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">           2 :                 RevertLib.revertBytes(e, string(&quot;&quot;));</span></span>
 <span id="L240"><span class="lineNum">     240</span>              :             }</span>
 <span id="L241"><span class="lineNum">     241</span>              :         }</span>
 <span id="L242"><span class="lineNum">     242</span>              :     }</span>
 <span id="L243"><span class="lineNum">     243</span>              : </span>
 <span id="L244"><span class="lineNum">     244</span>              :     /// @dev this method detect if error is caused by unable to convert shares to assets eg 999 shares =&gt; 0 assets</span>
-<span id="L245"><span class="lineNum">     245</span> <span class="tlaUNC">           0 :     function _isToAssetsConvertionError(bytes memory _error) internal pure returns (bool) {</span></span>
-<span id="L246"><span class="lineNum">     246</span> <span class="tlaUNC">           0 :         return bytes4(_error) == ISilo.ReturnZeroAssets.selector;</span></span>
+<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">           6 :     function _isToAssetsConvertionError(bytes memory _error) internal pure returns (bool) {</span></span>
+<span id="L246"><span class="lineNum">     246</span> <span class="tlaGNC">           6 :         return bytes4(_error) == ISilo.ReturnZeroAssets.selector;</span></span>
 <span id="L247"><span class="lineNum">     247</span>              :     }</span>
 <span id="L248"><span class="lineNum">     248</span>              : }</span>
         </pre>

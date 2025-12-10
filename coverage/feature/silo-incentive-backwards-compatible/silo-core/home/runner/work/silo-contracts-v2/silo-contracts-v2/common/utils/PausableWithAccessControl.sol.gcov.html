@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">6</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">6</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 18:53:54</td>
+            <td class="headerValue">2025-12-10 19:29:52</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">3</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">3</td>
           </tr>
                   <tr><td><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -72,16 +72,16 @@
 <span id="L10"><span class="lineNum">      10</span>              :     bytes32 public constant PAUSER_ADMIN_ROLE = keccak256(&quot;PAUSER_ADMIN_ROLE&quot;);</span>
 <span id="L11"><span class="lineNum">      11</span>              :     bytes32 public constant OWNER_ROLE = DEFAULT_ADMIN_ROLE;</span>
 <span id="L12"><span class="lineNum">      12</span>              : </span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaUNC tlaBgUNC">           0 :     constructor() {</span></span>
-<span id="L14"><span class="lineNum">      14</span> <span class="tlaUNC">           0 :         _setRoleAdmin(PAUSER_ROLE, PAUSER_ADMIN_ROLE);</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC tlaBgGNC">          42 :     constructor() {</span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">          42 :         _setRoleAdmin(PAUSER_ROLE, PAUSER_ADMIN_ROLE);</span></span>
 <span id="L15"><span class="lineNum">      15</span>              :     }</span>
 <span id="L16"><span class="lineNum">      16</span>              : </span>
-<span id="L17"><span class="lineNum">      17</span> <span class="tlaUNC">           0 :     function pause() external onlyRole(PAUSER_ROLE) {</span></span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaUNC">           0 :         _pause();</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">          60 :     function pause() external onlyRole(PAUSER_ROLE) {</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">           6 :         _pause();</span></span>
 <span id="L19"><span class="lineNum">      19</span>              :     }</span>
 <span id="L20"><span class="lineNum">      20</span>              : </span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 :     function unpause() external onlyRole(PAUSER_ROLE) {</span></span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC">           0 :         _unpause();</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">          55 :     function unpause() external onlyRole(PAUSER_ROLE) {</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">           1 :         _unpause();</span></span>
 <span id="L23"><span class="lineNum">      23</span>              :     }</span>
 <span id="L24"><span class="lineNum">      24</span>              : }</span>
         </pre>

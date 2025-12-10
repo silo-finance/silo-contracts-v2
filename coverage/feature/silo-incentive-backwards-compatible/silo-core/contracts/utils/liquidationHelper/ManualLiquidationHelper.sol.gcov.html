@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntryMed">77.1&nbsp;%</td>
             <td class="headerCovTableEntry">35</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">27</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 18:53:54</td>
+            <td class="headerValue">2025-12-10 19:29:52</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
             <td class="headerCovTableEntry">6</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">4</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -93,18 +93,18 @@
 <span id="L31"><span class="lineNum">      31</span>              : </span>
 <span id="L32"><span class="lineNum">      32</span>              :     /// @param _nativeToken address of wrapped native blockchain token eg. WETH on Ethereum</span>
 <span id="L33"><span class="lineNum">      33</span>              :     /// @param _tokensReceiver all leftover tokens (debt and collateral) will be send to this address after liquidation</span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC tlaBgUNC">           0 :     constructor (</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC tlaBgGNC">        1336 :     constructor (</span></span>
 <span id="L35"><span class="lineNum">      35</span>              :         address _nativeToken,</span>
 <span id="L36"><span class="lineNum">      36</span>              :         address payable _tokensReceiver</span>
 <span id="L37"><span class="lineNum">      37</span>              :     ) {</span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaUNC">           0 :         NATIVE_TOKEN = _nativeToken;</span></span>
-<span id="L39"><span class="lineNum">      39</span> <span class="tlaUNC">           0 :         TOKENS_RECEIVER = _tokensReceiver;</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">        1336 :         NATIVE_TOKEN = _nativeToken;</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">        1336 :         TOKENS_RECEIVER = _tokensReceiver;</span></span>
 <span id="L40"><span class="lineNum">      40</span>              :     }</span>
 <span id="L41"><span class="lineNum">      41</span>              : </span>
 <span id="L42"><span class="lineNum">      42</span>              :     receive() external payable {}</span>
 <span id="L43"><span class="lineNum">      43</span>              : </span>
 <span id="L44"><span class="lineNum">      44</span>              :     /// @dev open method to rescue tokens, tokens will be transferred to `TOKENS_RECEIVER`</span>
-<span id="L45"><span class="lineNum">      45</span> <span class="tlaUNC">           0 :     function rescueTokens(IERC20 _token) external virtual {</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaUNC tlaBgUNC">           0 :     function rescueTokens(IERC20 _token) external virtual {</span></span>
 <span id="L46"><span class="lineNum">      46</span> <span class="tlaUNC">           0 :         _rescueTokens(TOKENS_RECEIVER, _token);</span></span>
 <span id="L47"><span class="lineNum">      47</span>              :     }</span>
 <span id="L48"><span class="lineNum">      48</span>              : </span>
@@ -113,8 +113,8 @@
 <span id="L51"><span class="lineNum">      51</span>              :     /// liquidated collateral will be transfer to `TOKENS_RECEIVER`. Bad Debt is supported.</span>
 <span id="L52"><span class="lineNum">      52</span>              :     /// @param _siloWithDebt silo address where user has debt</span>
 <span id="L53"><span class="lineNum">      53</span>              :     /// @param _borrower user to liquidate</span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaUNC">           0 :     function executeLiquidation(ISilo _siloWithDebt, address _borrower) external virtual {</span></span>
-<span id="L55"><span class="lineNum">      55</span> <span class="tlaUNC">           0 :         _executeLiquidation(_siloWithDebt, _borrower, type(uint256).max, false, TOKENS_RECEIVER);</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC tlaBgGNC">         800 :     function executeLiquidation(ISilo _siloWithDebt, address _borrower) external virtual {</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">         800 :         _executeLiquidation(_siloWithDebt, _borrower, type(uint256).max, false, TOKENS_RECEIVER);</span></span>
 <span id="L56"><span class="lineNum">      56</span>              :     }</span>
 <span id="L57"><span class="lineNum">      57</span>              : </span>
 <span id="L58"><span class="lineNum">      58</span>              :     /// @dev entry point for manual liquidation</span>
@@ -124,7 +124,7 @@
 <span id="L62"><span class="lineNum">      62</span>              :     /// @param _borrower user to liquidate</span>
 <span id="L63"><span class="lineNum">      63</span>              :     /// @param _maxDebtToCover maximum amount of debt you want to repay</span>
 <span id="L64"><span class="lineNum">      64</span>              :     /// @param _receiveSToken if TRUE, collateral will be send as sToken</span>
-<span id="L65"><span class="lineNum">      65</span> <span class="tlaUNC">           0 :     function executeLiquidation(ISilo _siloWithDebt, address _borrower, uint256 _maxDebtToCover, bool _receiveSToken)</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaUNC tlaBgUNC">           0 :     function executeLiquidation(ISilo _siloWithDebt, address _borrower, uint256 _maxDebtToCover, bool _receiveSToken)</span></span>
 <span id="L66"><span class="lineNum">      66</span>              :         external</span>
 <span id="L67"><span class="lineNum">      67</span>              :         virtual</span>
 <span id="L68"><span class="lineNum">      68</span>              :     {</span>
@@ -139,7 +139,7 @@
 <span id="L77"><span class="lineNum">      77</span>              :     /// @param _maxDebtToCover maximum amount of debt you want to repay</span>
 <span id="L78"><span class="lineNum">      78</span>              :     /// @param _receiveSToken if TRUE, collateral will be send as sToken</span>
 <span id="L79"><span class="lineNum">      79</span>              :     /// @param _receiver of liquidated collateral</span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaUNC">           0 :     function executeLiquidation(</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC tlaBgGNC">        1600 :     function executeLiquidation(</span></span>
 <span id="L81"><span class="lineNum">      81</span>              :         ISilo _siloWithDebt,</span>
 <span id="L82"><span class="lineNum">      82</span>              :         address _borrower,</span>
 <span id="L83"><span class="lineNum">      83</span>              :         uint256 _maxDebtToCover,</span>
@@ -149,10 +149,10 @@
 <span id="L87"><span class="lineNum">      87</span>              :         external</span>
 <span id="L88"><span class="lineNum">      88</span>              :         virtual</span>
 <span id="L89"><span class="lineNum">      89</span>              :     {</span>
-<span id="L90"><span class="lineNum">      90</span> <span class="tlaUNC">           0 :         _executeLiquidation(_siloWithDebt, _borrower, _maxDebtToCover, _receiveSToken, _receiver);</span></span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">        1600 :         _executeLiquidation(_siloWithDebt, _borrower, _maxDebtToCover, _receiveSToken, _receiver);</span></span>
 <span id="L91"><span class="lineNum">      91</span>              :     }</span>
 <span id="L92"><span class="lineNum">      92</span>              : </span>
-<span id="L93"><span class="lineNum">      93</span> <span class="tlaUNC">           0 :     function _executeLiquidation(</span></span>
+<span id="L93"><span class="lineNum">      93</span> <span class="tlaGNC">        2400 :     function _executeLiquidation(</span></span>
 <span id="L94"><span class="lineNum">      94</span>              :         ISilo _siloWithDebt,</span>
 <span id="L95"><span class="lineNum">      95</span>              :         address _borrower,</span>
 <span id="L96"><span class="lineNum">      96</span>              :         uint256 _maxDebtToCover,</span>
@@ -162,24 +162,24 @@
 <span id="L100"><span class="lineNum">     100</span>              :         internal</span>
 <span id="L101"><span class="lineNum">     101</span>              :         virtual</span>
 <span id="L102"><span class="lineNum">     102</span>              :     {</span>
-<span id="L103"><span class="lineNum">     103</span> <span class="tlaUNC">           0 :         require(_maxDebtToCover != 0, MaxDebtToCoverZero());</span></span>
+<span id="L103"><span class="lineNum">     103</span> <span class="tlaGNC">        2400 :         require(_maxDebtToCover != 0, MaxDebtToCoverZero());</span></span>
 <span id="L104"><span class="lineNum">     104</span>              : </span>
-<span id="L105"><span class="lineNum">     105</span> <span class="tlaUNC">           0 :         (</span></span>
+<span id="L105"><span class="lineNum">     105</span> <span class="tlaGNC">        2400 :         (</span></span>
 <span id="L106"><span class="lineNum">     106</span>              :             ISiloConfig.ConfigData memory collateralConfig,</span>
 <span id="L107"><span class="lineNum">     107</span>              :             ISiloConfig.ConfigData memory debtConfig</span>
-<span id="L108"><span class="lineNum">     108</span> <span class="tlaUNC">           0 :         ) = _siloWithDebt.config().getConfigsForSolvency(_borrower);</span></span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">        2400 :         ) = _siloWithDebt.config().getConfigsForSolvency(_borrower);</span></span>
 <span id="L109"><span class="lineNum">     109</span>              : </span>
-<span id="L110"><span class="lineNum">     110</span> <span class="tlaUNC">           0 :         IPartialLiquidation liquidation = IPartialLiquidation(debtConfig.hookReceiver);</span></span>
-<span id="L111"><span class="lineNum">     111</span> <span class="tlaUNC">           0 :         IERC20 debtAsset = IERC20(debtConfig.token);</span></span>
+<span id="L110"><span class="lineNum">     110</span> <span class="tlaGNC">        2400 :         IPartialLiquidation liquidation = IPartialLiquidation(debtConfig.hookReceiver);</span></span>
+<span id="L111"><span class="lineNum">     111</span> <span class="tlaGNC">        2400 :         IERC20 debtAsset = IERC20(debtConfig.token);</span></span>
 <span id="L112"><span class="lineNum">     112</span>              : </span>
-<span id="L113"><span class="lineNum">     113</span> <span class="tlaUNC">           0 :         (, uint256 debtToRepay,) = liquidation.maxLiquidation(_borrower);</span></span>
-<span id="L114"><span class="lineNum">     114</span> <span class="tlaUNC">           0 :         require(debtToRepay != 0, UserSolvent());</span></span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">        2400 :         (, uint256 debtToRepay,) = liquidation.maxLiquidation(_borrower);</span></span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">        2400 :         require(debtToRepay != 0, UserSolvent());</span></span>
 <span id="L115"><span class="lineNum">     115</span>              : </span>
-<span id="L116"><span class="lineNum">     116</span> <span class="tlaUNC">           0 :         debtAsset.safeTransferFrom(msg.sender, address(this), debtToRepay);</span></span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">        2400 :         debtAsset.safeTransferFrom(msg.sender, address(this), debtToRepay);</span></span>
 <span id="L117"><span class="lineNum">     117</span>              : </span>
-<span id="L118"><span class="lineNum">     118</span> <span class="tlaUNC">           0 :         debtAsset.forceApprove(debtConfig.hookReceiver, debtToRepay);</span></span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">        2400 :         debtAsset.forceApprove(debtConfig.hookReceiver, debtToRepay);</span></span>
 <span id="L119"><span class="lineNum">     119</span>              : </span>
-<span id="L120"><span class="lineNum">     120</span> <span class="tlaUNC">           0 :         liquidation.liquidationCall({</span></span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">        2400 :         liquidation.liquidationCall({</span></span>
 <span id="L121"><span class="lineNum">     121</span>              :             _collateralAsset: collateralConfig.token,</span>
 <span id="L122"><span class="lineNum">     122</span>              :             _debtAsset: debtConfig.token,</span>
 <span id="L123"><span class="lineNum">     123</span>              :             _user: _borrower,</span>
@@ -187,36 +187,36 @@
 <span id="L125"><span class="lineNum">     125</span>              :             _receiveSToken: _receiveSToken</span>
 <span id="L126"><span class="lineNum">     126</span>              :         });</span>
 <span id="L127"><span class="lineNum">     127</span>              : </span>
-<span id="L128"><span class="lineNum">     128</span> <span class="tlaUNC">           0 :         debtAsset.forceApprove(debtConfig.hookReceiver, 0);</span></span>
+<span id="L128"><span class="lineNum">     128</span> <span class="tlaGNC">        2400 :         debtAsset.forceApprove(debtConfig.hookReceiver, 0);</span></span>
 <span id="L129"><span class="lineNum">     129</span>              : </span>
-<span id="L130"><span class="lineNum">     130</span> <span class="tlaUNC">           0 :         if (_receiveSToken) {</span></span>
-<span id="L131"><span class="lineNum">     131</span> <span class="tlaUNC">           0 :             _transferToken(</span></span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">         800 :         if (_receiveSToken) {</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">         800 :             _transferToken(</span></span>
 <span id="L132"><span class="lineNum">     132</span>              :                 _receiver,</span>
 <span id="L133"><span class="lineNum">     133</span>              :                 collateralConfig.protectedShareToken,</span>
 <span id="L134"><span class="lineNum">     134</span>              :                 IERC20(collateralConfig.protectedShareToken).balanceOf(address(this))</span>
 <span id="L135"><span class="lineNum">     135</span>              :             );</span>
-<span id="L136"><span class="lineNum">     136</span> <span class="tlaUNC">           0 :             _transferToken(</span></span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">         800 :             _transferToken(</span></span>
 <span id="L137"><span class="lineNum">     137</span>              :                 _receiver,</span>
 <span id="L138"><span class="lineNum">     138</span>              :                 collateralConfig.collateralShareToken,</span>
 <span id="L139"><span class="lineNum">     139</span>              :                 IERC20(collateralConfig.collateralShareToken).balanceOf(address(this))</span>
 <span id="L140"><span class="lineNum">     140</span>              :             );</span>
 <span id="L141"><span class="lineNum">     141</span>              :         } else {</span>
-<span id="L142"><span class="lineNum">     142</span> <span class="tlaUNC">           0 :             _transferToken(_receiver, collateralConfig.token, IERC20(collateralConfig.token).balanceOf(address(this)));</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">        1600 :             _transferToken(_receiver, collateralConfig.token, IERC20(collateralConfig.token).balanceOf(address(this)));</span></span>
 <span id="L143"><span class="lineNum">     143</span>              :         }</span>
 <span id="L144"><span class="lineNum">     144</span>              :     }</span>
 <span id="L145"><span class="lineNum">     145</span>              : </span>
-<span id="L146"><span class="lineNum">     146</span> <span class="tlaUNC">           0 :     function _transferToken(address payable _receiver, address _asset, uint256 _amount) internal virtual {</span></span>
-<span id="L147"><span class="lineNum">     147</span> <span class="tlaUNC">           0 :         if (_amount == 0) return;</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">        3200 :     function _transferToken(address payable _receiver, address _asset, uint256 _amount) internal virtual {</span></span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">        3200 :         if (_amount == 0) return;</span></span>
 <span id="L148"><span class="lineNum">     148</span>              : </span>
-<span id="L149"><span class="lineNum">     149</span> <span class="tlaUNC">           0 :         if (_asset == NATIVE_TOKEN) {</span></span>
-<span id="L150"><span class="lineNum">     150</span> <span class="tlaUNC">           0 :             _transferNative(_receiver, _amount);</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">        2400 :         if (_asset == NATIVE_TOKEN) {</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaUNC tlaBgUNC">           0 :             _transferNative(_receiver, _amount);</span></span>
 <span id="L151"><span class="lineNum">     151</span>              :         } else {</span>
-<span id="L152"><span class="lineNum">     152</span> <span class="tlaUNC">           0 :             IERC20(_asset).safeTransfer(_receiver, _amount);</span></span>
+<span id="L152"><span class="lineNum">     152</span> <span class="tlaGNC tlaBgGNC">        2400 :             IERC20(_asset).safeTransfer(_receiver, _amount);</span></span>
 <span id="L153"><span class="lineNum">     153</span>              :         }</span>
 <span id="L154"><span class="lineNum">     154</span>              :     }</span>
 <span id="L155"><span class="lineNum">     155</span>              : </span>
 <span id="L156"><span class="lineNum">     156</span>              :     /// @notice We assume that quoteToken is wrapped native token</span>
-<span id="L157"><span class="lineNum">     157</span> <span class="tlaUNC">           0 :     function _transferNative(address payable _receiver, uint256 _amount) internal virtual {</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaUNC tlaBgUNC">           0 :     function _transferNative(address payable _receiver, uint256 _amount) internal virtual {</span></span>
 <span id="L158"><span class="lineNum">     158</span> <span class="tlaUNC">           0 :         IWrappedNativeToken(address(NATIVE_TOKEN)).withdraw(_amount);</span></span>
 <span id="L159"><span class="lineNum">     159</span> <span class="tlaUNC">           0 :         _receiver.sendValue(_amount);</span></span>
 <span id="L160"><span class="lineNum">     160</span>              :     }</span>

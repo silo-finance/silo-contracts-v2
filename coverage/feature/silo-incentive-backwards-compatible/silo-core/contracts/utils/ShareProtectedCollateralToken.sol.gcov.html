@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">4</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">4</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 18:53:54</td>
+            <td class="headerValue">2025-12-10 19:29:52</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">2</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
           </tr>
                   <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -70,19 +70,19 @@
 <span id="L8"><span class="lineNum">       8</span>              : </span>
 <span id="L9"><span class="lineNum">       9</span>              : contract ShareProtectedCollateralToken is ShareCollateralToken, IShareTokenInitializable {</span>
 <span id="L10"><span class="lineNum">      10</span>              :     /// @inheritdoc IShareTokenInitializable</span>
-<span id="L11"><span class="lineNum">      11</span> <span class="tlaUNC tlaBgUNC">           0 :     function callOnBehalfOfShareToken(address _target, uint256 _value, ISilo.CallType _callType, bytes calldata _input)</span></span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC tlaBgGNC">          70 :     function callOnBehalfOfShareToken(address _target, uint256 _value, ISilo.CallType _callType, bytes calldata _input)</span></span>
 <span id="L12"><span class="lineNum">      12</span>              :         external</span>
 <span id="L13"><span class="lineNum">      13</span>              :         payable</span>
 <span id="L14"><span class="lineNum">      14</span>              :         virtual</span>
 <span id="L15"><span class="lineNum">      15</span>              :         onlyHookReceiver()</span>
 <span id="L16"><span class="lineNum">      16</span>              :         returns (bool success, bytes memory result)</span>
 <span id="L17"><span class="lineNum">      17</span>              :     {</span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaUNC">           0 :         (success, result) = ShareTokenLib.callOnBehalfOfShareToken(_target, _value, _callType, _input);</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">           1 :         (success, result) = ShareTokenLib.callOnBehalfOfShareToken(_target, _value, _callType, _input);</span></span>
 <span id="L19"><span class="lineNum">      19</span>              :     }</span>
 <span id="L20"><span class="lineNum">      20</span>              : </span>
 <span id="L21"><span class="lineNum">      21</span>              :     /// @inheritdoc IShareTokenInitializable</span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC">           0 :     function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual {</span></span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaUNC">           0 :         _shareTokenInitialize(_silo, _hookReceiver, _tokenType);</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">        2717 :     function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual {</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">        2717 :         _shareTokenInitialize(_silo, _hookReceiver, _tokenType);</span></span>
 <span id="L24"><span class="lineNum">      24</span>              :     }</span>
 <span id="L25"><span class="lineNum">      25</span>              : }</span>
         </pre>

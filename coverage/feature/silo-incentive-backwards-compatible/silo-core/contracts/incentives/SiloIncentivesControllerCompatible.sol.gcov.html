@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">12</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">12</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 18:53:54</td>
+            <td class="headerValue">2025-12-10 19:29:52</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">5</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">5</td>
           </tr>
                   <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -88,27 +88,27 @@
 <span id="L26"><span class="lineNum">      26</span>              :     {</span>
 <span id="L27"><span class="lineNum">      27</span>              :     }</span>
 <span id="L28"><span class="lineNum">      28</span>              : </span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaUNC tlaBgUNC">           0 :     function killGauge() external virtual onlyOwner {</span></span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaUNC">           0 :         _isKilled = true;</span></span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaUNC">           0 :         emit GaugeKilled();</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC tlaBgGNC">         319 :     function killGauge() external virtual onlyOwner {</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">         318 :         _isKilled = true;</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">         318 :         emit GaugeKilled();</span></span>
 <span id="L32"><span class="lineNum">      32</span>              :     }</span>
 <span id="L33"><span class="lineNum">      33</span>              : </span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC">           0 :     function unkillGauge() external virtual onlyOwner {</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaUNC">           0 :         _isKilled = false;</span></span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :         emit GaugeUnKilled();</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">           2 :     function unkillGauge() external virtual onlyOwner {</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">           1 :         _isKilled = false;</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">           1 :         emit GaugeUnKilled();</span></span>
 <span id="L37"><span class="lineNum">      37</span>              :     }</span>
 <span id="L38"><span class="lineNum">      38</span>              : </span>
 <span id="L39"><span class="lineNum">      39</span>              :     // solhint-disable-next-line func-name-mixedcase</span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaUNC">           0 :     function share_token() external view returns (address) {</span></span>
-<span id="L41"><span class="lineNum">      41</span> <span class="tlaUNC">           0 :         return SHARE_TOKEN;</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">         163 :     function share_token() external view returns (address) {</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">         163 :         return SHARE_TOKEN;</span></span>
 <span id="L42"><span class="lineNum">      42</span>              :     }</span>
 <span id="L43"><span class="lineNum">      43</span>              : </span>
 <span id="L44"><span class="lineNum">      44</span>              :     // solhint-disable-next-line func-name-mixedcase</span>
-<span id="L45"><span class="lineNum">      45</span> <span class="tlaUNC">           0 :     function is_killed() external view returns (bool) {</span></span>
-<span id="L46"><span class="lineNum">      46</span> <span class="tlaUNC">           0 :         return _isKilled;</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">         688 :     function is_killed() external view returns (bool) {</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">         688 :         return _isKilled;</span></span>
 <span id="L47"><span class="lineNum">      47</span>              :     }</span>
 <span id="L48"><span class="lineNum">      48</span>              : </span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC">           0 :     function afterTokenTransfer(</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">        1284 :     function afterTokenTransfer(</span></span>
 <span id="L50"><span class="lineNum">      50</span>              :         address _sender,</span>
 <span id="L51"><span class="lineNum">      51</span>              :         uint256 _senderBalance,</span>
 <span id="L52"><span class="lineNum">      52</span>              :         address _recipient,</span>
@@ -116,7 +116,7 @@
 <span id="L54"><span class="lineNum">      54</span>              :         uint256 _totalSupply,</span>
 <span id="L55"><span class="lineNum">      55</span>              :         uint256 _amount</span>
 <span id="L56"><span class="lineNum">      56</span>              :     ) public virtual override(IBackwardsCompatibleGaugeLike, SiloIncentivesController) {</span>
-<span id="L57"><span class="lineNum">      57</span> <span class="tlaUNC">           0 :         super.afterTokenTransfer(_sender, _senderBalance, _recipient, _recipientBalance, _totalSupply, _amount);</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">        1284 :         super.afterTokenTransfer(_sender, _senderBalance, _recipient, _recipientBalance, _totalSupply, _amount);</span></span>
 <span id="L58"><span class="lineNum">      58</span>              :     }</span>
 <span id="L59"><span class="lineNum">      59</span>              : }</span>
         </pre>

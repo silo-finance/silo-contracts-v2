@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">30.4&nbsp;%</td>
             <td class="headerCovTableEntry">23</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">7</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 18:53:54</td>
+            <td class="headerValue">2025-12-10 19:29:52</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">16.7&nbsp;%</td>
             <td class="headerCovTableEntry">6</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
           </tr>
                   <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -83,18 +83,18 @@
 <span id="L21"><span class="lineNum">      21</span>              :     /// @dev Registering new contract</span>
 <span id="L22"><span class="lineNum">      22</span>              :     /// @param _key key under which contract will be stored</span>
 <span id="L23"><span class="lineNum">      23</span>              :     /// @param _contract contract address</span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaUNC tlaBgUNC">           0 :     function register(string calldata _key, address _contract) external virtual onlyOwner {</span></span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :         bytes32 key = makeKey(_key);</span></span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaUNC">           0 :         if (_coordinates[key] != address(0)) revert KeyIsTaken();</span></span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaUNC">           0 :         if (_contract == address(0)) revert AddressZero();</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC tlaBgGNC">        3999 :     function register(string calldata _key, address _contract) external virtual onlyOwner {</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">        3999 :         bytes32 key = makeKey(_key);</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">        3999 :         if (_coordinates[key] != address(0)) revert KeyIsTaken();</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">        3999 :         if (_contract == address(0)) revert AddressZero();</span></span>
 <span id="L28"><span class="lineNum">      28</span>              : </span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaUNC">           0 :         _coordinates[key] = _contract;</span></span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaUNC">           0 :         emit NewCoordinates(_key, _contract);</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">        3999 :         _coordinates[key] = _contract;</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">        3999 :         emit NewCoordinates(_key, _contract);</span></span>
 <span id="L31"><span class="lineNum">      31</span>              :     }</span>
 <span id="L32"><span class="lineNum">      32</span>              : </span>
 <span id="L33"><span class="lineNum">      33</span>              :     /// @dev Removing coordinates</span>
 <span id="L34"><span class="lineNum">      34</span>              :     /// @param _key key to remove</span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaUNC">           0 :     function unregister(string calldata _key) external virtual onlyOwner {</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaUNC tlaBgUNC">           0 :     function unregister(string calldata _key) external virtual onlyOwner {</span></span>
 <span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :         bytes32 key = makeKey(_key);</span></span>
 <span id="L37"><span class="lineNum">      37</span> <span class="tlaUNC">           0 :         if (_coordinates[key] == address(0)) revert EmptyCoordinates();</span></span>
 <span id="L38"><span class="lineNum">      38</span>              : </span>
@@ -130,7 +130,7 @@
 <span id="L68"><span class="lineNum">      68</span>              :     /// @param _key string key</span>
 <span id="L69"><span class="lineNum">      69</span>              :     /// @return bytes32 representation of the `_key`</span>
 <span id="L70"><span class="lineNum">      70</span> <span class="tlaUNC">           0 :     function makeKey(string calldata _key) public pure virtual returns (bytes32) {</span></span>
-<span id="L71"><span class="lineNum">      71</span> <span class="tlaUNC">           0 :         return keccak256(abi.encodePacked(_key));</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC tlaBgGNC">        3999 :         return keccak256(abi.encodePacked(_key));</span></span>
 <span id="L72"><span class="lineNum">      72</span>              :     }</span>
 <span id="L73"><span class="lineNum">      73</span>              : }</span>
         </pre>
