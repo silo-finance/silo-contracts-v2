@@ -26,18 +26,13 @@ import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 import {DefaultingLiquidationAsserts} from "./common/DefaultingLiquidationAsserts.sol";
 
 /*
-
 - anything with decimals? don't think so, we only transfer shares
-
 - fees should be able to withdraw always? no, we might need liquidity or repay
+- input is often limited to ~uint48 because of `WithdrawSharesForLendersTooHighForDistribution`
 
-- if there is no bad debt, asset/share ratio should never go < 1.0
-*/
 
-/*
 FOUNDRY_PROFILE=core_test forge test --ffi --mc DefaultingLiquidationBorrowable -vv
 
-input is often limited to ~uint48 because of `WithdrawSharesForLendersTooHighForDistribution`
 */
 abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     using SiloLensLib for ISilo;
@@ -692,7 +687,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
     /*
     everyone should be able to withdraw protected after defaulting liquidation
-    TODO echidna candidate
+    echidna candidate
 
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_protectedCanBeFullyWithdrawn_fuzz -vv
     */
