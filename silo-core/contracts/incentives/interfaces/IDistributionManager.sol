@@ -78,12 +78,20 @@ interface IDistributionManager {
     function getAllProgramsNames() external view returns (string[] memory programsNames);
 
     /**
-     * @dev returns the name of an incentives program
-     * @param _programName the name (bytes32) of the incentives program
+     * @dev Returns the name of an incentives program (converts bytes32 to string)
+     * @notice This function has a bug and can't do it in proper way when _programId is for 
+     * immediate distribution (token address).
+     *
+     * @param _programId the id (bytes32) of the incentives program
      * @return programName the name (string) of the incentives program
      */
-    function getProgramName(bytes32 _programName) external view returns (string memory programName);
+    function getProgramName(bytes32 _programId) external view returns (string memory programName);
 
+
+    /// @dev NOTIFIER is contract that is allowed to notify controller about token transfers.
+    /// In original Aave implementation it was share token, but in Silo implementation it is usually hook contract.
+    function NOTIFIER() external view returns (address); // solhint-disable-line func-name-mixedcase
+    
     /**
      * @dev Returns the program id for the given program name.
      * This method TRUNCATES the program name to 32 bytes.

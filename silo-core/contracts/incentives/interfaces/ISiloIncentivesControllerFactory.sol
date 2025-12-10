@@ -7,6 +7,7 @@ interface ISiloIncentivesControllerFactory {
     /// @notice Creates a new SiloIncentivesControllerCompatible instance.
     /// @param _owner The address of the owner of the SiloIncentivesControllerCompatible.
     /// @param _notifier The address of the notifier of the SiloIncentivesControllerCompatible.
+    /// @param _shareToken The address of the share token of the SiloIncentivesControllerCompatible.
     /// @param _externalSalt The external salt to use for the creation of the incentives controller instance.
     /// @return The address of the newly created SiloIncentivesControllerCompatible.
     function create(

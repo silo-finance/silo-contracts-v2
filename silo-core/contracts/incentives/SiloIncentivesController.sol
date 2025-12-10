@@ -17,7 +17,7 @@ abstract contract SiloIncentivesController is BaseIncentivesController {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using SafeERC20 for IERC20;
 
-    /// @notice Silo share token
+    /// @inheritdoc ISiloIncentivesController
     address public immutable SHARE_TOKEN;
 
     /// @param _owner address of wallet that can manage the storage
@@ -88,12 +88,17 @@ abstract contract SiloIncentivesController is BaseIncentivesController {
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function immediateDistribution(address _tokenToDistribute, uint104 _amount) external virtual onlyNotifier {
-        if (_amount == 0) return;
+    function immediateDistribution(address _tokenToDistribute, uint104 _amount)
+        external
+        virtual
+        onlyNotifier
+        returns (bytes32 programId) 
+    {
+        if (_amount == 0) return bytes32(0);
 
         uint256 totalStaked = _shareToken().totalSupply();
 
-        bytes32 programId = _getOrCreateImmediateDistributionProgram(_tokenToDistribute);
+        programId = _getOrCreateImmediateDistributionProgram(_tokenToDistribute);
 
         IncentivesProgram storage program = incentivesPrograms[programId];
 

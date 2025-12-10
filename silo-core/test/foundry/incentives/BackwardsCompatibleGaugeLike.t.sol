@@ -29,6 +29,8 @@ this test will not check compatibility when:
 - deal can not grant tokens to user
 - oracle is not working
 - silo is empty (no totalSupply)
+
+FOUNDRY_PROFILE=core_test forge test --ffi --mc BackwardsCompatibleGaugeLikeTest -vv
 */
 contract BackwardsCompatibleGaugeLikeTest is Test {
     // we can't move too far because oracle can revert

@@ -36,7 +36,9 @@ For `SiloVault` and `Silo` `decimals()` fn return underlying asset decimals (USD
 ### `getProgramName()`
 
 Silo incentives controller with version < 3.6.0 has issue with `getProgramName` fn. It fails to convert the immediate 
-distribution program name into a proper string representation.
+distribution program name (which is token address) into a proper string representation.
+Eg. if token address has any zeros, they will be removed, so returned name will be incomplete.
+
 Silos incentives controller with this issue: Sonic 1 - 101, Arbitrum 100 - 111, Optimism - 100, Ink - 100 - 101.
 
 ### Debt share tokens approval for the leverage smart contract
