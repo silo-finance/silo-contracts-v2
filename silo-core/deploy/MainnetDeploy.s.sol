@@ -40,7 +40,9 @@ contract MainnetDeploy is CommonDeploy {
         SiloIncentivesControllerFactoryDeploy siloIncentivesControllerFactoryDeploy =
             new SiloIncentivesControllerFactoryDeploy();
 
-        _deploySiloFactory(); // TODO why this is here? it was replaced by only checking if factory is deployed.
+        // TODO this way will deploy factory multiple times, the fix is inside 
+        // https://github.com/silo-finance/silo-contracts-v2/pull/1649
+        _deploySiloFactory();
         interestRateModelV2ConfigFactoryDeploy.run();
         dkinkIRMFactoryDeploy.run();
         interestRateModelV2Deploy.run();

@@ -18,7 +18,7 @@ contract WhitelistImpl is Whitelist {
         // Test function protected by onlyAllowed modifier
     }
 
-    function testOnlyAllowedOrPublic() external onlyAllowedOrPublic {
+    function onlyAllowedOrPublicFn() external onlyAllowedOrPublic {
         // Test function protected by onlyAllowedOrPublic modifier
     }
 }
