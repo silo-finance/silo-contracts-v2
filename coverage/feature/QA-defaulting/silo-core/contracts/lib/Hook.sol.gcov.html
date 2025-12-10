@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">13.4&nbsp;%</td>
+            <td class="headerCovTableEntryMed">87.9&nbsp;%</td>
             <td class="headerCovTableEntry">232</td>
-            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntry">204</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 17:52:16</td>
+            <td class="headerValue">2025-12-10 19:47:00</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">27.3&nbsp;%</td>
+            <td class="headerCovTableEntryHi">90.9&nbsp;%</td>
             <td class="headerCovTableEntry">22</td>
-            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">20</td>
           </tr>
                   <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -278,15 +278,15 @@
 <span id="L216"><span class="lineNum">     216</span>              :     /// `matchAction(WITHDRAW | COLLATERAL_TOKEN, WITHDRAW) == true`</span>
 <span id="L217"><span class="lineNum">     217</span>              :     /// `matchAction(WITHDRAW | COLLATERAL_TOKEN, COLLATERAL_TOKEN) == true`</span>
 <span id="L218"><span class="lineNum">     218</span>              :     /// `matchAction(WITHDRAW | COLLATERAL_TOKEN, WITHDRAW | COLLATERAL_TOKEN) == true`</span>
-<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC tlaBgGNC">     2161762 :     function matchAction(uint256 _action, uint256 _expectedHook) internal pure returns (bool) {</span></span>
-<span id="L220"><span class="lineNum">     220</span> <span class="tlaGNC">     2161762 :         return (_action &amp; _expectedHook) == _expectedHook;</span></span>
+<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC tlaBgGNC">     4011211 :     function matchAction(uint256 _action, uint256 _expectedHook) internal pure returns (bool) {</span></span>
+<span id="L220"><span class="lineNum">     220</span> <span class="tlaGNC">     4011211 :         return (_action &amp; _expectedHook) == _expectedHook;</span></span>
 <span id="L221"><span class="lineNum">     221</span>              :     }</span>
 <span id="L222"><span class="lineNum">     222</span>              : </span>
 <span id="L223"><span class="lineNum">     223</span>              :     /// @notice Adds a hook to an action</span>
 <span id="L224"><span class="lineNum">     224</span>              :     /// @param _action The action</span>
 <span id="L225"><span class="lineNum">     225</span>              :     /// @param _newAction The new hook to be added</span>
-<span id="L226"><span class="lineNum">     226</span> <span class="tlaGNC">       27224 :     function addAction(uint256 _action, uint256 _newAction) internal pure returns (uint256) {</span></span>
-<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">       27224 :         return _action | _newAction;</span></span>
+<span id="L226"><span class="lineNum">     226</span> <span class="tlaGNC">       27280 :     function addAction(uint256 _action, uint256 _newAction) internal pure returns (uint256) {</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">       27280 :         return _action | _newAction;</span></span>
 <span id="L228"><span class="lineNum">     228</span>              :     }</span>
 <span id="L229"><span class="lineNum">     229</span>              : </span>
 <span id="L230"><span class="lineNum">     230</span>              :     /// @dev please be careful with removing actions, because other hooks might using them</span>
@@ -295,225 +295,225 @@
 <span id="L233"><span class="lineNum">     233</span>              :     /// `remove(_action, PROTECTED_TOKEN | SHARE_TOKEN_TRANSFER)`, the result will be `_action=COLLATERAL_TOKEN`</span>
 <span id="L234"><span class="lineNum">     234</span>              :     /// and it will not trigger collateral token transfer. In this example you should do:</span>
 <span id="L235"><span class="lineNum">     235</span>              :     /// `remove(_action, PROTECTED_TOKEN)`</span>
-<span id="L236"><span class="lineNum">     236</span> <span class="tlaUNC tlaBgUNC">           0 :     function removeAction(uint256 _action, uint256 _actionToRemove) internal pure returns (uint256) {</span></span>
-<span id="L237"><span class="lineNum">     237</span> <span class="tlaUNC">           0 :         return _action &amp; (~_actionToRemove);</span></span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">           2 :     function removeAction(uint256 _action, uint256 _actionToRemove) internal pure returns (uint256) {</span></span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC">           2 :         return _action &amp; (~_actionToRemove);</span></span>
 <span id="L238"><span class="lineNum">     238</span>              :     }</span>
 <span id="L239"><span class="lineNum">     239</span>              : </span>
 <span id="L240"><span class="lineNum">     240</span>              :     /// @notice Returns the action for depositing a specific collateral type</span>
 <span id="L241"><span class="lineNum">     241</span>              :     /// @param _type The collateral type</span>
-<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC tlaBgGNC">      645430 :     function depositAction(ISilo.CollateralType _type) internal pure returns (uint256) {</span></span>
-<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">      645430 :         return DEPOSIT | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);</span></span>
+<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">     1355016 :     function depositAction(ISilo.CollateralType _type) internal pure returns (uint256) {</span></span>
+<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">     1355016 :         return DEPOSIT | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);</span></span>
 <span id="L244"><span class="lineNum">     244</span>              :     }</span>
 <span id="L245"><span class="lineNum">     245</span>              : </span>
 <span id="L246"><span class="lineNum">     246</span>              :     /// @notice Returns the action for withdrawing a specific collateral type</span>
 <span id="L247"><span class="lineNum">     247</span>              :     /// @param _type The collateral type</span>
-<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">      545718 :     function withdrawAction(ISilo.CollateralType _type) internal pure returns (uint256) {</span></span>
-<span id="L249"><span class="lineNum">     249</span> <span class="tlaGNC">      545718 :         return WITHDRAW | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);</span></span>
+<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">      700294 :     function withdrawAction(ISilo.CollateralType _type) internal pure returns (uint256) {</span></span>
+<span id="L249"><span class="lineNum">     249</span> <span class="tlaGNC">      700294 :         return WITHDRAW | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);</span></span>
 <span id="L250"><span class="lineNum">     250</span>              :     }</span>
 <span id="L251"><span class="lineNum">     251</span>              : </span>
 <span id="L252"><span class="lineNum">     252</span>              :     /// @notice Returns the action for collateral transition</span>
 <span id="L253"><span class="lineNum">     253</span>              :     /// @param _type The collateral type</span>
-<span id="L254"><span class="lineNum">     254</span> <span class="tlaUNC tlaBgUNC">           0 :     function transitionCollateralAction(ISilo.CollateralType _type) internal pure returns (uint256) {</span></span>
-<span id="L255"><span class="lineNum">     255</span> <span class="tlaUNC">           0 :         return TRANSITION_COLLATERAL | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);</span></span>
+<span id="L254"><span class="lineNum">     254</span> <span class="tlaGNC">          86 :     function transitionCollateralAction(ISilo.CollateralType _type) internal pure returns (uint256) {</span></span>
+<span id="L255"><span class="lineNum">     255</span> <span class="tlaGNC">          86 :         return TRANSITION_COLLATERAL | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);</span></span>
 <span id="L256"><span class="lineNum">     256</span>              :     }</span>
 <span id="L257"><span class="lineNum">     257</span>              : </span>
 <span id="L258"><span class="lineNum">     258</span>              :     /// @notice Returns the share token transfer action</span>
 <span id="L259"><span class="lineNum">     259</span>              :     /// @param _tokenType The token type (COLLATERAL_TOKEN || PROTECTED_TOKEN || DEBT_TOKEN)</span>
-<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC tlaBgGNC">      798766 :     function shareTokenTransfer(uint256 _tokenType) internal pure returns (uint256) {</span></span>
-<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">      798766 :         require(</span></span>
+<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">     1435769 :     function shareTokenTransfer(uint256 _tokenType) internal pure returns (uint256) {</span></span>
+<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">     1435769 :         require(</span></span>
 <span id="L262"><span class="lineNum">     262</span>              :             _tokenType == COLLATERAL_TOKEN || _tokenType == PROTECTED_TOKEN || _tokenType == DEBT_TOKEN,</span>
 <span id="L263"><span class="lineNum">     263</span>              :             InvalidTokenType()</span>
 <span id="L264"><span class="lineNum">     264</span>              :         );</span>
 <span id="L265"><span class="lineNum">     265</span>              : </span>
-<span id="L266"><span class="lineNum">     266</span> <span class="tlaGNC">      798766 :         return SHARE_TOKEN_TRANSFER | _tokenType;</span></span>
+<span id="L266"><span class="lineNum">     266</span> <span class="tlaGNC">     1435766 :         return SHARE_TOKEN_TRANSFER | _tokenType;</span></span>
 <span id="L267"><span class="lineNum">     267</span>              :     }</span>
 <span id="L268"><span class="lineNum">     268</span>              : </span>
 <span id="L269"><span class="lineNum">     269</span>              :     /// @dev Decodes packed data from the share token after the transfer hook</span>
 <span id="L270"><span class="lineNum">     270</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L271"><span class="lineNum">     271</span>              :     /// @return input decoded</span>
-<span id="L272"><span class="lineNum">     272</span> <span class="tlaGNC">       21614 :     function afterTokenTransferDecode(bytes memory packed)</span></span>
+<span id="L272"><span class="lineNum">     272</span> <span class="tlaGNC">       21871 :     function afterTokenTransferDecode(bytes memory packed)</span></span>
 <span id="L273"><span class="lineNum">     273</span>              :         internal</span>
 <span id="L274"><span class="lineNum">     274</span>              :         pure</span>
 <span id="L275"><span class="lineNum">     275</span>              :         returns (AfterTokenTransfer memory input)</span>
 <span id="L276"><span class="lineNum">     276</span>              :     {</span>
-<span id="L277"><span class="lineNum">     277</span> <span class="tlaGNC">       21614 :         address sender;</span></span>
-<span id="L278"><span class="lineNum">     278</span> <span class="tlaGNC">       21614 :         address recipient;</span></span>
-<span id="L279"><span class="lineNum">     279</span> <span class="tlaGNC">       21614 :         uint256 amount;</span></span>
-<span id="L280"><span class="lineNum">     280</span> <span class="tlaGNC">       21614 :         uint256 senderBalance;</span></span>
-<span id="L281"><span class="lineNum">     281</span> <span class="tlaGNC">       21614 :         uint256 recipientBalance;</span></span>
-<span id="L282"><span class="lineNum">     282</span> <span class="tlaGNC">       21614 :         uint256 totalSupply;</span></span>
+<span id="L277"><span class="lineNum">     277</span> <span class="tlaGNC">       21871 :         address sender;</span></span>
+<span id="L278"><span class="lineNum">     278</span> <span class="tlaGNC">       21871 :         address recipient;</span></span>
+<span id="L279"><span class="lineNum">     279</span> <span class="tlaGNC">       21871 :         uint256 amount;</span></span>
+<span id="L280"><span class="lineNum">     280</span> <span class="tlaGNC">       21871 :         uint256 senderBalance;</span></span>
+<span id="L281"><span class="lineNum">     281</span> <span class="tlaGNC">       21871 :         uint256 recipientBalance;</span></span>
+<span id="L282"><span class="lineNum">     282</span> <span class="tlaGNC">       21871 :         uint256 totalSupply;</span></span>
 <span id="L283"><span class="lineNum">     283</span>              : </span>
 <span id="L284"><span class="lineNum">     284</span>              :         assembly { // solhint-disable-line no-inline-assembly</span>
-<span id="L285"><span class="lineNum">     285</span> <span class="tlaGNC">       21614 :             let pointer := PACKED_ADDRESS_LENGTH</span></span>
-<span id="L286"><span class="lineNum">     286</span> <span class="tlaGNC">       21614 :             sender := mload(add(packed, pointer))</span></span>
-<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">       21614 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L288"><span class="lineNum">     288</span> <span class="tlaGNC">       21614 :             recipient := mload(add(packed, pointer))</span></span>
-<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">       21614 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">       21614 :             amount := mload(add(packed, pointer))</span></span>
-<span id="L291"><span class="lineNum">     291</span> <span class="tlaGNC">       21614 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L292"><span class="lineNum">     292</span> <span class="tlaGNC">       21614 :             senderBalance := mload(add(packed, pointer))</span></span>
-<span id="L293"><span class="lineNum">     293</span> <span class="tlaGNC">       21614 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L294"><span class="lineNum">     294</span> <span class="tlaGNC">       21614 :             recipientBalance := mload(add(packed, pointer))</span></span>
-<span id="L295"><span class="lineNum">     295</span> <span class="tlaGNC">       21614 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">       21614 :             totalSupply := mload(add(packed, pointer))</span></span>
+<span id="L285"><span class="lineNum">     285</span> <span class="tlaGNC">       21871 :             let pointer := PACKED_ADDRESS_LENGTH</span></span>
+<span id="L286"><span class="lineNum">     286</span> <span class="tlaGNC">       21871 :             sender := mload(add(packed, pointer))</span></span>
+<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">       21871 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L288"><span class="lineNum">     288</span> <span class="tlaGNC">       21871 :             recipient := mload(add(packed, pointer))</span></span>
+<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">       21871 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">       21871 :             amount := mload(add(packed, pointer))</span></span>
+<span id="L291"><span class="lineNum">     291</span> <span class="tlaGNC">       21871 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L292"><span class="lineNum">     292</span> <span class="tlaGNC">       21871 :             senderBalance := mload(add(packed, pointer))</span></span>
+<span id="L293"><span class="lineNum">     293</span> <span class="tlaGNC">       21871 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L294"><span class="lineNum">     294</span> <span class="tlaGNC">       21871 :             recipientBalance := mload(add(packed, pointer))</span></span>
+<span id="L295"><span class="lineNum">     295</span> <span class="tlaGNC">       21871 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">       21871 :             totalSupply := mload(add(packed, pointer))</span></span>
 <span id="L297"><span class="lineNum">     297</span>              :         }</span>
 <span id="L298"><span class="lineNum">     298</span>              : </span>
-<span id="L299"><span class="lineNum">     299</span> <span class="tlaGNC">       21614 :         input = AfterTokenTransfer(sender, recipient, amount, senderBalance, recipientBalance, totalSupply);</span></span>
+<span id="L299"><span class="lineNum">     299</span> <span class="tlaGNC">       21871 :         input = AfterTokenTransfer(sender, recipient, amount, senderBalance, recipientBalance, totalSupply);</span></span>
 <span id="L300"><span class="lineNum">     300</span>              :     }</span>
 <span id="L301"><span class="lineNum">     301</span>              : </span>
 <span id="L302"><span class="lineNum">     302</span>              :     /// @dev Decodes packed data from the deposit hook</span>
 <span id="L303"><span class="lineNum">     303</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L304"><span class="lineNum">     304</span>              :     /// @return input decoded</span>
-<span id="L305"><span class="lineNum">     305</span> <span class="tlaUNC tlaBgUNC">           0 :     function beforeDepositDecode(bytes memory packed)</span></span>
+<span id="L305"><span class="lineNum">     305</span> <span class="tlaGNC">           5 :     function beforeDepositDecode(bytes memory packed)</span></span>
 <span id="L306"><span class="lineNum">     306</span>              :         internal</span>
 <span id="L307"><span class="lineNum">     307</span>              :         pure</span>
 <span id="L308"><span class="lineNum">     308</span>              :         returns (BeforeDepositInput memory input)</span>
 <span id="L309"><span class="lineNum">     309</span>              :     {</span>
-<span id="L310"><span class="lineNum">     310</span> <span class="tlaUNC">           0 :         uint256 assets;</span></span>
-<span id="L311"><span class="lineNum">     311</span> <span class="tlaUNC">           0 :         uint256 shares;</span></span>
-<span id="L312"><span class="lineNum">     312</span> <span class="tlaUNC">           0 :         address receiver;</span></span>
+<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">           5 :         uint256 assets;</span></span>
+<span id="L311"><span class="lineNum">     311</span> <span class="tlaGNC">           5 :         uint256 shares;</span></span>
+<span id="L312"><span class="lineNum">     312</span> <span class="tlaGNC">           5 :         address receiver;</span></span>
 <span id="L313"><span class="lineNum">     313</span>              : </span>
 <span id="L314"><span class="lineNum">     314</span>              :         assembly { // solhint-disable-line no-inline-assembly</span>
-<span id="L315"><span class="lineNum">     315</span> <span class="tlaUNC">           0 :             let pointer := PACKED_FULL_LENGTH</span></span>
-<span id="L316"><span class="lineNum">     316</span> <span class="tlaUNC">           0 :             assets := mload(add(packed, pointer))</span></span>
-<span id="L317"><span class="lineNum">     317</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L318"><span class="lineNum">     318</span> <span class="tlaUNC">           0 :             shares := mload(add(packed, pointer))</span></span>
-<span id="L319"><span class="lineNum">     319</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L320"><span class="lineNum">     320</span> <span class="tlaUNC">           0 :             receiver := mload(add(packed, pointer))</span></span>
+<span id="L315"><span class="lineNum">     315</span> <span class="tlaGNC">           5 :             let pointer := PACKED_FULL_LENGTH</span></span>
+<span id="L316"><span class="lineNum">     316</span> <span class="tlaGNC">           5 :             assets := mload(add(packed, pointer))</span></span>
+<span id="L317"><span class="lineNum">     317</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L318"><span class="lineNum">     318</span> <span class="tlaGNC">           5 :             shares := mload(add(packed, pointer))</span></span>
+<span id="L319"><span class="lineNum">     319</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L320"><span class="lineNum">     320</span> <span class="tlaGNC">           5 :             receiver := mload(add(packed, pointer))</span></span>
 <span id="L321"><span class="lineNum">     321</span>              :         }</span>
 <span id="L322"><span class="lineNum">     322</span>              : </span>
-<span id="L323"><span class="lineNum">     323</span> <span class="tlaUNC">           0 :         input = BeforeDepositInput(assets, shares, receiver);</span></span>
+<span id="L323"><span class="lineNum">     323</span> <span class="tlaGNC">           5 :         input = BeforeDepositInput(assets, shares, receiver);</span></span>
 <span id="L324"><span class="lineNum">     324</span>              :     }</span>
 <span id="L325"><span class="lineNum">     325</span>              : </span>
 <span id="L326"><span class="lineNum">     326</span>              :     /// @dev Decodes packed data from the deposit hook</span>
 <span id="L327"><span class="lineNum">     327</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L328"><span class="lineNum">     328</span>              :     /// @return input decoded</span>
-<span id="L329"><span class="lineNum">     329</span> <span class="tlaUNC">           0 :     function afterDepositDecode(bytes memory packed)</span></span>
+<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">           5 :     function afterDepositDecode(bytes memory packed)</span></span>
 <span id="L330"><span class="lineNum">     330</span>              :         internal</span>
 <span id="L331"><span class="lineNum">     331</span>              :         pure</span>
 <span id="L332"><span class="lineNum">     332</span>              :         returns (AfterDepositInput memory input)</span>
 <span id="L333"><span class="lineNum">     333</span>              :     {</span>
-<span id="L334"><span class="lineNum">     334</span> <span class="tlaUNC">           0 :         uint256 assets;</span></span>
-<span id="L335"><span class="lineNum">     335</span> <span class="tlaUNC">           0 :         uint256 shares;</span></span>
-<span id="L336"><span class="lineNum">     336</span> <span class="tlaUNC">           0 :         address receiver;</span></span>
-<span id="L337"><span class="lineNum">     337</span> <span class="tlaUNC">           0 :         uint256 receivedAssets;</span></span>
-<span id="L338"><span class="lineNum">     338</span> <span class="tlaUNC">           0 :         uint256 mintedShares;</span></span>
+<span id="L334"><span class="lineNum">     334</span> <span class="tlaGNC">           5 :         uint256 assets;</span></span>
+<span id="L335"><span class="lineNum">     335</span> <span class="tlaGNC">           5 :         uint256 shares;</span></span>
+<span id="L336"><span class="lineNum">     336</span> <span class="tlaGNC">           5 :         address receiver;</span></span>
+<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">           5 :         uint256 receivedAssets;</span></span>
+<span id="L338"><span class="lineNum">     338</span> <span class="tlaGNC">           5 :         uint256 mintedShares;</span></span>
 <span id="L339"><span class="lineNum">     339</span>              : </span>
 <span id="L340"><span class="lineNum">     340</span>              :         assembly { // solhint-disable-line no-inline-assembly</span>
-<span id="L341"><span class="lineNum">     341</span> <span class="tlaUNC">           0 :             let pointer := PACKED_FULL_LENGTH</span></span>
-<span id="L342"><span class="lineNum">     342</span> <span class="tlaUNC">           0 :             assets := mload(add(packed, pointer))</span></span>
-<span id="L343"><span class="lineNum">     343</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L344"><span class="lineNum">     344</span> <span class="tlaUNC">           0 :             shares := mload(add(packed, pointer))</span></span>
-<span id="L345"><span class="lineNum">     345</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L346"><span class="lineNum">     346</span> <span class="tlaUNC">           0 :             receiver := mload(add(packed, pointer))</span></span>
-<span id="L347"><span class="lineNum">     347</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L348"><span class="lineNum">     348</span> <span class="tlaUNC">           0 :             receivedAssets := mload(add(packed, pointer))</span></span>
-<span id="L349"><span class="lineNum">     349</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L350"><span class="lineNum">     350</span> <span class="tlaUNC">           0 :             mintedShares := mload(add(packed, pointer))</span></span>
+<span id="L341"><span class="lineNum">     341</span> <span class="tlaGNC">           5 :             let pointer := PACKED_FULL_LENGTH</span></span>
+<span id="L342"><span class="lineNum">     342</span> <span class="tlaGNC">           5 :             assets := mload(add(packed, pointer))</span></span>
+<span id="L343"><span class="lineNum">     343</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L344"><span class="lineNum">     344</span> <span class="tlaGNC">           5 :             shares := mload(add(packed, pointer))</span></span>
+<span id="L345"><span class="lineNum">     345</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L346"><span class="lineNum">     346</span> <span class="tlaGNC">           5 :             receiver := mload(add(packed, pointer))</span></span>
+<span id="L347"><span class="lineNum">     347</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L348"><span class="lineNum">     348</span> <span class="tlaGNC">           5 :             receivedAssets := mload(add(packed, pointer))</span></span>
+<span id="L349"><span class="lineNum">     349</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L350"><span class="lineNum">     350</span> <span class="tlaGNC">           5 :             mintedShares := mload(add(packed, pointer))</span></span>
 <span id="L351"><span class="lineNum">     351</span>              :         }</span>
 <span id="L352"><span class="lineNum">     352</span>              : </span>
-<span id="L353"><span class="lineNum">     353</span> <span class="tlaUNC">           0 :         input = AfterDepositInput(assets, shares, receiver, receivedAssets, mintedShares);</span></span>
+<span id="L353"><span class="lineNum">     353</span> <span class="tlaGNC">           5 :         input = AfterDepositInput(assets, shares, receiver, receivedAssets, mintedShares);</span></span>
 <span id="L354"><span class="lineNum">     354</span>              :     }</span>
 <span id="L355"><span class="lineNum">     355</span>              : </span>
 <span id="L356"><span class="lineNum">     356</span>              :     /// @dev Decodes packed data from the withdraw hook</span>
 <span id="L357"><span class="lineNum">     357</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L358"><span class="lineNum">     358</span>              :     /// @return input decoded</span>
-<span id="L359"><span class="lineNum">     359</span> <span class="tlaUNC">           0 :     function beforeWithdrawDecode(bytes memory packed)</span></span>
+<span id="L359"><span class="lineNum">     359</span> <span class="tlaGNC">           5 :     function beforeWithdrawDecode(bytes memory packed)</span></span>
 <span id="L360"><span class="lineNum">     360</span>              :         internal</span>
 <span id="L361"><span class="lineNum">     361</span>              :         pure</span>
 <span id="L362"><span class="lineNum">     362</span>              :         returns (BeforeWithdrawInput memory input)</span>
 <span id="L363"><span class="lineNum">     363</span>              :     {</span>
-<span id="L364"><span class="lineNum">     364</span> <span class="tlaUNC">           0 :         uint256 assets;</span></span>
-<span id="L365"><span class="lineNum">     365</span> <span class="tlaUNC">           0 :         uint256 shares;</span></span>
-<span id="L366"><span class="lineNum">     366</span> <span class="tlaUNC">           0 :         address receiver;</span></span>
-<span id="L367"><span class="lineNum">     367</span> <span class="tlaUNC">           0 :         address owner;</span></span>
-<span id="L368"><span class="lineNum">     368</span> <span class="tlaUNC">           0 :         address spender;</span></span>
+<span id="L364"><span class="lineNum">     364</span> <span class="tlaGNC">           5 :         uint256 assets;</span></span>
+<span id="L365"><span class="lineNum">     365</span> <span class="tlaGNC">           5 :         uint256 shares;</span></span>
+<span id="L366"><span class="lineNum">     366</span> <span class="tlaGNC">           5 :         address receiver;</span></span>
+<span id="L367"><span class="lineNum">     367</span> <span class="tlaGNC">           5 :         address owner;</span></span>
+<span id="L368"><span class="lineNum">     368</span> <span class="tlaGNC">           5 :         address spender;</span></span>
 <span id="L369"><span class="lineNum">     369</span>              : </span>
 <span id="L370"><span class="lineNum">     370</span>              :         assembly { // solhint-disable-line no-inline-assembly</span>
-<span id="L371"><span class="lineNum">     371</span> <span class="tlaUNC">           0 :             let pointer := PACKED_FULL_LENGTH</span></span>
-<span id="L372"><span class="lineNum">     372</span> <span class="tlaUNC">           0 :             assets := mload(add(packed, pointer))</span></span>
-<span id="L373"><span class="lineNum">     373</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L374"><span class="lineNum">     374</span> <span class="tlaUNC">           0 :             shares := mload(add(packed, pointer))</span></span>
-<span id="L375"><span class="lineNum">     375</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L376"><span class="lineNum">     376</span> <span class="tlaUNC">           0 :             receiver := mload(add(packed, pointer))</span></span>
-<span id="L377"><span class="lineNum">     377</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L378"><span class="lineNum">     378</span> <span class="tlaUNC">           0 :             owner := mload(add(packed, pointer))</span></span>
-<span id="L379"><span class="lineNum">     379</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L380"><span class="lineNum">     380</span> <span class="tlaUNC">           0 :             spender := mload(add(packed, pointer))</span></span>
+<span id="L371"><span class="lineNum">     371</span> <span class="tlaGNC">           5 :             let pointer := PACKED_FULL_LENGTH</span></span>
+<span id="L372"><span class="lineNum">     372</span> <span class="tlaGNC">           5 :             assets := mload(add(packed, pointer))</span></span>
+<span id="L373"><span class="lineNum">     373</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L374"><span class="lineNum">     374</span> <span class="tlaGNC">           5 :             shares := mload(add(packed, pointer))</span></span>
+<span id="L375"><span class="lineNum">     375</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L376"><span class="lineNum">     376</span> <span class="tlaGNC">           5 :             receiver := mload(add(packed, pointer))</span></span>
+<span id="L377"><span class="lineNum">     377</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L378"><span class="lineNum">     378</span> <span class="tlaGNC">           5 :             owner := mload(add(packed, pointer))</span></span>
+<span id="L379"><span class="lineNum">     379</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L380"><span class="lineNum">     380</span> <span class="tlaGNC">           5 :             spender := mload(add(packed, pointer))</span></span>
 <span id="L381"><span class="lineNum">     381</span>              :         }</span>
 <span id="L382"><span class="lineNum">     382</span>              : </span>
-<span id="L383"><span class="lineNum">     383</span> <span class="tlaUNC">           0 :         input = BeforeWithdrawInput(assets, shares, receiver, owner, spender);</span></span>
+<span id="L383"><span class="lineNum">     383</span> <span class="tlaGNC">           5 :         input = BeforeWithdrawInput(assets, shares, receiver, owner, spender);</span></span>
 <span id="L384"><span class="lineNum">     384</span>              :     }</span>
 <span id="L385"><span class="lineNum">     385</span>              : </span>
 <span id="L386"><span class="lineNum">     386</span>              :     /// @dev Decodes packed data from the withdraw hook</span>
 <span id="L387"><span class="lineNum">     387</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L388"><span class="lineNum">     388</span>              :     /// @return input decoded</span>
-<span id="L389"><span class="lineNum">     389</span> <span class="tlaUNC">           0 :     function afterWithdrawDecode(bytes memory packed)</span></span>
+<span id="L389"><span class="lineNum">     389</span> <span class="tlaGNC">           5 :     function afterWithdrawDecode(bytes memory packed)</span></span>
 <span id="L390"><span class="lineNum">     390</span>              :         internal</span>
 <span id="L391"><span class="lineNum">     391</span>              :         pure</span>
 <span id="L392"><span class="lineNum">     392</span>              :         returns (AfterWithdrawInput memory input)</span>
 <span id="L393"><span class="lineNum">     393</span>              :     {</span>
-<span id="L394"><span class="lineNum">     394</span> <span class="tlaUNC">           0 :         uint256 assets;</span></span>
-<span id="L395"><span class="lineNum">     395</span> <span class="tlaUNC">           0 :         uint256 shares;</span></span>
-<span id="L396"><span class="lineNum">     396</span> <span class="tlaUNC">           0 :         address receiver;</span></span>
-<span id="L397"><span class="lineNum">     397</span> <span class="tlaUNC">           0 :         address owner;</span></span>
-<span id="L398"><span class="lineNum">     398</span> <span class="tlaUNC">           0 :         address spender;</span></span>
-<span id="L399"><span class="lineNum">     399</span> <span class="tlaUNC">           0 :         uint256 withdrawnAssets;</span></span>
-<span id="L400"><span class="lineNum">     400</span> <span class="tlaUNC">           0 :         uint256 withdrawnShares;</span></span>
+<span id="L394"><span class="lineNum">     394</span> <span class="tlaGNC">           5 :         uint256 assets;</span></span>
+<span id="L395"><span class="lineNum">     395</span> <span class="tlaGNC">           5 :         uint256 shares;</span></span>
+<span id="L396"><span class="lineNum">     396</span> <span class="tlaGNC">           5 :         address receiver;</span></span>
+<span id="L397"><span class="lineNum">     397</span> <span class="tlaGNC">           5 :         address owner;</span></span>
+<span id="L398"><span class="lineNum">     398</span> <span class="tlaGNC">           5 :         address spender;</span></span>
+<span id="L399"><span class="lineNum">     399</span> <span class="tlaGNC">           5 :         uint256 withdrawnAssets;</span></span>
+<span id="L400"><span class="lineNum">     400</span> <span class="tlaGNC">           5 :         uint256 withdrawnShares;</span></span>
 <span id="L401"><span class="lineNum">     401</span>              : </span>
 <span id="L402"><span class="lineNum">     402</span>              :         assembly { // solhint-disable-line no-inline-assembly</span>
-<span id="L403"><span class="lineNum">     403</span> <span class="tlaUNC">           0 :             let pointer := PACKED_FULL_LENGTH</span></span>
-<span id="L404"><span class="lineNum">     404</span> <span class="tlaUNC">           0 :             assets := mload(add(packed, pointer))</span></span>
-<span id="L405"><span class="lineNum">     405</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L406"><span class="lineNum">     406</span> <span class="tlaUNC">           0 :             shares := mload(add(packed, pointer))</span></span>
-<span id="L407"><span class="lineNum">     407</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L408"><span class="lineNum">     408</span> <span class="tlaUNC">           0 :             receiver := mload(add(packed, pointer))</span></span>
-<span id="L409"><span class="lineNum">     409</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L410"><span class="lineNum">     410</span> <span class="tlaUNC">           0 :             owner := mload(add(packed, pointer))</span></span>
-<span id="L411"><span class="lineNum">     411</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L412"><span class="lineNum">     412</span> <span class="tlaUNC">           0 :             spender := mload(add(packed, pointer))</span></span>
-<span id="L413"><span class="lineNum">     413</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L414"><span class="lineNum">     414</span> <span class="tlaUNC">           0 :             withdrawnAssets := mload(add(packed, pointer))</span></span>
-<span id="L415"><span class="lineNum">     415</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L416"><span class="lineNum">     416</span> <span class="tlaUNC">           0 :             withdrawnShares := mload(add(packed, pointer))</span></span>
+<span id="L403"><span class="lineNum">     403</span> <span class="tlaGNC">           5 :             let pointer := PACKED_FULL_LENGTH</span></span>
+<span id="L404"><span class="lineNum">     404</span> <span class="tlaGNC">           5 :             assets := mload(add(packed, pointer))</span></span>
+<span id="L405"><span class="lineNum">     405</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L406"><span class="lineNum">     406</span> <span class="tlaGNC">           5 :             shares := mload(add(packed, pointer))</span></span>
+<span id="L407"><span class="lineNum">     407</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L408"><span class="lineNum">     408</span> <span class="tlaGNC">           5 :             receiver := mload(add(packed, pointer))</span></span>
+<span id="L409"><span class="lineNum">     409</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L410"><span class="lineNum">     410</span> <span class="tlaGNC">           5 :             owner := mload(add(packed, pointer))</span></span>
+<span id="L411"><span class="lineNum">     411</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L412"><span class="lineNum">     412</span> <span class="tlaGNC">           5 :             spender := mload(add(packed, pointer))</span></span>
+<span id="L413"><span class="lineNum">     413</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L414"><span class="lineNum">     414</span> <span class="tlaGNC">           5 :             withdrawnAssets := mload(add(packed, pointer))</span></span>
+<span id="L415"><span class="lineNum">     415</span> <span class="tlaGNC">           5 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L416"><span class="lineNum">     416</span> <span class="tlaGNC">           5 :             withdrawnShares := mload(add(packed, pointer))</span></span>
 <span id="L417"><span class="lineNum">     417</span>              :         }</span>
 <span id="L418"><span class="lineNum">     418</span>              : </span>
-<span id="L419"><span class="lineNum">     419</span> <span class="tlaUNC">           0 :         input = AfterWithdrawInput(assets, shares, receiver, owner, spender, withdrawnAssets, withdrawnShares);</span></span>
+<span id="L419"><span class="lineNum">     419</span> <span class="tlaGNC">           5 :         input = AfterWithdrawInput(assets, shares, receiver, owner, spender, withdrawnAssets, withdrawnShares);</span></span>
 <span id="L420"><span class="lineNum">     420</span>              :     }</span>
 <span id="L421"><span class="lineNum">     421</span>              : </span>
 <span id="L422"><span class="lineNum">     422</span>              :     /// @dev Decodes packed data from the before borrow hook</span>
 <span id="L423"><span class="lineNum">     423</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L424"><span class="lineNum">     424</span>              :     /// @return input decoded</span>
-<span id="L425"><span class="lineNum">     425</span> <span class="tlaUNC">           0 :     function beforeBorrowDecode(bytes memory packed)</span></span>
+<span id="L425"><span class="lineNum">     425</span> <span class="tlaGNC">           1 :     function beforeBorrowDecode(bytes memory packed)</span></span>
 <span id="L426"><span class="lineNum">     426</span>              :         internal</span>
 <span id="L427"><span class="lineNum">     427</span>              :         pure</span>
 <span id="L428"><span class="lineNum">     428</span>              :         returns (BeforeBorrowInput memory input)</span>
 <span id="L429"><span class="lineNum">     429</span>              :     {</span>
-<span id="L430"><span class="lineNum">     430</span> <span class="tlaUNC">           0 :         uint256 assets;</span></span>
-<span id="L431"><span class="lineNum">     431</span> <span class="tlaUNC">           0 :         uint256 shares;</span></span>
-<span id="L432"><span class="lineNum">     432</span> <span class="tlaUNC">           0 :         address receiver;</span></span>
-<span id="L433"><span class="lineNum">     433</span> <span class="tlaUNC">           0 :         address borrower;</span></span>
-<span id="L434"><span class="lineNum">     434</span> <span class="tlaUNC">           0 :         address spender;</span></span>
+<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">           1 :         uint256 assets;</span></span>
+<span id="L431"><span class="lineNum">     431</span> <span class="tlaGNC">           1 :         uint256 shares;</span></span>
+<span id="L432"><span class="lineNum">     432</span> <span class="tlaGNC">           1 :         address receiver;</span></span>
+<span id="L433"><span class="lineNum">     433</span> <span class="tlaGNC">           1 :         address borrower;</span></span>
+<span id="L434"><span class="lineNum">     434</span> <span class="tlaGNC">           1 :         address spender;</span></span>
 <span id="L435"><span class="lineNum">     435</span>              :         assembly { // solhint-disable-line no-inline-assembly</span>
-<span id="L436"><span class="lineNum">     436</span> <span class="tlaUNC">           0 :             let pointer := PACKED_FULL_LENGTH</span></span>
-<span id="L437"><span class="lineNum">     437</span> <span class="tlaUNC">           0 :             assets := mload(add(packed, pointer))</span></span>
-<span id="L438"><span class="lineNum">     438</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L439"><span class="lineNum">     439</span> <span class="tlaUNC">           0 :             shares := mload(add(packed, pointer))</span></span>
-<span id="L440"><span class="lineNum">     440</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L441"><span class="lineNum">     441</span> <span class="tlaUNC">           0 :             receiver := mload(add(packed, pointer))</span></span>
-<span id="L442"><span class="lineNum">     442</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L443"><span class="lineNum">     443</span> <span class="tlaUNC">           0 :             borrower := mload(add(packed, pointer))</span></span>
-<span id="L444"><span class="lineNum">     444</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L445"><span class="lineNum">     445</span> <span class="tlaUNC">           0 :             spender := mload(add(packed, pointer))</span></span>
+<span id="L436"><span class="lineNum">     436</span> <span class="tlaGNC">           1 :             let pointer := PACKED_FULL_LENGTH</span></span>
+<span id="L437"><span class="lineNum">     437</span> <span class="tlaGNC">           1 :             assets := mload(add(packed, pointer))</span></span>
+<span id="L438"><span class="lineNum">     438</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L439"><span class="lineNum">     439</span> <span class="tlaGNC">           1 :             shares := mload(add(packed, pointer))</span></span>
+<span id="L440"><span class="lineNum">     440</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L441"><span class="lineNum">     441</span> <span class="tlaGNC">           1 :             receiver := mload(add(packed, pointer))</span></span>
+<span id="L442"><span class="lineNum">     442</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L443"><span class="lineNum">     443</span> <span class="tlaGNC">           1 :             borrower := mload(add(packed, pointer))</span></span>
+<span id="L444"><span class="lineNum">     444</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L445"><span class="lineNum">     445</span> <span class="tlaGNC">           1 :             spender := mload(add(packed, pointer))</span></span>
 <span id="L446"><span class="lineNum">     446</span>              :         }</span>
 <span id="L447"><span class="lineNum">     447</span>              : </span>
-<span id="L448"><span class="lineNum">     448</span> <span class="tlaUNC">           0 :         input = BeforeBorrowInput(assets, shares, receiver, borrower, spender);</span></span>
+<span id="L448"><span class="lineNum">     448</span> <span class="tlaGNC">           1 :         input = BeforeBorrowInput(assets, shares, receiver, borrower, spender);</span></span>
 <span id="L449"><span class="lineNum">     449</span>              :     }</span>
 <span id="L450"><span class="lineNum">     450</span>              : </span>
 <span id="L451"><span class="lineNum">     451</span>              :     /// @dev Decodes packed data from the after borrow hook</span>
 <span id="L452"><span class="lineNum">     452</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L453"><span class="lineNum">     453</span>              :     /// @return input decoded</span>
-<span id="L454"><span class="lineNum">     454</span> <span class="tlaUNC">           0 :     function afterBorrowDecode(bytes memory packed)</span></span>
+<span id="L454"><span class="lineNum">     454</span> <span class="tlaUNC tlaBgUNC">           0 :     function afterBorrowDecode(bytes memory packed)</span></span>
 <span id="L455"><span class="lineNum">     455</span>              :         internal</span>
 <span id="L456"><span class="lineNum">     456</span>              :         pure</span>
 <span id="L457"><span class="lineNum">     457</span>              :         returns (AfterBorrowInput memory input)</span>
@@ -549,163 +549,163 @@
 <span id="L487"><span class="lineNum">     487</span>              :     /// @dev Decodes packed data from the before repay hook</span>
 <span id="L488"><span class="lineNum">     488</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L489"><span class="lineNum">     489</span>              :     /// @return input decoded</span>
-<span id="L490"><span class="lineNum">     490</span> <span class="tlaUNC">           0 :     function beforeRepayDecode(bytes memory packed)</span></span>
+<span id="L490"><span class="lineNum">     490</span> <span class="tlaGNC tlaBgGNC">           2 :     function beforeRepayDecode(bytes memory packed)</span></span>
 <span id="L491"><span class="lineNum">     491</span>              :         internal</span>
 <span id="L492"><span class="lineNum">     492</span>              :         pure</span>
 <span id="L493"><span class="lineNum">     493</span>              :         returns (BeforeRepayInput memory input)</span>
 <span id="L494"><span class="lineNum">     494</span>              :     {</span>
-<span id="L495"><span class="lineNum">     495</span> <span class="tlaUNC">           0 :         uint256 assets;</span></span>
-<span id="L496"><span class="lineNum">     496</span> <span class="tlaUNC">           0 :         uint256 shares;</span></span>
-<span id="L497"><span class="lineNum">     497</span> <span class="tlaUNC">           0 :         address borrower;</span></span>
-<span id="L498"><span class="lineNum">     498</span> <span class="tlaUNC">           0 :         address repayer;</span></span>
+<span id="L495"><span class="lineNum">     495</span> <span class="tlaGNC">           2 :         uint256 assets;</span></span>
+<span id="L496"><span class="lineNum">     496</span> <span class="tlaGNC">           2 :         uint256 shares;</span></span>
+<span id="L497"><span class="lineNum">     497</span> <span class="tlaGNC">           2 :         address borrower;</span></span>
+<span id="L498"><span class="lineNum">     498</span> <span class="tlaGNC">           2 :         address repayer;</span></span>
 <span id="L499"><span class="lineNum">     499</span>              : </span>
 <span id="L500"><span class="lineNum">     500</span>              :         assembly { // solhint-disable-line no-inline-assembly</span>
-<span id="L501"><span class="lineNum">     501</span> <span class="tlaUNC">           0 :             let pointer := PACKED_FULL_LENGTH</span></span>
-<span id="L502"><span class="lineNum">     502</span> <span class="tlaUNC">           0 :             assets := mload(add(packed, pointer))</span></span>
-<span id="L503"><span class="lineNum">     503</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L504"><span class="lineNum">     504</span> <span class="tlaUNC">           0 :             shares := mload(add(packed, pointer))</span></span>
-<span id="L505"><span class="lineNum">     505</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L506"><span class="lineNum">     506</span> <span class="tlaUNC">           0 :             borrower := mload(add(packed, pointer))</span></span>
-<span id="L507"><span class="lineNum">     507</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L508"><span class="lineNum">     508</span> <span class="tlaUNC">           0 :             repayer := mload(add(packed, pointer))</span></span>
+<span id="L501"><span class="lineNum">     501</span> <span class="tlaGNC">           2 :             let pointer := PACKED_FULL_LENGTH</span></span>
+<span id="L502"><span class="lineNum">     502</span> <span class="tlaGNC">           2 :             assets := mload(add(packed, pointer))</span></span>
+<span id="L503"><span class="lineNum">     503</span> <span class="tlaGNC">           2 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L504"><span class="lineNum">     504</span> <span class="tlaGNC">           2 :             shares := mload(add(packed, pointer))</span></span>
+<span id="L505"><span class="lineNum">     505</span> <span class="tlaGNC">           2 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L506"><span class="lineNum">     506</span> <span class="tlaGNC">           2 :             borrower := mload(add(packed, pointer))</span></span>
+<span id="L507"><span class="lineNum">     507</span> <span class="tlaGNC">           2 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L508"><span class="lineNum">     508</span> <span class="tlaGNC">           2 :             repayer := mload(add(packed, pointer))</span></span>
 <span id="L509"><span class="lineNum">     509</span>              :         }</span>
 <span id="L510"><span class="lineNum">     510</span>              : </span>
-<span id="L511"><span class="lineNum">     511</span> <span class="tlaUNC">           0 :         input = BeforeRepayInput(assets, shares, borrower, repayer);</span></span>
+<span id="L511"><span class="lineNum">     511</span> <span class="tlaGNC">           2 :         input = BeforeRepayInput(assets, shares, borrower, repayer);</span></span>
 <span id="L512"><span class="lineNum">     512</span>              :     }</span>
 <span id="L513"><span class="lineNum">     513</span>              : </span>
 <span id="L514"><span class="lineNum">     514</span>              :     /// @dev Decodes packed data from the after repay hook</span>
 <span id="L515"><span class="lineNum">     515</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L516"><span class="lineNum">     516</span>              :     /// @return input decoded</span>
-<span id="L517"><span class="lineNum">     517</span> <span class="tlaUNC">           0 :     function afterRepayDecode(bytes memory packed)</span></span>
+<span id="L517"><span class="lineNum">     517</span> <span class="tlaGNC">           1 :     function afterRepayDecode(bytes memory packed)</span></span>
 <span id="L518"><span class="lineNum">     518</span>              :         internal</span>
 <span id="L519"><span class="lineNum">     519</span>              :         pure</span>
 <span id="L520"><span class="lineNum">     520</span>              :         returns (AfterRepayInput memory input)</span>
 <span id="L521"><span class="lineNum">     521</span>              :     {</span>
-<span id="L522"><span class="lineNum">     522</span> <span class="tlaUNC">           0 :         uint256 assets;</span></span>
-<span id="L523"><span class="lineNum">     523</span> <span class="tlaUNC">           0 :         uint256 shares;</span></span>
-<span id="L524"><span class="lineNum">     524</span> <span class="tlaUNC">           0 :         address borrower;</span></span>
-<span id="L525"><span class="lineNum">     525</span> <span class="tlaUNC">           0 :         address repayer;</span></span>
-<span id="L526"><span class="lineNum">     526</span> <span class="tlaUNC">           0 :         uint256 repaidAssets;</span></span>
-<span id="L527"><span class="lineNum">     527</span> <span class="tlaUNC">           0 :         uint256 repaidShares;</span></span>
+<span id="L522"><span class="lineNum">     522</span> <span class="tlaGNC">           1 :         uint256 assets;</span></span>
+<span id="L523"><span class="lineNum">     523</span> <span class="tlaGNC">           1 :         uint256 shares;</span></span>
+<span id="L524"><span class="lineNum">     524</span> <span class="tlaGNC">           1 :         address borrower;</span></span>
+<span id="L525"><span class="lineNum">     525</span> <span class="tlaGNC">           1 :         address repayer;</span></span>
+<span id="L526"><span class="lineNum">     526</span> <span class="tlaGNC">           1 :         uint256 repaidAssets;</span></span>
+<span id="L527"><span class="lineNum">     527</span> <span class="tlaGNC">           1 :         uint256 repaidShares;</span></span>
 <span id="L528"><span class="lineNum">     528</span>              : </span>
 <span id="L529"><span class="lineNum">     529</span>              :         assembly { // solhint-disable-line no-inline-assembly</span>
-<span id="L530"><span class="lineNum">     530</span> <span class="tlaUNC">           0 :             let pointer := PACKED_FULL_LENGTH</span></span>
-<span id="L531"><span class="lineNum">     531</span> <span class="tlaUNC">           0 :             assets := mload(add(packed, pointer))</span></span>
-<span id="L532"><span class="lineNum">     532</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L533"><span class="lineNum">     533</span> <span class="tlaUNC">           0 :             shares := mload(add(packed, pointer))</span></span>
-<span id="L534"><span class="lineNum">     534</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L535"><span class="lineNum">     535</span> <span class="tlaUNC">           0 :             borrower := mload(add(packed, pointer))</span></span>
-<span id="L536"><span class="lineNum">     536</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L537"><span class="lineNum">     537</span> <span class="tlaUNC">           0 :             repayer := mload(add(packed, pointer))</span></span>
-<span id="L538"><span class="lineNum">     538</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L539"><span class="lineNum">     539</span> <span class="tlaUNC">           0 :             repaidAssets := mload(add(packed, pointer))</span></span>
-<span id="L540"><span class="lineNum">     540</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L541"><span class="lineNum">     541</span> <span class="tlaUNC">           0 :             repaidShares := mload(add(packed, pointer))</span></span>
+<span id="L530"><span class="lineNum">     530</span> <span class="tlaGNC">           1 :             let pointer := PACKED_FULL_LENGTH</span></span>
+<span id="L531"><span class="lineNum">     531</span> <span class="tlaGNC">           1 :             assets := mload(add(packed, pointer))</span></span>
+<span id="L532"><span class="lineNum">     532</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L533"><span class="lineNum">     533</span> <span class="tlaGNC">           1 :             shares := mload(add(packed, pointer))</span></span>
+<span id="L534"><span class="lineNum">     534</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L535"><span class="lineNum">     535</span> <span class="tlaGNC">           1 :             borrower := mload(add(packed, pointer))</span></span>
+<span id="L536"><span class="lineNum">     536</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L537"><span class="lineNum">     537</span> <span class="tlaGNC">           1 :             repayer := mload(add(packed, pointer))</span></span>
+<span id="L538"><span class="lineNum">     538</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L539"><span class="lineNum">     539</span> <span class="tlaGNC">           1 :             repaidAssets := mload(add(packed, pointer))</span></span>
+<span id="L540"><span class="lineNum">     540</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L541"><span class="lineNum">     541</span> <span class="tlaGNC">           1 :             repaidShares := mload(add(packed, pointer))</span></span>
 <span id="L542"><span class="lineNum">     542</span>              :         }</span>
 <span id="L543"><span class="lineNum">     543</span>              : </span>
-<span id="L544"><span class="lineNum">     544</span> <span class="tlaUNC">           0 :         input = AfterRepayInput(assets, shares, borrower, repayer, repaidAssets, repaidShares);</span></span>
+<span id="L544"><span class="lineNum">     544</span> <span class="tlaGNC">           1 :         input = AfterRepayInput(assets, shares, borrower, repayer, repaidAssets, repaidShares);</span></span>
 <span id="L545"><span class="lineNum">     545</span>              :     }</span>
 <span id="L546"><span class="lineNum">     546</span>              : </span>
 <span id="L547"><span class="lineNum">     547</span>              :     /// @dev Decodes packed data from the before flash loan hook</span>
 <span id="L548"><span class="lineNum">     548</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L549"><span class="lineNum">     549</span>              :     /// @return input decoded</span>
-<span id="L550"><span class="lineNum">     550</span> <span class="tlaUNC">           0 :     function beforeFlashLoanDecode(bytes memory packed)</span></span>
+<span id="L550"><span class="lineNum">     550</span> <span class="tlaGNC">           1 :     function beforeFlashLoanDecode(bytes memory packed)</span></span>
 <span id="L551"><span class="lineNum">     551</span>              :         internal</span>
 <span id="L552"><span class="lineNum">     552</span>              :         pure</span>
 <span id="L553"><span class="lineNum">     553</span>              :         returns (BeforeFlashLoanInput memory input)</span>
 <span id="L554"><span class="lineNum">     554</span>              :     {</span>
-<span id="L555"><span class="lineNum">     555</span> <span class="tlaUNC">           0 :         address receiver;</span></span>
-<span id="L556"><span class="lineNum">     556</span> <span class="tlaUNC">           0 :         address token;</span></span>
-<span id="L557"><span class="lineNum">     557</span> <span class="tlaUNC">           0 :         uint256 amount;</span></span>
+<span id="L555"><span class="lineNum">     555</span> <span class="tlaGNC">           1 :         address receiver;</span></span>
+<span id="L556"><span class="lineNum">     556</span> <span class="tlaGNC">           1 :         address token;</span></span>
+<span id="L557"><span class="lineNum">     557</span> <span class="tlaGNC">           1 :         uint256 amount;</span></span>
 <span id="L558"><span class="lineNum">     558</span>              : </span>
 <span id="L559"><span class="lineNum">     559</span>              :         assembly { // solhint-disable-line no-inline-assembly</span>
-<span id="L560"><span class="lineNum">     560</span> <span class="tlaUNC">           0 :             let pointer := PACKED_ADDRESS_LENGTH</span></span>
-<span id="L561"><span class="lineNum">     561</span> <span class="tlaUNC">           0 :             receiver := mload(add(packed, pointer))</span></span>
-<span id="L562"><span class="lineNum">     562</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L563"><span class="lineNum">     563</span> <span class="tlaUNC">           0 :             token := mload(add(packed, pointer))</span></span>
-<span id="L564"><span class="lineNum">     564</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L565"><span class="lineNum">     565</span> <span class="tlaUNC">           0 :             amount := mload(add(packed, pointer))</span></span>
+<span id="L560"><span class="lineNum">     560</span> <span class="tlaGNC">           1 :             let pointer := PACKED_ADDRESS_LENGTH</span></span>
+<span id="L561"><span class="lineNum">     561</span> <span class="tlaGNC">           1 :             receiver := mload(add(packed, pointer))</span></span>
+<span id="L562"><span class="lineNum">     562</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L563"><span class="lineNum">     563</span> <span class="tlaGNC">           1 :             token := mload(add(packed, pointer))</span></span>
+<span id="L564"><span class="lineNum">     564</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L565"><span class="lineNum">     565</span> <span class="tlaGNC">           1 :             amount := mload(add(packed, pointer))</span></span>
 <span id="L566"><span class="lineNum">     566</span>              :         }</span>
 <span id="L567"><span class="lineNum">     567</span>              : </span>
-<span id="L568"><span class="lineNum">     568</span> <span class="tlaUNC">           0 :         input = BeforeFlashLoanInput(receiver, token, amount);</span></span>
+<span id="L568"><span class="lineNum">     568</span> <span class="tlaGNC">           1 :         input = BeforeFlashLoanInput(receiver, token, amount);</span></span>
 <span id="L569"><span class="lineNum">     569</span>              :     }</span>
 <span id="L570"><span class="lineNum">     570</span>              : </span>
 <span id="L571"><span class="lineNum">     571</span>              :     /// @dev Decodes packed data from the before flash loan hook</span>
 <span id="L572"><span class="lineNum">     572</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L573"><span class="lineNum">     573</span>              :     /// @return input decoded</span>
-<span id="L574"><span class="lineNum">     574</span> <span class="tlaUNC">           0 :     function afterFlashLoanDecode(bytes memory packed)</span></span>
+<span id="L574"><span class="lineNum">     574</span> <span class="tlaGNC">           1 :     function afterFlashLoanDecode(bytes memory packed)</span></span>
 <span id="L575"><span class="lineNum">     575</span>              :         internal</span>
 <span id="L576"><span class="lineNum">     576</span>              :         pure</span>
 <span id="L577"><span class="lineNum">     577</span>              :         returns (AfterFlashLoanInput memory input)</span>
 <span id="L578"><span class="lineNum">     578</span>              :     {</span>
-<span id="L579"><span class="lineNum">     579</span> <span class="tlaUNC">           0 :         address receiver;</span></span>
-<span id="L580"><span class="lineNum">     580</span> <span class="tlaUNC">           0 :         address token;</span></span>
-<span id="L581"><span class="lineNum">     581</span> <span class="tlaUNC">           0 :         uint256 amount;</span></span>
-<span id="L582"><span class="lineNum">     582</span> <span class="tlaUNC">           0 :         uint256 fee;</span></span>
+<span id="L579"><span class="lineNum">     579</span> <span class="tlaGNC">           1 :         address receiver;</span></span>
+<span id="L580"><span class="lineNum">     580</span> <span class="tlaGNC">           1 :         address token;</span></span>
+<span id="L581"><span class="lineNum">     581</span> <span class="tlaGNC">           1 :         uint256 amount;</span></span>
+<span id="L582"><span class="lineNum">     582</span> <span class="tlaGNC">           1 :         uint256 fee;</span></span>
 <span id="L583"><span class="lineNum">     583</span>              : </span>
 <span id="L584"><span class="lineNum">     584</span>              :         assembly { // solhint-disable-line no-inline-assembly</span>
-<span id="L585"><span class="lineNum">     585</span> <span class="tlaUNC">           0 :             let pointer := PACKED_ADDRESS_LENGTH</span></span>
-<span id="L586"><span class="lineNum">     586</span> <span class="tlaUNC">           0 :             receiver := mload(add(packed, pointer))</span></span>
-<span id="L587"><span class="lineNum">     587</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L588"><span class="lineNum">     588</span> <span class="tlaUNC">           0 :             token := mload(add(packed, pointer))</span></span>
-<span id="L589"><span class="lineNum">     589</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L590"><span class="lineNum">     590</span> <span class="tlaUNC">           0 :             amount := mload(add(packed, pointer))</span></span>
-<span id="L591"><span class="lineNum">     591</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L592"><span class="lineNum">     592</span> <span class="tlaUNC">           0 :             fee := mload(add(packed, pointer))</span></span>
+<span id="L585"><span class="lineNum">     585</span> <span class="tlaGNC">           1 :             let pointer := PACKED_ADDRESS_LENGTH</span></span>
+<span id="L586"><span class="lineNum">     586</span> <span class="tlaGNC">           1 :             receiver := mload(add(packed, pointer))</span></span>
+<span id="L587"><span class="lineNum">     587</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L588"><span class="lineNum">     588</span> <span class="tlaGNC">           1 :             token := mload(add(packed, pointer))</span></span>
+<span id="L589"><span class="lineNum">     589</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L590"><span class="lineNum">     590</span> <span class="tlaGNC">           1 :             amount := mload(add(packed, pointer))</span></span>
+<span id="L591"><span class="lineNum">     591</span> <span class="tlaGNC">           1 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L592"><span class="lineNum">     592</span> <span class="tlaGNC">           1 :             fee := mload(add(packed, pointer))</span></span>
 <span id="L593"><span class="lineNum">     593</span>              :         }</span>
 <span id="L594"><span class="lineNum">     594</span>              : </span>
-<span id="L595"><span class="lineNum">     595</span> <span class="tlaUNC">           0 :         input = AfterFlashLoanInput(receiver, token, amount, fee);</span></span>
+<span id="L595"><span class="lineNum">     595</span> <span class="tlaGNC">           1 :         input = AfterFlashLoanInput(receiver, token, amount, fee);</span></span>
 <span id="L596"><span class="lineNum">     596</span>              :     }</span>
 <span id="L597"><span class="lineNum">     597</span>              : </span>
 <span id="L598"><span class="lineNum">     598</span>              :     /// @dev Decodes packed data from the transition collateral hook</span>
 <span id="L599"><span class="lineNum">     599</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L600"><span class="lineNum">     600</span>              :     /// @return input decoded</span>
-<span id="L601"><span class="lineNum">     601</span> <span class="tlaUNC">           0 :     function beforeTransitionCollateralDecode(bytes memory packed)</span></span>
+<span id="L601"><span class="lineNum">     601</span> <span class="tlaGNC">           2 :     function beforeTransitionCollateralDecode(bytes memory packed)</span></span>
 <span id="L602"><span class="lineNum">     602</span>              :         internal</span>
 <span id="L603"><span class="lineNum">     603</span>              :         pure</span>
 <span id="L604"><span class="lineNum">     604</span>              :         returns (BeforeTransitionCollateralInput memory input)</span>
 <span id="L605"><span class="lineNum">     605</span>              :     {</span>
-<span id="L606"><span class="lineNum">     606</span> <span class="tlaUNC">           0 :         uint256 shares;</span></span>
-<span id="L607"><span class="lineNum">     607</span> <span class="tlaUNC">           0 :         address owner;</span></span>
+<span id="L606"><span class="lineNum">     606</span> <span class="tlaGNC">           2 :         uint256 shares;</span></span>
+<span id="L607"><span class="lineNum">     607</span> <span class="tlaGNC">           2 :         address owner;</span></span>
 <span id="L608"><span class="lineNum">     608</span>              : </span>
 <span id="L609"><span class="lineNum">     609</span>              :         assembly { // solhint-disable-line no-inline-assembly</span>
-<span id="L610"><span class="lineNum">     610</span> <span class="tlaUNC">           0 :             let pointer := PACKED_FULL_LENGTH</span></span>
-<span id="L611"><span class="lineNum">     611</span> <span class="tlaUNC">           0 :             shares := mload(add(packed, pointer))</span></span>
-<span id="L612"><span class="lineNum">     612</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L613"><span class="lineNum">     613</span> <span class="tlaUNC">           0 :             owner := mload(add(packed, pointer))</span></span>
+<span id="L610"><span class="lineNum">     610</span> <span class="tlaGNC">           2 :             let pointer := PACKED_FULL_LENGTH</span></span>
+<span id="L611"><span class="lineNum">     611</span> <span class="tlaGNC">           2 :             shares := mload(add(packed, pointer))</span></span>
+<span id="L612"><span class="lineNum">     612</span> <span class="tlaGNC">           2 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L613"><span class="lineNum">     613</span> <span class="tlaGNC">           2 :             owner := mload(add(packed, pointer))</span></span>
 <span id="L614"><span class="lineNum">     614</span>              :         }</span>
 <span id="L615"><span class="lineNum">     615</span>              : </span>
-<span id="L616"><span class="lineNum">     616</span> <span class="tlaUNC">           0 :         input = BeforeTransitionCollateralInput(shares, owner);</span></span>
+<span id="L616"><span class="lineNum">     616</span> <span class="tlaGNC">           2 :         input = BeforeTransitionCollateralInput(shares, owner);</span></span>
 <span id="L617"><span class="lineNum">     617</span>              :     }</span>
 <span id="L618"><span class="lineNum">     618</span>              : </span>
 <span id="L619"><span class="lineNum">     619</span>              :     /// @dev Decodes packed data from the transition collateral hook</span>
 <span id="L620"><span class="lineNum">     620</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L621"><span class="lineNum">     621</span>              :     /// @return input decoded</span>
-<span id="L622"><span class="lineNum">     622</span> <span class="tlaUNC">           0 :     function afterTransitionCollateralDecode(bytes memory packed)</span></span>
+<span id="L622"><span class="lineNum">     622</span> <span class="tlaGNC">           2 :     function afterTransitionCollateralDecode(bytes memory packed)</span></span>
 <span id="L623"><span class="lineNum">     623</span>              :         internal</span>
 <span id="L624"><span class="lineNum">     624</span>              :         pure</span>
 <span id="L625"><span class="lineNum">     625</span>              :         returns (AfterTransitionCollateralInput memory input)</span>
 <span id="L626"><span class="lineNum">     626</span>              :     {</span>
-<span id="L627"><span class="lineNum">     627</span> <span class="tlaUNC">           0 :         uint256 shares;</span></span>
-<span id="L628"><span class="lineNum">     628</span> <span class="tlaUNC">           0 :         address owner;</span></span>
-<span id="L629"><span class="lineNum">     629</span> <span class="tlaUNC">           0 :         uint256 assets;</span></span>
+<span id="L627"><span class="lineNum">     627</span> <span class="tlaGNC">           2 :         uint256 shares;</span></span>
+<span id="L628"><span class="lineNum">     628</span> <span class="tlaGNC">           2 :         address owner;</span></span>
+<span id="L629"><span class="lineNum">     629</span> <span class="tlaGNC">           2 :         uint256 assets;</span></span>
 <span id="L630"><span class="lineNum">     630</span>              : </span>
 <span id="L631"><span class="lineNum">     631</span>              :         assembly { // solhint-disable-line no-inline-assembly</span>
-<span id="L632"><span class="lineNum">     632</span> <span class="tlaUNC">           0 :             let pointer := PACKED_FULL_LENGTH</span></span>
-<span id="L633"><span class="lineNum">     633</span> <span class="tlaUNC">           0 :             shares := mload(add(packed, pointer))</span></span>
-<span id="L634"><span class="lineNum">     634</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
-<span id="L635"><span class="lineNum">     635</span> <span class="tlaUNC">           0 :             owner := mload(add(packed, pointer))</span></span>
-<span id="L636"><span class="lineNum">     636</span> <span class="tlaUNC">           0 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
-<span id="L637"><span class="lineNum">     637</span> <span class="tlaUNC">           0 :             assets := mload(add(packed, pointer))</span></span>
+<span id="L632"><span class="lineNum">     632</span> <span class="tlaGNC">           2 :             let pointer := PACKED_FULL_LENGTH</span></span>
+<span id="L633"><span class="lineNum">     633</span> <span class="tlaGNC">           2 :             shares := mload(add(packed, pointer))</span></span>
+<span id="L634"><span class="lineNum">     634</span> <span class="tlaGNC">           2 :             pointer := add(pointer, PACKED_ADDRESS_LENGTH)</span></span>
+<span id="L635"><span class="lineNum">     635</span> <span class="tlaGNC">           2 :             owner := mload(add(packed, pointer))</span></span>
+<span id="L636"><span class="lineNum">     636</span> <span class="tlaGNC">           2 :             pointer := add(pointer, PACKED_FULL_LENGTH)</span></span>
+<span id="L637"><span class="lineNum">     637</span> <span class="tlaGNC">           2 :             assets := mload(add(packed, pointer))</span></span>
 <span id="L638"><span class="lineNum">     638</span>              :         }</span>
 <span id="L639"><span class="lineNum">     639</span>              : </span>
-<span id="L640"><span class="lineNum">     640</span> <span class="tlaUNC">           0 :         input = AfterTransitionCollateralInput(shares, owner, assets);</span></span>
+<span id="L640"><span class="lineNum">     640</span> <span class="tlaGNC">           2 :         input = AfterTransitionCollateralInput(shares, owner, assets);</span></span>
 <span id="L641"><span class="lineNum">     641</span>              :     }</span>
 <span id="L642"><span class="lineNum">     642</span>              : </span>
 <span id="L643"><span class="lineNum">     643</span>              :     /// @dev Decodes packed data from the switch collateral hook</span>
 <span id="L644"><span class="lineNum">     644</span>              :     /// @param packed The packed data (via abi.encodePacked)</span>
 <span id="L645"><span class="lineNum">     645</span>              :     /// @return input decoded</span>
-<span id="L646"><span class="lineNum">     646</span> <span class="tlaUNC">           0 :     function switchCollateralDecode(bytes memory packed)</span></span>
+<span id="L646"><span class="lineNum">     646</span> <span class="tlaUNC tlaBgUNC">           0 :     function switchCollateralDecode(bytes memory packed)</span></span>
 <span id="L647"><span class="lineNum">     647</span>              :         internal</span>
 <span id="L648"><span class="lineNum">     648</span>              :         pure</span>
 <span id="L649"><span class="lineNum">     649</span>              :         returns (SwitchCollateralInput memory input)</span>
@@ -721,13 +721,13 @@
 <span id="L659"><span class="lineNum">     659</span>              :     }</span>
 <span id="L660"><span class="lineNum">     660</span>              : </span>
 <span id="L661"><span class="lineNum">     661</span>              :     /// @dev Converts a uint8 to a boolean</span>
-<span id="L662"><span class="lineNum">     662</span> <span class="tlaUNC">           0 :     function _toBoolean(uint8 _value) internal pure returns (bool result) {</span></span>
-<span id="L663"><span class="lineNum">     663</span> <span class="tlaUNC">           0 :         if (_value == 0) {</span></span>
-<span id="L664"><span class="lineNum">     664</span> <span class="tlaUNC">           0 :             result = false;</span></span>
-<span id="L665"><span class="lineNum">     665</span> <span class="tlaUNC">           0 :         } else if (_value == 1) {</span></span>
-<span id="L666"><span class="lineNum">     666</span> <span class="tlaUNC">           0 :             result = true;</span></span>
+<span id="L662"><span class="lineNum">     662</span> <span class="tlaGNC tlaBgGNC">         802 :     function _toBoolean(uint8 _value) internal pure returns (bool result) {</span></span>
+<span id="L663"><span class="lineNum">     663</span> <span class="tlaGNC">         802 :         if (_value == 0) {</span></span>
+<span id="L664"><span class="lineNum">     664</span> <span class="tlaGNC">           1 :             result = false;</span></span>
+<span id="L665"><span class="lineNum">     665</span> <span class="tlaGNC">         801 :         } else if (_value == 1) {</span></span>
+<span id="L666"><span class="lineNum">     666</span> <span class="tlaGNC">           1 :             result = true;</span></span>
 <span id="L667"><span class="lineNum">     667</span>              :         } else {</span>
-<span id="L668"><span class="lineNum">     668</span> <span class="tlaUNC">           0 :             revert FailedToParseBoolean();</span></span>
+<span id="L668"><span class="lineNum">     668</span> <span class="tlaGNC">         800 :             revert FailedToParseBoolean();</span></span>
 <span id="L669"><span class="lineNum">     669</span>              :         }</span>
 <span id="L670"><span class="lineNum">     670</span>              :     }</span>
 <span id="L671"><span class="lineNum">     671</span>              : }</span>

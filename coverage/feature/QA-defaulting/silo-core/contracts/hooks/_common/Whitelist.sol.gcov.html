@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">6</td>
-            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">6</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 17:52:16</td>
+            <td class="headerValue">2025-12-10 19:47:00</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">3</td>
-            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">3</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -70,22 +70,22 @@
 <span id="L8"><span class="lineNum">       8</span>              : </span>
 <span id="L9"><span class="lineNum">       9</span>              :     error OnlyAllowedRole();</span>
 <span id="L10"><span class="lineNum">      10</span>              : </span>
-<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC tlaBgGNC">       30420 :     modifier onlyAllowedOrPublic() {</span></span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC tlaBgGNC">       30470 :     modifier onlyAllowedOrPublic() {</span></span>
 <span id="L12"><span class="lineNum">      12</span>              :         // If no allowed role is set, allow anyone to liquidate</span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">       30420 :         require(getRoleMemberCount(ALLOWED_ROLE) == 0 || hasRole(ALLOWED_ROLE, msg.sender), OnlyAllowedRole());</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">       30470 :         require(getRoleMemberCount(ALLOWED_ROLE) == 0 || hasRole(ALLOWED_ROLE, msg.sender), OnlyAllowedRole());</span></span>
 <span id="L14"><span class="lineNum">      14</span>              : </span>
 <span id="L15"><span class="lineNum">      15</span>              :         _;</span>
 <span id="L16"><span class="lineNum">      16</span>              :     }</span>
 <span id="L17"><span class="lineNum">      17</span>              : </span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaUNC tlaBgUNC">           0 :     modifier onlyAllowed() {</span></span>
-<span id="L19"><span class="lineNum">      19</span> <span class="tlaUNC">           0 :         require(hasRole(ALLOWED_ROLE, msg.sender), OnlyAllowedRole());</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">          11 :     modifier onlyAllowed() {</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">          11 :         require(hasRole(ALLOWED_ROLE, msg.sender), OnlyAllowedRole());</span></span>
 <span id="L20"><span class="lineNum">      20</span>              : </span>
 <span id="L21"><span class="lineNum">      21</span>              :         _;</span>
 <span id="L22"><span class="lineNum">      22</span>              :     }</span>
 <span id="L23"><span class="lineNum">      23</span>              : </span>
 <span id="L24"><span class="lineNum">      24</span>              :     // solhint-disable-next-line func-name-mixedcase</span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC tlaBgGNC">          71 :     function __Whitelist_init(address _owner) internal virtual {</span></span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">          71 :         _grantRole(DEFAULT_ADMIN_ROLE, _owner);</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">         103 :     function __Whitelist_init(address _owner) internal virtual {</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">         103 :         _grantRole(DEFAULT_ADMIN_ROLE, _owner);</span></span>
 <span id="L27"><span class="lineNum">      27</span>              :     }</span>
 <span id="L28"><span class="lineNum">      28</span>              : }</span>
         </pre>

@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 17:52:16</td>
+            <td class="headerValue">2025-12-10 19:47:00</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -73,28 +73,28 @@
 <span id="L11"><span class="lineNum">      11</span>              : /// @custom:security-contact security@silo.finance</span>
 <span id="L12"><span class="lineNum">      12</span>              : abstract contract ShareCollateralToken is ShareToken {</span>
 <span id="L13"><span class="lineNum">      13</span>              :     /// @inheritdoc IShareToken</span>
-<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC tlaBgGNC">      322715 :     function mint(address _owner, address /* _spender */, uint256 _amount) external virtual override onlySilo {</span></span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">      322715 :         _mint(_owner, _amount);</span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC tlaBgGNC">      677573 :     function mint(address _owner, address /* _spender */, uint256 _amount) external virtual override onlySilo {</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">      677455 :         _mint(_owner, _amount);</span></span>
 <span id="L16"><span class="lineNum">      16</span>              :     }</span>
 <span id="L17"><span class="lineNum">      17</span>              : </span>
 <span id="L18"><span class="lineNum">      18</span>              :     /// @inheritdoc IShareToken</span>
-<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">      272859 :     function burn(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {</span></span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">      272859 :         if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);</span></span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">      272859 :         _burn(_owner, _amount);</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">      352316 :     function burn(address _owner, address _spender, uint256 _amount) external virtual override onlySilo {</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">      352198 :         if (_owner != _spender) _spendAllowance(_owner, _spender, _amount);</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">      350936 :         _burn(_owner, _amount);</span></span>
 <span id="L22"><span class="lineNum">      22</span>              :     }</span>
 <span id="L23"><span class="lineNum">      23</span>              : </span>
 <span id="L24"><span class="lineNum">      24</span>              :     /// @dev Check if sender is solvent after the transfer</span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">      723650 :     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {</span></span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">      723650 :         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">     1185281 :     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">     1185281 :         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();</span></span>
 <span id="L27"><span class="lineNum">      27</span>              : </span>
 <span id="L28"><span class="lineNum">      28</span>              :         // for minting or burning, Silo is responsible to check all necessary conditions</span>
 <span id="L29"><span class="lineNum">      29</span>              :         // for transfer make sure that _sender is solvent after transfer</span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">      723650 :         if (ShareTokenLib.isTransfer(_sender, _recipient) &amp;&amp; $.transferWithChecks) {</span></span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">       29995 :             bool senderIsSolvent = ShareCollateralTokenLib.isSolventAfterCollateralTransfer(_sender);</span></span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">       29995 :             require(senderIsSolvent, IShareToken.SenderNotSolventAfterTransfer());</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">     1185281 :         if (ShareTokenLib.isTransfer(_sender, _recipient) &amp;&amp; $.transferWithChecks) {</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">       32436 :             bool senderIsSolvent = ShareCollateralTokenLib.isSolventAfterCollateralTransfer(_sender);</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">       32436 :             require(senderIsSolvent, IShareToken.SenderNotSolventAfterTransfer());</span></span>
 <span id="L33"><span class="lineNum">      33</span>              :         }</span>
 <span id="L34"><span class="lineNum">      34</span>              : </span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">      723650 :         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">     1183676 :         ShareToken._afterTokenTransfer(_sender, _recipient, _amount);</span></span>
 <span id="L36"><span class="lineNum">      36</span>              :     }</span>
 <span id="L37"><span class="lineNum">      37</span>              : }</span>
         </pre>

@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-10 17:52:16</td>
+            <td class="headerValue">2025-12-10 19:47:00</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">16.7&nbsp;%</td>
@@ -83,13 +83,13 @@
 <span id="L21"><span class="lineNum">      21</span>              :     /// @dev Registering new contract</span>
 <span id="L22"><span class="lineNum">      22</span>              :     /// @param _key key under which contract will be stored</span>
 <span id="L23"><span class="lineNum">      23</span>              :     /// @param _contract contract address</span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC tlaBgGNC">         156 :     function register(string calldata _key, address _contract) external virtual onlyOwner {</span></span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">         156 :         bytes32 key = makeKey(_key);</span></span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">         156 :         if (_coordinates[key] != address(0)) revert KeyIsTaken();</span></span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">         156 :         if (_contract == address(0)) revert AddressZero();</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC tlaBgGNC">        4152 :     function register(string calldata _key, address _contract) external virtual onlyOwner {</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">        4152 :         bytes32 key = makeKey(_key);</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">        4152 :         if (_coordinates[key] != address(0)) revert KeyIsTaken();</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">        4152 :         if (_contract == address(0)) revert AddressZero();</span></span>
 <span id="L28"><span class="lineNum">      28</span>              : </span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">         156 :         _coordinates[key] = _contract;</span></span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">         156 :         emit NewCoordinates(_key, _contract);</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">        4152 :         _coordinates[key] = _contract;</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">        4152 :         emit NewCoordinates(_key, _contract);</span></span>
 <span id="L31"><span class="lineNum">      31</span>              :     }</span>
 <span id="L32"><span class="lineNum">      32</span>              : </span>
 <span id="L33"><span class="lineNum">      33</span>              :     /// @dev Removing coordinates</span>
@@ -130,7 +130,7 @@
 <span id="L68"><span class="lineNum">      68</span>              :     /// @param _key string key</span>
 <span id="L69"><span class="lineNum">      69</span>              :     /// @return bytes32 representation of the `_key`</span>
 <span id="L70"><span class="lineNum">      70</span> <span class="tlaUNC">           0 :     function makeKey(string calldata _key) public pure virtual returns (bytes32) {</span></span>
-<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC tlaBgGNC">         156 :         return keccak256(abi.encodePacked(_key));</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC tlaBgGNC">        4152 :         return keccak256(abi.encodePacked(_key));</span></span>
 <span id="L72"><span class="lineNum">      72</span>              :     }</span>
 <span id="L73"><span class="lineNum">      73</span>              : }</span>
         </pre>
