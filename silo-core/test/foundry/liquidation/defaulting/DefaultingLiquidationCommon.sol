@@ -27,13 +27,11 @@ import {DefaultingLiquidationAsserts} from "./common/DefaultingLiquidationAssert
 
 /*
 
-- anything todo with decimals? don;t think so, we only transfer shares
+- anything with decimals? don't think so, we only transfer shares
 
 - fees should be able to withdraw always? no, we might need liquidity or repay
 
 - if there is no bad debt, asset/share ratio should never go < 1.0
-
-TODO test if there is diff when we configure gauge
 */
 
 /*
@@ -1518,7 +1516,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         if (_warp) vm.warp(block.timestamp + 1 hours);
 
         _removeIncentiveController();
-        gauge3 = _createIncentiveController(); // TODO can we create new without removing?
+        gauge3 = _createIncentiveController();
         if (_warp) vm.warp(block.timestamp + 1 hours);
 
         _moveUntillDefaultingPossible(makeAddr("borrower3"), 0.001e18, 1 hours);
