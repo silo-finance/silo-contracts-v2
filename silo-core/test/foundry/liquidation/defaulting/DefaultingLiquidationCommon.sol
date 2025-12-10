@@ -866,7 +866,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         vm.assume(_priceDropPercentage > 0.0005e18);
 
         // 0.5% to 20% price drop cap
-        int256 dropPercentage = int256(uint256(_priceDropPercentage) % 0.20e18);
+        int256 dropPercentage = int256(uint256(_priceDropPercentage) % 0.2e18);
 
         uint256 targetPrice = _calculateNewPrice(uint64(oracle0.price()), -int64(dropPercentage));
 
@@ -886,7 +886,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         console2.log("AFTER WARP AND PRICE CHANGE");
         _printLtv(borrower);
-        
+
         _createIncentiveController();
 
         _moveUntillDefaultingPossible(borrower, 0.0001e18, 1 hours);
