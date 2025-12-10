@@ -14,7 +14,7 @@ contract WhitelistImpl is Whitelist {
         __Whitelist_init(_owner);
     }
 
-    function testOnlyAllowed() external onlyAllowed {
+    function onlyAllowedFn() external onlyAllowed {
         // Test function protected by onlyAllowed modifier
     }
 
@@ -124,7 +124,7 @@ contract WhitelistTest is Test {
         whitelist.grantRole(ALLOWED_ROLE, allowedUser);
 
         vm.prank(allowedUser);
-        whitelist.testOnlyAllowed();
+        whitelist.onlyAllowedFn();
     }
 
     /*
@@ -133,7 +133,7 @@ contract WhitelistTest is Test {
     function test_OnlyAllowed_RevertsForUserWithoutAllowedRole() public {
         vm.prank(unauthorizedUser);
         vm.expectRevert(Whitelist.OnlyAllowedRole.selector);
-        whitelist.testOnlyAllowed();
+        whitelist.onlyAllowedFn();
     }
 
     /*
@@ -143,7 +143,7 @@ contract WhitelistTest is Test {
         // Owner has DEFAULT_ADMIN_ROLE but not ALLOWED_ROLE
         vm.prank(owner);
         vm.expectRevert(Whitelist.OnlyAllowedRole.selector);
-        whitelist.testOnlyAllowed();
+        whitelist.onlyAllowedFn();
     }
 
     /*
@@ -152,7 +152,7 @@ contract WhitelistTest is Test {
     function test_OnlyAllowed_RevertsForZeroAddress() public {
         vm.prank(zeroAddress);
         vm.expectRevert(Whitelist.OnlyAllowedRole.selector);
-        whitelist.testOnlyAllowed();
+        whitelist.onlyAllowedFn();
     }
 
     /*
@@ -163,7 +163,7 @@ contract WhitelistTest is Test {
         whitelist.grantRole(ALLOWED_ROLE, allowedUser);
 
         vm.prank(allowedUser);
-        whitelist.testOnlyAllowed();
+        whitelist.onlyAllowedFn();
 
         vm.prank(owner);
         whitelist.revokeRole(ALLOWED_ROLE, allowedUser);
@@ -171,7 +171,7 @@ contract WhitelistTest is Test {
 
         vm.prank(allowedUser);
         vm.expectRevert(Whitelist.OnlyAllowedRole.selector);
-        whitelist.testOnlyAllowed();
+        whitelist.onlyAllowedFn();
     }
 
     // ============ onlyAllowedOrPublic Modifier Tests ============
@@ -182,16 +182,16 @@ contract WhitelistTest is Test {
     function test_OnlyAllowedOrPublic_AllowsAnyoneWhenNoRolesSet() public {
         // No roles granted, should allow public access
         vm.prank(unauthorizedUser);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
 
         vm.prank(allowedUser);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
 
         vm.prank(owner);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
         
         vm.prank(zeroAddress);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
     }
 
     /*
@@ -202,7 +202,7 @@ contract WhitelistTest is Test {
         whitelist.grantRole(ALLOWED_ROLE, allowedUser);
 
         vm.prank(allowedUser);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
     }
 
     /*
@@ -214,7 +214,7 @@ contract WhitelistTest is Test {
 
         vm.prank(unauthorizedUser);
         vm.expectRevert(Whitelist.OnlyAllowedRole.selector);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
     }
 
     /*
@@ -226,14 +226,14 @@ contract WhitelistTest is Test {
 
         vm.expectRevert(Whitelist.OnlyAllowedRole.selector);
         vm.prank(unauthorizedUser);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
 
         vm.prank(owner);
         whitelist.revokeRole(ALLOWED_ROLE, allowedUser);
 
         // After all roles revoked, should allow public access
         vm.prank(unauthorizedUser);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
     }
 
     /*
@@ -250,20 +250,20 @@ contract WhitelistTest is Test {
         vm.stopPrank();
 
         vm.prank(allowedUser);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
 
         vm.prank(user2);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
 
         vm.prank(user3);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
     }
 
 
     function test_OnlyAllowedOrPublic_TransitionFromPublicToRestricted() public {
         // Initially public (no roles)
         vm.prank(unauthorizedUser);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
 
         // Grant role to someone
         vm.prank(owner);
@@ -272,17 +272,17 @@ contract WhitelistTest is Test {
         // Now unauthorized user should be blocked
         vm.prank(unauthorizedUser);
         vm.expectRevert(Whitelist.OnlyAllowedRole.selector);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
 
         // But allowed user should still work
         vm.prank(allowedUser);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
 
         vm.prank(owner);
         whitelist.revokeRole(ALLOWED_ROLE, allowedUser);
 
         vm.prank(unauthorizedUser);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
     }
 
     // ============ Integration Tests ============
@@ -297,7 +297,7 @@ contract WhitelistTest is Test {
 
         // 1. Initially public access
         vm.prank(user1);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
 
         // 2. Grant roles to multiple users
         vm.startPrank(owner);
@@ -307,23 +307,23 @@ contract WhitelistTest is Test {
 
         // 3. Users with roles can access
         vm.prank(user1);
-        whitelist.testOnlyAllowed();
+        whitelist.onlyAllowedFn();
         vm.prank(user1);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
 
         vm.prank(user2);
-        whitelist.testOnlyAllowed();
+        whitelist.onlyAllowedFn();
         vm.prank(user2);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
 
         // 4. User without role cannot access
         vm.prank(user3);
         vm.expectRevert(Whitelist.OnlyAllowedRole.selector);
-        whitelist.testOnlyAllowed();
+        whitelist.onlyAllowedFn();
 
         vm.prank(user3);
         vm.expectRevert(Whitelist.OnlyAllowedRole.selector);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
 
         // 5. Revoke one role
         vm.prank(owner);
@@ -332,11 +332,11 @@ contract WhitelistTest is Test {
         // 6. User1 can no longer access
         vm.prank(user1);
         vm.expectRevert(Whitelist.OnlyAllowedRole.selector);
-        whitelist.testOnlyAllowed();
+        whitelist.onlyAllowedFn();
 
         // 7. User2 still can access
         vm.prank(user2);
-        whitelist.testOnlyAllowed();
+        whitelist.onlyAllowedFn();
 
         // 8. Revoke all roles
         vm.prank(owner);
@@ -344,6 +344,6 @@ contract WhitelistTest is Test {
 
         // 9. Public access restored
         vm.prank(user3);
-        whitelist.testOnlyAllowedOrPublic();
+        whitelist.onlyAllowedOrPublicFn();
     }
 }
