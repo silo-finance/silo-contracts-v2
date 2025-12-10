@@ -872,8 +872,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     ) public virtual {
         vm.assume(_priceDropPercentage > 0.0005e18);
 
-        // 0.5% to 15.5% price drop cap
-        int256 dropPercentage = int256(uint256(_priceDropPercentage) % 0.15e18);
+        // 0.5% to 20% price drop cap
+        int256 dropPercentage = int256(uint256(_priceDropPercentage) % 0.20e18);
 
         uint256 targetPrice = _calculateNewPrice(uint64(oracle0.price()), -int64(dropPercentage));
 
@@ -892,15 +892,14 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         vm.assume(!_isOracleThrowing(borrower));
 
         console2.log("AFTER WARP AND PRICE CHANGE");
-
-        uint256 ltv = _printLtv(borrower);
-        vm.assume(ltv < 1e18); // we dont want back debt, in bad debt we reset position
-
+        _printLtv(borrower);
+        
         _createIncentiveController();
 
-        _printLtv(borrower);
+        _moveUntillDefaultingPossible(borrower, 0.0001e18, 1 hours);
 
-        vm.assume(_defaultingPossible(borrower));
+        uint256 ltv = _printLtv(borrower);
+        vm.assume(ltv < 1e18); // we dont want bad debt, in bad debt we reset position
 
         uint256 snapshot = vm.snapshotState();
         console2.log("snapshot taken", snapshot);
