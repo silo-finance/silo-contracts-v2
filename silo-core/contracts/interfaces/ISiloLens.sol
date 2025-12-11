@@ -27,7 +27,7 @@ interface ISiloLens {
     /// @notice Retrieves the version of the contract
     /// @param _contract Address of the contract
     /// @return version The version of the contract in format "SiloLens 3.17.0",
-    /// "legacy" if not implement IVersioned, empty string if not found (not a contract)
+    /// "legacy" if not implement IVersioned, "Not a contract" if not a contract.
     function getVersion(address _contract) external view returns (string memory version);
 
     /// @dev calculates solvency

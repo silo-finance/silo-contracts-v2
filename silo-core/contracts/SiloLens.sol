@@ -29,7 +29,7 @@ contract SiloLens is ISiloLens, IVersioned {
 
     /// @inheritdoc ISiloLens
     function getVersion(address _contract) external view returns (string memory version) {
-        if (_contract.code.length == 0) return "";
+        if (_contract.code.length == 0) return "Not a contract";
 
         try IVersioned(_contract).VERSION() returns (string memory v) {
             return v;
