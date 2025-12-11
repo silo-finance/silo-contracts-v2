@@ -6,6 +6,7 @@ import {CommonDeploy} from "./_CommonDeploy.sol";
 import {InterestRateModelV2FactoryDeploy} from "./InterestRateModelV2FactoryDeploy.s.sol";
 import {InterestRateModelV2Deploy} from "./InterestRateModelV2Deploy.s.sol";
 import {SiloHookV1Deploy} from "./SiloHookV1Deploy.s.sol";
+import {SiloHookV2Deploy} from "./SiloHookV2Deploy.s.sol";
 import {SiloDeployerDeploy} from "./SiloDeployerDeploy.s.sol";
 import {LiquidationHelperDeploy} from "./LiquidationHelperDeploy.s.sol";
 import {TowerDeploy} from "./TowerDeploy.s.sol";
@@ -27,6 +28,7 @@ contract MainnetDeploy is CommonDeploy {
             new InterestRateModelV2FactoryDeploy();
         InterestRateModelV2Deploy interestRateModelV2Deploy = new InterestRateModelV2Deploy();
         SiloHookV1Deploy siloHookV1Deploy = new SiloHookV1Deploy();
+        SiloHookV2Deploy siloHookV2Deploy = new SiloHookV2Deploy();
         SiloDeployerDeploy siloDeployerDeploy = new SiloDeployerDeploy();
         LiquidationHelperDeploy liquidationHelperDeploy = new LiquidationHelperDeploy();
         SiloLensDeploy siloLensDeploy = new SiloLensDeploy();
@@ -38,11 +40,14 @@ contract MainnetDeploy is CommonDeploy {
         SiloIncentivesControllerFactoryDeploy siloIncentivesControllerFactoryDeploy =
             new SiloIncentivesControllerFactoryDeploy();
 
+        // TODO this way will deploy factory multiple times, the fix is inside 
+        // https://github.com/silo-finance/silo-contracts-v2/pull/1649
         _deploySiloFactory();
         interestRateModelV2ConfigFactoryDeploy.run();
         dkinkIRMFactoryDeploy.run();
         interestRateModelV2Deploy.run();
         siloHookV1Deploy.run();
+        siloHookV2Deploy.run();
         siloDeployerDeploy.run();
         liquidationHelperDeploy.run();
         siloLensDeploy.run();

@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 // Libraries
 import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 
 // Contracts
 import {Invariants} from "./Invariants.t.sol";
