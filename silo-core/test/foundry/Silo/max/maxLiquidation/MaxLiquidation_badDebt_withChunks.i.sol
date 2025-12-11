@@ -7,7 +7,7 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {MaxLiquidationBadDebtTest} from "./MaxLiquidation_badDebt.i.sol";
 
 /*
-    forge test -vv --ffi --mc MaxLiquidationBadDebtWithChunksTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc MaxLiquidationBadDebtWithChunksTest
 
     same as MaxLiquidationBadDebtTest but with chunks
 */

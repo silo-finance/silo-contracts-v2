@@ -2,12 +2,8 @@
 pragma solidity ^0.8.19;
 
 // Contracts
-import {Silo, ISilo} from "silo-core/contracts/Silo.sol";
+import {Silo} from "silo-core/contracts/Silo.sol";
 import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
-import {
-    IInterestRateModelV2Config,
-    InterestRateModelV2Config
-} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 
 // Mock Contracts
 import {TestERC20} from "../utils/mocks/TestERC20.sol";
@@ -21,19 +17,14 @@ import {Actor} from "../utils/Actor.sol";
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {
-    IInterestRateModelV2Config,
-    InterestRateModelV2Config
+    IInterestRateModelV2Config
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {
-    IInterestRateModelV2Factory,
-    InterestRateModelV2Factory
+    IInterestRateModelV2Factory
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 
-import {
-    IInterestRateModelV2,
-    InterestRateModelV2
-} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
-import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
+import {IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {ISiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {SwapRouterMock} from "silo-core/test/foundry/leverage/mocks/SwapRouterMock.sol";
 
