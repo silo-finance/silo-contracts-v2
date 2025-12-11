@@ -23,6 +23,14 @@ contract DefaultingLiquidationInvalidConfigTest is Test {
     SiloHookV2 defaulting;
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_HookV2_version -vv
+    */
+    function test_HookV2_version() public {
+        ISiloConfig.ConfigData memory config;
+        _cloneHook(config).VERSION();
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_twoWayMarket -vv
     */
     function test_defaulting_twoWayMarket() public {
