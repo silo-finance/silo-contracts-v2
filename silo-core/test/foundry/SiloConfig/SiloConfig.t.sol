@@ -908,9 +908,9 @@ contract SiloConfigTest is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --mt test_reentrancyGuardEntered
+    FOUNDRY_PROFILE=core_test forge test -vv --mt test_siloConfig_reentrancyGuardEntered
     */
-    function test_reentrancyGuardEntered() public {
+    function test_siloConfig_reentrancyGuardEntered() public {
         assertFalse(_siloConfig.reentrancyGuardEntered(), "reentrancyGuardEntered should return false");
 
         vm.prank(_silo0Default);

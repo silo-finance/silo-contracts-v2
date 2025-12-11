@@ -8,7 +8,7 @@ import {TestStateLib} from "../../TestState.sol";
 contract BorrowSameAssetReentrancyTest is MethodReentrancyTest {
     function callMethod() external {
         ISilo silo0 = TestStateLib.silo0();
-        
+
         vm.expectRevert(ISilo.Deprecated.selector);
         silo0.borrowSameAsset(0, address(0), address(0));
     }
