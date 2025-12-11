@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.0.0] - 2025-12-11
+### Added
+- silo-core: Liquidation by defaulting (#1694)
+
+### Fixed
+- silo-core: handle 999 share case in liquidation (#1696)
+- silo-core: fix rounding direction in `valueToAssetsByRatio` (#1701)
+- fix: silo incentive backwards compatible (#1710)
+
+### Removed
+- silo-core: remove same borrow functionality (#1703)
+
 ## [3.13.2] - 2025-12-11
 ### Added
 - silo-core: calculate debt to cover for profitable liquidation (#1693)

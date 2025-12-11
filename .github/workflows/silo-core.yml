@@ -129,7 +129,7 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: all fast test
-                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest|NewMarketTest|SiloDeployerIntegrationTest" --ffi -vv
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --nmc "MaxBorrow|MaxLiquidationTest|MaxLiquidationBadDebt|PreviewTest|PreviewDepositTest|PreviewMintTest|SiloLensCompatibilityTest|NewMarketTest|SiloDeployerIntegrationTest|BackwardsCompatibleGaugeLikeTest|DefaultingLiquidation" --ffi -vv
 
     slow-contracts-tests:
         strategy:
@@ -140,7 +140,8 @@ jobs:
                     MaxLiquidationBadDebt,
                     PreviewTest,
                     PreviewDepositTest,
-                    PreviewMintTest
+                    PreviewMintTest,
+                    DefaultingLiquidation
                ]
 
         runs-on: ubuntu-latest
@@ -169,10 +170,8 @@ jobs:
             matrix:
                 match-test: [
                     test_maxLiquidation_noDebt,
-                    test_maxLiquidation_partial_1token_sTokens,
-                    test_maxLiquidation_partial_1token_tokens,
-                    test_maxLiquidation_partial_2tokens_sTokens,
-                    test_maxLiquidation_partial_2tokens_tokens
+                    test_maxLiquidation_partial_sTokens,
+                    test_maxLiquidation_partial_tokens
                ]
 
         runs-on: ubuntu-latest
@@ -195,29 +194,3 @@ jobs:
 
             -   name: ${{ matrix.match-test }}
                 run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc MaxLiquidationTest --mt ${{ matrix.match-test }} --ffi -vv
-
-    SiloLensCompatibilityTest:
-        strategy:
-            matrix:
-                match-contract: [ SiloLensCompatibilityTest ]
-
-        runs-on: ubuntu-latest
-        steps:
-            -   uses: actions/checkout@v3
-                with:
-                    submodules: recursive
-
-            -   name: Install Foundry
-                uses: foundry-rs/foundry-toolchain@v1
-                with:
-                    version: v1.2.3
-
-            -   name: Build silo foundry utils
-                working-directory: ./gitmodules/silo-foundry-utils
-                run: |
-                    cargo build --release
-                    cp target/release/silo-foundry-utils ../../silo-foundry-utils
-                    ../../silo-foundry-utils --version
-
-            -   name: ${{ matrix.match-contract }}
-                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc ${{ matrix.match-contract }} --ffi -vv

@@ -10,9 +10,7 @@ import {Silo} from "silo-core/contracts/Silo.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
 import {
-    IInterestRateModelV2,
-    InterestRateModelV2
-} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+    IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
@@ -34,16 +32,12 @@ import {
     IInterestRateModelV2Factory,
     InterestRateModelV2Factory
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
-import {
-    IInterestRateModelV2Config,
-    InterestRateModelV2Config
-} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
 import {ISilo} from "silo-core/contracts/Silo.sol";
 import {DynamicKinkModelFactory} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
 import {DynamicKinkModel} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModel.sol";
 
-import "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract Setup is BaseTest {

@@ -133,11 +133,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         return bytes32(abi.encodePacked(_programName));
     }
 
-    /**
-     * @dev Returns the name of an incentives program (converts bytes32 to string)
-     * @param _programId The id of the incentives program
-     * @return The name of the incentives program
-     */
+    /// @inheritdoc IDistributionManager
     function getProgramName(bytes32 _programId) public view virtual returns (string memory) {
         if (_isImmediateDistributionProgram[_programId]) {
             return Strings.toHexString(uint256(_programId), 20);

@@ -51,11 +51,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     forge test -vv --ffi --mt test_maxRedeem_whenBorrow
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxRedeem_whenBorrow_1token_fuzz(uint128 _collateral, uint128 _toBorrow) public {
-        _maxRedeem_whenBorrow(_collateral, _toBorrow);
-    }
-
-    function _maxRedeem_whenBorrow(uint128 _collateral, uint128 _toBorrow) private {
+    function test_maxRedeem_whenBorrow_fuzz(uint128 _collateral, uint128 _toBorrow) public {
         _createDebtOnSilo1(_collateral, _toBorrow);
 
         ISilo collateralSilo = silo0;
@@ -72,15 +68,10 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxRedeem_whenInterest_
+    forge test -vv --ffi --mt test_maxRedeem_whenInterest
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxRedeem_whenInterest_1token_fuzz(uint128 _collateral, uint128 _toBorrow) public {
-        // (uint128 _collateral, uint128 _toBorrow) = (5407, 5028);
-        _maxRedeem_whenInterest(_collateral, _toBorrow);
-    }
-
-    function _maxRedeem_whenInterest(uint128 _collateral, uint128 _toBorrow) private {
+    function test_maxRedeem_whenInterest_fuzz(uint128 _collateral, uint128 _toBorrow) public {
         _createDebtOnSilo1(_collateral, _toBorrow);
 
         vm.warp(block.timestamp + 100 days);
@@ -99,14 +90,10 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxRedeem_bothSilosWithInterest_
+    forge test -vv --ffi --mt test_maxRedeem_bothSilosWithInterest
     */
     /// forge-config: core_test.fuzz.runs = 1000
-    function test_maxRedeem_bothSilosWithInterest_1token_fuzz(uint128 _collateral, uint128 _toBorrow) public {
-        _maxRedeem_bothSilosWithInterest(_collateral, _toBorrow);
-    }
-
-    function _maxRedeem_bothSilosWithInterest(uint128 _collateral, uint128 _toBorrow) private {
+    function test_maxRedeem_bothSilosWithInterest_fuzz(uint128 _collateral, uint128 _toBorrow) public {
         _createDebtOnSilo1(_collateral, _toBorrow);
         _createDebtOnSilo0(_collateral, _toBorrow);
 

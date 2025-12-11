@@ -9,7 +9,7 @@ import {IERC721Receiver} from "openzeppelin5/token/ERC721/IERC721Receiver.sol";
 // Libraries
 import {Vm} from "forge-std/Base.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
-import "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 
 // Utils
 import {Actor} from "../utils/Actor.sol";

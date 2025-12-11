@@ -14,16 +14,17 @@ import {DistributionTypes} from "./lib/DistributionTypes.sol";
 
 /**
  * @title SiloIncentivesController
+ * @dev THIS CONTRACT IS NOT BACKWARDS COMPATIBLE AND SHOULD NOT BE USED DIRECTLY
  * @notice Distributor contract for rewards to the Aave protocol, using a staked token as rewards asset.
  * The contract stakes the rewards before redistributing them to the Aave protocol participants.
  * The reference staked token implementation is at https://github.com/aave/aave-stake-v2
  * @author Aave
  */
-contract SiloIncentivesController is BaseIncentivesController {
+abstract contract SiloIncentivesController is BaseIncentivesController {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using SafeERC20 for IERC20;
 
-    /// @notice Silo share token
+    /// @inheritdoc ISiloIncentivesController
     address public immutable SHARE_TOKEN;
 
     /// @param _owner address of wallet that can manage the storage
@@ -94,12 +95,17 @@ contract SiloIncentivesController is BaseIncentivesController {
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function immediateDistribution(address _tokenToDistribute, uint104 _amount) external virtual onlyNotifier {
-        if (_amount == 0) return;
+    function immediateDistribution(address _tokenToDistribute, uint104 _amount)
+        external
+        virtual
+        onlyNotifier
+        returns (bytes32 programId) 
+    {
+        if (_amount == 0) return bytes32(0);
 
         uint256 totalStaked = _shareToken().totalSupply();
 
-        bytes32 programId = _getOrCreateImmediateDistributionProgram(_tokenToDistribute);
+        programId = _getOrCreateImmediateDistributionProgram(_tokenToDistribute);
 
         IncentivesProgram storage program = incentivesPrograms[programId];
 
