@@ -33,7 +33,7 @@ contract DynamicKinkModelTest is KinkCommonTest {
         );
     }
 
-    function test_kink_version() public {
+    function test_kink_version() public view {
         irm.VERSION();
     }
 

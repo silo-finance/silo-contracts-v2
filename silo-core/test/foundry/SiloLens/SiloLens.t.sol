@@ -18,11 +18,9 @@ import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 
 /*
-    forge test -vv --ffi --mc SiloLensTest
+FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloLensTest
 */
 contract SiloLensTest is SiloLittleHelper, Test {
-    string public constant VERSION = "this should not break CI because it is a test contract";
-
     uint256 internal constant _AMOUNT_COLLATERAL = 1000e18;
     uint256 internal constant _AMOUNT_PROTECTED = 1000e18;
     uint256 internal constant _AMOUNT_BORROW = 500e18;
