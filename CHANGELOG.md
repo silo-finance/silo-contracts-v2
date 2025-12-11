@@ -6,6 +6,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [3.13.2] - 2025-12-11
+### Added
+- silo-core: calculate debt to cover for profitable liquidation (#1693)
+- rescue WAVAX from vault (#1691)
+
+### Changed
+- known issues: Liquidation collateral underestimation (#1578)
+- silo-coracles: cleanup for PTLinear oracle
+- silo-core: compare SiloDeployer addresses to previous deployment (#1688)
+- silo-vaults: fix broadcast path (#1689)
+- silo-core: fix search for IRM config name
+- silo-core: run deployer check on deployment (#1686)
+
+### Markets
+- silo-core: `sYUSD/USDC`` market on Avalanche (#1678)
+- silo-core: `sUSDp/USDC market on Avalanche (#1677)
+- silo-core: `savUSD / USDC` Avalanche market (#1683)
+- silo-core: `savBTC / BTC` Avalanche market (#1684)
+- silo-core: `mAPOLLO/USDC` market on Mainnet (#1669)
+
 ## [3.13.1] - 2025-12-11
 ### Removed
 - remove deprecated `FixedPricePTAMMOracle`

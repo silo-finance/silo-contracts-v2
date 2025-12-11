@@ -44,3 +44,15 @@ Silos incentives controller with this issue: Sonic 1 - 101, Arbitrum 100 - 111, 
 The leverage contract requires approval of share debt tokens so it can borrow on behalf of the user. Recent versions of the debt share token used `approve` fn for that, but it was changed in PR#1098 (Release 3.0.0), and after that change, we need to use `setReceiveApproval` fn.
 
 Silos with id < 100 on Sonic use `approve`. All other versions use `setReceiveApproval` fn.
+
+### Liquidation collateral overestimation
+
+The `PartialLiquidationLib` uses a fixed `_UNDERESTIMATION` constant of 2 wei to account for rounding errors during liquidation conversions (assets → shares → assets). This underestimation becomes insufficient when the asset-to-share ratio is high.
+
+During liquidation, the protocol performs two conversions that both round down:
+1. Converting collateral assets to shares (rounds down)
+2. Converting shares back to assets for withdrawal (rounds down)
+
+When the asset/share ratio is high, cumulative rounding errors can exceed 2 wei. The estimated value may be up to 2 × rounding error higher, because there are two conversions that round down. As a result, maxLiquidation() may overestimate the collateral to be liquidated in such cases.
+
+**Recommendation**: Instead of comparing maxLiquidation directly with the actual liquidation result, just check whether the liquidation is profitable. This avoids failed transactions caused by a small wei-level overestimation.

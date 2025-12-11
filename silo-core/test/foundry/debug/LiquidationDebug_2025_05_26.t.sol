@@ -26,8 +26,7 @@ contract LiquidationDebug_2025_05_26 is IntegrationTest {
 
         vm.createSelectFork("https://rpc-gel.inkonchain.com", 14568229 - 1);
 
-        helper =
-            new LiquidationHelper(weth, swapAllowanceHolder, payable(0xE8e8041cB5E3158A0829A19E014CA1cf91098554));
+        helper = new LiquidationHelper(weth, swapAllowanceHolder, payable(0xE8e8041cB5E3158A0829A19E014CA1cf91098554));
     }
 
     /*
