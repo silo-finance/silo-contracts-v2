@@ -42,10 +42,10 @@ jobs:
         
         if [ -z "$PREVIOUS_TAG" ]; then
           echo "No previous version tag found, getting all commits"
-          COMMITS=$(git log --oneline --pretty=format:"%s" --no-merges)
+          COMMITS=$(git log --reverse --oneline --pretty=format:"%s" --no-merges)
         else
           echo "Found previous tag: $PREVIOUS_TAG"
-          COMMITS=$(git log $PREVIOUS_TAG..HEAD --oneline --pretty=format:"%s" --no-merges)
+          COMMITS=$(git log --reverse $PREVIOUS_TAG..HEAD --oneline --pretty=format:"%s" --no-merges)
         fi
         
         # Count commits
@@ -148,19 +148,47 @@ jobs:
           ].join('\n');
 
           try {
-            console.log('Creating comment for PR #' + context.issue.number);
+            console.log('Looking for existing comment for PR #' + context.issue.number);
             
-            // Create a comment with the changelog suggestion
-            await github.rest.issues.createComment({
+            // Find existing comment from this bot
+            const comments = await github.rest.issues.listComments({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: changelogSuggestion
             });
             
-            console.log('Created CHANGELOG.md suggestion comment with ' + commitCount + ' commits for version ' + version);
+            // Look for a comment that starts with our marker
+            const botComment = comments.data.find(comment => 
+              comment.body.includes('## 📝 Suggested CHANGELOG.md Entry for Version')
+            );
+            
+            if (botComment) {
+              console.log('Found existing comment, updating it...');
+              
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: changelogSuggestion
+              });
+              
+              console.log('Updated existing CHANGELOG.md suggestion comment with ' + commitCount + ' commits for version ' + version);
+            } else {
+              console.log('No existing comment found, creating new one...');
+              
+              // Create a new comment with the changelog suggestion
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: changelogSuggestion
+              });
+              
+              console.log('Created new CHANGELOG.md suggestion comment with ' + commitCount + ' commits for version ' + version);
+            }
           } catch (error) {
-            console.log('Failed to create comment:', error.message);
+            console.log('Failed to create/update comment:', error.message);
             console.log('PR number:', context.issue?.number);
             throw error; // Re-throw to fail the step
           }
