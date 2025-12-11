@@ -2,27 +2,31 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
+import {console2} from "forge-std/console2.sol";
+
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import {SiloIncentivesControllerFactory} from "silo-core/contracts/incentives/SiloIncentivesControllerFactory.sol";
+import {ISiloIncentivesControllerFactory} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesControllerFactory.sol";
 import {SiloIncentivesControllerFactoryDeploy} from "silo-core/deploy/SiloIncentivesControllerFactoryDeploy.s.sol";
-import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
+import {SiloIncentivesControllerCompatible} from "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
 import {DistributionTypes} from "silo-core/contracts/incentives/lib/DistributionTypes.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 import {AddressUtilsLib} from "silo-core/contracts/lib/AddressUtilsLib.sol";
 
-// FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloIncentivesControllerTest
+/*
+FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloIncentivesControllerTest
+*/
 contract SiloIncentivesControllerTest is Test {
-    SiloIncentivesController internal _controller;
+    SiloIncentivesControllerCompatible internal _controller;
 
     address internal _owner = makeAddr("Owner");
     address internal _notifier;
     address internal _rewardToken;
-    SiloIncentivesControllerFactory internal _factory;
+    ISiloIncentivesControllerFactory internal _factory;
 
     address internal user1 = makeAddr("User1");
     address internal user2 = makeAddr("User2");
@@ -46,13 +50,23 @@ contract SiloIncentivesControllerTest is Test {
 
         _factory = deployer.run();
 
-        _controller = SiloIncentivesController(_factory.create(_owner, _notifier, _notifier, bytes32(0)));
+        _controller = SiloIncentivesControllerCompatible(_factory.create(_owner, _notifier, _notifier, bytes32(0)));
 
         assertTrue(
             _factory.isSiloIncentivesController(address(_controller)), "expected controller created in factory"
         );
 
         _PRECISION = _controller.TEN_POW_PRECISION();
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_getProgramName -vv
+    */
+    function test_getProgramName() public view {
+        bytes32 b1 = bytes32(abi.encodePacked("abc"));
+        console2.logBytes32(b1);
+        string memory programName = _controller.getProgramName(b1);
+        assertEq(programName, "abc", "invalid programName");
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_createIncentivesProgram_OwnableUnauthorizedAccount
@@ -590,7 +604,8 @@ contract SiloIncentivesControllerTest is Test {
         string memory programName = Strings.toHexString(_rewardToken);
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_rewardToken, uint104(1));
+        bytes32 programId = _controller.immediateDistribution(_rewardToken, uint104(1));
+        assertEq(_controller.getProgramName(programId), programName, "invalid programName for immediate distribution");
 
         // user1 deposit 100
         uint256 user1Deposit1 = 100e18;
@@ -615,7 +630,8 @@ contract SiloIncentivesControllerTest is Test {
         ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
+        programId = _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
+        assertEq(_controller.getProgramName(programId), programName, "program name should stay the same");
 
         // user2 deposit 100
         uint256 user2Deposit1 = 100e18;
@@ -640,7 +656,8 @@ contract SiloIncentivesControllerTest is Test {
         ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
+        programId = _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
+        assertEq(_controller.getProgramName(programId), programName, "program name should stay the same");
 
         // user3 deposit 100
         uint256 user3Deposit1 = 100e18;
@@ -827,13 +844,17 @@ contract SiloIncentivesControllerTest is Test {
         emit IncentivesProgramCreated(programName);
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_rewardToken, 1e18);
+        bytes32 programId = _controller.immediateDistribution(_rewardToken, 1e18);
+        assertEq(_controller.getProgramName(programId), programName, "invalid programName for immediate distribution");
     }
 
-    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_doNotRevert_when_amount_is_0
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_doNotRevert_when_amount_is_0
+    */
     function test_immediateDistribution_doNotRevert_when_amount_is_0() public {
         vm.prank(_notifier);
-        _controller.immediateDistribution(_rewardToken, 0);
+        bytes32 programId = _controller.immediateDistribution(_rewardToken, 0);
+        assertEq(programId, bytes32(0), "programId should be 0");
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_not_allowed_for_owner
@@ -865,7 +886,7 @@ contract SiloIncentivesControllerTest is Test {
     function test_wrong_notifier() public {
         // vm.expectRevert(abi.encodeWithSelector(IDistributionManager.WrongDecimals.selector));
         vm.expectRevert(abi.encodeWithSelector(IDistributionManager.ZeroAddress.selector));
-        SiloIncentivesController(_factory.create(_owner, address(0), address(0), bytes32(0)));
+        SiloIncentivesControllerCompatible(_factory.create(_owner, address(0), address(0), bytes32(0)));
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_setClaimer_success
@@ -1104,12 +1125,15 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(programId2, addressAsBytes32, "invalid address conversion");
     }
 
-    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_programName_getter
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_programName_getter
+    */
     function test_immediateDistribution_programName_getter() public {
         string memory programName = Strings.toHexString(_rewardToken);
 
         vm.prank(_notifier);
-        _controller.immediateDistribution(_rewardToken, uint104(1));
+        bytes32 programId = _controller.immediateDistribution(_rewardToken, uint104(1));
+        assertEq(_controller.getProgramName(programId), programName, "invalid programName for immediate distribution");
 
         string[] memory programsNames = _controller.getAllProgramsNames();
 
@@ -1119,7 +1143,9 @@ contract SiloIncentivesControllerTest is Test {
         emit log_named_string("programsNames[0]", programsNames[0]);
     }
 
-    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_programsNames_getter
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_programsNames_getter
+    */
     /// forge-config: core_test.fuzz.runs = 10000
     function test_programsNames_getter(address _token, string memory _programName) public {
         vm.assume(_token != address(0));
@@ -1140,7 +1166,10 @@ contract SiloIncentivesControllerTest is Test {
 
         // do distribution (it should create program)
         vm.prank(_notifier);
-        _controller.immediateDistribution(_token, uint104(1));
+        bytes32 programId = _controller.immediateDistribution(_token, uint104(1));
+        string memory programName = Strings.toHexString(_token);
+
+        assertEq(_controller.getProgramName(programId), programName, "invalid programName for immediate distribution");
 
         string[] memory programsNames = _controller.getAllProgramsNames();
         assertEq(programsNames.length, 2, "expected 2 programs");
