@@ -80,7 +80,8 @@ interface IDistributionManager {
     /**
      * @dev Returns the name of an incentives program (converts bytes32 to string)
      * @notice This function has a bug and can't do it in proper way when _programId is for 
-     * immediate distribution (token address).
+     * immediate distribution (token address) that was not created yet. 
+     * It works for programs that already exists.
      *
      * @param _programId the id (bytes32) of the incentives program
      * @return programName the name (string) of the incentives program
