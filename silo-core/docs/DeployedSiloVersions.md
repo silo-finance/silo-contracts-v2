@@ -77,7 +77,7 @@
 - 0x7C355E4F3e87E3299792fa9c1791db1b70f17374
 - 0x2Efa5cB0B72f625465aeAc4B84AC90C8b4519C23
 
-#### SiloIncentivesControllerGaugeLikeFactory
+#### SiloIncentivesControllerGaugeLikeFactory (deprecated)
 - 0x435Ab368F5fCCcc71554f4A8ac5F5b922bC4Dc06
 - 0x949b90c93848231A95D018C44B0E884b92b03218
 - 0x41FBdd2A144e641a8396aFa1083ADc69cEf39Ee8
@@ -97,7 +97,7 @@
 - 0x2265B128491c6429B2F65E1964949B4168110A1e
 - 0x0A9B6dd2fBebB9E3C565F3F899182F902dA89f02
 
-#### SiloIncentivesControllerGaugeLikeFactory
+#### SiloIncentivesControllerGaugeLikeFactory (deprecated)
 - 0x77cbCB96fFFe44d344c54A5868C49ad1C5AaAC6A
 - 0xD4576D3B8CcEA7545b8F4cAB2671CF7b712fb73B
 
@@ -108,7 +108,7 @@
 - 0xbc4eE059Cb3969DDB7770f67d9E3FDEE386f3f75
 - 0xF040CAdbc2572B2aC35Ca468B93f9c9ADF0f0D69
 
-#### SiloIncentivesControllerGaugeLikeFactory
+#### SiloIncentivesControllerGaugeLikeFactory (deprecated)
 - 0x9fF91EF98baf808e06F01984BC7d2a0ec9B6a39A
 
 ### Optimism
@@ -118,7 +118,7 @@
 - 0x9a8C0394839F958bDA8E80dAAAd20B4680199e14
 - 0x3b75AF9bE511bc0582B19a330C40EC6E58EDc320
 
-#### SiloIncentivesControllerGaugeLikeFactory
+#### SiloIncentivesControllerGaugeLikeFactory (deprecated)
 - 0xbDBBf747402653A5aD6F6B8c49F2e8dCeC37fAcF
 - 0xAaB8efb6F91093c5c3f10B1Cab4071D8E84a8976
 
@@ -131,7 +131,7 @@
 - 0xF2C9fBc8f46092f0Ef86B8Faff0D6f4D11884D7d
 - 0x22fBF354f7E8A99673559352c63Ae022E58460dd
 
-#### SiloIncentivesControllerGaugeLikeFactory
+#### SiloIncentivesControllerGaugeLikeFactory (deprecated)
 - 0x2Bb4C091250887f4d8Fd445B4D0BdeEB2556A36f
 - 0x2b07e8b10293019Cb89410894E62A090a7b5bFE6
 - 0x0Ec2E10be6167bf99aF57716761E571bB19E701E

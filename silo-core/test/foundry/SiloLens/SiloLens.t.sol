@@ -274,7 +274,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
         string memory expectedString = "0x5615deb798bb3e4dfa0139dfa1b3d433cc23b72f";
         bytes32 programId = bytes32(hex"5615deb798bb3e4dfa0139dfa1b3d433cc23b72f");
 
-        address siloIncentivesController = makeAddr("SiloIncentivesController");
+        address siloIncentivesController = makeAddr("SiloIncentivesControllerCompatible");
 
         // to simulate what we have in the DistributionManager
         bytes memory withRemovedZeros = TokenHelper.removeZeros(abi.encodePacked(programId));
@@ -313,7 +313,7 @@ contract SiloLensTest is SiloLittleHelper, Test {
 
     function test_SiloLens_20BytesName_getSiloIncentivesControllerProgramsNames() public {
         string memory expectedString = "ssssssssssssssssssss";
-        address siloIncentivesController = makeAddr("SiloIncentivesController");
+        address siloIncentivesController = makeAddr("SiloIncentivesControllerCompatible");
 
         bytes memory nameBytes = bytes(expectedString);
 
