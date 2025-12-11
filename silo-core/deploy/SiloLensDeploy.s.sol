@@ -17,11 +17,12 @@ import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
     Resume verification:
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/SiloLensDeploy.s.sol \
-        --ffi --rpc-url $RPC_INK \
+        --ffi --rpc-url $RPC_ARBITRUM \
         --verify \
-        --verifier blockscout --verifier-url $VERIFIER_URL_INK \
         --private-key $PRIVATE_KEY \
         --resume
+        --verifier blockscout --verifier-url $VERIFIER_URL_INK \
+        
 
     remember to run `TowerRegistration` script after deployment!
  */

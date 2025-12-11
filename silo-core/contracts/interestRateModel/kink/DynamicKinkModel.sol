@@ -12,6 +12,7 @@ import {PRBMathSD59x18} from "../../lib/PRBMathSD59x18.sol";
 import {ISilo} from "../../interfaces/ISilo.sol";
 import {IDynamicKinkModel} from "../../interfaces/IDynamicKinkModel.sol";
 import {IDynamicKinkModelConfig} from "../../interfaces/IDynamicKinkModelConfig.sol";
+import {IVersioned} from "../../interfaces/IVersioned.sol";
 
 import {DynamicKinkModelConfig} from "./DynamicKinkModelConfig.sol";
 import {KinkMath} from "../../lib/KinkMath.sol";
@@ -22,10 +23,12 @@ import {SiloMathLib} from "../../lib/SiloMathLib.sol";
 /// silo-core/docs/Kink_Interest_Rate_Model_V2_2025_09_23.pdf
 /// @dev it follows `IInterestRateModel` interface except `initialize` method
 /// @custom:security-contact security@silo.finance
-contract DynamicKinkModel is IDynamicKinkModel, Ownable1and2Steps, Initializable {
+contract DynamicKinkModel is IDynamicKinkModel, IVersioned, Ownable1and2Steps, Initializable {
     using KinkMath for int256;
     using KinkMath for int96;
     using KinkMath for uint256;
+
+    string public constant VERSION = "DynamicKinkModel 3.14.0";
 
     /// @dev DP in 18 decimal points used for integer calculations
     int256 internal constant _DP = int256(1e18);

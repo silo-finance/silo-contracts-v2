@@ -30,16 +30,18 @@ contract SiloVerifierScriptTest is Test {
     address constant USDC = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894;
     address constant EXAMPLE_HOOK_RECEIVER = 0x2D3d269334485d2D876df7363e1A50b13220a7D8;
 
-    uint256 constant EXTERNAL_PRICE_0 = 172; // price of wS @ 51321936 block
-    uint256 constant EXTERNAL_PRICE_1 = 1000;
+    uint256 constant EXTERNAL_PRICE_0 = 0.07561e6; // price of wS @ 51321936 block
+    uint256 constant EXTERNAL_PRICE_1 = 1e6;
 
     address public constant SILO_FACTORY = 0xa42001D6d2237d2c74108FE360403C4b796B7170;
+    address public constant DKINK_IRM_FACTORY = 0xfdC13d2Aa0b8eA820b26003139f31AeFCA65Ab47;
 
     function setUp() public {
-        vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 51338462);
+        vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 58293738);
         AddrLib.init();
 
         AddrLib.setAddress(SiloCoreContracts.SILO_FACTORY, SILO_FACTORY);
+        AddrLib.setAddress(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, DKINK_IRM_FACTORY);
     }
 
     function test_CheckDaoFee() public {
@@ -183,6 +185,9 @@ contract SiloVerifierScriptTest is Test {
         assertEq(verifier.verify(), 2, "2 errors after breaking Silo implementation in both Silos");
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_CheckMaxLtvLtLiquidationFee -vv
+    */
     function test_CheckMaxLtvLtLiquidationFee() public {
         SiloVerifier verifier = new SiloVerifier(WS_USDC_CONFIG, false, EXTERNAL_PRICE_0, EXTERNAL_PRICE_1);
         assertEq(verifier.verify(), 0, "no errors before mock");
@@ -356,11 +361,14 @@ contract SiloVerifierScriptTest is Test {
         );
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_CheckExternalPrices -vv
+    */
     function test_CheckExternalPrices() public {
         SiloVerifier verifier = new SiloVerifier(WS_USDC_CONFIG, false, EXTERNAL_PRICE_0, EXTERNAL_PRICE_1);
         assertEq(verifier.verify(), 0, "no errors for original prices");
 
-        verifier = new SiloVerifier(ISiloConfig(0xefA367570B11f8745B403c0D458b9D2EAf424686), false, 1000, 1000);
+        verifier = new SiloVerifier(ISiloConfig(0xefA367570B11f8745B403c0D458b9D2EAf424686), false, 1010, 1000);
         assertEq(verifier.verify(), 0, "no errors for single oracle case");
 
         verifier = new SiloVerifier(WS_USDC_CONFIG, false, EXTERNAL_PRICE_0 * 102 / 100, EXTERNAL_PRICE_1);
