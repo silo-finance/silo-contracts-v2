@@ -12,7 +12,14 @@ import {ISiloIncentivesController} from "./interfaces/ISiloIncentivesController.
 import {BaseIncentivesController} from "./base/BaseIncentivesController.sol";
 import {DistributionTypes} from "./lib/DistributionTypes.sol";
 
-/// @notice THIS CONTRACT IS NOT BACKWARDS COMPATIBLE AND SHOULD NOT BE USED DIRECTLY
+/**
+ * @title SiloIncentivesController
+ * @dev THIS CONTRACT IS NOT BACKWARDS COMPATIBLE AND SHOULD NOT BE USED DIRECTLY
+ * @notice Distributor contract for rewards to the Aave protocol, using a staked token as rewards asset.
+ * The contract stakes the rewards before redistributing them to the Aave protocol participants.
+ * The reference staked token implementation is at https://github.com/aave/aave-stake-v2
+ * @author Aave
+ */
 abstract contract SiloIncentivesController is BaseIncentivesController {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using SafeERC20 for IERC20;
