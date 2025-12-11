@@ -18,7 +18,7 @@ import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfac
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
+import {SiloIncentivesControllerCompatible} from "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
 import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
@@ -281,7 +281,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
     function _createIncentiveController() internal returns (ISiloIncentivesController newGauge) {
         (, ISilo debtSilo) = _getSilos();
-        gauge = new SiloIncentivesController(address(this), address(partialLiquidation), address(debtSilo));
+        gauge = new SiloIncentivesControllerCompatible(address(this), address(partialLiquidation), address(debtSilo));
 
         address owner = Ownable(address(defaulting)).owner();
         vm.prank(owner);

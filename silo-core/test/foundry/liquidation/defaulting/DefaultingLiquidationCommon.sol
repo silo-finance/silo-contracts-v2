@@ -14,7 +14,7 @@ import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IP
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
-import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
+import {SiloIncentivesControllerCompatible} from "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
 
 import {SiloConfigOverride, SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
@@ -1559,7 +1559,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     function test_createIncentiveController_forWrongToken_reverts() public {
         (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
         ISiloIncentivesController gauge =
-            new SiloIncentivesController(address(this), address(defaulting), address(collateralSilo));
+            new SiloIncentivesControllerCompatible(address(this), address(defaulting), address(collateralSilo));
 
         address owner = Ownable(address(defaulting)).owner();
 

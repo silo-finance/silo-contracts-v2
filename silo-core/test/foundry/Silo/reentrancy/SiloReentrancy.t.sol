@@ -9,7 +9,7 @@ import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
-import {SiloIncentivesController} from "silo-core/contracts/incentives/SiloIncentivesController.sol";
+import {SiloIncentivesControllerCompatible} from "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
@@ -162,7 +162,7 @@ contract SiloReentrancyTest is Test {
     }
 
     function _createIncentiveController(address _hookReceiver, address _debtSilo) internal {
-        ISiloIncentivesController gauge = new SiloIncentivesController(makeAddr("DAO"), _hookReceiver, _debtSilo);
+        ISiloIncentivesController gauge = new SiloIncentivesControllerCompatible(makeAddr("DAO"), _hookReceiver, _debtSilo);
 
         address owner = Ownable(_hookReceiver).owner();
         vm.prank(owner);
