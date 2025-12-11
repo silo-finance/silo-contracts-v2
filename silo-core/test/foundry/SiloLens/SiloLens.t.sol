@@ -18,7 +18,7 @@ import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 
 /*
-    forge test -vv --ffi --mc SiloLensTest
+FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloLensTest
 */
 contract SiloLensTest is SiloLittleHelper, Test {
     uint256 internal constant _AMOUNT_COLLATERAL = 1000e18;
@@ -41,6 +41,27 @@ contract SiloLensTest is SiloLittleHelper, Test {
 
         vm.prank(_borrower);
         silo1.borrow(_AMOUNT_BORROW, _borrower, _borrower);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_SiloLens_getVersion_neverReverts
+    */
+    function test_SiloLens_getVersion_neverReverts(address _contract) public view {
+        siloLens.getVersion(_contract);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_SiloLens_getVersion_version
+    */
+    function test_SiloLens_getVersion_version() public view {
+        assertEq(siloLens.getVersion(address(siloLens)), siloLens.VERSION(), "version should be the same");
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_SiloLens_getVersion_legacy
+    */
+    function test_SiloLens_getVersion_legacy() public view {
+        assertEq(siloLens.getVersion(address(this)), "legacy");
     }
 
     /*

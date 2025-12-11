@@ -17,11 +17,27 @@ import {SiloLensLib} from "./lib/SiloLensLib.sol";
 import {SiloStdLib} from "./lib/SiloStdLib.sol";
 import {IPartialLiquidation} from "./interfaces/IPartialLiquidation.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
+import {IVersioned} from "./interfaces/IVersioned.sol";
 
 
 /// @title SiloLens is a helper contract for integrations and UI
-contract SiloLens is ISiloLens {
+contract SiloLens is ISiloLens, IVersioned {
     uint256 internal constant _PRECISION_DECIMALS = 1e18;
+
+    /// @notice version contains the contract name and release version
+    string public constant VERSION = "SiloLens 4.0.0";
+
+    /// @inheritdoc ISiloLens
+    function getVersion(address _contract) external view returns (string memory version) {
+        if (_contract.code.length == 0) return "Not a contract";
+
+        try IVersioned(_contract).VERSION() returns (string memory v) {
+            return v;
+        } catch {
+            // handle error gracefully
+            return "legacy";
+        }
+    }
 
     /// @inheritdoc ISiloLens
     function isSolvent(ISilo _silo, address _borrower) external view returns (bool) {

@@ -28,6 +28,7 @@ import {GetRoleMemberCountReentrancyTest} from "../methods/silo-hook-v2/GetRoleM
 import {GetRoleMembersReentrancyTest} from "../methods/silo-hook-v2/GetRoleMembersReentrancyTest.sol";
 import {ValidateDefaultingCollateralReentrancyTest} from
     "../methods/silo-hook-v2/ValidateDefaultingCollateralReentrancyTest.sol";
+import {VersionReentrancyTest} from "../methods/silo-hook-v2/VersionReentrancyTest.sol";
 
 import {SiloHookV1MethodsRegistry} from "./SiloHookV1MethodsRegistry.sol";
 
@@ -54,6 +55,7 @@ contract SiloHookV2MethodsRegistry is SiloHookV1MethodsRegistry {
         _registerMethod(new GetKeeperAndLenderSharesSplitReentrancyTest());
         _registerMethod(new ValidateControllerForCollateralReentrancyTest());
         _registerMethod(new ValidateDefaultingCollateralReentrancyTest());
+        _registerMethod(new VersionReentrancyTest());
     }
 
     function abiFile() external pure override returns (string memory) {

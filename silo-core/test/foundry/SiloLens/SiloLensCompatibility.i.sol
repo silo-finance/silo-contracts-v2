@@ -9,6 +9,8 @@ import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
+
 import {IPartialLiquidation} from "silo-core/contracts/interfaces/IPartialLiquidation.sol";
 import {SiloDeployments} from "silo-core/deploy/silo/SiloDeployments.sol";
 
@@ -93,6 +95,8 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         _testFn(_getFeesAndFeeReceivers, _silo);
         _testFn(_getSiloIncentivesControllerProgramsNames);
         _testFn(_getOracleAddresses, _silo);
+        _testFn(_VERSION);
+        _testFn(_getVersion, address(_silo));
     }
 
     function _testSiloConfig(ISiloConfig _siloConfig) internal {
@@ -125,6 +129,11 @@ contract SiloLensCompatibilityTest is IntegrationTest {
 
     function _testFn(function() internal view returns (bytes4) func) internal {
         bytes4 sig = func();
+        _testedFunctions[sig] = true;
+    }
+    
+    function _testFn(function(address) internal view returns (bytes4) func, address _contract) internal {
+        bytes4 sig = func(_contract);
         _testedFunctions[sig] = true;
     }
 
@@ -347,6 +356,17 @@ contract SiloLensCompatibilityTest is IntegrationTest {
     function _getSiloIncentivesControllerProgramsNames() internal pure returns (bytes4 sig) {
         // method is not related to Silo
         sig = ISiloLens.getSiloIncentivesControllerProgramsNames.selector;
+    }
+
+    function _VERSION() internal pure returns (bytes4 sig) {
+        // method is not related to Silo
+        sig = IVersioned.VERSION.selector;
+    }
+
+    function _getVersion(address _contract) internal view returns (bytes4 sig) {
+        // method is not related to Silo
+        _lens.getVersion(_contract);
+        sig = ISiloLens.getVersion.selector;
     }
 
     function _getOracleAddresses(ISilo _silo) internal view returns (bytes4 sig) {
