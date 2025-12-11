@@ -33,6 +33,10 @@ contract DynamicKinkModelTest is KinkCommonTest {
         );
     }
 
+    function test_kink_version() public {
+        irm.VERSION();
+    }
+
     /*
     FOUNDRY_PROFILE=core_test forge test --mt test_kink_initRevert_whenSiloZero -vv
     */

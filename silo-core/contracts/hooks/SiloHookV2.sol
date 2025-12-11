@@ -4,12 +4,15 @@ pragma solidity 0.8.28;
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IHookReceiver} from "silo-core/contracts/interfaces/IHookReceiver.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 
 import {GaugeHookReceiver} from "silo-core/contracts/hooks/gauge/GaugeHookReceiver.sol";
 import {PartialLiquidationByDefaulting} from "silo-core/contracts/hooks/defaulting/PartialLiquidationByDefaulting.sol";
 import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
 
-contract SiloHookV2 is GaugeHookReceiver, PartialLiquidationByDefaulting {
+contract SiloHookV2 is GaugeHookReceiver, PartialLiquidationByDefaulting, IVersioned {
+    string public constant VERSION = "SiloHookV2 4.0.0";
+
     /// @inheritdoc IHookReceiver
     function initialize(ISiloConfig _config, bytes calldata _data) public virtual initializer {
         (address owner) = abi.decode(_data, (address));
