@@ -445,7 +445,9 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     function _resolveHookVersion(address _implementation) internal returns (HookVersion hookVersion) {
-        if (_implementation == getDeployedAddress(SiloCoreContracts.SILO_HOOK_V2)) {
+        if (_implementation == getDeployedAddress(SiloCoreContracts.SILO_HOOK_V3)) {
+            return HookVersion.V2;
+        } else if (_implementation == getDeployedAddress(SiloCoreContracts.SILO_HOOK_V2)) {
             return HookVersion.V2;
         } else if (_implementation == getDeployedAddress(SiloCoreContracts.SILO_HOOK_V1)) {
             return HookVersion.V1;
