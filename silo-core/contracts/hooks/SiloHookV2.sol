@@ -11,7 +11,7 @@ import {PartialLiquidationByDefaulting} from "silo-core/contracts/hooks/defaulti
 import {BaseHookReceiver} from "silo-core/contracts/hooks/_common/BaseHookReceiver.sol";
 
 contract SiloHookV2 is GaugeHookReceiver, PartialLiquidationByDefaulting, IVersioned {
-    function VERSION() external pure virtual returns (string memory) {
+    function VERSION() external pure virtual returns (string memory) { // solhint-disable-line func-name-mixedcase
         return "SiloHookV2 4.0.0";
     }
 
