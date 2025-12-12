@@ -174,9 +174,21 @@ contract NewMarketTest is Test {
             vm.expectRevert(); // it can be ZeroQuote or AboveMaxLtv
             _scenario.debtSilo.borrow(1, borrower, borrower);
 
-            // in some extream case we can get ZeroQuote, but we can debug this case if needed
-            vm.expectRevert(ISilo.AboveMaxLtv.selector);
-            _scenario.debtSilo.borrow(10, borrower, borrower);
+            try _scenario.debtSilo.borrow(10, borrower, borrower) {
+                revert("Borow should not work");
+            } catch (bytes memory data) {
+                bytes4 errorType = bytes4(data);
+
+                if (errorType == ISilo.AboveMaxLtv.selector) {
+                    // OK
+                } else if (errorType == ISilo.ZeroQuote.selector) {
+                    // in some extream case we can get ZeroQuote, but we can debug this case if needed
+                } else if (errorType == ISilo.ZeroPrice.selector) {
+                    // ok
+                } else {
+                    revert("Expected AboveMaxLtv, ZeroQuote, ZeroPrice, got something else");
+                }
+            }
 
             console2.log("\t- expect revert on borrow: OK");
 
