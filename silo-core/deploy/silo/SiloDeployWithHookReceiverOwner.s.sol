@@ -6,9 +6,9 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {SiloDeploy, ISiloDeployer} from "./SiloDeploy.s.sol";
 
 /*
-FOUNDRY_PROFILE=core CONFIG=Silo_savUSD_USDC_v4 HOOK_RECEIVER_OWNER=DAO \
+FOUNDRY_PROFILE=core CONFIG=TestSiloV3_S_USDC.e_borrowable_S HOOK_RECEIVER_OWNER=DAO \
     forge script silo-core/deploy/silo/SiloDeployWithHookReceiverOwner.s.sol \
-    --ffi --rpc-url $RPC_AVALANCHE --broadcast --verify
+    --ffi --rpc-url $RPC_SONIC --broadcast --verify
 
 Resume verification:
     FOUNDRY_PROFILE=core CONFIG=Silo_savUSD_USDC_v4 HOOK_RECEIVER_OWNER=DAO \
@@ -28,7 +28,8 @@ contract SiloDeployWithHookReceiverOwner is SiloDeploy {
     }
     
     function _getHookReceiverOwner() private view returns (address owner) {
-        string memory hookReceiverOwnerKey = vm.envString("HOOK_RECEIVER_OWNER");
-        owner = AddrLib.getAddress(hookReceiverOwnerKey);
+        owner = 0x1fF60e85852Ac73cd05B69A8B6641fc24A3FC011;
+        // string memory hookReceiverOwnerKey = vm.envString("HOOK_RECEIVER_OWNER");
+        // owner = AddrLib.getAddress(hookReceiverOwnerKey);
     }
 }
