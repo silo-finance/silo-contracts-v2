@@ -68,18 +68,73 @@ def extract_contract_name(file_path: str) -> str:
 
 
 def extract_version_constant(file_path: str) -> Optional[str]:
-    """Extract VERSION constant value from Solidity file."""
+    """Extract VERSION constant or function value from Solidity file."""
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        # Match: string public constant VERSION = "ContractName X.Y.Z";
+        # First, try to match constant: string public constant VERSION = "ContractName X.Y.Z";
         # or: string public constant VERSION = 'ContractName X.Y.Z';
-        pattern = r'string\s+public\s+constant\s+VERSION\s*=\s*["\']([^"\']+)["\']\s*;'
-        match = re.search(pattern, content)
+        constant_pattern = r'string\s+public\s+constant\s+VERSION\s*=\s*["\']([^"\']+)["\']\s*;'
+        match = re.search(constant_pattern, content)
         
         if match:
             return match.group(1)
+        
+        # If not found, try to match function: function VERSION() ... returns (string memory) { return "ContractName X.Y.Z"; }
+        # This pattern handles multi-line function definitions with DOTALL flag
+        # Match from function declaration through the return statement
+        function_pattern = r'function\s+VERSION\(\)[^{]*?\{[^}]*?return\s+["\']([^"\']+)["\']\s*;'
+        match = re.search(function_pattern, content, re.DOTALL)
+        
+        if match:
+            return match.group(1)
+        
+        # More robust approach: find function VERSION() and extract return value from its body
+        # Look for function VERSION() declaration
+        function_start_match = re.search(r'function\s+VERSION\(\)', content)
+        
+        if function_start_match:
+            # Find the opening brace of the function
+            start_pos = function_start_match.end()
+            brace_start = content.find('{', start_pos)
+            
+            if brace_start != -1:
+                # Find matching closing brace
+                brace_count = 0
+                in_string = False
+                string_char = None
+                
+                for i in range(brace_start, len(content)):
+                    char = content[i]
+                    
+                    # Handle string literals (skip escaped quotes)
+                    if char in ('"', "'") and (i == 0 or content[i-1] != '\\'):
+                        if not in_string:
+                            in_string = True
+                            string_char = char
+                        elif char == string_char:
+                            in_string = False
+                            string_char = None
+                        continue
+                    
+                    if in_string:
+                        continue
+                    
+                    # Count braces
+                    if char == '{':
+                        brace_count += 1
+                    elif char == '}':
+                        brace_count -= 1
+                        if brace_count == 0:
+                            # Found the end of the function
+                            function_body = content[brace_start:i+1]
+                            # Look for return statement in the function body
+                            return_pattern = r'return\s+["\']([^"\']+)["\']\s*;'
+                            return_match = re.search(return_pattern, function_body)
+                            if return_match:
+                                return return_match.group(1)
+                            break
         
         return None
     except Exception as e:
