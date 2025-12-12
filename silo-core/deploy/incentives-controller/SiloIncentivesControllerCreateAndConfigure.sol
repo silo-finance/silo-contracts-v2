@@ -13,7 +13,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 /*
     INCENTIVES_OWNER=GROWTH_MULTISIG SILO=wS_scUSD_Silo INCENTIVIZED_ASSET=scUSD \
     FOUNDRY_PROFILE=core \
-        forge script silo-core/deploy/incentives-controller/SiloIncentivesControllerCreateAndConfigure.s.sol \
+        forge script silo-core/deploy/incentives-controller/SiloIncentivesControllerCreateAndConfigure.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
  */
 contract SiloIncentivesControllerCreateAndConfigure is CommonDeploy {

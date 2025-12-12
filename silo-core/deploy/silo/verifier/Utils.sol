@@ -21,12 +21,14 @@ import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/Chainl
 import {ChainlinkV3Oracle} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3Oracle.sol";
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 import {IChainlinkV3Oracle} from "silo-oracles/contracts/interfaces/IChainlinkV3Oracle.sol";
+import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 
 import {IDynamicKinkModelConfig} from "silo-core/contracts/interfaces/IDynamicKinkModelConfig.sol";
 import {IDynamicKinkModel} from "silo-core/contracts/interfaces/IDynamicKinkModel.sol";
 import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
 import {SiloCoreDeployments, SiloCoreContracts} from "silo-core/common/SiloCoreContracts.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
+import {StringLib} from "silo-core/deploy/lib/StringLib.sol";
 
 interface IPTLinearAggregatorLike {
     function PT() external view returns (address);
@@ -124,7 +126,8 @@ library Utils {
     function isKinkIrm(address _irm) internal returns (bool) {
         require(_irm != address(0), "IRM address is empty");
 
-        address factory = SiloCoreDeployments.get(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, ChainsLib.chainAlias());
+        address factory =
+            SiloCoreDeployments.get(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, ChainsLib.chainAlias());
 
         if (factory == address(0)) {
             console2.log(SiloCoreContracts.DYNAMIC_KINK_MODEL_FACTORY, "is not deployed ", unicode"🚨");
@@ -132,6 +135,19 @@ library Utils {
         }
 
         return IDynamicKinkModelFactory(factory).createdByFactory(_irm);
+    }
+
+    function isDefaultingON(address _hookReceiver) internal returns (bool defaultingOn) {
+        address siloLens = SiloCoreDeployments.get(SiloCoreContracts.SILO_LENS, ChainsLib.chainAlias());
+
+        string memory version = ISiloLens(siloLens).getVersion(_hookReceiver);
+        string[] memory parts = StringLib.split(version, " ");
+
+        bytes32 hookV2Hash = keccak256(abi.encode("SiloHookV2"));
+        bytes32 hookV3Hash = keccak256(abi.encode("SiloHookV3"));
+        bytes32 versionHash = keccak256(abi.encode(parts[0]));
+
+        defaultingOn = versionHash == hookV2Hash || versionHash == hookV3Hash;
     }
 
     function quote(ISiloOracle _oracle, address _baseToken, uint256 _amount)

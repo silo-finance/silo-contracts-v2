@@ -28,6 +28,8 @@ import {CheckQuoteIsLinearFunction} from
     "silo-core/deploy/silo/verifier/checks/behavior/CheckQuoteIsLinearFunction.sol";
 import {CheckQuoteLargeAmounts} from "silo-core/deploy/silo/verifier/checks/behavior/CheckQuoteLargeAmounts.sol";
 import {CheckExternalPrices} from "silo-core/deploy/silo/verifier/checks/behavior/CheckExternalPrices.sol";
+import {CheckDefaultingIncentiveControllerConfig} from
+    "silo-core/deploy/silo/verifier/checks/silo/CheckDefaultingIncentiveControllerConfig.sol";
 
 contract SiloVerifier {
     ISiloConfig public immutable SILO_CONFIG;
@@ -101,6 +103,7 @@ contract SiloVerifier {
         _checks.push(new CheckShareTokensInGauge(_configData, _isSiloZero));
         _checks.push(new CheckSiloImplementation(_configData, _isSiloZero));
         _checks.push(new CheckPTLinearOracle(_configData.solvencyOracle, _configData.token));
+        _checks.push(new CheckDefaultingIncentiveControllerConfig(_configData, _isSiloZero));
     }
 
     function _buildBehaviorChecks(
