@@ -8,8 +8,8 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 
 /*
-FOUNDRY_PROFILE=core CONFIG=0xfD2559a183DDE3776A984eBaA8825699f7E180Ec \
-    EXTERNAL_PRICE_0=9600 EXTERNAL_PRICE_1=9999 \
+FOUNDRY_PROFILE=core CONFIG=0xa651183878081E0780c63c75D1E26b38B1f96413 \
+    EXTERNAL_PRICE_0=900 EXTERNAL_PRICE_1=1000 \
     forge script silo-core/deploy/silo/VerifySilo.s.sol \
     --ffi --rpc-url $RPC_SONIC
  */

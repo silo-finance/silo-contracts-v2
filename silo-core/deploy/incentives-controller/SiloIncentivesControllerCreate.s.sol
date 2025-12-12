@@ -132,6 +132,18 @@ contract SiloIncentivesControllerCreate is CommonDeploy {
 
         vm.stopBroadcast();
 
+        console2.log(
+            string.concat(
+                "\n",
+                unicode"🚸",
+                " hook owner must execute:\n\nsetGauge(%s, %s)\n\n",
+                unicode"🚸",
+                " in order to use it."
+            ),
+            incentivesController,
+            shareToken
+        );
+
         SiloIncentivesControllerDeployments.save({
             _chain: ChainsLib.chainAlias(),
             _shareToken: shareToken,
