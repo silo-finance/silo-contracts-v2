@@ -14,10 +14,11 @@ contract OracleForQA is ISiloOracle {
     error ZeroPrice();
     error OnlyAdminCanSetPrice();
 
-    constructor (address base, address _quote, address _admin) {
+    constructor (address base, address _quote, address _admin, uint256 _initialPrice) {
         QUOTE_TOKEN = _quote;
         BASE_DECIMALS = IERC20Metadata(base).decimals();
         ADMIN = _admin;
+        priceOfOneBaseToken = _initialPrice;
     }
 
     /// @param _price if oracle is set for WETH/USDC, where USDC is quote, then correct price would be 3000e6
