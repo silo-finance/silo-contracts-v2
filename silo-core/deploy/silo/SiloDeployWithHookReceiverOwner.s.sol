@@ -20,11 +20,11 @@ Resume verification:
  */
 contract SiloDeployWithHookReceiverOwner is SiloDeploy {
     function _getClonableHookReceiverOwner() internal view override returns (address owner) {
-        owner = _getHookReceiverOwner()
+        owner = _getHookReceiverOwner();
     }
 
     function _getDKinkIRMInitialOwner() internal override returns (address owner) {
-        owner = _getHookReceiverOwner()
+        owner = _getHookReceiverOwner();
     }
     
     function _getHookReceiverOwner() private view returns (address owner) {
