@@ -17,7 +17,7 @@ import {SiloDeployments} from "silo-core/deploy/silo/SiloDeployments.sol";
 import {SiloIncentivesControllerDeployments} from "./SiloIncentivesControllerDeployments.sol";
 
 /*
-    INCENTIVES_OWNER=DAO SILO=Silo_woS_wS_borrowable INCENTIVIZED_ASSET=wS \
+    INCENTIVES_OWNER=0x1fF60e85852Ac73cd05B69A8B6641fc24A3FC011 SILO=TestSiloV3_S_USDC.e_borrowable_S_id_155 INCENTIVIZED_ASSET=USDC.e \
     FOUNDRY_PROFILE=core \
         forge script silo-core/deploy/incentives-controller/SiloIncentivesControllerCreate.s.sol \
         --ffi --rpc-url $RPC_SONIC --broadcast --verify
@@ -64,8 +64,9 @@ contract SiloIncentivesControllerCreate is CommonDeploy {
         shareTokenType = vm.envOr(SHARE_TOKEN_TYPE_KEY, SHARE_TOKEN_TYPE_COLLATERAL);
 
         if (incentivesOwner == address(0)) {
-            string memory incentivesOwnerKey = vm.envString("INCENTIVES_OWNER");
-            incentivesOwner = AddrLib.getAddress(incentivesOwnerKey);
+            // string memory incentivesOwnerKey = vm.envString("INCENTIVES_OWNER");
+            // incentivesOwner = AddrLib.getAddress(incentivesOwnerKey);
+            incentivesOwner = vm.envAddress("INCENTIVES_OWNER");
             require(incentivesOwner != address(0), OwnerNotFound());
         }
 
