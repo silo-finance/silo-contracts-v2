@@ -19,6 +19,10 @@ from eth_utils import to_hex
 # Hardcoded RPC URL
 RPC_URL = "https://sonic-mainnet.g.alchemy.com/v2/aNrPwztzUMrRelRP2OkYVAQc0CHo4DJk"  # Update this to your actual RPC URL
 
+# Hardcoded block range
+FROM_BLOCK = 58061678
+TO_BLOCK = 58061678  # Use 'latest' for latest block, or specific block number
+
 # Output JSON file - save in the same directory as this script
 SCRIPT_DIR = Path(__file__).parent.absolute()
 OUTPUT_FILE = str(SCRIPT_DIR / "events.json")
@@ -105,8 +109,8 @@ def collect_liquidation_events(contract_address):
     
     # Create filter for LiquidationCall events
     liquidation_filter = w3.eth.filter({
-        'fromBlock': 58061678, # 5773890,
-        'toBlock': 58061678, # 'latest',
+        'fromBlock': FROM_BLOCK,
+        'toBlock': TO_BLOCK,
         'address': contract_address,
         'topics': [event_signature_hash]
     })

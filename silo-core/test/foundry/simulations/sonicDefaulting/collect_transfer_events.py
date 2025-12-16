@@ -3,9 +3,19 @@
 Script to collect IERC20.Transfer events from a Silo contract.
 
 
+silo0:
 python3 silo-core/test/foundry/simulations/sonicDefaulting/collect_transfer_events.py 0xf55902DE87Bd80c6a35614b48d7f8B612a083C12
-python3 silo-core/test/foundry/simulations/sonicDefaulting/collect_transfer_events.py 0x322e1d5384aa4ED66AeCa770B95686271de61dc3
+protected0:
+python3 silo-core/test/foundry/simulations/sonicDefaulting/collect_transfer_events.py 0xAecD6cBf567AE7dE05f7E32eB051525e9fcd9bc6
+debt0:
+python3 silo-core/test/foundry/simulations/sonicDefaulting/collect_transfer_events.py 0xE5c066B23c7A97899646b0bbe69f3E8bc4b61C1C
 
+silo1:
+python3 silo-core/test/foundry/simulations/sonicDefaulting/collect_transfer_events.py 0x322e1d5384aa4ED66AeCa770B95686271de61dc3
+protected1:
+python3 silo-core/test/foundry/simulations/sonicDefaulting/collect_transfer_events.py 0x0B960e953649269B4c895C593108fBc7F8b61a24
+debt1:
+python3 silo-core/test/foundry/simulations/sonicDefaulting/collect_transfer_events.py 0xbc4eF1B5453672a98073fbFF216966F5039ad256
 """
 
 import sys
@@ -18,6 +28,10 @@ from eth_utils import to_hex
 
 # Hardcoded RPC URL
 RPC_URL = "https://sonic-mainnet.g.alchemy.com/v2/aNrPwztzUMrRelRP2OkYVAQc0CHo4DJk"  # Update this to your actual RPC URL
+
+# Hardcoded block range
+FROM_BLOCK = 58061678
+TO_BLOCK = 58061678  # Use 'latest' for latest block, or specific block number
 
 # Output JSON file - save in the same directory as this script
 SCRIPT_DIR = Path(__file__).parent.absolute()
@@ -100,8 +114,8 @@ def collect_transfer_events(contract_address):
     
     # Create filter for Transfer events
     transfer_filter = w3.eth.filter({
-        'fromBlock': 58064714, # 5773890,
-        'toBlock': 58064714, # 'latest',
+        'fromBlock': FROM_BLOCK,
+        'toBlock': TO_BLOCK,
         'address': contract_address,
         'topics': [event_signature_hash]
     })

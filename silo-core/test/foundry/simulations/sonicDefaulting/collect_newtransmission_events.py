@@ -18,6 +18,10 @@ from eth_utils import to_hex
 # Hardcoded RPC URL
 RPC_URL = "https://sonic-mainnet.g.alchemy.com/v2/aNrPwztzUMrRelRP2OkYVAQc0CHo4DJk"  # Update this to your actual RPC URL
 
+# Hardcoded block range
+FROM_BLOCK = 58050000
+TO_BLOCK = 58061678  # Use 'latest' for latest block, or specific block number
+
 # Output JSON file - save in the same directory as this script
 SCRIPT_DIR = Path(__file__).parent.absolute()
 OUTPUT_FILE = str(SCRIPT_DIR / "events.json")
@@ -99,8 +103,8 @@ def collect_newtransmission_events(contract_address):
     # Create filter for NewTransmission events
     # Note: aggregatorRoundId is indexed, so it will be in topics[1]
     transmission_filter = w3.eth.filter({
-        'fromBlock': 58050000,
-        'toBlock': 58061678, # 'latest',
+        'fromBlock': FROM_BLOCK,
+        'toBlock': TO_BLOCK,
         'address': contract_address,
         'topics': [event_signature_hash]
     })
