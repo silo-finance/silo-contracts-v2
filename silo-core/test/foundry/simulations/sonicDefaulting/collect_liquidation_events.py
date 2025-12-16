@@ -6,16 +6,12 @@ Usage:
 
 python3 silo-core/test/foundry/simulations/sonicDefaulting/collect_liquidation_events.py 0x6AAFD9Dd424541885fd79C06FDA96929CFD512f9
 
-0xf55902DE87Bd80c6a35614b48d7f8B612a083C12
-
-
-  silo1   address :  0x322e1d5384aa4ED66AeCa770B95686271de61dc3
-
 """
 
 import sys
 import json
 import os
+from pathlib import Path
 from web3 import Web3
 from eth_abi import encode
 from eth_utils import to_hex
@@ -23,8 +19,9 @@ from eth_utils import to_hex
 # Hardcoded RPC URL
 RPC_URL = "https://sonic-mainnet.g.alchemy.com/v2/aNrPwztzUMrRelRP2OkYVAQc0CHo4DJk"  # Update this to your actual RPC URL
 
-# Output JSON file
-OUTPUT_FILE = "events.json"
+# Output JSON file - save in the same directory as this script
+SCRIPT_DIR = Path(__file__).parent.absolute()
+OUTPUT_FILE = str(SCRIPT_DIR / "events.json")
 
 # LiquidationCall event signature
 LIQUIDATION_CALL_EVENT_SIGNATURE = "LiquidationCall(address,address,address,uint256,uint256,bool)"
@@ -34,16 +31,35 @@ def load_existing_events():
     """Load existing events from JSON file if it exists."""
     if os.path.exists(OUTPUT_FILE):
         with open(OUTPUT_FILE, 'r') as f:
-            return json.load(f)
+            events = json.load(f)
+            # Normalize keys to always have 0x prefix and convert to array format
+            normalized_events = {}
+            for key, value in events.items():
+                normalized_key = key if key.startswith('0x') else '0x' + key
+                
+                # Convert old format (single event) to new format (array of events)
+                if isinstance(value, dict):
+                    # Old format: single event object
+                    if 'txHash' in value and not value['txHash'].startswith('0x'):
+                        value['txHash'] = '0x' + value['txHash']
+                    normalized_events[normalized_key] = [value]
+                elif isinstance(value, list):
+                    # New format: array of events
+                    for event in value:
+                        if 'txHash' in event and not event['txHash'].startswith('0x'):
+                            event['txHash'] = '0x' + event['txHash']
+                    normalized_events[normalized_key] = value
+            return normalized_events
     return {}
 
 
 def save_events(events_dict):
     """Save events to JSON file, sorted by block number and transaction index."""
     # Sort events by block number, then by transaction index
+    # For arrays, use the first event's blockNumber and txOrder
     sorted_events = dict(sorted(
         events_dict.items(),
-        key=lambda x: (x[1]['blockNumber'], x[1]['txOrder'])
+        key=lambda x: (x[1][0]['blockNumber'], x[1][0]['txOrder']) if x[1] else (0, 0)
     ))
     
     with open(OUTPUT_FILE, 'w') as f:
@@ -80,7 +96,6 @@ def collect_liquidation_events(contract_address):
     
     # Load existing events
     existing_events = load_existing_events()
-    existing_keys = set(existing_events.keys())
     
     # Create event filter
     event_signature_hash = w3.keccak(text=LIQUIDATION_CALL_EVENT_SIGNATURE)
@@ -100,27 +115,38 @@ def collect_liquidation_events(contract_address):
     print(f"Found {len(events)} LiquidationCall events")
     
     new_events_count = 0
+    # Cache transaction details to avoid redundant RPC calls
+    tx_cache = {}
     
     for event in events:
-        tx_hash = event['transactionHash'].hex()
+        tx_hash_raw = event['transactionHash'].hex()
+        # Ensure tx_hash has 0x prefix
+        tx_hash = tx_hash_raw if tx_hash_raw.startswith('0x') else '0x' + tx_hash_raw
         
-        # Use tx_hash as the key (as per user requirement)
-        # If transaction already exists, skip it
-        if tx_hash in existing_keys:
-            continue
-        
-        # Get transaction details
-        tx = w3.eth.get_transaction(tx_hash)
-        tx_receipt = w3.eth.get_transaction_receipt(tx_hash)
-        block = w3.eth.get_block(tx_receipt['blockNumber'])
+        # Get transaction details (use cache if available)
+        if tx_hash not in tx_cache:
+            tx = w3.eth.get_transaction(tx_hash)
+            tx_receipt = w3.eth.get_transaction_receipt(tx_hash)
+            block = w3.eth.get_block(tx_receipt['blockNumber'])
+            tx_cache[tx_hash] = {'tx': tx, 'tx_receipt': tx_receipt, 'block': block}
+        else:
+            tx = tx_cache[tx_hash]['tx']
+            tx_receipt = tx_cache[tx_hash]['tx_receipt']
+            block = tx_cache[tx_hash]['block']
         
         # Decode event arguments
         # LiquidationCall(address indexed liquidator, address indexed silo, address indexed borrower, uint256 repayDebtAssets, uint256 withdrawCollateral, bool receiveSToken)
         # Topics: [event_signature, liquidator, silo, borrower]
         # Data: repayDebtAssets (uint256), withdrawCollateral (uint256), receiveSToken (bool)
-        liquidator = '0x' + event['topics'][1].hex()[26:]  # Remove padding
-        silo = '0x' + event['topics'][2].hex()[26:]         # Remove padding
-        borrower = '0x' + event['topics'][3].hex()[26:]      # Remove padding
+        # Addresses in topics are 32-byte values, we need the last 20 bytes (40 hex chars)
+        topic1_hex = event['topics'][1].hex() if hasattr(event['topics'][1], 'hex') else event['topics'][1]
+        topic2_hex = event['topics'][2].hex() if hasattr(event['topics'][2], 'hex') else event['topics'][2]
+        topic3_hex = event['topics'][3].hex() if hasattr(event['topics'][3], 'hex') else event['topics'][3]
+        
+        # Remove '0x' prefix if present and take last 40 chars (20 bytes = address)
+        liquidator = '0x' + (topic1_hex[2:] if topic1_hex.startswith('0x') else topic1_hex)[-40:]
+        silo = '0x' + (topic2_hex[2:] if topic2_hex.startswith('0x') else topic2_hex)[-40:]
+        borrower = '0x' + (topic3_hex[2:] if topic3_hex.startswith('0x') else topic3_hex)[-40:]
         
         # Decode data: uint256, uint256, bool
         # Data is HexBytes in web3.py LogEntry
@@ -163,8 +189,22 @@ def collect_liquidation_events(contract_address):
             'eventArgs': encoded_args
         }
         
-        existing_events[tx_hash] = event_entry
-        new_events_count += 1
+        # Initialize array for this tx_hash if it doesn't exist
+        if tx_hash not in existing_events:
+            existing_events[tx_hash] = []
+        
+        # Check for duplicates based on eventName and eventArgs
+        is_duplicate = False
+        for existing_event in existing_events[tx_hash]:
+            if (existing_event['eventName'] == event_entry['eventName'] and 
+                existing_event['eventArgs'] == event_entry['eventArgs']):
+                is_duplicate = True
+                break
+        
+        # Add event only if it's not a duplicate
+        if not is_duplicate:
+            existing_events[tx_hash].append(event_entry)
+            new_events_count += 1
     
     if new_events_count > 0:
         print(f"Added {new_events_count} new LiquidationCall events")
@@ -172,7 +212,10 @@ def collect_liquidation_events(contract_address):
     else:
         print("No new LiquidationCall events found")
     
-    print(f"Total events in file: {len(existing_events)}")
+    # Count total events across all transactions
+    total_events = sum(len(events) for events in existing_events.values())
+    print(f"Total transactions: {len(existing_events)}")
+    print(f"Total events in file: {total_events}")
 
 
 if __name__ == "__main__":

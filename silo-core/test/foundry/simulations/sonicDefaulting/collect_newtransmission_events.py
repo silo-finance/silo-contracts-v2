@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-Script to collect IERC20.Transfer events from a Silo contract.
+Script to collect NewTransmission events from a contract.
+Only extracts the int192 answer field.
 
-
-python3 silo-core/test/foundry/simulations/sonicDefaulting/collect_transfer_events.py 0xf55902DE87Bd80c6a35614b48d7f8B612a083C12
-python3 silo-core/test/foundry/simulations/sonicDefaulting/collect_transfer_events.py 0x322e1d5384aa4ED66AeCa770B95686271de61dc3
-
+Usage: 
+python3 silo-core/test/foundry/simulations/sonicDefaulting/collect_newtransmission_events.py 0x0BdbFF19543B20d0bc2d1eA08deE2be4C0b76743
 """
 
 import sys
@@ -13,7 +12,7 @@ import json
 import os
 from pathlib import Path
 from web3 import Web3
-from eth_abi import encode
+from eth_abi import encode, decode
 from eth_utils import to_hex
 
 # Hardcoded RPC URL
@@ -23,8 +22,10 @@ RPC_URL = "https://sonic-mainnet.g.alchemy.com/v2/aNrPwztzUMrRelRP2OkYVAQc0CHo4D
 SCRIPT_DIR = Path(__file__).parent.absolute()
 OUTPUT_FILE = str(SCRIPT_DIR / "events.json")
 
-# ERC20 Transfer event signature
-TRANSFER_EVENT_SIGNATURE = "Transfer(address,address,uint256)"
+# NewTransmission event signature
+# NewTransmission(uint32 aggregatorRoundId, int192 answer, address transmitter, uint32 observationsTimestamp, int192[] observations, bytes observers, int192 juelsPerFeeCoin, bytes32 configDigest, uint40 epochAndRound)
+# Only aggregatorRoundId is indexed, so answer is in the data field
+NEW_TRANSMISSION_EVENT_SIGNATURE = "NewTransmission(uint32,int192,address,uint32,int192[],bytes,int192,bytes32,uint40)"
 
 
 def load_existing_events():
@@ -69,19 +70,17 @@ def save_events(events_dict):
 def encode_event_args(event_args):
     """
     Encode event arguments as bytes for Solidity abi.decode.
-    Transfer event: (address from, address to, uint256 value)
+    NewTransmission event: only answer (int192)
     """
-    from_addr = event_args['from']
-    to_addr = event_args['to']
-    value = event_args['value']
+    answer = event_args['answer']
     
-    # Encode as (address, address, uint256)
-    encoded = encode(['address', 'address', 'uint256'], [from_addr, to_addr, value])
+    # Encode as (int192,)
+    encoded = encode(['int192'], [answer])
     return to_hex(encoded)
 
 
-def collect_transfer_events(contract_address):
-    """Collect Transfer events from the contract."""
+def collect_newtransmission_events(contract_address):
+    """Collect NewTransmission events from the contract."""
     w3 = Web3(Web3.HTTPProvider(RPC_URL))
     
     if not w3.is_connected():
@@ -92,22 +91,22 @@ def collect_transfer_events(contract_address):
     existing_events = load_existing_events()
     
     # Create event filter
-    event_signature_hash = w3.keccak(text=TRANSFER_EVENT_SIGNATURE)
+    event_signature_hash = w3.keccak(text=NEW_TRANSMISSION_EVENT_SIGNATURE)
     
-    # Get Transfer events from the contract
-    # We'll query from block 0 to latest, but you might want to limit this
-    print(f"Querying Transfer events from contract {contract_address}...")
+    # Get NewTransmission events from the contract
+    print(f"Querying NewTransmission events from contract {contract_address}...")
     
-    # Create filter for Transfer events
-    transfer_filter = w3.eth.filter({
-        'fromBlock': 58064714, # 5773890,
-        'toBlock': 58064714, # 'latest',
+    # Create filter for NewTransmission events
+    # Note: aggregatorRoundId is indexed, so it will be in topics[1]
+    transmission_filter = w3.eth.filter({
+        'fromBlock': 58050000,
+        'toBlock': 58061678, # 'latest',
         'address': contract_address,
         'topics': [event_signature_hash]
     })
     
-    events = transfer_filter.get_all_entries()
-    print(f"Found {len(events)} Transfer events")
+    events = transmission_filter.get_all_entries()
+    print(f"Found {len(events)} NewTransmission events")
     
     new_events_count = 0
     # Cache transaction details to avoid redundant RPC calls
@@ -130,28 +129,35 @@ def collect_transfer_events(contract_address):
             block = tx_cache[tx_hash]['block']
         
         # Decode event arguments
-        # Transfer(address indexed from, address indexed to, uint256 value)
-        # Topics: [event_signature, from, to]
-        # Data: value (uint256)
-        # Addresses in topics are 32-byte values, we need the last 20 bytes (40 hex chars)
-        topic1_hex = event['topics'][1].hex() if hasattr(event['topics'][1], 'hex') else event['topics'][1]
-        topic2_hex = event['topics'][2].hex() if hasattr(event['topics'][2], 'hex') else event['topics'][2]
+        # NewTransmission(uint32 indexed aggregatorRoundId, int192 answer, address transmitter, uint32 observationsTimestamp, int192[] observations, bytes observers, int192 juelsPerFeeCoin, bytes32 configDigest, uint40 epochAndRound)
+        # Topics: [event_signature, aggregatorRoundId]
+        # Data: answer (int192), transmitter (address), observationsTimestamp (uint32), observations (int192[]), observers (bytes), juelsPerFeeCoin (int192), configDigest (bytes32), epochAndRound (uint40)
         
-        # Remove '0x' prefix if present and take last 40 chars (20 bytes = address)
-        from_addr = '0x' + (topic1_hex[2:] if topic1_hex.startswith('0x') else topic1_hex)[-40:]
-        to_addr = '0x' + (topic2_hex[2:] if topic2_hex.startswith('0x') else topic2_hex)[-40:]
-        
-        # Handle data field (value as uint256)
+        # Decode data field
+        # Data contains: int192 answer, address transmitter, uint32 observationsTimestamp, int192[] observations, bytes observers, int192 juelsPerFeeCoin, bytes32 configDigest, uint40 epochAndRound
+        # We need to decode all parameters to properly extract answer (due to dynamic types like arrays and bytes)
         data_hex = event['data'].hex() if hasattr(event['data'], 'hex') else event['data']
         if isinstance(data_hex, str) and data_hex.startswith('0x'):
-            value = int(data_hex, 16)
+            data_bytes = bytes.fromhex(data_hex[2:])
+        elif isinstance(data_hex, bytes):
+            data_bytes = data_hex
         else:
-            value = int(data_hex, 16) if isinstance(data_hex, str) else int.from_bytes(event['data'], 'big')
+            data_bytes = bytes.fromhex(data_hex)
+        
+        # Decode all parameters to extract answer
+        # Types: int192, address, uint32, int192[], bytes, int192, bytes32, uint40
+        try:
+            decoded = decode(
+                ['int192', 'address', 'uint32', 'int192[]', 'bytes', 'int192', 'bytes32', 'uint40'],
+                data_bytes
+            )
+            answer = decoded[0]  # First parameter is answer
+        except Exception as e:
+            print(f"Warning: Failed to decode answer for tx {tx_hash}: {e}")
+            continue
         
         event_args = {
-            'from': from_addr,
-            'to': to_addr,
-            'value': value
+            'answer': answer
         }
         
         # Encode event arguments as bytes
@@ -169,7 +175,7 @@ def collect_transfer_events(contract_address):
             'txFrom': tx['from'],
             'txTo': tx['to'] if tx['to'] else None,  # Handle contract creation
             'eventContractAddress': event_contract_address,
-            'eventName': 'Transfer',
+            'eventName': 'NewTransmission',
             'eventArgs': encoded_args
         }
         
@@ -191,10 +197,10 @@ def collect_transfer_events(contract_address):
             new_events_count += 1
     
     if new_events_count > 0:
-        print(f"Added {new_events_count} new Transfer events")
+        print(f"Added {new_events_count} new NewTransmission events")
         save_events(existing_events)
     else:
-        print("No new Transfer events found")
+        print("No new NewTransmission events found")
     
     # Count total events across all transactions
     total_events = sum(len(events) for events in existing_events.values())
@@ -204,7 +210,7 @@ def collect_transfer_events(contract_address):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python collect_transfer_events.py <contract_address>")
+        print("Usage: python3 collect_newtransmission_events.py <contract_address>")
         sys.exit(1)
     
     contract_address = sys.argv[1]
@@ -217,5 +223,5 @@ if __name__ == "__main__":
     # Normalize address (checksum)
     contract_address = Web3.to_checksum_address(contract_address)
     
-    collect_transfer_events(contract_address)
+    collect_newtransmission_events(contract_address)
 
