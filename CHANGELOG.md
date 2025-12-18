@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [3.14.0] - 2025-12-18
+### Added
+- added `IVersioned` inerface
+
 ## [3.13.2] - 2025-12-11
 ### Added
 - silo-core: calculate debt to cover for profitable liquidation (#1693)
