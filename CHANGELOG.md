@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [3.15.0] - 2025-12-19
+### Added
+- More configs to DKinkIRMConfigs.json
+
+### Markets
+- rsETH / WETH with new IRM on Arbitrum
+- siUSD / USDC with new IRM on Mainnet
+- PT-reUSD-25JUN2026 / USDC with new IRM on Mainnet
+
 ## [3.14.0] - 2025-12-18
 ### Added
 - added `IVersioned` inerface
