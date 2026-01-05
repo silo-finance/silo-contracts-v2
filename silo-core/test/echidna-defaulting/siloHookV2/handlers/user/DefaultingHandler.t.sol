@@ -24,6 +24,7 @@ import {MockSiloOracle} from "silo-core/test/invariants/utils/mocks/MockSiloOrac
 /// @title DefaultingHandler
 /// @notice Handler test contract for a set of actions
 contract DefaultingHandler is BaseHandlerDefaulting {
+    // TODO finalize this implementation
     function liquidationCallByDefaulting(uint256 _maxDebtToCover, RandomGenerator memory _random)
         external
         setupRandomActor(_random.i)

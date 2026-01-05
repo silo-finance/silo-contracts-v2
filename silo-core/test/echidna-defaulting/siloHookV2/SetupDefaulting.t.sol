@@ -24,11 +24,7 @@ import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract SetupDefaulting is Setup {
-    // function _setUp() internal override {
-    //     super._setUp();
-    // }
-
-    function core_deploySiloLiquidation() internal override {
+    function core_deploySiloLiquidation() internal virtual override {
         console2.log("/core_deploySiloLiquidation (SiloHookV2)/");
         // TODO should it work with straight deploy?
         liquidationModule = PartialLiquidation(address(new SiloHookV2()));
