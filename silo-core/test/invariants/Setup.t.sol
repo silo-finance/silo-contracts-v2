@@ -138,7 +138,7 @@ contract Setup is BaseTest {
     //                                   SILO-CORE SETUP FUNCTIONS                               //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function core_deploySiloLiquidation() internal {
+    function core_deploySiloLiquidation() internal virtual {
         liquidationModule = PartialLiquidation(address(new SiloHookV1()));
     }
 

@@ -14,7 +14,7 @@ import {InvariantsDefaulting} from "./InvariantsDefaulting.t.sol";
  * Test suite that converts from  "fuzz tests" to foundry "unit tests"
  * The objective is to go from random values to hardcoded values that can be analyzed more easily
  */
-contract CryticToFoundrySiloHookV2 is InvariantsDefaulting, SetupDefaulting {
+contract CryticToFoundryDefaulting is InvariantsDefaulting, SetupDefaulting {
     uint256 public constant DEFAULT_TIMESTAMP = 337812;
 
     CryticToFoundryDefaulting public DefaultingTester = this;

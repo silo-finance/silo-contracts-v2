@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 // Contracts
 import {Silo} from "silo-core/contracts/Silo.sol";
-import {PartialLiquidationByDefaulting} from "silo-core/contracts/hooks/defaulting/PartialLiquidationByDefaulting.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 
 // Mock Contracts
 import {TestERC20} from "../utils/mocks/TestERC20.sol";
@@ -87,7 +87,8 @@ abstract contract BaseStorage {
 
     /// @notice Secondary contracts
     ISiloDeployer siloDeployer;
-    PartialLiquidationByDefaulting liquidationModule;
+    PartialLiquidation liquidationModule;
+    // PartialLiquidationByDefaulting liquidationByDefaultingModule;
     SwapRouterMock swapRouterMock;
 
     /// @notice Implementations

@@ -39,9 +39,7 @@ contract DefaultingHandler is BaseHandlerDefaulting {
         _before();
         (success, returnData) = actor.proxy(
             address(liquidationModule),
-            abi.encodeWithSelector(
-                IPartialLiquidationByDefaulting.liquidationCallByDefaulting.selector, borrower, _maxDebtToCover
-            )
+            abi.encodeWithSignature("liquidationCallByDefaulting(address,uint256)", borrower, _maxDebtToCover)
         );
 
         if (success) {

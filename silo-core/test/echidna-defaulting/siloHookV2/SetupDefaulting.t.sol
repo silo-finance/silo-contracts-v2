@@ -9,11 +9,13 @@ import {Silo} from "silo-core/contracts/Silo.sol";
 import {
     IInterestRateModelV2, InterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
+import {SiloHookV2} from "silo-core/contracts/hooks/SiloHookV2.sol";
 
 // Test Contracts
 
 // Mock Contracts
-import {TestERC20} from "silo-core/test/echidna-leverage/utils/mocks/TestERC20.sol";
+import {TestERC20} from "silo-core/test/invariants/utils/mocks/TestERC20.sol";
 import {TestWETH} from "silo-core/test/echidna-leverage/utils/mocks/TestWETH.sol";
 
 // Interfaces
@@ -22,8 +24,13 @@ import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract SetupDefaulting is Setup {
-    function _setUp() internal override {
-        super._setUp();
+    // function _setUp() internal override {
+    //     super._setUp();
+    // }
+
+    function core_deploySiloLiquidation() internal override {
+        // TODO should it work with straight deploy?
+        liquidationModule = PartialLiquidation(address(new SiloHookV2()));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
