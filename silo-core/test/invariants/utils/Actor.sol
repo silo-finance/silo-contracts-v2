@@ -19,6 +19,8 @@ contract Actor {
         contracts = _contracts;
         for (uint256 i = 0; i < tokens.length; i++) {
             for (uint256 j = 0; j < contracts.length; j++) {
+                require(contracts[j] != address(0), "contracts[j] is zero");
+                
                 IERC20(tokens[i]).approve(contracts[j], type(uint256).max);
 
                 try IERC20R(tokens[i]).setReceiveApproval(contracts[j], type(uint256).max) {

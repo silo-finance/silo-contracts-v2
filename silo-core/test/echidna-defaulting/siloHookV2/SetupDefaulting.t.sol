@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {console} from "forge-std/console.sol";
+import {console2} from "forge-std/console2.sol";
 
 // Contracts
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
@@ -29,6 +29,7 @@ contract SetupDefaulting is Setup {
     // }
 
     function core_deploySiloLiquidation() internal override {
+        console2.log("/core_deploySiloLiquidation (SiloHookV2)/");
         // TODO should it work with straight deploy?
         liquidationModule = PartialLiquidation(address(new SiloHookV2()));
     }
@@ -38,6 +39,7 @@ contract SetupDefaulting is Setup {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function _deployAssets() internal override {
+        console2.log("/SetupDefaulting._deployAssets/");
         _asset0 = TestERC20(address(new TestWETH("Test Token0", "TT0", 18)));
         _asset1 = new TestERC20("Test Token1", "TT1", 6);
         baseAssets.push(address(_asset0));
@@ -50,6 +52,7 @@ contract SetupDefaulting is Setup {
 
     /// @notice Deploy protocol actors and initialize their balances
     function _setUpActors() internal override {
+        console2.log("/SetupDefaulting._setUpActors/");
         // Initialize the three actors of the fuzzers
         address[] memory addresses = new address[](3);
         addresses[0] = USER1;
@@ -67,7 +70,7 @@ contract SetupDefaulting is Setup {
         (tokens[2], tokens[3], tokens[4]) = vault0.config().getShareTokens(_vault0);
         (tokens[5], tokens[6], tokens[7]) = vault0.config().getShareTokens(_vault1);
 
-        address[] memory contracts = new address[](5);
+        address[] memory contracts = new address[](3);
         contracts[0] = address(_vault0);
         contracts[1] = address(_vault1);
         contracts[2] = address(liquidationModule);
@@ -84,6 +87,8 @@ contract SetupDefaulting is Setup {
 
             actorAddresses.push(_actor);
         }
+
+        console2.log("/SetupDefaulting._setUpActors/ done");
     }
 
     /// @notice Deploy an actor proxy contract for a user address

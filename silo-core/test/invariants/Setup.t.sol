@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {console2} from "forge-std/console2.sol";
+
 // Utils
 import {Actor} from "./utils/Actor.sol";
 
@@ -37,7 +39,6 @@ import {DynamicKinkModelFactory} from "silo-core/contracts/interestRateModel/kin
 import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
 import {DynamicKinkModel} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModel.sol";
 
-import {console} from "forge-std/console.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract Setup is BaseTest {
@@ -63,6 +64,7 @@ contract Setup is BaseTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function _deployAssets() internal virtual {
+        console2.log("/_deployAssets/");
         _asset0 = new TestERC20("Test Token0", "TT0", 18);
         _asset1 = new TestERC20("Test Token1", "TT1", 6);
         baseAssets.push(address(_asset0));
@@ -70,6 +72,7 @@ contract Setup is BaseTest {
     }
 
     function _deployCoreProtocol(address feeReceiver) internal {
+        console2.log("/_deployCoreProtocol/");
         core_deploySiloLiquidation();
         core_deploySiloFactory(feeReceiver);
         core_deployInterestRateConfigFactory();
@@ -78,11 +81,13 @@ contract Setup is BaseTest {
     }
 
     function _deployOracles() internal {
+        console2.log("/_deployOracles/");
         oracle0 = address(new MockSiloOracle(address(_asset0), 1 ether, QUOTE_TOKEN_ADDRESS, 18));
         oracle1 = address(new MockSiloOracle(address(_asset1), 1 ether, QUOTE_TOKEN_ADDRESS, 18));
     }
 
     function _deploySilos() internal {
+        console2.log("/_deploySilos/");
         // Setup initData
         _initData(address(_asset0), address(_asset1));
 
@@ -131,6 +136,7 @@ contract Setup is BaseTest {
 
     /// @notice Setup liquidation module and flashLoan receiver
     function _deployExternalContracts() internal {
+        console2.log("/_deployExternalContracts/");
         flashLoanReceiver = address(new MockFlashLoanReceiver());
     }
 
@@ -139,16 +145,19 @@ contract Setup is BaseTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function core_deploySiloLiquidation() internal virtual {
+        console2.log("/core_deploySiloLiquidation (SiloHookV1)/");
         liquidationModule = PartialLiquidation(address(new SiloHookV1()));
     }
 
     function core_deploySiloFactory(address feeReceiver) internal {
+        console2.log("/core_deploySiloFactory/");
         address daoFeeReceiver = feeReceiver == address(0) ? address(0) : feeReceiver;
 
         siloFactory = ISiloFactory(address(new SiloFactory(daoFeeReceiver)));
     }
 
     function core_deployInterestRateConfigFactory() internal {
+        console2.log("/core_deployInterestRateConfigFactory/");
         interestRateModelV2ConfigFactory = IInterestRateModelV2Factory(address(new InterestRateModelV2Factory()));
     }
 
@@ -174,6 +183,7 @@ contract Setup is BaseTest {
     }
 
     function core_deploySiloDeployer() internal {
+        console2.log("/core_deploySiloDeployer/");
         address dkinkIRMConfigFactory = address(new DynamicKinkModelFactory(new DynamicKinkModel()));
         siloImpl = address(new Silo(siloFactory));
         shareProtectedCollateralTokenImpl = address(new ShareProtectedCollateralToken());
@@ -203,6 +213,7 @@ contract Setup is BaseTest {
         address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl
     ) internal returns (ISiloConfig siloConfig_) {
+        console2.log("/_deploySiloConfig/");
         uint256 nextSiloId = siloFactory.getNextSiloId();
         uint256 creatorSiloCounter = siloFactory.creatorSiloCounter(msg.sender);
 
@@ -292,6 +303,7 @@ contract Setup is BaseTest {
 
     /// @notice Deploy protocol actors and initialize their balances
     function _setUpActors() internal virtual {
+        console2.log("/_setUpActors/");
         // Initialize the three actors of the fuzzers
         address[] memory addresses = new address[](3);
         addresses[0] = USER1;
