@@ -176,6 +176,15 @@ FOUNDRY_PROFILE=core_test forge snapshot --desc --check --no-match-test "_skip_"
 FOUNDRY_PROFILE=core_test forge snapshot --diff --desc --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
 ```
 
+## Slither
+
+Quick quide
+
+- slither is installed by default with echidna
+- for `dot` preview: `brew install graphviz`
+- `slither ./silo-core/contracts/hooks/defaulting/ --print vars-and-auth`
+
+
 ## Deployment
 
 set env variable `PRIVATE_KEY` then run
