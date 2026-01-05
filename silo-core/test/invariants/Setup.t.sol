@@ -93,7 +93,7 @@ contract Setup is BaseTest {
 
         // Deploy silo config
         siloConfig =
-            _deploySiloConfig(siloData["MOCK"], siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
+            _deploySiloConfig(siloData[_siloInitDataIdentifier()], siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
 
         // Deploy silos
         siloFactory.createSilo(
@@ -101,7 +101,7 @@ contract Setup is BaseTest {
             siloImpl,
             shareProtectedCollateralTokenImpl,
             shareDebtTokenImpl,
-            siloData["MOCK"].deployer,
+            siloData[_siloInitDataIdentifier()].deployer,
             msg.sender
         );
 
@@ -132,6 +132,10 @@ contract Setup is BaseTest {
 
         protectedTokens.push(protectedCollateralToken0);
         protectedTokens.push(protectedCollateralToken1);
+    }
+
+    function _siloInitDataIdentifier() internal pure virtual returns (string memory) {
+        return "MOCK";
     }
 
     /// @notice Setup liquidation module and flashLoan receiver
@@ -256,7 +260,7 @@ contract Setup is BaseTest {
         siloConfig_ = ISiloConfig(address(new SiloConfig(nextSiloId, configData0, configData1)));
     }
 
-    function _initData(address mock0, address mock1) internal {
+    function _initData(address mock0, address mock1) internal virtual {
         // The FULL data relies on addresses set in _setupBasicData()
         siloData["FULL"] = ISiloConfig.InitData({
             deployer: address(this),

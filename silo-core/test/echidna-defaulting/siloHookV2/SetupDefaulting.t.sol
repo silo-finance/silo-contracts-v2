@@ -9,6 +9,7 @@ import {Silo} from "silo-core/contracts/Silo.sol";
 import {
     IInterestRateModelV2, InterestRateModelV2
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 import {SiloHookV2} from "silo-core/contracts/hooks/SiloHookV2.sol";
 
@@ -103,5 +104,40 @@ contract SetupDefaulting is Setup {
         (success,) = address(_actor).call{value: INITIAL_ETH_BALANCE}("");
         assert(success);
         actorAddress = address(_actor);
+    }
+
+    function _siloInitDataIdentifier() internal pure virtual override returns (string memory) {
+        return "HOOK_V2";
+    }
+
+    function _initData(address mock0, address mock1) internal override {
+        super._initData(mock0, mock1);
+
+        siloData["HOOK_V2"] = ISiloConfig.InitData({
+            deployer: address(this),
+            daoFee: 0.15e18,
+            deployerFee: 0.1e18,
+            token0: mock0,
+            solvencyOracle0: address(0),
+            maxLtvOracle0: address(0),
+            interestRateModel0: address(interestRateModelV2),
+            maxLtv0: 0.75e18,
+            lt0: 0.85e18,
+            liquidationTargetLtv0: 0.76e18,
+            liquidationFee0: 0.05e18,
+            flashloanFee0: 0.01e18,
+            callBeforeQuote0: false,
+            hookReceiver: address(liquidationModule),
+            token1: mock1,
+            solvencyOracle1: address(0),
+            maxLtvOracle1: address(0),
+            interestRateModel1: address(interestRateModelV2),
+            maxLtv1: 0,
+            lt1: 0,
+            liquidationTargetLtv1: 0,
+            liquidationFee1: 0,
+            flashloanFee1: 0.01e18,
+            callBeforeQuote1: false
+        });
     }
 }
