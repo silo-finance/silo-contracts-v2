@@ -21,6 +21,16 @@ import {TestERC20} from "silo-core/test/invariants/utils/mocks/TestERC20.sol";
 import {TestWETH} from "silo-core/test/echidna-leverage/utils/mocks/TestWETH.sol";
 import {MockSiloOracle} from "silo-core/test/invariants/utils/mocks/MockSiloOracle.sol";
 
+/*
+- if LP provider does not claim, rewards balance can only grow
+- total supply of collateral and protected must stay the same before and after liquidation 
+- in case price 1:1 defaulting should not create any loss (if done before bad debt)
+- all rewards are claimable always
+- if LTV > LT_MARGIN, defaulting never reverts (notice: cap)
+- 1 wei debt liquidation: possible! keeper will not get any rewards
+- after defaultin we should not reduce collateral total assets below actual available balance (liquidity)
+*/
+
 /// @title DefaultingHandler
 /// @notice Handler test contract for a set of actions
 contract DefaultingHandler is BaseHandlerDefaulting {
@@ -38,14 +48,33 @@ contract DefaultingHandler is BaseHandlerDefaulting {
         _setTargetActor(_getRandomActor(_random.i));
 
         _before();
+
         (success, returnData) = actor.proxy(
             address(liquidationModule),
             abi.encodeWithSignature("liquidationCallByDefaulting(address,uint256)", borrower, _maxDebtToCover)
         );
 
         if (success) {
-            _after();
+            revert("liquidation by defaulting done!");
         }
+
+        _after();
+
+        _assert_defaulting_totalAssetsDoesNotChange();
+    }
+
+    function _assert_defaulting_totalAssetsDoesNotChange() internal {
+        assertEq(
+            defaultVarsBefore[address(vault0)].totalAssets,
+            defaultVarsAfter[address(vault0)].totalAssets,
+            "[silo0] total collateral assets should not change after defaulting"
+        );
+
+        assertEq(
+            defaultVarsBefore[address(vault1)].protectedShares,
+            defaultVarsAfter[address(vault1)].protectedShares,
+            "[silo1] total protected assets should not change after defaulting"
+        );
     }
 
     // TODO rules
