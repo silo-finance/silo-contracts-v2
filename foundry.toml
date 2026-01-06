@@ -73,6 +73,12 @@ test = 'silo-core/test/echidna-defaulting/siloHookV2'
 out = 'cache/foundry/out/echidna-defaulting/siloHookV2'
 broadcast = 'silo-core/echidna/broadcast'
 
+[profile.echidna_hookV3]
+src = 'silo-core/contracts'
+test = 'silo-core/test/echidna-defaulting/siloHookV3'
+out = 'cache/foundry/out/echidna-defaulting/siloHookV3'
+broadcast = 'silo-core/echidna/broadcast'
+
 
 [profile.core_test]
 src = 'silo-core/test'

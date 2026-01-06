@@ -176,13 +176,19 @@ FOUNDRY_PROFILE=core_test forge snapshot --desc --check --no-match-test "_skip_"
 FOUNDRY_PROFILE=core_test forge snapshot --diff --desc --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
 ```
 
-## Slither
+## Auditing tools 
 
-Quick quide
+### Echidna
+
+https://github.com/crytic/echidna
+
+### Slither
+
+https://github.com/crytic/slither
 
 - slither is installed by default with echidna
-- for `dot` preview: `brew install graphviz`
-- `slither ./silo-core/contracts/hooks/defaulting/ --print vars-and-auth`
+- for `dot` preview use `brew install graphviz`
+- check different [print engines](https://github.com/crytic/slither/wiki/Printer-documentation) eg `slither ./silo-core/contracts/hooks/SiloHookV2.sol --print <printer>`
 
 
 ## Deployment
