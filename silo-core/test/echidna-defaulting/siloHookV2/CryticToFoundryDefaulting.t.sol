@@ -43,14 +43,13 @@ contract CryticToFoundryDefaulting is InvariantsDefaulting, SetupDefaulting {
     /*
     FOUNDRY_PROFILE=echidna_defaulting forge test -vv --ffi --mt test_EchidnaDefaulting_empty
     */
-    function test_EchidnaDefaulting_empty() public {
-    }
-    
+    function test_EchidnaDefaulting_empty() public {}
+
     /*
     FOUNDRY_PROFILE=echidna_defaulting forge test -vv --ffi --mt test_EchidnaDefaulting_test1
     */
     function test_EchidnaDefaulting_test1() public {
-        DefaultingTester.deposit(26,1,1,0);
+        DefaultingTester.deposit(26, 1, 1, 0);
         DefaultingTester.liquidationCallByDefaulting(0, RandomGenerator(0, 0, 0));
     }
 }

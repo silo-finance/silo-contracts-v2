@@ -10,9 +10,7 @@ import {SetupDefaulting} from "../siloHookV2/SetupDefaulting.t.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract SetupHookV3 is SetupDefaulting {
-    function core_deploySiloLiquidation() internal override {
-        console2.log("/core_deploySiloLiquidation (SiloHookV3)/");
-        // TODO should it work with straight deploy?
-        liquidationModule = PartialLiquidation(address(new SiloHookV3()));
+    function _hookImplementation() internal override returns (address hook) {
+        hook = address(new SiloHookV3());
     }
 }

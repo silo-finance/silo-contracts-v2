@@ -55,6 +55,9 @@ contract Setup is BaseTest {
         // Deploy Silos
         _deploySilos();
 
+        // Initialize hook
+        _initHook();
+
         // Deploy External contracts
         _deployExternalContracts();
     }
@@ -132,6 +135,11 @@ contract Setup is BaseTest {
 
         protectedTokens.push(protectedCollateralToken0);
         protectedTokens.push(protectedCollateralToken1);
+    }
+
+    function _initHook() internal virtual {
+        console2.log("/_initHook/");
+        liquidationModule.initialize(siloConfig, abi.encode(address(this)));
     }
 
     function _siloInitDataIdentifier() internal pure virtual returns (string memory) {

@@ -55,7 +55,8 @@ contract DefaultingHandler is BaseHandlerDefaulting {
         );
 
         if (success) {
-            revert("liquidation by defaulting done!");
+            (, uint256 repayDebtAssets) = abi.decode(returnData, (uint256, uint256));
+            assertGt(repayDebtAssets, 0, "repayDebtAssets should be greater than 0 on any liquidation");
         }
 
         _after();
