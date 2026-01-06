@@ -188,8 +188,8 @@ https://github.com/crytic/slither
 
 - slither is installed by default with echidna
 - for `dot` preview use `brew install graphviz`
-- check different [print engines](https://github.com/crytic/slither/wiki/Printer-documentation) eg `slither ./silo-core/contracts/hooks/SiloHookV2.sol --print <printer>`
-
+- try different [print engines](https://github.com/crytic/slither/wiki/Printer-documentation) eg `slither ./silo-core/contracts/hooks/SiloHookV2.sol --print <printer>`
+- check `audits/scripts/generate_call_graphs.py`
 
 ## Deployment
 
