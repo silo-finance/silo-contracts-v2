@@ -57,6 +57,12 @@ contract DefaultingHandler is BaseHandlerDefaulting {
         if (success) {
             (, uint256 repayDebtAssets) = abi.decode(returnData, (uint256, uint256));
             assertGt(repayDebtAssets, 0, "repayDebtAssets should be greater than 0 on any liquidation");
+
+            assertLt(
+                defaultVarsAfter[address(vault1)].debtAssets, 
+                defaultVarsBefore[address(vault1)].debtAssets, 
+                "debt assets should decrease after liquidation"
+            );
         }
 
         _after();
