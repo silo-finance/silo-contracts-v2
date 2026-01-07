@@ -54,6 +54,8 @@ contract DefaultingHandler is BaseHandlerDefaulting {
             abi.encodeWithSignature("liquidationCallByDefaulting(address,uint256)", borrower, _maxDebtToCover)
         );
 
+        _after();
+
         if (success) {
             (, uint256 repayDebtAssets) = abi.decode(returnData, (uint256, uint256));
             assertGt(repayDebtAssets, 0, "repayDebtAssets should be greater than 0 on any liquidation");
@@ -64,8 +66,6 @@ contract DefaultingHandler is BaseHandlerDefaulting {
                 "debt assets should decrease after liquidation"
             );
         }
-
-        _after();
 
         _assert_defaulting_totalAssetsDoesNotChange();
     }
