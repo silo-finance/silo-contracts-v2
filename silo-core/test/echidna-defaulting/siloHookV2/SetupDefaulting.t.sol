@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {console2} from "forge-std/console2.sol";
 
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
@@ -53,8 +54,7 @@ contract SetupDefaulting is Setup {
     }
 
     function _createIncentiveController() internal {
-        ISiloIncentivesController gauge =
-            new SiloIncentivesControllerCompatible(address(this), address(liquidationModule), address(vault1));
+        gauge = new SiloIncentivesControllerCompatible(address(this), address(liquidationModule), address(vault1));
 
         address owner = Ownable(address(liquidationModule)).owner();
         vm.prank(owner);

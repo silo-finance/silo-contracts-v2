@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {InvariantsDefaulting} from "./InvariantsDefaulting.t.sol";
+import {Invariants} from "silo-core/test/invariants/Invariants.t.sol";
+import {DefaultingHandler} from "./handlers/user/DefaultingHandler.t.sol";
 import {SetupDefaulting} from "./SetupDefaulting.t.sol";
+import {BaseHandlerDefaulting} from "./base/BaseHandlerDefaulting.t.sol";
+import {DefaultBeforeAfterHooks} from "silo-core/test/invariants/hooks/DefaultBeforeAfterHooks.t.sol";
 
 /*
     make echidna-leverage-assert
@@ -11,7 +14,7 @@ import {SetupDefaulting} from "./SetupDefaulting.t.sol";
 /// @title DefaultingTester
 /// @notice Entry point for invariant testing, inherits all contracts, invariants & handler
 /// @dev Mono contract that contains all the testing logic
-contract DefaultingTester is InvariantsDefaulting, SetupDefaulting {
+contract DefaultingTester is Invariants, DefaultingHandler, SetupDefaulting {
     constructor() payable {
         // Deploy protocol contracts and protocol actors
         setUp();
@@ -27,5 +30,9 @@ contract DefaultingTester is InvariantsDefaulting, SetupDefaulting {
 
         // Initialize handler contracts
         _setUpHandlers();
+    }
+
+    function _defaultHooksBefore(address silo) internal override(BaseHandlerDefaulting, DefaultBeforeAfterHooks) {
+        BaseHandlerDefaulting._defaultHooksBefore(silo);
     }
 }

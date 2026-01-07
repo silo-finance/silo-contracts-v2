@@ -3,6 +3,9 @@ pragma solidity ^0.8.19;
 
 // Interfaces
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {console2} from "forge-std/console2.sol";
+
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 import {IERC3156FlashLender} from "silo-core/contracts/interfaces/IERC3156FlashLender.sol";
 import {IGeneralSwapModule} from "silo-core/contracts/interfaces/IGeneralSwapModule.sol";
@@ -13,7 +16,6 @@ import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
 
 // Libraries
-import {console2} from "forge-std/console2.sol";
 
 // Test Contracts
 import {BaseHandlerDefaulting} from "../../base/BaseHandlerDefaulting.t.sol";
@@ -22,8 +24,6 @@ import {TestWETH} from "silo-core/test/echidna-leverage/utils/mocks/TestWETH.sol
 import {MockSiloOracle} from "silo-core/test/invariants/utils/mocks/MockSiloOracle.sol";
 
 /*
-- if LP provider does not claim, rewards balance can only grow
-- in case price 1:1 defaulting should not create any loss (if done before bad debt)
 - all rewards are claimable always
 - if LTV > LT_MARGIN, defaulting never reverts (notice: cap)
 - 1 wei debt liquidation: possible! keeper will not get any rewards
@@ -60,8 +60,8 @@ contract DefaultingHandler is BaseHandlerDefaulting {
             assertGt(repayDebtAssets, 0, "repayDebtAssets should be greater than 0 on any liquidation");
 
             assertLt(
-                defaultVarsAfter[address(vault1)].debtAssets, 
-                defaultVarsBefore[address(vault1)].debtAssets, 
+                defaultVarsAfter[address(vault1)].debtAssets,
+                defaultVarsBefore[address(vault1)].debtAssets,
                 "debt assets should decrease after liquidation"
             );
         }
@@ -69,20 +69,54 @@ contract DefaultingHandler is BaseHandlerDefaulting {
         _assert_defaulting_totalAssetsDoesNotChange();
     }
 
+    function assert_claimRewardsCanBeDone(uint256 _actorIndex) external setupRandomActor(_actorIndex) {
+        bool success;
+        bytes memory returnData;
+
+        // we will NEVER claim rewards form actor[0], that one will be used for checking rule about rewards balance
+        if (address(actor) == _getRandomActor(0)) return;
+
+        (success, returnData) = actor.proxy(address(gauge), abi.encodeWithSignature("claimRewards(address)", actor));
+
+        if (!success) revert("claimRewards failed");
+    }
+
     /*
     total supply of collateral and protected must stay the same before and after liquidation
     */
     function _assert_defaulting_totalAssetsDoesNotChange() internal {
         assertEq(
-            defaultVarsBefore[address(vault1)].totalAssets,
-            defaultVarsAfter[address(vault1)].totalAssets,
-            "[silo1] total collateral assets should not change after defaulting"
+            defaultVarsBefore[address(vault0)].totalAssets,
+            defaultVarsAfter[address(vault0)].totalAssets,
+            "[silo0] total collateral assets should not change after defaulting (on collateral silo)"
         );
 
         assertEq(
-            defaultVarsBefore[address(vault1)].protectedShares,
-            defaultVarsAfter[address(vault1)].protectedShares,
-            "[silo1] total protected assets should not change after defaulting"
+            defaultVarsBefore[address(vault0)].totalProtectedAssets,
+            defaultVarsAfter[address(vault0)].totalProtectedAssets,
+            "[silo0] total protected assets should not change after defaulting (on collateral silo)"
+        );
+
+        assertEq(
+            defaultVarsBefore[address(vault1)].totalProtectedAssets,
+            defaultVarsAfter[address(vault1)].totalProtectedAssets,
+            "[silo1] total protected assets should not change after defaulting (on debt silo)"
+        );
+    }
+
+    /*
+    in case price 1:1 defaulting should not create any loss (if done before bad debt)
+    */
+    function _assets_noLossWhenNoBadDebt() internal {}
+
+    /*
+    - if LP provider does not claim, rewards balance can only grow
+    */
+    function assert_rewardsBAlanceCanOnlyGrowWhenNoClaim() external setupRandomActor(0) {
+        assertGt(
+            gauge.getRewardsBalance(address(actor), _getProgramNames()),
+            rewardsBalanceBefore[address(actor)],
+            "rewards balance should grow when no claim"
         );
     }
 

@@ -35,6 +35,7 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
         // Silo
         uint256 debtAssets;
         uint256 collateralAssets;
+        uint256 totalProtectedAssets;
         uint256 balance;
         uint256 cash;
         uint256 interestRate;
@@ -71,13 +72,13 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
     //                                           HOOKS                                           //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _defaultHooksBefore(address silo) internal {
+    function _defaultHooksBefore(address silo) internal virtual {
         _setSiloValues(silo, defaultVarsBefore[silo]);
         _setSharesValues(silo, defaultVarsBefore[silo]);
         _setBorrowingValues(silo, defaultVarsBefore[silo]);
     }
 
-    function _defaultHooksAfter(address silo) internal {
+    function _defaultHooksAfter(address silo) internal virtual {
         _setSiloValues(silo, defaultVarsAfter[silo]);
         _setSharesValues(silo, defaultVarsAfter[silo]);
         _setBorrowingValues(silo, defaultVarsAfter[silo]);
@@ -92,6 +93,7 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
         _defaultVars.totalAssets = ISilo(silo).totalAssets();
         _defaultVars.debtAssets = ISilo(silo).getDebtAssets();
         _defaultVars.collateralAssets = ISilo(silo).getCollateralAssets();
+        _defaultVars.totalProtectedAssets = ISilo(silo).getTotalAssetsStorage(ISilo.AssetType.Protected);
         (_defaultVars.daoAndDeployerFees,,,,) = ISilo(silo).getSiloStorage();
     }
 

@@ -22,7 +22,7 @@ import {
 import {
     IInterestRateModelV2Factory
 } from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
-
+import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {ISiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
@@ -55,6 +55,9 @@ abstract contract BaseStorage {
 
     /// @notice Mapping of fuzzer user addresses to actors
     mapping(address => Actor) internal actors;
+
+    /// @notice used for defalting - stores rewards balance before defaulting liquidation
+    mapping(address user => uint256 gaugeBalance) rewardsBalanceBefore;
 
     /// @notice Array of all actor addresses
     address[] internal actorAddresses;
@@ -90,6 +93,8 @@ abstract contract BaseStorage {
     PartialLiquidation liquidationModule;
     // PartialLiquidationByDefaulting liquidationByDefaultingModule;
     SwapRouterMock swapRouterMock;
+    ISiloIncentivesController gauge;
+
 
     /// @notice Implementations
     address siloImpl;
