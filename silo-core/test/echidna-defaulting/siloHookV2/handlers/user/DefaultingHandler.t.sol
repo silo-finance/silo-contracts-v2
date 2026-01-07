@@ -23,7 +23,6 @@ import {MockSiloOracle} from "silo-core/test/invariants/utils/mocks/MockSiloOrac
 
 /*
 - if LP provider does not claim, rewards balance can only grow
-- total supply of collateral and protected must stay the same before and after liquidation 
 - in case price 1:1 defaulting should not create any loss (if done before bad debt)
 - all rewards are claimable always
 - if LTV > LT_MARGIN, defaulting never reverts (notice: cap)
@@ -70,11 +69,14 @@ contract DefaultingHandler is BaseHandlerDefaulting {
         _assert_defaulting_totalAssetsDoesNotChange();
     }
 
+    /*
+    total supply of collateral and protected must stay the same before and after liquidation
+    */
     function _assert_defaulting_totalAssetsDoesNotChange() internal {
         assertEq(
-            defaultVarsBefore[address(vault0)].totalAssets,
-            defaultVarsAfter[address(vault0)].totalAssets,
-            "[silo0] total collateral assets should not change after defaulting"
+            defaultVarsBefore[address(vault1)].totalAssets,
+            defaultVarsAfter[address(vault1)].totalAssets,
+            "[silo1] total collateral assets should not change after defaulting"
         );
 
         assertEq(
