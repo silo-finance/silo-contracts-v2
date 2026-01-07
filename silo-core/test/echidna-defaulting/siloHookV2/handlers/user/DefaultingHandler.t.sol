@@ -28,6 +28,11 @@ import {MockSiloOracle} from "silo-core/test/invariants/utils/mocks/MockSiloOrac
 - if LTV > LT_MARGIN, defaulting never reverts (notice: cap)
 - 1 wei debt liquidation: possible! keeper will not get any rewards
 - after defaultin we should not reduce collateral total assets below actual available balance (liquidity)
+
+Risks:
+- liquidation breaks VAULT standard 
+- there is no user input, so there is no risk from "outside" 
+- "weird" liquidation eg 1 wei do weird stuff
 */
 
 /// @title DefaultingHandler
@@ -69,7 +74,7 @@ contract DefaultingHandler is BaseHandlerDefaulting {
         _assert_defaulting_totalAssetsDoesNotChange();
     }
 
-    function assert_claimRewardsCanBeDone(uint256 _actorIndex) external setupRandomActor(_actorIndex) {
+    function assert_claimRewardsCanBeAlwaysDone(uint256 _actorIndex) external setupRandomActor(_actorIndex) {
         bool success;
         bytes memory returnData;
 
@@ -112,11 +117,11 @@ contract DefaultingHandler is BaseHandlerDefaulting {
     /*
     - if LP provider does not claim, rewards balance can only grow
     */
-    function assert_rewardsBAlanceCanOnlyGrowWhenNoClaim() external setupRandomActor(0) {
-        assertGt(
+    function assert_rewardsBalanceCanOnlyGrowWhenNoClaim() external setupRandomActor(0) {
+        assertGe(
             gauge.getRewardsBalance(address(actor), _getProgramNames()),
             rewardsBalanceBefore[address(actor)],
-            "rewards balance should grow when no claim"
+            "rewards balance should not decrease when no claim"
         );
     }
 
