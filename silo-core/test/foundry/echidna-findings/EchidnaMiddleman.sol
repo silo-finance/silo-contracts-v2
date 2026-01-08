@@ -7,14 +7,11 @@ import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
-import {IERC20R} from "silo-core/contracts/interfaces/IERC20R.sol";
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {PartialLiquidationLib} from "silo-core/contracts/hooks/liquidation/lib/PartialLiquidationLib.sol";
+
 import {EchidnaSetup} from "./EchidnaSetup.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
-import {MockSiloOracle} from "../../invariants/utils/mocks/MockSiloOracle.sol";
-import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IPartialLiquidationByDefaulting.sol";
-import {IERC3156FlashBorrower} from "silo-core/contracts/interfaces/IERC3156FlashBorrower.sol";
 
 contract EchidnaMiddleman is EchidnaSetup {
     using SafeCast for uint256;
@@ -28,20 +25,6 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         vm.prank(actor);
         silo.deposit(_amount, actor);
-    }
-
-    function __setReceiveApproval(uint256 _amount, uint8 i, uint8 j) public {
-        address owner = _getRandomActor(i);
-        address target = __getRandomDebtToken(j);
-        vm.prank(owner);
-        IERC20R(target).setReceiveApproval(owner, _amount);
-    }
-
-    function __borrow(uint256 _assets, uint8 i, uint8 j) public {
-        address receiver = _chooseActor(i);
-        address target = __getRandomSilo(j);
-        vm.prank(receiver);
-        ISilo(target).borrow(_assets, receiver, receiver);
     }
 
     function __borrow(uint8 _actor, bool _siloZero, uint256 _amount) internal {
@@ -89,15 +72,6 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         vm.prank(actor);
         shares = silo0.borrow(maxAssets, actor, actor); // should not revert!
-    }
-
-    function __mint(uint256 _shares, uint8 i, uint8 j, uint8 k) public {
-        bool success;
-        address receiver = _chooseActor(i);
-        address target = __getRandomSilo(j);
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
-        vm.prank(receiver);
-        ISilo(target).mint(_shares, receiver, _collateralType);
     }
 
     function __mint(uint8 _actor, bool _siloZero, uint256 _shares) internal {
@@ -191,15 +165,6 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         vm.prank(actor);
         _siloWithCollateral.withdraw(maxAssets, actor, actor);
-    }
-
-    function __deposit(uint256 _assets, uint8 i, uint8 j, uint8 k) public {
-        bool success;
-        address receiver = _chooseActor(i);
-        address target = __getRandomSilo(j);
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
-        vm.prank(receiver);
-        ISilo(target).deposit(_assets, receiver, _collateralType);
     }
 
     function __deposit(uint8 _actor, bool _siloZero, uint256 _amount) internal {
@@ -363,11 +328,11 @@ contract EchidnaMiddleman is EchidnaSetup {
         assertGe(debt1, debtShareBalance1, "[debt] assets1 must be >= shares1");
     }
 
-    function __borrowShares(uint256 _shares, uint8 _actorIndex, uint256 _i) internal {
+    function __borrowShares(uint8 _actorIndex, bool _siloZero, uint256 _shares) internal {
         emit log_named_string("    function", "__borrowShares");
 
         address actor = _chooseActor(_actorIndex);
-        ISilo silo = ISilo(__getRandomSilo(_i));
+        ISilo silo = __chooseSilo(_siloZero);
 
         vm.prank(actor);
         silo.borrowShares(_shares, actor, actor);
@@ -406,43 +371,6 @@ contract EchidnaMiddleman is EchidnaSetup {
         assertLe(_collateralType, 3, "we have only 3 types");
     }
 
-    function __redeem(uint256 _shares, uint8 i, uint8 j, uint8 k) public {
-        address receiver = _chooseActor(i);
-        address target = __getRandomSilo(j);
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(k % 2);
-        vm.prank(receiver);
-        ISilo(target).redeem(_shares, receiver, receiver, _collateralType);
-    }
-
-    function __setDaoFee(uint128 _minFee, uint128 _maxFee) public {
-        siloFactory.setDaoFee(_minFee, _maxFee);
-    }
-
-    function __flashLoan(uint256 _amount, uint256 _amountToRepay, uint8 i, uint8 j) public {
-        address target = __getRandomSilo(i);
-
-        address token = __getRandomBaseAsset(j);
-        address actor = _chooseActor(i);
-
-        uint256 maxFlashLoanAmount = ISilo(target).maxFlashLoan(token);
-
-        _amountToRepay = clampBetween(_amountToRepay, 0, type(uint256).max - IERC20(token).totalSupply());
-
-        ISilo(target).flashLoan(
-            IERC3156FlashBorrower(flashLoanReceiver), token, _amount, abi.encode(_amountToRepay, address(actor))
-        );
-    }
-
-    function __withdraw(uint256 _assets, uint8 i, uint8 j, uint8 k) public {
-        emit log_named_string("    function", "__withdraw");
-
-        address actor = _chooseActor(i);
-        ISilo silo = ISilo(__getRandomSilo(j));
-
-        vm.prank(actor);
-        silo.withdraw(_assets, actor, actor);
-    }
-
     function __withdraw(uint8 _actorIndex, bool _vaultZero, uint256 _assets) public {
         emit log_named_string("    function", "__withdraw");
 
@@ -469,10 +397,6 @@ contract EchidnaMiddleman is EchidnaSetup {
 
         vm.prank(actor);
         assertEq(silo.mint(maxShares, actor), assets, "expect preview to be correct");
-    }
-
-    function __accrueInterest(uint8 _vaultZero) public {
-        __accrueInterest(_vaultZero % 2 == 0);
     }
 
     function __accrueInterest(bool _vaultZero) public {
@@ -586,55 +510,14 @@ contract EchidnaMiddleman is EchidnaSetup {
         }
     }
 
-    function __repay(uint256 _assets, uint8 i, uint8 j) public {
-        address borrower = _chooseActor(i);
-        address target = __getRandomSilo(j);
-
-        uint256 maxRepay = ISilo(target).maxRepay(borrower);
-
-        vm.prank(borrower);
-        ISilo(target).repay(_assets, borrower);
-    }
-
-    function __repayShares(uint256 _shares, uint8 i, uint8 j) public {
-        // Get one of the three actors randomly
-        address borrower = _getRandomActor(i);
-
-        address target = __getRandomSilo(j);
-
-        uint256 maxRepayShares = ISilo(target).maxRepayShares(borrower);
-
-        vm.prank(borrower);
-        ISilo(target).repayShares(_shares, borrower);
-    }
-
-    function __setOraclePrice(uint256 _price, uint8 i) public {
-        _price = clampBetween(_price, MIN_PRICE, MAX_PRICE);
-
-        // Get one of the mock oracles randomly
-        address target = _getRandomOracle(i);
-
-        MockSiloOracle(target).setPrice(_price);
-    }
-
-    function _getRandomOracle(uint256 i) internal view returns (address) {
-        return (i % 2) == 0 ? oracle0 : oracle1;
-    }
-
-    function clampBetween(uint256 value, uint256 low, uint256 high) internal returns (uint256) {
-        if (value < low || value > high) {
-            return low + (value % (high - low + 1));
-        }
-        return value;
-    }
-
     function __chooseSilo(bool _siloZero) private view returns (ISilo) {
         return _siloZero ? silo0 : silo1;
     }
 
     function __liquidationTokens(address _siloWithDebt) private view returns (address collateral, address debt) {
-        (collateral, debt) =
-            _siloWithDebt == address(silo0) ? (address(token0), address(token1)) : (address(token1), address(token0));
+        (collateral, debt) = _siloWithDebt == address(silo0)
+            ? (address(token0), address(token1))
+            : (address(token1), address(token0));
     }
 
     function __timeDelay(uint256 _t) internal {
@@ -651,190 +534,5 @@ contract EchidnaMiddleman is EchidnaSetup {
         token.mintOnDemand(_actor, _debtToRepay);
         vm.prank(_actor);
         token.approve(address(_silo), _debtToRepay);
-    }
-
-    function __increaseReceiveAllowance(uint256 _addedValue, uint8 i, uint8 j) public {
-        bool success;
-        bytes memory returnData;
-
-        // Get one of the three actors randomly
-        address owner = _chooseActor(i);
-
-        address target = __getRandomDebtToken(j);
-
-        vm.prank(owner);
-        IERC20R(target).increaseReceiveAllowance(owner, _addedValue);
-    }
-
-    function __decreaseReceiveAllowance(uint256 _addedValue, uint8 i, uint8 j) public {
-        bool success;
-        bytes memory returnData;
-
-        // Get one of the three actors randomly
-        address owner = _chooseActor(i);
-
-        address target = __getRandomDebtToken(j);
-
-        vm.prank(owner);
-        IERC20R(target).decreaseReceiveAllowance(owner, _addedValue);
-    }
-
-    function __assert_LENDING_INVARIANT_B(uint8 i, uint8 j) public {
-        address target = __getRandomSilo(i);
-        address actor = _chooseActor(i);
-
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(j % 2);
-
-        uint256 maxWithdraw = ISilo(target).maxWithdraw(address(actor), _collateralType);
-
-        vm.prank(actor);
-        ISilo(target).withdraw(maxWithdraw, address(actor), address(actor), _collateralType);
-    }
-
-    function __liquidationCall(uint256 _debtToCover, bool _receiveSToken, RandomGenerator memory random) public {
-        address borrower = _chooseActor(random.i);
-
-        // Fuzzing the collateral and debt assets in order to check for edge cases and integraty
-        // between the two silos
-        address collateralAsset = __getRandomBaseAsset(random.k);
-        address debtAsset = __getRandomBaseAsset(random.j);
-
-        vm.prank(borrower);
-        partialLiquidation.liquidationCall(collateralAsset, debtAsset, borrower, _debtToCover, _receiveSToken);
-    }
-
-    function __accrueInterestForBothSilos() public {
-        siloConfig.accrueInterestForBothSilos();
-    }
-
-    function __accrueInterestForSilo(uint8 i) public {
-        address silo = __getRandomSilo(i);
-        siloConfig.accrueInterestForSilo(silo);
-    }
-
-    function __assert_BORROWING_HSPOST_D(uint8 i, uint8 j) public {
-        // Get one of the three actors randomly
-        address actor = _getRandomActor(i);
-
-        address target = __getRandomSilo(j);
-
-        uint256 maxRepayShares = ISilo(target).maxRepayShares(actor);
-
-        uint256 debtAmount = ISilo(target).previewRepayShares(maxRepayShares);
-
-        (, address debtAsset) = siloConfig.getDebtShareTokenAndAsset(target);
-
-        if (debtAmount > IERC20(debtAsset).balanceOf(address(actor))) {
-            MintableToken(debtAsset).mint(address(actor), debtAmount - IERC20(debtAsset).balanceOf(address(actor)));
-        }
-
-        vm.prank(actor);
-        ISilo(target).repayShares(debtAmount, actor);
-    }
-
-    function __assertBORROWING_HSPOST_F(uint8 i, uint8 j) public {
-        // Get one of the three actors randomly
-        address actor = _getRandomActor(i);
-        address target = __getRandomSilo(j);
-
-        uint256 maxBorrow = ISilo(target).maxBorrow(address(actor));
-
-        vm.prank(actor);
-        ISilo(target).borrow(maxBorrow, actor, address(actor));
-    }
-
-    function __assert_SILO_HSPOST_D(uint8 i) public {
-        address target = __getRandomSilo(i);
-
-        ISilo(target).withdrawFees();
-        try ISilo(target).withdrawFees() {
-            revert("SILO_HSPOST_D");
-        } catch {
-            // ok expected
-        }
-    }
-
-    function __receiveAllowance(uint256, /* _addedValue */ uint8 i, uint8 j, uint8 k) public {
-        // Get one of the three actors randomly
-        address owner = _getRandomActor(i);
-
-        address recipient = _getRandomActor(j);
-
-        address target = __getRandomDebtToken(k);
-
-        vm.prank(owner);
-        IERC20R(target).receiveAllowance(owner, recipient);
-    }
-
-    function __approve(uint256 _amount, uint8 i, uint8 j) public {
-        // Get one of the three actors randomly
-        address spender = _getRandomActor(i);
-
-        address target = _getRandomShareToken(j);
-
-        vm.prank(spender);
-        IERC20(target).approve(spender, _amount);
-    }
-
-    function __transfer(uint256 _amount, uint8 i, uint8 j) public {
-        // Get one of the three actors randomly
-        address to = _getRandomActor(i);
-
-        address target = _getRandomShareToken(j);
-
-        vm.prank(to);
-        IERC20(target).transfer(to, _amount);
-    }
-
-    function __transferFrom(uint256 _amount, uint8 i, uint8 j, uint8 k) public {
-        // Get one of the three actors randomly
-        address from = _getRandomActor(i);
-        // Get one of the three actors randomly
-        address to = _getRandomActor(j);
-
-        address target = _getRandomShareToken(k);
-
-        vm.prank(from);
-        IERC20(target).transferFrom(from, to, _amount);
-    }
-
-    function __liquidationCallByDefaulting(uint256 _maxDebtToCover, RandomGenerator memory _random) public {
-        // only actors can borrow
-        address borrower = _getRandomActor(_random.j);
-        address actor = _getRandomActor(_random.i);
-
-        vm.prank(actor);
-        (, uint256 repayDebtAssets) = IPartialLiquidationByDefaulting(address(partialLiquidation))
-            .liquidationCallByDefaulting(borrower, _maxDebtToCover);
-
-        assertGt(repayDebtAssets, 0, "repayDebtAssets should be greater than 0 on any liquidation");
-    }
-
-    function __transitionCollateral(uint256 _shares, RandomGenerator memory r) public {
-        // Get one of the three actors randomly
-        address owner = _getRandomActor(r.i);
-
-        address target = __getRandomSilo(r.j);
-
-        ISilo.CollateralType _collateralType = ISilo.CollateralType(r.k % 2);
-
-        vm.prank(owner);
-        ISilo(target).transitionCollateral(_shares, owner, _collateralType);
-    }
-
-    function _getRandomShareToken(uint256 i) internal view returns (address) {
-        return shareTokens[i % shareTokens.length];
-    }
-
-    function __getRandomDebtToken(uint256 i) internal view returns (address) {
-        return debtTokens[i % debtTokens.length];
-    }
-
-    function __getRandomSilo(uint256 i) internal view returns (address) {
-        return i % 2 == 0 ? address(silo0) : address(silo1);
-    }
-
-    function __getRandomBaseAsset(uint256 i) internal view returns (address) {
-        return i % 2 == 0 ? address(token0) : address(token1);
     }
 }

@@ -11,32 +11,15 @@ import {IInterestRateModel} from "silo-core/contracts/interfaces/IInterestRateMo
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 
 import {SiloLittleHelper} from "../_common/SiloLittleHelper.sol";
-import {MockFlashLoanReceiver} from "../../invariants/helpers/FlashLoanReceiver.sol";
 
 // setup must match what was set for `EchidnaE2E`
 contract EchidnaSetup is SiloLittleHelper, Test {
     using SiloLensLib for ISilo;
 
-    struct RandomGenerator {
-        uint8 i;
-        uint8 j;
-        uint8 k;
-    }
-
-    uint256 public constant MIN_PRICE = 1e10;
-    uint256 public constant MAX_PRICE = 1e26;
-
     uint256 constant ACTORS_COUNT = 3;
     mapping(uint256 index => address actor) actors;
 
     ISiloConfig siloConfig;
-    address[] debtTokens;
-    address[] shareTokens;
-
-    address oracle0;
-    address oracle1;
-
-    address flashLoanReceiver;
 
     constructor() {
         actors[0] = makeAddr("Actor 0");
@@ -45,8 +28,6 @@ contract EchidnaSetup is SiloLittleHelper, Test {
     }
 
     function setUp() public {
-        flashLoanReceiver = address(new MockFlashLoanReceiver());
-
         siloConfig = _setUpLocalFixture("Silo_Echidna_MOCK");
 
         assertTrue(siloConfig.getConfig(address(silo0)).maxLtv != 0, "we need borrow to be allowed");
@@ -57,24 +38,6 @@ contract EchidnaSetup is SiloLittleHelper, Test {
         // same block and time as for E2E Echidna
         vm.warp(1706745600);
         vm.roll(17336000);
-
-        // Store all collateral (silos) & debt shareTokens in helper arrays
-        shareTokens.push(address(silo0));
-        shareTokens.push(address(silo1));
-
-        (,, address debtShareToken) = siloConfig.getShareTokens(address(silo0));
-        shareTokens.push(debtShareToken);
-        debtTokens.push(debtShareToken);
-        (,, address debtShareToken1) = siloConfig.getShareTokens(address(silo1));
-        shareTokens.push(debtShareToken1);
-        debtTokens.push(debtShareToken1);
-
-        oracle0 = siloConfig.getConfig(address(silo0)).solvencyOracle;
-        oracle1 = siloConfig.getConfig(address(silo1)).solvencyOracle;
-    }
-
-    function _getRandomActor(uint256 i) internal returns (address) {
-        return _chooseActor(i);
     }
 
     function _chooseActor(uint256 value) internal returns (address) {
