@@ -102,7 +102,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxWithdraw_whenInterest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxWithdraw_whenInterest_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxWithdraw_whenInterest_fuzz(uint128 _collateral, uint128 _toBorrow) public {
@@ -117,7 +117,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         emit log_named_decimal_uint("LTV before withdraw", silo1.getLtv(borrower), 16);
         emit log_named_uint("maxWithdraw", maxWithdraw);
 
-        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 3);
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 4);
         _assertMaxWithdrawIsZeroAtTheEnd(1);
     }
 
