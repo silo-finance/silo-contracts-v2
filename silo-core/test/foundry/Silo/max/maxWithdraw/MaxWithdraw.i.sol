@@ -59,7 +59,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         emit log_named_decimal_uint("LTV", collateralSilo.getLtv(borrower), 16);
 
         _assertBorrowerCanNotWithdrawMore(maxWithdraw, 4);
-        _assertMaxWithdrawIsZeroAtTheEnd();
+        _assertMaxWithdrawIsZeroAtTheEnd(1);
     }
 
     /*
