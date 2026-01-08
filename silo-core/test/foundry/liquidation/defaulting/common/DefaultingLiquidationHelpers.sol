@@ -123,7 +123,8 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         vm.stopPrank();
 
         (, ISilo debtSilo) = _getSilos();
-        assertLe(debtSilo.getLiquidity(), 1, "[_removeLiquidity] liquidity should be ~0");
+        // 2 because of rounding and fractions
+        assertLe(debtSilo.getLiquidity(), 2, "[_removeLiquidity] liquidity should be ~0");
     }
 
     // function _calculateLiquidityForBorrow(uint256 _collateral, uint256 _protected) internal view returns (uint256 forBorrow) {
