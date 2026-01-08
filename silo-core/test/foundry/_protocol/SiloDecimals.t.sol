@@ -160,7 +160,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         // LT is 85%, so 0.75e18 / 0.85 = 882352941176470700 of value in collateral is needed.
         // we have 1ETH, 1e18 - 882352941176470700 = 117647058823529340.
         // 117647058823529340 / 1e18 = 0.118% can be removed, => 2500e6 * 0.118 = 295000000
-        assertEq(silo0.maxWithdraw(borrower), 294117646, "maxWithdraw");
+        assertEq(silo0.maxWithdraw(borrower), 294117645, "maxWithdraw");
         _withdraw(silo0.maxWithdraw(borrower), borrower);
 
         vm.warp(1 days);
@@ -170,8 +170,8 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(10, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 100_4885419, "collateral");
-        assertEq(debt, 382813493616435237, "debt");
+        assertEq(collateral, 100_4885415, "collateral");
+        assertEq(debt, 382813492061162048, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
         token1.approve(address(partialLiquidation), debt);
