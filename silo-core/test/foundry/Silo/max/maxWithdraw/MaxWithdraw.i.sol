@@ -27,7 +27,7 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxWithdraw_deposit_
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxWithdraw_deposit_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxWithdraw_deposit_fuzz(uint112 _assets, uint16 _assets2) public {
@@ -38,9 +38,9 @@ contract MaxWithdrawTest is MaxWithdrawCommon {
         _deposit(_assets2, address(1)); // any
 
         uint256 maxWithdraw = silo0.maxWithdraw(borrower);
-        assertEq(maxWithdraw, _assets, "max withdraw == _assets if no interest");
+        assertEq(maxWithdraw, _assets - 1, "max withdraw == _assets if no interest (-1 for underestimation)");
 
-        _assertBorrowerCanNotWithdrawMore(maxWithdraw);
+        _assertBorrowerCanNotWithdrawMore(maxWithdraw, 2);
         _assertMaxWithdrawIsZeroAtTheEnd();
     }
 
