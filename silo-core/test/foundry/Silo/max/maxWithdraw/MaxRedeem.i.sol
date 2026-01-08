@@ -42,7 +42,9 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         uint256 oneAsset = silo0.convertToShares(1, ISilo.AssetType.Collateral);
 
         assertLe(
-            (_assets) * SiloMathLib._DECIMALS_OFFSET_POW - maxRedeem, oneAsset, "max withdraw == _assets/shares if no interest (-1 for underestimation)"
+            (_assets) * SiloMathLib._DECIMALS_OFFSET_POW - maxRedeem,
+            oneAsset,
+            "max withdraw == _assets/shares if no interest (-1 for underestimation)"
         );
 
         _assertBorrowerCanNotRedeemMore(maxRedeem); // no borrow here, so flag does not matter
@@ -119,7 +121,9 @@ contract MaxRedeemTest is MaxWithdrawCommon {
 
         assertEq(silo0.maxRedeem(borrower), 0, "expect maxRedeem to be 0");
         uint256 oneAsset = silo0.convertToShares(1, ISilo.AssetType.Collateral);
-        assertLe(IShareToken(collateralShareToken).balanceOf(borrower), oneAsset, "expect share balance to be (almost) 0");
+        assertLe(
+            IShareToken(collateralShareToken).balanceOf(borrower), oneAsset, "expect share balance to be (almost) 0"
+        );
     }
 
     function _assertBorrowerCanNotRedeemMore(uint256 _maxRedeem) internal {
@@ -146,9 +150,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         }
 
         uint256 counterExample = isSolvent ? _underestimate : 1;
-        emit log_named_uint(
-            "=========== [counterexample] testing counterexample for maxRedeem with", counterExample
-        );
+        emit log_named_uint("=========== [counterexample] testing counterexample for maxRedeem with", counterExample);
 
         vm.prank(borrower);
         vm.expectRevert();
@@ -160,9 +162,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     }
 
     function _assertMaxRedeemIsZeroAtTheEnd(uint256 _underestimate) internal {
-        emit log_named_uint(
-            "================= _assertMaxRedeemIsZeroAtTheEnd ================= +/-", _underestimate
-        );
+        emit log_named_uint("================= _assertMaxRedeemIsZeroAtTheEnd ================= +/-", _underestimate);
 
         uint256 maxRedeem = silo0.maxRedeem(borrower);
 
