@@ -93,7 +93,7 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         uint256 maxWithdraw = silo0.maxWithdraw(borrower);
         console2.log("maxWithdraw", maxWithdraw);
         // if we burn 1 wei, then getting max withdraw of 1 is not possible
-        if (_burn == 0) vm.assume(maxWithdraw == 1);
+        if (_burn == 0) vm.assume(maxWithdraw <= 1);
 
         uint256 maxRedeem = silo0.maxRedeem(borrower);
         console2.log("maxRedeem", maxRedeem);
