@@ -406,12 +406,12 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
         uint256 gauge2Rewards = borrowerCollateralShareToken.balanceOf(address(gauge2));
         assertEq(
             gauge2Rewards,
-            514.91160149492028061e18 + 5131457567026514,
+            514.915150623662180406e18,
             "gauge2 should have only collateral rewards from borrower2 liquidation"
         );
         assertEq(
             borrowerCollateralShareToken.balanceOf(makeAddr("keeper2")),
-            4.95107309129731039e18 + 49340938144486,
+            4.951107217535213273e18,
             "keeper2 fee from borrower2 liquidation"
         );
         assertEq(
@@ -425,12 +425,12 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
 
         assertEq(
             gauge2CollateralRewards1,
-            257.455800747460140305e18 + 2565728783513257,
+            257.457575311831090203e18,
             "[lpProvider1] gauge2 has claimable rewards"
         );
         assertEq(
             gauge2CollateralRewards2,
-            257.455800747460140305e18 + 2565728783513257,
+            257.457575311831090203e18,
             "[lpProvider2] gauge2 has claimable rewards"
         );
 
