@@ -40,9 +40,11 @@ interface IPartialLiquidationByDefaulting {
     error WithdrawSharesForLendersTooHighForDistribution();
 
     /// @notice Function to liquidate insolvent position by distributing user's collateral to lenders
-    /// - The caller (liquidator) does not cover any debt. `debtToCover` is amount of debt being liquidated
+    /// The caller (liquidator) does not cover any debt. `debtToCover` is amount of debt being liquidated
     ///   based on which amount of `collateralAsset` is calculated to distribute to lenders plus a liquidation fee.
     ///   Liquidation fee is split 80/20 between lenders and liquidator.
+    /// Defaulting liquidation can leave dust shares behind, because math retuens assets, 
+    /// and dust shares can not be transtalet to assets.
     /// @dev this method reverts when:
     /// - `_maxDebtToCover` is zero
     /// - `_user` is solvent and there is no debt to cover
