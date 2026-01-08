@@ -66,82 +66,44 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         );
     }
 
-    // function _depositAndBurn(uint256 _amount, uint256 _burn, ISilo.CollateralType _collateralType) public {
-    //     if (_amount == 0) return;
-
-    //     uint256 shares = _deposit(_amount, address(this), _collateralType);
-    //     vm.assume(shares >= _burn);
-
-    //     if (_burn != 0) {
-    //         (address protectedShareToken, address collateralShareToken,) =
-    //             silo0.config().getShareTokens(address(silo0));
-    //         address token =
-    //             _collateralType == ISilo.CollateralType.Protected ? protectedShareToken : collateralShareToken;
-
-    //         vm.prank(address(silo0));
-    //         IShareToken(token).burn(address(this), address(this), _burn);
-    //     }
-    // }
-
     function _removeLiquidity() internal {
         console2.log("\tremoving liquidity");
         address lpProvider = makeAddr("lpProvider");
 
         vm.startPrank(lpProvider);
-        uint256 amount;
 
-        try silo0.maxWithdraw(lpProvider) returns (uint256 _amount) {
-            amount = _amount;
-        } catch {
-            console2.log("\t[_removeLiquidity] maxWithdraw #0 failed");
-        }
+        _tryWithdrawAll(silo0, lpProvider);
 
-        if (amount != 0) {
-            try silo0.withdraw(amount, lpProvider, lpProvider) {
-                // nothing to do
-            } catch {
-                console2.log("\t[_removeLiquidity] withdraw #0 failed");
-            }
-        }
-
-        amount = 0;
-
-        try silo1.maxWithdraw(lpProvider) returns (uint256 _amount) {
-            amount = _amount;
-        } catch {
-            console2.log("\t[_removeLiquidity] maxWithdraw #1 failed");
-        }
-
-        if (amount != 0) {
-            try silo1.withdraw(amount, lpProvider, lpProvider) {
-                // nothing to do
-            } catch {
-                console2.log("\t[_removeLiquidity] withdraw #1 failed");
-            }
-        }
+        _tryWithdrawAll(silo1, lpProvider);
 
         vm.stopPrank();
 
         (, ISilo debtSilo) = _getSilos();
-        // 2 because of rounding and fractions
-        assertLe(debtSilo.getLiquidity(), 2, "[_removeLiquidity] liquidity should be ~0");
+        assertLe(debtSilo.getLiquidity(), 1, "[_removeLiquidity] liquidity should be ~0");
     }
 
-    // function _calculateLiquidityForBorrow(uint256 _collateral, uint256 _protected) internal view returns (uint256 forBorrow) {
-    //     (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
-    //     uint256 maxCollateral = Math.max(_collateral, _protected);
+    function _tryWithdrawAll(ISilo _silo, address _user) internal {
+        uint256 amount;
 
-    //     // for same token prcie is 1:1
-    //     if (address(debtSilo) == address(collateralSilo)) return maxCollateral;
+        try _silo.maxRedeem(_user) returns (uint256 _amount) {
+            amount = _amount;
+        } catch {
+            console2.log("\t[_tryWithdrawAll] maxRedeem failed");
+        }
 
-    //     if (address(collateralSilo) == address(silo0)) return oracle0.quote(maxCollateral, address(token0));
+        try _silo.redeem(amount, _user, _user) {
+            // nothing to do
+        } catch {
+            console2.log("\t[_tryWithdrawAll] redeem failed");
+        }
 
-    //     // collateral is in silo1 and we need to add liquidity to silo0
-    //     uint256 decimals0 = token0.decimals();
-    //     uint256 valueOfOne = oracle0.quote(10 ** decimals0, address(token0));
-
-    //     return  (10 ** decimals0) * maxCollateral / valueOfOne;
-    // }
+        // try dust
+        try _silo.withdraw(1, _user, _user) {
+            // nothing to do
+        } catch {
+            // nothing to do
+        }
+    }
 
     function _addLiquidity(uint256 _amount) internal {
         if (_amount == 0) return;
