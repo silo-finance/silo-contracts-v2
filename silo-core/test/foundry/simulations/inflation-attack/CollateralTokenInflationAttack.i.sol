@@ -22,7 +22,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
     }
 
     /*
-    forge test -vv --ffi --mt test_vault_denial_of_service_attack_deposit_lock
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_vault_denial_of_service_attack_deposit_lock
 
     @dev An issue resolved by increasing the decimals offset for the collateral share token.
          See silo-core/contracts/lib/SiloMathLib.sol _DECIMALS_OFFSET_POW
@@ -34,7 +34,7 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
         uint256 siloCollateralAssets = silo0.getCollateralAssets();
 
-        assertEq(siloCollateralAssets, 1_073_741_825);
+        assertEq(siloCollateralAssets, 1_073_741_825, "sanity check for silo collateral assets");
 
         // prepare to deposit
         _mintTokens(token0, siloCollateralAssets, victim);
@@ -87,8 +87,8 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         vm.prank(attacker);
         uint256 receivedAmount = silo0.redeem(redeemShares, attacker, attacker);
 
-        assertEq(attackerDeposits, 1073741823);
-        assertEq(receivedAmount, 1073741824); // 1 wei more?
+        assertEq(attackerDeposits, 1073741823, "sum of attacker deposits");
+        assertEq(receivedAmount, 1073741824, "attacker received amount"); // 1 wei more?
 
         // The following is true only if SiloMathLib._DECIMALS_OFFSET_POW = 10 ** 0
 
@@ -185,21 +185,21 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
 
         _borrowAndRepay(borrower, 200);
 
-        uint256 borrowerAssets = silo0.maxWithdraw(borrower);
+        uint256 borrowerShares = silo0.maxRedeem(borrower);
 
         vm.prank(borrower);
-        silo0.withdraw(borrowerAssets, borrower, borrower);
+        silo0.redeem(borrowerShares, borrower, borrower);
 
         silo0.accrueInterest();
 
         for (uint256 i = 0; i < 30; i++) {
             uint256 toDeposit = silo0.getCollateralAssets();
             _makeDeposit(silo0, token0, toDeposit, attacker, ISilo.CollateralType.Collateral);
+            depositedForAttack += toDeposit;
 
             vm.prank(attacker);
             silo0.withdraw(1, attacker, attacker);
-
-            depositedForAttack = depositedForAttack + toDeposit - 1;
+            depositedForAttack -= 1;
         }
 
         emit log_named_uint("[_doAttack] gas used: ", gasStart - gasleft());
