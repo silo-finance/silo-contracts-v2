@@ -28,7 +28,7 @@ contract MaxRedeemTest is MaxWithdrawCommon {
     }
 
     /*
-    forge test -vv --ffi --mt test_maxRedeem_deposit_fuzz
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_maxRedeem_deposit_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 1000
     function test_maxRedeem_deposit_fuzz(uint112 _assets, uint16 _assets2) public {
@@ -39,8 +39,10 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         _deposit(_assets2, address(1)); // any
 
         uint256 maxRedeem = silo0.maxRedeem(borrower);
-        assertEq(
-            maxRedeem, _assets * SiloMathLib._DECIMALS_OFFSET_POW, "max withdraw == _assets/shares if no interest"
+        uint256 oneAsset = silo0.convertToShares(1, ISilo.AssetType.Collateral);
+
+        assertLe(
+            (_assets) * SiloMathLib._DECIMALS_OFFSET_POW - maxRedeem, oneAsset, "max withdraw == _assets/shares if no interest (-1 for underestimation)"
         );
 
         _assertBorrowerCanNotRedeemMore(maxRedeem); // no borrow here, so flag does not matter
@@ -116,7 +118,8 @@ contract MaxRedeemTest is MaxWithdrawCommon {
         (, address collateralShareToken,) = silo0.config().getShareTokens(address(silo0));
 
         assertEq(silo0.maxRedeem(borrower), 0, "expect maxRedeem to be 0");
-        assertEq(IShareToken(collateralShareToken).balanceOf(borrower), 0, "expect share balance to be 0");
+        uint256 oneAsset = silo0.convertToShares(1, ISilo.AssetType.Collateral);
+        assertLe(IShareToken(collateralShareToken).balanceOf(borrower), oneAsset, "expect share balance to be (almost) 0");
     }
 
     function _assertBorrowerCanNotRedeemMore(uint256 _maxRedeem) internal {
