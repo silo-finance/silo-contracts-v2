@@ -126,8 +126,9 @@ contract CollateralTokenInflationAttack is SiloLittleHelper, Test {
         address depositor = depositors[anyDepositor];
 
         // The user is able to withdraw after SiloMathLib._DECIMALS_OFFSET_POW set to 10 ** 3
+        // -1 for underestimation
         vm.prank(depositor);
-        silo0.withdraw(depositsAmounts[anyDepositor], depositor, depositor);
+        silo0.withdraw(depositsAmounts[anyDepositor] - 1, depositor, depositor);
 
         // The following is true only if SiloMathLib._DECIMALS_OFFSET_POW = 10 ** 0
         // because of that the the following code is commented.
