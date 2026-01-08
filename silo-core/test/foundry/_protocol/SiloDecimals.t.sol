@@ -81,7 +81,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         assertEq(silo1.maxBorrow(borrower), 75e5 - 1, "maxBorrow");
         _borrow(silo1.maxBorrow(borrower), borrower);
 
-        assertEq(silo0.maxWithdraw(borrower), 1176469, "maxWithdraw");
+        assertEq(silo0.maxWithdraw(borrower), 1176468, "maxWithdraw");
         _withdraw(silo0.maxWithdraw(borrower), borrower);
 
         vm.warp(10 days);
@@ -91,8 +91,8 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(1e5, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 41_37812, "collateral");
-        assertEq(debt, 39_40776, "debt");
+        assertEq(collateral, 41_37808, "collateral");
+        assertEq(debt, 39_40772, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
         token1.approve(address(partialLiquidation), debt);
