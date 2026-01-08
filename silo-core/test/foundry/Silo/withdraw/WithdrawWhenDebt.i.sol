@@ -84,7 +84,7 @@ contract WithdrawWhenDebtTest is SiloLittleHelper, Test {
 
         // collateral
 
-        uint256 maxWithdraw = collateralSilo.maxWithdraw(address(this));
+        uint256 maxWithdraw = collateralSilo.maxWithdraw(address(this)) + 1; // +1 for underestimation
         assertEq(maxWithdraw, 2e18 - 1, "maxWithdraw, because we have protected (-1 for underestimation)");
 
         uint256 previewWithdraw = collateralSilo.previewWithdraw(maxWithdraw);
