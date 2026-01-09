@@ -169,8 +169,7 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
         {
             // borrower checks
 
-            uint256 collateralLiquidated = 0.489690721649484536e18; // hardcoded based on liquidation
-            if (_withOtherBorrower) collateralLiquidated -= 1;
+            uint256 collateralLiquidated = 0.500000000000000000e18; // hardcoded based on liquidation
 
             uint256 protectedLiquidated = collateralToLiquidate - collateralLiquidated;
 
@@ -204,8 +203,8 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
         {
             // lpProvider checks
 
-            uint256 totalGaugeRewards = 0.488721037052158825046e21; // hardcoded based on logs
-            if (_withOtherBorrower) totalGaugeRewards -= 998;
+            uint256 totalGaugeRewards = 0.499009900990099009901e21; // hardcoded based on logs
+            // if (_withOtherBorrower) totalGaugeRewards -= 998;
 
             uint256 totalProtectedRewards = 0.499009900990099009901e21; // hardcoded based on logs
 
@@ -222,8 +221,8 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
             address lpProvider = makeAddr("lpProvider");
 
             {
-                uint256 lpProviderCollateralLeft = 0.019396119484670633e18; // hardcoded based on logs
-                if (_withOtherBorrower) lpProviderCollateralLeft += 1.004211641545988107e18;
+                uint256 lpProviderCollateralLeft = 0.016553668919408922e18; // hardcoded based on logs
+                if (_withOtherBorrower) lpProviderCollateralLeft += 1.012738993241773239e18;
 
                 assertEq(
                     _getUserState(debtSilo, lpProvider).collateralAssets,
