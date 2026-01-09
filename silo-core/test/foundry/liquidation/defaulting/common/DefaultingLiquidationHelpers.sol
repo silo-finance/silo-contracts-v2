@@ -145,6 +145,17 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         _tryWithdrawMax(_borrower, collateralSilo, ISilo.CollateralType.Protected);
     }
 
+    function _wipeOutCollateralShares(IShareToken _token, address _borrower) internal {
+        uint256 balance =  _token.balanceOf(_borrower);
+        if (balance == 0) return;
+
+        vm.startPrank(address(_token));
+        _token.burn(_borrower, _borrower, balance);
+        // _token.forwardTransferFromNoChecks(_borrower, receiver, balance);
+        assertEq(_token.balanceOf(_borrower), 0, "shares must be 0 after wiping out");
+        vm.stopPrank();
+    }
+
     function _tryWithdrawMax(address _user, ISilo _silo, ISilo.CollateralType _collateralType) internal {
         uint256 amount;
 
@@ -388,12 +399,14 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
     function _printSiloState(ISilo _silo) internal view {
         SiloState memory siloState = _getSiloState(_silo);
+        console2.log("-------- %s silo state --------", vm.getLabel(address(_silo)));
         console2.log("total collateral", siloState.totalCollateral);
         console2.log("total protected", siloState.totalProtected);
         console2.log("total debt", siloState.totalDebt);
         console2.log("total collateral shares", siloState.totalCollateralShares);
         console2.log("total protected shares", siloState.totalProtectedShares);
         console2.log("total debt shares", siloState.totalDebtShares);
+        console2.log("-------- end --------");
     }
 
     function _getUserState(ISilo _silo, address _user) internal view returns (UserState memory userState) {

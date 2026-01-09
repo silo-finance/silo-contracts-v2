@@ -108,7 +108,7 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
         }
     }
 
-    function _assertTotalSharesZero(ISilo _silo) internal view {
+    function _assertTotalSharesZeroOnlyGauge(ISilo _silo) internal view {
         uint256 totalAssetsLeft = _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
 
         (address protectedShareToken,,) = siloConfig.getShareTokens(address(_silo));
@@ -125,7 +125,7 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
             assertEq(
                 _silo.totalSupply(),
                 gaugeCollateral,
-                "[_assertTotalSharesZero] silo should have only gauge collateral"
+                "[_assertTotalSharesZeroOnlyGauge] silo should have only gauge collateral"
             );
         }
 
@@ -136,7 +136,35 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
         assertEq(
             IShareToken(protectedShareToken).totalSupply(),
             gaugeProtected,
-            "[_assertEveryoneCanExit] protected share token should have only gauge protected"
+            "[_assertTotalSharesZeroOnlyGauge] protected share token should have only gauge protected"
+        );
+    }
+
+    function _assertTotalSharesZero(ISilo _silo) internal view {
+        uint256 totalAssetsLeft = _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
+
+        (address protectedShareToken,,) = siloConfig.getShareTokens(address(_silo));
+
+        console2.log("gaugeCollateral", _silo.balanceOf(address(gauge)));
+        console2.log("gaugeProtected", IShareToken(protectedShareToken).balanceOf(address(gauge)));
+
+        if (totalAssetsLeft == 0) {
+            // when no assets, even when we have shares state is unknown
+        } else if (totalAssetsLeft == 1) {
+            console2.log("totalAssetsLeft == 1, accepting as dust");
+            // we accept this as dust, rounding error
+        } else {
+            assertEq(
+                _silo.totalSupply(),
+                0,
+                "[_assertTotalSharesZero] silo should have NO collateral"
+            );
+        }
+
+        assertEq(
+            IShareToken(protectedShareToken).totalSupply(),
+            0,
+            "[_assertTotalSharesZero] silo should have NO protected shares"
         );
     }
 
