@@ -28,6 +28,7 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
                 _silo,
                 _user,
                 ISilo.CollateralType.Protected,
+                _allowForDust,
                 string.concat("[_assertNoShareTokens] no protected dust: ", _msg)
             );
         } else {
@@ -42,6 +43,7 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
                     _silo,
                     _user,
                     ISilo.CollateralType.Collateral,
+                    _allowForDust,
                     string.concat("[_assertNoShareTokens] no collateral dust: ", _msg)
                 );
             } else {
@@ -72,15 +74,25 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
         }
     }
 
-    function _assertNoRedeemable(ISilo _silo, address _user, ISilo.CollateralType _collateralType, string memory _msg)
-        internal
-    {
-        try _silo.redeem(_silo.balanceOf(_user), _user, _user, _collateralType) {
-            revert(
-                string.concat(
-                    _msg, " [_assertNoRedeemable] redeem should fail, after defaulting we expect zero assets: "
-                )
-            );
+    function _assertNoRedeemable(
+        ISilo _silo,
+        address _user,
+        ISilo.CollateralType _collateralType,
+        bool _allowForDust,
+        string memory _msg
+    ) internal {
+        try _silo.redeem(_silo.balanceOf(_user), _user, _user, _collateralType) returns (uint256 assets) {
+            if (_allowForDust) {
+                assertEq(
+                    assets, 1, string.concat(_msg, " [_assertNoRedeemable] redeem should give us max 1 wei of assets")
+                );
+            } else {
+                revert(
+                    string.concat(
+                        _msg, " [_assertNoRedeemable] redeem should fail, after defaulting we expect zero assets"
+                    )
+                );
+            }
         } catch {
             // OK
         }

@@ -735,7 +735,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         depositors.push(address(this)); // liquidator got shares
 
-        _assertNoRedeemable(collateralSilo, borrower, ISilo.CollateralType.Collateral, "collateral assets must be 0");
+        _assertNoRedeemable(
+            collateralSilo, borrower, ISilo.CollateralType.Collateral, false, "collateral assets must be 0"
+        );
         assertEq(protectedShareToken.balanceOf(borrower), 0, "protected shares must be 0");
         vm.assume(debtShareToken.balanceOf(borrower) != 0); // we need bad debt
 
