@@ -1220,7 +1220,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         _createIncentiveController();
 
-        debtSilo.deposit(Math.max(_collateral, 1), makeAddr("lpProvider2"));
+        uint256 shares2 = debtSilo.deposit(Math.max(_collateral, 1), makeAddr("lpProvider2"));
         debtSilo.deposit(Math.max(_protected, 1), makeAddr("lpProvider4"), ISilo.CollateralType.Protected);
 
         depositors.push(makeAddr("lpProvider1"));
@@ -1291,11 +1291,13 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
                 );
             }
 
-            assertGt(
-                protectedShareToken.balanceOf(makeAddr("lpProvider2")),
-                0,
-                "[lpProvider2] expect protected rewards always"
-            );
+            if (shares2 * protectedRewards / debtSilo.totalSupply() != 0) {
+                assertGt(
+                    protectedShareToken.balanceOf(makeAddr("lpProvider2")),
+                    0,
+                    "[lpProvider2] expect protected rewards based on math"
+                );
+            }
         }
 
         if (_badDebt && _collateral != 0) {
@@ -1313,8 +1315,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
                 );
             }
 
-            /// Defaulting liquidation can leave dust shares behind, because math retuens assets,
-            /// and dust shares can not be transtalet to assets.
+            /// Defaulting liquidation can leave dust shares behind, because math uses assets,
+            /// and dust shares can not be transtalet to assets, that's why we can not expect collateral rewards always
             // assertGt(
             //     collateralShareToken.balanceOf(makeAddr("lpProvider2")),
             //     0,
