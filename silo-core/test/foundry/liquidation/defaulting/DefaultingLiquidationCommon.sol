@@ -914,11 +914,13 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         });
 
         vm.assume(success);
+        bool throwing;
 
         if (_badDebtCasesOnly) {
             _removeLiquidity();
             _setCollateralPrice(changePrice);
-            vm.assume(!_isOracleThrowing(borrower));
+            (throwing,) = _isOracleThrowing(borrower);
+            vm.assume(!throwing);
             vm.warp(block.timestamp + _warp);
         } else {
             vm.assume(_printLtv(borrower) < 1e18);
@@ -929,7 +931,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _moveUntillDefaultingPossible(borrower, 0.001e18, 1 hours);
 
         // if oracle is throwing, we can not test anything
-        vm.assume(!_isOracleThrowing(borrower));
+        (throwing,) = _isOracleThrowing(borrower);
+        vm.assume(!throwing);
 
         _createIncentiveController();
 
@@ -980,7 +983,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         vm.warp(block.timestamp + _warp);
 
         // if oracle is throwing, we can not test anything
-        vm.assume(!_isOracleThrowing(borrower));
+        (bool throwing,) = _isOracleThrowing(borrower);
+        vm.assume(!throwing);
 
         console2.log("AFTER WARP AND PRICE CHANGE");
         _printLtv(borrower);
@@ -1201,7 +1205,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_everyoneCanClaim_badDebt -vv
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_everyoneCanClaim_badDebt -vv --mc DefaultingLiquidationBorrowable1Test
     */
-    function test_incentiveDistribution_everyoneCanClaim_badDebt(uint48 _collateral, uint48 _protected) public {
+    function test_incentiveDistribution_everyoneCanClaim_badDebt(
+        uint48 _collateral, uint48 _protected
+    ) public {
+        // (uint48 _collateral, uint48 _protected) = (17829408, 331553767526);
         _incentiveDistribution_everyoneCanClaim(_collateral, _protected, true);
     }
 

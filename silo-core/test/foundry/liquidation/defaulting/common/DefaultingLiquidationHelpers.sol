@@ -226,9 +226,10 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         console2.log("quote(%s) = %s", _amount, quote);
     }
 
-    function _isOracleThrowing(address _borrower) internal view returns (bool throwing) {
-        try siloLens.getLtv(silo0, _borrower) {
+    function _isOracleThrowing(address _borrower) internal view returns (bool throwing, uint256 ltv) {
+        try siloLens.getLtv(silo0, _borrower) returns (uint256 _ltv) {
             throwing = false;
+            ltv = _ltv;
         } catch {
             throwing = true;
         }
@@ -250,12 +251,18 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     }
 
     function _defaultingPossible(address _user) internal view returns (bool possible) {
+        (ISilo collateralSilo,) = _getSilos();
+        uint256 ltv = collateralSilo.getLtv(_user);
+
+        return _defaultingPossible(ltv);
+    }
+
+    function _defaultingPossible(uint256 _ltv) internal view returns (bool possible) {
         uint256 margin = defaulting.LT_MARGIN_FOR_DEFAULTING();
         (ISilo collateralSilo,) = _getSilos();
         uint256 lt = collateralSilo.config().getConfig(address(collateralSilo)).lt;
-        uint256 ltv = collateralSilo.getLtv(_user);
 
-        possible = ltv > lt + margin;
+        possible = _ltv > lt + margin;
     }
 
     function _createIncentiveController() internal returns (ISiloIncentivesController newGauge) {
@@ -454,13 +461,15 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
     function _moveUntillDefaultingPossible(address _borrower, uint64 _priceDrop, uint64 _warp) internal {
         uint256 price = oracle0.price();
+        (bool throwing, uint256 ltv) = _isOracleThrowing(_borrower);
 
-        while (!_defaultingPossible(_borrower)) {
+        while (!_defaultingPossible(ltv)) {
             price -= _priceDrop;
             _setCollateralPrice(price, false);
             vm.warp(block.timestamp + _warp);
 
-            vm.assume(!_isOracleThrowing(_borrower));
+            (throwing, ltv) = _isOracleThrowing(_borrower);
+            vm.assume(!throwing);
         }
 
         _printLtv(_borrower);
@@ -468,15 +477,17 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     }
 
     function _moveUntillBadDebt(address _borrower, uint64 _priceDrop, uint64 _warp) internal {
+        console2.log("\t[_moveUntillBadDebt] moving until bad debt");
         uint256 price = oracle0.price();
-        (, ISilo debtSilo) = _getSilos();
+        (bool throwing, uint256 ltv) = _isOracleThrowing(_borrower);
 
-        while (debtSilo.getLtv(_borrower) < 1e18) {
+        while (ltv < 1e18) {
             price -= _priceDrop;
             _setCollateralPrice(price, false);
             vm.warp(block.timestamp + _warp);
 
-            // vm.assume(!_isOracleThrowing(_borrower));
+            (throwing, ltv) = _isOracleThrowing(_borrower);
+            vm.assume(!throwing);
         }
 
         _printLtv(_borrower);
