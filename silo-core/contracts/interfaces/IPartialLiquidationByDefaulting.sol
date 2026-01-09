@@ -49,6 +49,7 @@ interface IPartialLiquidationByDefaulting {
     /// - `_maxDebtToCover` is zero
     /// - `_user` is solvent and there is no debt to cover
     /// - `_borrower` is solvent in terms of defaulting (might be insolvent for standard liquidation)
+    /// - on ReturnZeroShares error
     /// - when asset:share ratio is changes so much 
     ///   that `convertToShares` returns more shares to liquidate than totalShares in system, eg: 
     ///   totalAssets = 100, totalShares = 10, assetsToLiquidate = 1

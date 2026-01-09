@@ -260,7 +260,7 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
 
         {
             // fees checks - expect whole amount to be transfered
-            uint256 revenue = _printRevenue(debtSilo);
+            (uint256 revenue,) = _printRevenue(debtSilo);
             (address daoFeeReceiver, address deployerFeeReceiver) =
                 debtSilo.factory().getFeeReceivers(address(debtSilo));
 

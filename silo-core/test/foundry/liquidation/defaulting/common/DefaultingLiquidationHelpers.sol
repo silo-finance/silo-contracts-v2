@@ -318,9 +318,12 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         );
     }
 
-    function _printRevenue(ISilo _silo) internal view returns (uint256 revenue) {
+    function _printRevenue(ISilo _silo) internal view returns (uint256 revenue, uint256 revenueFractions) {
         (revenue,,,,) = _silo.getSiloStorage();
         console2.log(vm.getLabel(address(_silo)), "revenue", revenue);
+
+        revenueFractions = _silo.getFractionsStorage().revenue;
+        console2.log(vm.getLabel(address(_silo)), "fractions.revenue", revenueFractions);
     }
 
     function _getBorrowerShareTokens(address _borrower)
