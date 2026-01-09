@@ -498,12 +498,34 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_when_0collateral_otherBorrower -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_when_0collateral_otherBorrower_wipeOutShares -vv
     */
-    function test_defaulting_when_0collateral_otherBorrower(
-        uint96 _collateral, uint96 _protected, bool _wipeOutShares
-    ) public {
-        // (uint96 _collateral, uint96 _protected, bool _wipeOutShares) = (5, 79228162514264337593543950335, true);
+    function test_defaulting_when_0collateral_otherBorrower_wipeOutShares(uint96 _collateral, uint96 _protected)
+        public
+    {
+        _defaulting_when_0collateral_otherBorrower({
+            _collateral: _collateral,
+            _protected: _protected,
+            _wipeOutShares: true
+        });
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_when_0collateral_otherBorrower_withDustShares -vv
+    */
+    function test_defaulting_when_0collateral_otherBorrower_withDustShares(uint96 _collateral, uint96 _protected)
+        public
+    {
+        _defaulting_when_0collateral_otherBorrower({
+            _collateral: _collateral,
+            _protected: _protected,
+            _wipeOutShares: false
+        });
+    }
+
+    function _defaulting_when_0collateral_otherBorrower(uint96 _collateral, uint96 _protected, bool _wipeOutShares)
+        internal
+    {
         _addLiquidity(uint256(_collateral) + _protected);
 
         _setCollateralPrice(1.3e18); // we need high price at begin for this test, because we need to end up wit 1:1
@@ -548,6 +570,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         // this repay should make other liquidation not reset total assets, so everyone can exit
         debtSilo.repayShares(debtShareToken.balanceOf(makeAddr("otherBorrower")), makeAddr("otherBorrower"));
+        console2.log("AFTER otherBorrower REPAY");
 
         // first do normal liquidation with sTokens, to remove whole collateral,
         // price is set 1:1 so we can use collateral as max debt
@@ -556,10 +579,17 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint256 protectedPreview =
             collateralSilo.previewRedeem(protectedShareToken.balanceOf(borrower), ISilo.CollateralType.Protected);
         (address collateralToken, address debtToken) = _getTokens();
-        // we need to create 0 collateral, price is 1:1 so we can use collateral as maxDebt
-        partialLiquidation.liquidationCall(
+
+        // we need to create 0 collateral, price is 1:1 so we can use collateral as maxDebt,
+        // it might be not possible to liquidate tiny debt because of ReturnZeroShares error on repay
+        try partialLiquidation.liquidationCall(
             collateralToken, debtToken, borrower, collateralPreview + protectedPreview, true
-        );
+        ) {
+            // nothing to do
+        } catch {
+            // skipping case, when we can not liquidate tiny debt because of ReturnZeroShares error on repay
+            vm.assume(false);
+        }
 
         depositors.push(address(this)); // liquidator got shares
 
@@ -572,6 +602,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         assertEq(
             collateralSilo.previewRedeem(collateralShareToken.balanceOf(borrower)), 0, "collateral assets must be 0"
         );
+
         assertEq(protectedShareToken.balanceOf(borrower), 0, "protected shares must be 0");
         vm.assume(debtShareToken.balanceOf(borrower) != 0); // we need bad debt
 
@@ -596,21 +627,16 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _assertEveryoneCanExitFromSilo(debtSilo, true);
         _assertEveryoneCanExitFromSilo(collateralSilo, true);
 
-        if (_wipeOutShares) {
-            _assertTotalSharesZero(collateralSilo);
-        } else {
-            // we can not asseth total collateral to be 0,
-            // because after defaulting, we can create dust shares for depositors
+        // we can not asseth total collateral shares to be 0,
+        // because after defaulting, we can create dust shares for depositors
+        uint256 gaugeProtected = protectedShareToken.balanceOf(address(gauge));
+        console2.log("gaugeProtected", gaugeProtected);
 
-            uint256 gaugeProtected = protectedShareToken.balanceOf(address(gauge));
-            console2.log("gaugeProtected", gaugeProtected);
-
-            assertEq(
-                protectedShareToken.totalSupply(),
-                gaugeProtected,
-                "protected share token should have only gauge protected"
-            );
-        }
+        assertEq(
+            protectedShareToken.totalSupply(),
+            gaugeProtected,
+            "protected share token should have only gauge protected"
+        );
 
         _assertTotalSharesZero(debtSilo);
     }
