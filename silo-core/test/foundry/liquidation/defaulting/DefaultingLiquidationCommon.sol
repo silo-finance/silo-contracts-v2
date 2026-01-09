@@ -1486,9 +1486,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         assertGt(collateralRewards1 + protectedRewards1, 0, "expect ANY rewards from first liquidation");
         uint256 lpPrivider1Assets = debtSilo.previewRedeem(shares1);
 
-        // 20% to cover fees
-        debtSilo.deposit(lpPrivider1Assets * 12 / 10, makeAddr("lpProvider2"));
-        console2.log("lpPrivider1Assets", lpPrivider1Assets);
+        // 20% to cover fees, +1 to not generate zero input
+        debtSilo.deposit(lpPrivider1Assets * 12 / 10 + 1, makeAddr("lpProvider2"));
+        console2.log("lpPrivider1Assets + 20%", lpPrivider1Assets);
 
         vm.startPrank(makeAddr("lpProvider1"));
         try debtSilo.redeem(shares1, makeAddr("lpProvider1"), makeAddr("lpProvider1")) {
