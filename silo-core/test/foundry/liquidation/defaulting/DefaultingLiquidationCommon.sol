@@ -25,6 +25,7 @@ import {Whitelist} from "silo-core/contracts/hooks/_common/Whitelist.sol";
 
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 import {DefaultingLiquidationAsserts} from "./common/DefaultingLiquidationAsserts.sol";
+import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 /*
 - anything with decimals? don't think so, we only transfer shares
@@ -456,9 +457,23 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         (address collateralToken, address debtToken) = _getTokens();
 
         // we need to create 0 collateral, +2 should cover full collateral and price is 1:1 so we can use as maxDebt
-        partialLiquidation.liquidationCall(
+        try partialLiquidation.liquidationCall(
             collateralToken, debtToken, borrower, collateralPreview + protectedPreview + 2, true
-        );
+        ) {
+            // nothing to do
+        } catch (bytes memory data) {
+            bytes4 errorType = bytes4(data);
+            bytes4 returnZeroShares = bytes4(keccak256(abi.encodePacked("ReturnZeroShares()")));
+
+            // skipping case, when we can not liquidate tiny debt because of ReturnZeroShares error on repay
+            if (errorType == returnZeroShares) {
+                vm.assume(false);
+            } else {
+                RevertLib.revertBytes(data, "liquidationCall failed");
+            }
+        }
+
+        _wipeOutCollateralShares(collateralShareToken, borrower);
 
         depositors.push(address(this)); // liquidator got shares
         console2.log("AFTER NORMAL LIQUIDATION");
@@ -586,7 +601,15 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             collateralToken, debtToken, borrower, collateralPreview + protectedPreview, true
         ) {
             // nothing to do
-        } catch {
+        } catch (bytes memory data) {
+            bytes4 errorType = bytes4(data);
+            bytes4 returnZeroShares = bytes4(keccak256(abi.encodePacked("ReturnZeroShares()")));
+            if (errorType == returnZeroShares) {
+                vm.assume(false);
+            } else {
+                RevertLib.revertBytes(data, "liquidationCall failed");
+            }
+            
             // skipping case, when we can not liquidate tiny debt because of ReturnZeroShares error on repay
             vm.assume(false);
         }
