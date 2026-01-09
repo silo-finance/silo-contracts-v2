@@ -423,16 +423,8 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
         uint256 gauge2CollateralRewards1 = gauge2.getRewardsBalance(makeAddr("lpProvider1"), programNames[0]);
         uint256 gauge2CollateralRewards2 = gauge2.getRewardsBalance(makeAddr("lpProvider2"), programNames[0]);
 
-        assertEq(
-            gauge2CollateralRewards1,
-            257.457575311831090203e18,
-            "[lpProvider1] gauge2 has claimable rewards"
-        );
-        assertEq(
-            gauge2CollateralRewards2,
-            257.457575311831090203e18,
-            "[lpProvider2] gauge2 has claimable rewards"
-        );
+        assertEq(gauge2CollateralRewards1, 257.457575311831090203e18, "[lpProvider1] gauge2 has claimable rewards");
+        assertEq(gauge2CollateralRewards2, 257.457575311831090203e18, "[lpProvider2] gauge2 has claimable rewards");
 
         assertEq(
             borrowerProtectedShareToken.balanceOf(address(gauge3)),

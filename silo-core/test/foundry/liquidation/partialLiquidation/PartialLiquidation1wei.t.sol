@@ -121,9 +121,7 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
     FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_asset_protected_receiveSToken_fuzz
     */
     /// forge-config: core_test.fuzz.runs = 10000
-    function test_1wei_asset_protected_receiveSToken_fuzz(
-        uint32 _amount, uint32 _burn
-    ) public {
+    function test_1wei_asset_protected_receiveSToken_fuzz(uint32 _amount, uint32 _burn) public {
         // (uint32 _amount, uint32 _burn) = (1, 1000);
         _1wei_asset_protected_liquidation(_amount, _burn, true);
     }
@@ -201,7 +199,7 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
             uint256 btcBalance = token0.balanceOf(address(this));
             console2.log("BTC balance", btcBalance);
             assertEq(btcBalance, 1, "BTC balance is collateral after liquidation");
-        }   
+        }
 
         assertEq(IShareToken(protectedShareToken).balanceOf(borrower), 0, "protected shares are liquidated fully");
         assertEq(IShareToken(debtShareToken).balanceOf(borrower), 0, "debt repaid fully");

@@ -14,7 +14,8 @@ import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IP
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
-import {SiloIncentivesControllerCompatible} from "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
+import {SiloIncentivesControllerCompatible} from
+    "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
 
 import {SiloConfigOverride, SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
@@ -568,7 +569,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             _wipeOutCollateralShares(collateralShareToken, borrower);
         }
 
-        assertEq(collateralSilo.previewRedeem(collateralShareToken.balanceOf(borrower)), 0, "collateral assets must be 0");
+        assertEq(
+            collateralSilo.previewRedeem(collateralShareToken.balanceOf(borrower)), 0, "collateral assets must be 0"
+        );
         assertEq(protectedShareToken.balanceOf(borrower), 0, "protected shares must be 0");
         vm.assume(debtShareToken.balanceOf(borrower) != 0); // we need bad debt
 
@@ -596,7 +599,17 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         if (_wipeOutShares) {
             _assertTotalSharesZero(collateralSilo);
         } else {
-            _assertTotalSharesZeroOnlyGauge(collateralSilo);
+            // we can not asseth total collateral to be 0,
+            // because after defaulting, we can create dust shares for depositors
+
+            uint256 gaugeProtected = protectedShareToken.balanceOf(address(gauge));
+            console2.log("gaugeProtected", gaugeProtected);
+
+            assertEq(
+                protectedShareToken.totalSupply(),
+                gaugeProtected,
+                "protected share token should have only gauge protected"
+            );
         }
 
         _assertTotalSharesZero(debtSilo);
@@ -1229,7 +1242,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
                 );
             }
 
-            /// Defaulting liquidation can leave dust shares behind, because math retuens assets, 
+            /// Defaulting liquidation can leave dust shares behind, because math retuens assets,
             /// and dust shares can not be transtalet to assets.
             // assertGt(
             //     collateralShareToken.balanceOf(makeAddr("lpProvider2")),

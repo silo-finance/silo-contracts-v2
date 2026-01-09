@@ -18,7 +18,8 @@ import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfac
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {SiloIncentivesControllerCompatible} from "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
+import {SiloIncentivesControllerCompatible} from
+    "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
 import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
@@ -146,7 +147,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     }
 
     function _wipeOutCollateralShares(IShareToken _token, address _borrower) internal {
-        uint256 balance =  _token.balanceOf(_borrower);
+        uint256 balance = _token.balanceOf(_borrower);
         if (balance == 0) return;
 
         vm.startPrank(address(_token));

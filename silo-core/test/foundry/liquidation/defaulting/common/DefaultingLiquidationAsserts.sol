@@ -154,11 +154,7 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
             console2.log("totalAssetsLeft == 1, accepting as dust");
             // we accept this as dust, rounding error
         } else {
-            assertEq(
-                _silo.totalSupply(),
-                0,
-                "[_assertTotalSharesZero] silo should have NO collateral"
-            );
+            assertEq(_silo.totalSupply(), 0, "[_assertTotalSharesZero] silo should have NO collateral");
         }
 
         assertEq(
