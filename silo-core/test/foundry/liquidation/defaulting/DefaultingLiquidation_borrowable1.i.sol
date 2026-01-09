@@ -161,7 +161,7 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
         {
             // borrower checks
 
-            uint256 collateralLiquidated = 18713351204666493; // hardcoded based on liquidation
+            uint256 collateralLiquidated = 0.090180018543589209e18; // hardcoded based on liquidation
             if (_withOtherBorrower) collateralLiquidated -= 1;
 
             uint256 protectedLiquidated = collateralToLiquidate - collateralLiquidated;
@@ -190,7 +190,7 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
         {
             // lpProvider checks
 
-            uint256 totalGaugeRewards = 0.018535128812241097829e21; // hardcoded based on logs
+            uint256 totalGaugeRewards = 0.089321161224126454629e21; // hardcoded based on logs
             if (_withOtherBorrower) totalGaugeRewards -= 990;
 
             uint256 totalProtectedRewards = 0.495238095238095238096e21; // hardcoded based on logs
@@ -207,7 +207,7 @@ contract DefaultingLiquidationBorrowable1Test is DefaultingLiquidationCommon {
             address lpProvider = makeAddr("lpProvider");
 
             {
-                uint256 lpProviderCollateralLeft = 0.511385035888068675e18; // hardcoded based on logs
+                uint256 lpProviderCollateralLeft = 0.520865162326427786e18; // hardcoded based on logs
                 if (_withOtherBorrower) lpProviderCollateralLeft += 1.005397751321084384e18;
 
                 assertEq(
