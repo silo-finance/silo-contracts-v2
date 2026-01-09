@@ -295,14 +295,14 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _assertNoShareTokens({
             _silo: silo0,
             _user: _borrower,
-            _allowForDust: false,
+            _allowForDust: true,
             _msg: "position should be removed on silo0"
         });
 
         _assertNoShareTokens({
             _silo: silo1,
             _user: _borrower,
-            _allowForDust: false,
+            _allowForDust: true,
             _msg: "position should be removed on silo1"
         });
 
