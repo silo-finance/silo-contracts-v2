@@ -1452,9 +1452,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_twoRewardsReceivers -vv
     */
-    function test_incentiveDistribution_twoRewardsReceivers(
-        uint64 _collateral, uint64 _protected
-    ) public {
+    function test_incentiveDistribution_twoRewardsReceivers(uint64 _collateral, uint64 _protected) public {
         // (uint64 _collateral, uint64 _protected) = (27125091, 30817190);
         vm.assume(uint256(_collateral) + _protected > 0);
 
@@ -1487,7 +1485,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         assertGt(collateralRewards1 + protectedRewards1, 0, "expect ANY rewards from first liquidation");
         uint256 lpPrivider1Assets = debtSilo.previewRedeem(shares1);
-        
+
         // 20% to cover fees
         debtSilo.deposit(lpPrivider1Assets * 12 / 10, makeAddr("lpProvider2"));
         console2.log("lpPrivider1Assets", lpPrivider1Assets);
