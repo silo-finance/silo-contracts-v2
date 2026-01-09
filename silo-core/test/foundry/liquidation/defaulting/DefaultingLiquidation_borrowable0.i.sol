@@ -169,7 +169,7 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
         {
             // borrower checks
 
-            uint256 collateralLiquidated = 0.489690721649484537e18; // hardcoded based on liquidation
+            uint256 collateralLiquidated = 0.489690721649484536e18; // hardcoded based on liquidation
             if (_withOtherBorrower) collateralLiquidated -= 1;
 
             uint256 protectedLiquidated = collateralToLiquidate - collateralLiquidated;

@@ -157,8 +157,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         collateralSiloBefore = _getSiloState(collateralSilo);
         debtSiloBefore = _getSiloState(debtSilo);
 
-        partialLiquidation.maxLiquidation(borrower);
-
         console2.log("maxRepay borrower:", debtSilo.maxRepay(borrower));
         console2.log("maxRepay other borrower:", debtSilo.maxRepay(makeAddr("otherBorrower")));
 

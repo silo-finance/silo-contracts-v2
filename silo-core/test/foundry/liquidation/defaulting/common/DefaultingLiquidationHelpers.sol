@@ -84,22 +84,27 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     }
 
     function _tryWithdrawAll(ISilo _silo, address _user) internal {
+        _tryWithdrawAll(_silo, _user, ISilo.CollateralType.Collateral);
+        _tryWithdrawAll(_silo, _user, ISilo.CollateralType.Protected);
+    }
+
+    function _tryWithdrawAll(ISilo _silo, address _user, ISilo.CollateralType _collateralType) internal {
         uint256 amount;
 
-        try _silo.maxRedeem(_user) returns (uint256 _amount) {
+        try _silo.maxRedeem(_user, _collateralType) returns (uint256 _amount) {
             amount = _amount;
         } catch {
             console2.log("\t[_tryWithdrawAll] maxRedeem failed");
         }
 
-        try _silo.redeem(amount, _user, _user) {
+        try _silo.redeem(amount, _user, _user, _collateralType) {
             // nothing to do
         } catch {
             console2.log("\t[_tryWithdrawAll] redeem failed");
         }
 
         // try dust
-        try _silo.withdraw(1, _user, _user) {
+        try _silo.withdraw(1, _user, _user, _collateralType) {
             // nothing to do
         } catch {
             // nothing to do
@@ -142,8 +147,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
         if (!_maxOut) return success;
 
-        _tryWithdrawMax(_borrower, collateralSilo, ISilo.CollateralType.Collateral);
-        _tryWithdrawMax(_borrower, collateralSilo, ISilo.CollateralType.Protected);
+        _tryWithdrawAll(collateralSilo, _borrower);
     }
 
     function _wipeOutCollateralShares(IShareToken _token, address _borrower) internal {
