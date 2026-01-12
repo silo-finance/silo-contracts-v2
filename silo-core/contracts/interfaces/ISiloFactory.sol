@@ -27,10 +27,9 @@ interface ISiloFactory is IERC721 {
     );
 
     event NewSiloContracts(
-        address indexed silo, 
         address indexed protectedShareToken, 
         address indexed debtShareToken,
-        address hook
+        address indexed hook
     );
 
     event BaseURI(string newBaseURI);

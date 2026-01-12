@@ -106,7 +106,7 @@ library EventsLib {
         string symbol
     );
 
-    event VaultIncentiveModule(address indexed SiloVault, address indexed vaultIncentiveModule);
+    event VaultIncentiveModule(address indexed siloVault, address indexed vaultIncentiveModule);
 
     event CreateIdleVault(address indexed idleVault, address indexed vault);
 

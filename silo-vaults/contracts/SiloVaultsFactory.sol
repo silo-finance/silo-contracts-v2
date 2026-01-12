@@ -20,7 +20,7 @@ import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
 /// @author Silo Labs
 /// @custom:contact security@silo.finance
 /// @notice This contract allows to create SiloVault vaults, and to index them easily.
-contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
+contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory, IVersioned {
     /* STORAGE */
     address public immutable VAULT_INCENTIVES_MODULE_IMPLEMENTATION;
 
@@ -85,5 +85,10 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
             _salt,
             initCodeHash
         )))));
+    }
+
+    /// @inheritdoc IVersioned
+    function VERSION() external pure virtual returns (string memory) { // solhint-disable-line func-name-mixedcase
+        return "SiloVaultsFactory 4.0.0";
     }
 }

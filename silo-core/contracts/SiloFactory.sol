@@ -65,11 +65,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
         _setMaxLiquidationFee({_newMaxLiquidationFee: 0.30e18}); // 30% max liquidation fee
     }
 
-    /// @inheritdoc IVersioned
-    function VERSION() external pure virtual returns (string memory) { // solhint-disable-line func-name-mixedcase
-        return "SiloFactory 4.0.0";
-    }
-
     /// @inheritdoc ISiloFactory
     function createSilo( // solhint-disable-line function-max-lines
         ISiloConfig _siloConfig,
@@ -214,6 +209,11 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
         return Views.validateSiloInitData(_initData, _daoFeeRange, maxDeployerFee, maxFlashloanFee, maxLiquidationFee);
     }
 
+    /// @inheritdoc IVersioned
+    function VERSION() external pure virtual returns (string memory) { // solhint-disable-line func-name-mixedcase
+        return "SiloFactory 4.0.0";
+    }
+
     /// @inheritdoc ERC721
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         _requireOwned(tokenId);
@@ -227,10 +227,9 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
     }
 
     function _emitEventAboutSiloContracts(ISiloConfig _siloConfig, ISilo _silo) internal virtual {
-        (address protectedShareToken, address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(_silo));
+        (address protectedShareToken,, address debtShareToken) = _siloConfig.getShareTokens(address(_silo));
 
         emit NewSiloContracts(
-            address(_silo),
             protectedShareToken,
             debtShareToken,
             IShareToken(address(_silo)).hookReceiver()
