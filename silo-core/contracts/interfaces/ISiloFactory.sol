@@ -26,6 +26,13 @@ interface ISiloFactory is IERC721 {
         address siloConfig
     );
 
+    event NewSiloContracts(
+        address indexed silo, 
+        address indexed protectedShareToken, 
+        address indexed debtShareToken,
+        address hook
+    );
+
     event BaseURI(string newBaseURI);
 
     /// @notice Emitted on the update of DAO fee.

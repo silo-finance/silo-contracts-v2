@@ -67,6 +67,8 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
         emit EventsLib.CreateSiloVault(
             address(siloVault), msg.sender, _initialOwner, _initialTimelock, _asset, _name, _symbol
         );
+
+        emit EventsLib.VaultIncentiveModule(address(siloVault), address(siloVault.INCENTIVES_MODULE()));
     }
 
     /// @inheritdoc ISiloVaultsFactory

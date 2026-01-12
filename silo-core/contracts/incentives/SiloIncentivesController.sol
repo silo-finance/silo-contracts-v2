@@ -121,6 +121,8 @@ abstract contract SiloIncentivesController is BaseIncentivesController {
         program.lastUpdateTimestamp = uint40(block.timestamp - 1);
         program.emissionPerSecond = _amount;
 
+        emit ImmediateDistribution(_tokenToDistribute, programId, _amount);
+
         _updateAssetStateInternal(programId, totalStaked);
 
         // If we have ongoing distribution, we need to revert the changes and keep the state as it was.

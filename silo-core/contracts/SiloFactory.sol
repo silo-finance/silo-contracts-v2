@@ -13,8 +13,9 @@ import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
 import {Hook} from "./lib/Hook.sol";
 import {Views} from "./lib/Views.sol";
 import {CloneDeterministic} from "./lib/CloneDeterministic.sol";
+import {IVersioned} from "./interfaces/IVersioned.sol";
 
-contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
+contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
     /// @dev max fee is 50%, 1e18 == 100%
     uint256 public constant MAX_FEE = 0.5e18;
 
@@ -62,6 +63,11 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         _setMaxDeployerFee({_newMaxDeployerFee: 0.15e18}); // 15% max deployer fee
         _setMaxFlashloanFee({_newMaxFlashloanFee: 0.15e18}); // 15% max flashloan fee
         _setMaxLiquidationFee({_newMaxLiquidationFee: 0.30e18}); // 30% max liquidation fee
+    }
+
+    /// @inheritdoc IVersioned
+    function VERSION() external pure virtual returns (string memory) { // solhint-disable-line func-name-mixedcase
+        return "SiloFactory 4.0.0";
     }
 
     /// @inheritdoc ISiloFactory
@@ -123,6 +129,9 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             address(silo1),
             address(_siloConfig)
         );
+
+        _emitEventAboutSiloContracts(_siloConfig, silo0);
+        _emitEventAboutSiloContracts(_siloConfig, silo1);
     }
 
     /// @inheritdoc ISiloFactory
@@ -214,6 +223,17 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             Strings.toString(block.chainid),
             "/",
             Strings.toHexString(idToSiloConfig[tokenId])
+        );
+    }
+
+    function _emitEventAboutSiloContracts(ISiloConfig _siloConfig, ISilo _silo) internal virtual {
+        (address protectedShareToken, address collateralShareToken, address debtShareToken) = _siloConfig.getShareTokens(address(_silo));
+
+        emit NewSiloContracts(
+            address(_silo),
+            protectedShareToken,
+            debtShareToken,
+            IShareToken(address(_silo)).hookReceiver()
         );
     }
 
