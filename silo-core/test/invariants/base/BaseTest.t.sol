@@ -10,6 +10,7 @@ import {IERC721Receiver} from "openzeppelin5/token/ERC721/IERC721Receiver.sol";
 import {Vm} from "forge-std/Base.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 import {console} from "forge-std/console.sol";
+import {Strings} from "openzeppelin5/utils/Strings.sol";
 
 // Utils
 import {Actor} from "../utils/Actor.sol";
@@ -147,5 +148,14 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
             return errorSelector == expectedSelector;
         }
         return false;
+    }
+
+    /// @dev we assuming collateral silo is silo0
+    function _getImmediateProgramNames() internal view returns (string[] memory names) {
+        names = new string[](2);
+        names[1] = Strings.toHexString(address(vault0));
+
+        (address protectedShareToken,,) = siloConfig.getShareTokens(address(vault0));
+        names[0] = Strings.toHexString(protectedShareToken);
     }
 }

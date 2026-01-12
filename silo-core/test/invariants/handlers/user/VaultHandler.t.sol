@@ -132,8 +132,7 @@ contract VaultHandler is BaseHandler {
 
         _before();
         (success, returnData) = actor.proxy(
-            target,
-            abi.encodeWithSelector(ISilo.redeem.selector, _shares, receiver, address(actor), _collateralType)
+            target, abi.encodeWithSelector(ISilo.redeem.selector, _shares, receiver, address(actor), _collateralType)
         );
 
         if (success) {

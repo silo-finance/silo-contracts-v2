@@ -54,12 +54,20 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
         bool isSolvent;
     }
 
+    struct ActorsBalance {
+        uint256 shares;
+        uint256 assets;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       HOOKS STORAGE                                       //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     mapping(address => DefaultVars) defaultVarsBefore;
     mapping(address => DefaultVars) defaultVarsAfter;
+
+    mapping(address actor => mapping(address target => ActorsBalance balance)) actorsBalanceBefore;
+    mapping(address actor => mapping(address target => ActorsBalance balance)) actorsBalanceAfter;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                           SETUP                                           //
@@ -76,12 +84,14 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
         _setSiloValues(silo, defaultVarsBefore[silo]);
         _setSharesValues(silo, defaultVarsBefore[silo]);
         _setBorrowingValues(silo, defaultVarsBefore[silo]);
+        _setActorsBalanceBefore(silo);
     }
 
     function _defaultHooksAfter(address silo) internal virtual {
         _setSiloValues(silo, defaultVarsAfter[silo]);
         _setSharesValues(silo, defaultVarsAfter[silo]);
         _setBorrowingValues(silo, defaultVarsAfter[silo]);
+        _setActorsBalanceAfter(silo);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -102,6 +112,49 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
 
         _defaultVars.protectedShares = IERC20(protected).balanceOf(targetActor);
         _defaultVars.collateralShares = IERC20(collateral).balanceOf(targetActor);
+    }
+
+    function _setActorsBalanceBefore(address _silo) internal {
+        for (uint256 i; i < actorAddresses.length; i++) {
+            address actor = actorAddresses[i];
+
+            _setActorsBalanceValues(_silo, actor, actorsBalanceBefore[actor]);
+        }
+    }
+
+    function _setActorsBalanceAfter(address _silo) internal {
+        for (uint256 i; i < actorAddresses.length; i++) {
+            address actor = actorAddresses[i];
+
+            _setActorsBalanceValues(_silo, actor, actorsBalanceAfter[actor]);
+        }
+    }
+
+    function _setActorsBalanceValues(
+        address _silo,
+        address _actor,
+        mapping(address => ActorsBalance) storage _actorsBalance
+    ) internal {
+        (address protected, address collateral, address debt) = siloConfig.getShareTokens(_silo);
+
+        string[] memory programNames = _getImmediateProgramNames();
+        uint256 gaugeProtected =
+            vault0.previewRedeem(gauge.getRewardsBalance(_actor, programNames[0]), ISilo.CollateralType.Protected);
+        uint256 gaugeCollateral = vault0.previewRedeem(gauge.getRewardsBalance(_actor, programNames[1]));
+        // NOTE: for gause we only store assets, shares are always 0
+        _actorsBalance[address(gauge)] = ActorsBalance({shares: 0, assets: gaugeProtected + gaugeCollateral});
+
+        uint256 shares = IERC20(protected).balanceOf(_actor);
+        uint256 assets = ISilo(_silo).previewRedeem(shares, ISilo.CollateralType.Protected);
+        _actorsBalance[protected] = ActorsBalance({shares: shares, assets: assets});
+
+        shares = IERC20(collateral).balanceOf(_actor);
+        assets = ISilo(_silo).previewRedeem(shares, ISilo.CollateralType.Collateral);
+        _actorsBalance[collateral] = ActorsBalance({shares: shares, assets: assets});
+
+        shares = IERC20(debt).balanceOf(_actor);
+        assets = ISilo(_silo).previewRepayShares(shares);
+        _actorsBalance[debt] = ActorsBalance({shares: shares, assets: assets});
     }
 
     function _setBorrowingValues(address silo, DefaultVars storage _defaultVars) internal {
@@ -170,13 +223,11 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
         if (!defaultVarsBefore[silo].isSolvent) {
             if (defaultVarsBefore[silo].borrowerCollateralSilo == defaultVarsAfter[silo].borrowerCollateralSilo) {
                 assertFalse(
-                    msg.sig == IBorrowingHandler.borrow.selector
-                        || msg.sig == IBorrowingHandler.borrowShares.selector,
+                    msg.sig == IBorrowingHandler.borrow.selector || msg.sig == IBorrowingHandler.borrowShares.selector,
                     BASE_GPOST_D
                 );
             } else if (
-                msg.sig == IBorrowingHandler.borrow.selector
-                    || msg.sig == IBorrowingHandler.borrowShares.selector
+                msg.sig == IBorrowingHandler.borrow.selector || msg.sig == IBorrowingHandler.borrowShares.selector
             ) {
                 assertTrue(defaultVarsAfter[silo].isSolvent, BASE_GPOST_D);
             }
@@ -184,9 +235,8 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
 
         address borrowerCollateralSilo = siloConfig.borrowerCollateralSilo(targetActor);
 
-        if (
-            !defaultVarsBefore[silo].isSolvent && borrowerCollateralSilo == Actor(payable(targetActor)).lastTarget()
-        ) {
+        if (!defaultVarsBefore[silo].isSolvent && borrowerCollateralSilo == Actor(payable(targetActor)).lastTarget())
+        {
             assertFalse(
                 msg.sig == IVaultHandler.withdraw.selector || msg.sig == IVaultHandler.redeem.selector, BASE_GPOST_D
             );

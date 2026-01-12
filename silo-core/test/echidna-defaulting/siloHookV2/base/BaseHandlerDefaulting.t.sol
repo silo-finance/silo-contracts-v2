@@ -21,7 +21,7 @@ contract BaseHandlerDefaulting is BaseHandler {
         super._defaultHooksBefore(silo);
 
         address actor = _getRandomActor(0);
-        rewardsBalanceBefore[actor] = gauge.getRewardsBalance(actor, _getProgramNames());
+        rewardsBalanceBefore[actor] = gauge.getRewardsBalance(actor, _getImmediateProgramNames());
     }
 
     // function _defaultHooksAfter(address silo) internal override {

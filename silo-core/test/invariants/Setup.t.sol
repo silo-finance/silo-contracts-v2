@@ -11,13 +11,13 @@ import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
 import {Silo} from "silo-core/contracts/Silo.sol";
 import {ShareProtectedCollateralToken} from "silo-core/contracts/utils/ShareProtectedCollateralToken.sol";
 import {ShareDebtToken} from "silo-core/contracts/utils/ShareDebtToken.sol";
-import {
-    IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
+import {IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {PartialLiquidation} from "silo-core/contracts/hooks/liquidation/PartialLiquidation.sol";
 import {SiloHookV1} from "silo-core/contracts/hooks/SiloHookV1.sol";
 import {ISiloDeployer, SiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {CloneDeterministic} from "silo-core/contracts/lib/CloneDeterministic.sol";
 import {Views} from "silo-core/contracts/lib/Views.sol";
+import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 
 // Test Contracts
 import {BaseTest} from "./base/BaseTest.t.sol";
@@ -38,7 +38,6 @@ import {ISilo} from "silo-core/contracts/Silo.sol";
 import {DynamicKinkModelFactory} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModelFactory.sol";
 import {IDynamicKinkModelFactory} from "silo-core/contracts/interfaces/IDynamicKinkModelFactory.sol";
 import {DynamicKinkModel} from "silo-core/contracts/interestRateModel/kink/DynamicKinkModel.sol";
-
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract Setup is BaseTest {
@@ -95,8 +94,9 @@ contract Setup is BaseTest {
         _initData(address(_asset0), address(_asset1));
 
         // Deploy silo config
-        siloConfig =
-            _deploySiloConfig(siloData[_siloInitDataIdentifier()], siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl);
+        siloConfig = _deploySiloConfig(
+            siloData[_siloInitDataIdentifier()], siloImpl, shareProtectedCollateralTokenImpl, shareDebtTokenImpl
+        );
 
         // Deploy silos
         siloFactory.createSilo(
@@ -150,6 +150,8 @@ contract Setup is BaseTest {
     function _deployExternalContracts() internal {
         console2.log("/_deployExternalContracts/");
         flashLoanReceiver = address(new MockFlashLoanReceiver());
+
+        siloLens = new SiloLens();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

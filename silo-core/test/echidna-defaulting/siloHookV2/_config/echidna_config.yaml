@@ -45,9 +45,9 @@ corpusDir: "test/echidna-defaulting/siloHookV2/_corpus/echidna/default/_data/cor
 #mutConsts: [100, 1, 1]
 
 #remappings
-cryticArgs: [ "--solc-solcs-select", "0.8.28", "--solc-remaps", "@crytic/properties/=gitmodules/crytic/properties/ forge-std/=gitmodules/forge-std/src/ ds-test/=gitmodules/forge-std/lib/ds-test/src/ openzeppelin/=gitmodules/openzeppelin-contracts/contracts/", "--compile-libraries=(Actions,0xf01), (ShareCollateralTokenLib,0xf02),(ShareTokenLib,0xf03),(SiloLendingLib,0xf04),(Views,0xf05),(PartialLiquidationExecLib,0xf06),(DefaultingRepayLib,0xf07)" ]
+cryticArgs: [ "--solc-solcs-select", "0.8.28", "--solc-remaps", "@crytic/properties/=gitmodules/crytic/properties/ forge-std/=gitmodules/forge-std/src/ ds-test/=gitmodules/forge-std/lib/ds-test/src/ openzeppelin/=gitmodules/openzeppelin-contracts/contracts/", "--compile-libraries=(Actions,0xf01), (ShareCollateralTokenLib,0xf02),(ShareTokenLib,0xf03),(SiloLendingLib,0xf04),(Views,0xf05),(PartialLiquidationExecLib,0xf06),(DefaultingRepayLib,0xf07),(SiloLensLib,0xf08)" ]
 
-deployContracts: [ [ "0xf01", "Actions" ], [ "0xf02", "ShareCollateralTokenLib" ], [ "0xf03", "ShareTokenLib" ], [ "0xf04", "SiloLendingLib" ], [ "0xf05", "Views" ], [ "0xf06", "PartialLiquidationExecLib" ], [ "0xf07", "DefaultingRepayLib" ] ]
+deployContracts: [ [ "0xf01", "Actions" ], [ "0xf02", "ShareCollateralTokenLib" ], [ "0xf03", "ShareTokenLib" ], [ "0xf04", "SiloLendingLib" ], [ "0xf05", "Views" ], [ "0xf06", "PartialLiquidationExecLib" ], [ "0xf07", "DefaultingRepayLib" ], [ "0xf08", "SiloLensLib" ] ]
 
 # maximum value to send to payable functions
 maxValue: 1e+23 # 100000 eth

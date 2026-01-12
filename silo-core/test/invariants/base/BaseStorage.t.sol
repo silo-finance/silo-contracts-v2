@@ -16,17 +16,14 @@ import {Actor} from "../utils/Actor.sol";
 // Interfaces
 import {ISiloConfig} from "silo-core/contracts/SiloConfig.sol";
 import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
-import {
-    IInterestRateModelV2Config
-} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
-import {
-    IInterestRateModelV2Factory
-} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
+import {IInterestRateModelV2Config} from "silo-core/contracts/interestRateModel/InterestRateModelV2Config.sol";
+import {IInterestRateModelV2Factory} from "silo-core/contracts/interestRateModel/InterestRateModelV2Factory.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IInterestRateModelV2} from "silo-core/contracts/interestRateModel/InterestRateModelV2.sol";
 import {ISiloDeployer} from "silo-core/contracts/SiloDeployer.sol";
 import {LeverageRouter} from "silo-core/contracts/leverage/LeverageRouter.sol";
 import {SwapRouterMock} from "silo-core/test/foundry/leverage/mocks/SwapRouterMock.sol";
+import {SiloLens} from "silo-core/contracts/SiloLens.sol";
 
 /// @notice BaseStorage contract for all test contracts, works in tandem with BaseTest
 abstract contract BaseStorage {
@@ -95,7 +92,7 @@ abstract contract BaseStorage {
     // PartialLiquidationByDefaulting liquidationByDefaultingModule;
     SwapRouterMock swapRouterMock;
     ISiloIncentivesController gauge;
-
+    SiloLens siloLens;
 
     /// @notice Implementations
     address siloImpl;

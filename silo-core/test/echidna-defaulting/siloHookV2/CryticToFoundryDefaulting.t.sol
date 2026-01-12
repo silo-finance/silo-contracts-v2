@@ -54,8 +54,7 @@ contract CryticToFoundryDefaulting is Invariants, DefaultingHandler, SetupDefaul
     /*
     FOUNDRY_PROFILE=echidna_defaulting forge test -vv --ffi --mt test_EchidnaDefaulting_test1
     */
-    function test_EchidnaDefaulting_test1() public {
-    }
+    function test_EchidnaDefaulting_test1() public {}
 
     function _setUpActor(address actor) internal {
         // vm.startPrank(actor);

@@ -14,6 +14,7 @@ import {PausableWithAccessControl} from "common/utils/PausableWithAccessControl.
 import {RescueModule} from "silo-core/contracts/leverage/modules/RescueModule.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
 import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 // Libraries
 
@@ -24,7 +25,6 @@ import {TestWETH} from "silo-core/test/echidna-leverage/utils/mocks/TestWETH.sol
 import {MockSiloOracle} from "silo-core/test/invariants/utils/mocks/MockSiloOracle.sol";
 
 /*
-- all rewards are claimable always
 - if LTV > LT_MARGIN, defaulting never reverts (notice: cap)
 - 1 wei debt liquidation: possible! keeper will not get any rewards
 - after defaultin we should not reduce collateral total assets below actual available balance (liquidity)
@@ -38,6 +38,8 @@ Risks:
 /// @title DefaultingHandler
 /// @notice Handler test contract for a set of actions
 contract DefaultingHandler is BaseHandlerDefaulting {
+    uint256 borrowerLtvBeforeLastLiquidation;
+
     // TODO finalize this implementation
     function liquidationCallByDefaulting(uint256 _maxDebtToCover, RandomGenerator memory _random)
         external
@@ -52,6 +54,8 @@ contract DefaultingHandler is BaseHandlerDefaulting {
         _setTargetActor(_getRandomActor(_random.i));
 
         _before();
+
+        borrowerLtvBeforeLastLiquidation = siloLens.getLtv(vault0, borrower);
 
         (success, returnData) = actor.proxy(
             address(liquidationModule),
@@ -72,6 +76,8 @@ contract DefaultingHandler is BaseHandlerDefaulting {
         }
 
         _assert_defaulting_totalAssetsDoesNotChange();
+
+        _assets_defaultingDoesNotCreateLossWhenNoBadDebt();
     }
 
     function assert_claimRewardsCanBeAlwaysDone(uint256 _actorIndex) external setupRandomActor(_actorIndex) {
@@ -110,16 +116,80 @@ contract DefaultingHandler is BaseHandlerDefaulting {
     }
 
     /*
+    for defaulting we expect price to be 1:1, so that's why this asertions
+    */
+    function assert_defaulting_price1() external {
+        assertEq(
+            siloConfig.getConfig(address(vault0)).solvencyOracle,
+            address(0),
+            "price0 should be 1:1 for echidna setup for defaulting, cfg: HOOK_V2"
+        );
+
+        assertEq(
+            siloConfig.getConfig(address(vault1)).solvencyOracle,
+            address(0),
+            "price1 should be 1:1 for echidna setup for defaulting, cfg: HOOK_V2"
+        );
+    }
+
+    /*
     in case price 1:1 defaulting should not create any loss (if done before bad debt)
     */
-    function _assets_noLossWhenNoBadDebt() internal {}
+    function _assets_defaultingDoesNotCreateLossWhenNoBadDebt() internal {
+        if (borrowerLtvBeforeLastLiquidation >= 1e18) return;
+
+        (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(vault0));
+        (address protected1, address collateral1, address debt1) = siloConfig.getShareTokens(address(vault1));
+
+        string[] memory programNames = _getImmediateProgramNames();
+
+        for (uint256 i; i < actorAddresses.length; i++) {
+            address actor = actorAddresses[i];
+
+            // we can sum up two assets only because price is 1:1!
+            uint256 totalCollateralBefore =
+                actorsBalanceBefore[actor][collateral0].assets + actorsBalanceBefore[actor][collateral1].assets;
+            uint256 totalProtectedBefore =
+                actorsBalanceBefore[actor][protected0].assets + actorsBalanceBefore[actor][protected1].assets;
+
+            uint256 totalCollateralAfter =
+                actorsBalanceAfter[actor][collateral0].assets + actorsBalanceAfter[actor][collateral1].assets;
+            uint256 totalProtectedAfter =
+                actorsBalanceAfter[actor][protected0].assets + actorsBalanceAfter[actor][protected1].assets;
+
+            uint256 totalDebtBefore =
+                actorsBalanceBefore[actor][debt0].assets + actorsBalanceBefore[actor][debt1].assets;
+            uint256 totalDebtAfter = actorsBalanceAfter[actor][debt0].assets + actorsBalanceAfter[actor][debt1].assets;
+
+            uint256 gaugeAssetsBefore = actorsBalanceBefore[actor][address(gauge)].assets;
+            uint256 gaugeAssetsAfter = actorsBalanceAfter[actor][address(gauge)].assets;
+
+            uint256 totalAssetsBefore = totalCollateralBefore + totalProtectedBefore + gaugeAssetsBefore;
+            uint256 totalAssetsAfter = totalCollateralAfter + totalProtectedAfter + gaugeAssetsAfter;
+
+            if (totalDebtBefore == 0) {
+                assertGe(
+                    totalCollateralAfter,
+                    totalCollateralBefore,
+                    "liquidity provider should nave no loss after defaulting"
+                );
+            } else {
+                uint256 balanceBefore = totalAssetsBefore - totalDebtBefore;
+                uint256 balanceAfter = totalAssetsAfter - totalDebtAfter;
+
+                assertLt(
+                    balanceAfter, balanceBefore, "borrower should not gain after defaulting, it should loss fees"
+                );
+            }
+        }
+    }
 
     /*
     - if LP provider does not claim, rewards balance can only grow
     */
     function assert_rewardsBalanceCanOnlyGrowWhenNoClaim() external setupRandomActor(0) {
         assertGe(
-            gauge.getRewardsBalance(address(actor), _getProgramNames()),
+            gauge.getRewardsBalance(address(actor), _getImmediateProgramNames()),
             rewardsBalanceBefore[address(actor)],
             "rewards balance should not decrease when no claim"
         );
