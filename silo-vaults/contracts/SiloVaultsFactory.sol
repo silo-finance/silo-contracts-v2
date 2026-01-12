@@ -9,7 +9,7 @@ import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/
 import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {ISiloVault} from "./interfaces/ISiloVault.sol";
 import {ISiloVaultsFactory} from "./interfaces/ISiloVaultsFactory.sol";
-import {IVersioned} from "common/interfaces/IVersioned.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 
 import {EventsLib} from "./libraries/EventsLib.sol";
 import {SiloVaultFactoryActionsLib} from "./libraries/SiloVaultFactoryActionsLib.sol";
