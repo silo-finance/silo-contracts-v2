@@ -26,8 +26,7 @@ import {MockSiloOracle} from "silo-core/test/invariants/utils/mocks/MockSiloOrac
 
 /*
 - if LTV > LT_MARGIN, defaulting never reverts (notice: cap)
-- 1 wei debt liquidation: possible! keeper will not get any rewards
-- after defaultin we should not reduce collateral total assets below actual available balance (liquidity)
+- 1 wei debt liquidation: possible! keeper will not get any rewards - DO UNIT TEST FOR THIS!
 
 Risks:
 - liquidation breaks VAULT standard 
@@ -40,7 +39,6 @@ Risks:
 contract DefaultingHandler is BaseHandlerDefaulting {
     uint256 borrowerLtvBeforeLastLiquidation;
 
-    // TODO finalize this implementation
     function liquidationCallByDefaulting(uint256 _maxDebtToCover, RandomGenerator memory _random)
         external
         setupRandomActor(_random.i)
@@ -56,6 +54,9 @@ contract DefaultingHandler is BaseHandlerDefaulting {
         _before();
 
         borrowerLtvBeforeLastLiquidation = siloLens.getLtv(vault0, borrower);
+
+        _printMaxLiquidation(borrower);
+        _printLtv(borrower);
 
         (success, returnData) = actor.proxy(
             address(liquidationModule),
@@ -75,9 +76,10 @@ contract DefaultingHandler is BaseHandlerDefaulting {
             );
         }
 
-        _assert_defaulting_totalAssetsDoesNotChange();
-
-        _assets_defaultingDoesNotCreateLossWhenNoBadDebt();
+        if (success) {
+            _assert_defaulting_totalAssetsDoesNotChange();
+            _assets_defaultingDoesNotCreateLossWhenNoBadDebt();
+        }
     }
 
     function assert_claimRewardsCanBeAlwaysDone(uint256 _actorIndex) external setupRandomActor(_actorIndex) {
@@ -141,8 +143,6 @@ contract DefaultingHandler is BaseHandlerDefaulting {
         (address protected0, address collateral0, address debt0) = siloConfig.getShareTokens(address(vault0));
         (address protected1, address collateral1, address debt1) = siloConfig.getShareTokens(address(vault1));
 
-        string[] memory programNames = _getImmediateProgramNames();
-
         for (uint256 i; i < actorAddresses.length; i++) {
             address actor = actorAddresses[i];
 
@@ -193,6 +193,21 @@ contract DefaultingHandler is BaseHandlerDefaulting {
             rewardsBalanceBefore[address(actor)],
             "rewards balance should not decrease when no claim"
         );
+    }
+
+    /*
+    - after defaultin we should not reduce collateral total assets below actual available balance (liquidity)
+    */
+    function assert_defaulting_totalAssetsIsNotLessThanLiquidity() external {
+        uint256 siloBalance = _asset1.balanceOf(address(vault0));
+        uint256 protected = vault1.getTotalAssetsStorage(ISilo.AssetType.Protected);
+        uint256 available = siloBalance - protected;
+
+        uint256 totalAssets = vault0.getTotalAssetsStorage(ISilo.AssetType.Collateral);
+        assertGe(totalAssets, available, "total assets should not be less than available balance");
+
+        uint256 liquidity = vault0.getLiquidity();
+        assertGt(liquidity, available, "liquidity should be greater than available balance");
     }
 
     // TODO rules
