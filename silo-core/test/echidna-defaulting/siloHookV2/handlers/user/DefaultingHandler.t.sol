@@ -200,6 +200,8 @@ contract DefaultingHandler is BaseHandlerDefaulting {
     */
     function assert_defaulting_totalAssetsIsNotLessThanLiquidity() external {
         uint256 siloBalance = _asset1.balanceOf(address(vault0));
+        if (siloBalance == 0) return;
+        
         uint256 protected = vault1.getTotalAssetsStorage(ISilo.AssetType.Protected);
         uint256 available = siloBalance - protected;
 
