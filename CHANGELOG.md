@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [3.16.0] - 2026-01-13
+### Markets
+- weETH / WETH V2 new market on Arbitrum
+- PGOLD / PUSD new market on Arbitrum
+
 ## [3.15.0] - 2025-12-19
 ### Added
 - More configs to DKinkIRMConfigs.json
