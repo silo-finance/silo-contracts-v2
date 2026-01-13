@@ -81,7 +81,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         assertEq(silo1.maxBorrow(borrower), 75e5 - 1, "maxBorrow");
         _borrow(silo1.maxBorrow(borrower), borrower);
 
-        assertEq(silo0.maxWithdraw(borrower), 1176469, "maxWithdraw");
+        assertEq(silo0.maxWithdraw(borrower), 1176468, "maxWithdraw");
         _withdraw(silo0.maxWithdraw(borrower), borrower);
 
         vm.warp(10 days);
@@ -91,8 +91,8 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(1e5, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 41_37812, "collateral");
-        assertEq(debt, 39_40776, "debt");
+        assertEq(collateral, 41_37808, "collateral");
+        assertEq(debt, 39_40772, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
         token1.approve(address(partialLiquidation), debt);
@@ -119,7 +119,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         // LT is 85%, so 1875 / 0.85 = 2205 of value in collateral is needed.
         // we have 1ETH (2500USDC), 2500 - 2205 = 295.
         // 295 / 2500 = 0.118% can be removed, => ~118000000000000000
-        assertEq(silo0.maxWithdraw(borrower), 117647058447058823, "maxWithdraw (-1 underestimate for fractions)");
+        assertEq(silo0.maxWithdraw(borrower), 117647058447058822, "maxWithdraw (-1 underestimate for fractions)");
         _withdraw(silo0.maxWithdraw(borrower), borrower);
 
         vm.warp(1 days);
@@ -129,7 +129,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(1e6, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 417011079366804430, "collateral");
+        assertEq(collateral, 417011079366804431, "collateral");
         assertEq(debt, 992883522, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
@@ -160,7 +160,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         // LT is 85%, so 0.75e18 / 0.85 = 882352941176470700 of value in collateral is needed.
         // we have 1ETH, 1e18 - 882352941176470700 = 117647058823529340.
         // 117647058823529340 / 1e18 = 0.118% can be removed, => 2500e6 * 0.118 = 295000000
-        assertEq(silo0.maxWithdraw(borrower), 294117646, "maxWithdraw");
+        assertEq(silo0.maxWithdraw(borrower), 294117645, "maxWithdraw");
         _withdraw(silo0.maxWithdraw(borrower), borrower);
 
         vm.warp(1 days);
@@ -170,8 +170,8 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(10, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 100_4885419, "collateral");
-        assertEq(debt, 382813493616435237, "debt");
+        assertEq(collateral, 100_4885415, "collateral");
+        assertEq(debt, 382813492061162048, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
         token1.approve(address(partialLiquidation), debt);
@@ -198,7 +198,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         // LT is 85%, so (375000 - 1) / 0.85 = 441175 of value in collateral is needed.
         // we have 1HALF, 1e6 - (441175 * 2) = 117650.
         // 117650 / 1e6 = 0.11765 can be removed, => 1e6 * 0.117648 = 117650
-        assertEq(silo0.maxWithdraw(borrower), 117644, "maxWithdraw (-1 underestimate for fractions)");
+        assertEq(silo0.maxWithdraw(borrower), 117643, "maxWithdraw (-1 underestimate for fractions)");
         _withdraw(silo0.maxWithdraw(borrower), borrower);
 
         vm.warp(1 days);
@@ -208,7 +208,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(10, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 400686, "collateral");
+        assertEq(collateral, 400687, "collateral");
         assertEq(debt, 190804, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 

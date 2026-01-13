@@ -15,7 +15,7 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
     /// why? eg. if we have 4000 shares this give us 11 assets ot withdraw, but when we convert
     /// 11 assets back to shares, we will get eg 3929 (with rounding up), bacause of that dust will be left
     /// this case was observed so far in same assets positions.
-    function _assertNoShareTokens(ISilo _silo, address _user, bool _allowForDust, string memory _msg) internal view {
+    function _assertNoShareTokens(ISilo _silo, address _user, bool _allowForDust, string memory _msg) internal {
         console2.log("[_assertNoShareTokens] on silo %s for user %s", vm.getLabel(address(_silo)), vm.getLabel(_user));
 
         (address protectedShareToken, address collateralShareToken, address debtShareToken) =
@@ -24,9 +24,11 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
         uint256 balance = IShareToken(protectedShareToken).balanceOf(_user);
 
         if (_allowForDust) {
-            assertEq(
-                _silo.maxRedeem(_user, ISilo.CollateralType.Protected),
-                0,
+            _assertNoRedeemable(
+                _silo,
+                _user,
+                ISilo.CollateralType.Protected,
+                _allowForDust,
                 string.concat("[_assertNoShareTokens] no protected dust: ", _msg)
             );
         } else {
@@ -37,8 +39,12 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
 
         if (_silo.getTotalAssetsStorage(ISilo.AssetType.Collateral) != 0) {
             if (_allowForDust) {
-                assertEq(
-                    _silo.maxRedeem(_user), 0, string.concat("[_assertNoShareTokens] no collateral dust: ", _msg)
+                _assertNoRedeemable(
+                    _silo,
+                    _user,
+                    ISilo.CollateralType.Collateral,
+                    _allowForDust,
+                    string.concat("[_assertNoShareTokens] no collateral dust: ", _msg)
                 );
             } else {
                 assertEq(balance, 0, string.concat("[_assertNoShareTokens] collateral: ", _msg));
@@ -59,15 +65,37 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
 
         (uint256 fees,,,,) = _silo.getSiloStorage();
 
-        assertGt(
-            fees,
-            0,
-            string.concat(
-                "[_assertWithdrawableFees] expect fees to be greater than 0 for ", vm.getLabel(address(_silo))
-            )
-        );
+        if (fees == 0) {
+            // check fractions, they need to be >0
+            ISilo.Fractions memory fractions = _silo.getFractionsStorage();
+            assertGt(fractions.revenue, 0, "[_assertWithdrawableFees] expect revenue fractions to be greater than 0");
+        } else {
+            _silo.withdrawFees();
+        }
+    }
 
-        _silo.withdrawFees();
+    function _assertNoRedeemable(
+        ISilo _silo,
+        address _user,
+        ISilo.CollateralType _collateralType,
+        bool _allowForDust,
+        string memory _msg
+    ) internal {
+        try _silo.redeem(_silo.balanceOf(_user), _user, _user, _collateralType) returns (uint256 assets) {
+            if (_allowForDust) {
+                assertEq(
+                    assets, 1, string.concat(_msg, " [_assertNoRedeemable] redeem should give us max 1 wei of assets")
+                );
+            } else {
+                revert(
+                    string.concat(
+                        _msg, " [_assertNoRedeemable] redeem should fail, after defaulting we expect zero assets"
+                    )
+                );
+            }
+        } catch {
+            // OK
+        }
     }
 
     function _assertNoWithdrawableFees(ISilo _silo) internal {
@@ -80,6 +108,11 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
         assertEq(
             fees, 0, string.concat("[_assertNoWithdrawableFees] expect NO fees for ", vm.getLabel(address(_silo)))
         );
+
+        // check fractions, they need to be 0 as well
+        ISilo.Fractions memory fractions = _silo.getFractionsStorage();
+        assertEq(fractions.interest, 0, "[_assertNoWithdrawableFees] expect NO interest fractions");
+        assertEq(fractions.revenue, 0, "[_assertNoWithdrawableFees] expect NO revenue fractions");
     }
 
     function _assertEveryoneCanExitFromSilo(ISilo _silo, bool _allowForDust) internal {
@@ -102,13 +135,13 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
             _assertUserCanExit(_silo, depositors[i]);
         }
 
-        // separate loop is needed after everyone exit, because no shares depends on final total assets
+        // separate loop is needed after everyone exit, because noShareTokens depends on final total assets
         for (uint256 i; i < depositors.length; i++) {
             _assertNoShareTokens(_silo, depositors[i], _allowForDust, "_assertEveryoneCanExitFromSilo");
         }
     }
 
-    function _assertTotalSharesZero(ISilo _silo) internal view {
+    function _assertTotalSharesZeroOnlyGauge(ISilo _silo) internal view {
         uint256 totalAssetsLeft = _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
 
         (address protectedShareToken,,) = siloConfig.getShareTokens(address(_silo));
@@ -125,7 +158,7 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
             assertEq(
                 _silo.totalSupply(),
                 gaugeCollateral,
-                "[_assertTotalSharesZero] silo should have only gauge collateral"
+                "[_assertTotalSharesZeroOnlyGauge] silo should have only gauge collateral"
             );
         }
 
@@ -136,7 +169,31 @@ abstract contract DefaultingLiquidationAsserts is DefaultingLiquidationHelpers {
         assertEq(
             IShareToken(protectedShareToken).totalSupply(),
             gaugeProtected,
-            "[_assertEveryoneCanExit] protected share token should have only gauge protected"
+            "[_assertTotalSharesZeroOnlyGauge] protected share token should have only gauge protected"
+        );
+    }
+
+    function _assertTotalSharesZero(ISilo _silo) internal view {
+        uint256 totalAssetsLeft = _silo.getTotalAssetsStorage(ISilo.AssetType.Collateral);
+
+        (address protectedShareToken,,) = siloConfig.getShareTokens(address(_silo));
+
+        console2.log("gaugeCollateral", _silo.balanceOf(address(gauge)));
+        console2.log("gaugeProtected", IShareToken(protectedShareToken).balanceOf(address(gauge)));
+
+        if (totalAssetsLeft == 0) {
+            // when no assets, even when we have shares state is unknown
+        } else if (totalAssetsLeft == 1) {
+            console2.log("totalAssetsLeft == 1, accepting as dust");
+            // we accept this as dust, rounding error
+        } else {
+            assertEq(_silo.totalSupply(), 0, "[_assertTotalSharesZero] silo should have NO collateral");
+        }
+
+        assertEq(
+            IShareToken(protectedShareToken).totalSupply(),
+            0,
+            "[_assertTotalSharesZero] silo should have NO protected shares"
         );
     }
 

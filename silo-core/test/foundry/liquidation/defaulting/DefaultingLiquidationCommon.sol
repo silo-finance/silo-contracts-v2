@@ -14,7 +14,8 @@ import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IP
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
-import {SiloIncentivesControllerCompatible} from "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
+import {SiloIncentivesControllerCompatible} from
+    "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
 
 import {SiloConfigOverride, SiloFixture} from "../../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
@@ -24,6 +25,7 @@ import {Whitelist} from "silo-core/contracts/hooks/_common/Whitelist.sol";
 
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 import {DefaultingLiquidationAsserts} from "./common/DefaultingLiquidationAsserts.sol";
+import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 /*
 - anything with decimals? don't think so, we only transfer shares
@@ -147,14 +149,13 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _printLtv(borrower);
 
         debtSilo.accrueInterest();
-        assertGt(_printRevenue(debtSilo), 0, "we need case with fees");
+        (uint256 revenue, uint256 revenueFractions) = _printRevenue(debtSilo);
+        assertTrue(revenue > 0 || revenueFractions > 0, "we need case with fees");
 
         borrowerCollateralBefore = _getUserState(collateralSilo, borrower);
         borrowerDebtBefore = _getUserState(debtSilo, borrower);
         collateralSiloBefore = _getSiloState(collateralSilo);
         debtSiloBefore = _getSiloState(debtSilo);
-
-        partialLiquidation.maxLiquidation(borrower);
 
         console2.log("maxRepay borrower:", debtSilo.maxRepay(borrower));
         console2.log("maxRepay other borrower:", debtSilo.maxRepay(makeAddr("otherBorrower")));
@@ -292,14 +293,14 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _assertNoShareTokens({
             _silo: silo0,
             _user: _borrower,
-            _allowForDust: false,
+            _allowForDust: true,
             _msg: "position should be removed on silo0"
         });
 
         _assertNoShareTokens({
             _silo: silo1,
             _user: _borrower,
-            _allowForDust: false,
+            _allowForDust: true,
             _msg: "position should be removed on silo1"
         });
 
@@ -442,7 +443,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         // we need case, where we do not oveflow on interest, so we can apply interest
         // vm.assume(debtSilo.maxRepay(borrower) > repayBefore);
         debtSilo.accrueInterest();
-        vm.assume(_printRevenue(debtSilo) > 0); // we need case with fees
+        (uint256 revenue, uint256 revenueFractions) = _printRevenue(debtSilo);
+        assertTrue(revenue > 0 || revenueFractions > 0, "we need case with fees");
 
         // first do normal liquidation with sTokens, to remove whole collateral,
         // price is set 1:1 so we can use collateral as max debt
@@ -455,9 +457,23 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         (address collateralToken, address debtToken) = _getTokens();
 
         // we need to create 0 collateral, +2 should cover full collateral and price is 1:1 so we can use as maxDebt
-        partialLiquidation.liquidationCall(
+        try partialLiquidation.liquidationCall(
             collateralToken, debtToken, borrower, collateralPreview + protectedPreview + 2, true
-        );
+        ) {
+            // nothing to do
+        } catch (bytes memory data) {
+            bytes4 errorType = bytes4(data);
+            bytes4 returnZeroShares = bytes4(keccak256(abi.encodePacked("ReturnZeroShares()")));
+
+            // skipping case, when we can not liquidate tiny debt because of ReturnZeroShares error on repay
+            if (errorType == returnZeroShares) {
+                vm.assume(false);
+            } else {
+                RevertLib.revertBytes(data, "liquidationCall failed");
+            }
+        }
+
+        _wipeOutCollateralShares(collateralShareToken, borrower);
 
         depositors.push(address(this)); // liquidator got shares
         console2.log("AFTER NORMAL LIQUIDATION");
@@ -492,14 +508,39 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         // we need to allow for dust, because liquidaor got dust after defaulting
         _assertEveryoneCanExitFromSilo(collateralSilo, true);
 
-        _assertTotalSharesZero(collateralSilo);
-        _assertTotalSharesZero(debtSilo);
+        _assertTotalSharesZeroOnlyGauge(collateralSilo);
+        _assertTotalSharesZeroOnlyGauge(debtSilo);
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_when_0collateral_otherBorrower -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_when_0collateral_otherBorrower_wipeOutShares -vv
     */
-    function test_defaulting_when_0collateral_otherBorrower(uint96 _collateral, uint96 _protected) public {
+    function test_defaulting_when_0collateral_otherBorrower_wipeOutShares(uint96 _collateral, uint96 _protected)
+        public
+    {
+        _defaulting_when_0collateral_otherBorrower({
+            _collateral: _collateral,
+            _protected: _protected,
+            _wipeOutShares: true
+        });
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_when_0collateral_otherBorrower_withDustShares -vv
+    */
+    function test_defaulting_when_0collateral_otherBorrower_withDustShares(uint96 _collateral, uint96 _protected)
+        public
+    {
+        _defaulting_when_0collateral_otherBorrower({
+            _collateral: _collateral,
+            _protected: _protected,
+            _wipeOutShares: false
+        });
+    }
+
+    function _defaulting_when_0collateral_otherBorrower(uint96 _collateral, uint96 _protected, bool _wipeOutShares)
+        internal
+    {
         _addLiquidity(uint256(_collateral) + _protected);
 
         _setCollateralPrice(1.3e18); // we need high price at begin for this test, because we need to end up wit 1:1
@@ -540,10 +581,12 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         // we need case, where we do not oveflow on interest, so we can apply interest
         // vm.assume(debtSilo.maxRepay(borrower) > repayBefore);
         debtSilo.accrueInterest();
-        vm.assume(_printRevenue(debtSilo) > 0); // we need case with fees
+        (uint256 revenue, uint256 revenueFractions) = _printRevenue(debtSilo);
+        assertTrue(revenue > 0 || revenueFractions > 0, "we need case with fees");
 
         // this repay should make other liquidation not reset total assets, so everyone can exit
         debtSilo.repayShares(debtShareToken.balanceOf(makeAddr("otherBorrower")), makeAddr("otherBorrower"));
+        console2.log("AFTER otherBorrower REPAY");
 
         // first do normal liquidation with sTokens, to remove whole collateral,
         // price is set 1:1 so we can use collateral as max debt
@@ -552,18 +595,42 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint256 protectedPreview =
             collateralSilo.previewRedeem(protectedShareToken.balanceOf(borrower), ISilo.CollateralType.Protected);
         (address collateralToken, address debtToken) = _getTokens();
-        // we need to create 0 collateral, +1 should cover full collateral and price is 1:1 so we can use as maxDebt
-        partialLiquidation.liquidationCall(
-            collateralToken, debtToken, borrower, collateralPreview + protectedPreview + 1, true
-        );
+
+        // we need to create 0 collateral, price is 1:1 so we can use collateral as maxDebt,
+        // it might be not possible to liquidate tiny debt because of ReturnZeroShares error on repay
+        try partialLiquidation.liquidationCall(
+            collateralToken, debtToken, borrower, collateralPreview + protectedPreview, true
+        ) {
+            // nothing to do
+        } catch (bytes memory data) {
+            bytes4 errorType = bytes4(data);
+            bytes4 returnZeroShares = bytes4(keccak256(abi.encodePacked("ReturnZeroShares()")));
+            if (errorType == returnZeroShares) {
+                vm.assume(false);
+            } else {
+                RevertLib.revertBytes(data, "liquidationCall failed");
+            }
+
+            // skipping case, when we can not liquidate tiny debt because of ReturnZeroShares error on repay
+            vm.assume(false);
+        }
 
         depositors.push(address(this)); // liquidator got shares
 
-        assertEq(collateralShareToken.balanceOf(borrower), 0, "collateral shares must be 0");
+        console2.log("ratio", collateralSilo.convertToShares(1));
+
+        if (_wipeOutShares) {
+            _wipeOutCollateralShares(collateralShareToken, borrower);
+        }
+
+        assertEq(
+            collateralSilo.previewRedeem(collateralShareToken.balanceOf(borrower)), 0, "collateral assets must be 0"
+        );
+
         assertEq(protectedShareToken.balanceOf(borrower), 0, "protected shares must be 0");
         vm.assume(debtShareToken.balanceOf(borrower) != 0); // we need bad debt
 
-        console2.log("AFTER NORMAL LIQUIDATION");
+        console2.log("-------------------------------- AFTER NORMAL LIQUIDATION --------------------------------");
 
         assertTrue(_defaultingPossible(borrower), "defaulting should be possible even without collateral");
 
@@ -573,7 +640,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         token1.setOnDemand(false);
 
         defaulting.liquidationCallByDefaulting(borrower);
-        console2.log("AFTER DEFAULTING");
+        console2.log("-------------------------------- AFTER DEFAULTING --------------------------------");
 
         _assertProtectedRatioDidNotchanged();
 
@@ -584,7 +651,17 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _assertEveryoneCanExitFromSilo(debtSilo, true);
         _assertEveryoneCanExitFromSilo(collateralSilo, true);
 
-        _assertTotalSharesZero(collateralSilo);
+        // we can not asseth total collateral shares to be 0,
+        // because after defaulting, we can create dust shares for depositors
+        uint256 gaugeProtected = protectedShareToken.balanceOf(address(gauge));
+        console2.log("gaugeProtected", gaugeProtected);
+
+        assertEq(
+            protectedShareToken.totalSupply(),
+            gaugeProtected,
+            "protected share token should have only gauge protected"
+        );
+
         _assertTotalSharesZero(debtSilo);
     }
 
@@ -620,7 +697,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         // we need case, where we do not oveflow on interest, so we can apply interest
         // vm.assume(debtSilo.maxRepay(borrower) > repayBefore);
         debtSilo.accrueInterest();
-        vm.assume(_printRevenue(debtSilo) > 0); // we need case with fees
+        (uint256 revenue, uint256 revenueFractions) = _printRevenue(debtSilo);
+        assertTrue(revenue > 0 || revenueFractions > 0, "we need case with fees");
 
         // first do normal liquidation with sTokens, to remove whole collateral,
         // price is set 1:1 so we can use collateral as max debt
@@ -636,11 +714,28 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         token0.setOnDemand(false);
         token1.setOnDemand(false);
 
-        defaulting.liquidationCallByDefaulting(borrower, maxDebtToCover);
+        _printRevenue(debtSilo);
+
+        console2.log("BEFORE DEFAULTING #1, using maxDebtToCover: ", maxDebtToCover);
+
+        try defaulting.liquidationCallByDefaulting(borrower, maxDebtToCover) {
+            // nothing to do
+        } catch (bytes memory data) {
+            bytes4 errorType = bytes4(data);
+            bytes4 returnZeroShares = bytes4(keccak256(abi.encodePacked("ReturnZeroShares()")));
+
+            if (errorType == returnZeroShares) {
+                vm.assume(false); // we need cases where we can liquidate twice
+            } else {
+                RevertLib.revertBytes(data, "liquidationCallByDefaulting failed");
+            }
+        }
 
         depositors.push(address(this)); // liquidator got shares
 
-        assertEq(collateralShareToken.balanceOf(borrower), 0, "collateral shares must be 0");
+        _assertNoRedeemable(
+            collateralSilo, borrower, ISilo.CollateralType.Collateral, false, "collateral assets must be 0"
+        );
         assertEq(protectedShareToken.balanceOf(borrower), 0, "protected shares must be 0");
         vm.assume(debtShareToken.balanceOf(borrower) != 0); // we need bad debt
 
@@ -653,6 +748,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         console2.log("AFTER DEFAULTING #2");
         _assertProtectedRatioDidNotchanged();
 
+        _assertNoWithdrawableFees(collateralSilo);
+        // fees can be zero out after defaulting, so we can not assert that
+        // _assertWithdrawableFees(debtSilo);
+
         _printLtv(borrower);
 
         _printBalances(silo0, borrower);
@@ -660,11 +759,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         assertEq(silo0.getLtv(borrower), 0, "position should be removed");
 
-        _assertNoShareTokens(silo0, borrower, false, "position should be removed on silo0");
-        _assertNoShareTokens(silo1, borrower, false, "position should be removed on silo1");
-
-        _assertNoWithdrawableFees(collateralSilo);
-        _assertWithdrawableFees(debtSilo);
+        _assertNoShareTokens(
+            collateralSilo, borrower, true, "position should be removed on collateralSilo (dust allowed)"
+        );
+        _assertNoShareTokens(debtSilo, borrower, false, "position should be removed on debtSilo");
 
         token0.setOnDemand(true);
         token1.setOnDemand(true);
@@ -681,8 +779,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         // we can not assert zero shares ath the end, because
         // few defaulting can cause non-withdawable share dust
-        // _assertTotalSharesZero(collateralSilo);
-        // _assertTotalSharesZero(debtSilo);
+        // _assertTotalSharesZeroOnlyGauge(collateralSilo);
+        // _assertTotalSharesZeroOnlyGauge(debtSilo);
     }
 
     /*
@@ -816,11 +914,13 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         });
 
         vm.assume(success);
+        bool throwing;
 
         if (_badDebtCasesOnly) {
             _removeLiquidity();
             _setCollateralPrice(changePrice);
-            vm.assume(!_isOracleThrowing(borrower));
+            (throwing,) = _isOracleThrowing(borrower);
+            vm.assume(!throwing);
             vm.warp(block.timestamp + _warp);
         } else {
             vm.assume(_printLtv(borrower) < 1e18);
@@ -831,7 +931,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _moveUntillDefaultingPossible(borrower, 0.001e18, 1 hours);
 
         // if oracle is throwing, we can not test anything
-        vm.assume(!_isOracleThrowing(borrower));
+        (throwing,) = _isOracleThrowing(borrower);
+        vm.assume(!throwing);
 
         _createIncentiveController();
 
@@ -882,7 +983,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         vm.warp(block.timestamp + _warp);
 
         // if oracle is throwing, we can not test anything
-        vm.assume(!_isOracleThrowing(borrower));
+        (bool throwing,) = _isOracleThrowing(borrower);
+        vm.assume(!throwing);
 
         console2.log("AFTER WARP AND PRICE CHANGE");
         _printLtv(borrower);
@@ -1101,8 +1203,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     - does everyone can claim? its shares so even 1 wei should be claimable
 
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_everyoneCanClaim_badDebt -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_everyoneCanClaim_badDebt -vv --mc DefaultingLiquidationBorrowable1Test
     */
     function test_incentiveDistribution_everyoneCanClaim_badDebt(uint48 _collateral, uint48 _protected) public {
+        // (uint48 _collateral, uint48 _protected) = (17829408, 331553767526);
         _incentiveDistribution_everyoneCanClaim(_collateral, _protected, true);
     }
 
@@ -1114,14 +1218,14 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     function _incentiveDistribution_everyoneCanClaim(uint256 _collateral, uint256 _protected, bool _badDebt) public {
-        (, ISilo debtSilo) = _getSilos();
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
 
         uint256 shares1 = debtSilo.deposit(1, makeAddr("lpProvider1"));
         debtSilo.deposit(1, makeAddr("lpProvider3"), ISilo.CollateralType.Protected);
 
         _createIncentiveController();
 
-        debtSilo.deposit(Math.max(_collateral, 1), makeAddr("lpProvider2"));
+        uint256 shares2 = debtSilo.deposit(Math.max(_collateral, 1), makeAddr("lpProvider2"));
         debtSilo.deposit(Math.max(_protected, 1), makeAddr("lpProvider4"), ISilo.CollateralType.Protected);
 
         depositors.push(makeAddr("lpProvider1"));
@@ -1129,9 +1233,14 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         depositors.push(makeAddr("lpProvider3"));
         depositors.push(makeAddr("lpProvider4"));
 
+        console2.log("ratio", collateralSilo.convertToShares(1));
+
         bool success =
             _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
         vm.assume(success);
+
+        console2.log("borrower colateral share balance just after creation", collateralSilo.balanceOf(borrower));
+        console2.log("ratio", collateralSilo.convertToShares(1));
 
         token0.setOnDemand(false);
         token1.setOnDemand(false);
@@ -1144,10 +1253,15 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         (IShareToken collateralShareToken, IShareToken protectedShareToken,) = _getBorrowerShareTokens(borrower);
 
+        console2.log("borrower colateral share balance", collateralSilo.balanceOf(borrower));
+
         defaulting.liquidationCallByDefaulting(borrower);
 
         uint256 collateralRewards = collateralShareToken.balanceOf(address(gauge));
         uint256 protectedRewards = protectedShareToken.balanceOf(address(gauge));
+
+        console2.log("gauge2 collateralbalance", collateralRewards);
+        console2.log("gauge2 protected balance", protectedRewards);
 
         vm.prank(makeAddr("lpProvider1"));
         gauge.claimRewards(makeAddr("lpProvider1"));
@@ -1182,11 +1296,13 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
                 );
             }
 
-            assertGt(
-                protectedShareToken.balanceOf(makeAddr("lpProvider2")),
-                0,
-                "[lpProvider2] expect protected rewards always"
-            );
+            if (shares2 * protectedRewards / debtSilo.totalSupply() != 0) {
+                assertGt(
+                    protectedShareToken.balanceOf(makeAddr("lpProvider2")),
+                    0,
+                    "[lpProvider2] expect protected rewards based on math"
+                );
+            }
         }
 
         if (_badDebt && _collateral != 0) {
@@ -1204,11 +1320,13 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
                 );
             }
 
-            assertGt(
-                collateralShareToken.balanceOf(makeAddr("lpProvider2")),
-                0,
-                "[lpProvider2] expect collateral rewards always"
-            );
+            /// Defaulting liquidation can leave dust shares behind, because math uses assets,
+            /// and dust shares can not be transtalet to assets, that's why we can not expect collateral rewards always
+            // assertGt(
+            //     collateralShareToken.balanceOf(makeAddr("lpProvider2")),
+            //     0,
+            //     "[lpProvider2] expect collateral rewards always"
+            // );
         } else {
             // we dont know for sure if collateral rewards were distributed
         }
@@ -1335,7 +1453,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_twoRewardsReceivers -vv
     */
     function test_incentiveDistribution_twoRewardsReceivers(uint64 _collateral, uint64 _protected) public {
-        // (uint64 _collateral, uint64 _protected) = (14516, 14941);
+        // (uint64 _collateral, uint64 _protected) = (27125091, 30817190);
         vm.assume(uint256(_collateral) + _protected > 0);
 
         (, ISilo debtSilo) = _getSilos();
@@ -1366,14 +1484,19 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint256 protectedRewards1 = protectedShareToken.balanceOf(address(gauge));
 
         assertGt(collateralRewards1 + protectedRewards1, 0, "expect ANY rewards from first liquidation");
-
         uint256 lpPrivider1Assets = debtSilo.previewRedeem(shares1);
-        vm.assume(lpPrivider1Assets > 0); // we need be able to redeem, so lpProvider1 exit
-        // 20% to cover fees
-        debtSilo.deposit(lpPrivider1Assets * 12 / 10, makeAddr("lpProvider2"));
+
+        // 20% to cover fees, +1 to not generate zero input
+        debtSilo.deposit(lpPrivider1Assets * 12 / 10 + 1, makeAddr("lpProvider2"));
+        console2.log("lpPrivider1Assets + 20%", lpPrivider1Assets);
 
         vm.startPrank(makeAddr("lpProvider1"));
-        debtSilo.redeem(shares1, makeAddr("lpProvider1"), makeAddr("lpProvider1"));
+        try debtSilo.redeem(shares1, makeAddr("lpProvider1"), makeAddr("lpProvider1")) {
+            // nothing to do
+        } catch {
+            // we need be able to redeem, so lpProvider1 exit
+            vm.assume(false);
+        }
         vm.stopPrank();
 
         success = _createPosition({
@@ -1382,6 +1505,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             _protected: _protected,
             _maxOut: true
         });
+        console2.log("success", success);
 
         vm.assume(success);
 
@@ -1403,6 +1527,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         assertGt(collateralRewards2 + protectedRewards2, 0, "expect ANY rewards from second liquidation");
 
         vm.warp(block.timestamp + 1 hours);
+
+        console2.log("block.timestamp", block.timestamp);
 
         uint256 rewardsBalanceCollateral2 = gauge.getRewardsBalance(makeAddr("lpProvider2"), programNames[0]);
         uint256 rewardsBalanceProtected2 = gauge.getRewardsBalance(makeAddr("lpProvider2"), programNames[1]);

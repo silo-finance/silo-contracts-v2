@@ -18,7 +18,8 @@ import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfac
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
-import {SiloIncentivesControllerCompatible} from "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
+import {SiloIncentivesControllerCompatible} from
+    "silo-core/contracts/incentives/SiloIncentivesControllerCompatible.sol";
 import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
@@ -66,59 +67,15 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         );
     }
 
-    // function _depositAndBurn(uint256 _amount, uint256 _burn, ISilo.CollateralType _collateralType) public {
-    //     if (_amount == 0) return;
-
-    //     uint256 shares = _deposit(_amount, address(this), _collateralType);
-    //     vm.assume(shares >= _burn);
-
-    //     if (_burn != 0) {
-    //         (address protectedShareToken, address collateralShareToken,) =
-    //             silo0.config().getShareTokens(address(silo0));
-    //         address token =
-    //             _collateralType == ISilo.CollateralType.Protected ? protectedShareToken : collateralShareToken;
-
-    //         vm.prank(address(silo0));
-    //         IShareToken(token).burn(address(this), address(this), _burn);
-    //     }
-    // }
-
     function _removeLiquidity() internal {
         console2.log("\tremoving liquidity");
         address lpProvider = makeAddr("lpProvider");
 
         vm.startPrank(lpProvider);
-        uint256 amount;
 
-        try silo0.maxWithdraw(lpProvider) returns (uint256 _amount) {
-            amount = _amount;
-        } catch {
-            console2.log("\t[_removeLiquidity] maxWithdraw #0 failed");
-        }
+        _tryWithdrawAll(silo0, lpProvider);
 
-        if (amount != 0) {
-            try silo0.withdraw(amount, lpProvider, lpProvider) {
-                // nothing to do
-            } catch {
-                console2.log("\t[_removeLiquidity] withdraw #0 failed");
-            }
-        }
-
-        amount = 0;
-
-        try silo1.maxWithdraw(lpProvider) returns (uint256 _amount) {
-            amount = _amount;
-        } catch {
-            console2.log("\t[_removeLiquidity] maxWithdraw #1 failed");
-        }
-
-        if (amount != 0) {
-            try silo1.withdraw(amount, lpProvider, lpProvider) {
-                // nothing to do
-            } catch {
-                console2.log("\t[_removeLiquidity] withdraw #1 failed");
-            }
-        }
+        _tryWithdrawAll(silo1, lpProvider);
 
         vm.stopPrank();
 
@@ -126,21 +83,33 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         assertLe(debtSilo.getLiquidity(), 1, "[_removeLiquidity] liquidity should be ~0");
     }
 
-    // function _calculateLiquidityForBorrow(uint256 _collateral, uint256 _protected) internal view returns (uint256 forBorrow) {
-    //     (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
-    //     uint256 maxCollateral = Math.max(_collateral, _protected);
+    function _tryWithdrawAll(ISilo _silo, address _user) internal {
+        _tryWithdrawAll(_silo, _user, ISilo.CollateralType.Collateral);
+        _tryWithdrawAll(_silo, _user, ISilo.CollateralType.Protected);
+    }
 
-    //     // for same token prcie is 1:1
-    //     if (address(debtSilo) == address(collateralSilo)) return maxCollateral;
+    function _tryWithdrawAll(ISilo _silo, address _user, ISilo.CollateralType _collateralType) internal {
+        uint256 amount;
 
-    //     if (address(collateralSilo) == address(silo0)) return oracle0.quote(maxCollateral, address(token0));
+        try _silo.maxRedeem(_user, _collateralType) returns (uint256 _amount) {
+            amount = _amount;
+        } catch {
+            console2.log("\t[_tryWithdrawAll] maxRedeem failed");
+        }
 
-    //     // collateral is in silo1 and we need to add liquidity to silo0
-    //     uint256 decimals0 = token0.decimals();
-    //     uint256 valueOfOne = oracle0.quote(10 ** decimals0, address(token0));
+        try _silo.redeem(amount, _user, _user, _collateralType) {
+            // nothing to do
+        } catch {
+            console2.log("\t[_tryWithdrawAll] redeem failed");
+        }
 
-    //     return  (10 ** decimals0) * maxCollateral / valueOfOne;
-    // }
+        // try dust
+        try _silo.withdraw(1, _user, _user, _collateralType) {
+            // nothing to do
+        } catch {
+            // nothing to do
+        }
+    }
 
     function _addLiquidity(uint256 _amount) internal {
         if (_amount == 0) return;
@@ -178,8 +147,18 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
         if (!_maxOut) return success;
 
-        _tryWithdrawMax(_borrower, collateralSilo, ISilo.CollateralType.Collateral);
-        _tryWithdrawMax(_borrower, collateralSilo, ISilo.CollateralType.Protected);
+        _tryWithdrawAll(collateralSilo, _borrower);
+    }
+
+    function _wipeOutCollateralShares(IShareToken _token, address _borrower) internal {
+        uint256 balance = _token.balanceOf(_borrower);
+        if (balance == 0) return;
+
+        vm.startPrank(address(_token));
+        _token.burn(_borrower, _borrower, balance);
+        // _token.forwardTransferFromNoChecks(_borrower, receiver, balance);
+        assertEq(_token.balanceOf(_borrower), 0, "shares must be 0 after wiping out");
+        vm.stopPrank();
     }
 
     function _tryWithdrawMax(address _user, ISilo _silo, ISilo.CollateralType _collateralType) internal {
@@ -247,9 +226,10 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         console2.log("quote(%s) = %s", _amount, quote);
     }
 
-    function _isOracleThrowing(address _borrower) internal view returns (bool throwing) {
-        try siloLens.getLtv(silo0, _borrower) {
+    function _isOracleThrowing(address _borrower) internal view returns (bool throwing, uint256 ltv) {
+        try siloLens.getLtv(silo0, _borrower) returns (uint256 _ltv) {
             throwing = false;
+            ltv = _ltv;
         } catch {
             throwing = true;
         }
@@ -271,12 +251,18 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     }
 
     function _defaultingPossible(address _user) internal view returns (bool possible) {
+        (ISilo collateralSilo,) = _getSilos();
+        uint256 ltv = collateralSilo.getLtv(_user);
+
+        return _defaultingPossible(ltv);
+    }
+
+    function _defaultingPossible(uint256 _ltv) internal view returns (bool possible) {
         uint256 margin = defaulting.LT_MARGIN_FOR_DEFAULTING();
         (ISilo collateralSilo,) = _getSilos();
         uint256 lt = collateralSilo.config().getConfig(address(collateralSilo)).lt;
-        uint256 ltv = collateralSilo.getLtv(_user);
 
-        possible = ltv > lt + margin;
+        possible = _ltv > lt + margin;
     }
 
     function _createIncentiveController() internal returns (ISiloIncentivesController newGauge) {
@@ -343,9 +329,12 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         );
     }
 
-    function _printRevenue(ISilo _silo) internal view returns (uint256 revenue) {
+    function _printRevenue(ISilo _silo) internal view returns (uint256 revenue, uint256 revenueFractions) {
         (revenue,,,,) = _silo.getSiloStorage();
         console2.log(vm.getLabel(address(_silo)), "revenue", revenue);
+
+        revenueFractions = _silo.getFractionsStorage().revenue;
+        console2.log(vm.getLabel(address(_silo)), "fractions.revenue", revenueFractions);
     }
 
     function _getBorrowerShareTokens(address _borrower)
@@ -425,12 +414,14 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
     function _printSiloState(ISilo _silo) internal view {
         SiloState memory siloState = _getSiloState(_silo);
+        console2.log("-------- %s silo state --------", vm.getLabel(address(_silo)));
         console2.log("total collateral", siloState.totalCollateral);
         console2.log("total protected", siloState.totalProtected);
         console2.log("total debt", siloState.totalDebt);
         console2.log("total collateral shares", siloState.totalCollateralShares);
         console2.log("total protected shares", siloState.totalProtectedShares);
         console2.log("total debt shares", siloState.totalDebtShares);
+        console2.log("-------- end --------");
     }
 
     function _getUserState(ISilo _silo, address _user) internal view returns (UserState memory userState) {
@@ -470,13 +461,15 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
 
     function _moveUntillDefaultingPossible(address _borrower, uint64 _priceDrop, uint64 _warp) internal {
         uint256 price = oracle0.price();
+        (bool throwing, uint256 ltv) = _isOracleThrowing(_borrower);
 
-        while (!_defaultingPossible(_borrower)) {
+        while (!_defaultingPossible(ltv)) {
             price -= _priceDrop;
             _setCollateralPrice(price, false);
             vm.warp(block.timestamp + _warp);
 
-            vm.assume(!_isOracleThrowing(_borrower));
+            (throwing, ltv) = _isOracleThrowing(_borrower);
+            vm.assume(!throwing);
         }
 
         _printLtv(_borrower);
@@ -484,15 +477,17 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
     }
 
     function _moveUntillBadDebt(address _borrower, uint64 _priceDrop, uint64 _warp) internal {
+        console2.log("\t[_moveUntillBadDebt] moving until bad debt");
         uint256 price = oracle0.price();
-        (, ISilo debtSilo) = _getSilos();
+        (bool throwing, uint256 ltv) = _isOracleThrowing(_borrower);
 
-        while (debtSilo.getLtv(_borrower) < 1e18) {
+        while (ltv < 1e18) {
             price -= _priceDrop;
             _setCollateralPrice(price, false);
             vm.warp(block.timestamp + _warp);
 
-            // vm.assume(!_isOracleThrowing(_borrower));
+            (throwing, ltv) = _isOracleThrowing(_borrower);
+            vm.assume(!throwing);
         }
 
         _printLtv(_borrower);

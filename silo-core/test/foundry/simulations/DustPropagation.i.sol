@@ -131,14 +131,21 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         emit log_named_uint("total supply", silo0.totalSupply());
         emit log_named_uint("liquidity", silo0.getLiquidity());
 
-        assertEq(silo0.maxWithdraw(user1), 3, "[user1] maxWithdraw 3 - more than deposit, because dust was propagated");
+        // +1 because we underestimated for fractions in maxWithdraw function
+        assertEq(
+            silo0.maxWithdraw(user1) + 1, 3, "[user1] maxWithdraw 3 - more than deposit, because dust was propagated"
+        );
 
         shares1 += _deposit(1, user1);
         emit log_named_uint("[user1] shares1 #2", shares1);
         emit log_named_uint("total supply #2", silo0.totalSupply());
         emit log_named_uint("liquidity #2", silo0.getLiquidity());
 
-        assertEq(silo0.maxWithdraw(user1), 3, "[user1] maxWithdraw 3 - still more than deposit, because dust was propagated");
+        assertEq(
+            silo0.maxWithdraw(user1),
+            3,
+            "[user1] maxWithdraw 3 - still more than deposit, because dust was propagated"
+        );
 
         // +2 because we deposited it
         assertEq(silo0.getLiquidity(), DUST_LEFT + 2, "getLiquidity == 1, dust left");
@@ -161,15 +168,34 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         uint256 maxWithdraw1 = silo0.maxWithdraw(user1);
         uint256 maxWithdraw2 = silo0.maxWithdraw(user2);
 
-        assertEq(maxWithdraw1, assets + DUST_LEFT / 2, "[user1] maxWithdraw - more than deposit, because dust was propagated");
-        assertEq(maxWithdraw2, 0, "[user2] maxWithdraw 0, because dust was propagated so we 'back to normal' and -1 for rounding");
+        // +1 because we underestimated for fractions in maxWithdraw function
+        assertEq(
+            maxWithdraw1 + 1,
+            assets + DUST_LEFT / 2,
+            "[user1] maxWithdraw - more than deposit, because dust was propagated"
+        );
+        assertEq(
+            maxWithdraw2,
+            0,
+            "[user2] maxWithdraw 0, because dust was propagated so we 'back to normal' and -1 for rounding"
+        );
 
         shares2 += _deposit(1, user2);
         emit log_named_uint("[user2] shares2 #2", shares2);
-        assertEq(silo0.maxWithdraw(user2), 1, "[user2] maxWithdraw 1, dust propagated, user lost 1 wei because of rounding");
+        assertEq(
+            silo0.maxWithdraw(user2), 1, "[user2] maxWithdraw 1, dust propagated, user lost 1 wei because of rounding"
+        );
 
-        assertEq(_redeem(shares1, user1), assets + DUST_LEFT / 2, "[user1] withdrawn assets - more than deposit, because dust was propagated");
-        assertEq(_redeem(shares2, user2), 1, "[user2] withdrawn assets - less than deposit, because dust was propagated already");
+        assertEq(
+            _redeem(shares1, user1),
+            assets + DUST_LEFT / 2,
+            "[user1] withdrawn assets - more than deposit, because dust was propagated"
+        );
+        assertEq(
+            _redeem(shares2, user2),
+            1,
+            "[user2] withdrawn assets - less than deposit, because dust was propagated already"
+        );
 
         assertEq(silo0.getLiquidity(), DUST_LEFT - 1, "getLiquidity == 1, 1 wei of dust propagated");
     }
@@ -198,11 +224,7 @@ contract DustPropagationTest is SiloLittleHelper, Test {
         emit log_named_uint("dust was", DUST_LEFT);
         emit log_named_uint("silo0.getLiquidity() is now", silo0.getLiquidity());
 
-        assertLt(
-            silo0.getLiquidity(),
-            DUST_LEFT,
-            "some dust was propagated"
-        );
+        assertLt(silo0.getLiquidity(), DUST_LEFT, "some dust was propagated");
     }
 
     function _withdrawFromSilo(address _user, uint256 _deposited, uint256 _shares) internal {
@@ -220,7 +242,11 @@ contract DustPropagationTest is SiloLittleHelper, Test {
 
         uint256 withdrawn = _redeem(_shares, _user);
         emit log_named_uint("withdrawn1", withdrawn);
-        assertEq(withdrawn, maxWithdraw, "[user1] max should match real withdrawn");
+        assertLe(
+            withdrawn - maxWithdraw,
+            1,
+            "[user1] max should match real withdrawn (1wei diff acceptable because of max underestimation)"
+        );
 
         bool userGotMore = withdrawn > _deposited;
 
