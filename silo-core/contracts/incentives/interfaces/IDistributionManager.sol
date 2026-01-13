@@ -7,7 +7,7 @@ interface IDistributionManager {
     struct IncentivesProgram {
         uint256 index;
         address rewardToken; // can't be updated after creation
-        uint104 emissionPerSecond; // configured by owner
+        uint256 emissionPerSecond; // configured by owner
         uint40 lastUpdateTimestamp;
         uint40 distributionEnd; // configured by owner
         mapping(address user => uint256 userIndex) users;
@@ -16,7 +16,7 @@ interface IDistributionManager {
     struct IncentiveProgramDetails {
         uint256 index;
         address rewardToken;
-        uint104 emissionPerSecond;
+        uint256 emissionPerSecond;
         uint40 lastUpdateTimestamp;
         uint40 distributionEnd;
     }
