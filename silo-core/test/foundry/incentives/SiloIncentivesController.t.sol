@@ -973,7 +973,9 @@ contract SiloIncentivesControllerTest is Test {
         assertEq(accruedRewards[0].amount, 0, "expected 0 rewards");
     }
 
-    // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_claimRewards_toSomeoneElse
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_claimRewards_toSomeoneElse
+    */
     function test_claimRewards_toSomeoneElse() public {
         // user1 deposit 100
         uint256 user1Deposit1 = 100e18;
@@ -983,6 +985,9 @@ contract SiloIncentivesControllerTest is Test {
 
         uint256 toDistribute = 1000e18;
         ERC20Mock(_rewardToken).mint(address(_controller), toDistribute);
+
+        vm.expectEmit(true, true, true, true);
+        emit ISiloIncentivesController.ImmediateDistribution(_rewardToken, bytes32(uint256(uint160(_rewardToken))), toDistribute);
 
         vm.prank(_notifier);
         _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
