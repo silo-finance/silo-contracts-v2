@@ -137,13 +137,18 @@ abstract contract DefaultBeforeAfterHooks is BaseHooks {
     ) internal {
         (address protected, address collateral, address debt) = siloConfig.getShareTokens(_silo);
 
-        string[] memory programNames = _getImmediateProgramNames();
-        uint256 gaugeProtected =
-            vault0.previewRedeem(gauge.getRewardsBalance(_actor, programNames[0]), ISilo.CollateralType.Protected);
-        uint256 gaugeCollateral = vault0.previewRedeem(gauge.getRewardsBalance(_actor, programNames[1]));
-        // NOTE: for gause we only store assets, shares are always 0
-        _actorsBalance[address(gauge)] = ActorsBalance({shares: 0, assets: gaugeProtected + gaugeCollateral});
+        if (address(gauge) != address(0)) {
+            string[] memory programNames = _getImmediateProgramNames();
 
+            uint256 gaugeProtected =
+                vault0.previewRedeem(gauge.getRewardsBalance(_actor, programNames[0]), ISilo.CollateralType.Protected);
+                
+            uint256 gaugeCollateral = vault0.previewRedeem(gauge.getRewardsBalance(_actor, programNames[1]));
+
+            // NOTE: for gause we only store assets, shares are always 0
+            _actorsBalance[address(gauge)] = ActorsBalance({shares: 0, assets: gaugeProtected + gaugeCollateral});
+        }
+  
         uint256 shares = IERC20(protected).balanceOf(_actor);
         uint256 assets = ISilo(_silo).previewRedeem(shares, ISilo.CollateralType.Protected);
         _actorsBalance[protected] = ActorsBalance({shares: shares, assets: assets});

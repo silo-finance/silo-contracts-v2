@@ -109,6 +109,9 @@ contract CryticToFoundry is Invariants, Setup {
         Tester.withdraw(1238665, 0, 0, 1);
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_depositEchidna
+    */
     function test_depositEchidna() public {
         Tester.deposit(1, 0, 0, 0);
     }
