@@ -231,7 +231,7 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
             address protectedShareToken, address collateralShareToken, address debtShareToken
         ) = _siloConfig.getShareTokens(address(_silo));
 
-        emit NewSiloShareTokens(collateralShareToken, protectedShareToken, debtShareToken);
+        emit NewSiloShareTokens(protectedShareToken, collateralShareToken, debtShareToken);
         emit NewSiloHook(address(_silo), IShareToken(address(_silo)).hookReceiver());
     }
 

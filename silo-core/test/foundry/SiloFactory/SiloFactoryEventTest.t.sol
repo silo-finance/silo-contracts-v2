@@ -39,61 +39,55 @@ contract SiloFactoryMock is SiloFactory {
 FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloFactoryEventTest
 */
 contract SiloFactoryEventTest is Test {
+    SiloFactoryMock factoryMock = new SiloFactoryMock(makeAddr("daoFeeReceiver"));
+    ISiloConfig siloConfig = ISiloConfig(makeAddr("siloConfig"));
+
+    address silo0 = factoryMock.SILO0();
+    address silo1 = factoryMock.SILO1();
+
+    address protectedShareToken0 = makeAddr("protectedShareToken0");
+    address debtShareToken0 = makeAddr("debtShareToken0");
+    address protectedShareToken1 = makeAddr("protectedShareToken1");
+    address debtShareToken1 = makeAddr("debtShareToken1");
+
+    // hook is always the same, but for unit test we testing different hooks,
+    // to make sure that we are calling correct silo for hook
+    address hookReceiver0 = makeAddr("hookReceiver0");
+    address hookReceiver1 = makeAddr("hookReceiver1");
+
     function setUp() public {
-        // siloConfig = _setUpLocalFixture();
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloFactory_events
-    */
-    function test_siloFactory_events() public {
-        SiloFactoryMock factoryMock = new SiloFactoryMock(makeAddr("daoFeeReceiver"));
-        ISiloConfig siloConfig = ISiloConfig(makeAddr("siloConfig"));
-        address hookReceiver = makeAddr("hookReceiver");
-
         uint24 protectedTokenType = uint24(Hook.PROTECTED_TOKEN);
         uint24 debtTokenType = uint24(Hook.DEBT_TOKEN);
-
-        address silo0 = factoryMock.SILO0();
-        address silo1 = factoryMock.SILO1();
-
-        address asset0 = makeAddr("asset0");
-        address asset1 = makeAddr("asset1");
-
-        address protectedShareToken0 = makeAddr("protectedShareToken0");
-        address debtShareToken0 = makeAddr("debtShareToken0");
-        address protectedShareToken1 = makeAddr("protectedShareToken1");
-        address debtShareToken1 = makeAddr("debtShareToken1");
 
         vm.mockCall(silo0, abi.encodeWithSelector(ISilo.initialize.selector, address(siloConfig)), abi.encode(true));
         vm.mockCall(
             protectedShareToken0,
-            abi.encodeWithSelector(ISilo.initialize.selector, silo0, hookReceiver, protectedTokenType),
+            abi.encodeWithSelector(ISilo.initialize.selector, silo0, hookReceiver0, protectedTokenType),
             abi.encode(true)
         );
         vm.mockCall(
             debtShareToken0,
-            abi.encodeWithSelector(ISilo.initialize.selector, silo0, hookReceiver, debtTokenType),
+            abi.encodeWithSelector(ISilo.initialize.selector, silo0, hookReceiver0, debtTokenType),
             abi.encode(true)
         );
-        vm.mockCall(silo0, abi.encodeWithSelector(IShareToken.hookReceiver.selector), abi.encode(hookReceiver));
+        vm.mockCall(silo0, abi.encodeWithSelector(IShareToken.hookReceiver.selector), abi.encode(hookReceiver0));
         vm.mockCall(silo0, abi.encodeWithSelector(ISilo.updateHooks.selector), abi.encode(true));
-        vm.mockCall(silo0, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(asset0));
+        vm.mockCall(silo0, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(makeAddr("asset0")));
 
         vm.mockCall(silo1, abi.encodeWithSelector(ISilo.initialize.selector, address(siloConfig)), abi.encode(true));
         vm.mockCall(
             protectedShareToken1,
-            abi.encodeWithSelector(ISilo.initialize.selector, silo1, hookReceiver, protectedTokenType),
+            abi.encodeWithSelector(ISilo.initialize.selector, silo1, hookReceiver1, protectedTokenType),
             abi.encode(true)
         );
         vm.mockCall(
             debtShareToken1,
-            abi.encodeWithSelector(ISilo.initialize.selector, silo1, hookReceiver, debtTokenType),
+            abi.encodeWithSelector(ISilo.initialize.selector, silo1, hookReceiver1, debtTokenType),
             abi.encode(true)
         );
-        vm.mockCall(silo1, abi.encodeWithSelector(IShareToken.hookReceiver.selector), abi.encode(hookReceiver));
+        vm.mockCall(silo1, abi.encodeWithSelector(IShareToken.hookReceiver.selector), abi.encode(hookReceiver1));
         vm.mockCall(silo1, abi.encodeWithSelector(ISilo.updateHooks.selector), abi.encode(true));
-        vm.mockCall(silo1, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(asset1));
+        vm.mockCall(silo1, abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(makeAddr("asset1")));
 
         vm.mockCall(
             address(siloConfig),
@@ -105,19 +99,26 @@ contract SiloFactoryEventTest is Test {
             abi.encodeWithSelector(ISiloConfig.getShareTokens.selector, silo1),
             abi.encode(protectedShareToken1, silo1, debtShareToken1)
         );
+    }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_siloFactory_events
+    */
+    function test_siloFactory_events() public {
         vm.expectEmit(true, true, true, true);
         emit ISiloFactory.NewSiloShareTokens(protectedShareToken0, silo0, debtShareToken0);
+
+        vm.expectEmit(true, true, true, true);
+        emit ISiloFactory.NewSiloHook(silo0, hookReceiver0);
+
         vm.expectEmit(true, true, true, true);
         emit ISiloFactory.NewSiloShareTokens(protectedShareToken1, silo1, debtShareToken1);
 
         vm.expectEmit(true, true, true, true);
-        emit ISiloFactory.NewSiloHook(silo0, hookReceiver);
-        vm.expectEmit(true, true, true, true);
-        emit ISiloFactory.NewSiloHook(silo1, hookReceiver);
+        emit ISiloFactory.NewSiloHook(silo1, hookReceiver1);
 
         factoryMock.createSilo({
-            _siloConfig: ISiloConfig(makeAddr("siloConfig")),
+            _siloConfig: siloConfig,
             _siloImpl: address(new Silo(factoryMock)),
             _shareProtectedCollateralTokenImpl: address(new ShareProtectedCollateralToken()),
             _shareDebtTokenImpl: address(new ShareDebtToken()),
