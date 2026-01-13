@@ -28,8 +28,8 @@ interface ISiloFactory is IERC721 {
 
     /// @notice Emitted on the creation of a Silo, note that collateral share token == silo
     event NewSiloShareTokens(
-        address indexed collateralShareToken,
         address indexed protectedShareToken, 
+        address indexed collateralShareToken,
         address indexed debtShareToken
     );
 
