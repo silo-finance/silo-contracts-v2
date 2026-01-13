@@ -5,6 +5,7 @@ import {console2} from "forge-std/console2.sol";
 
 // Utils
 import {Actor} from "./utils/Actor.sol";
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 // Contracts
 import {SiloFactory} from "silo-core/contracts/SiloFactory.sol";
@@ -160,7 +161,15 @@ contract Setup is BaseTest {
 
     function core_deploySiloLiquidation() internal virtual {
         console2.log("/core_deploySiloLiquidation (SiloHookV1)/");
-        liquidationModule = PartialLiquidation(address(new SiloHookV1()));
+        liquidationModule = PartialLiquidation(_cloneHook());
+    }
+
+    function _cloneHook() internal virtual returns (address hook) {
+        hook = Clones.clone(_hookImplementation());
+    }
+
+    function _hookImplementation() internal virtual returns (address hook) {
+        hook = address(new SiloHookV1());
     }
 
     function core_deploySiloFactory(address feeReceiver) internal {

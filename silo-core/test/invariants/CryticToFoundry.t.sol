@@ -48,7 +48,10 @@ contract CryticToFoundry is Invariants, Setup {
     //                                     INVARIANTS REPLAY                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function test_replayechidna_BASE_INVARIANT() public {
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_replayechidna_BASE_INVARIANT1
+    */
+    function test_replayechidna_BASE_INVARIANT1() public {
         Tester.setOraclePrice(154174253363420274135519693994558375770505353341038094319633, 1);
         Tester.setOraclePrice(117361312846819359113791019924540616345894207664659799350103, 0);
         Tester.mint(1025, 0, 1, 0);

@@ -6,7 +6,6 @@ import {console2} from "forge-std/console2.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {Strings} from "openzeppelin5/utils/Strings.sol";
 
-import {Clones} from "openzeppelin5/proxy/Clones.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
 import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
@@ -35,21 +34,12 @@ import {Actor} from "silo-core/test/invariants/utils/Actor.sol";
 
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
 contract SetupDefaulting is Setup {
-    function core_deploySiloLiquidation() internal virtual override {
-        console2.log("/core_deploySiloLiquidation (SiloHookV2)/");
-        liquidationModule = PartialLiquidation(_cloneHook());
-    }
-
     function _initHook() internal virtual override {
         super._initHook();
         _createIncentiveController();
     }
 
-    function _cloneHook() internal virtual returns (SiloHookV2 hook) {
-        hook = SiloHookV2(Clones.clone(_hookImplementation()));
-    }
-
-    function _hookImplementation() internal virtual returns (address hook) {
+    function _hookImplementation() internal virtual override returns (address hook) {
         hook = address(new SiloHookV2());
     }
 
