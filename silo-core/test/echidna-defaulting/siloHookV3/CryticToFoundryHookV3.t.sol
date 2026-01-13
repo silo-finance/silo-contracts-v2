@@ -18,8 +18,6 @@ import {BaseHandlerDefaulting} from "../siloHookV2/base/BaseHandlerDefaulting.t.
  * The objective is to go from random values to hardcoded values that can be analyzed more easily
  */
 contract CryticToFoundryHookV3 is Invariants, DefaultingHandler, SetupHookV3 {
-    uint256 public constant DEFAULT_TIMESTAMP = 337812;
-
     CryticToFoundryHookV3 public DefaultingTester = this;
 
     function setUp() public {
@@ -33,6 +31,7 @@ contract CryticToFoundryHookV3 is Invariants, DefaultingHandler, SetupHookV3 {
         _setUpHandlers();
 
         vm.warp(DEFAULT_TIMESTAMP);
+        vm.roll(DEFAULT_BLOCK);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

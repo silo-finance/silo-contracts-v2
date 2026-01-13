@@ -18,7 +18,6 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
  */
 contract CryticToFoundry is Invariants, Setup {
     CryticToFoundry Tester = this;
-    uint256 constant DEFAULT_TIMESTAMP = 337812;
 
     function setUp() public {
         // Deploy protocol contracts
@@ -34,6 +33,7 @@ contract CryticToFoundry is Invariants, Setup {
         actor = actors[USER1];
 
         vm.warp(DEFAULT_TIMESTAMP);
+        vm.roll(DEFAULT_BLOCK);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

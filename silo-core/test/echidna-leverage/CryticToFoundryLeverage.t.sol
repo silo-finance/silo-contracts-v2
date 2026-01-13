@@ -15,8 +15,6 @@ import {InvariantsLeverage} from "./InvariantsLeverage.t.sol";
  * The objective is to go from random values to hardcoded values that can be analyzed more easily
  */
 contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
-    uint256 public constant DEFAULT_TIMESTAMP = 337812;
-
     CryticToFoundryLeverage public LeverageTester = this;
 
     function setUp() public {
@@ -30,6 +28,7 @@ contract CryticToFoundryLeverage is InvariantsLeverage, SetupLeverage {
         _setUpHandlers();
 
         vm.warp(DEFAULT_TIMESTAMP);
+        vm.roll(DEFAULT_BLOCK);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

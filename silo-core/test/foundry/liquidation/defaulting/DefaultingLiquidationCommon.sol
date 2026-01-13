@@ -1668,8 +1668,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         uint256 totalCollateralAfter = debtSilo.totalAssets();
         
         bool fullLiquidation;
+        (bool throwing,) = _isOracleThrowing(borrower);
 
-        if (_isOracleThrowing(borrower)) {
+        if (throwing) {
             fullLiquidation = false;
             console2.log("oracle is throwing, we can not check user solvency");
 
