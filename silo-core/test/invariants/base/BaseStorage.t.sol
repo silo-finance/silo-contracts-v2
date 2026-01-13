@@ -31,6 +31,9 @@ abstract contract BaseStorage {
     //                                       CONSTANTS                                           //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
+    uint256 public constant DEFAULT_TIMESTAMP = 337812;
+    uint256 public constant DEFAULT_BLOCK = 4239;
+
     uint256 constant MAX_TOKEN_AMOUNT = 1e29;
 
     uint256 constant ONE_DAY = 1 days;

@@ -30,6 +30,9 @@ contract DefaultingTester is Invariants, DefaultingHandler, SetupDefaulting {
 
         // Initialize handler contracts
         _setUpHandlers();
+
+        vm.warp(DEFAULT_TIMESTAMP);
+        vm.roll(DEFAULT_BLOCK);
     }
 
     function _defaultHooksBefore(address silo) internal override(BaseHandlerDefaulting, DefaultBeforeAfterHooks) {

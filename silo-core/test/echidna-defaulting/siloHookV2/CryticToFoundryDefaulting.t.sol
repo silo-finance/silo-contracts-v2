@@ -20,8 +20,6 @@ import {DefaultingHandler} from "./handlers/user/DefaultingHandler.t.sol";
  * The objective is to go from random values to hardcoded values that can be analyzed more easily
  */
 contract CryticToFoundryDefaulting is Invariants, DefaultingHandler, SetupDefaulting {
-    uint256 public constant DEFAULT_TIMESTAMP = 337812;
-
     CryticToFoundryDefaulting public DefaultingTester = this;
     CryticToFoundryDefaulting public Target = this;
 
@@ -36,6 +34,7 @@ contract CryticToFoundryDefaulting is Invariants, DefaultingHandler, SetupDefaul
         _setUpHandlers();
 
         vm.warp(DEFAULT_TIMESTAMP);
+        vm.roll(DEFAULT_BLOCK);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,6 +58,72 @@ contract CryticToFoundryDefaulting is Invariants, DefaultingHandler, SetupDefaul
     function _setUpActor(address actor) internal {
         // vm.startPrank(actor);
         // Add any additional actor setup here if needed
+    }
+
+    /*
+    FOUNDRY_PROFILE=echidna_defaulting forge test -vv --ffi --mt test_EchidnaDefaulting_test2
+    */
+    function test_EchidnaDefaulting_test2() public {
+        _setUpActor(USER1);
+        Target.deposit(1017867300, 255, 154, 152);
+        _setUpActor(USER1);
+        Target.mint(7111713077508456469, 56, 247, 255);
+        _delay(0x5f36, 0xdb1e);
+    _setUpActor(USER1);
+        Target.assertBORROWING_HSPOST_F(255, 255);
+        _delay(0x84344, 0x9abc);
+    _setUpActor(USER1);
+        Target.assert_defaulting_price1();
+        _delay(0x13417, 0x2bb2);
+    _setUpActor(USER1);
+        Target.assert_defaulting_totalAssetsIsNotLessThanLiquidity();
+        _delay(0x71e3a, 0xeaa1);
+    _setUpActor(USER1);
+        Target.deposit(103942843829821916262830942653128025804425797611087637966294849975061662195270, 35, 30, 255);
+        _delay(0x2bd1c, 0x6392);
+    _setUpActor(USER2);
+        Target.assert_defaulting_totalAssetsIsNotLessThanLiquidity();
+        _delay(0x74057, 0x3d63);
+    _setUpActor(USER1);
+        Target.liquidationCall(2794043644144, false, RandomGenerator(255, 146, 0));
+        _setUpActor(USER1);
+        Target.assert_LENDING_INVARIANT_B(216, 122);
+        _delay(0x7f467, 0xabd9);
+    _setUpActor(USER1);
+        Target.setOraclePrice(1194144534193741270213735117138418, 12);
+        _delay(0x2c83b, 0x18);
+    _setUpActor(USER1);
+        Target.receiveAllowance(4939, 3, 26, 13);
+        _delay(0x4647f, 0x1097);
+    _setUpActor(USER1);
+        Target.accrueInterestForSilo(0);
+        _delay(0x35361, 0x47fd);
+    _setUpActor(USER1);
+        Target.redeem(15241046242, 201, 121, 51);
+        _delay(0x866f3, 0x3df5);
+    _setUpActor(USER1);
+        Target.accrueInterest(179);
+        _delay(0x38252, 0x85ab);
+    _setUpActor(USER1);
+        Target.repay(174590089, 37, 76);
+        _delay(0x2fd85, 0xe98);
+    _setUpActor(USER1);
+        Target.approve(12, 107, 14);
+        _delay(0x7c279, 0x3168);
+    _setUpActor(USER1);
+        Target.transfer(41423330505857396159155861457666608144691816007497169336636200277649435230440, 8, 98);
+        _delay(0x76e49, 0x590a);
+    _setUpActor(USER1);
+        Target.accrueInterestForSilo(41);
+        _delay(0x4821b, 0xb9a);
+    _setUpActor(USER1);
+        Target.borrow(89198472592584626845696818725833454757642320225748433841547145926155650798269, 3, 136);
+        _delay(0x932c, 0x5300);
+    _setUpActor(USER1);
+        Target.assert_claimRewardsCanBeAlwaysDone(2);
+        _delay(0x2f994, 0xc63);
+    _setUpActor(USER1);
+        Target.accrueInterest(17);
     }
 
     /*

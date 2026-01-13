@@ -82,7 +82,7 @@ contract DefaultingHandler is BaseHandlerDefaulting {
         }
     }
 
-    function assert_claimRewardsCanBeAlwaysDone(uint256 _actorIndex) external setupRandomActor(_actorIndex) {
+    function assert_claimRewardsCanBeAlwaysDone(uint8 _actorIndex) external setupRandomActor(_actorIndex) {
         bool success;
         bytes memory returnData;
 
