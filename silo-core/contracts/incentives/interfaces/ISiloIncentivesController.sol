@@ -8,6 +8,7 @@ interface ISiloIncentivesController is IDistributionManager {
     event ClaimerSet(address indexed user, address indexed claimer);
     event IncentivesProgramCreated(string name);
     event IncentivesProgramUpdated(string name);
+    event ImmediateDistribution(address indexed rewardToken, bytes32 indexed programId, uint256 amount);
 
     event RewardsAccrued(
         address indexed user,

@@ -106,6 +106,8 @@ library EventsLib {
         string symbol
     );
 
+    event VaultIncentiveModule(address indexed siloVault, address indexed vaultIncentiveModule);
+
     event CreateIdleVault(address indexed idleVault, address indexed vault);
 
     /// @notice Emitted during a public reallocation for each withdrawn-from market.

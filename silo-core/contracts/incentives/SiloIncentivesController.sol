@@ -11,6 +11,7 @@ import {Strings} from "openzeppelin5/utils/Strings.sol";
 import {ISiloIncentivesController} from "./interfaces/ISiloIncentivesController.sol";
 import {BaseIncentivesController} from "./base/BaseIncentivesController.sol";
 import {DistributionTypes} from "./lib/DistributionTypes.sol";
+import {IVersioned} from "../interfaces/IVersioned.sol";
 
 /**
  * @title SiloIncentivesController
@@ -20,7 +21,7 @@ import {DistributionTypes} from "./lib/DistributionTypes.sol";
  * The reference staked token implementation is at https://github.com/aave/aave-stake-v2
  * @author Aave
  */
-abstract contract SiloIncentivesController is BaseIncentivesController {
+abstract contract SiloIncentivesController is BaseIncentivesController, IVersioned {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using SafeERC20 for IERC20;
 
@@ -36,6 +37,11 @@ abstract contract SiloIncentivesController is BaseIncentivesController {
     {
         require(_shareTokenAddress != address(0), EmptyShareToken());
         SHARE_TOKEN = _shareTokenAddress;
+    }
+
+    /// @inheritdoc IVersioned
+    function VERSION() external pure virtual returns (string memory) { // solhint-disable-line func-name-mixedcase
+        return "SiloIncentivesController 4.0.0";
     }
 
     /// @inheritdoc ISiloIncentivesController
@@ -120,6 +126,8 @@ abstract contract SiloIncentivesController is BaseIncentivesController {
         program.distributionEnd = uint40(block.timestamp);  
         program.lastUpdateTimestamp = uint40(block.timestamp - 1);
         program.emissionPerSecond = _amount;
+
+        emit ImmediateDistribution(_tokenToDistribute, programId, _amount);
 
         _updateAssetStateInternal(programId, totalStaked);
 
