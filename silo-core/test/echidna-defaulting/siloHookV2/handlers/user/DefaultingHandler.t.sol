@@ -28,7 +28,7 @@ import {MockSiloOracle} from "silo-core/test/invariants/utils/mocks/MockSiloOrac
 - if LTV > LT_MARGIN, defaulting never reverts (notice: cap)
 - 1 wei debt liquidation: possible! keeper will not get any rewards - DO UNIT TEST FOR THIS!
 
-Risks:
+Potential risks:
 - liquidation breaks VAULT standard 
 - there is no user input, so there is no risk from "outside" 
 - "weird" liquidation eg 1 wei do weird stuff
