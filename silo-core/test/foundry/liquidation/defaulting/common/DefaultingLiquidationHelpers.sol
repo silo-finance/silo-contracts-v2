@@ -464,6 +464,8 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         (bool throwing, uint256 ltv) = _isOracleThrowing(_borrower);
 
         while (!_defaultingPossible(ltv)) {
+            vm.assume(price > _priceDrop);
+
             price -= _priceDrop;
             _setCollateralPrice(price, false);
             vm.warp(block.timestamp + _warp);
@@ -482,6 +484,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         (bool throwing, uint256 ltv) = _isOracleThrowing(_borrower);
 
         while (ltv < 1e18) {
+            vm.assume(price > _priceDrop);
             price -= _priceDrop;
             _setCollateralPrice(price, false);
             vm.warp(block.timestamp + _warp);
