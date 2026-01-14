@@ -192,7 +192,19 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     when we use high amoutst, only immediate distrobution can overflow
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_ImmediateDistributionOverflows -vv --mc DefaultingLiquidationBorrowable0Test
     */
-    function test_defaulting_ImmediateDistributionOverflows(uint256 _collateral, uint32 _warp) public {
+    function test_defaulting_ImmediateDistributionOverflows_fuzz(uint256 _collateral, uint32 _warp) public {
+        _defaulting_ImmediateDistributionOverflows(_collateral, _warp);
+    }
+    
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_ImmediateDistributionOverflows_uint104_fuzz -vv
+    */
+    function test_defaulting_ImmediateDistributionOverflows_uint104_fuzz(uint32 _warp) public {
+        // goal is to test change uint104 -> uint256 and have fized big value to test
+        _defaulting_ImmediateDistributionOverflows(2 ** 128, _warp);
+    }
+
+    function _defaulting_ImmediateDistributionOverflows(uint256 _collateral, uint32 _warp) internal {
         vm.assume(_collateral <= type(uint256).max / SiloMathLib._DECIMALS_OFFSET_POW);
 
         _addLiquidity(_collateral);

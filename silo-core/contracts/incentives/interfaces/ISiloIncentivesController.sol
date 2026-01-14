@@ -93,7 +93,7 @@ interface ISiloIncentivesController is IDistributionManager {
     function updateIncentivesProgram(
         string calldata _incentivesProgram,
         uint40 _distributionEnd,
-        uint104 _emissionPerSecond
+        uint256 _emissionPerSecond
     ) external;
 
     /**
