@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
+import {Math} from "openzeppelin5/utils/math/Math.sol";
 
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
 import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
@@ -16,6 +17,7 @@ import {DistributionTypes} from "silo-core/contracts/incentives/lib/Distribution
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 import {AddressUtilsLib} from "silo-core/contracts/lib/AddressUtilsLib.sol";
+import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 /*
 FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc SiloIncentivesControllerTest
@@ -993,6 +995,56 @@ contract SiloIncentivesControllerTest is Test {
         _controller.immediateDistribution(_rewardToken, uint104(toDistribute));
 
         _claimRewards(user1, user2, programName);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_emissionPerSecond
+    */
+    function test_immediateDistribution_emissionPerSecond_fuzz(uint256 _toDistribute) public {
+        vm.assume(_toDistribute > 0);
+        _immediateDistribution_emissionPerSecond(_toDistribute);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_immediateDistribution_emissionPerSecond_max
+    */
+    function test_immediateDistribution_emissionPerSecond_max() public {
+        uint256 user1Deposit = 100e18;
+        uint256 maxEmissionPerSecond = Math.mulDiv(type(uint256).max, user1Deposit, _controller.TEN_POW_PRECISION());
+
+        _immediateDistribution_emissionPerSecond(maxEmissionPerSecond - 1);
+    }
+
+    function _immediateDistribution_emissionPerSecond(uint256 _toDistribute) internal {
+        // user1 deposit 100
+        uint256 user1Deposit1 = 100e18;
+        ERC20Mock(_notifier).mint(user1, user1Deposit1);
+
+        string memory programName = Strings.toHexString(_rewardToken);
+
+        ERC20Mock(_rewardToken).mint(address(_controller), _toDistribute);
+
+        vm.expectEmit(true, true, true, true);
+        emit ISiloIncentivesController.ImmediateDistribution(_rewardToken, bytes32(uint256(uint160(_rewardToken))), _toDistribute);
+
+        vm.prank(_notifier);
+        try _controller.immediateDistribution(_rewardToken, _toDistribute) {
+            // ok
+        } catch (bytes memory _err) {
+            bytes4 emissionPerSecondOverflowSelector = IDistributionManager.EmissionPerSecondOverflow.selector;
+            bytes4 indexOverflowSelector = IDistributionManager.IndexOverflow.selector;
+            bytes4 newIndexOverflowSelector = IDistributionManager.NewIndexOverflow.selector;
+
+            if (bytes4(_err) != emissionPerSecondOverflowSelector && bytes4(_err) != indexOverflowSelector && bytes4(_err) != newIndexOverflowSelector) {
+                console2.log("expected EmissionPerSecondOverflow() or IndexOverflow() or NewIndexOverflow()");
+                RevertLib.revertBytes(_err, string(""));
+            } else {
+                // OK, we expected above errors
+                vm.assume(false);
+            }
+        }
+
+        _claimRewards(user1, user1, programName);
     }
 
     // FOUNDRY_PROFILE=core_test forge test -vvv --ffi --mt test_getRewardsBalance_DifferentRewardsTokens

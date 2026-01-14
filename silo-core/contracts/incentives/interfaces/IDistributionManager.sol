@@ -39,6 +39,10 @@ interface IDistributionManager {
     error OnlyNotifierOrOwner();
     error ZeroAddress();
 
+    error EmissionPerSecondOverflow();
+    error IndexOverflow();
+    error NewIndexOverflow();
+
     /**
      * @dev Sets the end date for the distribution
      * @param _incentivesProgram The incentives program name
