@@ -37,6 +37,6 @@ contract YinjToInjAdapterDeploy is CommonDeploy {
 
         vm.stopBroadcast();
 
-        _registerDeployment(address(adapter), SiloOraclesContracts.EGGS_TO_SONIC_ADAPTER);
+        _registerDeployment(address(adapter), SiloOraclesContracts.YINJ_TO_INJ_ADAPTER);
     }
 }
