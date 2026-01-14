@@ -333,7 +333,7 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
         uint256 currentTimestamp = block.timestamp > distributionEnd ? distributionEnd : block.timestamp;
         uint256 timeDelta = currentTimestamp - lastUpdateTimestamp;
 
-        require(emissionPerSecond <= type(uint256).max / timeDelta, EmissionPerSecondOverflow());
+        require(emissionPerSecond <= type(uint256).max / timeDelta, EmissionForTimeDeltaOverflow());
         uint256 emisionForTimeDelta = emissionPerSecond * timeDelta;
 
         require(emisionForTimeDelta / totalBalance <= type(uint256).max / TEN_POW_PRECISION, IndexOverflow());

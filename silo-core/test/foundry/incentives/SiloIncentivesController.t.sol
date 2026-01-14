@@ -1031,12 +1031,12 @@ contract SiloIncentivesControllerTest is Test {
         try _controller.immediateDistribution(_rewardToken, _toDistribute) {
             // ok
         } catch (bytes memory _err) {
-            bytes4 emissionPerSecondOverflowSelector = IDistributionManager.EmissionPerSecondOverflow.selector;
+            bytes4 emissionPerSecondOverflowSelector = IDistributionManager.EmissionForTimeDeltaOverflow.selector;
             bytes4 indexOverflowSelector = IDistributionManager.IndexOverflow.selector;
             bytes4 newIndexOverflowSelector = IDistributionManager.NewIndexOverflow.selector;
 
             if (bytes4(_err) != emissionPerSecondOverflowSelector && bytes4(_err) != indexOverflowSelector && bytes4(_err) != newIndexOverflowSelector) {
-                console2.log("expected EmissionPerSecondOverflow() or IndexOverflow() or NewIndexOverflow()");
+                console2.log("expected EmissionForTimeDeltaOverflow() or IndexOverflow() or NewIndexOverflow()");
                 RevertLib.revertBytes(_err, string(""));
             } else {
                 // OK, we expected above errors

@@ -39,7 +39,7 @@ interface IDistributionManager {
     error OnlyNotifierOrOwner();
     error ZeroAddress();
 
-    error EmissionPerSecondOverflow();
+    error EmissionForTimeDeltaOverflow();
     error IndexOverflow();
     error NewIndexOverflow();
 
