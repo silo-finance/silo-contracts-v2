@@ -16,6 +16,7 @@ import {IShareToken} from "silo-core/contracts/interfaces/IShareToken.sol";
 import {IPartialLiquidationByDefaulting} from "silo-core/contracts/interfaces/IPartialLiquidationByDefaulting.sol";
 import {ISiloIncentivesController} from "silo-core/contracts/incentives/interfaces/ISiloIncentivesController.sol";
 import {IGaugeHookReceiver} from "silo-core/contracts/interfaces/IGaugeHookReceiver.sol";
+import {IDistributionManager} from "silo-core/contracts/incentives/interfaces/IDistributionManager.sol";
 
 import {SiloLensLib} from "silo-core/contracts/lib/SiloLensLib.sol";
 import {SiloIncentivesControllerCompatible} from
@@ -357,19 +358,25 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         try defaulting.liquidationCallByDefaulting(_borrower) {
             success = true;
         } catch (bytes memory e) {
-            if (
-                keccak256(e)
-                    == keccak256(
-                        abi.encodeWithSelector(
-                            IPartialLiquidationByDefaulting.WithdrawSharesForLendersTooHighForDistribution.selector
-                        )
-                    )
-            ) {
-                console2.log("WithdrawSharesForLendersTooHighForDistribution");
+            if (_isControllerOverflowing(e)) {
+                console2.log("immediate distribution ovverflow");
                 vm.assume(false);
             }
 
             RevertLib.revertBytes(e, "executeDefaulting failed");
+        }
+    }
+
+    function _isControllerOverflowing(bytes memory _err) internal pure returns (bool overflowing) {
+        bytes4 newIndexOverflowSelector = IDistributionManager.NewIndexOverflow.selector;
+        bytes4 indexOverflowSelector = IDistributionManager.IndexOverflow.selector;
+        bytes4 emissionForTimeDeltaOverflowSelector = IDistributionManager.EmissionForTimeDeltaOverflow.selector;
+
+        if (
+            bytes4(_err) == newIndexOverflowSelector || bytes4(_err) == indexOverflowSelector
+                || bytes4(_err) == emissionForTimeDeltaOverflowSelector
+        ) {
+            overflowing = true;
         }
     }
 
@@ -464,6 +471,8 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         (bool throwing, uint256 ltv) = _isOracleThrowing(_borrower);
 
         while (!_defaultingPossible(ltv)) {
+            vm.assume(price > _priceDrop);
+
             price -= _priceDrop;
             _setCollateralPrice(price, false);
             vm.warp(block.timestamp + _warp);
@@ -482,6 +491,7 @@ abstract contract DefaultingLiquidationHelpers is SiloLittleHelper, Test {
         (bool throwing, uint256 ltv) = _isOracleThrowing(_borrower);
 
         while (ltv < 1e18) {
+            vm.assume(price > _priceDrop);
             price -= _priceDrop;
             _setCollateralPrice(price, false);
             vm.warp(block.timestamp + _warp);

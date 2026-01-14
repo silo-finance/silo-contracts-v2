@@ -26,11 +26,12 @@ import {Whitelist} from "silo-core/contracts/hooks/_common/Whitelist.sol";
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 import {DefaultingLiquidationAsserts} from "./common/DefaultingLiquidationAsserts.sol";
 import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 /*
 - anything with decimals? don't think so, we only transfer shares
 - fees should be able to withdraw always? no, we might need liquidity or repay
-- input is often limited to ~uint48 because of `WithdrawSharesForLendersTooHighForDistribution`
+- input is often limited to ~uint48 because of `immediate distribution overflow`
 
 
 FOUNDRY_PROFILE=core_test forge test --ffi --mc DefaultingLiquidationBorrowable -vv
@@ -185,6 +186,63 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             _protected: _protected,
             _warp: _warp
         });
+    }
+
+    /*
+    when we use high amoutst, only immediate distrobution can overflow
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_ImmediateDistributionOverflows -vv --mc DefaultingLiquidationBorrowable0Test
+    */
+    function test_defaulting_ImmediateDistributionOverflows_fuzz(uint256 _collateral, uint32 _warp) public {
+        _defaulting_ImmediateDistributionOverflows(_collateral, _warp);
+    }
+    
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_ImmediateDistributionOverflows_uint104_fuzz -vv
+    */
+    function test_defaulting_ImmediateDistributionOverflows_uint104_fuzz(uint32 _warp) public {
+        // goal is to test change uint104 -> uint256 and have fized big value to test
+        _defaulting_ImmediateDistributionOverflows(2 ** 128, _warp);
+    }
+
+    function _defaulting_ImmediateDistributionOverflows(uint256 _collateral, uint32 _warp) internal {
+        vm.assume(_collateral <= type(uint256).max / SiloMathLib._DECIMALS_OFFSET_POW);
+
+        _addLiquidity(_collateral);
+
+        bool success =
+            _createPosition({_borrower: borrower, _collateral: _collateral, _protected: 0, _maxOut: true});
+
+        vm.assume(success);
+
+        // this will help with high interest
+        _removeLiquidity();
+
+        _moveUntillDefaultingPossible(borrower, 0.01e18, 1 days);
+
+        vm.warp(block.timestamp + _warp);
+
+        _createIncentiveController();
+
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
+
+        (uint256 collateralToLiquidate,,) = IPartialLiquidation(address(defaulting)).maxLiquidation(borrower);
+
+        try defaulting.getKeeperAndLenderSharesSplit(collateralToLiquidate, ISilo.CollateralType.Collateral) {
+            // ok
+        } catch {
+            // exclude case when we overflow on split match
+            vm.assume(false);
+        }
+
+        try defaulting.liquidationCallByDefaulting(borrower) {
+            // ok
+        } catch (bytes memory e) {
+            if (_isControllerOverflowing(e)) {
+                console2.log("immediate distribution overflow, accepted, but exlude this case");
+                vm.assume(false);
+            } else RevertLib.revertBytes(e, "executeDefaulting failed");
+        }
     }
 
     /*

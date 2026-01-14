@@ -265,8 +265,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
                 _borrower, address(controllerCollateral), _withdrawSharesForLenders
             );
 
-            require(_withdrawSharesForLenders <= type(uint104).max, WithdrawSharesForLendersTooHighForDistribution());
-            controllerCollateral.immediateDistribution(_shareToken, uint104(_withdrawSharesForLenders));
+            controllerCollateral.immediateDistribution(_shareToken, _withdrawSharesForLenders);
         }
 
         // distribute collateral shares to keeper

@@ -101,7 +101,7 @@ abstract contract SiloIncentivesController is BaseIncentivesController, IVersion
     }
 
     /// @inheritdoc ISiloIncentivesController
-    function immediateDistribution(address _tokenToDistribute, uint104 _amount)
+    function immediateDistribution(address _tokenToDistribute, uint256 _amount)
         external
         virtual
         onlyNotifier
@@ -119,7 +119,7 @@ abstract contract SiloIncentivesController is BaseIncentivesController, IVersion
         _updateAssetStateInternal(programId, totalStaked);
 
         uint40 distributionEndBefore = program.distributionEnd;
-        uint104 emissionPerSecondBefore = program.emissionPerSecond;
+        uint256 emissionPerSecondBefore = program.emissionPerSecond;
 
         // Distributing `_amount` of rewards in one second allows the rewards to be added to users' balances
         // even to the active incentives program.
