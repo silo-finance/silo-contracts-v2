@@ -30,7 +30,7 @@ import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 /*
 - anything with decimals? don't think so, we only transfer shares
 - fees should be able to withdraw always? no, we might need liquidity or repay
-- input is often limited to ~uint48 because of `WithdrawSharesForLendersTooHighForDistribution`
+- input is often limited to ~uint48 because of `WithdrawSharesForLendersTooHighForDistribution` TODO
 
 
 FOUNDRY_PROFILE=core_test forge test --ffi --mc DefaultingLiquidationBorrowable -vv
@@ -185,6 +185,44 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             _protected: _protected,
             _warp: _warp
         });
+    }
+
+    /*
+    when we use high amoutst, only immediate distrobution can overflow
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_badDebt_fuzz_overflow -vv
+    */
+    function test_defaulting_neverReverts_badDebt_fuzz_overflow(uint256 _collateral, uint256 _protected, uint32 _warp)
+        public
+    {
+        _addLiquidity(Math.max(_collateral, _protected));
+
+        bool success =
+            _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
+
+        vm.assume(success);
+
+        // this will help with high interest
+        _removeLiquidity();
+
+        _moveUntillDefaultingPossible(borrower, 0.01e18, 1 days);
+
+        vm.warp(block.timestamp + _warp);
+
+        _createIncentiveController();
+
+        token0.setOnDemand(false);
+        token1.setOnDemand(false);
+
+        try defaulting.liquidationCallByDefaulting(borrower) {
+            // ok
+        } catch (bytes memory e) {
+            if (_isControllerOverflowing(e)) {
+                console2.log("immediate distribution overflow");
+                vm.assume(false);
+            }
+
+            RevertLib.revertBytes(e, "executeDefaulting failed");
+        }
     }
 
     /*
