@@ -26,11 +26,12 @@ import {Whitelist} from "silo-core/contracts/hooks/_common/Whitelist.sol";
 import {DummyOracle} from "silo-core/test/foundry/_common/DummyOracle.sol";
 import {DefaultingLiquidationAsserts} from "./common/DefaultingLiquidationAsserts.sol";
 import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
+import {SiloMathLib} from "silo-core/contracts/lib/SiloMathLib.sol";
 
 /*
 - anything with decimals? don't think so, we only transfer shares
 - fees should be able to withdraw always? no, we might need liquidity or repay
-- input is often limited to ~uint48 because of `WithdrawSharesForLendersTooHighForDistribution` TODO
+- input is often limited to ~uint48 because of `immediate distribution overflow`
 
 
 FOUNDRY_PROFILE=core_test forge test --ffi --mc DefaultingLiquidationBorrowable -vv
@@ -189,11 +190,15 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
     /*
     when we use high amoutst, only immediate distrobution can overflow
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_badDebt_fuzz_overflow -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_ImmediateDistributionOverflows -vv
     */
-    function test_defaulting_neverReverts_badDebt_fuzz_overflow(uint256 _collateral, uint256 _protected, uint32 _warp)
+    function test_defaulting_ImmediateDistributionOverflows(uint256 _collateral, uint256 _protected, uint32 _warp)
         public
     {
+        // exlide offset
+        vm.assume(_collateral <= type(uint256).max / SiloMathLib._DECIMALS_OFFSET_POW);
+        vm.assume(_protected <= type(uint256).max / SiloMathLib._DECIMALS_OFFSET_POW);
+
         _addLiquidity(Math.max(_collateral, _protected));
 
         bool success =
@@ -217,11 +222,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             // ok
         } catch (bytes memory e) {
             if (_isControllerOverflowing(e)) {
-                console2.log("immediate distribution overflow");
-                vm.assume(false);
-            }
-
-            RevertLib.revertBytes(e, "executeDefaulting failed");
+                console2.log("immediate distribution overflow, accepted");
+            } else RevertLib.revertBytes(e, "executeDefaulting failed");
         }
     }
 
