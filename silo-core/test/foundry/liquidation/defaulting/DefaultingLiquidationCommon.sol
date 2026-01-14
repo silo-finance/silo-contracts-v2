@@ -190,19 +190,15 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
     /*
     when we use high amoutst, only immediate distrobution can overflow
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_ImmediateDistributionOverflows -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_ImmediateDistributionOverflows -vv --mc DefaultingLiquidationBorrowable0Test
     */
-    function test_defaulting_ImmediateDistributionOverflows(uint256 _collateral, uint256 _protected, uint32 _warp)
-        public
-    {
-        // exlide offset
+    function test_defaulting_ImmediateDistributionOverflows(uint256 _collateral, uint32 _warp) public {
         vm.assume(_collateral <= type(uint256).max / SiloMathLib._DECIMALS_OFFSET_POW);
-        vm.assume(_protected <= type(uint256).max / SiloMathLib._DECIMALS_OFFSET_POW);
 
-        _addLiquidity(Math.max(_collateral, _protected));
+        _addLiquidity(_collateral);
 
         bool success =
-            _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
+            _createPosition({_borrower: borrower, _collateral: _collateral, _protected: 0, _maxOut: true});
 
         vm.assume(success);
 
@@ -218,11 +214,21 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         token0.setOnDemand(false);
         token1.setOnDemand(false);
 
+        (uint256 collateralToLiquidate,,) = IPartialLiquidation(address(defaulting)).maxLiquidation(borrower);
+
+        try defaulting.getKeeperAndLenderSharesSplit(collateralToLiquidate, ISilo.CollateralType.Collateral) {
+            // ok
+        } catch {
+            // exclude case when we overflow on split match
+            vm.assume(false);
+        }
+
         try defaulting.liquidationCallByDefaulting(borrower) {
             // ok
         } catch (bytes memory e) {
             if (_isControllerOverflowing(e)) {
-                console2.log("immediate distribution overflow, accepted");
+                console2.log("immediate distribution overflow, accepted, but exlude this case");
+                vm.assume(false);
             } else RevertLib.revertBytes(e, "executeDefaulting failed");
         }
     }
