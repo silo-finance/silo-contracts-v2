@@ -1634,6 +1634,77 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_Defaulting_maxDebtToCover1Wei -vv
+    */
+    function test_Defaulting_maxDebtToCover1Wei(
+        uint64 _collateral, uint64 _protected, bool _maxOut
+    ) public {
+        // (uint64 _collateral, uint64 _protected, bool _maxOut) = (30088, 1290024793, false);
+        _addLiquidity(100e18);
+        bool position = _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: _maxOut});
+        vm.assume(position);
+        
+        _createIncentiveController();
+
+        _moveUntillDefaultingPossible(borrower, 0.001e18, 1 hours);
+
+        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
+
+        siloConfig.accrueInterestForBothSilos();
+
+        uint256 totalDebtBefore = debtSilo.getDebtAssets();
+        uint256 totalProtectedBefore = debtSilo.getTotalAssetsStorage(ISilo.AssetType.Protected);
+        uint256 totalCollateralBefore = debtSilo.totalAssets();
+
+        _printMaxLiquidation(borrower);
+
+        // we only want cases when it is possible, but it can fail with diff errors eg ZeroQuote
+        vm.assume(_tryDefaulting(borrower, 1));
+
+        console2.log("liquidation done");
+
+        uint256 totalDebtAfter = debtSilo.getDebtAssets();
+        uint256 totalProtectedAfter = debtSilo.getTotalAssetsStorage(ISilo.AssetType.Protected);
+        uint256 totalCollateralAfter = debtSilo.totalAssets();
+        
+        bool fullLiquidation;
+        (bool throwing,) = _isOracleThrowing(borrower);
+
+        if (throwing) {
+            fullLiquidation = false;
+            console2.log("oracle is throwing, we can not check user solvency");
+
+            // we should expect withdraw to throw because of oracle throwing
+            vm.startPrank(borrower);
+
+            vm.expectRevert();
+            collateralSilo.withdraw(1, borrower, borrower);
+
+            vm.expectRevert();
+            collateralSilo.withdraw(1, borrower, borrower, ISilo.CollateralType.Protected);
+            vm.stopPrank();
+        } else {
+            _printLtv(borrower);
+            fullLiquidation = siloLens.getUserLTV(debtSilo, borrower) == 0;
+            console2.log("is user solvent?", debtSilo.isSolvent(borrower) ? "yes" : "no");
+        }
+
+        if (totalDebtAfter == 0 && totalDebtBefore != 1) {
+            console2.log("it was full liquidation, not 1wei case");
+            vm.assume(false);
+        }
+
+        assertEq(totalDebtAfter, totalDebtBefore - 1, "total debt should be reduced by 1 wei");
+
+        // for full liquidation we only checking debt, because debt to cover should be 1 always
+        if (fullLiquidation) return;
+
+        uint256 protectedDiff = totalProtectedBefore - totalProtectedAfter;
+        uint256 collateralDiff = totalCollateralBefore - totalCollateralAfter;
+        assertLe(protectedDiff + collateralDiff, 1, "protected and collateral should be reduced by at most 1 wei");
+    }
+
+    /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_gaugeManagement -vv
     */
     function test_incentiveDistribution_gaugeManagement_noWarp() public virtual;

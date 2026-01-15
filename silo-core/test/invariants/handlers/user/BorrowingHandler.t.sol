@@ -79,14 +79,10 @@ contract BorrowingHandler is BaseHandler {
             _after();
 
             assertGe(
-                defaultVarsAfter[target].userDebtShares,
-                defaultVarsBefore[target].userDebtShares,
-                BORROWING_HSPOST_Q
+                defaultVarsAfter[target].userDebtShares, defaultVarsBefore[target].userDebtShares, BORROWING_HSPOST_Q
             );
 
-            assertGe(
-                defaultVarsAfter[target].userBalance, defaultVarsBefore[target].userBalance, BORROWING_HSPOST_R
-            );
+            assertGe(defaultVarsAfter[target].userBalance, defaultVarsBefore[target].userBalance, BORROWING_HSPOST_R);
         }
     }
 

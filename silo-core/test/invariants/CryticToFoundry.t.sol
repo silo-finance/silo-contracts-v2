@@ -18,7 +18,6 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
  */
 contract CryticToFoundry is Invariants, Setup {
     CryticToFoundry Tester = this;
-    uint256 constant DEFAULT_TIMESTAMP = 337812;
 
     function setUp() public {
         // Deploy protocol contracts
@@ -34,6 +33,7 @@ contract CryticToFoundry is Invariants, Setup {
         actor = actors[USER1];
 
         vm.warp(DEFAULT_TIMESTAMP);
+        vm.roll(DEFAULT_BLOCK);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,7 +48,10 @@ contract CryticToFoundry is Invariants, Setup {
     //                                     INVARIANTS REPLAY                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function test_replayechidna_BASE_INVARIANT() public {
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_replayechidna_BASE_INVARIANT1
+    */
+    function test_replayechidna_BASE_INVARIANT1() public {
         Tester.setOraclePrice(154174253363420274135519693994558375770505353341038094319633, 1);
         Tester.setOraclePrice(117361312846819359113791019924540616345894207664659799350103, 0);
         Tester.mint(1025, 0, 1, 0);
@@ -106,6 +109,9 @@ contract CryticToFoundry is Invariants, Setup {
         Tester.withdraw(1238665, 0, 0, 1);
     }
 
+    /*
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_depositEchidna
+    */
     function test_depositEchidna() public {
         Tester.deposit(1, 0, 0, 0);
     }
