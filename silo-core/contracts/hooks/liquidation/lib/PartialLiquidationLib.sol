@@ -145,8 +145,8 @@ library PartialLiquidationLib {
     {
         require(_totalValue != 0, IPartialLiquidation.UnknownRatio());
 
-        // rounding direction was discavered based on set of tests, 
-        // especially with 1 wei collateral and borrow agains it
+        // round UP to allow for 1 wei collateral liquidations and
+        // always take more collateral and debt during liquidation
         assets = Math.mulDiv(_value, _totalAssets, _totalValue, Rounding.UP);
     }
 
