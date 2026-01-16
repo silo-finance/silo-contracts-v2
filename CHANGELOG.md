@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## Summary of MVP for Stellar
+- one way market
+- protected share token can be removed
+- oracle implementation: depends on ecosystem
+- oracle management - if we launch market with admin, we can replace oracle address
+- Vaults don’t need to claim rewards from underlying markets and distribute to users
+- only Kink model, unless there is already some model in ecosystem, battle tested, then we can use it but must be manageable
+- notification (Hooks) not needed except silo incentive controller
+- leverage not needed for MVP
+- both options for liquidation
+- liquidation helper (for bot) and manual liquidation (mostly for humans)
+- if approval and tx can be done "at one click", router can be ignored
+
+Merkl is deploying Q1 2026 on Stellar, so this means:
+- We don’t need to distribute rewards through markets
+- We don’t need to distribute rewards through vaults
+
+
 ## [4.0.0] - 2026-01-15
 ### Added
 - silo-core: Liquidation by defaulting (#1694)

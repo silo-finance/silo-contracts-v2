@@ -6,14 +6,11 @@ import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {ISilo} from "./interfaces/ISilo.sol";
 import {ISiloConfig} from "./interfaces/ISiloConfig.sol";
 import {CrossReentrancyGuard} from "./utils/CrossReentrancyGuard.sol";
-import {Hook} from "./lib/Hook.sol";
 
 /// @notice SiloConfig stores full configuration of Silo in immutable manner
 /// @dev Immutable contract is more expensive to deploy than minimal proxy however it provides nearly 10x cheaper
 /// data access using immutable variables.
-contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
-    using Hook for uint256;
-    
+contract SiloConfig is ISiloConfig, CrossReentrancyGuard {    
     uint256 public immutable SILO_ID;
 
     uint256 internal immutable _DAO_FEE;
