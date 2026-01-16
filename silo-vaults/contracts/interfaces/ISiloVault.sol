@@ -5,7 +5,6 @@ import {IERC20Permit} from "openzeppelin5/token/ERC20/extensions/ERC20Permit.sol
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {MarketConfig, PendingUint192, PendingAddress, ArbitraryLossThreshold} from "../libraries/PendingLib.sol";
-import {IVaultIncentivesModule} from "./IVaultIncentivesModule.sol";
 
 struct MarketAllocation {
     /// @notice The market to allocate.
@@ -39,14 +38,6 @@ interface ISiloVaultBase {
     /// This threshold prevents SiloVault from losing funds in compromised markets with inflated shares to assets rate.
     /// This value can be changed by vault owner/guardian if needed.
     function DEFAULT_LOST_THRESHOLD() external view returns (uint256);
-
-    /// @notice Incentives module for the vault.
-    /// @dev Stores configuration for each market incentives claiming logic and
-    /// notification receivers that will be notified when a vault's balance changes.
-    function INCENTIVES_MODULE() external view returns (IVaultIncentivesModule);
-
-    /// @notice method for claiming and distributing incentives rewards for all vault users
-    function claimRewards() external;
 
     /// @notice Returns whether the reentrancy guard is entered.
     function reentrancyGuardEntered() external view returns (bool);

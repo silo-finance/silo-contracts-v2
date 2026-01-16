@@ -12,7 +12,6 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 
 import {SiloVault} from "./SiloVault.sol";
 import {IdleVault} from "./IdleVault.sol";
-import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
 
 contract IdleVaultsFactory is Create2Factory {
     mapping(address => bool) public isIdleVault;
