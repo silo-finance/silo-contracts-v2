@@ -46,13 +46,7 @@ library Views {
         if (_token != ShareTokenLib.siloConfig().getAssetForSilo(address(this))) return 0;
 
         ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-        uint256 protectedAssets = $.totalAssets[ISilo.AssetType.Protected];
-        uint256 balance = IERC20(_token).balanceOf(address(this));
-
-        unchecked {
-            // we check underflow ourself
-            return balance > protectedAssets ? balance - protectedAssets : 0;
-        }
+        return IERC20(_token).balanceOf(address(this));
     }
 
     function maxBorrow(address _borrower)
@@ -63,18 +57,13 @@ library Views {
         return SiloLendingLib.maxBorrow(_borrower);
     }
 
-    function maxWithdraw(address _owner, ISilo.CollateralType _collateralType)
+    function maxWithdraw(address _owner)
         external
         view
         returns (uint256 assets, uint256 shares)
     {
         return SiloERC4626Lib.maxWithdraw(
-            _owner,
-            _collateralType,
-            // 0 for CollateralType.Collateral because it will be calculated internally
-            _collateralType == ISilo.CollateralType.Protected
-                ? SiloStorageLib.getSiloStorage().totalAssets[ISilo.AssetType.Protected]
-                : 0
+            _owner
         );
     }
 
@@ -96,7 +85,6 @@ library Views {
         returns (
             uint192 daoAndDeployerRevenue,
             uint64 interestRateTimestamp,
-            uint256 protectedAssets,
             uint256 collateralAssets,
             uint256 debtAssets
         )
@@ -105,7 +93,6 @@ library Views {
 
         daoAndDeployerRevenue = $.daoAndDeployerRevenue;
         interestRateTimestamp = $.interestRateTimestamp;
-        protectedAssets = $.totalAssets[ISilo.AssetType.Protected];
         collateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
         debtAssets = $.totalAssets[ISilo.AssetType.Debt];
     }
@@ -130,17 +117,6 @@ library Views {
         totalDebtAssets = SiloStdLib.getTotalDebtAssetsWithInterest(
             thisSiloConfig.silo, thisSiloConfig.interestRateModel
         );
-    }
-
-    function getCollateralAndProtectedAssets()
-        internal
-        view
-        returns (uint256 totalCollateralAssets, uint256 totalProtectedAssets)
-    {
-        ISilo.SiloStorage storage $ = SiloStorageLib.getSiloStorage();
-
-        totalCollateralAssets = $.totalAssets[ISilo.AssetType.Collateral];
-        totalProtectedAssets = $.totalAssets[ISilo.AssetType.Protected];
     }
 
     function getCollateralAndDebtAssets()

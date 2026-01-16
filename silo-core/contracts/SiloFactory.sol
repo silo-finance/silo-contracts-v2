@@ -69,7 +69,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
     function createSilo( // solhint-disable-line function-max-lines
         ISiloConfig _siloConfig,
         address _siloImpl,
-        address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
         address _deployer,
         address _creator
@@ -79,7 +78,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
     {
         require(
             _siloImpl != address(0) &&
-            _shareProtectedCollateralTokenImpl != address(0) &&
             _shareDebtTokenImpl != address(0) &&
             address(_siloConfig) != address(0),
             ZeroAddress()
@@ -92,7 +90,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
         (ISilo silo0, ISilo silo1) = _createValidateSilosAndShareTokens(
             _siloConfig,
             _siloImpl,
-            _shareProtectedCollateralTokenImpl,
             _shareDebtTokenImpl,
             _creator
         );
@@ -228,17 +225,16 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
 
     function _emitEventAboutSiloContracts(ISiloConfig _siloConfig, ISilo _silo) internal virtual {
         (
-            address protectedShareToken, address collateralShareToken, address debtShareToken
+            address collateralShareToken, address debtShareToken
         ) = _siloConfig.getShareTokens(address(_silo));
 
-        emit NewSiloShareTokens(protectedShareToken, collateralShareToken, debtShareToken);
+        emit NewSiloShareTokens(collateralShareToken, debtShareToken);
         emit NewSiloHook(address(_silo), IShareToken(address(_silo)).hookReceiver());
     }
 
     function _createValidateSilosAndShareTokens(
         ISiloConfig _siloConfig,
         address _siloImpl,
-        address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
         address _creator
     ) internal virtual returns (ISilo silo0, ISilo silo1) {
@@ -255,7 +251,6 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
             _siloConfig,
             silo0,
             silo1,
-            _shareProtectedCollateralTokenImpl,
             _shareDebtTokenImpl,
             counter,
             _creator
@@ -321,19 +316,10 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
         ISiloConfig _siloConfig,
         ISilo _silo0,
         ISilo _silo1,
-        address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
         uint256 _creatorSiloCounter,
         address _creator
     ) internal virtual {
-        address createdProtectedShareToken0 = CloneDeterministic.shareProtectedCollateralToken0(
-            _shareProtectedCollateralTokenImpl, _creatorSiloCounter, _creator
-        );
-
-        address createdProtectedShareToken1 = CloneDeterministic.shareProtectedCollateralToken1(
-            _shareProtectedCollateralTokenImpl, _creatorSiloCounter, _creator
-        );
-
         address createdDebtShareToken0 = CloneDeterministic.shareDebtToken0(
             _shareDebtTokenImpl, _creatorSiloCounter, _creator
         );
@@ -342,43 +328,37 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
             _shareDebtTokenImpl, _creatorSiloCounter, _creator
         );
 
-        _validateShareTokens(_siloConfig, address(_silo0), createdProtectedShareToken0, createdDebtShareToken0);
-        _validateShareTokens(_siloConfig, address(_silo1), createdProtectedShareToken1, createdDebtShareToken1);
+        _validateShareTokens(_siloConfig, address(_silo0), createdDebtShareToken0);
+        _validateShareTokens(_siloConfig, address(_silo1), createdDebtShareToken1);
     }
 
     function _validateShareTokens(
         ISiloConfig _siloConfig,
         address _silo,
-        address _createdProtectedShareToken,
         address _createdDebtShareToken
     ) internal virtual {
         (
-            address protectedShareToken,
             address collateralShareToken,
             address debtShareToken
         ) = _siloConfig.getShareTokens(_silo);
 
         require(_silo == collateralShareToken, ConfigMismatchShareCollateralToken());
-        require(protectedShareToken == _createdProtectedShareToken, ConfigMismatchShareProtectedToken());
         require(debtShareToken == _createdDebtShareToken, ConfigMismatchShareDebtToken());
     }
 
     function _initializeShareTokens(ISiloConfig _siloConfig, ISilo _silo0, ISilo _silo1) internal virtual {
-        uint24 protectedTokenType = uint24(Hook.PROTECTED_TOKEN);
         uint24 debtTokenType = uint24(Hook.DEBT_TOKEN);
 
         // initialize silo0 share tokens
         address hookReceiver0 = IShareToken(address(_silo0)).hookReceiver();
-        (address protectedShareToken0, , address debtShareToken0) = _siloConfig.getShareTokens(address(_silo0));
+        (, address debtShareToken0) = _siloConfig.getShareTokens(address(_silo0));
 
-        IShareTokenInitializable(protectedShareToken0).initialize(_silo0, hookReceiver0, protectedTokenType);
         IShareTokenInitializable(debtShareToken0).initialize(_silo0, hookReceiver0, debtTokenType);
 
         // initialize silo1 share tokens
         address hookReceiver1 = IShareToken(address(_silo1)).hookReceiver();
-        (address protectedShareToken1, , address debtShareToken1) = _siloConfig.getShareTokens(address(_silo1));
+        (, address debtShareToken1) = _siloConfig.getShareTokens(address(_silo1));
 
-        IShareTokenInitializable(protectedShareToken1).initialize(_silo1, hookReceiver1, protectedTokenType);
         IShareTokenInitializable(debtShareToken1).initialize(_silo1, hookReceiver1, debtTokenType);
     }
 }

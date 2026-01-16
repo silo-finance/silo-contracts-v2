@@ -197,7 +197,7 @@ library SiloMathLib {
     }
 
     /// @param _collateralMaxLtv maxLTV in 18 decimals that is set for debt asset
-    /// @param _sumOfBorrowerCollateralValue borrower total collateral value (including protected)
+    /// @param _sumOfBorrowerCollateralValue borrower total collateral value
     /// @param _borrowerDebtValue total value of borrower debt
     /// @return maxBorrowValue max borrow value yet available for borrower
     function calculateMaxBorrowValue(
@@ -220,18 +220,16 @@ library SiloMathLib {
     }
 
     /// @notice Calculate the maximum assets a borrower can withdraw without breaching the liquidation threshold
-    /// @param _sumOfCollateralsValue The combined value of collateral and protected assets of the borrower
+    /// @param _sumOfCollateralsValue The combined value of collateral assets of the borrower
     /// @param _debtValue The total debt value of the borrower
     /// @param _lt The liquidation threshold in 18 decimal points
     /// @param _borrowerCollateralAssets The borrower's collateral assets before the withdrawal
-    /// @param _borrowerProtectedAssets The borrower's protected assets before the withdrawal
     /// @return maxAssets The maximum assets the borrower can safely withdraw
     function calculateMaxAssetsToWithdraw(
         uint256 _sumOfCollateralsValue,
         uint256 _debtValue,
         uint256 _lt,
-        uint256 _borrowerCollateralAssets,
-        uint256 _borrowerProtectedAssets
+        uint256 _borrowerCollateralAssets
     ) internal pure returns (uint256 maxAssets) {
         if (_sumOfCollateralsValue == 0) return 0;
         if (_debtValue == 0) return _sumOfCollateralsValue;
@@ -249,7 +247,7 @@ library SiloMathLib {
         // safe because we checked `if (_sumOfCollateralsValue <= minimumCollateralValue)`
         unchecked { spareCollateralValue = _sumOfCollateralsValue - minimumCollateralValue; }
 
-        maxAssets = (_borrowerProtectedAssets + _borrowerCollateralAssets)
+        maxAssets = (_borrowerCollateralAssets)
                 .mulDiv(spareCollateralValue, _sumOfCollateralsValue, Rounding.MAX_WITHDRAW_TO_ASSETS);
     }
 
@@ -257,8 +255,6 @@ library SiloMathLib {
     /// @param _maxAssets The calculated limit on how many assets can be withdrawn without breaching the liquidation
     /// threshold
     /// @param _borrowerCollateralAssets Amount of collateral assets currently held by the borrower
-    /// @param _borrowerProtectedAssets Amount of protected assets currently held by the borrower
-    /// @param _collateralType Specifies whether the asset is of type Collateral or Protected
     /// @param _totalAssets The entire quantity of assets available in the system for withdrawal
     /// @param _assetTypeShareTokenTotalSupply Total supply of share tokens for the specified asset type
     /// @param _liquidity Current liquidity in the system for the asset type
@@ -267,8 +263,6 @@ library SiloMathLib {
     function maxWithdrawToAssetsAndShares(
         uint256 _maxAssets,
         uint256 _borrowerCollateralAssets,
-        uint256 _borrowerProtectedAssets,
-        ISilo.CollateralType _collateralType,
         uint256 _totalAssets,
         uint256 _assetTypeShareTokenTotalSupply,
         uint256 _liquidity
@@ -276,22 +270,18 @@ library SiloMathLib {
         if (_maxAssets == 0) return (0, 0);
         if (_assetTypeShareTokenTotalSupply == 0) return (0, 0);
 
-        if (_collateralType == ISilo.CollateralType.Collateral) {
             assets = _maxAssets > _borrowerCollateralAssets ? _borrowerCollateralAssets : _maxAssets;
 
             if (assets > _liquidity) {
                 assets = _liquidity;
             }
-        } else {
-            assets = _maxAssets > _borrowerProtectedAssets ? _borrowerProtectedAssets : _maxAssets;
-        }
 
         shares = SiloMathLib.convertToShares(
             assets,
             _totalAssets,
             _assetTypeShareTokenTotalSupply,
             Rounding.MAX_WITHDRAW_TO_SHARES,
-            ISilo.AssetType(uint256(_collateralType))
+            ISilo.AssetType.Collateral
         );
     }
 

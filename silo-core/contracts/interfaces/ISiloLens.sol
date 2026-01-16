@@ -84,7 +84,7 @@ interface ISiloLens {
     /// @return ltv The LTV for the borrower in 18 decimals points
     function getLtv(ISilo _silo, address _borrower) external view returns (uint256 ltv);
 
-    /// @notice Check if user has position (collateral, protected or debt)
+    /// @notice Check if user has position (collateral or debt)
     /// in any asset in a market (both silos are checked)
     /// @param _siloConfig Market address (silo config address)
     /// @param _borrower wallet address for which to read data
@@ -116,7 +116,7 @@ interface ISiloLens {
         view
         returns (address daoFeeReceiver, address deployerFeeReceiver, uint256 daoFee, uint256 deployerFee);
 
-    /// @notice Get underlying balance of all deposits of silo asset of given user including "protected"
+    /// @notice Get underlying balance of all deposits of silo asset of given user
     /// deposits, with interest
     /// @param _silo Address of the silo
     /// @param _borrower wallet address for which to read data
@@ -163,13 +163,7 @@ interface ISiloLens {
         view
         returns (uint256 _totalBorrowAmount);
 
-    /// @notice Get amount of protected asset token that has been deposited to Silo
-    /// @param _silo Silo address from which to read data
-    /// @return amount of all "protected" deposits
-    function collateralOnlyDeposits(ISilo _silo) external view returns (uint256);
-
     /// @notice Calculates current deposit (with interest) for user
-    /// without protected deposits
     /// @param _silo Silo address from which to read data
     /// @param _borrower account for which calculation are done
     /// @return borrowerDeposits amount of asset _borrower posses
@@ -216,7 +210,7 @@ interface ISiloLens {
     function protocolFees(ISilo _silo) external view returns (uint256);
 
     /// @notice Calculate value of collateral asset for user
-    /// @dev It dynamically adds interest earned. Takes for account protected deposits as well.
+    /// @dev It dynamically adds interest earned.
     /// In v1 result is always in 18 decimals, here it depends on oracle setup.
     /// @param _siloConfig Market address (silo config address)
     /// @param _borrower account for which calculation are done

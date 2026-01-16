@@ -101,14 +101,13 @@ abstract contract BaseHookReceiver is IHookReceiver, Initializable {
 
         if (_addr == silo0 || _addr == silo1) return true;
 
-        address protectedCollateralShareToken;
         address debtShareToken;
 
-        (protectedCollateralShareToken,, debtShareToken) = siloConfig.getShareTokens(silo0);
-        if (_addr == protectedCollateralShareToken || _addr == debtShareToken) return true;
+        (, debtShareToken) = siloConfig.getShareTokens(silo0);
+        if (_addr == debtShareToken) return true;
 
-        (protectedCollateralShareToken,, debtShareToken) = siloConfig.getShareTokens(silo1);
-        if (_addr == protectedCollateralShareToken || _addr == debtShareToken) return true;
+        (, debtShareToken) = siloConfig.getShareTokens(silo1);
+        if (_addr == debtShareToken) return true;
 
         return false;
     }

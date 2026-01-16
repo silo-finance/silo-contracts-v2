@@ -14,7 +14,7 @@ interface IShareToken is IERC20Metadata {
         uint24 hooksBefore;
         /// @param hooks bitmap
         uint24 hooksAfter;
-        /// @param tokenType must be one of this hooks values: COLLATERAL_TOKEN, PROTECTED_TOKEN, DEBT_TOKEN
+        /// @param tokenType must be one of this hooks values: COLLATERAL_TOKEN, DEBT_TOKEN
         uint24 tokenType;
     }
 

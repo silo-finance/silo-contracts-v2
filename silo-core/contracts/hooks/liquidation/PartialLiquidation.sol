@@ -29,9 +29,7 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
 
     struct LiquidationCallParams {
         uint256 collateralShares;
-        uint256 protectedShares;
         uint256 withdrawAssetsFromCollateral;
-        uint256 withdrawAssetsFromProtected;
         bytes4 customError;
     }
 
@@ -63,7 +61,7 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
         LiquidationCallParams memory params;
 
         (
-            params.withdrawAssetsFromCollateral, params.withdrawAssetsFromProtected, repayDebtAssets, params.customError
+            params.withdrawAssetsFromCollateral, repayDebtAssets, params.customError
         ) = PartialLiquidationExecLib.getExactLiquidationAmounts(
             collateralConfig,
             debtConfig,
@@ -91,64 +89,31 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
             ISilo.AssetType.Collateral
         );
 
-        params.protectedShares = _callShareTokenForwardTransferNoChecks(
-            collateralConfig.silo,
-            _borrower,
-            shareTokenReceiver,
-            params.withdrawAssetsFromProtected,
-            collateralConfig.protectedShareToken,
-            ISilo.AssetType.Protected
-        );
-
         siloConfigCached.turnOffReentrancyProtection();
 
         ISilo(debtConfig.silo).repay(repayDebtAssets, _borrower);
 
         // without collateral this is not longer liquidation, it's repay
-        require(params.collateralShares != 0 || params.protectedShares != 0, NoCollateralToLiquidate());
+        require(params.collateralShares != 0, NoCollateralToLiquidate());
 
         if (_receiveSToken) {
             if (params.collateralShares != 0) {
                 withdrawCollateral = ISilo(collateralConfig.silo).previewRedeem(
-                    params.collateralShares,
-                    ISilo.CollateralType.Collateral
+                    params.collateralShares
                 );
-            }
-
-            if (params.protectedShares != 0) {
-                unchecked {
-                    // protected and collateral values were split from total collateral to withdraw,
-                    // so we will not overflow when we sum them back, especially that on redeem, we rounding down
-                    withdrawCollateral += ISilo(collateralConfig.silo).previewRedeem(
-                        params.protectedShares,
-                        ISilo.CollateralType.Protected
-                    );
-                }
             }
         } else {
             // in case of liquidation redeem, hook transfers sTokens to itself and it has no debt
             // so solvency will not be checked in silo on redeem action
 
             // if share token offset is more than 0, positive number of shares can generate 0 assets
-            // so there is a need to check assets before we withdraw collateral/protected
+            // so there is a need to check assets before we withdraw collateral
 
             withdrawCollateral = _tryRedeem({
                 _silo: collateralConfig.silo,
                 _shareToken: collateralConfig.collateralShareToken,
-                _shares: params.collateralShares,
-                _collateralType: ISilo.CollateralType.Collateral
+                _shares: params.collateralShares
             });
-
-            unchecked {
-                // protected and collateral values were split from total collateral to withdraw,
-                // so we will not overflow when we sum them back, especially that on redeem, we rounding down
-                withdrawCollateral += _tryRedeem({
-                    _silo: collateralConfig.silo,
-                    _shareToken: collateralConfig.protectedShareToken,
-                    _shares: params.protectedShares,
-                    _collateralType: ISilo.CollateralType.Protected
-                });
-            }
         }
 
         emit LiquidationCall(
@@ -220,16 +185,14 @@ abstract contract PartialLiquidation is TransientReentrancy, BaseHookReceiver, I
     function _tryRedeem(
         address _silo,
         address _shareToken,
-        uint256 _shares,
-        ISilo.CollateralType _collateralType
+        uint256 _shares
     ) internal returns (uint256 withdrawCollateral) {
         if (_shares == 0) return 0;
 
         try ISilo(_silo).redeem({
             _shares: _shares,
             _receiver: msg.sender,
-            _owner: address(this),
-            _collateralType: _collateralType
+            _owner: address(this)
         }) returns (uint256 assets) {
             withdrawCollateral = assets;
         } catch (bytes memory e) {

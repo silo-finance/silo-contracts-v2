@@ -26,9 +26,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     address internal immutable _TOKEN0;
 
-    /// @dev Token that represents a share in total protected deposits of Silo
-    address internal immutable _PROTECTED_COLLATERAL_SHARE_TOKEN0;
-    /// @dev Token that represents a share in total deposits of Silo
     address internal immutable _COLLATERAL_SHARE_TOKEN0;
     /// @dev Token that represents a share in total debt of Silo
     address internal immutable _DEBT_SHARE_TOKEN0;
@@ -53,8 +50,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     address internal immutable _TOKEN1;
 
-    /// @dev Token that represents a share in total protected deposits of Silo
-    address internal immutable _PROTECTED_COLLATERAL_SHARE_TOKEN1;
     /// @dev Token that represents a share in total deposits of Silo
     address internal immutable _COLLATERAL_SHARE_TOKEN1;
     /// @dev Token that represents a share in total debt of Silo
@@ -74,9 +69,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     bool internal immutable _CALL_BEFORE_QUOTE1;
     
-    /// @inheritdoc ISiloConfig
-    mapping (address borrower => address collateralSilo) public borrowerCollateralSilo;
-    
     /// @param _siloId ID of this pool assigned by factory
     /// @param _configData0 silo configuration data for token0
     /// @param _configData1 silo configuration data for token1
@@ -89,6 +81,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
         // To make further computations in the Silo secure require DAO and deployer fees to be less than 100%
         require(_configData0.daoFee + _configData0.deployerFee < 1e18, FeeTooHigh());
+        require(_configData0.lt != 0, "MVP: silo0 will be always collateral silo, you can not borrow it");
+        require(_configData1.lt == 0, "MVP: silo1 will be always debt silo");
 
         _DAO_FEE = _configData0.daoFee;
         _DEPLOYER_FEE = _configData0.deployerFee;
@@ -99,7 +93,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         _SILO0 = _configData0.silo;
         _TOKEN0 = _configData0.token;
 
-        _PROTECTED_COLLATERAL_SHARE_TOKEN0 = _configData0.protectedShareToken;
         _COLLATERAL_SHARE_TOKEN0 = _configData0.silo;
         _DEBT_SHARE_TOKEN0 = _configData0.debtShareToken;
 
@@ -121,7 +114,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         _SILO1 = _configData1.silo;
         _TOKEN1 = _configData1.token;
 
-        _PROTECTED_COLLATERAL_SHARE_TOKEN1 = _configData1.protectedShareToken;
         _COLLATERAL_SHARE_TOKEN1 = _configData1.silo;
         _DEBT_SHARE_TOKEN1 = _configData1.debtShareToken;
 
@@ -137,29 +129,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         _FLASHLOAN_FEE1 = _configData1.flashloanFee;
 
         _CALL_BEFORE_QUOTE1 = _configData1.callBeforeQuote;
-    }
-
-    /// @inheritdoc ISiloConfig
-    function setThisSiloAsCollateralSilo(address) external virtual returns (bool) {
-        revert Deprecated();
-    }
-
-    /// @inheritdoc ISiloConfig
-    function setOtherSiloAsCollateralSilo(address _borrower) external virtual returns (bool collateralSiloChanged) {
-        collateralSiloChanged = _setSiloAsCollateralSilo(msg.sender == _SILO0 ? _SILO1 : _SILO0, _borrower);
-    }
-
-    /// @inheritdoc ISiloConfig
-    function onDebtTransfer(address _sender, address _recipient) external virtual {
-        require(msg.sender == _DEBT_SHARE_TOKEN0 || msg.sender == _DEBT_SHARE_TOKEN1, OnlyDebtShareToken());
-
-        address thisSilo = msg.sender == _DEBT_SHARE_TOKEN0 ? _SILO0 : _SILO1;
-
-        require(!hasDebtInOtherSilo(thisSilo, _recipient), DebtExistInOtherSilo());
-
-        if (borrowerCollateralSilo[_recipient] == address(0)) {
-            borrowerCollateralSilo[_recipient] = borrowerCollateralSilo[_sender];
-        }
     }
 
     /// @inheritdoc ISiloConfig
@@ -201,14 +170,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         ConfigData memory collateralConfig,
         ConfigData memory debtConfig
     ) {
-        address debtSilo = getDebtSilo(_borrower);
-
-        if (debtSilo == address(0)) return (collateralConfig, debtConfig);
-
-        address collateralSilo = borrowerCollateralSilo[_borrower];
-
-        collateralConfig = getConfig(collateralSilo);
-        debtConfig = getConfig(debtSilo);
+        collateralConfig = getConfig(_SILO0);
+        debtConfig = getConfig(_SILO1);
     }
 
     /// @inheritdoc ISiloConfig
@@ -228,19 +191,13 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         view
         virtual
         returns (ConfigData memory collateralConfig, ConfigData memory debtConfig)
-    {
-        address collateralSilo; 
-        
-        if (_debtSilo == _SILO0) {
-            collateralSilo = _SILO1;
-        } else if (_debtSilo == _SILO1) {
-            collateralSilo = _SILO0;
-        } else {
+    {        
+        if (_debtSilo != _SILO1) {
             revert WrongSilo();
         }
 
-        collateralConfig = getConfig(collateralSilo);
-        debtConfig = getConfig(_debtSilo);
+        collateralConfig = getConfig(_SILO0);
+        debtConfig = getConfig(_SILO1);
     }
 
     /// @inheritdoc ISiloConfig
@@ -253,12 +210,12 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         external
         view
         virtual
-        returns (address protectedShareToken, address collateralShareToken, address debtShareToken)
+        returns (address collateralShareToken, address debtShareToken)
     {
         if (_silo == _SILO0) {
-            return (_PROTECTED_COLLATERAL_SHARE_TOKEN0, _COLLATERAL_SHARE_TOKEN0, _DEBT_SHARE_TOKEN0);
+            return (_COLLATERAL_SHARE_TOKEN0, _DEBT_SHARE_TOKEN0);
         } else if (_silo == _SILO1) {
-            return (_PROTECTED_COLLATERAL_SHARE_TOKEN1, _COLLATERAL_SHARE_TOKEN1, _DEBT_SHARE_TOKEN1);
+            return (_COLLATERAL_SHARE_TOKEN1, _DEBT_SHARE_TOKEN1);
         } else {
             revert WrongSilo();
         }
@@ -297,20 +254,16 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function getCollateralShareTokenAndAsset(address _silo, ISilo.CollateralType _collateralType)
+    function getCollateralShareTokenAndAsset(address _silo)
         external
         view
         virtual
         returns (address shareToken, address asset)
     {
         if (_silo == _SILO0) {
-            return _collateralType == ISilo.CollateralType.Collateral
-                ? (_COLLATERAL_SHARE_TOKEN0, _TOKEN0)
-                : (_PROTECTED_COLLATERAL_SHARE_TOKEN0, _TOKEN0);
+            return (_COLLATERAL_SHARE_TOKEN0, _TOKEN0);
         } else if (_silo == _SILO1) {
-            return _collateralType == ISilo.CollateralType.Collateral
-                ? (_COLLATERAL_SHARE_TOKEN1, _TOKEN1)
-                : (_PROTECTED_COLLATERAL_SHARE_TOKEN1, _TOKEN1);
+            return (_COLLATERAL_SHARE_TOKEN1, _TOKEN1);
         } else {
             revert WrongSilo();
         }
@@ -343,35 +296,12 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         }
     }
 
-    /// @inheritdoc ISiloConfig
-    function hasDebtInOtherSilo(address _thisSilo, address _borrower) public view virtual returns (bool hasDebt) {
-        if (_thisSilo == _SILO0) {
-            hasDebt = _balanceOf(_DEBT_SHARE_TOKEN1, _borrower) != 0;
-        } else if (_thisSilo == _SILO1) {
-            hasDebt = _balanceOf(_DEBT_SHARE_TOKEN0, _borrower) != 0;
-        } else {
-            revert WrongSilo();
-        }
-     }
-
-    /// @inheritdoc ISiloConfig
-    function getDebtSilo(address _borrower) public view virtual returns (address debtSilo) {
-        uint256 debtBal0 = _balanceOf(_DEBT_SHARE_TOKEN0, _borrower);
-        uint256 debtBal1 = _balanceOf(_DEBT_SHARE_TOKEN1, _borrower);
-
-        require(debtBal0 == 0 || debtBal1 == 0, DebtExistInOtherSilo());
-        if (debtBal0 == 0 && debtBal1 == 0) return address(0);
-
-        debtSilo = debtBal0 != 0 ? _SILO0 : _SILO1;
-    }
-
     function _silo0ConfigData() internal view virtual returns (ConfigData memory config) {
         config = ConfigData({
             daoFee: _DAO_FEE,
             deployerFee: _DEPLOYER_FEE,
             silo: _SILO0,
             token: _TOKEN0,
-            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
             collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
             debtShareToken: _DEBT_SHARE_TOKEN0,
             solvencyOracle: _SOLVENCY_ORACLE0,
@@ -393,7 +323,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             deployerFee: _DEPLOYER_FEE,
             silo: _SILO1,
             token: _TOKEN1,
-            protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
             collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
             debtShareToken: _DEBT_SHARE_TOKEN1,
             solvencyOracle: _SOLVENCY_ORACLE1,
@@ -415,7 +344,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
                 silo: _SILO0,
                 token: _TOKEN0,
                 collateralShareToken: _COLLATERAL_SHARE_TOKEN0,
-                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN0,
                 daoFee: _DAO_FEE,
                 deployerFee: _DEPLOYER_FEE,
                 interestRateModel: _INTEREST_RATE_MODEL0
@@ -425,7 +353,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
                 silo: _SILO1,
                 token: _TOKEN1,
                 collateralShareToken: _COLLATERAL_SHARE_TOKEN1,
-                protectedShareToken: _PROTECTED_COLLATERAL_SHARE_TOKEN1,
                 daoFee: _DAO_FEE,
                 deployerFee: _DEPLOYER_FEE,
                 interestRateModel: _INTEREST_RATE_MODEL1
@@ -441,8 +368,6 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
             msg.sender != _HOOK_RECEIVER &&
             msg.sender != _COLLATERAL_SHARE_TOKEN0 &&
             msg.sender != _COLLATERAL_SHARE_TOKEN1 &&
-            msg.sender != _PROTECTED_COLLATERAL_SHARE_TOKEN0 &&
-            msg.sender != _PROTECTED_COLLATERAL_SHARE_TOKEN1 &&
             msg.sender != _DEBT_SHARE_TOKEN0 &&
             msg.sender != _DEBT_SHARE_TOKEN1
         ) {
@@ -456,18 +381,5 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
 
     function _balanceOf(address _token, address _user) internal view virtual returns (uint256 balance) {
         balance = IERC20(_token).balanceOf(_user);
-    }
-
-    function _setSiloAsCollateralSilo(address _newCollateralSilo, address _borrower)
-        internal
-        virtual
-        returns (bool collateralSiloChanged)
-    {
-        _onlySilo();
-
-        if (borrowerCollateralSilo[_borrower] != _newCollateralSilo) {
-            borrowerCollateralSilo[_borrower] = _newCollateralSilo;
-            collateralSiloChanged = true;
-        }
     }
 }

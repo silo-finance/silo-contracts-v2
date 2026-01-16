@@ -113,12 +113,6 @@ abstract contract LeverageUsingSiloFlashloan is
         virtual
     {
         address shareTokenToApprove = address(_closeArgs.siloWithCollateral);
-        
-        if (_closeArgs.collateralType == ISilo.CollateralType.Protected) {
-            (
-                shareTokenToApprove,,
-            ) = _closeArgs.siloWithCollateral.config().getShareTokens(address(_closeArgs.siloWithCollateral));
-        }
 
         _executePermit(_msgSender, _withdrawAllowance, shareTokenToApprove);
 
@@ -236,8 +230,7 @@ abstract contract LeverageUsingSiloFlashloan is
 
         _depositArgs.silo.deposit({
             _assets: _totalDeposit,
-            _receiver: _txMsgSender,
-            _collateralType: _depositArgs.collateralType
+            _receiver: _txMsgSender
         });
     }
     
@@ -266,8 +259,7 @@ abstract contract LeverageUsingSiloFlashloan is
         uint256 withdrawnDeposit = closeArgs.siloWithCollateral.redeem({
             _shares: sharesToRedeem,
             _receiver: address(this),
-            _owner: _txMsgSender,
-            _collateralType: closeArgs.collateralType
+            _owner: _txMsgSender
         });
 
         // swap collateral to debt to repay flashloan
@@ -304,7 +296,7 @@ abstract contract LeverageUsingSiloFlashloan is
         virtual
         returns (uint256 repayShareBalance)
     {
-        (,, address shareDebtToken) = _txSiloConfig.getShareTokens(address(_siloWithDebt));
+        (, address shareDebtToken) = _txSiloConfig.getShareTokens(address(_siloWithDebt));
         repayShareBalance = IERC20(shareDebtToken).balanceOf(_txMsgSender);
     }
 
@@ -314,13 +306,7 @@ abstract contract LeverageUsingSiloFlashloan is
         virtual
         returns (uint256 balanceOf)
     {
-        if (_closeArgs.collateralType == ISilo.CollateralType.Collateral) {
-            return _closeArgs.siloWithCollateral.balanceOf(_txMsgSender);
-        }
-
-        (address protectedShareToken,,) = _txSiloConfig.getShareTokens(address(_closeArgs.siloWithCollateral));
-
-        balanceOf = ISilo(protectedShareToken).balanceOf(_txMsgSender);
+        return _closeArgs.siloWithCollateral.balanceOf(_txMsgSender);
     }
 
     function _resolveOtherSilo(ISilo _thisSilo) internal view returns (ISilo otherSilo) {

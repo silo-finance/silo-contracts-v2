@@ -14,13 +14,9 @@ import {ISiloIncentivesController} from "../incentives/interfaces/ISiloIncentive
 interface IPartialLiquidationByDefaulting {
     struct CallParams {
         uint256 collateralSharesTotal;
-        uint256 protectedSharesTotal;
         uint256 withdrawAssetsFromCollateral;
-        uint256 withdrawAssetsFromProtected;
         uint256 collateralSharesForKeeper;
         uint256 collateralSharesForLenders;
-        uint256 protectedSharesForKeeper;
-        uint256 protectedSharesForLenders;
         bytes4 customError;
     }
     
@@ -69,8 +65,7 @@ interface IPartialLiquidationByDefaulting {
 
     /// @dev it can revert in case of assets or shares values close to max uint256
     function getKeeperAndLenderSharesSplit(
-        uint256 _assetsToLiquidate,
-        ISilo.CollateralType _collateralType
+        uint256 _assetsToLiquidate
     ) external view returns (uint256 totalSharesToLiquidate, uint256 keeperShares, uint256 lendersShares);
 
     /// @notice Validate if market is supported by defaulting, reverts if not

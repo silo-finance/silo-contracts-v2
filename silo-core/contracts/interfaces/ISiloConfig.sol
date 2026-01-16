@@ -99,7 +99,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
         uint256 deployerFee;
         address silo;
         address token;
-        address protectedShareToken;
         address collateralShareToken;
         address debtShareToken;
         address solvencyOracle;
@@ -118,7 +117,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
         address silo;
         address token;
         address collateralShareToken;
-        address protectedShareToken;
         uint256 daoFee;
         uint256 deployerFee;
         address interestRateModel;
@@ -132,48 +130,12 @@ interface ISiloConfig is ICrossReentrancyGuard {
     error FeeTooHigh();
     error Deprecated();
 
-    /// @dev It should be called on debt transfer (debt share token transfer).
-    /// In the case if the`_recipient` doesn't have configured a collateral silo,
-    /// it will be set to the collateral silo of the `_sender`.
-    /// @param _sender sender address
-    /// @param _recipient recipient address
-    function onDebtTransfer(address _sender, address _recipient) external;
-
-    /// @notice deprecated
-    function setThisSiloAsCollateralSilo(address _borrower) external returns (bool collateralSiloChanged);
-
-    /// @notice Set collateral silo
-    /// @dev Revert if msg.sender is not a SILO_0 or SILO_1.
-    /// @dev Always set collateral silo opposite to the msg.sender.
-    /// @param _borrower borrower address
-    /// @return collateralSiloChanged TRUE if collateral silo changed
-    function setOtherSiloAsCollateralSilo(address _borrower) external returns (bool collateralSiloChanged);
-
     /// @notice Accrue interest for the silo
     /// @param _silo silo for which accrue interest
     function accrueInterestForSilo(address _silo) external;
 
     /// @notice Accrue interest for both silos (SILO_0 and SILO_1 in a config)
     function accrueInterestForBothSilos() external;
-
-    /// @notice Retrieves the collateral silo for a specific borrower.
-    /// @dev As a user can deposit into `Silo0` and `Silo1`, this property specifies which Silo
-    /// will be used as collateral for the debt. Later on, it will be used for max LTV and solvency checks.
-    /// After being set, the collateral silo is never set to `address(0)` again but such getters as
-    /// `getConfigsForSolvency`, `getConfigsForBorrow`, `getConfigsForWithdraw` will return empty
-    /// collateral silo config if borrower doesn't have debt.
-    ///
-    /// In the SiloConfig collateral silo is set by the following functions:
-    /// `onDebtTransfer` - only if the recipient doesn't have collateral silo set (inherits it from the sender)
-    /// This function is called on debt share token transfer (debt transfer).
-    /// `setOtherSiloAsCollateralSilo` - sets the opposite silo as collateral from the one that calls the function.
-    ///
-    /// In the Silo collateral silo is set by the following functions:
-    /// `borrow` - always sets opposite silo as collateral.
-    /// If Silo0 borrows, then Silo1 will be collateral and vice versa.
-    /// @param _borrower The address of the borrower for which the collateral silo is being retrieved
-    /// @return collateralSilo The address of the collateral silo for the specified borrower
-    function borrowerCollateralSilo(address _borrower) external view returns (address collateralSilo);
 
     /// @notice Retrieves the silo ID
     /// @dev Each silo is assigned a unique ID. ERC-721 token is minted with identical ID to deployer.
@@ -191,17 +153,6 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @param _silo The address of the silo for which the associated asset is being retrieved
     /// @return asset The address of the asset associated with the specified silo
     function getAssetForSilo(address _silo) external view returns (address asset);
-
-    /// @notice Verifies if the borrower has debt in other silo by checking the debt share token balance
-    /// @param _thisSilo The address of the silo in respect of which the debt is checked
-    /// @param _borrower The address of the borrower for which the debt is checked
-    /// @return hasDebt true if the borrower has debt in other silo
-    function hasDebtInOtherSilo(address _thisSilo, address _borrower) external view returns (bool hasDebt);
-
-    /// @notice Retrieves the debt silo associated with a specific borrower
-    /// @dev This function reverts if debt present in two silo (should not happen)
-    /// @param _borrower The address of the borrower for which the debt silo is being retrieved
-    function getDebtSilo(address _borrower) external view returns (address debtSilo);
 
     /// @notice Retrieves configuration data for both silos. First config is for the silo that is asking for configs.
     /// @param borrower borrower address for which debtConfig will be returned
@@ -255,20 +206,18 @@ interface ISiloConfig is ICrossReentrancyGuard {
     /// @notice Retrieves share tokens associated with a specific silo
     /// @dev This function reverts for incorrect silo address input
     /// @param _silo The address of the silo for which share tokens are being retrieved
-    /// @return protectedShareToken The address of the protected (non-borrowable) share token
     /// @return collateralShareToken The address of the collateral share token
     /// @return debtShareToken The address of the debt share token
     function getShareTokens(address _silo)
         external
         view
-        returns (address protectedShareToken, address collateralShareToken, address debtShareToken);
+        returns (address collateralShareToken, address debtShareToken);
 
     /// @notice Retrieves the share token and the silo token associated with a specific silo
     /// @param _silo The address of the silo for which the share token and silo token are being retrieved
-    /// @param _collateralType The type of collateral
-    /// @return shareToken The address of the share token (collateral or protected collateral)
+    /// @return shareToken The address of the share token (collateral)
     /// @return asset The address of the silo token
-    function getCollateralShareTokenAndAsset(address _silo, ISilo.CollateralType _collateralType)
+    function getCollateralShareTokenAndAsset(address _silo)
         external
         view
         returns (address shareToken, address asset);

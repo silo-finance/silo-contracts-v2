@@ -130,11 +130,6 @@ contract ManualLiquidationHelper is TokenRescuer {
         if (_receiveSToken) {
             _transferToken(
                 _receiver,
-                collateralConfig.protectedShareToken,
-                IERC20(collateralConfig.protectedShareToken).balanceOf(address(this))
-            );
-            _transferToken(
-                _receiver,
                 collateralConfig.collateralShareToken,
                 IERC20(collateralConfig.collateralShareToken).balanceOf(address(this))
             );

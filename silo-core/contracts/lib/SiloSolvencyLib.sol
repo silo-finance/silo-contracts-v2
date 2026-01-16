@@ -14,7 +14,6 @@ library SiloSolvencyLib {
     struct LtvData {
         ISiloOracle collateralOracle;
         ISiloOracle debtOracle;
-        uint256 borrowerProtectedAssets;
         uint256 borrowerCollateralAssets;
         uint256 borrowerDebtAssets;
     }
@@ -102,17 +101,9 @@ library SiloSolvencyLib {
         uint256 totalShares;
         uint256 shares;
 
-        (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
-            _collateralConfig.protectedShareToken, _borrower, 0 /* no cache */
-        );
-
         (
-            uint256 totalCollateralAssets, uint256 totalProtectedAssets
-        ) = ISilo(_collateralConfig.silo).getCollateralAndProtectedTotalsStorage();
-
-        ltvData.borrowerProtectedAssets = SiloMathLib.convertToAssets(
-            shares, totalProtectedAssets, totalShares, Rounding.COLLATERAL_TO_ASSETS, ISilo.AssetType.Protected
-        );
+            uint256 totalCollateralAssets
+        ) = ISilo(_collateralConfig.silo).getTotalAssetsStorage(ISilo.AssetType.Collateral);
 
         (shares, totalShares) = SiloStdLib.getSharesAndTotalSupply(
             _collateralConfig.collateralShareToken, _borrower, 0 /* no cache */
@@ -202,7 +193,7 @@ library SiloSolvencyLib {
     /// @param _ltvData Data structure containing the assets data required for LTV calculations
     /// @param _collateralAsset Address of the collateral asset
     /// @param _debtAsset Address of the debt asset
-    /// @return sumOfCollateralValue Total value of collateral assets considering both protected and regular collateral
+    /// @return sumOfCollateralValue Total value of collateral assets
     /// assets
     /// @return debtValue Total value of debt assets
     function getPositionValues(LtvData memory _ltvData, address _collateralAsset, address _debtAsset)
@@ -212,7 +203,7 @@ library SiloSolvencyLib {
     {
         uint256 sumOfCollateralAssets;
         
-        sumOfCollateralAssets = _ltvData.borrowerProtectedAssets + _ltvData.borrowerCollateralAssets;
+        sumOfCollateralAssets = _ltvData.borrowerCollateralAssets;
 
         if (sumOfCollateralAssets != 0) {
             // if no oracle is set, assume price 1, we should also not set oracle for quote token

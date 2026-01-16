@@ -161,20 +161,7 @@ contract SiloLens is ISiloLens, IVersioned {
 
         (ISiloConfig.ConfigData memory collateralConfig,) = siloConfig.getConfigsForSolvency(_borrower);
 
-        uint256 protectedShares = IERC20(collateralConfig.protectedShareToken).balanceOf(_borrower);
-
-        if (protectedShares == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired, fullLiquidation);
-
-        uint256 protectedAssets = ISilo(collateralConfig.silo).convertToAssets(
-            protectedShares,
-            ISilo.AssetType.Protected
-        );
-
-        if (protectedAssets == 0) return (collateralToLiquidate, debtToRepay, sTokenRequired, fullLiquidation);
-
-        uint256 availableLiquidity = ISilo(collateralConfig.silo).getLiquidity();
-
-        sTokenRequired = availableLiquidity + protectedAssets < collateralToLiquidate;
+        return (collateralToLiquidate, debtToRepay, sTokenRequired, fullLiquidation);
     }
 
     /// @inheritdoc ISiloLens
@@ -189,11 +176,6 @@ contract SiloLens is ISiloLens, IVersioned {
 
     function totalBorrowAmountWithInterest(ISilo _silo) external view returns (uint256 amount) {
         amount = _silo.getDebtAssets();
-    }
-
-    /// @inheritdoc ISiloLens
-    function collateralOnlyDeposits(ISilo _silo) external view returns (uint256) {
-        return _silo.getTotalAssetsStorage(ISilo.AssetType.Protected);
     }
 
     /// @inheritdoc ISiloLens
@@ -231,7 +213,7 @@ contract SiloLens is ISiloLens, IVersioned {
 
     /// @inheritdoc ISiloLens
     function protocolFees(ISilo _silo) external view returns (uint256 daoAndDeployerRevenue) {
-        (daoAndDeployerRevenue,,,,) = _silo.getSiloStorage();
+        (daoAndDeployerRevenue,,,) = _silo.getSiloStorage();
     }
 
     /// @inheritdoc ISiloLens

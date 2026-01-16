@@ -28,7 +28,6 @@ interface ISiloFactory is IERC721 {
 
     /// @notice Emitted on the creation of a Silo, note that collateral share token == silo
     event NewSiloShareTokens(
-        address indexed protectedShareToken, 
         address indexed collateralShareToken,
         address indexed debtShareToken
     );
@@ -94,21 +93,18 @@ interface ISiloFactory is IERC721 {
     error LiquidationTargetLtvTooHigh();
     error NotYourSilo();
     error ConfigMismatchSilo();
-    error ConfigMismatchShareProtectedToken();
     error ConfigMismatchShareDebtToken();
     error ConfigMismatchShareCollateralToken();
 
     /// @notice Create a new Silo.
     /// @param _siloConfig Silo configuration.
     /// @param _siloImpl Address of the `Silo` implementation.
-    /// @param _shareProtectedCollateralTokenImpl Address of the `ShareProtectedCollateralToken` implementation.
     /// @param _shareDebtTokenImpl Address of the `ShareDebtToken` implementation.
     /// @param _deployer Address of the deployer.
     /// @param _creator Address of the creator.
     function createSilo(
         ISiloConfig _siloConfig,
         address _siloImpl,
-        address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl,
         address _deployer,
         address _creator

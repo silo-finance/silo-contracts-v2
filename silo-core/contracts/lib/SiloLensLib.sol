@@ -136,9 +136,7 @@ library SiloLensLib {
         ISiloConfig.ConfigData memory cfg1 = _siloConfig.getConfig(silo1);
 
         if (IShareToken(cfg0.collateralShareToken).balanceOf(_borrower) != 0) return true;
-        if (IShareToken(cfg0.protectedShareToken).balanceOf(_borrower) != 0) return true;
         if (IShareToken(cfg1.collateralShareToken).balanceOf(_borrower) != 0) return true;
-        if (IShareToken(cfg1.protectedShareToken).balanceOf(_borrower) != 0) return true;
 
         if (IShareToken(cfg0.debtShareToken).balanceOf(_borrower) != 0) return true;
         if (IShareToken(cfg1.debtShareToken).balanceOf(_borrower) != 0) return true;
@@ -159,28 +157,23 @@ library SiloLensLib {
         returns (uint256 borrowerCollateral)
     {
         (
-            address protectedShareToken, address collateralShareToken,
+            address collateralShareToken,
         ) = _silo.config().getShareTokens(address(_silo));
 
-        uint256 protectedShareBalance = IShareToken(protectedShareToken).balanceOf(_borrower);
         uint256 collateralShareBalance = IShareToken(collateralShareToken).balanceOf(_borrower);
 
-        if (protectedShareBalance != 0) {
-            borrowerCollateral = _silo.previewRedeem(protectedShareBalance, ISilo.CollateralType.Protected);
-        }
-
         if (collateralShareBalance != 0) {
-            borrowerCollateral += _silo.previewRedeem(collateralShareBalance, ISilo.CollateralType.Collateral);
+            borrowerCollateral += _silo.previewRedeem(collateralShareBalance);
         }
     }
 
     function totalBorrowShare(ISilo _silo) internal view returns (uint256) {
-        (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
+        (, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
         return IShareToken(debtShareToken).totalSupply();
     }
 
     function borrowShare(ISilo _silo, address _borrower) external view returns (uint256) {
-        (,, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
+        (, address debtShareToken) = _silo.config().getShareTokens(address(_silo));
         return IShareToken(debtShareToken).balanceOf(_borrower);
     }
 

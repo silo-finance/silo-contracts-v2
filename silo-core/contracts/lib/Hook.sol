@@ -193,7 +193,7 @@ library Hook {
     uint256 internal constant SWITCH_COLLATERAL = 2 ** 8; // deprecated
     uint256 internal constant SHARE_TOKEN_TRANSFER = 2 ** 10;
     uint256 internal constant COLLATERAL_TOKEN = 2 ** 11;
-    uint256 internal constant PROTECTED_TOKEN = 2 ** 12;
+    // uint256 internal constant PROTECTED_TOKEN = 2 ** 12;
     uint256 internal constant DEBT_TOKEN = 2 ** 13;
 
     // note: currently we can support hook value up to 2 ** 23,
@@ -228,38 +228,33 @@ library Hook {
     }
 
     /// @dev please be careful with removing actions, because other hooks might using them
-    /// eg when you have `_action = COLLATERAL_TOKEN | PROTECTED_TOKEN | SHARE_TOKEN_TRANSFER`
-    /// and you want to remove action on protected token transfer by doing
-    /// `remove(_action, PROTECTED_TOKEN | SHARE_TOKEN_TRANSFER)`, the result will be `_action=COLLATERAL_TOKEN`
-    /// and it will not trigger collateral token transfer. In this example you should do:
-    /// `remove(_action, PROTECTED_TOKEN)`
+    /// eg when you have `_action = COLLATERAL_TOKEN | SHARE_TOKEN_TRANSFER`
+    /// and you want to remove action on share token transfer by doing
+    /// `remove(_action, SHARE_TOKEN_TRANSFER)`, the result will be `_action=COLLATERAL_TOKEN`
     function removeAction(uint256 _action, uint256 _actionToRemove) internal pure returns (uint256) {
         return _action & (~_actionToRemove);
     }
 
     /// @notice Returns the action for depositing a specific collateral type
-    /// @param _type The collateral type
-    function depositAction(ISilo.CollateralType _type) internal pure returns (uint256) {
-        return DEPOSIT | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);
+    function depositAction() internal pure returns (uint256) {
+        return DEPOSIT | COLLATERAL_TOKEN;
     }
 
     /// @notice Returns the action for withdrawing a specific collateral type
-    /// @param _type The collateral type
-    function withdrawAction(ISilo.CollateralType _type) internal pure returns (uint256) {
-        return WITHDRAW | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);
+    function withdrawAction() internal pure returns (uint256) {
+        return WITHDRAW | COLLATERAL_TOKEN;
     }
 
     /// @notice Returns the action for collateral transition
-    /// @param _type The collateral type
-    function transitionCollateralAction(ISilo.CollateralType _type) internal pure returns (uint256) {
-        return TRANSITION_COLLATERAL | (_type == ISilo.CollateralType.Collateral ? COLLATERAL_TOKEN : PROTECTED_TOKEN);
+    function transitionCollateralAction() internal pure returns (uint256) {
+        return TRANSITION_COLLATERAL | COLLATERAL_TOKEN;
     }
 
     /// @notice Returns the share token transfer action
-    /// @param _tokenType The token type (COLLATERAL_TOKEN || PROTECTED_TOKEN || DEBT_TOKEN)
+    /// @param _tokenType The token type (COLLATERAL_TOKEN || DEBT_TOKEN)
     function shareTokenTransfer(uint256 _tokenType) internal pure returns (uint256) {
         require(
-            _tokenType == COLLATERAL_TOKEN || _tokenType == PROTECTED_TOKEN || _tokenType == DEBT_TOKEN,
+            _tokenType == COLLATERAL_TOKEN || _tokenType == DEBT_TOKEN,
             InvalidTokenType()
         );
 
