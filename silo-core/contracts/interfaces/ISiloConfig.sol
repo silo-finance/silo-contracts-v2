@@ -131,11 +131,7 @@ interface ISiloConfig is ICrossReentrancyGuard {
     error Deprecated();
 
     /// @notice Accrue interest for the silo
-    /// @param _silo silo for which accrue interest
-    function accrueInterestForSilo(address _silo) external;
-
-    /// @notice Accrue interest for both silos (SILO_0 and SILO_1 in a config)
-    function accrueInterestForBothSilos() external;
+    function accrueInterestForSilo() external;
 
     /// @notice Retrieves the silo ID
     /// @dev Each silo is assigned a unique ID. ERC-721 token is minted with identical ID to deployer.

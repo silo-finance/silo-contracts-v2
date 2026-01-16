@@ -41,7 +41,7 @@ library DefaultingRepayLib {
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         siloConfig.turnOnReentrancyProtection();
-        siloConfig.accrueInterestForSilo(address(this));
+        siloConfig.accrueInterestForSilo();
 
         (address debtShareToken, address debtAsset) = siloConfig.getDebtShareTokenAndAsset(address(this));
 

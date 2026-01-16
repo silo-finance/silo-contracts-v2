@@ -74,7 +74,7 @@ library Actions {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         siloConfig.turnOnReentrancyProtection();
-        siloConfig.accrueInterestForSilo(address(this));
+        siloConfig.accrueInterestForSilo();
 
         (
             address shareToken, address asset
@@ -113,7 +113,7 @@ library Actions {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         siloConfig.turnOnReentrancyProtection();
-        siloConfig.accrueInterestForBothSilos();
+        siloConfig.accrueInterestForSilo();
 
         ISiloConfig.DepositConfig memory depositConfig;
         ISiloConfig.ConfigData memory collateralConfig;
@@ -154,7 +154,7 @@ library Actions {
         ISiloConfig siloConfig = ShareTokenLib.siloConfig();
 
         siloConfig.turnOnReentrancyProtection();
-        siloConfig.accrueInterestForBothSilos();
+        siloConfig.accrueInterestForSilo();
 
         ISiloConfig.ConfigData memory collateralConfig;
         ISiloConfig.ConfigData memory debtConfig;
@@ -201,7 +201,7 @@ library Actions {
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         siloConfig.turnOnReentrancyProtection();
-        siloConfig.accrueInterestForSilo(address(this));
+        siloConfig.accrueInterestForSilo();
 
         (address debtShareToken, address debtAsset) = siloConfig.getDebtShareTokenAndAsset(address(this));
 

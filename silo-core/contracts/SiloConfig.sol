@@ -132,32 +132,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function accrueInterestForSilo(address _silo) external virtual {
-        address irm;
-
-        if (_silo == _SILO0) {
-            irm = _INTEREST_RATE_MODEL0;
-        } else if (_silo == _SILO1) {
-            irm = _INTEREST_RATE_MODEL1;
-        } else {
-            revert WrongSilo();
-        }
-
-        ISilo(_silo).accrueInterestForConfig(
-            irm,
-            _DAO_FEE,
-            _DEPLOYER_FEE
-        );
-    }
-
-    /// @inheritdoc ISiloConfig
-    function accrueInterestForBothSilos() external virtual {
-        ISilo(_SILO0).accrueInterestForConfig(
-            _INTEREST_RATE_MODEL0,
-            _DAO_FEE,
-            _DEPLOYER_FEE
-        );
-
+    function accrueInterestForSilo() external virtual {
         ISilo(_SILO1).accrueInterestForConfig(
             _INTEREST_RATE_MODEL1,
             _DAO_FEE,

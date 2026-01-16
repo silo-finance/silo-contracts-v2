@@ -125,7 +125,7 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
         if (ShareTokenLib.isTransfer(_sender, _recipient) && $.transferWithChecks) {
-            $.siloConfig.accrueInterestForBothSilos();
+            $.siloConfig.accrueInterestForSilo();
             ShareTokenLib.callOracleBeforeQuote($.siloConfig, _recipient);
             require($.silo.isSolvent(_recipient), IShareToken.RecipientNotSolventAfterTransfer());
         }
