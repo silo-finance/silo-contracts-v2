@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">4</td>
-            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-07-24 09:16:39</td>
+            <td class="headerValue">2026-01-16 12:30:27</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">1</td>
-            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
                   <tr><td><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -71,12 +71,12 @@
 <span id="L9"><span class="lineNum">       9</span>              : </span>
 <span id="L10"><span class="lineNum">      10</span>              :     /// @notice Transfer ownership to a new address. Pending ownership transfer will be canceled.</span>
 <span id="L11"><span class="lineNum">      11</span>              :     /// @param newOwner The new owner of the contract</span>
-<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC tlaBgGNC">         280 :     function transferOwnership1Step(address newOwner) public virtual onlyOwner {</span></span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">         261 :         if (newOwner == address(0)) {</span></span>
-<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">           1 :             revert OwnableInvalidOwner(address(0));</span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaUNC tlaBgUNC">           0 :     function transferOwnership1Step(address newOwner) public virtual onlyOwner {</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaUNC">           0 :         if (newOwner == address(0)) {</span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaUNC">           0 :             revert OwnableInvalidOwner(address(0));</span></span>
 <span id="L15"><span class="lineNum">      15</span>              :         }</span>
 <span id="L16"><span class="lineNum">      16</span>              : </span>
-<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">         260 :         Ownable2Step._transferOwnership(newOwner);</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaUNC">           0 :         Ownable2Step._transferOwnership(newOwner);</span></span>
 <span id="L18"><span class="lineNum">      18</span>              :     }</span>
 <span id="L19"><span class="lineNum">      19</span>              : }</span>
         </pre>

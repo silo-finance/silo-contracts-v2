@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">4</td>
-            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-07-24 09:16:39</td>
+            <td class="headerValue">2026-01-16 12:30:27</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">1</td>
-            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
                   <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -65,26 +65,26 @@
 <span id="L3"><span class="lineNum">       3</span>              : </span>
 <span id="L4"><span class="lineNum">       4</span>              : import {Create2Factory} from &quot;common/utils/Create2Factory.sol&quot;;</span>
 <span id="L5"><span class="lineNum">       5</span>              : </span>
-<span id="L6"><span class="lineNum">       6</span>              : import {SiloIncentivesController} from &quot;./SiloIncentivesController.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {SiloIncentivesControllerCompatible} from &quot;./SiloIncentivesControllerCompatible.sol&quot;;</span>
 <span id="L7"><span class="lineNum">       7</span>              : import {ISiloIncentivesControllerFactory} from &quot;./interfaces/ISiloIncentivesControllerFactory.sol&quot;;</span>
 <span id="L8"><span class="lineNum">       8</span>              : </span>
 <span id="L9"><span class="lineNum">       9</span>              : /// @title SiloIncentivesControllerFactory</span>
-<span id="L10"><span class="lineNum">      10</span>              : /// @notice Factory contract for creating SiloIncentivesController instances.</span>
+<span id="L10"><span class="lineNum">      10</span>              : /// @notice Factory contract for creating SiloIncentivesControllerCompatible instances.</span>
 <span id="L11"><span class="lineNum">      11</span>              : contract SiloIncentivesControllerFactory is Create2Factory, ISiloIncentivesControllerFactory {</span>
 <span id="L12"><span class="lineNum">      12</span>              :     mapping(address =&gt; bool) public isSiloIncentivesController;</span>
 <span id="L13"><span class="lineNum">      13</span>              : </span>
 <span id="L14"><span class="lineNum">      14</span>              :     /// @inheritdoc ISiloIncentivesControllerFactory</span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC tlaBgGNC">          60 :     function create(</span></span>
-<span id="L16"><span class="lineNum">      16</span>              :         address _owner,</span>
-<span id="L17"><span class="lineNum">      17</span>              :         address _notifier,</span>
-<span id="L18"><span class="lineNum">      18</span>              :         address _shareToken,</span>
-<span id="L19"><span class="lineNum">      19</span>              :         bytes32 _externalSalt</span>
-<span id="L20"><span class="lineNum">      20</span>              :     ) external returns (address controller) {</span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">          60 :         controller = address(new SiloIncentivesController{salt: _salt(_externalSalt)}(_owner, _notifier, _shareToken));</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaUNC tlaBgUNC">           0 :     function create(address _owner, address _notifier, address _shareToken, bytes32 _externalSalt)</span></span>
+<span id="L16"><span class="lineNum">      16</span>              :         external</span>
+<span id="L17"><span class="lineNum">      17</span>              :         returns (address controller)</span>
+<span id="L18"><span class="lineNum">      18</span>              :     {</span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaUNC">           0 :         controller = address(</span></span>
+<span id="L20"><span class="lineNum">      20</span>              :             new SiloIncentivesControllerCompatible{salt: _salt(_externalSalt)}(_owner, _notifier, _shareToken)</span>
+<span id="L21"><span class="lineNum">      21</span>              :         );</span>
 <span id="L22"><span class="lineNum">      22</span>              : </span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">          59 :         isSiloIncentivesController[controller] = true;</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaUNC">           0 :         isSiloIncentivesController[controller] = true;</span></span>
 <span id="L24"><span class="lineNum">      24</span>              : </span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">          59 :         emit SiloIncentivesControllerCreated(controller);</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :         emit SiloIncentivesControllerCreated(controller);</span></span>
 <span id="L26"><span class="lineNum">      26</span>              :     }</span>
 <span id="L27"><span class="lineNum">      27</span>              : }</span>
         </pre>

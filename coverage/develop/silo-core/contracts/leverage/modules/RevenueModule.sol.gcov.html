@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">11</td>
-            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-07-24 09:16:39</td>
+            <td class="headerValue">2026-01-16 12:30:27</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
             <td class="headerCovTableEntry">2</td>
-            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">0</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -81,22 +81,22 @@
 <span id="L19"><span class="lineNum">      19</span>              :     address public revenueReceiver;</span>
 <span id="L20"><span class="lineNum">      20</span>              : </span>
 <span id="L21"><span class="lineNum">      21</span>              :     /// @inheritdoc ILeverageRouter</span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC tlaBgGNC">         607 :     function setLeverageFee(uint256 _fee) external onlyRole(OWNER_ROLE) {</span></span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">         554 :         require(revenueReceiver != address(0), ReceiverZero());</span></span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">         553 :         require(leverageFee != _fee, FeeDidNotChanged());</span></span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">         552 :         require(_fee &lt;= MAX_LEVERAGE_FEE, InvalidFee());</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC tlaBgUNC">           0 :     function setLeverageFee(uint256 _fee) external onlyRole(OWNER_ROLE) {</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaUNC">           0 :         require(revenueReceiver != address(0), ReceiverZero());</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaUNC">           0 :         require(leverageFee != _fee, FeeDidNotChanged());</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :         require(_fee &lt;= MAX_LEVERAGE_FEE, InvalidFee());</span></span>
 <span id="L26"><span class="lineNum">      26</span>              : </span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">         296 :         leverageFee = _fee;</span></span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">         296 :         emit LeverageFeeChanged(_fee);</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaUNC">           0 :         leverageFee = _fee;</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaUNC">           0 :         emit LeverageFeeChanged(_fee);</span></span>
 <span id="L29"><span class="lineNum">      29</span>              :     }</span>
 <span id="L30"><span class="lineNum">      30</span>              : </span>
 <span id="L31"><span class="lineNum">      31</span>              :     /// @inheritdoc ILeverageRouter</span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">          93 :     function setRevenueReceiver(address _receiver) external onlyRole(OWNER_ROLE) {</span></span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">          40 :         require(revenueReceiver != _receiver, ReceiverDidNotChanged());</span></span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">          40 :         require(_receiver != address(0), ReceiverZero());</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaUNC">           0 :     function setRevenueReceiver(address _receiver) external onlyRole(OWNER_ROLE) {</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaUNC">           0 :         require(revenueReceiver != _receiver, ReceiverDidNotChanged());</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC">           0 :         require(_receiver != address(0), ReceiverZero());</span></span>
 <span id="L35"><span class="lineNum">      35</span>              : </span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">          40 :         revenueReceiver = _receiver;</span></span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">          40 :         emit RevenueReceiverChanged(_receiver);</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :         revenueReceiver = _receiver;</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaUNC">           0 :         emit RevenueReceiverChanged(_receiver);</span></span>
 <span id="L38"><span class="lineNum">      38</span>              :     }</span>
 <span id="L39"><span class="lineNum">      39</span>              : }</span>
         </pre>
