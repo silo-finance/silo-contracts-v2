@@ -175,7 +175,7 @@ library SiloERC4626Lib {
 
             if (liquidity != 0) {
                 // We need to count for fractions. When fractions are applied, liquidity may be decreased.
-                unchecked { liquidity -= 1; }
+                unchecked { liquidity -= 1; _totalAssets -= 1; }
             }
         } else {
             shareTokenTotalSupply = IShareToken(depositConfig.protectedShareToken).totalSupply();

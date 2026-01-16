@@ -9,6 +9,7 @@ import {IIncentivesClaimingLogicFactory} from "silo-vaults/contracts/interfaces/
 import {Create2Factory} from "common/utils/Create2Factory.sol";
 import {ISiloVault} from "./interfaces/ISiloVault.sol";
 import {ISiloVaultsFactory} from "./interfaces/ISiloVaultsFactory.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 
 import {EventsLib} from "./libraries/EventsLib.sol";
 import {SiloVaultFactoryActionsLib} from "./libraries/SiloVaultFactoryActionsLib.sol";
@@ -20,7 +21,7 @@ import {VaultIncentivesModule} from "./incentives/VaultIncentivesModule.sol";
 /// @author Silo Labs
 /// @custom:contact security@silo.finance
 /// @notice This contract allows to create SiloVault vaults, and to index them easily.
-contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
+contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory, IVersioned {
     /* STORAGE */
     address public immutable VAULT_INCENTIVES_MODULE_IMPLEMENTATION;
 
@@ -67,6 +68,8 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
         emit EventsLib.CreateSiloVault(
             address(siloVault), msg.sender, _initialOwner, _initialTimelock, _asset, _name, _symbol
         );
+
+        emit EventsLib.VaultIncentiveModule(address(siloVault), address(siloVault.INCENTIVES_MODULE()));
     }
 
     /// @inheritdoc ISiloVaultsFactory
@@ -83,5 +86,10 @@ contract SiloVaultsFactory is Create2Factory, ISiloVaultsFactory {
             _salt,
             initCodeHash
         )))));
+    }
+
+    /// @inheritdoc IVersioned
+    function VERSION() external pure virtual returns (string memory) { // solhint-disable-line func-name-mixedcase
+        return "SiloVaultsFactory 4.0.0";
     }
 }

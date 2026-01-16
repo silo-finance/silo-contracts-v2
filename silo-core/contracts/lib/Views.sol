@@ -55,12 +55,12 @@ library Views {
         }
     }
 
-    function maxBorrow(address _borrower, bool _sameAsset)
+    function maxBorrow(address _borrower)
         external
         view
         returns (uint256 maxAssets, uint256 maxShares)
     {
-        return SiloLendingLib.maxBorrow(_borrower, _sameAsset);
+        return SiloLendingLib.maxBorrow(_borrower);
     }
 
     function maxWithdraw(address _owner, ISilo.CollateralType _collateralType)

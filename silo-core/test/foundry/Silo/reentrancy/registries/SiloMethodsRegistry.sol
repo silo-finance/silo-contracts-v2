@@ -82,8 +82,7 @@ import {SiloConfigReentrancyTest} from "../methods/silo/SiloConfigReentrancyTest
 import {GetSiloStorageReentrancyTest} from "../methods/silo/GetSiloStorageReentrancyTest.sol";
 import {SiloReentrancyTest} from "../methods/share-token/SiloReentrancyTest.sol";
 import {SiloTokenReentrancyTest} from "../methods/silo/SiloTokenReentrancyTest.sol";
-import {SwitchCollateralToThisSiloReentrancyTest} from
-    "../methods/silo/SwitchCollateralToThisSiloReentrancyTest.sol";
+import {SwitchCollateralToThisSiloReentrancyTest} from "../methods/silo/SwitchCollateralToThisSiloReentrancyTest.sol";
 import {SymbolReentrancyTest} from "../methods/silo/SymbolReentrancyTest.sol";
 import {SynchronizeHooksReentrancyTest} from "../methods/share-token/SynchronizeHooksReentrancyTest.sol";
 import {SynchronizeHooksTokenReentrancyTest} from "../methods/silo/SynchronizeHooksTokenReentrancyTest.sol";

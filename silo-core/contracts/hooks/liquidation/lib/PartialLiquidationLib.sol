@@ -145,7 +145,9 @@ library PartialLiquidationLib {
     {
         require(_totalValue != 0, IPartialLiquidation.UnknownRatio());
 
-        assets = _value * _totalAssets / _totalValue;
+        // round UP to allow for 1 wei collateral liquidations and
+        // always take more collateral and debt during liquidation
+        assets = Math.mulDiv(_value, _totalAssets, _totalValue, Rounding.UP);
     }
 
     /// @notice this function never reverts

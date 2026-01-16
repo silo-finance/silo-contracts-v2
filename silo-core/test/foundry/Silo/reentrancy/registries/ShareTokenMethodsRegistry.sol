@@ -8,8 +8,7 @@ import {DomainSeparatorReentrancyTest} from "../methods/share-token/DomainSepara
 import {AllowanceReentrancyTest} from "../methods/share-token/AllowanceReentrancyTest.sol";
 import {ApproveReentrancyTest} from "../methods/share-token/ApproveReentrancyTest.sol";
 import {BalanceOfReentrancyTest} from "../methods/share-token/BalanceOfReentrancyTest.sol";
-import {BalanceOfAndTotalSupplyReentrancyTest} from
-    "../methods/share-token/BalanceOfAndTotalSupplyReentrancyTest.sol";
+import {BalanceOfAndTotalSupplyReentrancyTest} from "../methods/share-token/BalanceOfAndTotalSupplyReentrancyTest.sol";
 import {BurnReentrancyTest} from "../methods/share-token/BurnReentrancyTest.sol";
 import {CallOnBehalfOfShareTokenReentrancyTest} from
     "../methods/share-token/CallOnBehalfOfShareTokenReentrancyTest.sol";

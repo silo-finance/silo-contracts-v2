@@ -165,8 +165,8 @@ contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
         _borrowAndUpdateSiloCode(_borrowAmount);
 
         if (_redeem) {
-            uint256 maxRedeem = silo0.maxRedeem(borrower);
             _changeTotalsScenario2();
+            uint256 maxRedeem = silo0.maxRedeem(borrower);
             vm.assume(maxRedeem != 0);
             silo0.redeem(maxRedeem, borrower, borrower);
         } else {

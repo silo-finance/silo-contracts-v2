@@ -84,7 +84,7 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
         uint256 _siloId,
         ConfigData memory _configData0,
         ConfigData memory _configData1
-    ) CrossReentrancyGuard() {
+    ) {
         SILO_ID = _siloId;
 
         // To make further computations in the Silo secure require DAO and deployer fees to be less than 100%
@@ -140,8 +140,8 @@ contract SiloConfig is ISiloConfig, CrossReentrancyGuard {
     }
 
     /// @inheritdoc ISiloConfig
-    function setThisSiloAsCollateralSilo(address _borrower) external virtual returns (bool collateralSiloChanged) {
-        collateralSiloChanged = _setSiloAsCollateralSilo(msg.sender, _borrower);
+    function setThisSiloAsCollateralSilo(address) external virtual returns (bool) {
+        revert Deprecated();
     }
 
     /// @inheritdoc ISiloConfig

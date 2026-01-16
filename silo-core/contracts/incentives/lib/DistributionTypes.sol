@@ -5,12 +5,12 @@ library DistributionTypes {
     struct IncentivesProgramCreationInput {
         string name;
         address rewardToken;
-        uint104 emissionPerSecond;
+        uint256 emissionPerSecond;
         uint40 distributionEnd;
     }
 
     struct AssetConfigInput {
-        uint104 emissionPerSecond;
+        uint256 emissionPerSecond;
         uint256 totalStaked;
         address underlyingAsset;
     }
