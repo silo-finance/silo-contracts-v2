@@ -33,11 +33,6 @@ library DefaultingRepayLib {
     {
         IShareToken.ShareTokenStorage storage _shareStorage = ShareTokenLib.getShareTokenStorage();
 
-        if (_shareStorage.hookSetup.hooksBefore.matchAction(Hook.REPAY)) {
-            bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer);
-            IHookReceiver(_shareStorage.hookSetup.hookReceiver).beforeAction(address(this), Hook.REPAY, data);
-        }
-
         ISiloConfig siloConfig = _shareStorage.siloConfig;
 
         siloConfig.turnOnReentrancyProtection();
@@ -50,11 +45,6 @@ library DefaultingRepayLib {
         );
 
         siloConfig.turnOffReentrancyProtection();
-
-        if (_shareStorage.hookSetup.hooksAfter.matchAction(Hook.REPAY)) {
-            bytes memory data = abi.encodePacked(_assets, _shares, _borrower, _repayer, assets, shares);
-            IHookReceiver(_shareStorage.hookSetup.hookReceiver).afterAction(address(this), Hook.REPAY, data);
-        }
     }
 
     /// @dev This is a copy of lib/SiloLendingLib.sol repay() function with a single line changed.
