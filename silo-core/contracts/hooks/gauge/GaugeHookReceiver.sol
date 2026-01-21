@@ -87,16 +87,14 @@ abstract contract GaugeHookReceiver is BaseHookReceiver, IGaugeHookReceiver, Own
     /// @param _silo Silo address for which tokens was deployed
     /// @param _shareToken Share token address
     /// @dev Revert if wrong silo
-    /// @dev Revert if the share token is not one of the collateral, protected or debt tokens
+    /// @dev Revert if the share token is not one of the collateral or debt tokens
     function _getTokenType(address _silo, address _shareToken) internal view virtual returns (uint256) {
         (
-            address protectedShareToken,
             address collateralShareToken,
             address debtShareToken
         ) = siloConfig.getShareTokens(_silo);
 
         if (_shareToken == collateralShareToken) return Hook.COLLATERAL_TOKEN;
-        if (_shareToken == protectedShareToken) return Hook.PROTECTED_TOKEN;
         if (_shareToken == debtShareToken) return Hook.DEBT_TOKEN;
 
         revert InvalidShareToken();

@@ -179,7 +179,7 @@ library PartialLiquidationLib {
     /// @notice in case math fail to calculate repay value, eg when collateral is not enough to cover repay and fee
     /// function will return full debt value and full collateral value, it will not revert. It is up to liquidator
     /// to make decision if it will be profitable
-    /// @param _totalBorrowerCollateralValue regular and protected
+    /// @param _totalBorrowerCollateralValue total collateral value
     /// @param _ltvAfterLiquidation % of `repayValue` that liquidator will use as profit from liquidating
     function maxLiquidationPreview(
         uint256 _totalBorrowerCollateralValue,
@@ -224,7 +224,7 @@ library PartialLiquidationLib {
     /// result also take into consideration the dust
     /// @notice protocol does not uses this method, because in protocol our input is debt to cover in assets
     /// however this is useful to figure out what is max debt to cover.
-    /// @param _totalBorrowerCollateralValue regular and protected
+    /// @param _totalBorrowerCollateralValue total collateral value
     /// @param _ltvAfterLiquidation % of `repayValue` that liquidator will use as profit from liquidating
     /// @return repayValue max repay value that is allowed for partial liquidation. if this value equals
     /// `_totalBorrowerDebtValue`, that means dust threshold was triggered and result force to do full liquidation
@@ -278,25 +278,6 @@ library PartialLiquidationLib {
         return repayValue * _PRECISION_DECIMALS / _totalBorrowerDebtValue > _FULL_LIQUIDATION_THRESHOLD
             ? _totalBorrowerDebtValue
             : repayValue;
-    }
-
-    /// @dev protected collateral is prioritized
-    /// @param _borrowerProtectedAssets available users protected collateral
-    function splitReceiveCollateralToLiquidate(uint256 _collateralToLiquidate, uint256 _borrowerProtectedAssets)
-        internal
-        pure
-        returns (uint256 withdrawAssetsFromCollateral, uint256 withdrawAssetsFromProtected)
-    {
-        if (_collateralToLiquidate == 0) return (0, 0);
-
-        unchecked {
-            (
-                withdrawAssetsFromCollateral, withdrawAssetsFromProtected
-            ) = _collateralToLiquidate > _borrowerProtectedAssets
-                // safe to uncheck because of above condition
-                ? (_collateralToLiquidate - _borrowerProtectedAssets, _borrowerProtectedAssets)
-                : (0, _collateralToLiquidate);
-        }
     }
 
     /// @notice must stay private because this is not for general LTV, only for ltv after internally

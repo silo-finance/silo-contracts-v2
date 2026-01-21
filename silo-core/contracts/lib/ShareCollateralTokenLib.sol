@@ -25,7 +25,7 @@ library ShareCollateralTokenLib {
         // when deposit silo is collateral silo, that means this sToken is collateral for debt
         if (collateral.silo != deposit.silo) return true;
 
-        siloConfig.accrueInterestForBothSilos();
+        siloConfig.accrueInterestForSilo();
 
         ShareTokenLib.callOracleBeforeQuote(siloConfig, _sender);
 

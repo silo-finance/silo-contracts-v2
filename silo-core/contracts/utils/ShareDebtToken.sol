@@ -110,10 +110,6 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
 
         // If we are minting or burning, Silo is responsible to check all necessary conditions
         if (ShareTokenLib.isTransfer(_sender, _recipient)) {
-            // Silo forbids having two debts and this condition will be checked inside `onDebtTransfer`.
-            // If the `_recipient` has no collateral silo set yet, it will be copied from the sender.
-            $.siloConfig.onDebtTransfer(_sender, _recipient);
-
             // if we NOT doing checks, we early return and not checking/changing any allowance
             if (!$.transferWithChecks) return;
 
@@ -129,7 +125,7 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
         // if we are NOT minting and not burning, it means we are transferring
         // make sure that _recipient is solvent after transfer
         if (ShareTokenLib.isTransfer(_sender, _recipient) && $.transferWithChecks) {
-            $.siloConfig.accrueInterestForBothSilos();
+            $.siloConfig.accrueInterestForSilo();
             ShareTokenLib.callOracleBeforeQuote($.siloConfig, _recipient);
             require($.silo.isSolvent(_recipient), IShareToken.RecipientNotSolventAfterTransfer());
         }

@@ -35,15 +35,15 @@ Supporting the following scenarios:
 
 ## withdraw
 - withdraw token using Silo.withdraw
-    SiloRouterV2.withdraw(ISilo _silo, uint256 _amount, address _receiver, ISilo.CollateralType _collateral)
+    SiloRouterV2.withdraw(ISilo _silo, uint256 _amount, address _receiver)
 - withdraw wrapped native token and unwrap in a single tx using SiloRouterV2.multicall
-    SiloRouterV2.withdraw(ISilo _silo, uint256 _amount, address _receiver, ISilo.CollateralType _collateral)
+    SiloRouterV2.withdraw(ISilo _silo, uint256 _amount, address _receiver)
     SiloRouterV2.unwrap(IWrappedNativeToken _native, uint256 _amount)
     SiloRouterV2.sendValue(address payable _to, uint256 _amount)
 - full withdraw token using Silo.redeem
-    SiloRouterV2.withdrawAll(ISilo _silo, address _receiver, ISilo.CollateralType _collateral)
+    SiloRouterV2.withdrawAll(ISilo _silo, address _receiver)
 - full withdraw wrapped native token and unwrap in a single tx using SiloRouterV2.multicall
-    SiloRouterV2.withdrawAll(ISilo _silo, address _receiver, ISilo.CollateralType _collateral)
+    SiloRouterV2.withdrawAll(ISilo _silo, address _receiver)
     SiloRouterV2.unwrapAll(IWrappedNativeToken _native)
     SiloRouterV2.sendValueAll(address payable _to)
 
@@ -166,30 +166,27 @@ contract SiloRouterV2Implementation is ISiloRouterV2Implementation {
     /// @inheritdoc ISiloRouterV2Implementation
     function deposit(
         ISilo _silo,
-        uint256 _amount,
-        ISilo.CollateralType _collateral
+        uint256 _amount
     ) external payable virtual returns (uint256 shares) {
-        shares = _silo.deposit(_amount, msg.sender, _collateral);
+        shares = _silo.deposit(_amount, msg.sender);
     }
 
     /// @inheritdoc ISiloRouterV2Implementation
     function withdraw(
         ISilo _silo,
         uint256 _amount,
-        address _receiver,
-        ISilo.CollateralType _collateral
+        address _receiver
     ) external payable virtual returns (uint256 shares) {
-        shares = _silo.withdraw(_amount, _receiver, msg.sender, _collateral);
+        shares = _silo.withdraw(_amount, _receiver, msg.sender);
     }
 
     /// @inheritdoc ISiloRouterV2Implementation
     function withdrawAll(
         ISilo _silo,
-        address _receiver,
-        ISilo.CollateralType _collateral
+        address _receiver
     ) external payable virtual returns (uint256 assets) {
-        uint256 sharesAmount = _silo.maxRedeem(msg.sender, _collateral);
-        assets = _silo.redeem(sharesAmount, _receiver, msg.sender, _collateral);
+        uint256 sharesAmount = _silo.maxRedeem(msg.sender);
+        assets = _silo.redeem(sharesAmount, _receiver, msg.sender);
     }
 
     /// @inheritdoc ISiloRouterV2Implementation

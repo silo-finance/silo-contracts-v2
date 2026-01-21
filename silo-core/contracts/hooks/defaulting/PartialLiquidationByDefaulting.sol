@@ -91,7 +91,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         CallParams memory params;
 
         (
-            params.withdrawAssetsFromCollateral, params.withdrawAssetsFromProtected, repayDebtAssets, params.customError
+            params.withdrawAssetsFromCollateral, repayDebtAssets, params.customError
         ) = PartialLiquidationExecLib.getExactLiquidationAmounts({
             _collateralConfig: collateralConfig,
             _debtConfig: debtConfig,
@@ -108,17 +108,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
                 _silo: collateralConfig.silo,
                 _shareToken: collateralConfig.collateralShareToken,
                 _liquidationFee: collateralConfig.liquidationFee,
-                _assetsToLiquidate: params.withdrawAssetsFromCollateral,
-                _collateralType: ISilo.CollateralType.Collateral
-            });
-
-        (params.protectedSharesTotal, params.protectedSharesForKeeper, params.protectedSharesForLenders) =
-            _getKeeperAndLenderSharesSplit({
-                _silo: collateralConfig.silo,
-                _shareToken: collateralConfig.protectedShareToken,
-                _liquidationFee: collateralConfig.liquidationFee,
-                _assetsToLiquidate: params.withdrawAssetsFromProtected,
-                _collateralType: ISilo.CollateralType.Protected
+                _assetsToLiquidate: params.withdrawAssetsFromCollateral
             });
 
         _liquidateByDistributingCollateral({
@@ -129,25 +119,11 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             _withdrawSharesForKeeper: params.collateralSharesForKeeper
         });
 
-        _liquidateByDistributingCollateral({
-            _borrower: _borrower,
-            _debtSilo: debtConfig.silo,
-            _shareToken: collateralConfig.protectedShareToken,
-            _withdrawSharesForLenders: params.protectedSharesForLenders,
-            _withdrawSharesForKeeper: params.protectedSharesForKeeper
-        });
-
         // calculate total withdrawn collateral
 
         if (params.collateralSharesTotal != 0) {
             withdrawCollateral = ISilo(collateralConfig.silo).previewRedeem(
-                params.collateralSharesTotal, ISilo.CollateralType.Collateral
-            );
-        }
-
-        if (params.protectedSharesTotal != 0) {
-            withdrawCollateral += ISilo(collateralConfig.silo).previewRedeem(
-                params.protectedSharesTotal, ISilo.CollateralType.Protected
+                params.collateralSharesTotal
             );
         }
 
@@ -165,17 +141,15 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     }
 
     function getKeeperAndLenderSharesSplit(
-        uint256 _assetsToLiquidate,
-        ISilo.CollateralType _collateralType
+        uint256 _assetsToLiquidate
     ) external view virtual returns (uint256 totalSharesToLiquidate, uint256 keeperShares, uint256 lendersShares) {
-        (address silo, address shareToken, uint256 liquidationFee) = _resolveSplitData(_collateralType);
+        (address silo, address shareToken, uint256 liquidationFee) = _resolveSplitData();
 
         (totalSharesToLiquidate, keeperShares, lendersShares) = _getKeeperAndLenderSharesSplit({
             _silo: silo,
             _shareToken: shareToken,
             _liquidationFee: liquidationFee,
-            _assetsToLiquidate: _assetsToLiquidate,
-            _collateralType: _collateralType
+            _assetsToLiquidate: _assetsToLiquidate
         });
     }
 
@@ -186,7 +160,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         virtual
         returns (ISiloIncentivesController controllerCollateral)
     {
-        (, address collateralShareToken,) = siloConfig.getShareTokens(_silo);
+        (address collateralShareToken,) = siloConfig.getShareTokens(_silo);
         require(collateralShareToken != address(0), EmptyCollateralShareToken());
 
         controllerCollateral = IGaugeHookReceiver(address(this)).configuredGauges(IShareToken(collateralShareToken));
@@ -297,12 +271,11 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         address _silo,
         address _shareToken,
         uint256 _liquidationFee,
-        uint256 _assetsToLiquidate,
-        ISilo.CollateralType _collateralType
+        uint256 _assetsToLiquidate
     ) internal view virtual returns (uint256 totalSharesToLiquidate, uint256 keeperShares, uint256 lendersShares) {
         if (_assetsToLiquidate == 0) return (0, 0, 0);
 
-        uint256 totalAssets = ISilo(_silo).getTotalAssetsStorage(ISilo.AssetType(uint8(_collateralType)));
+        uint256 totalAssets = ISilo(_silo).getTotalAssetsStorage(ISilo.AssetType.Collateral);
         uint256 totalShares = IShareToken(_shareToken).totalSupply();
             
         // assets were calculating with rounding down for withdraw,
@@ -313,7 +286,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             _totalAssets: totalAssets,
             _totalShares: totalShares,
             _rounding: Rounding.LIQUIDATE_TO_SHARES,
-            _assetType: ISilo.AssetType(uint8(_collateralType))
+            _assetType: ISilo.AssetType.Collateral
         });
 
         // c - collateral that equals debt value
@@ -345,7 +318,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
         lendersShares = totalSharesToLiquidate - keeperShares;
     }
 
-    function _resolveSplitData(ISilo.CollateralType _collateralType)
+    function _resolveSplitData()
         internal
         view
         virtual
@@ -362,9 +335,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
             silo = silo1;
         }
 
-        shareToken = _collateralType == ISilo.CollateralType.Collateral
-            ? collateralConfig.collateralShareToken
-            : collateralConfig.protectedShareToken;
+        shareToken = collateralConfig.collateralShareToken;
 
         liquidationFee = collateralConfig.liquidationFee;
     }

@@ -12,7 +12,6 @@ interface IPendleRewardsClaimer is IHookReceiver {
     error CollateralDepositNotAllowed();
     error IncentivesControllerRequired();
     error WrongSiloConfig();
-    error TransitionProtectedCollateralNotAllowed();
 
     /// @notice Redeem rewards from Pendle
     /// @return rewardTokens Reward tokens

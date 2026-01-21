@@ -20,7 +20,6 @@ library PartialLiquidationExecLib {
         view
         returns (
             uint256 withdrawAssetsFromCollateral,
-            uint256 withdrawAssetsFromProtected,
             uint256 repayDebtAssets,
             bytes4 customError
         )
@@ -34,10 +33,8 @@ library PartialLiquidationExecLib {
             _debtShareBalanceCached:0 /* no cached balance */
         });
 
-        uint256 borrowerCollateralToLiquidate;
-
         (
-            borrowerCollateralToLiquidate, repayDebtAssets, customError
+            withdrawAssetsFromCollateral, repayDebtAssets, customError
         ) = liquidationPreview(
             ltvData,
             PartialLiquidationLib.LiquidationPreviewParams({
@@ -48,12 +45,6 @@ library PartialLiquidationExecLib {
                 liquidationTargetLtv: _collateralConfig.liquidationTargetLtv,
                 liquidationFee: _liquidationFee
             })
-        );
-
-        (
-            withdrawAssetsFromCollateral, withdrawAssetsFromProtected
-        ) = PartialLiquidationLib.splitReceiveCollateralToLiquidate(
-            borrowerCollateralToLiquidate, ltvData.borrowerProtectedAssets
         );
     }
 
@@ -89,7 +80,7 @@ library PartialLiquidationExecLib {
             uint256 sumOfCollateralValue, uint256 debtValue
         ) = SiloSolvencyLib.getPositionValues(ltvData, collateralConfig.token, debtConfig.token);
 
-        uint256 sumOfCollateralAssets = ltvData.borrowerProtectedAssets + ltvData.borrowerCollateralAssets;
+        uint256 sumOfCollateralAssets = ltvData.borrowerCollateralAssets;
 
         if (sumOfCollateralValue == 0) return (sumOfCollateralAssets, ltvData.borrowerDebtAssets, false);
 
@@ -116,7 +107,7 @@ library PartialLiquidationExecLib {
         }
     }
 
-    /// @return receiveCollateralAssets collateral + protected to liquidate, on self liquidation when borrower repay
+    /// @return receiveCollateralAssets collateral to liquidate, on self liquidation when borrower repay
     /// all debt, he will receive all collateral back
     /// @return repayDebtAssets
     function liquidationPreview( // solhint-disable-line function-max-lines, code-complexity
@@ -127,7 +118,7 @@ library PartialLiquidationExecLib {
         view
         returns (uint256 receiveCollateralAssets, uint256 repayDebtAssets, bytes4 customError)
     {
-        uint256 sumOfCollateralAssets = _ltvData.borrowerCollateralAssets + _ltvData.borrowerProtectedAssets;
+        uint256 sumOfCollateralAssets = _ltvData.borrowerCollateralAssets;
 
         if (_ltvData.borrowerDebtAssets == 0 || _params.maxDebtToCover == 0) {
             return (0, 0, IPartialLiquidation.NoDebtToCover.selector);

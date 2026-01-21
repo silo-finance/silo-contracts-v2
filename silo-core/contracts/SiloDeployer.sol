@@ -23,7 +23,6 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
     IDynamicKinkModelFactory public immutable DYNAMIC_KINK_MODEL_FACTORY;
     ISiloFactory public immutable SILO_FACTORY;
     address public immutable SILO_IMPL;
-    address public immutable SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL;
     address public immutable SHARE_DEBT_TOKEN_IMPL;
     // solhint-enable var-name-mixedcase
 
@@ -32,14 +31,12 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
         IDynamicKinkModelFactory _dynamicKinkModelFactory,
         ISiloFactory _siloFactory,
         address _siloImpl,
-        address _shareProtectedCollateralTokenImpl,
         address _shareDebtTokenImpl
     ) {
         IRM_CONFIG_FACTORY = _irmConfigFactory;
         DYNAMIC_KINK_MODEL_FACTORY = _dynamicKinkModelFactory;
         SILO_FACTORY = _siloFactory;
         SILO_IMPL = _siloImpl;
-        SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL = _shareProtectedCollateralTokenImpl;
         SHARE_DEBT_TOKEN_IMPL = _shareDebtTokenImpl;
     }
 
@@ -66,7 +63,6 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
         SILO_FACTORY.createSilo({
             _siloConfig: siloConfig,
             _siloImpl: SILO_IMPL,
-            _shareProtectedCollateralTokenImpl: SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
             _shareDebtTokenImpl: SHARE_DEBT_TOKEN_IMPL,
             _deployer: _siloInitData.deployer,
             _creator: msg.sender
@@ -111,20 +107,6 @@ contract SiloDeployer is Create2Factory, ISiloDeployer {
 
         configData0.collateralShareToken = configData0.silo;
         configData1.collateralShareToken = configData1.silo;
-
-        configData0.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken0Addr(
-            SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
-            creatorSiloCounter,
-            address(SILO_FACTORY),
-            msg.sender
-        );
-
-        configData1.protectedShareToken = CloneDeterministic.predictShareProtectedCollateralToken1Addr(
-            SHARE_PROTECTED_COLLATERAL_TOKEN_IMPL,
-            creatorSiloCounter,
-            address(SILO_FACTORY),
-            msg.sender
-        );
 
         configData0.debtShareToken = CloneDeterministic.predictShareDebtToken0Addr(
             SHARE_DEBT_TOKEN_IMPL,

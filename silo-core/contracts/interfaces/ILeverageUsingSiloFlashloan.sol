@@ -26,21 +26,17 @@ interface ILeverageUsingSiloFlashloan {
     /// @notice Parameters for deposit after leverage
     /// @param silo Target Silo for depositing
     /// @param amount Raw deposit amount (excluding flashloan)
-    /// @param collateralType The type of collateral to use
     struct DepositArgs {
         ISilo silo;
         uint256 amount;
-        ISilo.CollateralType collateralType;
     }
 
     /// @param flashloanTarget The address of the contract providing the flash loan, it must have enough liquidity
     /// to cover borrower debt
     /// @param siloWithCollateral address of silo with collateral, the other silo is expected to have debt
-    /// @param collateralType The type of collateral to use
     struct CloseLeverageArgs {
         address flashloanTarget;
         ISilo siloWithCollateral;
-        ISilo.CollateralType collateralType;
     }
 
     /// @dev owner argument in signature should be msg.sender, spender should be leverage contract
@@ -133,7 +129,7 @@ interface ILeverageUsingSiloFlashloan {
     /// @param _msgSender The address of the sender (provided by the leverage router)
     /// @param _swapArgs Swap call data and settings, it should swap enough collateral to repay flashloan in debt token
     /// @param _closeLeverageArgs configuration for closing position
-    /// @param _withdrawAllowance Permit for leverage contract to withdraw all borrower collateral or protected tokens
+    /// @param _withdrawAllowance Permit for leverage contract to withdraw all borrower collateral tokens
     function closeLeveragePositionPermit(
         address _msgSender,
         bytes calldata _swapArgs,

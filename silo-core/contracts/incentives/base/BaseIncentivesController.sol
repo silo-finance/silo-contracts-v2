@@ -45,46 +45,6 @@ abstract contract BaseIncentivesController is DistributionManager, ISiloIncentiv
     constructor(address _owner, address _notifier) DistributionManager(_owner, _notifier) {}
 
     /// @inheritdoc ISiloIncentivesController
-    function createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput)
-        external
-        virtual
-        onlyOwner
-    {
-        uint256 programNameLength = bytes(_incentivesProgramInput.name).length;
-
-        require(programNameLength <= 32, TooLongProgramName());
-        require(_incentivesProgramInput.emissionPerSecond < MAX_EMISSION_PER_SECOND, EmissionPerSecondTooHigh());
-        require(_incentivesProgramInput.distributionEnd >= block.timestamp, InvalidDistributionEnd());
-
-        bytes32 programId = getProgramId(_incentivesProgramInput.name);
-
-        _createIncentiveProgram(programId, _incentivesProgramInput);
-    }
-
-    /// @inheritdoc ISiloIncentivesController
-    function updateIncentivesProgram(
-        string calldata _incentivesProgram,
-        uint40 _distributionEnd,
-        uint256 _emissionPerSecond
-    ) external virtual onlyOwner {
-        require(_distributionEnd >= block.timestamp, InvalidDistributionEnd());
-        require(_emissionPerSecond < MAX_EMISSION_PER_SECOND, EmissionPerSecondTooHigh());
-
-        bytes32 programId = getProgramId(_incentivesProgram);
-
-        require(_incentivesProgramIds.contains(programId), IncentivesProgramNotFound());
-
-        uint256 totalSupply = _shareToken().totalSupply();
-
-        _updateAssetStateInternal(programId, totalSupply);
-
-        incentivesPrograms[programId].distributionEnd = _distributionEnd;
-        incentivesPrograms[programId].emissionPerSecond = _emissionPerSecond;
-
-        emit IncentivesProgramUpdated(_incentivesProgram);
-    }
-
-    /// @inheritdoc ISiloIncentivesController
     function getRewardsBalance(address _user, string calldata _programName)
         external
         view

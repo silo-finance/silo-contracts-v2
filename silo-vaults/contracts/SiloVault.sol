@@ -22,10 +22,6 @@ import {
     ISiloVault
 } from "./interfaces/ISiloVault.sol";
 
-import {INotificationReceiver} from "./interfaces/INotificationReceiver.sol";
-import {IVaultIncentivesModule} from "./interfaces/IVaultIncentivesModule.sol";
-import {IIncentivesClaimingLogic} from "./interfaces/IIncentivesClaimingLogic.sol";
-
 import {PendingUint192, PendingAddress, PendingLib} from "./libraries/PendingLib.sol";
 import {ConstantsLib} from "./libraries/ConstantsLib.sol";
 import {ErrorsLib} from "./libraries/ErrorsLib.sol";
@@ -52,9 +48,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
     /// @inheritdoc ISiloVaultBase
     uint8 public constant DECIMALS_OFFSET = 6;
-
-    /// @inheritdoc ISiloVaultBase
-    IVaultIncentivesModule public immutable INCENTIVES_MODULE;
 
     /* STORAGE */
 
@@ -114,24 +107,20 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
     /// @dev Initializes the contract.
     /// @param _owner The owner of the contract.
     /// @param _initialTimelock The initial timelock.
-    /// @param _vaultIncentivesModule The vault incentives module.
     /// @param _asset The address of the underlying asset.
     /// @param _name The name of the vault.
     /// @param _symbol The symbol of the vault.
     constructor(
         address _owner,
         uint256 _initialTimelock,
-        IVaultIncentivesModule _vaultIncentivesModule,
         address _asset,
         string memory _name,
         string memory _symbol
     ) ERC4626(IERC20(_asset)) ERC20Permit(_name) ERC20(_name, _symbol) Ownable(_owner) {
-        require(address(_vaultIncentivesModule) != address(0), ErrorsLib.ZeroAddress());
         require(decimals() <= 18, ErrorsLib.NotSupportedDecimals());
 
         _checkTimelockBounds(_initialTimelock);
         _setTimelock(_initialTimelock);
-        INCENTIVES_MODULE = _vaultIncentivesModule;
     }
 
     /* MODIFIERS */
@@ -457,16 +446,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
 
         // Safe to cast because pendingCap <= type(uint184).max.
         _setCap(_market, uint184(pendingCap[_market].value));
-
-        _nonReentrantOff();
-    }
-
-    /// @inheritdoc ISiloVaultBase
-    function claimRewards() public virtual {
-        _nonReentrantOn();
-
-        _updateLastTotalAssets(_accrueFee());
-        _claimRewards();
 
         _nonReentrantOff();
     }
@@ -952,55 +931,6 @@ contract SiloVault is ERC4626, ERC20Permit, Ownable2Step, Multicall, ISiloVaultS
             // that total assets is already increased by the total interest (including the fee assets).
             feeShares =
                 _convertToSharesWithTotals(feeAssets, totalSupply(), newTotalAssets - feeAssets, Math.Rounding.Floor);
-        }
-    }
-
-    function _update(address _from, address _to, uint256 _value) internal virtual override {
-        // on deposit, claim must be first action, new user should not get reward
-
-        // on withdraw, claim must be first action, user that is leaving should get rewards
-        // immediate deposit-withdraw operation will not abused it, because before deposit all rewards will be
-        // claimed, so on withdraw on the same block no additional rewards will be generated.
-
-        // transfer shares is basically withdraw->deposit, so claiming rewards should be done before any state changes
-
-        _claimRewards();
-
-        super._update(_from, _to, _value);
-
-        if (_value == 0) return;
-
-        _afterTokenTransfer(_from, _to, _value);
-    }
-
-    function _afterTokenTransfer(address _from, address _to, uint256 _value) internal virtual {
-        address[] memory receivers = INCENTIVES_MODULE.getNotificationReceivers();
-
-        if (receivers.length == 0) return;
-
-        uint256 total = totalSupply();
-        uint256 senderBalance = _from == address(0) ? 0 : balanceOf(_from);
-        uint256 recipientBalance = _to == address(0) ? 0 : balanceOf(_to);
-
-        for (uint256 i; i < receivers.length; i++) {
-            INotificationReceiver(receivers[i]).afterTokenTransfer({
-                _sender: _from,
-                _senderBalance: senderBalance,
-                _recipient: _to,
-                _recipientBalance: recipientBalance,
-                _totalSupply: total,
-                _amount: _value
-            });
-        }
-    }
-
-    function _claimRewards() internal virtual {
-        address[] memory logics = INCENTIVES_MODULE.getAllIncentivesClaimingLogics();
-        bytes memory data = abi.encodeWithSelector(IIncentivesClaimingLogic.claimRewardsAndDistribute.selector);
-
-        for (uint256 i; i < logics.length; i++) {
-            (bool success,) = logics[i].delegatecall(data);
-            if (!success) revert ErrorsLib.ClaimRewardsFailed();
         }
     }
 

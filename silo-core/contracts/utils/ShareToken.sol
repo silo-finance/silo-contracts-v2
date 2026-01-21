@@ -182,10 +182,6 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     ///     decimals(): same as underlying asset
     ///     offset: 3
     ///     minted shares per 1 wei of asset deposited: 1000
-    /// ProtectedShareToken:
-    ///     decimals(): same as underlying asset
-    ///     offset: 3
-    ///     minted shares per 1 wei of asset deposited: 1000
     /// DebtShareToken:
     ///     decimals(): same as underlying asset
     ///     offset: 0
@@ -207,7 +203,6 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     ///      NAME - asset name
     ///      SILO_ID - unique silo id
     ///
-    ///      Protected deposit: "Silo Finance Non-borrowable NAME Deposit, SiloId: SILO_ID"
     ///      Borrowable deposit: "Silo Finance Borrowable NAME Deposit, SiloId: SILO_ID"
     ///      Debt: "Silo Finance NAME Debt, SiloId: SILO_ID"
     function name()
@@ -224,7 +219,6 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
     ///      SYMBOL - asset symbol
     ///      SILO_ID - unique silo id
     ///
-    ///      Protected deposit: "nbSYMBOL-SILO_ID"
     ///      Borrowable deposit: "bSYMBOL-SILO_ID"
     ///      Debt: "dSYMBOL-SILO_ID"
     function symbol()

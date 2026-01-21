@@ -51,7 +51,6 @@ library ShareTokenLib {
     ///      NAME - asset name
     ///      SILO_ID - unique silo id
     ///
-    ///      Protected deposit: "Silo Finance Non-borrowable NAME Deposit, SiloId: SILO_ID"
     ///      Borrowable deposit: "Silo Finance Borrowable NAME Deposit, SiloId: SILO_ID"
     ///      Debt: "Silo Finance NAME Debt, SiloId: SILO_ID"
     function name() external view returns (string memory) {
@@ -63,9 +62,7 @@ library ShareTokenLib {
         string memory pre = "";
         string memory post = " Deposit";
 
-        if (address(this) == configData.protectedShareToken) {
-            pre = "Non-borrowable ";
-        } else if (address(this) == configData.collateralShareToken) {
+        if (address(this) == configData.collateralShareToken) {
             pre = "Borrowable ";
         } else if (address(this) == configData.debtShareToken) {
             post = " Debt";
@@ -79,7 +76,6 @@ library ShareTokenLib {
     ///      SYMBOL - asset symbol
     ///      SILO_ID - unique silo id
     ///
-    ///      Protected deposit: "nbSYMBOL-SILO_ID"
     ///      Borrowable deposit: "bSYMBOL-SILO_ID"
     ///      Debt: "dSYMBOL-SILO_ID"
     function symbol() external view returns (string memory) {
@@ -90,9 +86,7 @@ library ShareTokenLib {
 
         string memory pre;
 
-        if (address(this) == configData.protectedShareToken) {
-            pre = "nb";
-        } else if (address(this) == configData.collateralShareToken) {
+        if (address(this) == configData.collateralShareToken) {
             pre = "b";
         } else if (address(this) == configData.debtShareToken) {
             pre = "d";
