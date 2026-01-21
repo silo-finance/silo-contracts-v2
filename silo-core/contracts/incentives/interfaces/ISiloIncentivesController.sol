@@ -78,25 +78,6 @@ interface ISiloIncentivesController is IDistributionManager {
     function setClaimer(address _user, address _claimer) external;
 
     /**
-     * @dev Creates a new incentives program
-     * @param _incentivesProgramInput The incentives program creation input
-     */
-    function createIncentivesProgram(DistributionTypes.IncentivesProgramCreationInput memory _incentivesProgramInput)
-        external;
-
-    /**
-     * @dev Updates an existing incentives program
-     * @param _incentivesProgram The incentives program name
-     * @param _distributionEnd The distribution end
-     * @param _emissionPerSecond The emission per second
-     */
-    function updateIncentivesProgram(
-        string calldata _incentivesProgram,
-        uint40 _distributionEnd,
-        uint256 _emissionPerSecond
-    ) external;
-
-    /**
      * @dev Claims reward for an user to the desired address, on all the assets of the lending pool,
      * accumulating the pending rewards
      * @param _to Address that will be receiving the rewards

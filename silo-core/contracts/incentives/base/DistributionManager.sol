@@ -54,26 +54,6 @@ contract DistributionManager is IDistributionManager, Ownable2Step {
     }
 
     /// @inheritdoc IDistributionManager
-    function setDistributionEnd(
-        string calldata _incentivesProgram,
-        uint40 _distributionEnd
-    ) external virtual onlyOwner {
-        require(_distributionEnd >= block.timestamp, ISiloIncentivesController.InvalidDistributionEnd());
-
-        bytes32 programId = getProgramId(_incentivesProgram);
-
-        require(_incentivesProgramIds.contains(programId), ISiloIncentivesController.IncentivesProgramNotFound());
-
-        uint256 totalSupply = _shareToken().totalSupply();
-
-        _updateAssetStateInternal(programId, totalSupply);
-
-        incentivesPrograms[programId].distributionEnd = _distributionEnd;
-
-        emit DistributionEndUpdated(_incentivesProgram, _distributionEnd);
-    }
-
-    /// @inheritdoc IDistributionManager
     function getDistributionEnd(string calldata _incentivesProgram) external view virtual override returns (uint256) {
         bytes32 incentivesProgramId = getProgramId(_incentivesProgram);
         return incentivesPrograms[incentivesProgramId].distributionEnd;

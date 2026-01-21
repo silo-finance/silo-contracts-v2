@@ -44,13 +44,6 @@ interface IDistributionManager {
     error NewIndexOverflow();
 
     /**
-     * @dev Sets the end date for the distribution
-     * @param _incentivesProgram The incentives program name
-     * @param _distributionEnd The end date timestamp
-     */
-    function setDistributionEnd(string calldata _incentivesProgram, uint40 _distributionEnd) external;
-
-    /**
      * @dev Gets the end date for the distribution  
      * @param _incentivesProgram The incentives program name
      * @return The end of the distribution
