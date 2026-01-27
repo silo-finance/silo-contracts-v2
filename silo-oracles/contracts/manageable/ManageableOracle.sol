@@ -43,13 +43,6 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     /// @notice Only one type of ownership change can be pending at a time (either transfer or renounce)
     PendingAddress public pendingOwnership;
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() Ownable1and2Steps(DEAD_ADDRESS) {
-        // lock the implementation
-        _transferOwnership(address(0));
-        _disableInitializers();
-    }
-
     /// @dev Modifier to check if timelock has elapsed
     modifier afterTimelock(uint64 _validAt) {
         require(_validAt != 0, NoPendingUpdate());
@@ -57,9 +50,11 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         _;
     }
 
-    /// @inheritdoc IVersioned
-    function VERSION() external pure override returns (string memory version) {
-        version = "ManageableOracle v1.0.0";
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() Ownable1and2Steps(DEAD_ADDRESS) {
+        // lock the implementation
+        _transferOwnership(address(0));
+        _disableInitializers();
     }
 
     /// @notice Initialize the ManageableOracle with underlying oracle factory
@@ -97,7 +92,8 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     function proposeOracle(ISiloOracle _oracle) external virtual onlyOwner {
         require(pendingOracle.validAt == 0, PendingUpdate());
         require(address(_oracle) != address(0), ZeroOracle());
-        require(_oracle.quoteToken() == QUOTE_TOKEN, QuoteTokenMustBeTheSame());
+        require(_oracle.quoteToken() == quoteToken, QuoteTokenMustBeTheSame());
+        // base token should be the same as well, but we don't have easy way to check it
 
         pendingOracle.update(address(_oracle), timelock);
 
@@ -164,6 +160,40 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         emit OwnershipRenounceProposed(pendingOwnership.validAt);
     }
 
+    /// @inheritdoc IManageableOracle
+    function cancelTransferOwnership() external virtual onlyOwner {
+        require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());
+        require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());
+
+        _resetPendingAddress(pendingOwnership);
+        emit OwnershipTransferCanceled();
+    }
+
+    /// @inheritdoc IManageableOracle
+    function cancelRenounceOwnership() external virtual onlyOwner {
+        require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());
+        require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
+
+        _resetPendingAddress(pendingOwnership);
+        emit OwnershipRenounceCanceled();
+    }
+
+    /// @inheritdoc ISiloOracle
+    function beforeQuote(address _baseToken) external virtual {
+        oracle.beforeQuote(_baseToken);
+    }
+
+    /// @inheritdoc ISiloOracle
+    function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
+        quoteAmount = oracle.quote(_baseAmount, _baseToken);
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "ManageableOracle v1.0.0";
+    }
+
     /// @inheritdoc Ownable
     function transferOwnership(address newOwner)
         public
@@ -190,35 +220,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         _transferOwnership(address(0));
     }
 
-    /// @inheritdoc IManageableOracle
-    function cancelTransferOwnership() external virtual onlyOwner {
-        require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());
-        require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());
-
-        _resetPendingAddress(pendingOwnership);
-        emit OwnershipTransferCanceled();
-    }
-
-    /// @inheritdoc IManageableOracle
-    function cancelRenounceOwnership() external virtual onlyOwner {
-        require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());
-        require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
-
-        _resetPendingAddress(pendingOwnership);
-        emit OwnershipRenounceCanceled();
-    }
-
-    /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
-        quoteAmount = oracle.quote(_baseAmount, _baseToken);
-    }
-
-    /// @inheritdoc ISiloOracle
-    function beforeQuote(address _baseToken) external virtual {
-        oracle.beforeQuote(_baseToken);
-    }
-
-    // solhint-disable-next-line func-mixedcase
+    // solhint-disable-next-line func-name-mixedcase
     function __ManageableOracle_init(ISiloOracle _oracle, address _owner, uint32 _timelock)
         internal
         onlyInitializing
