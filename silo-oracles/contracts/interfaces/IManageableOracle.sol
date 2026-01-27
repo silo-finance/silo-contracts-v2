@@ -30,30 +30,6 @@ interface IManageableOracle {
     error UseRenounceOwnership();
     error FailedToCreateAnOracle();
 
-    /// @notice Get the current oracle used by the manageable oracle
-    /// @return The oracle used by the manageable oracle
-    function oracle() external view returns (ISiloOracle);
-
-    /// @notice Get the pending oracle address (if any)
-    /// @return value The pending oracle address
-    /// @return validAt The timestamp at which the pending oracle becomes valid
-    function pendingOracle() external view returns (address value, uint64 validAt);
-
-    /// @notice Get the current time lock duration
-    /// @return The time lock duration in seconds
-    function timelock() external view returns (uint32);
-
-    /// @notice Get the pending time lock duration (if any)
-    /// @return value The pending timelock value
-    /// @return validAt The timestamp at which the pending timelock becomes valid
-    function pendingTimelock() external view returns (uint192 value, uint64 validAt);
-
-    /// @notice Get the pending ownership change (if any)
-    /// @return value The pending owner address
-    /// @return validAt The timestamp at which the pending ownership change becomes valid
-    /// @dev If address is DEAD_ADDRESS (0xdead), it means pending renounce, otherwise pending transfer
-    function pendingOwnership() external view returns (address value, uint64 validAt);
-
     /// @notice Initialize the ManageableOracle with underlying oracle factory
     /// @param _underlyingOracleFactory Factory address to create the underlying oracle
     /// @param _underlyingOracleInitData Calldata to call the factory and create the underlying oracle
@@ -110,4 +86,28 @@ interface IManageableOracle {
 
     /// @notice Cancel the pending ownership renounce (can only be called by owner)
     function cancelRenounceOwnership() external;
+
+    /// @notice Get the current oracle used by the manageable oracle
+    /// @return The oracle used by the manageable oracle
+    function oracle() external view returns (ISiloOracle);
+
+    /// @notice Get the pending oracle address (if any)
+    /// @return value The pending oracle address
+    /// @return validAt The timestamp at which the pending oracle becomes valid
+    function pendingOracle() external view returns (address value, uint64 validAt);
+
+    /// @notice Get the current time lock duration
+    /// @return The time lock duration in seconds
+    function timelock() external view returns (uint32);
+
+    /// @notice Get the pending time lock duration (if any)
+    /// @return value The pending timelock value
+    /// @return validAt The timestamp at which the pending timelock becomes valid
+    function pendingTimelock() external view returns (uint192 value, uint64 validAt);
+
+    /// @notice Get the pending ownership change (if any)
+    /// @return value The pending owner address
+    /// @return validAt The timestamp at which the pending ownership change becomes valid
+    /// @dev If address is DEAD_ADDRESS (0xdead), it means pending renounce, otherwise pending transfer
+    function pendingOwnership() external view returns (address value, uint64 validAt);
 }

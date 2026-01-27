@@ -25,7 +25,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     uint32 public constant MAX_TIMELOCK = 7 days;
 
     /// @dev Quote token address (set during initialization)
-    address public QUOTE_TOKEN;
+    address public quoteToken;
 
     /// @dev Current oracle
     ISiloOracle public oracle;
@@ -164,7 +164,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         emit OwnershipRenounceProposed(pendingOwnership.validAt);
     }
 
-    /// @inheritdoc IManageableOracle
+    /// @inheritdoc Ownable
     function transferOwnership(address newOwner)
         public
         virtual
@@ -180,14 +180,8 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         _transferOwnership(newOwner);
     }
 
-    /// @inheritdoc IManageableOracle
-    function renounceOwnership()
-        public
-        virtual
-        override(IManageableOracle, Ownable)
-        onlyOwner
-        afterTimelock(pendingOwnership.validAt)
-    {
+    /// @inheritdoc Ownable
+    function renounceOwnership() public virtual override onlyOwner afterTimelock(pendingOwnership.validAt) {
         require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
         require(pendingOracle.validAt == 0, PendingOracleUpdate());
 
@@ -215,20 +209,16 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     }
 
     /// @inheritdoc ISiloOracle
-    function beforeQuote(address _baseToken) external virtual {
-        oracle.beforeQuote(_baseToken);
-    }
-
-    /// @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
         quoteAmount = oracle.quote(_baseAmount, _baseToken);
     }
 
     /// @inheritdoc ISiloOracle
-    function quoteToken() external view virtual returns (address token) {
-        token = QUOTE_TOKEN;
+    function beforeQuote(address _baseToken) external virtual {
+        oracle.beforeQuote(_baseToken);
     }
 
+    // solhint-disable-next-line func-mixedcase
     function __ManageableOracle_init(ISiloOracle _oracle, address _owner, uint32 _timelock)
         internal
         onlyInitializing
@@ -237,7 +227,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         require(_owner != address(0), ZeroOwner());
         require(_timelock >= MIN_TIMELOCK && _timelock <= MAX_TIMELOCK, InvalidTimelock());
 
-        QUOTE_TOKEN = _oracle.quoteToken();
+        quoteToken = _oracle.quoteToken();
         oracle = _oracle;
         timelock = _timelock;
 
