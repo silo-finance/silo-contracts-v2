@@ -24,15 +24,8 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
         external
         returns (IManageableOracle manageableOracle)
     {
-        bytes32 salt = _salt(_externalSalt);
-
-        manageableOracle = IManageableOracle(Clones.cloneDeterministic(address(ORACLE_IMPLEMENTATION), salt));
-
+        manageableOracle = _createOracle(_externalSalt, _owner);
         manageableOracle.initialize(_oracle, _owner, _timelock);
-
-        createdInFactory[address(manageableOracle)] = true;
-
-        emit ManageableOracleCreated(address(manageableOracle), _owner);
     }
 
     /// @inheritdoc IManageableOracleFactory
@@ -43,15 +36,8 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
         uint32 _timelock,
         bytes32 _externalSalt
     ) external returns (IManageableOracle manageableOracle) {
-        bytes32 salt = _salt(_externalSalt);
-
-        manageableOracle = IManageableOracle(Clones.cloneDeterministic(address(ORACLE_IMPLEMENTATION), salt));
-
+        manageableOracle = _createOracle(_externalSalt, _owner);
         manageableOracle.initialize(_underlyingOracleFactory, _underlyingOracleInitData, _owner, _timelock);
-
-        createdInFactory[address(manageableOracle)] = true;
-
-        emit ManageableOracleCreated(address(manageableOracle), _owner);
     }
 
     /// @notice Predict the deterministic address of a ManageableOracle that would be created
@@ -67,5 +53,22 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
 
         predictedAddress =
             Clones.predictDeterministicAddress(address(ORACLE_IMPLEMENTATION), _createSalt(_deployer, _externalSalt));
+    }
+
+    /// @dev Internal helper to create and register a ManageableOracle instance
+    /// @param _externalSalt External salt for the CREATE2 deterministic deployment
+    /// @param _owner Address that will own the contract
+    /// @return manageableOracle The created ManageableOracle instance
+    function _createOracle(bytes32 _externalSalt, address _owner)
+        internal
+        returns (IManageableOracle manageableOracle)
+    {
+        bytes32 salt = _salt(_externalSalt);
+
+        manageableOracle = IManageableOracle(Clones.cloneDeterministic(address(ORACLE_IMPLEMENTATION), salt));
+
+        createdInFactory[address(manageableOracle)] = true;
+
+        emit ManageableOracleCreated(address(manageableOracle), _owner);
     }
 }
