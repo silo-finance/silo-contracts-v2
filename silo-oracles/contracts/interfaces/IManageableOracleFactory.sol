@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.5.0;
+
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOracle.sol";
+
+/// @notice Factory for creating ManageableOracle instances
+interface IManageableOracleFactory {
+    event ManageableOracleCreated(address indexed oracle, address indexed owner);
+
+    error DeployerCannotBeZero();
+
+    /// @notice Create a new ManageableOracle
+    /// @param _oracle Initial oracle address
+    /// @param _owner Address that will own the contract
+    /// @param _timelock Initial time lock duration
+    /// @param _externalSalt External salt for deterministic address generation
+    /// @return manageableOracle The created ManageableOracle instance
+    function createManageableOracle(
+        ISiloOracle _oracle,
+        address _owner,
+        uint32 _timelock,
+        bytes32 _externalSalt
+    ) external returns (IManageableOracle manageableOracle);
+
+    /// @notice Predict the deterministic address of a ManageableOracle that would be created
+    /// @param _deployer Address of the account that will deploy the oracle
+    /// @param _externalSalt External salt for the CREATE2 deterministic deployment
+    /// @return predictedAddress The address where the ManageableOracle would be deployed
+    function predictAddress(address _deployer, bytes32 _externalSalt)
+        external
+        view
+        returns (address predictedAddress);
+}

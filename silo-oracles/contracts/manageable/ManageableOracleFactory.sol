@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma solidity 0.8.28;
+
+import {Clones} from "openzeppelin5/proxy/Clones.sol";
+
+import {Create2Factory} from "common/utils/Create2Factory.sol";
+import {ManageableOracle} from "silo-oracles/contracts/manageable/ManageableOracle.sol";
+import {IManageableOracleFactory} from "silo-oracles/contracts/interfaces/IManageableOracleFactory.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOracle.sol";
+
+contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
+    /// @dev Implementation contract that will be cloned
+    ManageableOracle public immutable ORACLE_IMPLEMENTATION;
+
+    mapping(address => bool) public createdInFactory;
+
+    constructor() {
+        ORACLE_IMPLEMENTATION = new ManageableOracle();
+    }
+
+    /// @inheritdoc IManageableOracleFactory
+    function createManageableOracle(ISiloOracle _oracle, address _owner, uint32 _timelock, bytes32 _externalSalt)
+        external
+        returns (IManageableOracle manageableOracle)
+    {
+        bytes32 salt = _salt(_externalSalt);
+
+        manageableOracle = IManageableOracle(Clones.cloneDeterministic(address(ORACLE_IMPLEMENTATION), salt));
+
+        manageableOracle.initialize(_oracle, _owner, _timelock);
+
+        createdInFactory[address(manageableOracle)] = true;
+
+        emit ManageableOracleCreated(address(manageableOracle), _owner);
+    }
+
+    /// @notice Predict the deterministic address of a ManageableOracle that would be created
+    /// @param _deployer Address of the account that will deploy the oracle
+    /// @param _externalSalt External salt for the CREATE2 deterministic deployment
+    /// @return predictedAddress The address where the ManageableOracle would be deployed
+    function predictAddress(address _deployer, bytes32 _externalSalt)
+        external
+        view
+        returns (address predictedAddress)
+    {
+        require(_deployer != address(0), DeployerCannotBeZero());
+
+        predictedAddress =
+            Clones.predictDeterministicAddress(address(ORACLE_IMPLEMENTATION), _createSalt(_deployer, _externalSalt));
+    }
+}
