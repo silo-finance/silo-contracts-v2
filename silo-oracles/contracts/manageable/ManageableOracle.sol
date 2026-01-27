@@ -7,10 +7,12 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOracle.sol";
 import {PendingAddress, PendingUint192, PendingLib} from "silo-vaults/contracts/libraries/PendingLib.sol";
 import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
+import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 
 /// @title ManageableOracle
 /// @notice Oracle forwarder that allows updating the oracle address with time lock and owner approval
-contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, Initializable {
+contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, Initializable, IVersioned {
     using PendingLib for PendingAddress;
     using PendingLib for PendingUint192;
 
@@ -55,23 +57,40 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         _;
     }
 
+    /// @inheritdoc IVersioned
+    function VERSION() external pure override returns (string memory version) {
+        version = "ManageableOracle v1.0.0";
+    }
+
+    /// @notice Initialize the ManageableOracle with underlying oracle factory
+    /// @param _underlyingOracleFactory Factory address to create the underlying oracle
+    /// @param _underlyingOracleInitData Calldata to call the factory and create the underlying oracle
+    /// @param _owner Address that will own the contract
+    /// @param _timelock Initial time lock duration
+    /// @dev This method is primarily used by SiloDeployer to create the oracle during deployment.
+    ///      The oracle address is extracted from the factory call return data.
+    function initialize(
+        address _underlyingOracleFactory,
+        bytes calldata _underlyingOracleInitData,
+        address _owner,
+        uint32 _timelock
+    ) external initializer {
+        require(_underlyingOracleFactory != address(0), ZeroFactory());
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory data) = _underlyingOracleFactory.call(_underlyingOracleInitData);
+        require(success && data.length == 32, FailedToCreateAnOracle());
+
+        address createdOracle = abi.decode(data, (address));
+        __ManageableOracle_init(ISiloOracle(createdOracle), _owner, _timelock);
+    }
+
     /// @notice Initialize the ManageableOracle
     /// @param _oracle Initial oracle address
     /// @param _owner Address that will own the contract
     /// @param _timelock Initial time lock duration
-    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock) external initializer {
-        require(address(_oracle) != address(0), ZeroOracle());
-        require(_owner != address(0), ZeroOwner());
-        require(_timelock >= MIN_TIMELOCK && _timelock <= MAX_TIMELOCK, InvalidTimelock());
-
-        QUOTE_TOKEN = _oracle.quoteToken();
-        oracle = _oracle;
-        timelock = _timelock;
-
-        _transferOwnership(_owner);
-
-        emit OracleUpdated(_oracle);
-        emit TimelockUpdated(_timelock);
+    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock) external {
+        __ManageableOracle_init(_oracle, _owner, _timelock);
     }
 
     /// @inheritdoc IManageableOracle
@@ -90,7 +109,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         require(pendingTimelock.validAt == 0, PendingUpdate());
         require(_timelock >= MIN_TIMELOCK && _timelock <= MAX_TIMELOCK, InvalidTimelock());
 
-        pendingTimelock.update(uint192(_timelock), timelock);
+        pendingTimelock.update(uint184(_timelock), timelock);
 
         emit TimelockProposed(_timelock, pendingTimelock.validAt);
     }
@@ -146,7 +165,13 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     }
 
     /// @inheritdoc IManageableOracle
-    function transferOwnership(address newOwner) public virtual override onlyOwner afterTimelock(pendingOwnership.validAt) {
+    function transferOwnership(address newOwner)
+        public
+        virtual
+        override
+        onlyOwner
+        afterTimelock(pendingOwnership.validAt)
+    {
         require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());
         require(pendingOwnership.value == newOwner, InvalidOwnershipChangeType());
 
@@ -156,7 +181,13 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     }
 
     /// @inheritdoc IManageableOracle
-    function renounceOwnership() public virtual override onlyOwner afterTimelock(pendingOwnership.validAt) {
+    function renounceOwnership()
+        public
+        virtual
+        override(IManageableOracle, Ownable)
+        onlyOwner
+        afterTimelock(pendingOwnership.validAt)
+    {
         require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
         require(pendingOracle.validAt == 0, PendingOracleUpdate());
 
@@ -196,6 +227,24 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address token) {
         token = QUOTE_TOKEN;
+    }
+
+    function __ManageableOracle_init(ISiloOracle _oracle, address _owner, uint32 _timelock)
+        internal
+        onlyInitializing
+    {
+        require(address(_oracle) != address(0), ZeroOracle());
+        require(_owner != address(0), ZeroOwner());
+        require(_timelock >= MIN_TIMELOCK && _timelock <= MAX_TIMELOCK, InvalidTimelock());
+
+        QUOTE_TOKEN = _oracle.quoteToken();
+        oracle = _oracle;
+        timelock = _timelock;
+
+        _transferOwnership(_owner);
+
+        emit OracleUpdated(_oracle);
+        emit TimelockUpdated(_timelock);
     }
 
     function _resetPendingAddress(PendingAddress storage _pending) internal virtual {

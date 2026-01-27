@@ -2,7 +2,6 @@
 pragma solidity >=0.5.0;
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {PendingAddress, PendingUint192} from "silo-vaults/contracts/libraries/PendingLib.sol";
 
 /// @notice Manageable oracle that allows updating the oracle address with time lock and two-owner approval
 interface IManageableOracle {
@@ -25,30 +24,49 @@ interface IManageableOracle {
     error TimelockNotExpired();
     error InvalidTimelock();
     error ZeroOracle();
+    error ZeroFactory();
     error ZeroOwner();
     error InvalidOwnershipChangeType();
     error UseRenounceOwnership();
+    error FailedToCreateAnOracle();
 
     /// @notice Get the current oracle used by the manageable oracle
     /// @return The oracle used by the manageable oracle
     function oracle() external view returns (ISiloOracle);
 
     /// @notice Get the pending oracle address (if any)
-    /// @return The pending oracle struct containing address and validAt timestamp
-    function pendingOracle() external view returns (PendingAddress memory);
+    /// @return value The pending oracle address
+    /// @return validAt The timestamp at which the pending oracle becomes valid
+    function pendingOracle() external view returns (address value, uint64 validAt);
 
     /// @notice Get the current time lock duration
     /// @return The time lock duration in seconds
     function timelock() external view returns (uint32);
 
     /// @notice Get the pending time lock duration (if any)
-    /// @return The pending timelock struct containing value and validAt timestamp
-    function pendingTimelock() external view returns (PendingUint192 memory);
+    /// @return value The pending timelock value
+    /// @return validAt The timestamp at which the pending timelock becomes valid
+    function pendingTimelock() external view returns (uint192 value, uint64 validAt);
 
     /// @notice Get the pending ownership change (if any)
-    /// @return The pending ownership struct containing address and validAt timestamp
+    /// @return value The pending owner address
+    /// @return validAt The timestamp at which the pending ownership change becomes valid
     /// @dev If address is DEAD_ADDRESS (0xdead), it means pending renounce, otherwise pending transfer
-    function pendingOwnership() external view returns (PendingAddress memory);
+    function pendingOwnership() external view returns (address value, uint64 validAt);
+
+    /// @notice Initialize the ManageableOracle with underlying oracle factory
+    /// @param _underlyingOracleFactory Factory address to create the underlying oracle
+    /// @param _underlyingOracleInitData Calldata to call the factory and create the underlying oracle
+    /// @param _owner Address that will own the contract
+    /// @param _timelock Initial time lock duration
+    /// @dev This method is primarily used by SiloDeployer to create the oracle during deployment.
+    ///      The oracle address is extracted from the factory call return data.
+    function initialize(
+        address _underlyingOracleFactory,
+        bytes calldata _underlyingOracleInitData,
+        address _owner,
+        uint32 _timelock
+    ) external;
 
     /// @notice Initialize the ManageableOracle
     /// @param _oracle Initial oracle address
@@ -86,12 +104,6 @@ interface IManageableOracle {
 
     /// @notice Propose ownership renounce (can only be called by owner)
     function proposeRenounceOwnership() external;
-
-    /// @notice Accept and execute the pending ownership transfer (can only be called by owner after time lock expires)
-    function transferOwnership(address newOwner) external;
-
-    /// @notice Accept and execute the pending ownership renounce (can only be called by owner after time lock expires)
-    function renounceOwnership() external;
 
     /// @notice Cancel the pending ownership transfer (can only be called by owner)
     function cancelTransferOwnership() external;

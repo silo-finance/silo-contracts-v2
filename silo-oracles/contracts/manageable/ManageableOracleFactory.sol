@@ -20,7 +20,7 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
     }
 
     /// @inheritdoc IManageableOracleFactory
-    function createManageableOracle(ISiloOracle _oracle, address _owner, uint32 _timelock, bytes32 _externalSalt)
+    function create(ISiloOracle _oracle, address _owner, uint32 _timelock, bytes32 _externalSalt)
         external
         returns (IManageableOracle manageableOracle)
     {
@@ -29,6 +29,25 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
         manageableOracle = IManageableOracle(Clones.cloneDeterministic(address(ORACLE_IMPLEMENTATION), salt));
 
         manageableOracle.initialize(_oracle, _owner, _timelock);
+
+        createdInFactory[address(manageableOracle)] = true;
+
+        emit ManageableOracleCreated(address(manageableOracle), _owner);
+    }
+
+    /// @inheritdoc IManageableOracleFactory
+    function create(
+        address _underlyingOracleFactory,
+        bytes calldata _underlyingOracleInitData,
+        address _owner,
+        uint32 _timelock,
+        bytes32 _externalSalt
+    ) external returns (IManageableOracle manageableOracle) {
+        bytes32 salt = _salt(_externalSalt);
+
+        manageableOracle = IManageableOracle(Clones.cloneDeterministic(address(ORACLE_IMPLEMENTATION), salt));
+
+        manageableOracle.initialize(_underlyingOracleFactory, _underlyingOracleInitData, _owner, _timelock);
 
         createdInFactory[address(manageableOracle)] = true;
 

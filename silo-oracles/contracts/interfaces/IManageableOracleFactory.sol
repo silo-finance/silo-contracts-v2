@@ -16,8 +16,24 @@ interface IManageableOracleFactory {
     /// @param _timelock Initial time lock duration
     /// @param _externalSalt External salt for deterministic address generation
     /// @return manageableOracle The created ManageableOracle instance
-    function createManageableOracle(
+    function create(
         ISiloOracle _oracle,
+        address _owner,
+        uint32 _timelock,
+        bytes32 _externalSalt
+    ) external returns (IManageableOracle manageableOracle);
+
+    /// @notice Create a new ManageableOracle with underlying oracle factory
+    /// @param _underlyingOracleFactory Factory address to create the underlying oracle
+    /// @param _underlyingOracleInitData Calldata to call the factory and create the underlying oracle
+    /// @param _owner Address that will own the contract
+    /// @param _timelock Initial time lock duration
+    /// @param _externalSalt External salt for deterministic address generation
+    /// @return manageableOracle The created ManageableOracle instance
+    /// @dev This method is primarily used by SiloDeployer to create the oracle during deployment
+    function create(
+        address _underlyingOracleFactory,
+        bytes calldata _underlyingOracleInitData,
         address _owner,
         uint32 _timelock,
         bytes32 _externalSalt
