@@ -37,8 +37,9 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     /// @dev Pending time lock duration
     PendingUint192 public pendingTimelock;
 
-    /// @dev Pending ownership transfer (address(0) means no pending transfer, address(0xdead) means pending renounce)
-    PendingAddress public pendingOwnershipChange;
+    /// @dev Pending ownership change (DEAD_ADDRESS means renounce, otherwise transfer)
+    /// @notice Only one type of ownership change can be pending at a time (either transfer or renounce)
+    PendingAddress public pendingOwnership;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() Ownable1and2Steps(DEAD_ADDRESS) {
@@ -127,47 +128,59 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     /// @notice Override transferOwnership to use timelock
     /// @param newOwner The new owner address
     function transferOwnership(address newOwner) public virtual override onlyOwner {
-        require(pendingOwnershipChange.validAt == 0, PendingUpdate());
+        require(pendingOwnership.validAt == 0, PendingUpdate());
         require(newOwner != address(0), ZeroOwner());
+        require(newOwner != DEAD_ADDRESS, UseRenounceOwnership());
 
-        pendingOwnershipChange.update(newOwner, timelock);
+        pendingOwnership.update(newOwner, timelock);
 
-        emit OwnershipTransferProposed(newOwner, pendingOwnershipChange.validAt);
+        emit OwnershipTransferProposed(newOwner, pendingOwnership.validAt);
     }
 
     /// @notice Override renounceOwnership to use timelock
     function renounceOwnership() public virtual override onlyOwner {
-        require(pendingOwnershipChange.validAt == 0, PendingUpdate());
+        require(pendingOwnership.validAt == 0, PendingUpdate());
 
-        pendingOwnershipChange.update(DEAD_ADDRESS, timelock);
+        pendingOwnership.update(DEAD_ADDRESS, timelock);
 
-        emit OwnershipRenounceProposed(pendingOwnershipChange.validAt);
+        emit OwnershipRenounceProposed(pendingOwnership.validAt);
     }
 
     /// @inheritdoc IManageableOracle
-    function acceptOwnershipTransfer() external virtual onlyOwner afterTimelock(pendingOwnershipChange.validAt) {
-        require(pendingOwnershipChange.value != DEAD_ADDRESS, InvalidOwnershipChangeType());
+    function acceptTransferOwnership() external virtual onlyOwner afterTimelock(pendingOwnership.validAt) {
+        require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());
 
-        address newOwner = pendingOwnershipChange.value;
-        _resetPendingAddress(pendingOwnershipChange);
+        address newOwner = pendingOwnership.value;
+        _resetPendingAddress(pendingOwnership);
 
-        transferOwnership(newOwner);
+        _transferOwnership(newOwner);
     }
 
     /// @inheritdoc IManageableOracle
-    function acceptOwnershipRenounce() external virtual onlyOwner afterTimelock(pendingOwnershipChange.validAt) {
-        require(pendingOwnershipChange.value == address(0xdead), InvalidOwnershipChangeType());
+    function acceptRenounceOwnership() external virtual onlyOwner afterTimelock(pendingOwnership.validAt) {
+        require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
+        require(pendingOracle.validAt == 0, PendingOracleUpdate());
 
-        _resetPendingAddress(pendingOwnershipChange);
+        _resetPendingAddress(pendingOwnership);
         renounceOwnership();
     }
 
     /// @inheritdoc IManageableOracle
-    function cancelOwnershipChange() external virtual onlyOwner {
-        require(pendingOwnershipChange.validAt != 0, NoPendingUpdateToCancel());
+    function cancelTransferOwnership() external virtual onlyOwner {
+        require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());
+        require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());
 
-        _resetPendingAddress(pendingOwnershipChange);
-        emit OwnershipChangeCanceled();
+        _resetPendingAddress(pendingOwnership);
+        emit OwnershipTransferCanceled();
+    }
+
+    /// @inheritdoc IManageableOracle
+    function cancelRenounceOwnership() external virtual onlyOwner {
+        require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());
+        require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
+
+        _resetPendingAddress(pendingOwnership);
+        emit OwnershipRenounceCanceled();
     }
 
     /// @inheritdoc ISiloOracle

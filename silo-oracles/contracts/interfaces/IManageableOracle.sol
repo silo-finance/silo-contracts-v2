@@ -14,10 +14,12 @@ interface IManageableOracle {
     event TimelockProposalCanceled();
     event OwnershipTransferProposed(address indexed newOwner, uint256 availableAt);
     event OwnershipRenounceProposed(uint256 availableAt);
-    event OwnershipChangeCanceled();
+    event OwnershipTransferCanceled();
+    event OwnershipRenounceCanceled();
 
     error QuoteTokenMustBeTheSame();
     error PendingUpdate();
+    error PendingOracleUpdate();
     error NoPendingUpdate();
     error NoPendingUpdateToCancel();
     error TimelockNotExpired();
@@ -25,6 +27,7 @@ interface IManageableOracle {
     error ZeroOracle();
     error ZeroOwner();
     error InvalidOwnershipChangeType();
+    error UseRenounceOwnership();
 
     /// @notice Get the current oracle used by the manageable oracle
     /// @return The oracle used by the manageable oracle
@@ -43,9 +46,9 @@ interface IManageableOracle {
     function pendingTimelock() external view returns (PendingUint192 memory);
 
     /// @notice Get the pending ownership change (if any)
-    /// @return The pending ownership change struct containing address and validAt timestamp
-    /// @dev address(0xdead) means pending renounce, otherwise it's pending transfer
-    function pendingOwnershipChange() external view returns (PendingAddress memory);
+    /// @return The pending ownership struct containing address and validAt timestamp
+    /// @dev If address is DEAD_ADDRESS (0xdead), it means pending renounce, otherwise pending transfer
+    function pendingOwnership() external view returns (PendingAddress memory);
 
     /// @notice Initialize the ManageableOracle
     /// @param _oracle Initial oracle address
@@ -78,11 +81,14 @@ interface IManageableOracle {
     function cancelTimelock() external;
 
     /// @notice Accept and execute the pending ownership transfer (can only be called by owner after time lock expires)
-    function acceptOwnershipTransfer() external;
+    function acceptTransferOwnership() external;
 
     /// @notice Accept and execute the pending ownership renounce (can only be called by owner after time lock expires)
-    function acceptOwnershipRenounce() external;
+    function acceptRenounceOwnership() external;
 
-    /// @notice Cancel the pending ownership change (can only be called by owner)
-    function cancelOwnershipChange() external;
+    /// @notice Cancel the pending ownership transfer (can only be called by owner)
+    function cancelTransferOwnership() external;
+
+    /// @notice Cancel the pending ownership renounce (can only be called by owner)
+    function cancelRenounceOwnership() external;
 }
