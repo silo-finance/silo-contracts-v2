@@ -111,6 +111,26 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     }
 
     /// @inheritdoc IManageableOracle
+    function proposeTransferOwnership(address _newOwner) external virtual onlyOwner {
+        require(pendingOwnership.validAt == 0, PendingUpdate());
+        require(_newOwner != address(0), ZeroOwner());
+        require(_newOwner != DEAD_ADDRESS, UseRenounceOwnership());
+
+        pendingOwnership.update(_newOwner, timelock);
+
+        emit OwnershipTransferProposed(_newOwner, pendingOwnership.validAt);
+    }
+
+    /// @inheritdoc IManageableOracle
+    function proposeRenounceOwnership() external virtual onlyOwner {
+        require(pendingOwnership.validAt == 0, PendingUpdate());
+
+        pendingOwnership.update(DEAD_ADDRESS, timelock);
+
+        emit OwnershipRenounceProposed(pendingOwnership.validAt);
+    }
+
+    /// @inheritdoc IManageableOracle
     function acceptOracle() external virtual onlyOwner afterTimelock(pendingOracle.validAt) {
         oracle = ISiloOracle(pendingOracle.value);
         _resetPendingAddress(pendingOracle);
@@ -138,26 +158,6 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
 
         _resetPendingUint192(pendingTimelock);
         emit TimelockProposalCanceled();
-    }
-
-    /// @inheritdoc IManageableOracle
-    function proposeTransferOwnership(address newOwner) external virtual onlyOwner {
-        require(pendingOwnership.validAt == 0, PendingUpdate());
-        require(newOwner != address(0), ZeroOwner());
-        require(newOwner != DEAD_ADDRESS, UseRenounceOwnership());
-
-        pendingOwnership.update(newOwner, timelock);
-
-        emit OwnershipTransferProposed(newOwner, pendingOwnership.validAt);
-    }
-
-    /// @inheritdoc IManageableOracle
-    function proposeRenounceOwnership() external virtual onlyOwner {
-        require(pendingOwnership.validAt == 0, PendingUpdate());
-
-        pendingOwnership.update(DEAD_ADDRESS, timelock);
-
-        emit OwnershipRenounceProposed(pendingOwnership.validAt);
     }
 
     /// @inheritdoc IManageableOracle
@@ -194,7 +194,8 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         version = "ManageableOracle v1.0.0";
     }
 
-    /// @inheritdoc Ownable
+    /// @inheritdoc Ownable2Step
+    /// @notice This function has been overridden and implemented with timelock protection.
     function transferOwnership(address newOwner)
         public
         virtual
@@ -211,18 +212,19 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     }
 
     /// @inheritdoc Ownable
+    /// @notice This function has been overridden and implemented with timelock protection.
     function renounceOwnership() public virtual override onlyOwner afterTimelock(pendingOwnership.validAt) {
         require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
         require(pendingOracle.validAt == 0, PendingOracleUpdate());
 
         _resetPendingAddress(pendingOwnership);
-
         _transferOwnership(address(0));
     }
 
     // solhint-disable-next-line func-name-mixedcase
     function __ManageableOracle_init(ISiloOracle _oracle, address _owner, uint32 _timelock)
         internal
+        virtual
         onlyInitializing
     {
         require(address(_oracle) != address(0), ZeroOracle());

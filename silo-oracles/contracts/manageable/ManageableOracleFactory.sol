@@ -13,7 +13,7 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
     /// @dev Implementation contract that will be cloned
     ManageableOracle public immutable ORACLE_IMPLEMENTATION;
 
-    mapping(address => bool) public createdInFactory;
+    mapping(address oracle => bool created) public createdInFactory;
 
     constructor() {
         ORACLE_IMPLEMENTATION = new ManageableOracle();
