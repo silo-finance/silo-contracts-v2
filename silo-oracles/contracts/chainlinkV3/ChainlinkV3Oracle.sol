@@ -5,12 +5,13 @@ import {Initializable} from  "openzeppelin5-upgradeable/proxy/utils/Initializabl
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 import {OracleNormalization} from "../lib/OracleNormalization.sol";
 import {ChainlinkV3OracleConfig} from "./ChainlinkV3OracleConfig.sol";
 import {IChainlinkV3Oracle} from "../interfaces/IChainlinkV3Oracle.sol";
 
-contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
+contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable, Aggregator {
     ChainlinkV3OracleConfig public oracleConfig;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -25,9 +26,15 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable {
         emit ChainlinkV3ConfigDeployed(_configAddress);
     }
 
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual returns (address token, uint256 decimals) {
+        ChainlinkV3Config memory config = oracleConfig.getConfig();
+        return (address(config.baseToken), TokenHelper.assertAndGetDecimals(config.baseToken));
+    }
+
     /// @inheritdoc ISiloOracle
     // solhint-disable-next-line code-complexity
-    function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken) public view virtual returns (uint256 quoteAmount) {
         ChainlinkV3Config memory config = oracleConfig.getConfig();
 
         if (_baseToken != address(config.baseToken)) revert AssetNotSupported();
