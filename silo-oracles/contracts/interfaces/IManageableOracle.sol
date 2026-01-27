@@ -80,11 +80,18 @@ interface IManageableOracle {
     /// @notice Cancel the pending timelock update (can only be called by owner)
     function cancelTimelock() external;
 
+    /// @notice Propose a new ownership transfer (can only be called by owner)
+    /// @param newOwner The new owner address to propose
+    function proposeTransferOwnership(address newOwner) external;
+
+    /// @notice Propose ownership renounce (can only be called by owner)
+    function proposeRenounceOwnership() external;
+
     /// @notice Accept and execute the pending ownership transfer (can only be called by owner after time lock expires)
-    function acceptTransferOwnership() external;
+    function transferOwnership(address newOwner) external;
 
     /// @notice Accept and execute the pending ownership renounce (can only be called by owner after time lock expires)
-    function acceptRenounceOwnership() external;
+    function renounceOwnership() external;
 
     /// @notice Cancel the pending ownership transfer (can only be called by owner)
     function cancelTransferOwnership() external;
