@@ -106,7 +106,7 @@ interface IManageableOracle {
     /// @dev Can only be called by the current owner after timelock expires
     ///      NOTE: Renouncing ownership will leave the contract without an owner,
     ///      thereby disabling any functionality that is only available to the owner.
-    function renounceOwnership() external;
+    function acceptRenounceOwnership() external;
 
     /// @notice Verify that the oracle is valid and can provide quotes for the base token
     /// @param _oracle Oracle address to verify

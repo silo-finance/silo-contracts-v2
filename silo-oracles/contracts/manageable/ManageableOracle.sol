@@ -168,7 +168,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
     }
 
     /// @inheritdoc IManageableOracle
-    function renounceOwnership() external virtual onlyOwner afterTimelock(pendingOwnership.validAt) {
+    function acceptRenounceOwnership() external virtual onlyOwner afterTimelock(pendingOwnership.validAt) {
         require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
         require(pendingOracle.validAt == 0, PendingOracleUpdate());
 
