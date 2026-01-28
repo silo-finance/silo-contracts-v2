@@ -7,13 +7,12 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOracle.sol";
 import {PendingAddress, PendingUint192, PendingLib} from "silo-vaults/contracts/libraries/PendingLib.sol";
 import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
-import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 /// @title ManageableOracle
 /// @notice Oracle forwarder that allows updating the oracle address with time lock and owner approval
-contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, Initializable, IVersioned {
+contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVersioned {
     using PendingLib for PendingAddress;
     using PendingLib for PendingUint192;
 
@@ -24,6 +23,8 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
 
     /// @dev Maximum time lock duration
     uint32 public constant MAX_TIMELOCK = 7 days;
+
+    address public owner;
 
     /// @dev Quote token address (set during initialization)
     address public quoteToken;
@@ -57,10 +58,14 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         _;
     }
 
+    /// @dev Modifier to check if the caller is the owner
+    modifier onlyOwner() {
+        require(msg.sender == owner, OnlyOwner());
+        _;
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() Ownable1and2Steps(DEAD_ADDRESS) {
-        // lock the implementation
-        _transferOwnership(address(0));
+    constructor() {
         _disableInitializers();
     }
 
@@ -204,26 +209,28 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         version = "ManageableOracle v1.0.0";
     }
 
-    /// @inheritdoc Ownable2Step
-    /// @notice This function has been overridden and implemented with timelock protection.
-    function transferOwnership(address newOwner)
+    /// @dev The new owner accepts the ownership transfer.
+    function acceptOwnership()
         public
         virtual
-        override
-        onlyOwner
         afterTimelock(pendingOwnership.validAt)
     {
         require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());
-        require(pendingOwnership.value == newOwner, InvalidOwnershipChangeType());
+        require(pendingOwnership.value == msg.sender, OwnableUnauthorizedAccount());
 
         _resetPendingAddress(pendingOwnership);
 
         _transferOwnership(newOwner);
     }
 
-    /// @inheritdoc Ownable
-    /// @notice This function has been overridden and implemented with timelock protection.
-    function renounceOwnership() public virtual override onlyOwner afterTimelock(pendingOwnership.validAt) {
+    /**
+     * @dev Leaves the contract without owner. It will not be possible to call
+     * `onlyOwner` functions. Can only be called by the current owner.
+     *
+     * NOTE: Renouncing ownership will leave the contract without an owner,
+     * thereby disabling any functionality that is only available to the owner.
+     */
+    function renounceOwnership() public virtual onlyOwner afterTimelock(pendingOwnership.validAt) {
         require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
         require(pendingOracle.validAt == 0, PendingOracleUpdate());
 
@@ -287,5 +294,11 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     function _resetPendingUint192(PendingUint192 storage _pending) internal virtual {
         _pending.value = 0;
         _pending.validAt = 0;
+    }
+
+    function _transferOwnership(address _newOwner) internal virtual {
+        address oldOwner = owner;
+        owner = _newOwner;
+        emit OwnershipTransferred(oldOwner, _newOwner);
     }
 }

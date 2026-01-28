@@ -15,6 +15,8 @@ interface IManageableOracle {
     event OwnershipRenounceProposed(uint256 availableAt);
     event OwnershipTransferCanceled();
     event OwnershipRenounceCanceled();
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
 
     error QuoteTokenMustBeTheSame();
     error PendingUpdate();
