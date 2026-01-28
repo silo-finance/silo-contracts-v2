@@ -54,12 +54,6 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable, Aggregator, IVersi
         version = "DIAOracle 4.0.0";
     }
 
-    /// @inheritdoc Aggregator
-    function baseToken() public view virtual override returns (address token) {
-        IDIAOracle.DIAConfig memory config = oracleConfig.getConfig();
-        return config.baseToken;
-    }
-
     /// @inheritdoc ISiloOracle
     // solhint-disable-next-line code-complexity
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
@@ -111,6 +105,12 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable, Aggregator, IVersi
 
     function beforeQuote(address) external pure virtual override {
         // nothing to execute
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        IDIAOracle.DIAConfig memory config = oracleConfig.getConfig();
+        return config.baseToken;
     }
 
     /// @param _diaOracle IDIAOracleV2 oracle where price is stored

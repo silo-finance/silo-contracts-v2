@@ -69,11 +69,6 @@ abstract contract PendleLPTOracle is ISiloOracle, Aggregator, IVersioned {
         version = "PendleLPTOracle 4.0.0";
     }
 
-    /// @inheritdoc Aggregator
-    function baseToken() public view virtual override returns (address token) {
-        return _getBaseToken();
-    }
-
     /// @inheritdoc ISiloOracle
     /// @dev Pendle LPs might be susceptible to read-only reentrancy IF the underlying yieldToken
     /// surrenders the control flow to an external caller at any point.
@@ -93,6 +88,11 @@ abstract contract PendleLPTOracle is ISiloOracle, Aggregator, IVersioned {
     /// @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address) {
         return QUOTE_TOKEN;
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        return _getBaseToken();
     }
 
     function _getBaseToken() internal virtual view returns (address baseToken) {

@@ -27,12 +27,19 @@ abstract contract Aggregator is AggregatorV3Interface {
         return (0, 0, 0, 0, 0);
     }
 
-    /// @notice this function follows the Chainlink V3 interface but only answer is used, all other return values are zero
+    /// @notice this function follows the Chainlink V3 interface but only answer is used,
+    /// all other return values are zero
     function latestRoundData()
         external
         view
         virtual
-        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+        returns (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        )
     {
         address token = baseToken();
         uint256 decimals = TokenHelper.assertAndGetDecimals(token);

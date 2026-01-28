@@ -76,6 +76,12 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, Aggregator, IVersione
         // nothing to execute
     }
 
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        IPTLinearOracleConfig.OracleConfig memory cfg = oracleConfig.getConfig();
+        return cfg.ptToken;
+    }
+
     /// @inheritdoc AggregatorV3Interface
     function decimals() external pure returns (uint8) {
         return 18;
@@ -111,11 +117,5 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, Aggregator, IVersione
         quoteAmount = _baseAmount * uint256(ptLinearPrice) / cfg.normalizationDivider;
 
         require(quoteAmount != 0, ZeroQuote());
-    }
-
-    /// @inheritdoc Aggregator
-    function baseToken() public view virtual override returns (address token) {
-        IPTLinearOracleConfig.OracleConfig memory cfg = oracleConfig.getConfig();
-        return cfg.ptToken;
     }
 }

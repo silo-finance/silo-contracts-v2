@@ -50,12 +50,6 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Aggregator, IVersione
         version = "UniswapV3Oracle 4.0.0";
     }
 
-    /// @inheritdoc Aggregator
-    function baseToken() public view virtual override returns (address token) {
-        UniswapV3Config memory config = oracleConfig.getConfig();
-        return config.baseToken;
-    }
-
     /// @notice Adjust UniV3 pool cardinality to Silo's requirements.
     /// Call `observationsStatus` to see, if you need to execute this method.
     /// This method prepares pool for setup for price provider. In order to run `setupAsset` for asset,
@@ -152,6 +146,12 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Aggregator, IVersione
 
     function beforeQuote(address) external pure virtual override {
         // nothing to execute
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        UniswapV3Config memory config = oracleConfig.getConfig();
+        return config.baseToken;
     }
 
     /// @param _pool uniswap V3 pool address

@@ -44,11 +44,6 @@ contract OracleScaler is ISiloOracle, Aggregator, IVersioned {
         version = "OracleScaler 4.0.0";
     }
 
-    /// @inheritdoc Aggregator
-    function baseToken() public view virtual override returns (address token) {
-        return QUOTE_TOKEN;
-    }
-
     // @inheritdoc ISiloOracle
     function beforeQuote(address) external virtual {}
 
@@ -64,5 +59,10 @@ contract OracleScaler is ISiloOracle, Aggregator, IVersioned {
     // @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address) {
         return address(QUOTE_TOKEN);
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        return QUOTE_TOKEN;
     }
 }
