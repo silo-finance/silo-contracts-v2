@@ -27,12 +27,6 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable, Ag
         emit ChainlinkV3ConfigDeployed(_configAddress);
     }
 
-    /// @inheritdoc Aggregator
-    function baseToken() public view virtual override returns (address token) {
-        ChainlinkV3Config memory config = oracleConfig.getConfig();
-        return address(config.baseToken);
-    }
-
     /// @inheritdoc ISiloOracle
     // solhint-disable-next-line code-complexity
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
@@ -96,6 +90,12 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable, Ag
     // solhint-disable-next-line func-name-mixedcase
     function VERSION() external pure virtual override returns (string memory version) {
         version = "ChainlinkV3Oracle 4.0.0";
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        ChainlinkV3Config memory config = oracleConfig.getConfig();
+        return address(config.baseToken);
     }
 
     function _getAggregatorPrice(AggregatorV3Interface _aggregator, uint256 /* _heartbeat */)
