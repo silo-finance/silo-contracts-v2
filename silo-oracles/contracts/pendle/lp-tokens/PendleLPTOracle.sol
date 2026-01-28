@@ -63,12 +63,6 @@ abstract contract PendleLPTOracle is ISiloOracle, Aggregator, IVersioned {
         QUOTE_TOKEN = _underlyingOracle.quoteToken();
     }
 
-    /// @inheritdoc IVersioned
-    // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure virtual override returns (string memory version) {
-        version = "PendleLPTOracle 4.0.0";
-    }
-
     /// @inheritdoc ISiloOracle
     /// @dev Pendle LPs might be susceptible to read-only reentrancy IF the underlying yieldToken
     /// surrenders the control flow to an external caller at any point.
@@ -88,6 +82,12 @@ abstract contract PendleLPTOracle is ISiloOracle, Aggregator, IVersioned {
     /// @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address) {
         return QUOTE_TOKEN;
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure virtual override returns (string memory version) {
+        version = "PendleLPTOracle 4.0.0";
     }
 
     /// @inheritdoc Aggregator

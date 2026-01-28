@@ -18,12 +18,6 @@ contract ERC4626Oracle is ISiloOracle, Aggregator, IVersioned {
         VAULT = _vault;
     }
 
-    /// @inheritdoc IVersioned
-    // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure override returns (string memory version) {
-        version = "ERC4626Oracle 4.0.0";
-    }
-
     /// @inheritdoc ISiloOracle
     function beforeQuote(address _baseToken) external view {
         // only for an ISiloOracle interface implementation
@@ -41,6 +35,12 @@ contract ERC4626Oracle is ISiloOracle, Aggregator, IVersioned {
     /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
         return VAULT.asset();
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "ERC4626Oracle 4.0.0";
     }
 
     /// @inheritdoc Aggregator

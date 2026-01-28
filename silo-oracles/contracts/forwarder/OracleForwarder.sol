@@ -25,12 +25,6 @@ contract OracleForwarder is Ownable2Step, IOracleForwarder, IVersioned {
         _setOracle(_oracle);
     }
 
-    /// @inheritdoc IVersioned
-    // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure override returns (string memory version) {
-        version = "OracleForwarder 4.0.0";
-    }
-
     // @inheritdoc ISiloOracle
     function beforeQuote(address _baseToken) external virtual {
         oracle.beforeQuote(_baseToken);
@@ -44,6 +38,12 @@ contract OracleForwarder is Ownable2Step, IOracleForwarder, IVersioned {
     // @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address token) {
         token = QUOTE_TOKEN;
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "OracleForwarder 4.0.0";
     }
 
     function _setOracle(ISiloOracle _oracle) internal virtual {

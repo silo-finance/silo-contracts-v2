@@ -32,12 +32,6 @@ contract ERC4626OracleWithUnderlying is IERC4626OracleWithUnderlying, Aggregator
         _QUOTE_TOKEN = _oracle.quoteToken();
     }
 
-    /// @inheritdoc IVersioned
-    // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure override returns (string memory version) {
-        version = "ERC4626OracleWithUnderlying 4.0.0";
-    }
-
     function getConfig() external view returns (Config memory) {
         return Config({
             baseToken: _VAULT,
@@ -65,6 +59,12 @@ contract ERC4626OracleWithUnderlying is IERC4626OracleWithUnderlying, Aggregator
 
     function beforeQuote(address) external pure virtual override {
         // nothing to execute
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "ERC4626OracleWithUnderlying 4.0.0";
     }
 
     /// @inheritdoc Aggregator

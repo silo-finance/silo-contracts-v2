@@ -44,12 +44,6 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Aggregator, IVersione
         emit UniswapV3ConfigDeployed(_configAddress);
     }
 
-    /// @inheritdoc IVersioned
-    // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure override returns (string memory version) {
-        version = "UniswapV3Oracle 4.0.0";
-    }
-
     /// @notice Adjust UniV3 pool cardinality to Silo's requirements.
     /// Call `observationsStatus` to see, if you need to execute this method.
     /// This method prepares pool for setup for price provider. In order to run `setupAsset` for asset,
@@ -146,6 +140,12 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Aggregator, IVersione
 
     function beforeQuote(address) external pure virtual override {
         // nothing to execute
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "UniswapV3Oracle 4.0.0";
     }
 
     /// @inheritdoc Aggregator

@@ -38,12 +38,6 @@ contract OracleScaler is ISiloOracle, Aggregator, IVersioned {
         QUOTE_TOKEN = _quoteToken;
     }
 
-    /// @inheritdoc IVersioned
-    // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure override returns (string memory version) {
-        version = "OracleScaler 4.0.0";
-    }
-
     // @inheritdoc ISiloOracle
     function beforeQuote(address) external virtual {}
 
@@ -59,6 +53,12 @@ contract OracleScaler is ISiloOracle, Aggregator, IVersioned {
     // @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address) {
         return address(QUOTE_TOKEN);
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "OracleScaler 4.0.0";
     }
 
     /// @inheritdoc Aggregator

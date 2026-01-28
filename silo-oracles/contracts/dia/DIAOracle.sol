@@ -48,12 +48,6 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable, Aggregator, IVersi
         emit DIAConfigDeployed(_configAddress);
     }
 
-    /// @inheritdoc IVersioned
-    // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure override returns (string memory version) {
-        version = "DIAOracle 4.0.0";
-    }
-
     /// @inheritdoc ISiloOracle
     // solhint-disable-next-line code-complexity
     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
@@ -105,6 +99,12 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable, Aggregator, IVersi
 
     function beforeQuote(address) external pure virtual override {
         // nothing to execute
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "DIAOracle 4.0.0";
     }
 
     /// @inheritdoc Aggregator

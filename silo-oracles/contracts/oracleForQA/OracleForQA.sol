@@ -25,12 +25,6 @@ contract OracleForQA is ISiloOracle, Aggregator, IVersioned {
         priceOfOneBaseToken = _initialPrice;
     }
 
-    /// @inheritdoc IVersioned
-    // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure override returns (string memory version) {
-        version = "OracleForQA 4.0.0";
-    }
-
     /// @param _price if oracle is set for WETH/USDC, where USDC is quote, then correct price would be 3000e6
     function setPriceOfOneBaseToken(uint256 _price) external {
         require(ADMIN == address(0) || msg.sender == ADMIN, OnlyAdminCanSetPrice());
@@ -53,6 +47,12 @@ contract OracleForQA is ISiloOracle, Aggregator, IVersioned {
 
     function beforeQuote(address) external pure virtual override {
         // nothing to execute
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "OracleForQA 4.0.0";
     }
 
     /// @inheritdoc Aggregator

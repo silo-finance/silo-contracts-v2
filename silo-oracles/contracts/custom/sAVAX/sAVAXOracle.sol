@@ -15,12 +15,6 @@ contract sAVAXOracle is ISiloOracle, Aggregator, IVersioned { // solhint-disable
     error AssetNotSupported();
     error ZeroPrice();
 
-    /// @inheritdoc IVersioned
-    // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure override returns (string memory version) {
-        version = "sAVAXOracle 4.0.0";
-    }
-
     /// @inheritdoc ISiloOracle
     function beforeQuote(address _baseToken) external view {
         // only for an ISiloOracle interface implementation
@@ -38,6 +32,12 @@ contract sAVAXOracle is ISiloOracle, Aggregator, IVersioned { // solhint-disable
     /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
         return 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7; // WAVAX
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "sAVAXOracle 4.0.0";
     }
 
     /// @inheritdoc Aggregator
