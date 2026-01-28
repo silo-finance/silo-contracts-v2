@@ -6,12 +6,15 @@ import {OracleLibrary} from  "uniswap/v3-periphery/contracts/libraries/OracleLib
 import {IUniswapV3Pool} from  "uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 import {RevertBytes} from  "../lib/RevertBytes.sol";
+import {Aggregator} from "../_common/Aggregator.sol";
 import {IUniswapV3Oracle} from "../interfaces/IUniswapV3Oracle.sol";
 import {UniswapV3OracleConfig} from "./UniswapV3OracleConfig.sol";
 
-contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle {
+contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, Aggregator, IVersioned {
     using RevertBytes for bytes;
 
     /// @dev Uniswap can revert with "Old" error when begin of TWAP period is older than oldest observation.
@@ -39,6 +42,18 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle {
 
         oracleConfig = _configAddress;
         emit UniswapV3ConfigDeployed(_configAddress);
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "UniswapV3Oracle 4.0.0";
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        UniswapV3Config memory config = oracleConfig.getConfig();
+        return config.baseToken;
     }
 
     /// @notice Adjust UniV3 pool cardinality to Silo's requirements.

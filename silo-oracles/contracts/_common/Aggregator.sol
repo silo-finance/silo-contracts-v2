@@ -2,17 +2,9 @@
 pragma solidity 0.8.28;
 
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 abstract contract Aggregator is AggregatorV3Interface {
-    function latestRoundData()
-        external
-        view
-        virtual
-        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
-    {
-        return (0, 0, 0, 0, 0);
-    }
-
     /// @notice all Silo oracles should return price in 18 decimals
     function decimals() external view virtual returns (uint8) {
         return 18;
@@ -42,7 +34,8 @@ abstract contract Aggregator is AggregatorV3Interface {
         virtual
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
-        (address token, uint256 decimals) = baseToken();
+        address token = baseToken();
+        uint256 decimals = TokenHelper.assertAndGetDecimals(token);
         answer = quote(10 ** decimals, token);
 
         startedAt = block.timestamp;
@@ -51,5 +44,5 @@ abstract contract Aggregator is AggregatorV3Interface {
 
     function quote(uint256 _baseAmount, address _baseToken) public view virtual returns (uint256 quoteAmount);
     
-    function baseToken() public view virtual returns (address token, uint256 decimals);
+    function baseToken() public view virtual returns (address token);
 }

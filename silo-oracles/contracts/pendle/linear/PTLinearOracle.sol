@@ -8,12 +8,14 @@ import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {IPTLinearOracleConfig} from "../../interfaces/IPTLinearOracleConfig.sol";
 import {IPTLinearOracle} from "../../interfaces/IPTLinearOracle.sol";
+import {Aggregator} from "../../_common/Aggregator.sol";
 
 import {ISparkLinearDiscountOracle} from "../../pendle/interfaces/ISparkLinearDiscountOracle.sol";
 
-contract PTLinearOracle is IPTLinearOracle, Initializable {
+contract PTLinearOracle is IPTLinearOracle, Initializable, Aggregator, IVersioned {
     IPTLinearOracleConfig public oracleConfig;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -28,6 +30,12 @@ contract PTLinearOracle is IPTLinearOracle, Initializable {
         oracleConfig = _configAddress;
 
         emit PTLinearOracleInitialized(_configAddress);
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "PTLinearOracle 4.0.0";
     }
 
     /// @inheritdoc AggregatorV3Interface
@@ -103,5 +111,11 @@ contract PTLinearOracle is IPTLinearOracle, Initializable {
         quoteAmount = _baseAmount * uint256(ptLinearPrice) / cfg.normalizationDivider;
 
         require(quoteAmount != 0, ZeroQuote());
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        IPTLinearOracleConfig.OracleConfig memory cfg = oracleConfig.getConfig();
+        return cfg.ptToken;
     }
 }

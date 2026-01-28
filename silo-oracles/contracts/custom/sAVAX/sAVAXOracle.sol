@@ -2,15 +2,29 @@
 pragma solidity 0.8.28;
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {IsAVAX} from "silo-oracles/contracts/interfaces/IsAVAX.sol";
+import {Aggregator} from "../../_common/Aggregator.sol";
 
 /// @dev sAVAXOracle is a custom oracle for tAVAX/wAVAX market
-contract sAVAXOracle is ISiloOracle { // solhint-disable-line contract-name-camelcase
+contract sAVAXOracle is ISiloOracle, Aggregator, IVersioned { // solhint-disable-line contract-name-camelcase
     IsAVAX public constant S_AVAX = IsAVAX(0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE);
     address public constant IAU_SAVAX = 0x5Ac32E4c756bD57630eAdF216668Ba16fA4635a2;
 
     error AssetNotSupported();
     error ZeroPrice();
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "sAVAXOracle 4.0.0";
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        return IAU_SAVAX;
+    }
 
     /// @inheritdoc ISiloOracle
     function beforeQuote(address _baseToken) external view {

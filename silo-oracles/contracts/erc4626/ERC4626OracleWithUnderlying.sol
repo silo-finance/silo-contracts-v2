@@ -3,11 +3,14 @@ pragma solidity 0.8.28;
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {Aggregator} from "../_common/Aggregator.sol";
 
 import {IERC4626OracleWithUnderlying} from "../interfaces/IERC4626OracleWithUnderlying.sol";
 
 /// @dev quote will returns price in oracle decimals
-contract ERC4626OracleWithUnderlying is IERC4626OracleWithUnderlying {
+contract ERC4626OracleWithUnderlying is IERC4626OracleWithUnderlying, Aggregator, IVersioned {
     /// @dev address of the vault itself, vault share is base token
     IERC4626 private immutable _VAULT; // solhint-disable-line var-name-mixedcase
 
@@ -27,6 +30,12 @@ contract ERC4626OracleWithUnderlying is IERC4626OracleWithUnderlying {
 
         _VAULT_ASSET = _vault.asset();
         _QUOTE_TOKEN = _oracle.quoteToken();
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "ERC4626OracleWithUnderlying 4.0.0";
     }
 
     function getConfig() external view returns (Config memory) {
@@ -56,5 +65,10 @@ contract ERC4626OracleWithUnderlying is IERC4626OracleWithUnderlying {
 
     function beforeQuote(address) external pure virtual override {
         // nothing to execute
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        return address(_VAULT);
     }
 }

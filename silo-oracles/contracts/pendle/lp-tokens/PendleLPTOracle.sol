@@ -2,10 +2,12 @@
 pragma solidity 0.8.28;
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {IPendleOracleHelper} from "silo-oracles/contracts/pendle/interfaces/IPendleOracleHelper.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {Aggregator} from "../../_common/Aggregator.sol";
 
-abstract contract PendleLPTOracle is ISiloOracle {
+abstract contract PendleLPTOracle is ISiloOracle, Aggregator, IVersioned {
     /// @dev getLpToSyRate unit of measurement.
     uint256 public constant PENDLE_RATE_PRECISION = 10 ** 18;
 
@@ -59,6 +61,17 @@ abstract contract PendleLPTOracle is ISiloOracle {
         UNDERLYING_TOKEN = underlyingToken;
 
         QUOTE_TOKEN = _underlyingOracle.quoteToken();
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure virtual override returns (string memory version) {
+        version = "PendleLPTOracle 4.0.0";
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        return _getBaseToken();
     }
 
     /// @inheritdoc ISiloOracle

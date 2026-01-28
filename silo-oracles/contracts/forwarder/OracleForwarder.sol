@@ -4,9 +4,10 @@ pragma solidity 0.8.28;
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {IOracleForwarder} from "silo-oracles/contracts/interfaces/IOracleForwarder.sol";
 
-contract OracleForwarder is Ownable2Step, IOracleForwarder {
+contract OracleForwarder is Ownable2Step, IOracleForwarder, IVersioned {
     address public immutable QUOTE_TOKEN;
 
     ISiloOracle public oracle;
@@ -22,6 +23,12 @@ contract OracleForwarder is Ownable2Step, IOracleForwarder {
         require(_oracle.quoteToken() == QUOTE_TOKEN, QuoteTokenMustBeTheSame());
 
         _setOracle(_oracle);
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "OracleForwarder 4.0.0";
     }
 
     // @inheritdoc ISiloOracle

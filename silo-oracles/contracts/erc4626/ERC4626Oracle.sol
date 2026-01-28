@@ -4,8 +4,11 @@ pragma solidity 0.8.28;
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {Aggregator} from "../_common/Aggregator.sol";
 
-contract ERC4626Oracle is ISiloOracle {
+contract ERC4626Oracle is ISiloOracle, Aggregator, IVersioned {
     IERC4626 public immutable VAULT;
 
     error AssetNotSupported();
@@ -13,6 +16,12 @@ contract ERC4626Oracle is ISiloOracle {
 
     constructor(IERC4626 _vault) {
         VAULT = _vault;
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "ERC4626Oracle 4.0.0";
     }
 
     /// @inheritdoc ISiloOracle
@@ -32,5 +41,10 @@ contract ERC4626Oracle is ISiloOracle {
     /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
         return VAULT.asset();
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        return address(VAULT);
     }
 }

@@ -4,13 +4,16 @@ pragma solidity 0.8.28;
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {Initializable} from  "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 import {OracleNormalization} from "../lib/OracleNormalization.sol";
+import {Aggregator} from "../_common/Aggregator.sol";
 import {DIAOracleConfig} from "./DIAOracleConfig.sol";
 import {IDIAOracle} from "../interfaces/IDIAOracle.sol";
 import {IDIAOracleV2} from "../external/dia/IDIAOracleV2.sol";
 
-contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
+contract DIAOracle is ISiloOracle, IDIAOracle, Initializable, Aggregator, IVersioned {
     DIAOracleConfig public oracleConfig;
 
     /// @dev we accessing prices for assets by keys eg. "Jones/USD"
@@ -43,6 +46,18 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable {
         secondaryKey[_configAddress] = _key2;
 
         emit DIAConfigDeployed(_configAddress);
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "DIAOracle 4.0.0";
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        IDIAOracle.DIAConfig memory config = oracleConfig.getConfig();
+        return config.baseToken;
     }
 
     /// @inheritdoc ISiloOracle

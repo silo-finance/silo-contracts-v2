@@ -6,12 +6,13 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 
 import {OracleNormalization} from "../lib/OracleNormalization.sol";
 import {ChainlinkV3OracleConfig} from "./ChainlinkV3OracleConfig.sol";
 import {IChainlinkV3Oracle} from "../interfaces/IChainlinkV3Oracle.sol";
 
-contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable, Aggregator {
+contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable, Aggregator, IVersioned {
     ChainlinkV3OracleConfig public oracleConfig;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -26,10 +27,16 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable, Ag
         emit ChainlinkV3ConfigDeployed(_configAddress);
     }
 
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "ChainlinkV3Oracle 4.0.0";
+    }
+
     /// @inheritdoc Aggregator
-    function baseToken() public view virtual returns (address token, uint256 decimals) {
+    function baseToken() public view virtual override returns (address token) {
         ChainlinkV3Config memory config = oracleConfig.getConfig();
-        return (address(config.baseToken), TokenHelper.assertAndGetDecimals(config.baseToken));
+        return address(config.baseToken);
     }
 
     /// @inheritdoc ISiloOracle

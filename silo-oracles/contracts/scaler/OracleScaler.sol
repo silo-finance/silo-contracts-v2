@@ -2,13 +2,15 @@
 pragma solidity 0.8.28;
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {Aggregator} from "../_common/Aggregator.sol";
 
 /// @notice OracleScaler is an oracle, which scales the token amounts to 18 decimals instead of original decimals.
 /// For example, USDC decimals are 6. 1 USDC is 10**6. This oracle will scale this amount to 10**18. If the token
 /// decimals > 18, this oracle will revert.
 /// This oracle was created to increase the precision for LTV calculation of low decimal tokens.
-contract OracleScaler is ISiloOracle {
+contract OracleScaler is ISiloOracle, Aggregator, IVersioned {
     /// @dev the amounts will be scaled to 18 decimals.
     uint8 public constant DECIMALS_TO_SCALE = 18;
 
@@ -34,6 +36,17 @@ contract OracleScaler is ISiloOracle {
         SCALE_FACTOR = 10 ** uint256(DECIMALS_TO_SCALE - quoteTokenDecimals);
 
         QUOTE_TOKEN = _quoteToken;
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "OracleScaler 4.0.0";
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        return QUOTE_TOKEN;
     }
 
     // @inheritdoc ISiloOracle

@@ -13,6 +13,12 @@ contract ERC4626OracleHardcodeQuote is ERC4626Oracle {
         _QUOTE_TOKEN = _quoteToken;
     }
 
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "ERC4626OracleHardcodeQuote 4.0.0";
+    }
+
     /// @inheritdoc ISiloOracle
     function quoteToken() external view override returns (address) {
         return _QUOTE_TOKEN;
