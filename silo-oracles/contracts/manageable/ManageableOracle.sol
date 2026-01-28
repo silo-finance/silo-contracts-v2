@@ -6,7 +6,6 @@ import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOracle.sol";
 import {PendingAddress, PendingUint192, PendingLib} from "silo-vaults/contracts/libraries/PendingLib.sol";
-import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
@@ -159,6 +158,25 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
         emit TimelockUpdated(timelock);
     }
 
+    /// @dev The new owner accepts the ownership transfer.
+    function acceptOwnership() external virtual afterTimelock(pendingOwnership.validAt) {
+        require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());
+        require(pendingOwnership.value == msg.sender, OwnableUnauthorizedAccount());
+
+        _resetPendingAddress(pendingOwnership);
+
+        _transferOwnership(newOwner);
+    }
+
+    /// @inheritdoc IManageableOracle
+    function renounceOwnership() external virtual onlyOwner afterTimelock(pendingOwnership.validAt) {
+        require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
+        require(pendingOracle.validAt == 0, PendingOracleUpdate());
+
+        _resetPendingAddress(pendingOwnership);
+        _transferOwnership(address(0));
+    }
+
     /// @inheritdoc IManageableOracle
     function cancelOracle() external virtual onlyOwner {
         require(pendingOracle.validAt != 0, NoPendingUpdateToCancel());
@@ -209,43 +227,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
         version = "ManageableOracle v1.0.0";
     }
 
-    /// @dev The new owner accepts the ownership transfer.
-    function acceptOwnership()
-        public
-        virtual
-        afterTimelock(pendingOwnership.validAt)
-    {
-        require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());
-        require(pendingOwnership.value == msg.sender, OwnableUnauthorizedAccount());
-
-        _resetPendingAddress(pendingOwnership);
-
-        _transferOwnership(newOwner);
-    }
-
-    /**
-     * @dev Leaves the contract without owner. It will not be possible to call
-     * `onlyOwner` functions. Can only be called by the current owner.
-     *
-     * NOTE: Renouncing ownership will leave the contract without an owner,
-     * thereby disabling any functionality that is only available to the owner.
-     */
-    function renounceOwnership() public virtual onlyOwner afterTimelock(pendingOwnership.validAt) {
-        require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
-        require(pendingOracle.validAt == 0, PendingOracleUpdate());
-
-        _resetPendingAddress(pendingOwnership);
-        _transferOwnership(address(0));
-    }
-
     /// @inheritdoc IManageableOracle
-    /// @notice Verify that the oracle is valid and can provide quotes for the base token
-    /// @param _oracle Oracle address to verify
-    /// @param _baseToken Base token address to verify against
-    /// @dev This function checks that:
-    ///      - Oracle address is not zero
-    ///      - Oracle quote token matches the stored quote token
-    ///      - Oracle can provide a valid quote for the base token
     function oracleVerification(ISiloOracle _oracle, address _baseToken) public view virtual {
         require(address(_oracle) != address(0), ZeroOracle());
         require(_oracle.quoteToken() == quoteToken, QuoteTokenMustBeTheSame());

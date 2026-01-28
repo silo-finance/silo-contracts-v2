@@ -34,6 +34,8 @@ interface IManageableOracle {
     error FailedToCreateAnOracle();
     error OracleQuoteFailed();
     error BaseTokenDecimalsMustBeGreaterThanZero();
+    error OnlyOwner();
+    error OwnableUnauthorizedAccount();
 
     /// @notice Initialize the ManageableOracle with underlying oracle factory
     /// @param _underlyingOracleFactory Factory address to create the underlying oracle
@@ -96,6 +98,16 @@ interface IManageableOracle {
     /// @notice Cancel the pending ownership renounce (can only be called by owner)
     function cancelRenounceOwnership() external;
 
+    /// @notice The new owner accepts the ownership transfer
+    /// @dev Can only be called by the pending owner after timelock expires
+    function acceptOwnership() external;
+
+    /// @notice Leaves the contract without owner
+    /// @dev Can only be called by the current owner after timelock expires
+    ///      NOTE: Renouncing ownership will leave the contract without an owner,
+    ///      thereby disabling any functionality that is only available to the owner.
+    function renounceOwnership() external;
+
     /// @notice Verify that the oracle is valid and can provide quotes for the base token
     /// @param _oracle Oracle address to verify
     /// @param _baseToken Base token address to verify against
@@ -104,6 +116,10 @@ interface IManageableOracle {
     ///      - Oracle quote token matches the stored quote token
     ///      - Oracle can provide a valid quote for the base token
     function oracleVerification(ISiloOracle _oracle, address _baseToken) external view;
+
+    /// @notice Get the current owner of the contract
+    /// @return The address of the current owner
+    function owner() external view returns (address);
 
     /// @notice Get the current oracle used by the manageable oracle
     /// @return The oracle used by the manageable oracle
