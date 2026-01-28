@@ -31,6 +31,7 @@ interface IManageableOracle {
     error UseRenounceOwnership();
     error FailedToCreateAnOracle();
     error OracleQuoteFailed();
+    error BaseTokenDecimalsMustBeGreaterThanZero();
 
     /// @notice Initialize the ManageableOracle with underlying oracle factory
     /// @param _underlyingOracleFactory Factory address to create the underlying oracle
