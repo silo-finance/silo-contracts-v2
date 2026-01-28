@@ -146,7 +146,6 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, IVersioned {
         version = "UniswapV3Oracle 4.0.0";
     }
 
-    /// @inheritdoc Aggregator
     function baseToken() public view virtual returns (address token) {
         UniswapV3Config memory config = oracleConfig.getConfig();
         return config.baseToken;

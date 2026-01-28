@@ -38,7 +38,7 @@ contract ERC4626Oracle is ISiloOracle, Aggregator, IVersioned {
 
     /// @inheritdoc IVersioned
     // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure override returns (string memory version) {
+    function VERSION() external pure override virtual returns (string memory version) {
         version = "ERC4626Oracle 4.0.0";
     }
 

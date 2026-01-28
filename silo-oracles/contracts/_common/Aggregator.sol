@@ -3,6 +3,8 @@ pragma solidity 0.8.28;
 
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
+import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 abstract contract Aggregator is AggregatorV3Interface {
     /// @notice all Silo oracles should return price in 18 decimals
@@ -18,7 +20,7 @@ abstract contract Aggregator is AggregatorV3Interface {
         return 1;
     }
 
-    /// @notice not supported
+    /// @notice not in use, always returns 0s, use latestRoundData instead
     function getRoundData(uint80)
         external
         view
@@ -43,13 +45,12 @@ abstract contract Aggregator is AggregatorV3Interface {
     {
         address token = baseToken();
         uint256 decimals = TokenHelper.assertAndGetDecimals(token);
-        answer = quote(10 ** decimals, token);
+        ISiloOracle oracle = ISiloOracle(address(this));
+        answer = SafeCast.toInt256(oracle.quote(10 ** decimals, token));
 
         startedAt = block.timestamp;
         updatedAt = block.timestamp;
     }
-
-    function quote(uint256 _baseAmount, address _baseToken) public view virtual returns (uint256 quoteAmount);
     
     function baseToken() public view virtual returns (address token);
 }

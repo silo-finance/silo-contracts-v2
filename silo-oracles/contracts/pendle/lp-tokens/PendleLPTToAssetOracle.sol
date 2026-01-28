@@ -17,9 +17,8 @@ import {PendleLPTOracle} from "./PendleLPTOracle.sol";
 contract PendleLPTToAssetOracle is PendleLPTOracle {
     constructor(ISiloOracle _underlyingOracle, address _market) PendleLPTOracle(_underlyingOracle, _market) {}
 
-    /// @inheritdoc IVersioned
     // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure override returns (string memory version) {
+    function VERSION() external pure override virtual returns (string memory version) {
         version = "PendleLPTToAssetOracle 4.0.0";
     }
 

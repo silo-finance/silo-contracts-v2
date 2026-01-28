@@ -39,7 +39,7 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, Aggregator, IVersione
         external
         view
         virtual
-        override
+        override(Aggregator, AggregatorV3Interface)
         returns (uint80, int256 answer, uint256, uint256, uint80)
     {
         IPTLinearOracleConfig.OracleConfig memory cfg = oracleConfig.getConfig();
@@ -54,7 +54,7 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, Aggregator, IVersione
     }
 
     /// @inheritdoc AggregatorV3Interface
-    function description() external view returns (string memory) {
+    function description() external view override(Aggregator, AggregatorV3Interface) virtual returns (string memory) {
         string memory baseSymbol = TokenHelper.symbol(oracleConfig.getConfig().ptToken);
         string memory quoteSymbol = TokenHelper.symbol(oracleConfig.getConfig().hardcodedQuoteToken);
         return string.concat("PTLinearOracle for ", baseSymbol, " / ", quoteSymbol);
@@ -74,21 +74,6 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, Aggregator, IVersione
     // solhint-disable-next-line func-name-mixedcase
     function VERSION() external pure override returns (string memory version) {
         version = "PTLinearOracle 4.0.0";
-    }
-
-    /// @inheritdoc AggregatorV3Interface
-    function decimals() external pure returns (uint8) {
-        return 18;
-    }
-
-    /// @inheritdoc AggregatorV3Interface
-    function version() external pure returns (uint256) {
-        return 1;
-    }
-
-    /// @notice not in use, always returns 0s, use latestRoundData instead
-    function getRoundData(uint80 /* _roundId */ ) external pure returns (uint80, int256, uint256, uint256, uint80) {
-        return (0, 0, 0, 0, 0);
     }
 
     /// @inheritdoc Aggregator
