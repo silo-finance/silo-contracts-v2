@@ -26,32 +26,38 @@ interface IManageableOracle {
     error ZeroOracle();
     error ZeroFactory();
     error ZeroOwner();
+    error ZeroBaseToken();
     error InvalidOwnershipChangeType();
     error UseRenounceOwnership();
     error FailedToCreateAnOracle();
+    error OracleQuoteFailed();
 
     /// @notice Initialize the ManageableOracle with underlying oracle factory
     /// @param _underlyingOracleFactory Factory address to create the underlying oracle
     /// @param _underlyingOracleInitData Calldata to call the factory and create the underlying oracle
     /// @param _owner Address that will own the contract
     /// @param _timelock Initial time lock duration
+    /// @param _baseToken Base token address for the oracle
     /// @dev This method is primarily used by SiloDeployer to create the oracle during deployment.
     ///      The oracle address is extracted from the factory call return data.
     function initialize(
         address _underlyingOracleFactory,
         bytes calldata _underlyingOracleInitData,
         address _owner,
-        uint32 _timelock
+        uint32 _timelock,
+        address _baseToken
     ) external;
 
     /// @notice Initialize the ManageableOracle
     /// @param _oracle Initial oracle address
     /// @param _owner Address that will own the contract
     /// @param _timelock Initial time lock duration
+    /// @param _baseToken Base token address for the oracle
     function initialize(
         ISiloOracle _oracle,
         address _owner,
-        uint32 _timelock
+        uint32 _timelock,
+        address _baseToken
     ) external;
 
     /// @notice Propose a new oracle address (can only be called by owner)
@@ -87,6 +93,15 @@ interface IManageableOracle {
     /// @notice Cancel the pending ownership renounce (can only be called by owner)
     function cancelRenounceOwnership() external;
 
+    /// @notice Verify that the oracle is valid and can provide quotes for the base token
+    /// @param _oracle Oracle address to verify
+    /// @param _baseToken Base token address to verify against
+    /// @dev This function checks that:
+    ///      - Oracle address is not zero
+    ///      - Oracle quote token matches the stored quote token
+    ///      - Oracle can provide a valid quote for the base token
+    function oracleVerification(ISiloOracle _oracle, address _baseToken) external view;
+
     /// @notice Get the current oracle used by the manageable oracle
     /// @return The oracle used by the manageable oracle
     function oracle() external view returns (ISiloOracle);
@@ -110,4 +125,12 @@ interface IManageableOracle {
     /// @return validAt The timestamp at which the pending ownership change becomes valid
     /// @dev If address is DEAD_ADDRESS (0xdead), it means pending renounce, otherwise pending transfer
     function pendingOwnership() external view returns (address value, uint64 validAt);
+
+    /// @notice Get the base token address
+    /// @return The base token address
+    function baseToken() external view returns (address);
+
+    /// @notice Get the base token decimals
+    /// @return The base token decimals
+    function baseTokenDecimals() external view returns (uint256);
 }

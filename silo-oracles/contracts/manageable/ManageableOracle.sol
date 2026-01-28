@@ -9,6 +9,7 @@ import {PendingAddress, PendingUint192, PendingLib} from "silo-vaults/contracts/
 import {Ownable1and2Steps} from "common/access/Ownable1and2Steps.sol";
 import {Ownable2Step, Ownable} from "openzeppelin5/access/Ownable2Step.sol";
 import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 /// @title ManageableOracle
 /// @notice Oracle forwarder that allows updating the oracle address with time lock and owner approval
@@ -26,6 +27,12 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
 
     /// @dev Quote token address (set during initialization)
     address public quoteToken;
+
+    /// @dev Base token address (set during initialization)
+    address public baseToken;
+
+    /// @dev Base token decimals (set during initialization)
+    uint256 public baseTokenDecimals;
 
     /// @dev Current oracle
     ISiloOracle public oracle;
@@ -62,13 +69,15 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
     /// @param _underlyingOracleInitData Calldata to call the factory and create the underlying oracle
     /// @param _owner Address that will own the contract
     /// @param _timelock Initial time lock duration
+    /// @param _baseToken Base token address for the oracle
     /// @dev This method is primarily used by SiloDeployer to create the oracle during deployment.
     ///      The oracle address is extracted from the factory call return data.
     function initialize(
         address _underlyingOracleFactory,
         bytes calldata _underlyingOracleInitData,
         address _owner,
-        uint32 _timelock
+        uint32 _timelock,
+        address _baseToken
     ) external initializer {
         require(_underlyingOracleFactory != address(0), ZeroFactory());
 
@@ -77,15 +86,16 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         require(success && data.length == 32, FailedToCreateAnOracle());
 
         address createdOracle = abi.decode(data, (address));
-        __ManageableOracle_init(ISiloOracle(createdOracle), _owner, _timelock);
+        __ManageableOracle_init(ISiloOracle(createdOracle), _owner, _timelock, _baseToken);
     }
 
     /// @notice Initialize the ManageableOracle
     /// @param _oracle Initial oracle address
     /// @param _owner Address that will own the contract
     /// @param _timelock Initial time lock duration
-    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock) external {
-        __ManageableOracle_init(_oracle, _owner, _timelock);
+    /// @param _baseToken Base token address for the oracle
+    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken) external {
+        __ManageableOracle_init(_oracle, _owner, _timelock, _baseToken);
     }
 
     /// @inheritdoc IManageableOracle
@@ -221,19 +231,47 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Ownable1and2Steps, 
         _transferOwnership(address(0));
     }
 
+    /// @inheritdoc IManageableOracle
+    /// @notice Verify that the oracle is valid and can provide quotes for the base token
+    /// @param _oracle Oracle address to verify
+    /// @param _baseToken Base token address to verify against
+    /// @dev This function checks that:
+    ///      - Oracle address is not zero
+    ///      - Oracle quote token matches the stored quote token
+    ///      - Oracle can provide a valid quote for the base token
+    function oracleVerification(ISiloOracle _oracle, address _baseToken) public view virtual {
+        require(address(_oracle) != address(0), ZeroOracle());
+        require(_oracle.quoteToken() == quoteToken, QuoteTokenMustBeTheSame());
+
+        // sanity check
+        uint256 price = _oracle.quote(10 ** baseTokenDecimals, _baseToken);
+        require(price != 0, OracleQuoteFailed());
+    }
+
+    /// @notice Internal initialization function for ManageableOracle
+    /// @param _oracle Initial oracle address
+    /// @param _owner Address that will own the contract
+    /// @param _timelock Initial time lock duration
+    /// @param _baseToken Base token address for the oracle
     // solhint-disable-next-line func-name-mixedcase
-    function __ManageableOracle_init(ISiloOracle _oracle, address _owner, uint32 _timelock)
+    function __ManageableOracle_init(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken)
         internal
         virtual
         onlyInitializing
     {
-        require(address(_oracle) != address(0), ZeroOracle());
+        require(_baseToken != address(0), ZeroBaseToken());
         require(_owner != address(0), ZeroOwner());
         require(_timelock >= MIN_TIMELOCK && _timelock <= MAX_TIMELOCK, InvalidTimelock());
 
         quoteToken = _oracle.quoteToken();
+        baseToken = _baseToken;
+        baseTokenDecimals = TokenHelper.assertAndGetDecimals(_baseToken);
+        require(baseTokenDecimals != 0, BaseTokenDecimalsMustBeGreaterThanZero());
+
         oracle = _oracle;
         timelock = _timelock;
+
+        oracleVerification(_oracle, _baseToken);
 
         _transferOwnership(_owner);
 

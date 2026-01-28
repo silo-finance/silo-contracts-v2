@@ -20,12 +20,12 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
     }
 
     /// @inheritdoc IManageableOracleFactory
-    function create(ISiloOracle _oracle, address _owner, uint32 _timelock, bytes32 _externalSalt)
+    function create(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken, bytes32 _externalSalt)
         external
         returns (IManageableOracle manageableOracle)
     {
         manageableOracle = _createOracle(_externalSalt, _owner);
-        manageableOracle.initialize(_oracle, _owner, _timelock);
+        manageableOracle.initialize(_oracle, _owner, _timelock, _baseToken);
     }
 
     /// @inheritdoc IManageableOracleFactory
@@ -34,10 +34,13 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
         bytes calldata _underlyingOracleInitData,
         address _owner,
         uint32 _timelock,
+        address _baseToken,
         bytes32 _externalSalt
     ) external returns (IManageableOracle manageableOracle) {
         manageableOracle = _createOracle(_externalSalt, _owner);
-        manageableOracle.initialize(_underlyingOracleFactory, _underlyingOracleInitData, _owner, _timelock);
+        manageableOracle.initialize(
+            _underlyingOracleFactory, _underlyingOracleInitData, _owner, _timelock, _baseToken
+        );
     }
 
     /// @notice Predict the deterministic address of a ManageableOracle that would be created
