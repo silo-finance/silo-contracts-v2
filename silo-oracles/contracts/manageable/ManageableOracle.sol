@@ -164,8 +164,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
         require(pendingOwnership.value == msg.sender, OwnableUnauthorizedAccount());
 
         _resetPendingAddress(pendingOwnership);
-
-        _transferOwnership(newOwner);
+        _transferOwnership(msg.sender);
     }
 
     /// @inheritdoc IManageableOracle
