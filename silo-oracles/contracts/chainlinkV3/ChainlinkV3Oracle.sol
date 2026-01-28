@@ -5,7 +5,6 @@ import {Initializable} from  "openzeppelin5-upgradeable/proxy/utils/Initializabl
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {AggregatorV3Interface} from "chainlink/v0.8/interfaces/AggregatorV3Interface.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 
 import {OracleNormalization} from "../lib/OracleNormalization.sol";

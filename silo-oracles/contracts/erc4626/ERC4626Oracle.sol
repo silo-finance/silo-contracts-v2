@@ -5,7 +5,6 @@ import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
-import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {Aggregator} from "../_common/Aggregator.sol";
 
 contract ERC4626Oracle is ISiloOracle, Aggregator, IVersioned {

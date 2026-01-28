@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
-import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {IsAVAX} from "silo-oracles/contracts/interfaces/IsAVAX.sol";
 import {Aggregator} from "../../_common/Aggregator.sol";
 
