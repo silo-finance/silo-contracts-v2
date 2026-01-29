@@ -95,8 +95,8 @@ abstract contract PendleLPTOracle is ISiloOracle, Aggregator, IVersioned {
         return _getBaseToken();
     }
 
-    function _getBaseToken() internal virtual view returns (address baseToken) {
-        baseToken = PENDLE_MARKET;
+    function _getBaseToken() internal virtual view returns (address token) {
+        token = PENDLE_MARKET;
     }
 
     function _getRateLpToUnderlying() internal virtual view returns (uint256);
