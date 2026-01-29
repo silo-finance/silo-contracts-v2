@@ -21,13 +21,9 @@ interface IManageableOracleFactory {
     /// @param _baseToken Base token address for the oracle
     /// @param _externalSalt External salt for deterministic address generation
     /// @return manageableOracle The created ManageableOracle instance
-    function create(
-        ISiloOracle _oracle,
-        address _owner,
-        uint32 _timelock,
-        address _baseToken,
-        bytes32 _externalSalt
-    ) external returns (IManageableOracle manageableOracle);
+    function create(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken, bytes32 _externalSalt)
+        external
+        returns (IManageableOracle manageableOracle);
 
     /// @notice Create a new ManageableOracle with underlying oracle factory
     /// @param _underlyingOracleFactory Factory address to create the underlying oracle

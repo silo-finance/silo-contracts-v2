@@ -17,7 +17,6 @@ interface IManageableOracle {
     event OwnershipRenounceCanceled();
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-
     error QuoteTokenMustBeTheSame();
     error PendingUpdate();
     error PendingOracleUpdate();
@@ -57,12 +56,7 @@ interface IManageableOracle {
     /// @param _owner Address that will own the contract
     /// @param _timelock Initial time lock duration
     /// @param _baseToken Base token address for the oracle
-    function initialize(
-        ISiloOracle _oracle,
-        address _owner,
-        uint32 _timelock,
-        address _baseToken
-    ) external;
+    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken) external;
 
     /// @notice Propose a new oracle address (can only be called by owner)
     /// @param _oracle The new oracle address to propose
