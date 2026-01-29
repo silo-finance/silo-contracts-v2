@@ -18,20 +18,20 @@ import {MockOracleFactory} from "./common/MockOracleFactory.sol";
 import {FailingMockOracleFactory} from "./common/FailingMockOracleFactory.sol";
 
 /*
- FOUNDRY_PROFILE=oracles forge test --mc ManageableOracleTest
+ FOUNDRY_PROFILE=oracles forge test --mc ManageableOracleInitTest
 */
-contract ManageableOracleTest is Test {
-    address internal _owner = makeAddr("Owner");
-    uint32 internal constant _timelock = 1 days;
-    address internal _baseToken;
+contract ManageableOracleInitTest is Test {
+    address internal owner = makeAddr("Owner");
+    uint32 internal constant timelock = 1 days;
+    address internal baseToken;
 
-    IManageableOracleFactory internal _factory;
-    SiloOracleMock1 internal _oracleMock;
+    IManageableOracleFactory internal factory;
+    SiloOracleMock1 internal oracleMock;
 
     function setUp() public {
-        _oracleMock = new SiloOracleMock1();
-        _factory = new ManageableOracleFactory();
-        _baseToken = address(new MintableToken(18));
+        oracleMock = new SiloOracleMock1();
+        factory = new ManageableOracleFactory();
+        baseToken = address(new MintableToken(18));
     }
 
     /*
@@ -41,10 +41,10 @@ contract ManageableOracleTest is Test {
     function test_ManageableOracle_cannotInitializeTwice_withOracle() public {
         // Create ManageableOracle through factory
         IManageableOracle manageableOracle =
-            _factory.create(ISiloOracle(address(_oracleMock)), _owner, _timelock, _baseToken, bytes32(0));
+            factory.create(ISiloOracle(address(oracleMock)), owner, timelock, baseToken, bytes32(0));
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        manageableOracle.initialize(ISiloOracle(address(_oracleMock)), _owner, _timelock, _baseToken);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock, baseToken);
     }
 
     /*
@@ -52,13 +52,13 @@ contract ManageableOracleTest is Test {
         Test that after creating a ManageableOracle, we cannot call initialize again (with factory)
     */
     function test_ManageableOracle_cannotInitializeTwice_withFactory() public {
-        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(_oracleMock));
+        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
 
         IManageableOracle manageableOracle =
-            _factory.create(mockFactory, initData, _owner, _timelock, _baseToken, bytes32(0));
+            factory.create(mockFactory, initData, owner, timelock, baseToken, bytes32(0));
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        manageableOracle.initialize(mockFactory, initData, _owner, _timelock, _baseToken);
+        manageableOracle.initialize(mockFactory, initData, owner, timelock, baseToken);
     }
 
     /*
@@ -68,12 +68,12 @@ contract ManageableOracleTest is Test {
     function test_ManageableOracle_cannotInitializeTwice_crossMethod() public {
         // Create ManageableOracle through factory with oracle
         IManageableOracle manageableOracle =
-            _factory.create(ISiloOracle(address(_oracleMock)), _owner, _timelock, _baseToken, bytes32(0));
+            factory.create(ISiloOracle(address(oracleMock)), owner, timelock, baseToken, bytes32(0));
 
-        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(_oracleMock));
+        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        manageableOracle.initialize(mockFactory, initData, _owner, _timelock, _baseToken);
+        manageableOracle.initialize(mockFactory, initData, owner, timelock, baseToken);
     }
 
     /*
@@ -81,13 +81,13 @@ contract ManageableOracleTest is Test {
         Test that after creating a ManageableOracle with factory, we cannot call initialize with oracle
     */
     function test_ManageableOracle_cannotInitializeTwice_crossMethodReverse() public {
-        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(_oracleMock));
+        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
 
         IManageableOracle manageableOracle =
-            _factory.create(mockFactory, initData, _owner, _timelock, _baseToken, bytes32(0));
+            factory.create(mockFactory, initData, owner, timelock, baseToken, bytes32(0));
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        manageableOracle.initialize(ISiloOracle(address(_oracleMock)), _owner, _timelock, _baseToken);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock, baseToken);
     }
 
     /*
@@ -100,12 +100,12 @@ contract ManageableOracleTest is Test {
 
         // Try to call initialize with oracle - should revert with InvalidInitialization (because _disableInitializers was called in constructor)
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        manageableOracle.initialize(ISiloOracle(address(_oracleMock)), _owner, _timelock, _baseToken);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock, baseToken);
 
-        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(_oracleMock));
+        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        manageableOracle.initialize(mockFactory, initData, _owner, _timelock, _baseToken);
+        manageableOracle.initialize(mockFactory, initData, owner, timelock, baseToken);
     }
 
     /*
@@ -122,7 +122,7 @@ contract ManageableOracleTest is Test {
     */
     function test_ManageableOracle_create_withOracle_getters() public {
         IManageableOracle manageableOracle =
-            _factory.create(ISiloOracle(address(_oracleMock)), _owner, _timelock, _baseToken, bytes32(0));
+            factory.create(ISiloOracle(address(oracleMock)), owner, timelock, baseToken, bytes32(0));
 
         _assertGettersAfterCreate(manageableOracle);
     }
@@ -131,10 +131,10 @@ contract ManageableOracleTest is Test {
         FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_create_withFactory_getters
     */
     function test_ManageableOracle_create_withFactory_getters() public {
-        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(_oracleMock));
+        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
 
         IManageableOracle manageableOracle =
-            _factory.create(mockFactory, initData, _owner, _timelock, _baseToken, bytes32(0));
+            factory.create(mockFactory, initData, owner, timelock, baseToken, bytes32(0));
 
         _assertGettersAfterCreate(manageableOracle);
     }
@@ -145,10 +145,10 @@ contract ManageableOracleTest is Test {
     */
     function test_ManageableOracle_initialize_revert_ZeroFactory() public {
         IManageableOracle manageableOracle = _clonedOracle();
-        (, bytes memory initData) = _mockOracleFactoryAndInitData(address(_oracleMock));
+        (, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
 
         vm.expectRevert(IManageableOracle.ZeroFactory.selector);
-        manageableOracle.initialize(address(0), initData, _owner, _timelock, _baseToken);
+        manageableOracle.initialize(address(0), initData, owner, timelock, baseToken);
     }
 
     /*
@@ -161,7 +161,7 @@ contract ManageableOracleTest is Test {
         bytes memory initData = abi.encodeWithSelector(FailingMockOracleFactory.create.selector);
 
         vm.expectRevert(IManageableOracle.FailedToCreateAnOracle.selector);
-        manageableOracle.initialize(failingFactory, initData, _owner, _timelock, _baseToken);
+        manageableOracle.initialize(failingFactory, initData, owner, timelock, baseToken);
     }
 
     /*
@@ -172,7 +172,7 @@ contract ManageableOracleTest is Test {
         IManageableOracle manageableOracle = _clonedOracle();
 
         vm.expectRevert(IManageableOracle.ZeroBaseToken.selector);
-        manageableOracle.initialize(ISiloOracle(address(_oracleMock)), _owner, _timelock, address(0));
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock, address(0));
     }
 
     /*
@@ -183,7 +183,7 @@ contract ManageableOracleTest is Test {
         IManageableOracle manageableOracle = _clonedOracle();
 
         vm.expectRevert(IManageableOracle.ZeroOwner.selector);
-        manageableOracle.initialize(ISiloOracle(address(_oracleMock)), address(0), _timelock, _baseToken);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), address(0), timelock, baseToken);
     }
 
     /*
@@ -196,7 +196,7 @@ contract ManageableOracleTest is Test {
         uint32 timelockTooLow = minTimelock - 1;
 
         vm.expectRevert(IManageableOracle.InvalidTimelock.selector);
-        manageableOracle.initialize(ISiloOracle(address(_oracleMock)), _owner, timelockTooLow, _baseToken);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelockTooLow, baseToken);
     }
 
     /*
@@ -209,7 +209,7 @@ contract ManageableOracleTest is Test {
         uint32 timelockTooHigh = maxTimelock + 1;
 
         vm.expectRevert(IManageableOracle.InvalidTimelock.selector);
-        manageableOracle.initialize(ISiloOracle(address(_oracleMock)), _owner, timelockTooHigh, _baseToken);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelockTooHigh, baseToken);
     }
 
     /*
@@ -221,7 +221,7 @@ contract ManageableOracleTest is Test {
         address baseTokenZeroDecimals = address(new MintableToken(0));
 
         vm.expectRevert(IManageableOracle.BaseTokenDecimalsMustBeGreaterThanZero.selector);
-        manageableOracle.initialize(ISiloOracle(address(_oracleMock)), _owner, _timelock, baseTokenZeroDecimals);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock, baseTokenZeroDecimals);
     }
 
     /*
@@ -233,7 +233,7 @@ contract ManageableOracleTest is Test {
         (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(0));
 
         vm.expectRevert(IManageableOracle.ZeroOracle.selector);
-        manageableOracle.initialize(mockFactory, initData, _owner, _timelock, _baseToken);
+        manageableOracle.initialize(mockFactory, initData, owner, timelock, baseToken);
     }
 
     /*
@@ -244,14 +244,14 @@ contract ManageableOracleTest is Test {
         IManageableOracle manageableOracle = _clonedOracle();
         address oracleMockZeroQuote = makeAddr("SiloOracleMockZeroQuote");
         vm.mockCall(
-            oracleMockZeroQuote, abi.encodeWithSelector(ISiloOracle.quoteToken.selector), abi.encode(_baseToken)
+            oracleMockZeroQuote, abi.encodeWithSelector(ISiloOracle.quoteToken.selector), abi.encode(baseToken)
         );
         vm.mockCall(
-            oracleMockZeroQuote, abi.encodeWithSelector(ISiloOracle.quote.selector, 1e18, _baseToken), abi.encode(0)
+            oracleMockZeroQuote, abi.encodeWithSelector(ISiloOracle.quote.selector, 1e18, baseToken), abi.encode(0)
         );
 
         vm.expectRevert(IManageableOracle.OracleQuoteFailed.selector);
-        manageableOracle.initialize(ISiloOracle(oracleMockZeroQuote), _owner, _timelock, _baseToken);
+        manageableOracle.initialize(ISiloOracle(oracleMockZeroQuote), owner, timelock, baseToken);
     }
 
     function _mockOracleFactoryAndInitData(address _oracle)
@@ -263,24 +263,27 @@ contract ManageableOracleTest is Test {
     }
 
     function _assertGettersAfterCreate(IManageableOracle _oracle) internal view {
-        assertEq(_oracle.owner(), _owner, "invalid owner");
-        assertEq(address(_oracle.oracle()), address(_oracleMock), "invalid oracle");
+        assertEq(_oracle.owner(), owner, "invalid owner");
+        assertEq(address(_oracle.oracle()), address(oracleMock), "invalid oracle");
+
         (address pendingOracleValue, uint64 pendingOracleValidAt) = _oracle.pendingOracle();
         assertEq(pendingOracleValue, address(0), "invalid pendingOracle value");
         assertEq(pendingOracleValidAt, 0, "invalid pendingOracle validAt");
-        assertEq(_oracle.timelock(), _timelock, "invalid timelock");
+        assertEq(_oracle.timelock(), timelock, "invalid timelock");
+
         (uint192 pendingTimelockValue, uint64 pendingTimelockValidAt) = _oracle.pendingTimelock();
         assertEq(pendingTimelockValue, 0, "invalid pendingTimelock value");
         assertEq(pendingTimelockValidAt, 0, "invalid pendingTimelock validAt");
+        
         (address pendingOwnershipValue, uint64 pendingOwnershipValidAt) = _oracle.pendingOwnership();
         assertEq(pendingOwnershipValue, address(0), "invalid pendingOwnership value");
         assertEq(pendingOwnershipValidAt, 0, "invalid pendingOwnership validAt");
-        assertEq(_oracle.baseToken(), _baseToken, "invalid baseToken");
+        assertEq(_oracle.baseToken(), baseToken, "invalid baseToken");
         assertEq(_oracle.baseTokenDecimals(), 18, "invalid baseTokenDecimals");
-        assertEq(ISiloOracle(address(_oracle)).quoteToken(), _oracleMock.quoteToken(), "invalid quoteToken");
+        assertEq(ISiloOracle(address(_oracle)).quoteToken(), oracleMock.quoteToken(), "invalid quoteToken");
     }
 
     function _clonedOracle() internal returns (IManageableOracle) {
-        return IManageableOracle(Clones.cloneDeterministic(address(_factory.ORACLE_IMPLEMENTATION()), bytes32(0)));
+        return IManageableOracle(Clones.cloneDeterministic(address(factory.ORACLE_IMPLEMENTATION()), bytes32(0)));
     }
 }
