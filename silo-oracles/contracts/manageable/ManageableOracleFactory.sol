@@ -11,7 +11,7 @@ import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOr
 
 contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
     /// @dev Implementation contract that will be cloned
-    ManageableOracle public immutable ORACLE_IMPLEMENTATION;
+    IManageableOracle public immutable ORACLE_IMPLEMENTATION;
 
     mapping(address oracle => bool created) public createdInFactory;
 
