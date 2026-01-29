@@ -17,6 +17,7 @@ import {MockOracleFactory} from "silo-oracles/test/foundry/manageable/common/Moc
  (base is abstract; run ManageableOracleBaseWithOracleTest or ManageableOracleBaseWithFactoryTest)
 */
 abstract contract ManageableOracleBase is Test {
+    error OracleCustomError();
     address internal owner = makeAddr("Owner");
     uint32 internal constant timelock = 1 days;
     address internal baseToken;
@@ -107,6 +108,44 @@ abstract contract ManageableOracleBase is Test {
         
         vm.expectRevert(IManageableOracle.OracleQuoteFailed.selector);
         oracle.oracleVerification(ISiloOracle(zeroQuoteOracle), baseToken);
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_oracleVerification_revert_whenOracleReverts
+    */
+    function test_oracleVerification_revert_whenOracleReverts() public {
+        address revertingOracle = makeAddr("revertingOracle");
+        vm.mockCall(
+            revertingOracle,
+            abi.encodeWithSelector(ISiloOracle.quoteToken.selector),
+            abi.encode(oracleMock.quoteToken())
+        );
+        vm.mockCallRevert(
+            revertingOracle,
+            abi.encodeWithSelector(ISiloOracle.quote.selector, 10 ** 18, baseToken),
+            ""
+        );
+        vm.expectRevert(IManageableOracle.OracleQuoteFailed.selector);
+        oracle.oracleVerification(ISiloOracle(revertingOracle), baseToken);
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_oracleVerification_revert_propagatesCustomError
+    */
+    function test_oracleVerification_revert_propagatesCustomError() public {
+        address customErrorOracle = makeAddr("customErrorOracle");
+        vm.mockCall(
+            customErrorOracle,
+            abi.encodeWithSelector(ISiloOracle.quoteToken.selector),
+            abi.encode(oracleMock.quoteToken())
+        );
+        vm.mockCallRevert(
+            customErrorOracle,
+            abi.encodeWithSelector(ISiloOracle.quote.selector, 10 ** 18, baseToken),
+            abi.encodeWithSelector(OracleCustomError.selector)
+        );
+        vm.expectRevert(OracleCustomError.selector);
+        oracle.oracleVerification(ISiloOracle(customErrorOracle), baseToken);
     }
 
     /*

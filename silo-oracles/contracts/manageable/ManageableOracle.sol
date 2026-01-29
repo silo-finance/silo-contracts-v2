@@ -8,6 +8,7 @@ import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOr
 import {PendingAddress, PendingUint192, PendingLib} from "silo-vaults/contracts/libraries/PendingLib.sol";
 import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
+import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 /// @title ManageableOracle
 /// @notice Oracle forwarder that allows updating the oracle address with time lock and owner approval
@@ -232,8 +233,11 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
         require(_oracle.quoteToken() == quoteToken, QuoteTokenMustBeTheSame());
 
         // sanity check
-        uint256 price = _oracle.quote(10 ** baseTokenDecimals, _baseToken);
-        require(price != 0, OracleQuoteFailed());
+        try _oracle.quote(10 ** baseTokenDecimals, _baseToken) returns (uint256 price) {
+            require(price != 0, OracleQuoteFailed());
+        } catch (bytes memory reason) {
+            RevertLib.revertBytes(reason, OracleQuoteFailed.selector);
+        }
     }
 
     /// @notice Internal initialization function for ManageableOracle
