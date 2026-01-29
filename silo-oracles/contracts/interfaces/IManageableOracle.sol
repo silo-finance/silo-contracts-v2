@@ -35,7 +35,6 @@ interface IManageableOracle {
     error OracleQuoteFailed();
     error BaseTokenDecimalsMustBeGreaterThanZero();
     error OnlyOwner();
-    error OwnableUnauthorizedAccount();
 
     /// @notice Initialize the ManageableOracle with underlying oracle factory
     /// @param _underlyingOracleFactory Factory address to create the underlying oracle

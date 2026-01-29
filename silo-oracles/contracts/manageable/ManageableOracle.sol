@@ -162,7 +162,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
     /// @dev The new owner accepts the ownership transfer.
     function acceptOwnership() external virtual afterTimelock(pendingOwnership.validAt) {
         require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());
-        require(pendingOwnership.value == msg.sender, OwnableUnauthorizedAccount());
+        require(pendingOwnership.value == msg.sender, OnlyOwner());
 
         _resetPendingAddress(pendingOwnership);
         _transferOwnership(msg.sender);

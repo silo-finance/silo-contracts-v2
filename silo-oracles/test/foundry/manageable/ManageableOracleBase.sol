@@ -60,7 +60,7 @@ abstract contract ManageableOracleBase is Test {
     /*
         FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_VERSION
     */
-    function test_ManageableOracle_VERSION() public {
+    function test_ManageableOracle_VERSION() public view{
         assertEq(IVersioned(address(oracle)).VERSION(), "ManageableOracle 4.0.0");
     }
 
@@ -151,7 +151,51 @@ abstract contract ManageableOracleBase is Test {
     /*
         FOUNDRY_PROFILE=oracles forge test --mt test_oracleVerification_succeeds
     */
-    function test_oracleVerification_succeeds() public {
+    function test_oracleVerification_succeeds() public view {
         oracle.oracleVerification(ISiloOracle(address(oracleMock)), baseToken);
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_revert_whenNotOwner
+    */
+    function test_onlyOwner_revert_whenNotOwner() public {
+        address stranger = makeAddr("Stranger");
+        vm.startPrank(stranger);
+
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.proposeOracle(ISiloOracle(address(oracleMock)));
+
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.proposeTimelock(timelock);
+
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.proposeTransferOwnership(makeAddr("NewOwner"));
+
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.proposeRenounceOwnership();
+
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.acceptOracle();
+
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.acceptTimelock();
+
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.acceptRenounceOwnership();
+
+        vm.expectRevert(IManageableOracle.NoPendingUpdate.selector);
+        oracle.acceptOwnership();
+
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.cancelOracle();
+
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.cancelTimelock();
+
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.cancelTransferOwnership();
+
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.cancelRenounceOwnership();
     }
 }
