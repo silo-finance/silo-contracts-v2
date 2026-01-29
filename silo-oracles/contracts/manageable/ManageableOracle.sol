@@ -223,7 +223,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
     /// @inheritdoc IVersioned
     // solhint-disable-next-line func-name-mixedcase
     function VERSION() external pure override returns (string memory version) {
-        version = "ManageableOracle v1.0.0";
+        version = "ManageableOracle 4.0.0";
     }
 
     /// @inheritdoc IManageableOracle

@@ -7,6 +7,7 @@ import {ManageableOracleFactory} from "silo-oracles/contracts/manageable/Managea
 import {IManageableOracleFactory} from "silo-oracles/contracts/interfaces/IManageableOracleFactory.sol";
 import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOracle.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 
 import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
@@ -52,5 +53,13 @@ abstract contract ManageableOracleBase is Test {
         emit IManageableOracle.TimelockUpdated(timelock);
 
         _createManageableOracle();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_VERSION
+    */
+    function test_ManageableOracle_VERSION() public {
+        IVersioned manageableOracle = IVersioned(address(_createManageableOracle()));
+        assertEq(manageableOracle.VERSION(), "ManageableOracle 4.0.0");
     }
 }
