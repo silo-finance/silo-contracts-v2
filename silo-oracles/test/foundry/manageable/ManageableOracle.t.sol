@@ -126,6 +126,29 @@ contract ManageableOracleTest is Test {
     }
 
     /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_create_withOracle_getters
+    */
+    function test_ManageableOracle_create_withOracle_getters() public {
+        IManageableOracle manageableOracle =
+            _factory.create(ISiloOracle(address(_oracleMock)), _owner, _timelock, _baseToken, bytes32(0));
+        
+        _assertGettersAfterCreate(manageableOracle);
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_create_withFactory_getters
+    */
+    function test_ManageableOracle_create_withFactory_getters() public {
+        address mockFactory = address(new MockOracleFactory());
+        bytes memory initData = abi.encodeWithSelector(MockOracleFactory.create.selector, address(_oracleMock));
+        
+        IManageableOracle manageableOracle =
+            _factory.create(mockFactory, initData, _owner, _timelock, _baseToken, bytes32(0));
+
+        _assertGettersAfterCreate(manageableOracle);
+    }
+
+    /*
         FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_initialize_revert_ZeroFactory
         Test that initialize with factory reverts when factory address is zero
     */
@@ -235,6 +258,24 @@ contract ManageableOracleTest is Test {
 
         vm.expectRevert(IManageableOracle.OracleQuoteFailed.selector);
         manageableOracle.initialize(ISiloOracle(oracleMockZeroQuote), _owner, _timelock, _baseToken);
+    }
+
+    function _assertGettersAfterCreate(IManageableOracle _oracle) internal view {
+        assertEq(_oracle.owner(), _owner, "invalid owner");
+        assertEq(address(_oracle.oracle()), address(_oracleMock), "invalid oracle");
+        (address pendingOracleValue, uint64 pendingOracleValidAt) = _oracle.pendingOracle();
+        assertEq(pendingOracleValue, address(0), "invalid pendingOracle value");
+        assertEq(pendingOracleValidAt, 0, "invalid pendingOracle validAt");
+        assertEq(_oracle.timelock(), _timelock, "invalid timelock");
+        (uint192 pendingTimelockValue, uint64 pendingTimelockValidAt) = _oracle.pendingTimelock();
+        assertEq(pendingTimelockValue, 0, "invalid pendingTimelock value");
+        assertEq(pendingTimelockValidAt, 0, "invalid pendingTimelock validAt");
+        (address pendingOwnershipValue, uint64 pendingOwnershipValidAt) = _oracle.pendingOwnership();
+        assertEq(pendingOwnershipValue, address(0), "invalid pendingOwnership value");
+        assertEq(pendingOwnershipValidAt, 0, "invalid pendingOwnership validAt");
+        assertEq(_oracle.baseToken(), _baseToken, "invalid baseToken");
+        assertEq(_oracle.baseTokenDecimals(), 18, "invalid baseTokenDecimals");
+        assertEq(ISiloOracle(address(_oracle)).quoteToken(), _oracleMock.quoteToken(), "invalid quoteToken");
     }
 
     function _clonedOracle() internal returns (IManageableOracle) {
