@@ -269,6 +269,9 @@ abstract contract ManageableOracleBase is Test {
         uint256 proposeTime = block.timestamp;
         vm.prank(owner);
         oracle.proposeOracle(ISiloOracle(address(otherOracleMock)));
+        (address pendingOracleValue, uint64 pendingOracleValidAt) = oracle.pendingOracle();
+        assertEq(pendingOracleValue, address(otherOracleMock), "invalid pendingOracle value after propose");
+        assertEq(pendingOracleValidAt, proposeTime + timelock, "invalid pendingOracle validAt after propose");
 
         vm.prank(owner);
         vm.expectRevert(IManageableOracle.TimelockNotExpired.selector);
@@ -280,10 +283,16 @@ abstract contract ManageableOracleBase is Test {
         oracle.acceptOracle();
 
         vm.warp(proposeTime + timelock);
+        assertEq(address(oracle.oracle()), address(oracleMock), "oracle should still be old before accept");
         vm.expectEmit(true, true, true, true, address(oracle));
         emit IManageableOracle.OracleUpdated(ISiloOracle(address(otherOracleMock)));
         vm.prank(owner);
         oracle.acceptOracle();
+
+        (pendingOracleValue, pendingOracleValidAt) = oracle.pendingOracle();
+        assertEq(pendingOracleValue, address(0), "pendingOracle not cleared after accept");
+        assertEq(pendingOracleValidAt, 0, "pendingOracle validAt not cleared after accept");
+        assertEq(address(oracle.oracle()), address(otherOracleMock), "oracle not updated after accept");
     }
 
     /*
@@ -294,6 +303,9 @@ abstract contract ManageableOracleBase is Test {
         uint256 proposeTime = block.timestamp;
         vm.prank(owner);
         oracle.proposeTimelock(newTimelock);
+        (uint192 pendingTimelockValue, uint64 pendingTimelockValidAt) = oracle.pendingTimelock();
+        assertEq(pendingTimelockValue, newTimelock, "invalid pendingTimelock value after propose");
+        assertEq(pendingTimelockValidAt, proposeTime + timelock, "invalid pendingTimelock validAt after propose");
 
         vm.prank(owner);
         vm.expectRevert(IManageableOracle.TimelockNotExpired.selector);
@@ -305,10 +317,16 @@ abstract contract ManageableOracleBase is Test {
         oracle.acceptTimelock();
 
         vm.warp(proposeTime + timelock);
+        assertEq(oracle.timelock(), timelock, "timelock should still be old before accept");
         vm.expectEmit(true, true, true, true, address(oracle));
         emit IManageableOracle.TimelockUpdated(newTimelock);
         vm.prank(owner);
         oracle.acceptTimelock();
+
+        (pendingTimelockValue, pendingTimelockValidAt) = oracle.pendingTimelock();
+        assertEq(pendingTimelockValue, 0, "pendingTimelock not cleared after accept");
+        assertEq(pendingTimelockValidAt, 0, "pendingTimelock validAt not cleared after accept");
+        assertEq(oracle.timelock(), newTimelock, "timelock not updated after accept");
     }
 
     /*
@@ -319,6 +337,9 @@ abstract contract ManageableOracleBase is Test {
         uint256 proposeTime = block.timestamp;
         vm.prank(owner);
         oracle.proposeTransferOwnership(newOwner);
+        (address pendingOwnershipValue, uint64 pendingOwnershipValidAt) = oracle.pendingOwnership();
+        assertEq(pendingOwnershipValue, newOwner, "invalid pendingOwnership value after propose");
+        assertEq(pendingOwnershipValidAt, proposeTime + timelock, "invalid pendingOwnership validAt after propose");
 
         vm.prank(newOwner);
         vm.expectRevert(IManageableOracle.TimelockNotExpired.selector);
@@ -330,10 +351,16 @@ abstract contract ManageableOracleBase is Test {
         oracle.acceptOwnership();
 
         vm.warp(proposeTime + timelock);
+        assertEq(oracle.owner(), owner, "owner should still be old before accept");
         vm.expectEmit(true, true, true, true, address(oracle));
         emit IManageableOracle.OwnershipTransferred(owner, newOwner);
         vm.prank(newOwner);
         oracle.acceptOwnership();
+
+        (pendingOwnershipValue, pendingOwnershipValidAt) = oracle.pendingOwnership();
+        assertEq(pendingOwnershipValue, address(0), "pendingOwnership not cleared after accept");
+        assertEq(pendingOwnershipValidAt, 0, "pendingOwnership validAt not cleared after accept");
+        assertEq(oracle.owner(), newOwner, "owner not updated after accept");
     }
 
     /*
@@ -343,6 +370,9 @@ abstract contract ManageableOracleBase is Test {
         uint256 proposeTime = block.timestamp;
         vm.prank(owner);
         oracle.proposeRenounceOwnership();
+        (address pendingOwnershipValue, uint64 pendingOwnershipValidAt) = oracle.pendingOwnership();
+        assertEq(pendingOwnershipValue, oracle.DEAD_ADDRESS(), "invalid pendingOwnership value after propose");
+        assertEq(pendingOwnershipValidAt, proposeTime + timelock, "invalid pendingOwnership validAt after propose");
 
         vm.prank(owner);
         vm.expectRevert(IManageableOracle.TimelockNotExpired.selector);
@@ -354,10 +384,16 @@ abstract contract ManageableOracleBase is Test {
         oracle.acceptRenounceOwnership();
 
         vm.warp(proposeTime + timelock);
+        assertEq(oracle.owner(), owner, "owner should still be set before accept renounce");
         vm.expectEmit(true, true, true, false, address(oracle));
         emit IManageableOracle.OwnershipTransferred(owner, address(0));
         vm.prank(owner);
         oracle.acceptRenounceOwnership();
+
+        (pendingOwnershipValue, pendingOwnershipValidAt) = oracle.pendingOwnership();
+        assertEq(pendingOwnershipValue, address(0), "pendingOwnership not cleared after accept");
+        assertEq(pendingOwnershipValidAt, 0, "pendingOwnership validAt not cleared after accept");
+        assertEq(oracle.owner(), address(0), "owner not cleared after accept renounce");
     }
 
     /*
@@ -365,6 +401,7 @@ abstract contract ManageableOracleBase is Test {
     */
     function test_cancelOracle_cancelPossibleAlways(uint256 _time) public {
         vm.assume(_time <= 30 days);
+        address oracleBeforeCancel = address(oracle.oracle());
         SiloOracleMock1 otherOracleMock = new SiloOracleMock1();
         otherOracleMock.setQuoteToken(oracleMock.quoteToken());
 
@@ -375,6 +412,11 @@ abstract contract ManageableOracleBase is Test {
         emit IManageableOracle.OracleProposalCanceled();
         vm.prank(owner);
         oracle.cancelOracle();
+
+        (address pendingOracleValue, uint64 pendingOracleValidAt) = oracle.pendingOracle();
+        assertEq(pendingOracleValue, address(0), "pendingOracle not cleared after cancel");
+        assertEq(pendingOracleValidAt, 0, "pendingOracle validAt not cleared after cancel");
+        assertEq(address(oracle.oracle()), oracleBeforeCancel, "oracle value should not change after cancel");
     }
 
     /*
@@ -382,6 +424,7 @@ abstract contract ManageableOracleBase is Test {
     */
     function test_cancelTimelock_cancelPossibleAlways(uint256 _time) public {
         vm.assume(_time <= 30 days);
+        uint32 timelockBeforeCancel = oracle.timelock();
         uint32 newTimelock = 2 days;
         vm.prank(owner);
         oracle.proposeTimelock(newTimelock);
@@ -390,6 +433,11 @@ abstract contract ManageableOracleBase is Test {
         emit IManageableOracle.TimelockProposalCanceled();
         vm.prank(owner);
         oracle.cancelTimelock();
+
+        (uint192 pendingTimelockValue, uint64 pendingTimelockValidAt) = oracle.pendingTimelock();
+        assertEq(pendingTimelockValue, 0, "pendingTimelock not cleared after cancel");
+        assertEq(pendingTimelockValidAt, 0, "pendingTimelock validAt not cleared after cancel");
+        assertEq(oracle.timelock(), timelockBeforeCancel, "timelock value should not change after cancel");
     }
 
     /*
@@ -397,6 +445,7 @@ abstract contract ManageableOracleBase is Test {
     */
     function test_cancelTransferOwnership_cancelPossibleAlways(uint256 _time) public {
         vm.assume(_time <= 30 days);
+        address ownerBeforeCancel = oracle.owner();
         address newOwner = makeAddr("NewOwner");
         vm.prank(owner);
         oracle.proposeTransferOwnership(newOwner);
@@ -405,6 +454,11 @@ abstract contract ManageableOracleBase is Test {
         emit IManageableOracle.OwnershipTransferCanceled();
         vm.prank(owner);
         oracle.cancelTransferOwnership();
+
+        (address pendingOwnershipValue, uint64 pendingOwnershipValidAt) = oracle.pendingOwnership();
+        assertEq(pendingOwnershipValue, address(0), "pendingOwnership not cleared after cancel");
+        assertEq(pendingOwnershipValidAt, 0, "pendingOwnership validAt not cleared after cancel");
+        assertEq(oracle.owner(), ownerBeforeCancel, "owner value should not change after cancel");
     }
 
     /*
@@ -412,6 +466,7 @@ abstract contract ManageableOracleBase is Test {
     */
     function test_cancelRenounceOwnership_cancelPossibleAlways(uint256 _time) public {
         vm.assume(_time <= 30 days);
+        address ownerBeforeCancel = oracle.owner();
         vm.prank(owner);
         oracle.proposeRenounceOwnership();
         vm.warp(block.timestamp + _time);
@@ -419,6 +474,11 @@ abstract contract ManageableOracleBase is Test {
         emit IManageableOracle.OwnershipRenounceCanceled();
         vm.prank(owner);
         oracle.cancelRenounceOwnership();
+        
+        (address pendingOwnershipValue, uint64 pendingOwnershipValidAt) = oracle.pendingOwnership();
+        assertEq(pendingOwnershipValue, address(0), "pendingOwnership not cleared after cancel");
+        assertEq(pendingOwnershipValidAt, 0, "pendingOwnership validAt not cleared after cancel");
+        assertEq(oracle.owner(), ownerBeforeCancel, "owner value should not change after cancel");
     }
 
     /*

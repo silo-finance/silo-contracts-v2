@@ -107,6 +107,8 @@ interface IManageableOracle {
     ///      thereby disabling any functionality that is only available to the owner.
     function acceptRenounceOwnership() external;
 
+    function DEAD_ADDRESS() external view returns (address);
+
     /// @notice Verify that the oracle is valid and can provide quotes for the base token
     /// @param _oracle Oracle address to verify
     /// @param _baseToken Base token address to verify against
