@@ -156,46 +156,65 @@ abstract contract ManageableOracleBase is Test {
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_revert_whenNotOwner
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_proposeOracle_revert_whenNotOwner
     */
-    function test_onlyOwner_revert_whenNotOwner() public {
-        address stranger = makeAddr("Stranger");
-        vm.startPrank(stranger);
-
+    function test_onlyOwner_proposeOracle_revert_whenNotOwner() public {
         vm.expectRevert(IManageableOracle.OnlyOwner.selector);
         oracle.proposeOracle(ISiloOracle(address(oracleMock)));
+    }
 
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_proposeTimelock_revert_whenNotOwner
+    */
+    function test_onlyOwner_proposeTimelock_revert_whenNotOwner() public {
         vm.expectRevert(IManageableOracle.OnlyOwner.selector);
         oracle.proposeTimelock(timelock);
+    }
 
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_proposeTransferOwnership_revert_whenNotOwner
+    */
+    function test_onlyOwner_proposeTransferOwnership_revert_whenNotOwner() public {
         vm.expectRevert(IManageableOracle.OnlyOwner.selector);
         oracle.proposeTransferOwnership(makeAddr("NewOwner"));
+    }
 
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_proposeRenounceOwnership_revert_whenNotOwner
+    */
+    function test_onlyOwner_proposeRenounceOwnership_revert_whenNotOwner() public {
         vm.expectRevert(IManageableOracle.OnlyOwner.selector);
         oracle.proposeRenounceOwnership();
+    }
 
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_acceptOracle_revert_whenNotOwner
+    */
+    function test_onlyOwner_acceptOracle_revert_whenNotOwner() public {
         vm.expectRevert(IManageableOracle.OnlyOwner.selector);
         oracle.acceptOracle();
+    }
 
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_acceptTimelock_revert_whenNotOwner
+    */
+    function test_onlyOwner_acceptTimelock_revert_whenNotOwner() public {
         vm.expectRevert(IManageableOracle.OnlyOwner.selector);
         oracle.acceptTimelock();
+    }
 
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_acceptRenounceOwnership_revert_whenNotOwner
+    */
+    function test_onlyOwner_acceptRenounceOwnership_revert_whenNotOwner() public {
         vm.expectRevert(IManageableOracle.OnlyOwner.selector);
         oracle.acceptRenounceOwnership();
-
-        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
-        oracle.cancelOracle();
-
-        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
-        oracle.cancelTimelock();
-
-        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
-        oracle.cancelTransferOwnership();
-
-        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
-        oracle.cancelRenounceOwnership();
-        vm.stopPrank();
-
+    }
+    
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_acceptOwnership_revert_whenNotOwner
+    */
+    function test_onlyOwner_acceptOwnership_revert_whenNotOwner() public {
         vm.prank(owner);
         oracle.proposeTransferOwnership(makeAddr("NewOwner"));
 
@@ -206,5 +225,37 @@ abstract contract ManageableOracleBase is Test {
         
         vm.expectRevert(IManageableOracle.OnlyOwner.selector);
         oracle.acceptOwnership();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_cancelOracle_revert_whenNotOwner
+    */
+    function test_onlyOwner_cancelOracle_revert_whenNotOwner() public {
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.cancelOracle();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_cancelTimelock_revert_whenNotOwner
+    */
+    function test_onlyOwner_cancelTimelock_revert_whenNotOwner() public {
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.cancelTimelock();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_cancelTransferOwnership_revert_whenNotOwner
+    */
+    function test_onlyOwner_cancelTransferOwnership_revert_whenNotOwner() public {
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.cancelTransferOwnership();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_cancelRenounceOwnership_revert_whenNotOwner
+    */
+    function test_onlyOwner_cancelRenounceOwnership_revert_whenNotOwner() public {
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.cancelRenounceOwnership();
     }
 }
