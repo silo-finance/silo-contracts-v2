@@ -117,6 +117,15 @@ contract ManageableOracleTest is Test {
     }
 
     /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_directlyCreated_hasZeroOwner
+        Test that when creating ManageableOracle directly (not through factory), owner is address(0)
+    */
+    function test_ManageableOracle_directlyCreated_hasZeroOwner() public {
+        ManageableOracle manageableOracle = new ManageableOracle();
+        assertEq(manageableOracle.owner(), address(0));
+    }
+
+    /*
         FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_initialize_revert_ZeroFactory
         Test that initialize with factory reverts when factory address is zero
     */
