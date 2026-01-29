@@ -82,7 +82,11 @@ contract PendlePTOracleTest is Forking {
     }
 
     function test_PendlePTOracle_baseToken() public view {
-        assertEq(oracle.baseToken(), ptToken, "baseToken");
+        address baseTokenAddr = oracle.baseToken();
+        assertEq(baseTokenAddr, ptToken, "baseToken");
+
+        uint256 amount = 10 ** IERC20Metadata(baseTokenAddr).decimals();
+        oracle.quote(amount, baseTokenAddr);
     }
 
     function test_PendlePTOracle_constructor_state() public view {

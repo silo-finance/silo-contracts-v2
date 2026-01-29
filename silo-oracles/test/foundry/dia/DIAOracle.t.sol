@@ -203,6 +203,10 @@ contract DIAOracleTest is DIAConfigDefault {
     }
 
     function test_DIAOracle_baseToken() public view {
-        assertEq(DIA_ORACLE.baseToken(), address(tokens["RDPX"]), "baseToken");
+        address baseTokenAddr = DIA_ORACLE.baseToken();
+        assertEq(baseTokenAddr, address(tokens["RDPX"]), "baseToken");
+
+        uint256 amount = 10 ** IERC20Metadata(baseTokenAddr).decimals();
+        DIA_ORACLE.quote(amount, baseTokenAddr);
     }
 }

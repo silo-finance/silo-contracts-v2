@@ -17,6 +17,7 @@ import {SiloOraclesContracts} from "silo-oracles/deploy/SiloOraclesContracts.sol
 import {OraclesDeployments, OracleConfig} from "silo-oracles/deploy/OraclesDeployments.sol";
 import {ChainlinkV3OracleDeploy} from "silo-oracles/deploy/chainlink-v3-oracle/ChainlinkV3OracleDeploy.s.sol";
 
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {PendleWrapperLPTToAssetOracle} from
     "silo-oracles/contracts/pendle/lp-tokens/wrappers/PendleWrapperLPTToAssetOracle.sol";
 
@@ -109,6 +110,10 @@ contract PendleWrapperLPTOracle is Test {
         ISiloOracle underlyingOracle = ISiloOracle(address(chainlinkOracleDeploy.run()));
         PendleLPTOracle wrapperOracle = PendleLPTOracle(address(factoryToAsset.create(underlyingOracle, sUSDe_WRAPPER, bytes32(0))));
 
-        assertEq(wrapperOracle.baseToken(), address(sUSDe_WRAPPER), "baseToken");
+        address baseTokenAddr = wrapperOracle.baseToken();
+        assertEq(baseTokenAddr, address(sUSDe_WRAPPER), "baseToken");
+
+        uint256 amount = 10 ** IERC20Metadata(baseTokenAddr).decimals();
+        wrapperOracle.quote(amount, baseTokenAddr);
     }
 }

@@ -172,8 +172,12 @@ contract PendlePTToAssetOracleTest is Forking {
     }
 
     function test_PendlePTToAssetOracle_baseToken() public view {
-        assertEq(oracle.baseToken(), oracle.PT_TOKEN());
-        assertEq(oracle.baseToken(), ptToken);
+        address baseTokenAddr = oracle.baseToken();
+        assertEq(baseTokenAddr, oracle.PT_TOKEN());
+        assertEq(baseTokenAddr, ptToken);
+
+        uint256 amount = 10 ** IERC20Metadata(baseTokenAddr).decimals();
+        oracle.quote(amount, baseTokenAddr);
     }
 
     function test_PendlePTToAssetOracle_getPtToken() public view {

@@ -87,7 +87,11 @@ contract PTLinearOracleTest is PTLinearMocks {
 
     function test_ptLinear_baseToken() public {
         PTLinearOracle oracle = PTLinearOracle(address(_createOracle()));
-        assertEq(oracle.baseToken(), makeAddr("ptToken"), "baseToken");
+        address baseTokenAddr = oracle.baseToken();
+        assertEq(baseTokenAddr, makeAddr("ptToken"), "baseToken");
+
+        uint256 amount = 1e18;
+        oracle.quote(amount, baseTokenAddr);
     }
 
     /*

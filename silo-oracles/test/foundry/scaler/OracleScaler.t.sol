@@ -56,7 +56,11 @@ contract OracleScalerTest is Test {
 
     function test_OracleScaler_baseToken() public {
         OracleScaler scaler = OracleScaler(address(oracleDeployer.run()));
-        assertEq(scaler.baseToken(), USDC, "baseToken");
+        address baseTokenAddr = scaler.baseToken();
+        assertEq(baseTokenAddr, USDC, "baseToken");
+
+        uint256 amount = 10 ** IERC20Metadata(baseTokenAddr).decimals();
+        scaler.quote(amount, baseTokenAddr);
     }
 
     function test_OracleScaler_constructorVars() public {

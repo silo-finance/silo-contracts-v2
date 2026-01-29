@@ -92,7 +92,11 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
 
     function test_ChainlinkV3Oracle_baseToken() public {
         ChainlinkV3Oracle oracle = ORACLE_FACTORY.create(_dydxChainlinkV3Config(1e20, 0), bytes32(0));
-        assertEq(oracle.baseToken(), address(tokens["DYDX"]), "baseToken");
+        address baseTokenAddr = oracle.baseToken();
+        assertEq(baseTokenAddr, address(tokens["DYDX"]), "baseToken");
+
+        uint256 amount = 10 ** IERC20Metadata(baseTokenAddr).decimals();
+        oracle.quote(amount, baseTokenAddr);
     }
 
     /*

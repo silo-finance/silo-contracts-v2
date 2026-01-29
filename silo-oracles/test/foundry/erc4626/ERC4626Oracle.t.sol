@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {Test} from "forge-std/Test.sol";
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {ERC4626OracleFactoryDeploy} from "silo-oracles/deploy/erc4626/ERC4626OracleFactoryDeploy.sol";
 import {ERC4626OracleFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleFactory.sol";
@@ -101,7 +102,12 @@ contract ERC4626OracleTest is Test {
     function test_ERC4626Oracle_baseToken() public {
         IERC4626 vault = IERC4626(_wosVault);
         ISiloOracle oracle = _factory.createERC4626Oracle(vault, bytes32(0));
-        assertEq(ERC4626Oracle(address(oracle)).baseToken(), address(vault), "baseToken");
+        ERC4626Oracle erc4626Oracle = ERC4626Oracle(address(oracle));
+        address baseTokenAddr = erc4626Oracle.baseToken();
+        assertEq(baseTokenAddr, address(vault), "baseToken");
+
+        uint256 amount = 10 ** IERC20Metadata(baseTokenAddr).decimals();
+        oracle.quote(amount, baseTokenAddr);
     }
 
     // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626Oracle_reorg
