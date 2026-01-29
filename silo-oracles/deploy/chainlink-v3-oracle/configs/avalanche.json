@@ -140,6 +140,16 @@
         "normalizationDivider": 1e8,
         "normalizationMultiplier": 0
     },
+    "SPECTRA_HARDCODE_PT-sw-avUSDx(avUSD)-2026-05-15_USDC": {
+        "baseToken": "PT-sw-avUSDx(avUSD)-2026-05-15",
+        "quoteToken": "USDC",
+        "primaryAggregator": "SPECTRA_PT-sw-avUSDx(avUSD)-2026-05-15_avUSD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0
+    },
     "RE_reUSD_USD": {
         "baseToken": "reUSD",
         "quoteToken": "SILO_VIRTUAL_USD_8",
@@ -164,6 +174,16 @@
         "baseToken": "sUSDp",
         "quoteToken": "USDC",
         "primaryAggregator": "DIA_sUSDp_USD_AGGREGATOR",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0
+    },
+    "SPECTRA_HARDCODE_PT-savUSD(avUSD)-2026-05-15_USDC": {
+        "baseToken": "PT-savUSD(avUSD)-2026-05-15",
+        "quoteToken": "USDC",
+        "primaryAggregator": "SPECTRA_PT-savUSD(avUSD)-2026-05-15_avUSD_aggregator",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
