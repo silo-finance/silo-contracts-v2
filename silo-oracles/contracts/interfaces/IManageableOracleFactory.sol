@@ -10,10 +10,6 @@ interface IManageableOracleFactory {
 
     error DeployerCannotBeZero();
 
-    /// @notice Get the implementation contract that will be cloned
-    /// @return The ManageableOracle implementation contract
-    function ORACLE_IMPLEMENTATION() external view returns (IManageableOracle);
-
     /// @notice Create a new ManageableOracle
     /// @param _oracle Initial oracle address
     /// @param _owner Address that will own the contract
@@ -51,4 +47,9 @@ interface IManageableOracleFactory {
         external
         view
         returns (address predictedAddress);
+    
+    /// @notice Get the implementation contract that will be cloned
+    /// @return The ManageableOracle implementation contract
+    // solhint-disable-next-line func-name-mixedcase
+    function ORACLE_IMPLEMENTATION() external view returns (IManageableOracle);
 }

@@ -397,6 +397,39 @@ abstract contract ManageableOracleBase is Test {
     }
 
     /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_acceptRenounceOwnership_revert_whenPendingOracleOrPendingTimelock
+    */
+    function test_acceptRenounceOwnership_revert_whenPendingOracleOrPendingTimelock() public {
+        SiloOracleMock1 otherOracleMock = new SiloOracleMock1();
+        otherOracleMock.setQuoteToken(oracleMock.quoteToken());
+        uint32 newTimelock = 2 days;
+        uint256 proposeTime = block.timestamp;
+
+        vm.startPrank(owner);
+        oracle.proposeRenounceOwnership();
+
+        oracle.proposeOracle(ISiloOracle(address(otherOracleMock)));
+
+        vm.warp(proposeTime + timelock);
+        vm.expectRevert(IManageableOracle.PendingOracleUpdate.selector);
+        oracle.acceptRenounceOwnership();
+
+        oracle.proposeTimelock(newTimelock);
+        vm.expectRevert(IManageableOracle.PendingOracleUpdate.selector);
+        oracle.acceptRenounceOwnership();
+
+        oracle.acceptOracle();
+
+        vm.expectRevert(IManageableOracle.PendingTimelockUpdate.selector);
+        oracle.acceptRenounceOwnership();
+
+        oracle.cancelTimelock();
+
+        oracle.acceptRenounceOwnership();
+        assertEq(oracle.owner(), address(0), "invalid owner after accept renounce");
+    }
+
+    /*
         FOUNDRY_PROFILE=oracles forge test --mt test_cancelOracle_cancelPossibleAlways
     */
     function test_cancelOracle_cancelPossibleAlways(uint256 _time) public {
@@ -474,7 +507,7 @@ abstract contract ManageableOracleBase is Test {
         emit IManageableOracle.OwnershipRenounceCanceled();
         vm.prank(owner);
         oracle.cancelRenounceOwnership();
-        
+
         (address pendingOwnershipValue, uint64 pendingOwnershipValidAt) = oracle.pendingOwnership();
         assertEq(pendingOwnershipValue, address(0), "pendingOwnership not cleared after cancel");
         assertEq(pendingOwnershipValidAt, 0, "pendingOwnership validAt not cleared after cancel");

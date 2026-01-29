@@ -99,7 +99,10 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
     /// @param _owner Address that will own the contract
     /// @param _timelock Initial time lock duration
     /// @param _baseToken Base token address for the oracle
-    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken) external initializer {
+    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken)
+        external
+        initializer
+    {
         __ManageableOracle_init(_oracle, _owner, _timelock, _baseToken);
     }
 
@@ -172,6 +175,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
     function acceptRenounceOwnership() external virtual onlyOwner afterTimelock(pendingOwnership.validAt) {
         require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
         require(pendingOracle.validAt == 0, PendingOracleUpdate());
+        require(pendingTimelock.validAt == 0, PendingTimelockUpdate());
 
         _resetPendingAddress(pendingOwnership);
         _transferOwnership(address(0));

@@ -20,6 +20,7 @@ interface IManageableOracle {
     error QuoteTokenMustBeTheSame();
     error PendingUpdate();
     error PendingOracleUpdate();
+    error PendingTimelockUpdate();
     error NoPendingUpdate();
     error NoPendingUpdateToCancel();
     error TimelockNotExpired();
@@ -101,6 +102,7 @@ interface IManageableOracle {
     ///      thereby disabling any functionality that is only available to the owner.
     function acceptRenounceOwnership() external;
 
+    // solhint-disable-next-line func-name-mixedcase
     function DEAD_ADDRESS() external view returns (address);
 
     /// @notice Verify that the oracle is valid and can provide quotes for the base token
