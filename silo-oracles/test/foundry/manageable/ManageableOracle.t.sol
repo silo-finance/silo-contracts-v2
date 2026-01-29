@@ -14,6 +14,9 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 
+import {MockOracleFactory} from "./common/MockOracleFactory.sol";
+import {FailingMockOracleFactory} from "./common/FailingMockOracleFactory.sol";
+
 /*
  FOUNDRY_PROFILE=oracles forge test --mc ManageableOracleTest
 */
@@ -279,19 +282,5 @@ contract ManageableOracleTest is Test {
 
     function _clonedOracle() internal returns (IManageableOracle) {
         return IManageableOracle(Clones.cloneDeterministic(address(_factory.ORACLE_IMPLEMENTATION()), bytes32(0)));
-    }
-}
-
-/* Mock factory for testing - returns the oracle address passed to it */
-contract MockOracleFactory {
-    function create(address _oracle) external pure returns (address) {
-        return _oracle;
-    }
-}
-
-/* Mock factory that fails when called */
-contract FailingMockOracleFactory {
-    function create() external pure {
-        revert("Factory call failed");
     }
 }
