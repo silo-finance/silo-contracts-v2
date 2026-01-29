@@ -247,6 +247,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
         virtual
         onlyInitializing
     {
+        require(address(_oracle) != address(0), ZeroOracle());
         require(_baseToken != address(0), ZeroBaseToken());
         require(_owner != address(0), ZeroOwner());
         require(_timelock >= MIN_TIMELOCK && _timelock <= MAX_TIMELOCK, InvalidTimelock());
