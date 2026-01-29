@@ -183,9 +183,6 @@ abstract contract ManageableOracleBase is Test {
         vm.expectRevert(IManageableOracle.OnlyOwner.selector);
         oracle.acceptRenounceOwnership();
 
-        vm.expectRevert(IManageableOracle.NoPendingUpdate.selector);
-        oracle.acceptOwnership();
-
         vm.expectRevert(IManageableOracle.OnlyOwner.selector);
         oracle.cancelOracle();
 
@@ -197,5 +194,17 @@ abstract contract ManageableOracleBase is Test {
 
         vm.expectRevert(IManageableOracle.OnlyOwner.selector);
         oracle.cancelRenounceOwnership();
+        vm.stopPrank();
+
+        vm.prank(owner);
+        oracle.proposeTransferOwnership(makeAddr("NewOwner"));
+
+        vm.warp(block.timestamp + timelock + 1);
+        vm.prank(owner);
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.acceptOwnership();
+        
+        vm.expectRevert(IManageableOracle.OnlyOwner.selector);
+        oracle.acceptOwnership();
     }
 }
