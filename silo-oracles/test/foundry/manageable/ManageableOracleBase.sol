@@ -258,4 +258,105 @@ abstract contract ManageableOracleBase is Test {
         vm.expectRevert(IManageableOracle.OnlyOwner.selector);
         oracle.cancelRenounceOwnership();
     }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_proposeOracle_acceptAfterTimelock
+    */
+    function test_proposeOracle_acceptAfterTimelock() public {
+        SiloOracleMock1 otherOracleMock = new SiloOracleMock1();
+        otherOracleMock.setQuoteToken(oracleMock.quoteToken());
+
+        uint256 proposeTime = block.timestamp;
+        vm.prank(owner);
+        oracle.proposeOracle(ISiloOracle(address(otherOracleMock)));
+
+        vm.prank(owner);
+        vm.expectRevert(IManageableOracle.TimelockNotExpired.selector);
+        oracle.acceptOracle();
+
+        vm.warp(proposeTime + timelock - 1);
+        vm.prank(owner);
+        vm.expectRevert(IManageableOracle.TimelockNotExpired.selector);
+        oracle.acceptOracle();
+
+        vm.warp(proposeTime + timelock);
+        vm.expectEmit(true, true, true, true, address(oracle));
+        emit IManageableOracle.OracleUpdated(ISiloOracle(address(otherOracleMock)));
+        vm.prank(owner);
+        oracle.acceptOracle();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_proposeTimelock_acceptAfterTimelock
+    */
+    function test_proposeTimelock_acceptAfterTimelock() public {
+        uint32 newTimelock = 2 days;
+        uint256 proposeTime = block.timestamp;
+        vm.prank(owner);
+        oracle.proposeTimelock(newTimelock);
+
+        vm.prank(owner);
+        vm.expectRevert(IManageableOracle.TimelockNotExpired.selector);
+        oracle.acceptTimelock();
+
+        vm.warp(proposeTime + timelock - 1);
+        vm.prank(owner);
+        vm.expectRevert(IManageableOracle.TimelockNotExpired.selector);
+        oracle.acceptTimelock();
+
+        vm.warp(proposeTime + timelock);
+        vm.expectEmit(true, true, true, true, address(oracle));
+        emit IManageableOracle.TimelockUpdated(newTimelock);
+        vm.prank(owner);
+        oracle.acceptTimelock();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_proposeTransferOwnership_acceptOwnershipAfterTimelock
+    */
+    function test_proposeTransferOwnership_acceptOwnershipAfterTimelock() public {
+        address newOwner = makeAddr("NewOwner");
+        uint256 proposeTime = block.timestamp;
+        vm.prank(owner);
+        oracle.proposeTransferOwnership(newOwner);
+
+        vm.prank(newOwner);
+        vm.expectRevert(IManageableOracle.TimelockNotExpired.selector);
+        oracle.acceptOwnership();
+
+        vm.warp(proposeTime + timelock - 1);
+        vm.prank(newOwner);
+        vm.expectRevert(IManageableOracle.TimelockNotExpired.selector);
+        oracle.acceptOwnership();
+
+        vm.warp(proposeTime + timelock);
+        vm.expectEmit(true, true, true, true, address(oracle));
+        emit IManageableOracle.OwnershipTransferred(owner, newOwner);
+        vm.prank(newOwner);
+        oracle.acceptOwnership();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_proposeRenounceOwnership_acceptRenounceOwnershipAfterTimelock
+    */
+    function test_proposeRenounceOwnership_acceptRenounceOwnershipAfterTimelock() public {
+        uint256 proposeTime = block.timestamp;
+        vm.prank(owner);
+        oracle.proposeRenounceOwnership();
+
+        vm.prank(owner);
+        vm.expectRevert(IManageableOracle.TimelockNotExpired.selector);
+        oracle.acceptRenounceOwnership();
+
+        vm.warp(proposeTime + timelock - 1);
+        vm.prank(owner);
+        vm.expectRevert(IManageableOracle.TimelockNotExpired.selector);
+        oracle.acceptRenounceOwnership();
+
+        vm.warp(proposeTime + timelock);
+        vm.expectEmit(true, true, true, false, address(oracle));
+        emit IManageableOracle.OwnershipTransferred(owner, address(0));
+        vm.prank(owner);
+        oracle.acceptRenounceOwnership();
+    }
 }
