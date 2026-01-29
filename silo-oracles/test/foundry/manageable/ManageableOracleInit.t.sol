@@ -274,7 +274,7 @@ contract ManageableOracleInitTest is Test {
         (uint192 pendingTimelockValue, uint64 pendingTimelockValidAt) = _oracle.pendingTimelock();
         assertEq(pendingTimelockValue, 0, "invalid pendingTimelock value");
         assertEq(pendingTimelockValidAt, 0, "invalid pendingTimelock validAt");
-        
+
         (address pendingOwnershipValue, uint64 pendingOwnershipValidAt) = _oracle.pendingOwnership();
         assertEq(pendingOwnershipValue, address(0), "invalid pendingOwnership value");
         assertEq(pendingOwnershipValidAt, 0, "invalid pendingOwnership validAt");
