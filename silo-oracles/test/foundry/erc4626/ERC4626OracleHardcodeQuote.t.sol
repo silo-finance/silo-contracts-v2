@@ -69,6 +69,14 @@ contract ERC4626OracleHardcodeQuoteTest is Test {
         assertEq(oracle.quoteToken(), quoteToken);
     }
 
+    function test_ERC4626OracleHardcodeQuote_VERSION() public view {
+        assertEq(ERC4626OracleHardcodeQuote(address(oracle)).VERSION(), "ERC4626OracleHardcodeQuote 4.0.0", "VERSION");
+    }
+
+    function test_ERC4626OracleHardcodeQuote_baseToken() public view {
+        assertEq(ERC4626OracleHardcodeQuote(address(oracle)).baseToken(), address(vault), "baseToken");
+    }
+
     // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626OracleHardcodeQuote_beforeQuote -vvv
     function test_ERC4626OracleHardcodeQuote_beforeQuote() public {
         // should not revert

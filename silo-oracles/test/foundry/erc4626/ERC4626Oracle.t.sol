@@ -90,6 +90,20 @@ contract ERC4626OracleTest is Test {
         oracle.beforeQuote(address(1));
     }
 
+    // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626Oracle_VERSION -vvv
+    function test_ERC4626Oracle_VERSION() public {
+        IERC4626 vault = IERC4626(_wosVault);
+        ISiloOracle oracle = _factory.createERC4626Oracle(vault, bytes32(0));
+        assertEq(ERC4626Oracle(address(oracle)).VERSION(), "ERC4626Oracle 4.0.0", "VERSION");
+    }
+
+    // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626Oracle_baseToken -vvv
+    function test_ERC4626Oracle_baseToken() public {
+        IERC4626 vault = IERC4626(_wosVault);
+        ISiloOracle oracle = _factory.createERC4626Oracle(vault, bytes32(0));
+        assertEq(ERC4626Oracle(address(oracle)).baseToken(), address(vault), "baseToken");
+    }
+
     // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626Oracle_reorg
     function test_ERC4626Oracle_reorg() public {
         address eoa1 = makeAddr("eoa1");

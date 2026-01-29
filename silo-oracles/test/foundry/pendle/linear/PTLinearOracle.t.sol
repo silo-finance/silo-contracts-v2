@@ -80,6 +80,16 @@ contract PTLinearOracleTest is PTLinearMocks {
         assertEq(oracle.version(), 1, "Version should match");
     }
 
+    function test_ptLinear_VERSION() public {
+        PTLinearOracle oracle = PTLinearOracle(address(_createOracle()));
+        assertEq(oracle.VERSION(), "PTLinearOracle 4.0.0", "VERSION");
+    }
+
+    function test_ptLinear_baseToken() public {
+        PTLinearOracle oracle = PTLinearOracle(address(_createOracle()));
+        assertEq(oracle.baseToken(), makeAddr("ptToken"), "baseToken");
+    }
+
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_ptLinear_decimals --ffi -vv
     */

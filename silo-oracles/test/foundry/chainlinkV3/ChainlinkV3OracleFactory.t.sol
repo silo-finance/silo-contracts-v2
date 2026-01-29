@@ -85,6 +85,16 @@ contract ChainlinkV3OracleFactoryTest is ChainlinkV3Configs {
         );
     }
 
+    function test_ChainlinkV3Oracle_VERSION() public {
+        ChainlinkV3Oracle oracle = ORACLE_FACTORY.create(_dydxChainlinkV3Config(1e20, 0), bytes32(0));
+        assertEq(oracle.VERSION(), "ChainlinkV3Oracle 4.0.0", "VERSION");
+    }
+
+    function test_ChainlinkV3Oracle_baseToken() public {
+        ChainlinkV3Oracle oracle = ORACLE_FACTORY.create(_dydxChainlinkV3Config(1e20, 0), bytes32(0));
+        assertEq(oracle.baseToken(), address(tokens["DYDX"]), "baseToken");
+    }
+
     /*
         FOUNDRY_PROFILE=oracles forge test -vvv --mt test_ChainlinkV3OracleFactory_reorg
     */

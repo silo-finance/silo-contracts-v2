@@ -52,6 +52,10 @@ contract PendlePTToAssetOracleTest is Forking {
         oracle = PendlePTToAssetOracle(address(oracleDeploy.run()));
     }
 
+    function test_PendlePTToAssetOracle_VERSION() public view {
+        assertEq(oracle.VERSION(), "PendlePTToAssetOracle 4.0.0", "VERSION");
+    }
+
     function test_PendlePTToAssetOracle_factory_pendleOracle() public view {
         assertEq(address(factory.PENDLE_ORACLE()), address(pendleOracle), "pendle oracle is set right");
     }

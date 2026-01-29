@@ -197,4 +197,12 @@ contract DIAOracleTest is DIAConfigDefault {
     function test_DIAOracle_quoteToken() public view {
         assertEq(address(DIA_ORACLE.quoteToken()), address(tokens["USDT"]), "must be USDC");
     }
+
+    function test_DIAOracle_VERSION() public view {
+        assertEq(DIA_ORACLE.VERSION(), "DIAOracle 4.0.0", "VERSION");
+    }
+
+    function test_DIAOracle_baseToken() public view {
+        assertEq(DIA_ORACLE.baseToken(), address(tokens["RDPX"]), "baseToken");
+    }
 }

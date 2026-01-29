@@ -47,6 +47,14 @@ contract ERC4626OracleWithUnderlyingTest is Test {
         // deploy pass
     }
 
+    function test_ERC4626OracleWithUnderlying_VERSION() public view {
+        assertEq(oracle.VERSION(), "ERC4626OracleWithUnderlying 4.0.0", "VERSION");
+    }
+
+    function test_ERC4626OracleWithUnderlying_baseToken() public view {
+        assertEq(oracle.baseToken(), wstUSR, "baseToken");
+    }
+
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_wrappedVault_price --ffi -vv
      */

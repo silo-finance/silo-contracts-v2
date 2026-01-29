@@ -114,4 +114,48 @@ contract PendleLPTOracleTest is Test {
         uint256 price = oracleSy.quote(1e18, market);
         assertEq(price, 1115338829967733590);
     }
+
+    function test_LPTToAssetOracle_VERSION() public {
+        ISiloOracle underlyingOracle = ISiloOracle(0x8c5bb146f416De3fbcD8168cC844aCf4Aa2098c5);
+        address market = 0x3F5EA53d1160177445B1898afbB16da111182418;
+
+        PendleLPTToAssetOracleDeploy oracleAssetDeploy = new PendleLPTToAssetOracleDeploy();
+        oracleAssetDeploy.setParams(market, underlyingOracle);
+
+        oracleAsset = PendleLPTOracle(address(oracleAssetDeploy.run()));
+        assertEq(oracleAsset.VERSION(), "PendleLPTOracle 4.0.0", "VERSION");
+    }
+
+    function test_LPTToAssetOracle_baseToken() public {
+        ISiloOracle underlyingOracle = ISiloOracle(0x8c5bb146f416De3fbcD8168cC844aCf4Aa2098c5);
+        address market = 0x3F5EA53d1160177445B1898afbB16da111182418;
+
+        PendleLPTToAssetOracleDeploy oracleAssetDeploy = new PendleLPTToAssetOracleDeploy();
+        oracleAssetDeploy.setParams(market, underlyingOracle);
+
+        oracleAsset = PendleLPTOracle(address(oracleAssetDeploy.run()));
+        assertEq(oracleAsset.baseToken(), market, "baseToken");
+    }
+
+    function test_LPTToSyOracle_VERSION() public {
+        ISiloOracle underlyingOracle = ISiloOracle(0x4D7262786976917f0d7a83d6Ef3089273e117cF7);
+        address market = 0x3aeF1d372d0a7a7E482F465Bc14A42D78f920392;
+
+        PendleLPTToSyOracleDeploy oracleSyDeploy = new PendleLPTToSyOracleDeploy();
+        oracleSyDeploy.setParams(market, underlyingOracle);
+
+        oracleSy = PendleLPTOracle(address(oracleSyDeploy.run()));
+        assertEq(oracleSy.VERSION(), "PendleLPTOracle 4.0.0", "VERSION");
+    }
+
+    function test_LPTToSyOracle_baseToken() public {
+        ISiloOracle underlyingOracle = ISiloOracle(0x4D7262786976917f0d7a83d6Ef3089273e117cF7);
+        address market = 0x3aeF1d372d0a7a7E482F465Bc14A42D78f920392;
+
+        PendleLPTToSyOracleDeploy oracleSyDeploy = new PendleLPTToSyOracleDeploy();
+        oracleSyDeploy.setParams(market, underlyingOracle);
+
+        oracleSy = PendleLPTOracle(address(oracleSyDeploy.run()));
+        assertEq(oracleSy.baseToken(), market, "baseToken");
+    }
 }
