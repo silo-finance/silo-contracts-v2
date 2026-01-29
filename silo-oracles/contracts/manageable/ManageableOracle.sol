@@ -98,7 +98,7 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
     /// @param _owner Address that will own the contract
     /// @param _timelock Initial time lock duration
     /// @param _baseToken Base token address for the oracle
-    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken) external {
+    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken) external initializer {
         __ManageableOracle_init(_oracle, _owner, _timelock, _baseToken);
     }
 
