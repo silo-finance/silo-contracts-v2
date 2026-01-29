@@ -359,4 +359,101 @@ abstract contract ManageableOracleBase is Test {
         vm.prank(owner);
         oracle.acceptRenounceOwnership();
     }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_cancelOracle_cancelPossibleAlways
+    */
+    function test_cancelOracle_cancelPossibleAlways(uint256 _time) public {
+        vm.assume(_time <= 30 days);
+        SiloOracleMock1 otherOracleMock = new SiloOracleMock1();
+        otherOracleMock.setQuoteToken(oracleMock.quoteToken());
+
+        vm.prank(owner);
+        oracle.proposeOracle(ISiloOracle(address(otherOracleMock)));
+        vm.warp(block.timestamp + _time);
+        vm.expectEmit(true, false, false, false, address(oracle));
+        emit IManageableOracle.OracleProposalCanceled();
+        vm.prank(owner);
+        oracle.cancelOracle();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_cancelTimelock_cancelPossibleAlways
+    */
+    function test_cancelTimelock_cancelPossibleAlways(uint256 _time) public {
+        vm.assume(_time <= 30 days);
+        uint32 newTimelock = 2 days;
+        vm.prank(owner);
+        oracle.proposeTimelock(newTimelock);
+        vm.warp(block.timestamp + _time);
+        vm.expectEmit(true, false, false, false, address(oracle));
+        emit IManageableOracle.TimelockProposalCanceled();
+        vm.prank(owner);
+        oracle.cancelTimelock();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_cancelTransferOwnership_cancelPossibleAlways
+    */
+    function test_cancelTransferOwnership_cancelPossibleAlways(uint256 _time) public {
+        vm.assume(_time <= 30 days);
+        address newOwner = makeAddr("NewOwner");
+        vm.prank(owner);
+        oracle.proposeTransferOwnership(newOwner);
+        vm.warp(block.timestamp + _time);
+        vm.expectEmit(true, false, false, false, address(oracle));
+        emit IManageableOracle.OwnershipTransferCanceled();
+        vm.prank(owner);
+        oracle.cancelTransferOwnership();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_cancelRenounceOwnership_cancelPossibleAlways
+    */
+    function test_cancelRenounceOwnership_cancelPossibleAlways(uint256 _time) public {
+        vm.assume(_time <= 30 days);
+        vm.prank(owner);
+        oracle.proposeRenounceOwnership();
+        vm.warp(block.timestamp + _time);
+        vm.expectEmit(true, false, false, false, address(oracle));
+        emit IManageableOracle.OwnershipRenounceCanceled();
+        vm.prank(owner);
+        oracle.cancelRenounceOwnership();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_cancelOracle_revert_whenNothingProposed
+    */
+    function test_cancelOracle_revert_whenNothingProposed() public {
+        vm.expectRevert(IManageableOracle.NoPendingUpdateToCancel.selector);
+        vm.prank(owner);
+        oracle.cancelOracle();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_cancelTimelock_revert_whenNothingProposed
+    */
+    function test_cancelTimelock_revert_whenNothingProposed() public {
+        vm.expectRevert(IManageableOracle.NoPendingUpdateToCancel.selector);
+        vm.prank(owner);
+        oracle.cancelTimelock();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_cancelTransferOwnership_revert_whenNothingProposed
+    */
+    function test_cancelTransferOwnership_revert_whenNothingProposed() public {
+        vm.expectRevert(IManageableOracle.NoPendingUpdateToCancel.selector);
+        vm.prank(owner);
+        oracle.cancelTransferOwnership();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_cancelRenounceOwnership_revert_whenNothingProposed
+    */
+    function test_cancelRenounceOwnership_revert_whenNothingProposed() public {
+        vm.expectRevert(IManageableOracle.NoPendingUpdateToCancel.selector);
+        vm.prank(owner);
+        oracle.cancelRenounceOwnership();
+    }
 }
