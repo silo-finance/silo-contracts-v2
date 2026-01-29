@@ -12,7 +12,6 @@ import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 import {MockOracleFactory} from "silo-oracles/test/foundry/manageable/common/MockOracleFactory.sol";
-
 /*
  FOUNDRY_PROFILE=oracles forge test --mc ManageableOracleBase
  (base is abstract; run ManageableOracleBaseWithOracleTest or ManageableOracleBaseWithFactoryTest)
@@ -24,15 +23,17 @@ abstract contract ManageableOracleBase is Test {
 
     IManageableOracleFactory internal factory;
     SiloOracleMock1 internal oracleMock;
+    IManageableOracle internal oracle;
 
     function setUp() public {
         oracleMock = new SiloOracleMock1();
         factory = new ManageableOracleFactory();
         baseToken = address(new MintableToken(18));
+        oracle = _createManageableOracle();
     }
 
     /// @return manageableOracle Created oracle (via create with oracle or create with factory)
-    function _createManageableOracle() internal virtual returns (ISiloOracle manageableOracle);
+    function _createManageableOracle() internal virtual returns (IManageableOracle manageableOracle);
 
     /*
         FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_creation_emitsAllEvents
@@ -59,7 +60,59 @@ abstract contract ManageableOracleBase is Test {
         FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_VERSION
     */
     function test_ManageableOracle_VERSION() public {
-        IVersioned manageableOracle = IVersioned(address(_createManageableOracle()));
-        assertEq(manageableOracle.VERSION(), "ManageableOracle 4.0.0");
+        assertEq(IVersioned(address(oracle)).VERSION(), "ManageableOracle 4.0.0");
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_oracleVerification_revert_ZeroOracle
+    */
+    function test_oracleVerification_revert_ZeroOracle() public {
+        vm.expectRevert(IManageableOracle.ZeroOracle.selector);
+        oracle.oracleVerification(ISiloOracle(address(0)), baseToken);
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_oracleVerification_revert_QuoteTokenMustBeTheSame
+    */
+    function test_oracleVerification_revert_QuoteTokenMustBeTheSame() public {
+        address wrongQuoteTokenOracle = makeAddr("wrongQuoteTokenOracle");
+        
+        vm.mockCall(
+            wrongQuoteTokenOracle,
+            abi.encodeWithSelector(ISiloOracle.quoteToken.selector),
+            abi.encode(makeAddr("differentQuoteToken"))
+        );
+        
+        vm.expectRevert(IManageableOracle.QuoteTokenMustBeTheSame.selector);
+        oracle.oracleVerification(ISiloOracle(wrongQuoteTokenOracle), baseToken);
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_oracleVerification_revert_OracleQuoteFailed
+    */
+    function test_oracleVerification_revert_OracleQuoteFailed() public {
+        address zeroQuoteOracle = makeAddr("zeroQuoteOracle");
+        
+        vm.mockCall(
+            zeroQuoteOracle,
+            abi.encodeWithSelector(ISiloOracle.quoteToken.selector),
+            abi.encode(oracleMock.quoteToken())
+        );
+        
+        vm.mockCall(
+            zeroQuoteOracle,
+            abi.encodeWithSelector(ISiloOracle.quote.selector, 10 ** 18, baseToken),
+            abi.encode(uint256(0))
+        );
+        
+        vm.expectRevert(IManageableOracle.OracleQuoteFailed.selector);
+        oracle.oracleVerification(ISiloOracle(zeroQuoteOracle), baseToken);
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_oracleVerification_succeeds
+    */
+    function test_oracleVerification_succeeds() public {
+        oracle.oracleVerification(ISiloOracle(address(oracleMock)), baseToken);
     }
 }
