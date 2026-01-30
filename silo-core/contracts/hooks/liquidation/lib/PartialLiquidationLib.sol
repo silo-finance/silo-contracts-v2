@@ -138,6 +138,7 @@ library PartialLiquidationLib {
     /// @notice reverts on `_totalValue` == 0
     /// @dev calculate assets based on ratio: assets = (value, totalAssets, totalValue)
     /// to calculate assets => value, use it like: value = (assets, totalValue, totalAssets)
+    /// this method is used for collateral assets and for debt assets
     function valueToAssetsByRatio(uint256 _value, uint256 _totalAssets, uint256 _totalValue)
         internal
         pure
@@ -145,8 +146,6 @@ library PartialLiquidationLib {
     {
         require(_totalValue != 0, IPartialLiquidation.UnknownRatio());
 
-        // rounding direction was discavered based on set of tests, 
-        // especially with 1 wei collateral and borrow agains it
         assets = Math.mulDiv(_value, _totalAssets, _totalValue, Rounding.DOWN);
     }
 
