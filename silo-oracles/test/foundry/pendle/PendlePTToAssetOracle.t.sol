@@ -52,6 +52,9 @@ contract PendlePTToAssetOracleTest is Forking {
         oracle = PendlePTToAssetOracle(address(oracleDeploy.run()));
     }
 
+    /*
+    FOUNDRY_PROFILE=oracles forge test -vvv --mt test_PendlePTToAssetOracle_VERSION
+    */
     function test_PendlePTToAssetOracle_VERSION() public view {
         assertEq(oracle.VERSION(), "PendlePTToAssetOracle 4.0.0", "VERSION");
     }
