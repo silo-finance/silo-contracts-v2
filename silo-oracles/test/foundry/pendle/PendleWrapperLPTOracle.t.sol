@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
-import {console2} from "forge-std/console2.sol";
 
 import {IPendleOracleHelper} from "silo-oracles/contracts/pendle/interfaces/IPendleOracleHelper.sol";
 import {PendleLPTOracle} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTOracle.sol";
@@ -103,8 +102,19 @@ contract PendleWrapperLPTOracle is Test {
     
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_wrapperLPTToAssetOracle_deploy --ffi -vv
-    */
+     */
     function test_wrapperLPTToAssetOracle_deploy() public {
-        console2.log("TODO missing test");
+        chainlinkOracleDeploy.setUseConfigName(OracleConfig.CHAINLINK_sUSDe_USD);
+        ISiloOracle oracle = ISiloOracle(address(chainlinkOracleDeploy.run()));
+
+        vm.expectEmit(false, false, false, false); // check only if the event is emitted
+        emit PendleWrapperLPTToAssetOracleCreated(ISiloOracle(address(0)));
+
+        address newOracle = address(factoryToAsset.create(oracle, sUSDe_WRAPPER, bytes32(0)));
+        PendleWrapperLPTToAssetOracle pendleOracle = PendleWrapperLPTToAssetOracle(newOracle);
+
+        assertEq(pendleOracle.VERSION(), "PendleWrapperLPTToSyOracle 4.0.0", "VERSION");
+
+        // TODO PendleWrapperLPTToSyOracle has missing tests for quote method
     }
 }
