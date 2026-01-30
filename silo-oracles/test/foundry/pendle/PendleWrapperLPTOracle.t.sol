@@ -104,7 +104,7 @@ contract PendleWrapperLPTOracle is Test {
     /*
     FOUNDRY_PROFILE=oracles forge test --mt test_wrapperLPTToAssetOracle_deploy --ffi -vv
     */
-    function test_wrapperLPTToAssetOracle_deploy() public {
+    function test_wrapperLPTToAssetOracle_deploy() public pure {
         console2.log("TODO missing test");
     }
 }

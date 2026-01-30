@@ -47,7 +47,7 @@ contract OracleForwarderTest is Test {
         _oracleForwarder.setOracle(ISiloOracle(address(_oracleMock2)));
     }
    
-    function test_OracleForwarder_VERSION() public {
+    function test_OracleForwarder_VERSION() public view {
         assertEq(IVersioned(address(_oracleForwarder)).VERSION(), "OracleForwarder 4.0.0");
     }
 
