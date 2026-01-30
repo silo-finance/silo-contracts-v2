@@ -6,6 +6,8 @@ import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {SafeCast} from "openzeppelin5/utils/math/SafeCast.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
+/// @dev Aggregator is a common aggregator interface for Silo oracles. 
+/// It allows to join multiple oracles to caltulate any asset price.
 abstract contract Aggregator is AggregatorV3Interface {
     /// @notice all Silo oracles should return price in 18 decimals
     function decimals() external view virtual returns (uint8) {
