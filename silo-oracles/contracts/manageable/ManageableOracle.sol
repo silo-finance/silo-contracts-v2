@@ -109,9 +109,8 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
     /// @inheritdoc IManageableOracle
     function proposeOracle(ISiloOracle _oracle) external virtual onlyOwner {
         require(pendingOracle.validAt == 0, PendingUpdate());
-        require(address(_oracle) != address(0), ZeroOracle());
-        require(_oracle.quoteToken() == quoteToken, QuoteTokenMustBeTheSame());
-        // base token should be the same as well, but we don't have easy way to check it
+        
+        oracleVerification(_oracle, baseToken);
 
         pendingOracle.update(address(_oracle), timelock);
 
