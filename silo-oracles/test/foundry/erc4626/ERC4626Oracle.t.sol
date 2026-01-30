@@ -101,9 +101,8 @@ contract ERC4626OracleTest is Test {
     // FOUNDRY_PROFILE=oracles forge test --mt test_ERC4626Oracle_baseToken -vvv
     function test_ERC4626Oracle_baseToken() public {
         IERC4626 vault = IERC4626(_wosVault);
-        ISiloOracle oracle = _factory.createERC4626Oracle(vault, bytes32(0));
-        ERC4626Oracle erc4626Oracle = ERC4626Oracle(address(oracle));
-        address baseTokenAddr = erc4626Oracle.baseToken();
+        ERC4626Oracle oracle = ERC4626Oracle(address(_factory.createERC4626Oracle(vault, bytes32(0))));
+        address baseTokenAddr = oracle.baseToken();
         assertEq(baseTokenAddr, address(vault), "baseToken");
 
         uint256 amount = 10 ** IERC20Metadata(baseTokenAddr).decimals();

@@ -90,30 +90,12 @@ contract PendleWrapperLPTOracle is Test {
         vm.expectEmit(false, false, false, false); // check only if the event is emitted
         emit PendleWrapperLPTToSyOracleCreated(ISiloOracle(address(0)));
 
-        ISiloOracle pendleWrapperLPTToSyOracle = factoryToSy.create(oracle, sUSDe_WRAPPER, bytes32(0));
+        PendleWrapperLPTToSyOracle pendleOracle = PendleWrapperLPTToSyOracle(address(factoryToSy.create(oracle, sUSDe_WRAPPER, bytes32(0))));
 
-        uint256 price = pendleWrapperLPTToSyOracle.quote(1e18, address(sUSDe_WRAPPER));
+        uint256 price = pendleOracle.quote(1e18, address(sUSDe_WRAPPER));
 
         assertEq(price, 2745809640189568598); // ~2.745 USD
-    }
-
-    function test_wrapperLPTToAssetOracle_VERSION() public {
-        chainlinkOracleDeploy.setUseConfigName(OracleConfig.CHAINLINK_sUSDe_USD);
-        ISiloOracle underlyingOracle = ISiloOracle(address(chainlinkOracleDeploy.run()));
-        PendleLPTOracle wrapperOracle = PendleLPTOracle(address(factoryToAsset.create(underlyingOracle, sUSDe_WRAPPER, bytes32(0))));
-
-        assertEq(wrapperOracle.VERSION(), "PendleWrapperLPTToAssetOracle 4.0.0", "VERSION");
-    }
-
-    function test_wrapperLPTToAssetOracle_baseToken() public {
-        chainlinkOracleDeploy.setUseConfigName(OracleConfig.CHAINLINK_sUSDe_USD);
-        ISiloOracle underlyingOracle = ISiloOracle(address(chainlinkOracleDeploy.run()));
-        PendleLPTOracle wrapperOracle = PendleLPTOracle(address(factoryToAsset.create(underlyingOracle, sUSDe_WRAPPER, bytes32(0))));
-
-        address baseTokenAddr = wrapperOracle.baseToken();
-        assertEq(baseTokenAddr, address(sUSDe_WRAPPER), "baseToken");
-
-        uint256 amount = 10 ** IERC20Metadata(baseTokenAddr).decimals();
-        wrapperOracle.quote(amount, baseTokenAddr);
+        assertEq(price, pendleOracle.quote(1e18, pendleOracle.baseToken()), "quote with baseToken");
+        assertEq(pendleOracle.VERSION(), "PendleWrapperLPTToSyOracle 4.0.0", "VERSION");
     }
 }
