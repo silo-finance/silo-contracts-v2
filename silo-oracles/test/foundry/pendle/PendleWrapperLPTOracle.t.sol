@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {IPendleOracleHelper} from "silo-oracles/contracts/pendle/interfaces/IPendleOracleHelper.sol";
 import {PendleLPTOracle} from "silo-oracles/contracts/pendle/lp-tokens/PendleLPTOracle.sol";
@@ -56,6 +57,7 @@ contract PendleWrapperLPTOracle is Test {
     PendleLPTOracle oracleAsset;
 
     event PendleWrapperLPTToSyOracleCreated(ISiloOracle indexed pendleWrapperLPTToSyOracle);
+    event PendleWrapperLPTToAssetOracleCreated(ISiloOracle indexed pendleWrapperLPTToAssetOracle);
 
     function setUp() public {
         vm.createSelectFork(vm.envString("RPC_MAINNET"), 22672300); // forking block jun 10 2025
@@ -81,9 +83,9 @@ contract PendleWrapperLPTOracle is Test {
     }
 
     /*
-    FOUNDRY_PROFILE=oracles forge test --mt test_wrapperLPTToAssetOracle_deploy --ffi -vv
+    FOUNDRY_PROFILE=oracles forge test --mt test_wrapperLPTToSyOracle_deploy --ffi -vv
      */
-    function test_wrapperLPTToAssetOracle_deploy() public {
+    function test_wrapperLPTToSyOracle_deploy() public {
         chainlinkOracleDeploy.setUseConfigName(OracleConfig.CHAINLINK_sUSDe_USD);
         ISiloOracle oracle = ISiloOracle(address(chainlinkOracleDeploy.run()));
 
@@ -97,5 +99,12 @@ contract PendleWrapperLPTOracle is Test {
         assertEq(price, 2745809640189568598); // ~2.745 USD
         assertEq(price, pendleOracle.quote(1e18, pendleOracle.baseToken()), "quote with baseToken");
         assertEq(pendleOracle.VERSION(), "PendleWrapperLPTToSyOracle 4.0.0", "VERSION");
+    }
+    
+    /*
+    FOUNDRY_PROFILE=oracles forge test --mt test_wrapperLPTToAssetOracle_deploy --ffi -vv
+    */
+    function test_wrapperLPTToAssetOracle_deploy() public {
+        console2.log("TODO missing test");
     }
 }
