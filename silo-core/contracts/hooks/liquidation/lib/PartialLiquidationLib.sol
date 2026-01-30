@@ -147,7 +147,7 @@ library PartialLiquidationLib {
 
         // rounding direction was discavered based on set of tests, 
         // especially with 1 wei collateral and borrow agains it
-        assets = Math.mulDiv(_value, _totalAssets, _totalValue, Rounding.UP);
+        assets = Math.mulDiv(_value, _totalAssets, _totalValue, Rounding.DOWN);
     }
 
     /// @notice this function never reverts
