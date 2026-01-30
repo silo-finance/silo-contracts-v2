@@ -29,14 +29,14 @@ abstract contract ManageableOracleISiloOracleTestBase is Test {
     /*
         FOUNDRY_PROFILE=oracles forge test --mt test_ISiloOracle_quoteToken
     */
-    function test_ISiloOracle_quoteToken() public {
+    function test_ISiloOracle_quoteToken() public view {
         assertEq(manageableOracle.quoteToken(), oracleMock.quoteToken(), "invalid quoteToken");
     }
 
     /*
         FOUNDRY_PROFILE=oracles forge test --mt test_ISiloOracle_quote
     */
-    function test_ISiloOracle_quote() public {
+    function test_ISiloOracle_quote() public view {
         uint256 baseAmount = 1e18;
 
         assertEq(
