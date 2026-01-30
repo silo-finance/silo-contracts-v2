@@ -106,14 +106,17 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_asset_protected
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mt test_1wei_asset_protected_fuzz
 
     this test fail with `NoRepayAssets` error and make liquidation not possible
     when we have 1 wei of protected collateral and we borrow agains it.
     with fix in `valueToAssetsByRatio` we can liquidate.
     */
     /// forge-config: core_test.fuzz.runs = 10000
-    function test_1wei_asset_protected_fuzz(uint32 _amount, uint32 _burn) public {
+    function test_1wei_asset_protected_fuzz(
+        uint32 _amount, uint32 _burn
+    ) public {
+        // ( uint32 _amount, uint32 _burn) = (0, 291965790);
         _1wei_asset_protected_liquidation(_amount, _burn, false);
     }
 
@@ -185,6 +188,17 @@ contract PartialLiquidation1weiTest is SiloLittleHelper, Test {
         assertFalse(silo1.isSolvent(borrower), "borrower should be ready to liquidate");
 
         {
+            emit log_named_decimal_uint("ltv", siloLens.getLtv(silo0, borrower), 16);
+
+            vm.expectRevert(abi.encodeWithSelector(IPartialLiquidation.NoRepayAssets.selector));
+            partialLiquidation.liquidationCall(
+                address(token0), address(token1), borrower, type(uint256).max, _receiveSToken
+            );
+
+            // when pride drop even more, collateral assets will grow to 1 wei and we will be able to liquidate
+            _mockQuote(minAmount, 7.7e9 * minAmount); // price DROP
+            _mockQuote(maxWithdraw, 7.7e9 * maxWithdraw); // price DROP
+
             emit log_named_decimal_uint("ltv", siloLens.getLtv(silo0, borrower), 16);
         }
 

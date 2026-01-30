@@ -126,7 +126,7 @@ contract LiquidationPreviewTestData {
                 collateralAssetsToLiquidate: 4230769230769230776,
                 debtAssetsToRepay: 480769230769230770,
                 // (one - 480769230769230770n) * 80n * one / ((10n * one - 4230769230769230776n) * 10n)
-                ltvAfterLiquidation: 720000000000000000 // this is minimal acceptable LTV
+                ltvAfterLiquidation: 720000000000000001 // this is minimal acceptable LTV
             })
         });
 

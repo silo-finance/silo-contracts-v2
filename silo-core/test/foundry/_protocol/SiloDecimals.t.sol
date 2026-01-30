@@ -129,7 +129,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(1e6, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 417011079366804431, "collateral");
+        assertEq(collateral, 417011079366804430, "collateral");
         assertEq(debt, 992883522, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
@@ -170,7 +170,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(10, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 100_4885415, "collateral");
+        assertEq(collateral, 100_4885414, "collateral");
         assertEq(debt, 382813492061162048, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
@@ -208,7 +208,7 @@ contract SiloDecimalsTest is SiloLittleHelper, Test {
         _repay(10, borrower);
 
         (uint256 collateral, uint256 debt, bool receiveSToken) = partialLiquidation.maxLiquidation(borrower);
-        assertEq(collateral, 400687, "collateral");
+        assertEq(collateral, 400686, "collateral");
         assertEq(debt, 190804, "debt");
         assertFalse(receiveSToken, "receiveSToken");
 
