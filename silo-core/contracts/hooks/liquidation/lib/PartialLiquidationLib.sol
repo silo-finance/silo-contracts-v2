@@ -146,7 +146,7 @@ library PartialLiquidationLib {
     {
         require(_totalValue != 0, IPartialLiquidation.UnknownRatio());
 
-        assets = Math.mulDiv(_value, _totalAssets, _totalValue, Rounding.DOWN);
+        assets = _value * _totalAssets / _totalValue;
     }
 
     /// @notice this function never reverts
