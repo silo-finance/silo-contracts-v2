@@ -16,7 +16,7 @@ import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOr
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 /*
-FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE=SCALER_woS BASE_TOKEN=wBTC OWNER=DAO \
+FOUNDRY_PROFILE=oracles UNDERLYING_ORACLE=CHAINLINK_ETH_USD BASE_TOKEN=wBTC TIMELOCK=86400 OWNER=DAO \
     forge script silo-oracles/deploy/manageable-oracle/ManageableOracleDeploy.s.sol \
     --ffi --rpc-url $RPC_SONIC --broadcast --verify
 
@@ -27,46 +27,21 @@ OWNER env defaults to deployer (address from PRIVATE_KEY) when not set.
 error UnderlyingOracleNotFound();
 
 contract ManageableOracleDeploy is CommonDeploy {
-    string public underlyingOracleKey;
-    address public baseToken;
-    address public owner;
-    uint32 public timelock;
-    bytes32 public externalSalt;
-
-    function setUnderlyingOracleKey(string memory _key) public {
-        underlyingOracleKey = _key;
-    }
-
-    function setBaseToken(address _baseToken) public {
-        baseToken = _baseToken;
-    }
-
-    function setOwner(address _owner) public {
-        owner = _owner;
-    }
-
-    function setTimelock(uint32 _timelock) public {
-        timelock = _timelock;
-    }
-
-    function setExternalSalt(bytes32 _externalSalt) public {
-        externalSalt = _externalSalt;
-    }
-
     function run() public returns (IManageableOracle manageableOracle) {
         AddrLib.init();
 
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
         address deployer = vm.addr(deployerPrivateKey);
+        console2.log("deployer:", deployer);
 
-        string memory underlyingKey = _getUnderlyingOracleKey();
-        address underlyingOracle = OraclesDeployments.get(getChainAlias(), underlyingKey);
-        if (underlyingOracle == address(0)) revert UnderlyingOracleNotFound();
+        address underlyingOracle = AddrLib.getAddress(vm.envString("UNDERLYING_ORACLE"));
+        address baseTokenAddr = AddrLib.getAddress(vm.envString("BASE_TOKEN"));
+        address ownerAddr = AddrLib.getAddress(vm.envString("OWNER"));
+        uint32 timelockVal = uint32(vm.envUint("TIMELOCK"));
+        bytes32 externalSaltVal = vm.envBytes32("EXTERNAL_SALT");
 
-        address baseTokenAddr = _getBaseToken();
-        address ownerAddr = _getOwner(deployer);
-        uint32 timelockVal = _getTimelock();
-        bytes32 externalSaltVal = _getExternalSalt();
+        console2.log("externalSaltVal:");
+        console2.logBytes32(externalSaltVal);
 
         address factoryAddress = getDeployedAddress(SiloOraclesFactoriesContracts.MANAGEABLE_ORACLE_FACTORY);
         ManageableOracleFactory factory = ManageableOracleFactory(factoryAddress);
@@ -84,41 +59,12 @@ contract ManageableOracleDeploy is CommonDeploy {
         _qa(address(manageableOracle), baseTokenAddr);
     }
 
-    function _getUnderlyingOracleKey() internal view returns (string memory) {
-        if (bytes(underlyingOracleKey).length != 0) return underlyingOracleKey;
-        return vm.envString("UNDERLYING_ORACLE");
-    }
-
-    function _getBaseToken() internal returns (address) {
-        if (baseToken != address(0)) return baseToken;
-        return AddrLib.getAddress(vm.envString("BASE_TOKEN"));
-    }
-
-    function _getOwner(address _deployer) internal returns (address) {
-        if (owner != address(0)) return owner;
-        string memory ownerName = vm.envString("OWNER");
-        if (bytes(ownerName).length == 0) return _deployer;
-        return AddrLib.getAddress(ownerName);
-    }
-
-    function _getTimelock() internal view returns (uint32) {
-        if (timelock != 0) return timelock;
-        return uint32(vm.envUint("TIMELOCK"));
-    }
-
-    function _getExternalSalt() internal view returns (bytes32) {
-        if (externalSalt != bytes32(0)) return externalSalt;
-        if (vm.envOr("EXTERNAL_SALT", bytes32(0)) != bytes32(0)) return vm.envBytes32("EXTERNAL_SALT");
-        return bytes32(0);
-    }
-
     function _getOracleName(address _oracle, address _baseToken) internal view returns (string memory) {
         address quoteToken = ISiloOracle(_oracle).quoteToken();
         string memory baseSymbol = IERC20Metadata(_baseToken).symbol();
         string memory quoteSymbol = IERC20Metadata(quoteToken).symbol();
         return string.concat("MANAGEABLE_ORACLE_", baseSymbol, "_", quoteSymbol);
     }
-
     function _qa(address _oracle, address _baseToken) internal view returns (uint256 quote) {
         uint256 oneBaseToken = 10 ** IERC20Metadata(_baseToken).decimals();
         quote = ISiloOracle(_oracle).quote(oneBaseToken, _baseToken);
@@ -127,9 +73,7 @@ contract ManageableOracleDeploy is CommonDeploy {
         string memory quoteSymbol = IERC20Metadata(ISiloOracle(_oracle).quoteToken()).symbol();
 
         console2.log("\nQA ------------------------------: %s\n", _oracle);
-        console2.log("  Base amount (1 %s): ", baseSymbol);
-        console2.log("    ", PriceFormatter.formatPriceInE18(oneBaseToken));
-        console2.log("  Quote (%s, 18 decimals): ", quoteSymbol);
-        console2.log("    ", PriceFormatter.formatPriceInE18(quote));
+        console2.log("  Quote (%s, %s): ", PriceFormatter.formatPriceInE18(oneBaseToken), baseSymbol);
+        console2.log("    ", PriceFormatter.formatPriceInE18(quote), quoteSymbol);
     }
 }

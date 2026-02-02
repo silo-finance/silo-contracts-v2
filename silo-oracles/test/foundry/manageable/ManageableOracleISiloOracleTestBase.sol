@@ -9,6 +9,8 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
+import {ManageableOracleFactoryDeploy} from
+    "silo-oracles/deploy/manageable-oracle/ManageableOracleFactoryDeploy.s.sol";
 
 abstract contract ManageableOracleISiloOracleTestBase is Test {
     address internal owner = makeAddr("Owner");
@@ -19,9 +21,11 @@ abstract contract ManageableOracleISiloOracleTestBase is Test {
     SiloOracleMock1 internal oracleMock;
     ISiloOracle internal manageableOracle;
 
-    function setUp() public {
+    function setUp() public virtual {
         oracleMock = new SiloOracleMock1();
-        factory = new ManageableOracleFactory();
+        ManageableOracleFactoryDeploy factoryDeployer = new ManageableOracleFactoryDeploy();
+        factoryDeployer.disableDeploymentsSync();
+        factory = IManageableOracleFactory(factoryDeployer.run());
         baseToken = address(new MintableToken(18));
         manageableOracle = _createManageableOracle();
     }

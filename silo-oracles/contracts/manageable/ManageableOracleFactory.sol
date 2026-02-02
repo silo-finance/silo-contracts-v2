@@ -52,8 +52,8 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
     {
         require(_deployer != address(0), DeployerCannotBeZero());
 
-        predictedAddress =
-            Clones.predictDeterministicAddress(address(ORACLE_IMPLEMENTATION), _createSalt(_deployer, _externalSalt));
+        bytes32 salt = _createSalt(_deployer, _externalSalt);
+        predictedAddress = Clones.predictDeterministicAddress(address(ORACLE_IMPLEMENTATION), salt);
     }
 
     function _createUnderlyingOracle(

@@ -50,7 +50,7 @@ contract ManageableOracleFactoryTest is Test {
     function test_createdInFactory_afterCreate() public {
         IManageableOracle manageableOracle =
             factory.create(ISiloOracle(address(oracleMock)), owner, timelock, baseToken, bytes32(0));
-        
+
         assertTrue(factory.createdInFactory(address(manageableOracle)), "oracle not in factory mapping");
     }
 }
