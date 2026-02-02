@@ -15,7 +15,6 @@ import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/Sil
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 
 import {MockOracleFactory} from "./common/MockOracleFactory.sol";
-import {FailingMockOracleFactory} from "./common/FailingMockOracleFactory.sol";
 
 /*
  FOUNDRY_PROFILE=oracles forge test --mc ManageableOracleInitTest
@@ -48,49 +47,6 @@ contract ManageableOracleInitTest is Test {
     }
 
     /*
-        FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_cannotInitializeTwice_withFactory
-        Test that after creating a ManageableOracle, we cannot call initialize again (with factory)
-    */
-    function test_ManageableOracle_cannotInitializeTwice_withFactory() public {
-        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
-
-        IManageableOracle manageableOracle =
-            factory.create(mockFactory, initData, owner, timelock, baseToken, bytes32(0));
-
-        vm.expectRevert(Initializable.InvalidInitialization.selector);
-        manageableOracle.initialize(mockFactory, initData, owner, timelock, baseToken);
-    }
-
-    /*
-        FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_cannotInitializeTwice_crossMethod
-        Test that after creating a ManageableOracle with oracle, we cannot call initialize with factory
-    */
-    function test_ManageableOracle_cannotInitializeTwice_crossMethod() public {
-        // Create ManageableOracle through factory with oracle
-        IManageableOracle manageableOracle =
-            factory.create(ISiloOracle(address(oracleMock)), owner, timelock, baseToken, bytes32(0));
-
-        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
-
-        vm.expectRevert(Initializable.InvalidInitialization.selector);
-        manageableOracle.initialize(mockFactory, initData, owner, timelock, baseToken);
-    }
-
-    /*
-        FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_cannotInitializeTwice_crossMethodReverse
-        Test that after creating a ManageableOracle with factory, we cannot call initialize with oracle
-    */
-    function test_ManageableOracle_cannotInitializeTwice_crossMethodReverse() public {
-        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
-
-        IManageableOracle manageableOracle =
-            factory.create(mockFactory, initData, owner, timelock, baseToken, bytes32(0));
-
-        vm.expectRevert(Initializable.InvalidInitialization.selector);
-        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock, baseToken);
-    }
-
-    /*
         FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_cannotInitialize_directlyCreated
         Test that when creating ManageableOracle directly (not through factory), we cannot initialize it
     */
@@ -98,14 +54,9 @@ contract ManageableOracleInitTest is Test {
         // Create ManageableOracle directly (not through factory)
         ManageableOracle manageableOracle = new ManageableOracle();
 
-        // Try to call initialize with oracle - should revert with InvalidInitialization (because _disableInitializers was called in constructor)
+        // Try to call initialize - should revert with InvalidInitialization (because _disableInitializers was called in constructor)
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock, baseToken);
-
-        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
-
-        vm.expectRevert(Initializable.InvalidInitialization.selector);
-        manageableOracle.initialize(mockFactory, initData, owner, timelock, baseToken);
     }
 
     /*
@@ -137,31 +88,6 @@ contract ManageableOracleInitTest is Test {
             factory.create(mockFactory, initData, owner, timelock, baseToken, bytes32(0));
 
         _assertGettersAfterCreate(manageableOracle);
-    }
-
-    /*
-        FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_initialize_revert_ZeroFactory
-        Test that initialize with factory reverts when factory address is zero
-    */
-    function test_ManageableOracle_initialize_revert_ZeroFactory() public {
-        IManageableOracle manageableOracle = _clonedOracle();
-        (, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
-
-        vm.expectRevert(IManageableOracle.ZeroFactory.selector);
-        manageableOracle.initialize(address(0), initData, owner, timelock, baseToken);
-    }
-
-    /*
-        FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_initialize_revert_FailedToCreateAnOracle
-        Test that initialize with factory reverts when factory call fails
-    */
-    function test_ManageableOracle_initialize_revert_FailedToCreateAnOracle() public {
-        IManageableOracle manageableOracle = _clonedOracle();
-        address failingFactory = address(new FailingMockOracleFactory());
-        bytes memory initData = abi.encodeWithSelector(FailingMockOracleFactory.create.selector);
-
-        vm.expectRevert(IManageableOracle.FailedToCreateAnOracle.selector);
-        manageableOracle.initialize(failingFactory, initData, owner, timelock, baseToken);
     }
 
     /*
@@ -222,18 +148,6 @@ contract ManageableOracleInitTest is Test {
 
         vm.expectRevert(IManageableOracle.BaseTokenDecimalsMustBeGreaterThanZero.selector);
         manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock, baseTokenZeroDecimals);
-    }
-
-    /*
-        FOUNDRY_PROFILE=oracles forge test --mt test_ManageableOracle_initialize_revert_ZeroOracle
-        Test that initialize reverts when oracle address is zero (in oracleVerification when factory returns zero)
-    */
-    function test_ManageableOracle_initialize_revert_ZeroOracle() public {
-        IManageableOracle manageableOracle = _clonedOracle();
-        (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(0));
-
-        vm.expectRevert(IManageableOracle.ZeroOracle.selector);
-        manageableOracle.initialize(mockFactory, initData, owner, timelock, baseToken);
     }
 
     /*
