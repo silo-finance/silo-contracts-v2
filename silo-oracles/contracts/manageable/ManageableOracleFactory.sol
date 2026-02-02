@@ -21,7 +21,7 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
 
     /// @inheritdoc IManageableOracleFactory
     function create(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken, bytes32 _externalSalt)
-        external
+        public
         returns (IManageableOracle manageableOracle)
     {
         manageableOracle = _createOracle(_externalSalt, _owner);
@@ -37,10 +37,8 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
         address _baseToken,
         bytes32 _externalSalt
     ) external returns (IManageableOracle manageableOracle) {
-        manageableOracle = _createOracle(_externalSalt, _owner);
-        manageableOracle.initialize(
-            _underlyingOracleFactory, _underlyingOracleInitData, _owner, _timelock, _baseToken
-        );
+        address underlyingOracle = _createUnderlyingOracle(_underlyingOracleFactory, _underlyingOracleInitData);
+        manageableOracle = create(ISiloOracle(underlyingOracle), _owner, _timelock, _baseToken, _externalSalt);
     }
 
     /// @notice Predict the deterministic address of a ManageableOracle that would be created
@@ -56,6 +54,19 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
 
         predictedAddress =
             Clones.predictDeterministicAddress(address(ORACLE_IMPLEMENTATION), _createSalt(_deployer, _externalSalt));
+    }
+
+    function _createUnderlyingOracle(
+        address _underlyingOracleFactory,
+        bytes calldata _underlyingOracleInitData
+    ) internal returns (address underlyinOracle) {
+        require(_underlyingOracleFactory != address(0), ZeroFactory());
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory data) = _underlyingOracleFactory.call(_underlyingOracleInitData);
+        require(success && data.length == 32, FailedToCreateUnderlyingOracle());
+
+        underlyinOracle = abi.decode(data, (address));
     }
 
     /// @dev Internal helper to create and register a ManageableOracle instance

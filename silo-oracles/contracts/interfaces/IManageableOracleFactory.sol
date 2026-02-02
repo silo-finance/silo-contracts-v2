@@ -9,6 +9,8 @@ interface IManageableOracleFactory {
     event ManageableOracleCreated(address indexed oracle, address indexed owner);
 
     error DeployerCannotBeZero();
+    error ZeroFactory();
+    error FailedToCreateUnderlyingOracle();
 
     /// @notice Create a new ManageableOracle
     /// @param _oracle Initial oracle address

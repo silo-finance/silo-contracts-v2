@@ -26,31 +26,13 @@ interface IManageableOracle {
     error TimelockNotExpired();
     error InvalidTimelock();
     error ZeroOracle();
-    error ZeroFactory();
     error ZeroOwner();
     error ZeroBaseToken();
     error InvalidOwnershipChangeType();
     error UseRenounceOwnership();
-    error FailedToCreateAnOracle();
     error OracleQuoteFailed();
     error BaseTokenDecimalsMustBeGreaterThanZero();
     error OnlyOwner();
-
-    /// @notice Initialize the ManageableOracle with underlying oracle factory
-    /// @param _underlyingOracleFactory Factory address to create the underlying oracle
-    /// @param _underlyingOracleInitData Calldata to call the factory and create the underlying oracle
-    /// @param _owner Address that will own the contract
-    /// @param _timelock Initial time lock duration
-    /// @param _baseToken Base token address for the oracle
-    /// @dev This method is primarily used by SiloDeployer to create the oracle during deployment.
-    ///      The oracle address is extracted from the factory call return data.
-    function initialize(
-        address _underlyingOracleFactory,
-        bytes calldata _underlyingOracleInitData,
-        address _owner,
-        uint32 _timelock,
-        address _baseToken
-    ) external;
 
     /// @notice Initialize the ManageableOracle
     /// @param _oracle Initial oracle address

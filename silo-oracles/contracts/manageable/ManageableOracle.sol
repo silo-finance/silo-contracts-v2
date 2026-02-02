@@ -69,31 +69,6 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
         _disableInitializers();
     }
 
-    /// @notice Initialize the ManageableOracle with underlying oracle factory
-    /// @param _underlyingOracleFactory Factory address to create the underlying oracle
-    /// @param _underlyingOracleInitData Calldata to call the factory and create the underlying oracle
-    /// @param _owner Address that will own the contract
-    /// @param _timelock Initial time lock duration
-    /// @param _baseToken Base token address for the oracle
-    /// @dev This method is primarily used by SiloDeployer to create the oracle during deployment.
-    ///      The oracle address is extracted from the factory call return data.
-    function initialize(
-        address _underlyingOracleFactory,
-        bytes calldata _underlyingOracleInitData,
-        address _owner,
-        uint32 _timelock,
-        address _baseToken
-    ) external initializer {
-        require(_underlyingOracleFactory != address(0), ZeroFactory());
-
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory data) = _underlyingOracleFactory.call(_underlyingOracleInitData);
-        require(success && data.length == 32, FailedToCreateAnOracle());
-
-        address createdOracle = abi.decode(data, (address));
-        __ManageableOracle_init(ISiloOracle(createdOracle), _owner, _timelock, _baseToken);
-    }
-
     /// @notice Initialize the ManageableOracle
     /// @param _oracle Initial oracle address
     /// @param _owner Address that will own the contract
@@ -103,7 +78,25 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
         external
         initializer
     {
-        __ManageableOracle_init(_oracle, _owner, _timelock, _baseToken);
+        require(address(_oracle) != address(0), ZeroOracle());
+        require(_baseToken != address(0), ZeroBaseToken());
+        require(_owner != address(0), ZeroOwner());
+        require(_timelock >= MIN_TIMELOCK && _timelock <= MAX_TIMELOCK, InvalidTimelock());
+
+        quoteToken = _oracle.quoteToken();
+        baseToken = _baseToken;
+        baseTokenDecimals = TokenHelper.assertAndGetDecimals(_baseToken);
+        require(baseTokenDecimals != 0, BaseTokenDecimalsMustBeGreaterThanZero());
+
+        oracle = _oracle;
+        timelock = _timelock;
+
+        oracleVerification(_oracle, _baseToken);
+
+        _transferOwnership(_owner);
+
+        emit OracleUpdated(_oracle);
+        emit TimelockUpdated(_timelock);
     }
 
     /// @inheritdoc IManageableOracle
@@ -241,38 +234,6 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
         } catch (bytes memory reason) {
             RevertLib.revertBytes(reason, OracleQuoteFailed.selector);
         }
-    }
-
-    /// @notice Internal initialization function for ManageableOracle
-    /// @param _oracle Initial oracle address
-    /// @param _owner Address that will own the contract
-    /// @param _timelock Initial time lock duration
-    /// @param _baseToken Base token address for the oracle
-    // solhint-disable-next-line func-name-mixedcase
-    function __ManageableOracle_init(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken)
-        internal
-        virtual
-        onlyInitializing
-    {
-        require(address(_oracle) != address(0), ZeroOracle());
-        require(_baseToken != address(0), ZeroBaseToken());
-        require(_owner != address(0), ZeroOwner());
-        require(_timelock >= MIN_TIMELOCK && _timelock <= MAX_TIMELOCK, InvalidTimelock());
-
-        quoteToken = _oracle.quoteToken();
-        baseToken = _baseToken;
-        baseTokenDecimals = TokenHelper.assertAndGetDecimals(_baseToken);
-        require(baseTokenDecimals != 0, BaseTokenDecimalsMustBeGreaterThanZero());
-
-        oracle = _oracle;
-        timelock = _timelock;
-
-        oracleVerification(_oracle, _baseToken);
-
-        _transferOwnership(_owner);
-
-        emit OracleUpdated(_oracle);
-        emit TimelockUpdated(_timelock);
     }
 
     function _resetPendingAddress(PendingAddress storage _pending) internal virtual {
