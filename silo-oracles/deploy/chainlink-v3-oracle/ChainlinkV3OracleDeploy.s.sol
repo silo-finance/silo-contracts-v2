@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {console2} from "forge-std/console2.sol";
 import {CommonDeploy} from "../CommonDeploy.sol";
+import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {SiloOraclesFactoriesContracts} from "../SiloOraclesFactoriesContracts.sol";
 import {ChainlinkV3OraclesConfigsParser as ConfigParser} from "./ChainlinkV3OraclesConfigsParser.sol";
 import {ChainlinkV3Oracle} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3Oracle.sol";
@@ -11,6 +12,8 @@ import {ChainlinkV3OracleFactory} from "silo-oracles/contracts/chainlinkV3/Chain
 import {OraclesDeployments} from "../OraclesDeployments.sol";
 import {ChainlinkV3OracleConfig} from "silo-oracles/contracts/chainlinkV3/ChainlinkV3OracleConfig.sol";
 import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
+import {InjectiveDeploymentHelper} from "silo-oracles/deploy/injective/InjectiveDeploymentHelper.sol";
+
 
 /*
 FOUNDRY_PROFILE=oracles CONFIG=CHAINLINK_USDC_USD \
@@ -44,6 +47,11 @@ contract ChainlinkV3OracleDeploy is CommonDeploy {
     }
 
     function run() public returns (ChainlinkV3Oracle oracle) {
+        if (ChainsLib.getChainId() == ChainsLib.INJECTIVE_CHAIN_ID) {
+            InjectiveDeploymentHelper injectiveHelper = new InjectiveDeploymentHelper();
+            injectiveHelper.mockBankModule();
+        }
+
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         string memory configName = bytes(useConfigName).length != 0 ? useConfigName : vm.envString("CONFIG");

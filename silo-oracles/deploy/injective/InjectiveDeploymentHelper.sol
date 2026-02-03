@@ -9,6 +9,7 @@ import {IYInjPriceOracle} from "silo-oracles/contracts/custom/yINJ/interfaces/IY
 interface IBankModule {
     function mint(address recipient, uint256 amount) external payable returns (bool);
     function totalSupply(address) external view returns (uint256);
+    function metadata (address) external view returns (string memory, string memory, uint8);
 }
 
 contract InjectiveDeploymentHelper is CommonDeploy {
@@ -30,6 +31,18 @@ contract InjectiveDeploymentHelper is CommonDeploy {
             BANK_PRECOMPILE,
             abi.encodeWithSelector(IBankModule.totalSupply.selector, BYINJ),
             abi.encode(BYINJ_TOTAL_SUPPLY)
+        );
+
+        vm.mockCall(
+            BANK_PRECOMPILE,
+            abi.encodeWithSelector(IBankModule.metadata.selector, BYINJ),
+            abi.encode("byINJ", "byINJ", 18)
+        );
+
+        vm.mockCall(
+            BANK_PRECOMPILE,
+            abi.encodeWithSelector(IBankModule.metadata.selector, YINJ),
+            abi.encode("yINJ", "yINJ", 18)
         );
     }
 }
