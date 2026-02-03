@@ -67,6 +67,26 @@ contract YinjToInjAdapterTest is Test {
         );
     }
 
+    function test_YinjToInjAdapter_constructor_reverts() public {
+        vm.expectRevert();
+        new YinjToInjAdapter(IYInjPriceOracle(address(YINJ)));
+
+        vm.expectRevert(YinjToInjAdapter.InvalidOracleAddress.selector);
+
+        vm.mockCall(
+            BANK_PRECOMPILE,
+            abi.encodeWithSelector(IBankModule.totalSupply.selector, BYINJ),
+            abi.encode(0)
+        );
+
+        new YinjToInjAdapter(ORACLE);
+    }
+
+    function test_YinjToInjAdapter_getRoundData_reverts() public {
+        vm.expectRevert(YinjToInjAdapter.NotImplemented.selector);
+        adapter.getRoundData(0);
+    }
+
     function test_YinjToInjAdapter_latestRoundData_equalToOriginalRate() public view {
         assertEq(address(adapter.ORACLE()), address(ORACLE), "Oracle is set in constructor");
 
@@ -90,5 +110,7 @@ contract YinjToInjAdapterTest is Test {
         assertEq(startedAt, block.timestamp, "startedAt timestamp is block.timestamp");
         assertEq(updatedAt, block.timestamp, "startedAt timestamp is block.timestamp");
         assertEq(answeredInRound, 1, "answeredInRound is 1");
+
+        assertEq(adapter.version(), 1, "version() is 1");
     }
 }
