@@ -10,6 +10,8 @@ import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPend
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Aggregator} from "../_common/Aggregator.sol";
 
+// solhint-disable ordering
+
 /// @notice PendlePTOracle is an oracle, which multiplies the underlying PT token price by PtToSyRate from Pendle.
 /// This oracle must be deployed using PendlePTOracleFactory contract. PendlePTOracle decimals are equal to underlying
 /// oracle's decimals. TWAP duration is constant and equal to 30 minutes. UNDERLYING_ORACLE must return the price of

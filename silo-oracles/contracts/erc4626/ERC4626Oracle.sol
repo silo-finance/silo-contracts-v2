@@ -7,6 +7,8 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {Aggregator} from "../_common/Aggregator.sol";
 
+// solhint-disable ordering
+
 contract ERC4626Oracle is ISiloOracle, Aggregator, IVersioned {
     IERC4626 public immutable VAULT;
 

@@ -11,6 +11,8 @@ import {OracleNormalization} from "../lib/OracleNormalization.sol";
 import {ChainlinkV3OracleConfig} from "./ChainlinkV3OracleConfig.sol";
 import {IChainlinkV3Oracle} from "../interfaces/IChainlinkV3Oracle.sol";
 
+// solhint-disable ordering
+
 contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable, Aggregator, IVersioned {
     ChainlinkV3OracleConfig public oracleConfig;
 

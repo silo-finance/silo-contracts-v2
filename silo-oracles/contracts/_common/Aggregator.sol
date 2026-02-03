@@ -18,19 +18,6 @@ abstract contract Aggregator is AggregatorV3Interface {
         return "Silo Oracle";
     }
 
-    function version() external pure returns (uint256) {
-        return 1;
-    }
-
-    /// @notice not in use, always returns 0s, use latestRoundData instead
-    function getRoundData(uint80)
-        external
-        pure
-        returns (uint80, int256, uint256, uint256, uint80)
-    {
-        return (0, 0, 0, 0, 0);
-    }
-
     /// @notice this function follows the Chainlink V3 interface but only answer is used,
     /// all other return values are zero
     function latestRoundData()
@@ -53,6 +40,19 @@ abstract contract Aggregator is AggregatorV3Interface {
         startedAt = block.timestamp;
         updatedAt = block.timestamp;
         answeredInRound = 0;
+    }
+
+    function version() external pure returns (uint256) {
+        return 1;
+    }
+
+    /// @notice not in use, always returns 0s, use latestRoundData instead
+    function getRoundData(uint80)
+        external
+        pure
+        returns (uint80, int256, uint256, uint256, uint80)
+    {
+        return (0, 0, 0, 0, 0);
     }
     
     function baseToken() public view virtual returns (address token);

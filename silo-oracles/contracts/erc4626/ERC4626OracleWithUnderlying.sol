@@ -8,6 +8,8 @@ import {Aggregator} from "../_common/Aggregator.sol";
 
 import {IERC4626OracleWithUnderlying} from "../interfaces/IERC4626OracleWithUnderlying.sol";
 
+// solhint-disable ordering
+
 /// @dev quote will returns price in oracle decimals
 contract ERC4626OracleWithUnderlying is IERC4626OracleWithUnderlying, Aggregator, IVersioned {
     /// @dev address of the vault itself, vault share is base token

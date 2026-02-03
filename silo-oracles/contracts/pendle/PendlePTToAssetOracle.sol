@@ -10,6 +10,8 @@ import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPend
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Aggregator} from "../_common/Aggregator.sol";
 
+// solhint-disable ordering
+
 /// @notice PendlePTToAssetOracle is an oracle, which multiplies the SY.assetInfo() asset price by PtToAssetRate.
 /// This oracle must be deployed using PendlePTToAssetOracleFactory contract. TWAP duration is constant and equal
 /// to 30 minutes. UNDERLYING_ORACLE must return the price of SY.assetInfo() asset. Quote token

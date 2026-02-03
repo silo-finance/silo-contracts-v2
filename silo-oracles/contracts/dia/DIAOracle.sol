@@ -12,6 +12,8 @@ import {DIAOracleConfig} from "./DIAOracleConfig.sol";
 import {IDIAOracle} from "../interfaces/IDIAOracle.sol";
 import {IDIAOracleV2} from "../external/dia/IDIAOracleV2.sol";
 
+// solhint-disable ordering
+
 contract DIAOracle is ISiloOracle, IDIAOracle, Initializable, Aggregator, IVersioned {
     DIAOracleConfig public oracleConfig;
 

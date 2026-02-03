@@ -6,6 +6,8 @@ import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {Aggregator} from "../_common/Aggregator.sol";
 
+// solhint-disable ordering
+
 /// @notice OracleScaler is an oracle, which scales the token amounts to 18 decimals instead of original decimals.
 /// For example, USDC decimals are 6. 1 USDC is 10**6. This oracle will scale this amount to 10**18. If the token
 /// decimals > 18, this oracle will revert.

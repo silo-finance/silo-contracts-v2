@@ -7,6 +7,8 @@ import {IPendleOracleHelper} from "silo-oracles/contracts/pendle/interfaces/IPen
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {Aggregator} from "../../_common/Aggregator.sol";
 
+// solhint-disable ordering
+
 abstract contract PendleLPTOracle is ISiloOracle, Aggregator, IVersioned {
     /// @dev getLpToSyRate unit of measurement.
     uint256 public constant PENDLE_RATE_PRECISION = 10 ** 18;

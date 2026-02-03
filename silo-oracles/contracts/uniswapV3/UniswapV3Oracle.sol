@@ -12,6 +12,8 @@ import {RevertBytes} from  "../lib/RevertBytes.sol";
 import {IUniswapV3Oracle} from "../interfaces/IUniswapV3Oracle.sol";
 import {UniswapV3OracleConfig} from "./UniswapV3OracleConfig.sol";
 
+// solhint-disable ordering
+
 contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, IVersioned {
     using RevertBytes for bytes;
 

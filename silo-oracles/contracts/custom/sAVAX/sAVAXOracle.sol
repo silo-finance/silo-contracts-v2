@@ -6,6 +6,8 @@ import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {IsAVAX} from "silo-oracles/contracts/interfaces/IsAVAX.sol";
 import {Aggregator} from "../../_common/Aggregator.sol";
 
+// solhint-disable ordering
+
 /// @dev sAVAXOracle is a custom oracle for tAVAX/wAVAX market
 contract sAVAXOracle is ISiloOracle, Aggregator, IVersioned { // solhint-disable-line contract-name-camelcase
     IsAVAX public constant S_AVAX = IsAVAX(0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE);

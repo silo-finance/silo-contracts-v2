@@ -6,6 +6,8 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {Aggregator} from "../_common/Aggregator.sol";
 
+// solhint-disable ordering
+
 contract OracleForQA is ISiloOracle, Aggregator, IVersioned {
     address public immutable QUOTE_TOKEN;
     address public immutable BASE_TOKEN;
