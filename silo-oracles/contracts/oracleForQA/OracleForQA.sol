@@ -6,8 +6,6 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {Aggregator} from "../_common/Aggregator.sol";
 
-// solhint-disable ordering
-
 contract OracleForQA is ISiloOracle, Aggregator, IVersioned {
     address public immutable QUOTE_TOKEN;
     address public immutable BASE_TOKEN;
@@ -38,21 +36,6 @@ contract OracleForQA is ISiloOracle, Aggregator, IVersioned {
         return QUOTE_TOKEN;
     }
 
-    /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken)
-        public
-        view
-        virtual
-        override(Aggregator, ISiloOracle)
-        returns (uint256 quoteAmount)
-    {
-        quoteAmount = _baseToken == QUOTE_TOKEN
-            ? _baseAmount
-            : _baseAmount * priceOfOneBaseToken / (10 ** BASE_DECIMALS);
-
-        require(quoteAmount != 0, ZeroPrice());
-    }
-
     function beforeQuote(address) external pure virtual override {
         // nothing to execute
     }
@@ -66,5 +49,20 @@ contract OracleForQA is ISiloOracle, Aggregator, IVersioned {
     /// @inheritdoc Aggregator
     function baseToken() public view virtual override returns (address token) {
         return BASE_TOKEN;
+    }
+
+    /// @inheritdoc ISiloOracle
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
+        quoteAmount = _baseToken == QUOTE_TOKEN
+            ? _baseAmount
+            : _baseAmount * priceOfOneBaseToken / (10 ** BASE_DECIMALS);
+
+        require(quoteAmount != 0, ZeroPrice());
     }
 }

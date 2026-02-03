@@ -6,8 +6,6 @@ import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {IsAVAX} from "silo-oracles/contracts/interfaces/IsAVAX.sol";
 import {Aggregator} from "../../_common/Aggregator.sol";
 
-// solhint-disable ordering
-
 /// @dev sAVAXOracle is a custom oracle for tAVAX/wAVAX market
 contract sAVAXOracle is ISiloOracle, Aggregator, IVersioned { // solhint-disable-line contract-name-camelcase
     IsAVAX public constant S_AVAX = IsAVAX(0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE);
@@ -19,21 +17,6 @@ contract sAVAXOracle is ISiloOracle, Aggregator, IVersioned { // solhint-disable
     /// @inheritdoc ISiloOracle
     function beforeQuote(address _baseToken) external view {
         // only for an ISiloOracle interface implementation
-    }
-
-    /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken)
-        public
-        view
-        virtual
-        override(Aggregator, ISiloOracle)
-        returns (uint256 quoteAmount)
-    {
-        require(_baseToken == IAU_SAVAX, AssetNotSupported());
-
-        quoteAmount = S_AVAX.getPooledAvaxByShares(_baseAmount);
-
-        if (quoteAmount == 0) revert ZeroPrice();
     }
 
     /// @inheritdoc ISiloOracle
@@ -50,5 +33,20 @@ contract sAVAXOracle is ISiloOracle, Aggregator, IVersioned { // solhint-disable
     /// @inheritdoc Aggregator
     function baseToken() public view virtual override returns (address token) {
         return IAU_SAVAX;
+    }
+
+    /// @inheritdoc ISiloOracle
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
+        require(_baseToken == IAU_SAVAX, AssetNotSupported());
+
+        quoteAmount = S_AVAX.getPooledAvaxByShares(_baseAmount);
+
+        if (quoteAmount == 0) revert ZeroPrice();
     }
 }

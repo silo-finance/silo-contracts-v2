@@ -8,8 +8,6 @@ import {Aggregator} from "../_common/Aggregator.sol";
 
 import {IERC4626OracleWithUnderlying} from "../interfaces/IERC4626OracleWithUnderlying.sol";
 
-// solhint-disable ordering
-
 /// @dev quote will returns price in oracle decimals
 contract ERC4626OracleWithUnderlying is IERC4626OracleWithUnderlying, Aggregator, IVersioned {
     /// @dev address of the vault itself, vault share is base token
@@ -41,23 +39,6 @@ contract ERC4626OracleWithUnderlying is IERC4626OracleWithUnderlying, Aggregator
             vaultAsset: _VAULT_ASSET
         });
     }
-    
-    /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken)
-        public
-        view
-        virtual
-        override(Aggregator, ISiloOracle)
-        returns (uint256 quoteAmount)
-    {
-        require(_baseAmount < type(uint128).max, BaseAmountOverflow());
-        require(_baseToken == address(_VAULT), AssetNotSupported());
-
-        uint256 underlyingAssets = _VAULT.convertToAssets(_baseAmount);
-        quoteAmount = _ORACLE.quote(underlyingAssets, _VAULT_ASSET);
-  
-        require(quoteAmount != 0, ZeroQuote());
-    }
 
     /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
@@ -77,5 +58,22 @@ contract ERC4626OracleWithUnderlying is IERC4626OracleWithUnderlying, Aggregator
     /// @inheritdoc Aggregator
     function baseToken() public view virtual override returns (address token) {
         return address(_VAULT);
+    }
+
+    /// @inheritdoc ISiloOracle
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
+        require(_baseAmount < type(uint128).max, BaseAmountOverflow());
+        require(_baseToken == address(_VAULT), AssetNotSupported());
+
+        uint256 underlyingAssets = _VAULT.convertToAssets(_baseAmount);
+        quoteAmount = _ORACLE.quote(underlyingAssets, _VAULT_ASSET);
+  
+        require(quoteAmount != 0, ZeroQuote());
     }
 }

@@ -6,8 +6,6 @@ import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 import {Aggregator} from "../_common/Aggregator.sol";
 
-// solhint-disable ordering
-
 /// @notice OracleScaler is an oracle, which scales the token amounts to 18 decimals instead of original decimals.
 /// For example, USDC decimals are 6. 1 USDC is 10**6. This oracle will scale this amount to 10**18. If the token
 /// decimals > 18, this oracle will revert.
@@ -40,25 +38,10 @@ contract OracleScaler is ISiloOracle, Aggregator, IVersioned {
         QUOTE_TOKEN = _quoteToken;
     }
 
-    // @inheritdoc ISiloOracle
+    /// @inheritdoc ISiloOracle
     function beforeQuote(address) external virtual {}
 
-    // @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken)
-        public
-        view
-        virtual
-        override(Aggregator, ISiloOracle)
-        returns (uint256 quoteAmount)
-    {
-        require(_baseToken == QUOTE_TOKEN, AssetNotSupported());
-
-        quoteAmount = _baseAmount * SCALE_FACTOR;
-
-        require(quoteAmount != 0, ZeroPrice());
-    }
-
-    // @inheritdoc ISiloOracle
+    /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
         return address(QUOTE_TOKEN);
     }
@@ -72,5 +55,20 @@ contract OracleScaler is ISiloOracle, Aggregator, IVersioned {
     /// @inheritdoc Aggregator
     function baseToken() public view virtual override returns (address token) {
         return QUOTE_TOKEN;
+    }
+
+    /// @inheritdoc ISiloOracle
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
+        require(_baseToken == QUOTE_TOKEN, AssetNotSupported());
+
+        quoteAmount = _baseAmount * SCALE_FACTOR;
+
+        require(quoteAmount != 0, ZeroPrice());
     }
 }

@@ -7,8 +7,6 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IVersioned} from "silo-core/contracts/interfaces/IVersioned.sol";
 import {Aggregator} from "../_common/Aggregator.sol";
 
-// solhint-disable ordering
-
 contract ERC4626Oracle is ISiloOracle, Aggregator, IVersioned {
     IERC4626 public immutable VAULT;
 
@@ -25,21 +23,6 @@ contract ERC4626Oracle is ISiloOracle, Aggregator, IVersioned {
     }
 
     /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken)
-        public
-        view
-        virtual
-        override(Aggregator, ISiloOracle)
-        returns (uint256 quoteAmount)
-    {
-        if (_baseToken != address(VAULT)) revert AssetNotSupported();
-
-        quoteAmount = VAULT.convertToAssets(_baseAmount);
-
-        if (quoteAmount == 0) revert ZeroPrice();
-    }
-
-    /// @inheritdoc ISiloOracle
     function quoteToken() external view virtual returns (address) {
         return VAULT.asset();
     }
@@ -53,5 +36,20 @@ contract ERC4626Oracle is ISiloOracle, Aggregator, IVersioned {
     /// @inheritdoc Aggregator
     function baseToken() public view virtual override returns (address token) {
         return address(VAULT);
+    }
+
+    /// @inheritdoc ISiloOracle
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
+        if (_baseToken != address(VAULT)) revert AssetNotSupported();
+
+        quoteAmount = VAULT.convertToAssets(_baseAmount);
+
+        if (quoteAmount == 0) revert ZeroPrice();
     }
 }

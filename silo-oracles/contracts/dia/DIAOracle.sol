@@ -12,8 +12,6 @@ import {DIAOracleConfig} from "./DIAOracleConfig.sol";
 import {IDIAOracle} from "../interfaces/IDIAOracle.sol";
 import {IDIAOracleV2} from "../external/dia/IDIAOracleV2.sol";
 
-// solhint-disable ordering
-
 contract DIAOracle is ISiloOracle, IDIAOracle, Initializable, Aggregator, IVersioned {
     DIAOracleConfig public oracleConfig;
 
@@ -47,6 +45,28 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable, Aggregator, IVersi
         secondaryKey[_configAddress] = _key2;
 
         emit DIAConfigDeployed(_configAddress);
+    }
+
+    /// @inheritdoc ISiloOracle
+    function quoteToken() external view virtual returns (address) {
+        IDIAOracle.DIAConfig memory setup = oracleConfig.getConfig();
+        return address(setup.quoteToken);
+    }
+
+    function beforeQuote(address) external pure virtual override {
+        // nothing to execute
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "DIAOracle 4.0.0";
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        IDIAOracle.DIAConfig memory config = oracleConfig.getConfig();
+        return config.baseToken;
     }
 
     /// @inheritdoc ISiloOracle
@@ -96,28 +116,6 @@ contract DIAOracle is ISiloOracle, IDIAOracle, Initializable, Aggregator, IVersi
         );
 
         if (quoteAmount == 0) revert ZeroQuote();
-    }
-
-    /// @inheritdoc ISiloOracle
-    function quoteToken() external view virtual returns (address) {
-        IDIAOracle.DIAConfig memory setup = oracleConfig.getConfig();
-        return address(setup.quoteToken);
-    }
-
-    function beforeQuote(address) external pure virtual override {
-        // nothing to execute
-    }
-
-    /// @inheritdoc IVersioned
-    // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure override returns (string memory version) {
-        version = "DIAOracle 4.0.0";
-    }
-
-    /// @inheritdoc Aggregator
-    function baseToken() public view virtual override returns (address token) {
-        IDIAOracle.DIAConfig memory config = oracleConfig.getConfig();
-        return config.baseToken;
     }
 
     /// @param _diaOracle IDIAOracleV2 oracle where price is stored
