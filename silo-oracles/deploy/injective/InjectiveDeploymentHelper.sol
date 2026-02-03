@@ -44,5 +44,12 @@ contract InjectiveDeploymentHelper is CommonDeploy {
             abi.encodeWithSelector(IBankModule.metadata.selector, YINJ),
             abi.encode("yINJ", "yINJ", 18)
         );
+
+        // TODO Validate wINJ token name, symbol and decimals. Explorer is down.
+        vm.mockCall(
+            BANK_PRECOMPILE,
+            abi.encodeWithSelector(IBankModule.metadata.selector, 0x0000000088827d2d103ee2d9A6b781773AE03FfB),
+            abi.encode("wINJ", "wINJ", 18)
+        );
     }
 }
