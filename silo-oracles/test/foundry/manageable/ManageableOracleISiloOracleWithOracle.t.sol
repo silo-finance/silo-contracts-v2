@@ -8,9 +8,10 @@ import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadat
 import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 import {SiloOraclesFactoriesContracts} from "silo-oracles/deploy/SiloOraclesFactoriesContracts.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-import {ManageableOracleDeploy} from "silo-oracles/deploy/manageable-oracle/ManageableOracleDeploy.s.sol";
-import {ManageableOracleISiloOracleTestBase} from
-    "silo-oracles/test/foundry/manageable/ManageableOracleISiloOracleTestBase.sol";
+import {ManageableOracleDeploy} from "silo-oracles/deploy/manageable/ManageableOracleDeploy.s.sol";
+import {
+    ManageableOracleISiloOracleTestBase
+} from "silo-oracles/test/foundry/manageable/ManageableOracleISiloOracleTestBase.sol";
 
 /*
  FOUNDRY_PROFILE=oracles forge test --mc ManageableOracleISiloOracleWithOracleTest

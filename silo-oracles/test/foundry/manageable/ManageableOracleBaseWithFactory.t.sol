@@ -14,7 +14,7 @@ contract ManageableOracleBaseWithFactoryTest is ManageableOracleBase {
     function _createManageableOracle() internal override returns (IManageableOracle manageableOracle) {
         (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
 
-        manageableOracle = factory.create(mockFactory, initData, owner, timelock, baseToken, bytes32(0));
+        manageableOracle = factory.create(mockFactory, initData, owner, timelock, bytes32(0));
     }
 
     function _mockOracleFactoryAndInitData(address _oracle)

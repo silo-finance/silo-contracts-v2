@@ -7,12 +7,14 @@ import {Clones} from "openzeppelin5/proxy/Clones.sol";
 
 import {ManageableOracleFactory} from "silo-oracles/contracts/manageable/ManageableOracleFactory.sol";
 import {ManageableOracle} from "silo-oracles/contracts/manageable/ManageableOracle.sol";
+import {Aggregator} from "silo-oracles/contracts/_common/Aggregator.sol";
 import {IManageableOracleFactory} from "silo-oracles/contracts/interfaces/IManageableOracleFactory.sol";
 import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOracle.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-
+import {IERC20Metadata} from "silo-oracles/test/foundry/interfaces/IERC20Metadata.sol";
 import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
+import {TokenHelper} from "silo-core/contracts/lib/TokenHelper.sol";
 
 import {MockOracleFactory} from "./common/MockOracleFactory.sol";
 
@@ -30,7 +32,9 @@ contract ManageableOracleInitTest is Test {
     function setUp() public {
         oracleMock = new SiloOracleMock1();
         factory = new ManageableOracleFactory();
-        baseToken = address(new MintableToken(18));
+        baseToken = oracleMock.baseToken();
+
+        vm.mockCall(address(baseToken), abi.encodeWithSelector(IERC20Metadata.decimals.selector), abi.encode(18));
     }
 
     /*
@@ -40,10 +44,10 @@ contract ManageableOracleInitTest is Test {
     function test_ManageableOracle_cannotInitializeTwice_withOracle() public {
         // Create ManageableOracle through factory
         IManageableOracle manageableOracle =
-            factory.create(ISiloOracle(address(oracleMock)), owner, timelock, baseToken, bytes32(0));
+            factory.create(ISiloOracle(address(oracleMock)), owner, timelock, bytes32(0));
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock, baseToken);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock);
     }
 
     /*
@@ -56,7 +60,7 @@ contract ManageableOracleInitTest is Test {
 
         // Try to call initialize - should revert with InvalidInitialization (because _disableInitializers was called in constructor)
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock, baseToken);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock);
     }
 
     /*
@@ -73,7 +77,7 @@ contract ManageableOracleInitTest is Test {
     */
     function test_ManageableOracle_create_withOracle_getters() public {
         IManageableOracle manageableOracle =
-            factory.create(ISiloOracle(address(oracleMock)), owner, timelock, baseToken, bytes32(0));
+            factory.create(ISiloOracle(address(oracleMock)), owner, timelock, bytes32(0));
 
         _assertGettersAfterCreate(manageableOracle);
     }
@@ -84,8 +88,7 @@ contract ManageableOracleInitTest is Test {
     function test_ManageableOracle_create_withFactory_getters() public {
         (address mockFactory, bytes memory initData) = _mockOracleFactoryAndInitData(address(oracleMock));
 
-        IManageableOracle manageableOracle =
-            factory.create(mockFactory, initData, owner, timelock, baseToken, bytes32(0));
+        IManageableOracle manageableOracle = factory.create(mockFactory, initData, owner, timelock, bytes32(0));
 
         _assertGettersAfterCreate(manageableOracle);
     }
@@ -97,8 +100,12 @@ contract ManageableOracleInitTest is Test {
     function test_ManageableOracle_initialize_revert_ZeroBaseToken() public {
         IManageableOracle manageableOracle = _clonedOracle();
 
-        vm.expectRevert(IManageableOracle.ZeroBaseToken.selector);
-        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock, address(0));
+        vm.mockCall(
+            address(oracleMock), abi.encodeWithSelector(IManageableOracle.baseToken.selector), abi.encode(address(0))
+        );
+
+        vm.expectRevert(TokenHelper.TokenIsNotAContract.selector);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock);
     }
 
     /*
@@ -109,7 +116,7 @@ contract ManageableOracleInitTest is Test {
         IManageableOracle manageableOracle = _clonedOracle();
 
         vm.expectRevert(IManageableOracle.ZeroOwner.selector);
-        manageableOracle.initialize(ISiloOracle(address(oracleMock)), address(0), timelock, baseToken);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), address(0), timelock);
     }
 
     /*
@@ -122,7 +129,7 @@ contract ManageableOracleInitTest is Test {
         uint32 timelockTooLow = minTimelock - 1;
 
         vm.expectRevert(IManageableOracle.InvalidTimelock.selector);
-        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelockTooLow, baseToken);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelockTooLow);
     }
 
     /*
@@ -135,7 +142,7 @@ contract ManageableOracleInitTest is Test {
         uint32 timelockTooHigh = maxTimelock + 1;
 
         vm.expectRevert(IManageableOracle.InvalidTimelock.selector);
-        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelockTooHigh, baseToken);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelockTooHigh);
     }
 
     /*
@@ -144,10 +151,11 @@ contract ManageableOracleInitTest is Test {
     */
     function test_ManageableOracle_initialize_revert_BaseTokenDecimalsMustBeGreaterThanZero() public {
         IManageableOracle manageableOracle = _clonedOracle();
-        address baseTokenZeroDecimals = address(new MintableToken(0));
+
+        vm.mockCall(baseToken, abi.encodeWithSelector(IERC20Metadata.decimals.selector), abi.encode(0));
 
         vm.expectRevert(IManageableOracle.BaseTokenDecimalsMustBeGreaterThanZero.selector);
-        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock, baseTokenZeroDecimals);
+        manageableOracle.initialize(ISiloOracle(address(oracleMock)), owner, timelock);
     }
 
     /*
@@ -157,6 +165,10 @@ contract ManageableOracleInitTest is Test {
     function test_ManageableOracle_initialize_revert_OracleQuoteFailed() public {
         IManageableOracle manageableOracle = _clonedOracle();
         address oracleMockZeroQuote = makeAddr("SiloOracleMockZeroQuote");
+
+        vm.mockCall(
+            oracleMockZeroQuote, abi.encodeWithSelector(IManageableOracle.baseToken.selector), abi.encode(baseToken)
+        );
         vm.mockCall(
             oracleMockZeroQuote, abi.encodeWithSelector(ISiloOracle.quoteToken.selector), abi.encode(baseToken)
         );
@@ -165,7 +177,7 @@ contract ManageableOracleInitTest is Test {
         );
 
         vm.expectRevert(IManageableOracle.OracleQuoteFailed.selector);
-        manageableOracle.initialize(ISiloOracle(oracleMockZeroQuote), owner, timelock, baseToken);
+        manageableOracle.initialize(ISiloOracle(oracleMockZeroQuote), owner, timelock);
     }
 
     function _mockOracleFactoryAndInitData(address _oracle)
@@ -174,6 +186,8 @@ contract ManageableOracleInitTest is Test {
     {
         _mockFactory = address(new MockOracleFactory());
         _initData = abi.encodeWithSelector(MockOracleFactory.create.selector, _oracle);
+
+        vm.mockCall(_oracle, abi.encodeWithSelector(IManageableOracle.baseToken.selector), abi.encode(baseToken));
     }
 
     function _assertGettersAfterCreate(IManageableOracle _oracle) internal view {
@@ -192,7 +206,7 @@ contract ManageableOracleInitTest is Test {
         (address pendingOwnershipValue, uint64 pendingOwnershipValidAt) = _oracle.pendingOwnership();
         assertEq(pendingOwnershipValue, address(0), "invalid pendingOwnership value");
         assertEq(pendingOwnershipValidAt, 0, "invalid pendingOwnership validAt");
-        assertEq(_oracle.baseToken(), baseToken, "invalid baseToken");
+        assertEq(Aggregator(address(_oracle)).baseToken(), baseToken, "invalid baseToken");
         assertEq(_oracle.baseTokenDecimals(), 18, "invalid baseTokenDecimals");
         assertEq(ISiloOracle(address(_oracle)).quoteToken(), oracleMock.quoteToken(), "invalid quoteToken");
     }

@@ -18,6 +18,7 @@ interface IManageableOracle {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     error QuoteTokenMustBeTheSame();
+    error BaseTokenMustBeTheSame();
     error PendingUpdate();
     error PendingOracleUpdate();
     error PendingTimelockUpdate();
@@ -38,8 +39,7 @@ interface IManageableOracle {
     /// @param _oracle Initial oracle address
     /// @param _owner Address that will own the contract
     /// @param _timelock Initial time lock duration
-    /// @param _baseToken Base token address for the oracle
-    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken) external;
+    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock) external;
 
     /// @notice Propose a new oracle address (can only be called by owner)
     /// @param _oracle The new oracle address to propose
@@ -89,12 +89,11 @@ interface IManageableOracle {
 
     /// @notice Verify that the oracle is valid and can provide quotes for the base token
     /// @param _oracle Oracle address to verify
-    /// @param _baseToken Base token address to verify against
     /// @dev This function checks that:
     ///      - Oracle address is not zero
     ///      - Oracle quote token matches the stored quote token
     ///      - Oracle can provide a valid quote for the base token
-    function oracleVerification(ISiloOracle _oracle, address _baseToken) external view;
+    function oracleVerification(ISiloOracle _oracle) external view;
 
     /// @notice Get the current owner of the contract
     /// @return The address of the current owner

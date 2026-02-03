@@ -20,12 +20,12 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
     }
 
     /// @inheritdoc IManageableOracleFactory
-    function create(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken, bytes32 _externalSalt)
+    function create(ISiloOracle _oracle, address _owner, uint32 _timelock, bytes32 _externalSalt)
         public
         returns (IManageableOracle manageableOracle)
     {
         manageableOracle = _createOracle(_externalSalt, _owner);
-        manageableOracle.initialize(_oracle, _owner, _timelock, _baseToken);
+        manageableOracle.initialize(_oracle, _owner, _timelock);
     }
 
     /// @inheritdoc IManageableOracleFactory
@@ -34,11 +34,10 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
         bytes calldata _underlyingOracleInitData,
         address _owner,
         uint32 _timelock,
-        address _baseToken,
         bytes32 _externalSalt
     ) external returns (IManageableOracle manageableOracle) {
         address underlyingOracle = _createUnderlyingOracle(_underlyingOracleFactory, _underlyingOracleInitData);
-        manageableOracle = create(ISiloOracle(underlyingOracle), _owner, _timelock, _baseToken, _externalSalt);
+        manageableOracle = create(ISiloOracle(underlyingOracle), _owner, _timelock, _externalSalt);
     }
 
     /// @notice Predict the deterministic address of a ManageableOracle that would be created
@@ -56,10 +55,10 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
         predictedAddress = Clones.predictDeterministicAddress(address(ORACLE_IMPLEMENTATION), salt);
     }
 
-    function _createUnderlyingOracle(
-        address _underlyingOracleFactory,
-        bytes calldata _underlyingOracleInitData
-    ) internal returns (address underlyinOracle) {
+    function _createUnderlyingOracle(address _underlyingOracleFactory, bytes calldata _underlyingOracleInitData)
+        internal
+        returns (address underlyinOracle)
+    {
         require(_underlyingOracleFactory != address(0), ZeroFactory());
 
         // solhint-disable-next-line avoid-low-level-calls

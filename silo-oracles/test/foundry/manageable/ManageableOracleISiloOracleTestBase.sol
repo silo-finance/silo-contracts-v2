@@ -6,11 +6,11 @@ import {Test} from "forge-std/Test.sol";
 import {ManageableOracleFactory} from "silo-oracles/contracts/manageable/ManageableOracleFactory.sol";
 import {IManageableOracleFactory} from "silo-oracles/contracts/interfaces/IManageableOracleFactory.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IERC20Metadata} from "silo-oracles/test/foundry/interfaces/IERC20Metadata.sol";
 
 import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
-import {ManageableOracleFactoryDeploy} from
-    "silo-oracles/deploy/manageable-oracle/ManageableOracleFactoryDeploy.s.sol";
+import {ManageableOracleFactoryDeploy} from "silo-oracles/deploy/manageable/ManageableOracleFactoryDeploy.s.sol";
 
 abstract contract ManageableOracleISiloOracleTestBase is Test {
     address internal owner = makeAddr("Owner");
@@ -23,10 +23,18 @@ abstract contract ManageableOracleISiloOracleTestBase is Test {
 
     function setUp() public virtual {
         oracleMock = new SiloOracleMock1();
+
         ManageableOracleFactoryDeploy factoryDeployer = new ManageableOracleFactoryDeploy();
         factoryDeployer.disableDeploymentsSync();
         factory = IManageableOracleFactory(factoryDeployer.run());
-        baseToken = address(new MintableToken(18));
+        baseToken = oracleMock.baseToken();
+
+        vm.mockCall(address(baseToken), abi.encodeWithSelector(IERC20Metadata.decimals.selector), abi.encode(18));
+
+        vm.mockCall(
+            address(baseToken), abi.encodeWithSelector(IERC20Metadata.symbol.selector), abi.encode("BASE_TOKEN")
+        );
+
         manageableOracle = _createManageableOracle();
     }
 

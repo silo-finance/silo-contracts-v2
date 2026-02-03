@@ -11,7 +11,7 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOracle.sol";
 import {Create2Factory} from "silo-oracles/contracts/_common/Create2Factory.sol";
 import {ManageableOracleBase} from "silo-oracles/test/foundry/manageable/ManageableOracleBase.sol";
-import {ManageableOracleDeploy} from "silo-oracles/deploy/manageable-oracle/ManageableOracleDeploy.s.sol";
+import {ManageableOracleDeploy} from "silo-oracles/deploy/manageable/ManageableOracleDeploy.s.sol";
 import {IManageableOracleFactory} from "silo-oracles/contracts/interfaces/IManageableOracleFactory.sol";
 import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
@@ -36,6 +36,8 @@ contract ManageableOracleBaseWithOracleTest is ManageableOracleBase, Create2Fact
     }
 
     function _beforeOracleCreation() internal override {
+        super._beforeOracleCreation();
+
         oracleDeployer = new ManageableOracleDeploy();
         oracleDeployer.disableDeploymentsSync();
 

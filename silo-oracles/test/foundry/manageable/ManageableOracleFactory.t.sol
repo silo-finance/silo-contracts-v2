@@ -7,7 +7,7 @@ import {ManageableOracleFactory} from "silo-oracles/contracts/manageable/Managea
 import {IManageableOracleFactory} from "silo-oracles/contracts/interfaces/IManageableOracleFactory.sol";
 import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOracle.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
-
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 import {SiloOracleMock1} from "silo-oracles/test/foundry/_mocks/silo-oracles/SiloOracleMock1.sol";
 import {MintableToken} from "silo-core/test/foundry/_common/MintableToken.sol";
 
@@ -26,7 +26,10 @@ contract ManageableOracleFactoryTest is Test {
         factory = new ManageableOracleFactory();
         owner = makeAddr("Owner");
         timelock = 1 days;
-        baseToken = address(new MintableToken(18));
+        baseToken = oracleMock.baseToken();
+
+        vm.mockCall(baseToken, abi.encodeWithSelector(IERC20Metadata.symbol.selector), abi.encode("BASE_TOKEN"));
+        vm.mockCall(baseToken, abi.encodeWithSelector(IERC20Metadata.decimals.selector), abi.encode(18));
     }
 
     /*
@@ -34,13 +37,11 @@ contract ManageableOracleFactoryTest is Test {
     */
     function test_predictAddress_matchesDeploy() public {
         address predictedAddress1 = factory.predictAddress(address(this), bytes32(0));
-        IManageableOracle oracle1 =
-            factory.create(ISiloOracle(address(oracleMock)), owner, timelock, baseToken, bytes32(0));
+        IManageableOracle oracle1 = factory.create(ISiloOracle(address(oracleMock)), owner, timelock, bytes32(0));
         assertEq(address(oracle1), predictedAddress1, "invalid first predicted address");
 
         address predictedAddress2 = factory.predictAddress(address(this), bytes32(0));
-        IManageableOracle oracle2 =
-            factory.create(ISiloOracle(address(oracleMock)), owner, timelock, baseToken, bytes32(0));
+        IManageableOracle oracle2 = factory.create(ISiloOracle(address(oracleMock)), owner, timelock, bytes32(0));
         assertEq(address(oracle2), predictedAddress2, "invalid second predicted address");
     }
 
@@ -49,7 +50,7 @@ contract ManageableOracleFactoryTest is Test {
     */
     function test_createdInFactory_afterCreate() public {
         IManageableOracle manageableOracle =
-            factory.create(ISiloOracle(address(oracleMock)), owner, timelock, baseToken, bytes32(0));
+            factory.create(ISiloOracle(address(oracleMock)), owner, timelock, bytes32(0));
 
         assertTrue(factory.createdInFactory(address(manageableOracle)), "oracle not in factory mapping");
     }

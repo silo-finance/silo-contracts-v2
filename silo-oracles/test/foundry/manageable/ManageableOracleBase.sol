@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
+import {IERC20Metadata} from "silo-oracles/test/foundry/interfaces/IERC20Metadata.sol";
 import {ManageableOracleFactory} from "silo-oracles/contracts/manageable/ManageableOracleFactory.sol";
 import {IManageableOracleFactory} from "silo-oracles/contracts/interfaces/IManageableOracleFactory.sol";
 import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOracle.sol";
@@ -31,7 +32,7 @@ abstract contract ManageableOracleBase is Test {
     function setUp() public virtual {
         oracleMock = new SiloOracleMock1();
         factory = new ManageableOracleFactory();
-        baseToken = address(new MintableToken(18));
+        baseToken = oracleMock.baseToken();
 
         _beforeOracleCreation();
 
@@ -69,7 +70,7 @@ abstract contract ManageableOracleBase is Test {
     */
     function test_oracleVerification_revert_ZeroOracle() public {
         vm.expectRevert(IManageableOracle.ZeroOracle.selector);
-        oracle.oracleVerification(ISiloOracle(address(0)), baseToken);
+        oracle.oracleVerification(ISiloOracle(address(0)));
     }
 
     /*
@@ -85,7 +86,7 @@ abstract contract ManageableOracleBase is Test {
         );
 
         vm.expectRevert(IManageableOracle.QuoteTokenMustBeTheSame.selector);
-        oracle.oracleVerification(ISiloOracle(wrongQuoteTokenOracle), baseToken);
+        oracle.oracleVerification(ISiloOracle(wrongQuoteTokenOracle));
     }
 
     /*
@@ -106,8 +107,14 @@ abstract contract ManageableOracleBase is Test {
             abi.encode(uint256(0))
         );
 
+        vm.mockCall(
+            zeroQuoteOracle,
+            abi.encodeWithSelector(IManageableOracle.baseToken.selector),
+            abi.encode(oracle.baseToken())
+        );
+
         vm.expectRevert(IManageableOracle.OracleQuoteFailed.selector);
-        oracle.oracleVerification(ISiloOracle(zeroQuoteOracle), baseToken);
+        oracle.oracleVerification(ISiloOracle(zeroQuoteOracle));
     }
 
     /*
@@ -120,11 +127,14 @@ abstract contract ManageableOracleBase is Test {
             abi.encodeWithSelector(ISiloOracle.quoteToken.selector),
             abi.encode(oracleMock.quoteToken())
         );
+        vm.mockCall(
+            revertingOracle, abi.encodeWithSelector(IManageableOracle.baseToken.selector), abi.encode(baseToken)
+        );
         vm.mockCallRevert(
             revertingOracle, abi.encodeWithSelector(ISiloOracle.quote.selector, 10 ** 18, baseToken), ""
         );
         vm.expectRevert(IManageableOracle.OracleQuoteFailed.selector);
-        oracle.oracleVerification(ISiloOracle(revertingOracle), baseToken);
+        oracle.oracleVerification(ISiloOracle(revertingOracle));
     }
 
     /*
@@ -132,6 +142,7 @@ abstract contract ManageableOracleBase is Test {
     */
     function test_oracleVerification_revert_propagatesCustomError() public {
         address customErrorOracle = makeAddr("customErrorOracle");
+
         vm.mockCall(
             customErrorOracle,
             abi.encodeWithSelector(ISiloOracle.quoteToken.selector),
@@ -142,15 +153,19 @@ abstract contract ManageableOracleBase is Test {
             abi.encodeWithSelector(ISiloOracle.quote.selector, 10 ** 18, baseToken),
             abi.encodeWithSelector(OracleCustomError.selector)
         );
+        vm.mockCall(
+            customErrorOracle, abi.encodeWithSelector(IManageableOracle.baseToken.selector), abi.encode(baseToken)
+        );
+
         vm.expectRevert(OracleCustomError.selector);
-        oracle.oracleVerification(ISiloOracle(customErrorOracle), baseToken);
+        oracle.oracleVerification(ISiloOracle(customErrorOracle));
     }
 
     /*
         FOUNDRY_PROFILE=oracles forge test --mt test_oracleVerification_succeeds
     */
     function test_oracleVerification_succeeds() public view {
-        oracle.oracleVerification(ISiloOracle(address(oracleMock)), baseToken);
+        oracle.oracleVerification(ISiloOracle(address(oracleMock)));
     }
 
     /*
@@ -548,7 +563,11 @@ abstract contract ManageableOracleBase is Test {
         oracle.cancelRenounceOwnership();
     }
 
-    function _beforeOracleCreation() internal virtual {}
+    function _beforeOracleCreation() internal virtual {
+        vm.mockCall(baseToken, abi.encodeWithSelector(IERC20Metadata.decimals.selector), abi.encode(18));
+
+        vm.mockCall(baseToken, abi.encodeWithSelector(IERC20Metadata.symbol.selector), abi.encode("BASE_TOKEN"));
+    }
 
     function _predictOracleAddress() internal view virtual returns (address) {
         return factory.predictAddress(address(this), bytes32(0));

@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {Initializable} from "openzeppelin5-upgradeable/proxy/utils/Initializable.sol";
 
+import {Aggregator} from "../_common/Aggregator.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOracle.sol";
 import {PendingAddress, PendingUint192, PendingLib} from "silo-vaults/contracts/libraries/PendingLib.sol";
@@ -12,7 +13,7 @@ import {RevertLib} from "silo-core/contracts/lib/RevertLib.sol";
 
 /// @title ManageableOracle
 /// @notice Oracle forwarder that allows updating the oracle address with time lock and owner approval
-contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVersioned {
+contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initializable, IVersioned {
     using PendingLib for PendingAddress;
     using PendingLib for PendingUint192;
 
@@ -28,9 +29,6 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
 
     /// @dev Quote token address (set during initialization)
     address public quoteToken;
-
-    /// @dev Base token address (set during initialization)
-    address public baseToken;
 
     /// @dev Base token decimals (set during initialization)
     uint256 public baseTokenDecimals;
@@ -50,6 +48,9 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
     /// @dev Pending ownership change (DEAD_ADDRESS means renounce, otherwise transfer)
     /// @notice Only one type of ownership change can be pending at a time (either transfer or renounce)
     PendingAddress public pendingOwnership;
+
+    /// @dev Base token address (set during initialization)
+    address internal _requiredBaseToken;
 
     /// @dev Modifier to check if timelock has elapsed
     modifier afterTimelock(uint64 _validAt) {
@@ -73,25 +74,22 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
     /// @param _oracle Initial oracle address
     /// @param _owner Address that will own the contract
     /// @param _timelock Initial time lock duration
-    /// @param _baseToken Base token address for the oracle
-    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken)
-        external
-        initializer
-    {
+    function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock) external initializer {
         require(address(_oracle) != address(0), ZeroOracle());
-        require(_baseToken != address(0), ZeroBaseToken());
         require(_owner != address(0), ZeroOwner());
         require(_timelock >= MIN_TIMELOCK && _timelock <= MAX_TIMELOCK, InvalidTimelock());
 
         quoteToken = _oracle.quoteToken();
-        baseToken = _baseToken;
-        baseTokenDecimals = TokenHelper.assertAndGetDecimals(_baseToken);
+        address baseTokenCached = Aggregator(address(_oracle)).baseToken();
+        _requiredBaseToken = baseTokenCached;
+        baseTokenDecimals = TokenHelper.assertAndGetDecimals(baseTokenCached);
+
         require(baseTokenDecimals != 0, BaseTokenDecimalsMustBeGreaterThanZero());
 
         oracle = _oracle;
         timelock = _timelock;
 
-        oracleVerification(_oracle, _baseToken);
+        oracleVerification(_oracle);
 
         _transferOwnership(_owner);
 
@@ -102,8 +100,8 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
     /// @inheritdoc IManageableOracle
     function proposeOracle(ISiloOracle _oracle) external virtual onlyOwner {
         require(pendingOracle.validAt == 0, PendingUpdate());
-        
-        oracleVerification(_oracle, baseToken);
+
+        oracleVerification(_oracle);
 
         pendingOracle.update(address(_oracle), timelock);
 
@@ -212,24 +210,38 @@ contract ManageableOracle is ISiloOracle, IManageableOracle, Initializable, IVer
         oracle.beforeQuote(_baseToken);
     }
 
-    /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
-        quoteAmount = oracle.quote(_baseAmount, _baseToken);
-    }
-
     /// @inheritdoc IVersioned
     // solhint-disable-next-line func-name-mixedcase
     function VERSION() external pure override returns (string memory version) {
         version = "ManageableOracle 4.0.0";
     }
 
+    function baseToken() public view virtual override(Aggregator, IManageableOracle) returns (address) {
+        return _requiredBaseToken;
+    }
+
+    /// @inheritdoc ISiloOracle
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
+        quoteAmount = oracle.quote(_baseAmount, _baseToken);
+    }
+
     /// @inheritdoc IManageableOracle
-    function oracleVerification(ISiloOracle _oracle, address _baseToken) public view virtual {
+    function oracleVerification(ISiloOracle _oracle) public view virtual {
+        address baseTokenCached = baseToken();
+        require(baseTokenCached != address(0), ZeroBaseToken());
+
         require(address(_oracle) != address(0), ZeroOracle());
         require(_oracle.quoteToken() == quoteToken, QuoteTokenMustBeTheSame());
+        require(Aggregator(address(_oracle)).baseToken() == baseTokenCached, BaseTokenMustBeTheSame());
 
         // sanity check
-        try _oracle.quote(10 ** baseTokenDecimals, _baseToken) returns (uint256 price) {
+        try _oracle.quote(10 ** baseTokenDecimals, baseTokenCached) returns (uint256 price) {
             require(price != 0, OracleQuoteFailed());
         } catch (bytes memory reason) {
             RevertLib.revertBytes(reason, OracleQuoteFailed.selector);

@@ -35,7 +35,6 @@ contract ManageableOracleDeploy is CommonDeploy {
         console2.log("deployer:", deployer);
 
         address underlyingOracle = AddrLib.getAddress(vm.envString("UNDERLYING_ORACLE"));
-        address baseTokenAddr = AddrLib.getAddress(vm.envString("BASE_TOKEN"));
         address ownerAddr = AddrLib.getAddress(vm.envString("OWNER"));
         uint32 timelockVal = uint32(vm.envUint("TIMELOCK"));
         bytes32 externalSaltVal = vm.envBytes32("EXTERNAL_SALT");
@@ -48,28 +47,28 @@ contract ManageableOracleDeploy is CommonDeploy {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        manageableOracle =
-            factory.create(ISiloOracle(underlyingOracle), ownerAddr, timelockVal, baseTokenAddr, externalSaltVal);
+        manageableOracle = factory.create(ISiloOracle(underlyingOracle), ownerAddr, timelockVal, externalSaltVal);
 
         vm.stopBroadcast();
 
-        string memory oracleName = _getOracleName(address(manageableOracle), baseTokenAddr);
+        string memory oracleName = _getOracleName(address(manageableOracle));
         OraclesDeployments.save(getChainAlias(), oracleName, address(manageableOracle));
 
-        _qa(address(manageableOracle), baseTokenAddr);
+        _qa(address(manageableOracle));
     }
 
-    function _getOracleName(address _oracle, address _baseToken) internal view returns (string memory) {
+    function _getOracleName(address _oracle) internal view returns (string memory) {
         address quoteToken = ISiloOracle(_oracle).quoteToken();
-        string memory baseSymbol = IERC20Metadata(_baseToken).symbol();
+        string memory baseSymbol = IERC20Metadata(IManageableOracle(_oracle).baseToken()).symbol();
         string memory quoteSymbol = IERC20Metadata(quoteToken).symbol();
         return string.concat("MANAGEABLE_ORACLE_", baseSymbol, "_", quoteSymbol);
     }
-    function _qa(address _oracle, address _baseToken) internal view returns (uint256 quote) {
-        uint256 oneBaseToken = 10 ** IERC20Metadata(_baseToken).decimals();
-        quote = ISiloOracle(_oracle).quote(oneBaseToken, _baseToken);
+    function _qa(address _oracle) internal view returns (uint256 quote) {
+        IERC20Metadata baseToken = IERC20Metadata(IManageableOracle(_oracle).baseToken());
+        uint256 oneBaseToken = 10 ** baseToken.decimals();
+        quote = ISiloOracle(_oracle).quote(oneBaseToken, address(baseToken));
 
-        string memory baseSymbol = IERC20Metadata(_baseToken).symbol();
+        string memory baseSymbol = baseToken.symbol();
         string memory quoteSymbol = IERC20Metadata(ISiloOracle(_oracle).quoteToken()).symbol();
 
         console2.log("\nQA ------------------------------: %s\n", _oracle);

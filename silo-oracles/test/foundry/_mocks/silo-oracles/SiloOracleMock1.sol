@@ -8,6 +8,7 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 contract SiloOracleMock1 is StdCheatsSafe, ISiloOracle {
     uint256 public price = 1000000000000000000;
     address public tokenAsQuote = makeAddr("SiloOracleMock.quoteToken");
+    address public baseToken = makeAddr("SiloOracleMock.baseToken");
 
     event BeforeQuoteSiloOracleMock1();
 
