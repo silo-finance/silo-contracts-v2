@@ -37,7 +37,13 @@ contract OracleForQA is ISiloOracle, Aggregator, IVersioned {
     }
 
     /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
         quoteAmount = _baseToken == QUOTE_TOKEN
             ? _baseAmount
             : _baseAmount * priceOfOneBaseToken / (10 ** BASE_DECIMALS);

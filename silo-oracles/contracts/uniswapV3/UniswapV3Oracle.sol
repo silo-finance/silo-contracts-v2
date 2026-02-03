@@ -100,7 +100,7 @@ contract UniswapV3Oracle is ISiloOracle, IUniswapV3Oracle, IVersioned {
     ///
     /// recommended observations are = 30 min / blockTime
     function quote(uint256 _baseAmount, address _baseToken)
-        external
+        public
         view
         virtual
         override

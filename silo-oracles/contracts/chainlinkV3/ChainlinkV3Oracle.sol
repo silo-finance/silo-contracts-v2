@@ -28,7 +28,13 @@ contract ChainlinkV3Oracle is IChainlinkV3Oracle, ISiloOracle, Initializable, Ag
 
     /// @inheritdoc ISiloOracle
     // solhint-disable-next-line code-complexity
-    function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
         ChainlinkV3Config memory config = oracleConfig.getConfig();
 
         if (_baseToken != address(config.baseToken)) revert AssetNotSupported();

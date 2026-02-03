@@ -20,7 +20,13 @@ contract sAVAXOracle is ISiloOracle, Aggregator, IVersioned { // solhint-disable
     }
 
     /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) external view returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
         require(_baseToken == IAU_SAVAX, AssetNotSupported());
 
         quoteAmount = S_AVAX.getPooledAvaxByShares(_baseAmount);

@@ -83,7 +83,13 @@ contract PTLinearOracle is IPTLinearOracle, Initializable, Aggregator, IVersione
     }
 
     /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) public view virtual returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
         IPTLinearOracleConfig oracleCfg = oracleConfig;
         require(address(oracleCfg) != address(0), NotInitialized());
 

@@ -42,7 +42,13 @@ contract OracleScaler is ISiloOracle, Aggregator, IVersioned {
     function beforeQuote(address) external virtual {}
 
     // @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
         require(_baseToken == QUOTE_TOKEN, AssetNotSupported());
 
         quoteAmount = _baseAmount * SCALE_FACTOR;
@@ -51,7 +57,7 @@ contract OracleScaler is ISiloOracle, Aggregator, IVersioned {
     }
 
     // @inheritdoc ISiloOracle
-    function quoteToken() external virtual view returns (address) {
+    function quoteToken() external view virtual returns (address) {
         return address(QUOTE_TOKEN);
     }
 

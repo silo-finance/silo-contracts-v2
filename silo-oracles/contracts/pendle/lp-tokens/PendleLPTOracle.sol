@@ -70,7 +70,13 @@ abstract contract PendleLPTOracle is ISiloOracle, Aggregator, IVersioned {
     function beforeQuote(address) external virtual {}
 
     /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
         require(_baseToken == _getBaseToken(), AssetNotSupported());
 
         quoteAmount = UNDERLYING_ORACLE.quote(_baseAmount, UNDERLYING_TOKEN);
@@ -80,7 +86,7 @@ abstract contract PendleLPTOracle is ISiloOracle, Aggregator, IVersioned {
     }
 
     /// @inheritdoc ISiloOracle
-    function quoteToken() external virtual view returns (address) {
+    function quoteToken() external view virtual returns (address) {
         return QUOTE_TOKEN;
     }
 
@@ -95,10 +101,10 @@ abstract contract PendleLPTOracle is ISiloOracle, Aggregator, IVersioned {
         return _getBaseToken();
     }
 
-    function _getBaseToken() internal virtual view returns (address token) {
+    function _getBaseToken() internal view virtual returns (address token) {
         token = PENDLE_MARKET;
     }
 
-    function _getRateLpToUnderlying() internal virtual view returns (uint256);
-    function _getUnderlyingToken() internal virtual view returns (address);
+    function _getRateLpToUnderlying() internal view virtual returns (uint256);
+    function _getUnderlyingToken() internal view virtual returns (address);
 }

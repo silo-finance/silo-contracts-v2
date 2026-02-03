@@ -79,7 +79,13 @@ contract PendlePTOracle is ISiloOracle, Aggregator, IVersioned {
     function beforeQuote(address) external virtual {}
 
     // @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) external virtual view returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
         require(_baseToken == PT_TOKEN, AssetNotSupported());
         uint256 rate = PENDLE_ORACLE.getPtToSyRate(MARKET, TWAP_DURATION);
 

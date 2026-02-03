@@ -48,8 +48,7 @@ abstract contract Aggregator is AggregatorV3Interface {
         roundId = 0;
         address token = baseToken();
         uint256 tokenDecimals = TokenHelper.assertAndGetDecimals(token);
-        ISiloOracle oracle = ISiloOracle(address(this));
-        answer = SafeCast.toInt256(oracle.quote(10 ** tokenDecimals, token));
+        answer = SafeCast.toInt256(quote(10 ** tokenDecimals, token));
 
         startedAt = block.timestamp;
         updatedAt = block.timestamp;
@@ -57,4 +56,6 @@ abstract contract Aggregator is AggregatorV3Interface {
     }
     
     function baseToken() public view virtual returns (address token);
+
+    function quote(uint256 _baseAmount, address _baseToken) public view virtual returns (uint256 quoteAmount);
 }

@@ -41,7 +41,13 @@ contract ERC4626OracleWithUnderlying is IERC4626OracleWithUnderlying, Aggregator
     }
     
     /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
         require(_baseAmount < type(uint128).max, BaseAmountOverflow());
         require(_baseToken == address(_VAULT), AssetNotSupported());
 

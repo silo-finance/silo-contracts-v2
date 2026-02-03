@@ -23,7 +23,13 @@ contract ERC4626Oracle is ISiloOracle, Aggregator, IVersioned {
     }
 
     /// @inheritdoc ISiloOracle
-    function quote(uint256 _baseAmount, address _baseToken) external view returns (uint256 quoteAmount) {
+    function quote(uint256 _baseAmount, address _baseToken)
+        public
+        view
+        virtual
+        override(Aggregator, ISiloOracle)
+        returns (uint256 quoteAmount)
+    {
         if (_baseToken != address(VAULT)) revert AssetNotSupported();
 
         quoteAmount = VAULT.convertToAssets(_baseAmount);
