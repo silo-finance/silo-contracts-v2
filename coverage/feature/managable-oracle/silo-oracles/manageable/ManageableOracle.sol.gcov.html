@@ -32,17 +32,17 @@
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
-            <td class="headerCovTableEntry">111</td>
-            <td class="headerCovTableEntry">111</td>
+            <td class="headerCovTableEntry">102</td>
+            <td class="headerCovTableEntry">102</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-01-30 11:58:30</td>
+            <td class="headerValue">2026-02-03 06:51:35</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
-            <td class="headerCovTableEntry">24</td>
-            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntry">23</td>
           </tr>
                   <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -127,233 +127,193 @@
 <span id="L65"><span class="lineNum">      65</span>              :     }</span>
 <span id="L66"><span class="lineNum">      66</span>              : </span>
 <span id="L67"><span class="lineNum">      67</span>              :     /// @custom:oz-upgrades-unsafe-allow constructor</span>
-<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">          93 :     constructor() {</span></span>
-<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">          93 :         _disableInitializers();</span></span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">          87 :     constructor() {</span></span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">          87 :         _disableInitializers();</span></span>
 <span id="L70"><span class="lineNum">      70</span>              :     }</span>
 <span id="L71"><span class="lineNum">      71</span>              : </span>
-<span id="L72"><span class="lineNum">      72</span>              :     /// @notice Initialize the ManageableOracle with underlying oracle factory</span>
-<span id="L73"><span class="lineNum">      73</span>              :     /// @param _underlyingOracleFactory Factory address to create the underlying oracle</span>
-<span id="L74"><span class="lineNum">      74</span>              :     /// @param _underlyingOracleInitData Calldata to call the factory and create the underlying oracle</span>
-<span id="L75"><span class="lineNum">      75</span>              :     /// @param _owner Address that will own the contract</span>
-<span id="L76"><span class="lineNum">      76</span>              :     /// @param _timelock Initial time lock duration</span>
-<span id="L77"><span class="lineNum">      77</span>              :     /// @param _baseToken Base token address for the oracle</span>
-<span id="L78"><span class="lineNum">      78</span>              :     /// @dev This method is primarily used by SiloDeployer to create the oracle during deployment.</span>
-<span id="L79"><span class="lineNum">      79</span>              :     ///      The oracle address is extracted from the factory call return data.</span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">          46 :     function initialize(</span></span>
-<span id="L81"><span class="lineNum">      81</span>              :         address _underlyingOracleFactory,</span>
-<span id="L82"><span class="lineNum">      82</span>              :         bytes calldata _underlyingOracleInitData,</span>
-<span id="L83"><span class="lineNum">      83</span>              :         address _owner,</span>
-<span id="L84"><span class="lineNum">      84</span>              :         uint32 _timelock,</span>
-<span id="L85"><span class="lineNum">      85</span>              :         address _baseToken</span>
-<span id="L86"><span class="lineNum">      86</span>              :     ) external initializer {</span>
-<span id="L87"><span class="lineNum">      87</span> <span class="tlaGNC">          43 :         require(_underlyingOracleFactory != address(0), ZeroFactory());</span></span>
-<span id="L88"><span class="lineNum">      88</span>              : </span>
-<span id="L89"><span class="lineNum">      89</span>              :         // solhint-disable-next-line avoid-low-level-calls</span>
-<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">          42 :         (bool success, bytes memory data) = _underlyingOracleFactory.call(_underlyingOracleInitData);</span></span>
-<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">          42 :         require(success &amp;&amp; data.length == 32, FailedToCreateAnOracle());</span></span>
-<span id="L92"><span class="lineNum">      92</span>              : </span>
-<span id="L93"><span class="lineNum">      93</span> <span class="tlaGNC">          41 :         address createdOracle = abi.decode(data, (address));</span></span>
-<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">          41 :         __ManageableOracle_init(ISiloOracle(createdOracle), _owner, _timelock, _baseToken);</span></span>
-<span id="L95"><span class="lineNum">      95</span>              :     }</span>
-<span id="L96"><span class="lineNum">      96</span>              : </span>
-<span id="L97"><span class="lineNum">      97</span>              :     /// @notice Initialize the ManageableOracle</span>
-<span id="L98"><span class="lineNum">      98</span>              :     /// @param _oracle Initial oracle address</span>
-<span id="L99"><span class="lineNum">      99</span>              :     /// @param _owner Address that will own the contract</span>
-<span id="L100"><span class="lineNum">     100</span>              :     /// @param _timelock Initial time lock duration</span>
-<span id="L101"><span class="lineNum">     101</span>              :     /// @param _baseToken Base token address for the oracle</span>
-<span id="L102"><span class="lineNum">     102</span> <span class="tlaGNC">          52 :     function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken)</span></span>
-<span id="L103"><span class="lineNum">     103</span>              :         external</span>
-<span id="L104"><span class="lineNum">     104</span>              :         initializer</span>
-<span id="L105"><span class="lineNum">     105</span>              :     {</span>
-<span id="L106"><span class="lineNum">     106</span> <span class="tlaGNC">          49 :         __ManageableOracle_init(_oracle, _owner, _timelock, _baseToken);</span></span>
-<span id="L107"><span class="lineNum">     107</span>              :     }</span>
-<span id="L108"><span class="lineNum">     108</span>              : </span>
-<span id="L109"><span class="lineNum">     109</span>              :     /// @inheritdoc IManageableOracle</span>
-<span id="L110"><span class="lineNum">     110</span> <span class="tlaGNC">        1606 :     function proposeOracle(ISiloOracle _oracle) external virtual onlyOwner {</span></span>
-<span id="L111"><span class="lineNum">     111</span> <span class="tlaGNC">        1604 :         require(pendingOracle.validAt == 0, PendingUpdate());</span></span>
-<span id="L112"><span class="lineNum">     112</span> <span class="tlaGNC">        1604 :         require(address(_oracle) != address(0), ZeroOracle());</span></span>
-<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">        1604 :         require(_oracle.quoteToken() == quoteToken, QuoteTokenMustBeTheSame());</span></span>
-<span id="L114"><span class="lineNum">     114</span>              :         // base token should be the same as well, but we don't have easy way to check it</span>
-<span id="L115"><span class="lineNum">     115</span>              : </span>
-<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">        1604 :         pendingOracle.update(address(_oracle), timelock);</span></span>
+<span id="L72"><span class="lineNum">      72</span>              :     /// @notice Initialize the ManageableOracle</span>
+<span id="L73"><span class="lineNum">      73</span>              :     /// @param _oracle Initial oracle address</span>
+<span id="L74"><span class="lineNum">      74</span>              :     /// @param _owner Address that will own the contract</span>
+<span id="L75"><span class="lineNum">      75</span>              :     /// @param _timelock Initial time lock duration</span>
+<span id="L76"><span class="lineNum">      76</span>              :     /// @param _baseToken Base token address for the oracle</span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">          88 :     function initialize(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken)</span></span>
+<span id="L78"><span class="lineNum">      78</span>              :         external</span>
+<span id="L79"><span class="lineNum">      79</span>              :         initializer</span>
+<span id="L80"><span class="lineNum">      80</span>              :     {</span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">          86 :         require(address(_oracle) != address(0), ZeroOracle());</span></span>
+<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">          86 :         require(_baseToken != address(0), ZeroBaseToken());</span></span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">          85 :         require(_owner != address(0), ZeroOwner());</span></span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">          84 :         require(_timelock &gt;= MIN_TIMELOCK &amp;&amp; _timelock &lt;= MAX_TIMELOCK, InvalidTimelock());</span></span>
+<span id="L85"><span class="lineNum">      85</span>              : </span>
+<span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">          82 :         quoteToken = _oracle.quoteToken();</span></span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaGNC">          82 :         baseToken = _baseToken;</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">          82 :         baseTokenDecimals = TokenHelper.assertAndGetDecimals(_baseToken);</span></span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">          82 :         require(baseTokenDecimals != 0, BaseTokenDecimalsMustBeGreaterThanZero());</span></span>
+<span id="L90"><span class="lineNum">      90</span>              : </span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">          81 :         oracle = _oracle;</span></span>
+<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC">          81 :         timelock = _timelock;</span></span>
+<span id="L93"><span class="lineNum">      93</span>              : </span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">          81 :         oracleVerification(_oracle, _baseToken);</span></span>
+<span id="L95"><span class="lineNum">      95</span>              : </span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaGNC">          80 :         _transferOwnership(_owner);</span></span>
+<span id="L97"><span class="lineNum">      97</span>              : </span>
+<span id="L98"><span class="lineNum">      98</span> <span class="tlaGNC">          80 :         emit OracleUpdated(_oracle);</span></span>
+<span id="L99"><span class="lineNum">      99</span> <span class="tlaGNC">          80 :         emit TimelockUpdated(_timelock);</span></span>
+<span id="L100"><span class="lineNum">     100</span>              :     }</span>
+<span id="L101"><span class="lineNum">     101</span>              : </span>
+<span id="L102"><span class="lineNum">     102</span>              :     /// @inheritdoc IManageableOracle</span>
+<span id="L103"><span class="lineNum">     103</span> <span class="tlaGNC">        1606 :     function proposeOracle(ISiloOracle _oracle) external virtual onlyOwner {</span></span>
+<span id="L104"><span class="lineNum">     104</span> <span class="tlaGNC">        1604 :         require(pendingOracle.validAt == 0, PendingUpdate());</span></span>
+<span id="L105"><span class="lineNum">     105</span>              :         </span>
+<span id="L106"><span class="lineNum">     106</span> <span class="tlaGNC">        1604 :         oracleVerification(_oracle, baseToken);</span></span>
+<span id="L107"><span class="lineNum">     107</span>              : </span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">        1604 :         pendingOracle.update(address(_oracle), timelock);</span></span>
+<span id="L109"><span class="lineNum">     109</span>              : </span>
+<span id="L110"><span class="lineNum">     110</span> <span class="tlaGNC">        1604 :         emit OracleProposed(_oracle, pendingOracle.validAt);</span></span>
+<span id="L111"><span class="lineNum">     111</span>              :     }</span>
+<span id="L112"><span class="lineNum">     112</span>              : </span>
+<span id="L113"><span class="lineNum">     113</span>              :     /// @inheritdoc IManageableOracle</span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">        1606 :     function proposeTimelock(uint32 _timelock) external virtual onlyOwner {</span></span>
+<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">        1604 :         require(pendingTimelock.validAt == 0, PendingUpdate());</span></span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">        1604 :         require(_timelock &gt;= MIN_TIMELOCK &amp;&amp; _timelock &lt;= MAX_TIMELOCK, InvalidTimelock());</span></span>
 <span id="L117"><span class="lineNum">     117</span>              : </span>
-<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">        1604 :         emit OracleProposed(_oracle, pendingOracle.validAt);</span></span>
-<span id="L119"><span class="lineNum">     119</span>              :     }</span>
-<span id="L120"><span class="lineNum">     120</span>              : </span>
-<span id="L121"><span class="lineNum">     121</span>              :     /// @inheritdoc IManageableOracle</span>
-<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">        1606 :     function proposeTimelock(uint32 _timelock) external virtual onlyOwner {</span></span>
-<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">        1604 :         require(pendingTimelock.validAt == 0, PendingUpdate());</span></span>
-<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">        1604 :         require(_timelock &gt;= MIN_TIMELOCK &amp;&amp; _timelock &lt;= MAX_TIMELOCK, InvalidTimelock());</span></span>
-<span id="L125"><span class="lineNum">     125</span>              : </span>
-<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">        1604 :         pendingTimelock.update(uint184(_timelock), timelock);</span></span>
-<span id="L127"><span class="lineNum">     127</span>              : </span>
-<span id="L128"><span class="lineNum">     128</span> <span class="tlaGNC">        1604 :         emit TimelockProposed(_timelock, pendingTimelock.validAt);</span></span>
-<span id="L129"><span class="lineNum">     129</span>              :     }</span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">        1604 :         pendingTimelock.update(uint184(_timelock), timelock);</span></span>
+<span id="L119"><span class="lineNum">     119</span>              : </span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">        1604 :         emit TimelockProposed(_timelock, pendingTimelock.validAt);</span></span>
+<span id="L121"><span class="lineNum">     121</span>              :     }</span>
+<span id="L122"><span class="lineNum">     122</span>              : </span>
+<span id="L123"><span class="lineNum">     123</span>              :     /// @inheritdoc IManageableOracle</span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">        1606 :     function proposeTransferOwnership(address _newOwner) external virtual onlyOwner {</span></span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">        1604 :         require(pendingOwnership.validAt == 0, PendingUpdate());</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">        1604 :         require(_newOwner != address(0), ZeroOwner());</span></span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaGNC">        1604 :         require(_newOwner != DEAD_ADDRESS, UseRenounceOwnership());</span></span>
+<span id="L128"><span class="lineNum">     128</span>              : </span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">        1604 :         pendingOwnership.update(_newOwner, timelock);</span></span>
 <span id="L130"><span class="lineNum">     130</span>              : </span>
-<span id="L131"><span class="lineNum">     131</span>              :     /// @inheritdoc IManageableOracle</span>
-<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">        1606 :     function proposeTransferOwnership(address _newOwner) external virtual onlyOwner {</span></span>
-<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">        1604 :         require(pendingOwnership.validAt == 0, PendingUpdate());</span></span>
-<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">        1604 :         require(_newOwner != address(0), ZeroOwner());</span></span>
-<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">        1604 :         require(_newOwner != DEAD_ADDRESS, UseRenounceOwnership());</span></span>
-<span id="L136"><span class="lineNum">     136</span>              : </span>
-<span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">        1604 :         pendingOwnership.update(_newOwner, timelock);</span></span>
-<span id="L138"><span class="lineNum">     138</span>              : </span>
-<span id="L139"><span class="lineNum">     139</span> <span class="tlaGNC">        1604 :         emit OwnershipTransferProposed(_newOwner, pendingOwnership.validAt);</span></span>
-<span id="L140"><span class="lineNum">     140</span>              :     }</span>
-<span id="L141"><span class="lineNum">     141</span>              : </span>
-<span id="L142"><span class="lineNum">     142</span>              :     /// @inheritdoc IManageableOracle</span>
-<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">        1606 :     function proposeRenounceOwnership() external virtual onlyOwner {</span></span>
-<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">        1604 :         require(pendingOwnership.validAt == 0, PendingUpdate());</span></span>
-<span id="L145"><span class="lineNum">     145</span>              : </span>
-<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">        1604 :         pendingOwnership.update(DEAD_ADDRESS, timelock);</span></span>
-<span id="L147"><span class="lineNum">     147</span>              : </span>
-<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">        1604 :         emit OwnershipRenounceProposed(pendingOwnership.validAt);</span></span>
-<span id="L149"><span class="lineNum">     149</span>              :     }</span>
-<span id="L150"><span class="lineNum">     150</span>              : </span>
-<span id="L151"><span class="lineNum">     151</span>              :     /// @inheritdoc IManageableOracle</span>
-<span id="L152"><span class="lineNum">     152</span> <span class="tlaGNC">          10 :     function acceptOracle() external virtual onlyOwner afterTimelock(pendingOracle.validAt) {</span></span>
-<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">           4 :         oracle = ISiloOracle(pendingOracle.value);</span></span>
-<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">           4 :         _resetPendingAddress(pendingOracle);</span></span>
-<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">           4 :         emit OracleUpdated(oracle);</span></span>
-<span id="L156"><span class="lineNum">     156</span>              :     }</span>
-<span id="L157"><span class="lineNum">     157</span>              : </span>
-<span id="L158"><span class="lineNum">     158</span>              :     /// @inheritdoc IManageableOracle</span>
-<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">           8 :     function acceptTimelock() external virtual onlyOwner afterTimelock(pendingTimelock.validAt) {</span></span>
-<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">           2 :         timelock = uint32(pendingTimelock.value);</span></span>
-<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">           2 :         _resetPendingUint192(pendingTimelock);</span></span>
-<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">           2 :         emit TimelockUpdated(timelock);</span></span>
-<span id="L163"><span class="lineNum">     163</span>              :     }</span>
-<span id="L164"><span class="lineNum">     164</span>              : </span>
-<span id="L165"><span class="lineNum">     165</span>              :     /// @dev The new owner accepts the ownership transfer.</span>
-<span id="L166"><span class="lineNum">     166</span> <span class="tlaGNC">          10 :     function acceptOwnership() external virtual afterTimelock(pendingOwnership.validAt) {</span></span>
-<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">           6 :         require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());</span></span>
-<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">           6 :         require(pendingOwnership.value == msg.sender, OnlyOwner());</span></span>
-<span id="L169"><span class="lineNum">     169</span>              : </span>
-<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">           2 :         _resetPendingAddress(pendingOwnership);</span></span>
-<span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC">           2 :         _transferOwnership(msg.sender);</span></span>
-<span id="L172"><span class="lineNum">     172</span>              :     }</span>
-<span id="L173"><span class="lineNum">     173</span>              : </span>
-<span id="L174"><span class="lineNum">     174</span>              :     /// @inheritdoc IManageableOracle</span>
-<span id="L175"><span class="lineNum">     175</span> <span class="tlaGNC">          16 :     function acceptRenounceOwnership() external virtual onlyOwner afterTimelock(pendingOwnership.validAt) {</span></span>
-<span id="L176"><span class="lineNum">     176</span> <span class="tlaGNC">          10 :         require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());</span></span>
-<span id="L177"><span class="lineNum">     177</span> <span class="tlaGNC">          10 :         require(pendingOracle.validAt == 0, PendingOracleUpdate());</span></span>
-<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">           6 :         require(pendingTimelock.validAt == 0, PendingTimelockUpdate());</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">        1604 :         emit OwnershipTransferProposed(_newOwner, pendingOwnership.validAt);</span></span>
+<span id="L132"><span class="lineNum">     132</span>              :     }</span>
+<span id="L133"><span class="lineNum">     133</span>              : </span>
+<span id="L134"><span class="lineNum">     134</span>              :     /// @inheritdoc IManageableOracle</span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">        1606 :     function proposeRenounceOwnership() external virtual onlyOwner {</span></span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">        1604 :         require(pendingOwnership.validAt == 0, PendingUpdate());</span></span>
+<span id="L137"><span class="lineNum">     137</span>              : </span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">        1604 :         pendingOwnership.update(DEAD_ADDRESS, timelock);</span></span>
+<span id="L139"><span class="lineNum">     139</span>              : </span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">        1604 :         emit OwnershipRenounceProposed(pendingOwnership.validAt);</span></span>
+<span id="L141"><span class="lineNum">     141</span>              :     }</span>
+<span id="L142"><span class="lineNum">     142</span>              : </span>
+<span id="L143"><span class="lineNum">     143</span>              :     /// @inheritdoc IManageableOracle</span>
+<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">          10 :     function acceptOracle() external virtual onlyOwner afterTimelock(pendingOracle.validAt) {</span></span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">           4 :         oracle = ISiloOracle(pendingOracle.value);</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">           4 :         _resetPendingAddress(pendingOracle);</span></span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">           4 :         emit OracleUpdated(oracle);</span></span>
+<span id="L148"><span class="lineNum">     148</span>              :     }</span>
+<span id="L149"><span class="lineNum">     149</span>              : </span>
+<span id="L150"><span class="lineNum">     150</span>              :     /// @inheritdoc IManageableOracle</span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">           8 :     function acceptTimelock() external virtual onlyOwner afterTimelock(pendingTimelock.validAt) {</span></span>
+<span id="L152"><span class="lineNum">     152</span> <span class="tlaGNC">           2 :         timelock = uint32(pendingTimelock.value);</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">           2 :         _resetPendingUint192(pendingTimelock);</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">           2 :         emit TimelockUpdated(timelock);</span></span>
+<span id="L155"><span class="lineNum">     155</span>              :     }</span>
+<span id="L156"><span class="lineNum">     156</span>              : </span>
+<span id="L157"><span class="lineNum">     157</span>              :     /// @dev The new owner accepts the ownership transfer.</span>
+<span id="L158"><span class="lineNum">     158</span> <span class="tlaGNC">          10 :     function acceptOwnership() external virtual afterTimelock(pendingOwnership.validAt) {</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">           6 :         require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">           6 :         require(pendingOwnership.value == msg.sender, OnlyOwner());</span></span>
+<span id="L161"><span class="lineNum">     161</span>              : </span>
+<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">           2 :         _resetPendingAddress(pendingOwnership);</span></span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">           2 :         _transferOwnership(msg.sender);</span></span>
+<span id="L164"><span class="lineNum">     164</span>              :     }</span>
+<span id="L165"><span class="lineNum">     165</span>              : </span>
+<span id="L166"><span class="lineNum">     166</span>              :     /// @inheritdoc IManageableOracle</span>
+<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">          16 :     function acceptRenounceOwnership() external virtual onlyOwner afterTimelock(pendingOwnership.validAt) {</span></span>
+<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">          10 :         require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());</span></span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC">          10 :         require(pendingOracle.validAt == 0, PendingOracleUpdate());</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">           6 :         require(pendingTimelock.validAt == 0, PendingTimelockUpdate());</span></span>
+<span id="L171"><span class="lineNum">     171</span>              : </span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">           4 :         _resetPendingAddress(pendingOwnership);</span></span>
+<span id="L173"><span class="lineNum">     173</span> <span class="tlaGNC">           4 :         _transferOwnership(address(0));</span></span>
+<span id="L174"><span class="lineNum">     174</span>              :     }</span>
+<span id="L175"><span class="lineNum">     175</span>              : </span>
+<span id="L176"><span class="lineNum">     176</span>              :     /// @inheritdoc IManageableOracle</span>
+<span id="L177"><span class="lineNum">     177</span> <span class="tlaGNC">        1604 :     function cancelOracle() external virtual onlyOwner {</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">        1602 :         require(pendingOracle.validAt != 0, NoPendingUpdateToCancel());</span></span>
 <span id="L179"><span class="lineNum">     179</span>              : </span>
-<span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">           4 :         _resetPendingAddress(pendingOwnership);</span></span>
-<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">           4 :         _transferOwnership(address(0));</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">        1600 :         _resetPendingAddress(pendingOracle);</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">        1600 :         emit OracleProposalCanceled();</span></span>
 <span id="L182"><span class="lineNum">     182</span>              :     }</span>
 <span id="L183"><span class="lineNum">     183</span>              : </span>
 <span id="L184"><span class="lineNum">     184</span>              :     /// @inheritdoc IManageableOracle</span>
-<span id="L185"><span class="lineNum">     185</span> <span class="tlaGNC">        1604 :     function cancelOracle() external virtual onlyOwner {</span></span>
-<span id="L186"><span class="lineNum">     186</span> <span class="tlaGNC">        1602 :         require(pendingOracle.validAt != 0, NoPendingUpdateToCancel());</span></span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaGNC">        1606 :     function cancelTimelock() external virtual onlyOwner {</span></span>
+<span id="L186"><span class="lineNum">     186</span> <span class="tlaGNC">        1604 :         require(pendingTimelock.validAt != 0, NoPendingUpdateToCancel());</span></span>
 <span id="L187"><span class="lineNum">     187</span>              : </span>
-<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">        1600 :         _resetPendingAddress(pendingOracle);</span></span>
-<span id="L189"><span class="lineNum">     189</span> <span class="tlaGNC">        1600 :         emit OracleProposalCanceled();</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">        1602 :         _resetPendingUint192(pendingTimelock);</span></span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaGNC">        1602 :         emit TimelockProposalCanceled();</span></span>
 <span id="L190"><span class="lineNum">     190</span>              :     }</span>
 <span id="L191"><span class="lineNum">     191</span>              : </span>
 <span id="L192"><span class="lineNum">     192</span>              :     /// @inheritdoc IManageableOracle</span>
-<span id="L193"><span class="lineNum">     193</span> <span class="tlaGNC">        1606 :     function cancelTimelock() external virtual onlyOwner {</span></span>
-<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">        1604 :         require(pendingTimelock.validAt != 0, NoPendingUpdateToCancel());</span></span>
-<span id="L195"><span class="lineNum">     195</span>              : </span>
-<span id="L196"><span class="lineNum">     196</span> <span class="tlaGNC">        1602 :         _resetPendingUint192(pendingTimelock);</span></span>
-<span id="L197"><span class="lineNum">     197</span> <span class="tlaGNC">        1602 :         emit TimelockProposalCanceled();</span></span>
-<span id="L198"><span class="lineNum">     198</span>              :     }</span>
-<span id="L199"><span class="lineNum">     199</span>              : </span>
-<span id="L200"><span class="lineNum">     200</span>              :     /// @inheritdoc IManageableOracle</span>
-<span id="L201"><span class="lineNum">     201</span> <span class="tlaGNC">        1604 :     function cancelTransferOwnership() external virtual onlyOwner {</span></span>
-<span id="L202"><span class="lineNum">     202</span> <span class="tlaGNC">        1602 :         require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());</span></span>
-<span id="L203"><span class="lineNum">     203</span> <span class="tlaGNC">        1600 :         require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());</span></span>
-<span id="L204"><span class="lineNum">     204</span>              : </span>
-<span id="L205"><span class="lineNum">     205</span> <span class="tlaGNC">        1600 :         _resetPendingAddress(pendingOwnership);</span></span>
-<span id="L206"><span class="lineNum">     206</span> <span class="tlaGNC">        1600 :         emit OwnershipTransferCanceled();</span></span>
-<span id="L207"><span class="lineNum">     207</span>              :     }</span>
-<span id="L208"><span class="lineNum">     208</span>              : </span>
-<span id="L209"><span class="lineNum">     209</span>              :     /// @inheritdoc IManageableOracle</span>
-<span id="L210"><span class="lineNum">     210</span> <span class="tlaGNC">        1604 :     function cancelRenounceOwnership() external virtual onlyOwner {</span></span>
-<span id="L211"><span class="lineNum">     211</span> <span class="tlaGNC">        1602 :         require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());</span></span>
-<span id="L212"><span class="lineNum">     212</span> <span class="tlaGNC">        1600 :         require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());</span></span>
-<span id="L213"><span class="lineNum">     213</span>              : </span>
-<span id="L214"><span class="lineNum">     214</span> <span class="tlaGNC">        1600 :         _resetPendingAddress(pendingOwnership);</span></span>
-<span id="L215"><span class="lineNum">     215</span> <span class="tlaGNC">        1600 :         emit OwnershipRenounceCanceled();</span></span>
-<span id="L216"><span class="lineNum">     216</span>              :     }</span>
-<span id="L217"><span class="lineNum">     217</span>              : </span>
-<span id="L218"><span class="lineNum">     218</span>              :     /// @inheritdoc ISiloOracle</span>
-<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC">           2 :     function beforeQuote(address _baseToken) external virtual {</span></span>
-<span id="L220"><span class="lineNum">     220</span> <span class="tlaGNC">           2 :         oracle.beforeQuote(_baseToken);</span></span>
-<span id="L221"><span class="lineNum">     221</span>              :     }</span>
-<span id="L222"><span class="lineNum">     222</span>              : </span>
-<span id="L223"><span class="lineNum">     223</span>              :     /// @inheritdoc ISiloOracle</span>
-<span id="L224"><span class="lineNum">     224</span> <span class="tlaGNC">           2 :     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {</span></span>
-<span id="L225"><span class="lineNum">     225</span> <span class="tlaGNC">           2 :         quoteAmount = oracle.quote(_baseAmount, _baseToken);</span></span>
-<span id="L226"><span class="lineNum">     226</span>              :     }</span>
-<span id="L227"><span class="lineNum">     227</span>              : </span>
-<span id="L228"><span class="lineNum">     228</span>              :     /// @inheritdoc IVersioned</span>
-<span id="L229"><span class="lineNum">     229</span>              :     // solhint-disable-next-line func-name-mixedcase</span>
-<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC">           2 :     function VERSION() external pure override returns (string memory version) {</span></span>
-<span id="L231"><span class="lineNum">     231</span> <span class="tlaGNC">           2 :         version = &quot;ManageableOracle 4.0.0&quot;;</span></span>
-<span id="L232"><span class="lineNum">     232</span>              :     }</span>
-<span id="L233"><span class="lineNum">     233</span>              : </span>
-<span id="L234"><span class="lineNum">     234</span>              :     /// @inheritdoc IManageableOracle</span>
-<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">          12 :     function oracleVerification(ISiloOracle _oracle, address _baseToken) public view virtual {</span></span>
-<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">          96 :         require(address(_oracle) != address(0), ZeroOracle());</span></span>
-<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC">          94 :         require(_oracle.quoteToken() == quoteToken, QuoteTokenMustBeTheSame());</span></span>
+<span id="L193"><span class="lineNum">     193</span> <span class="tlaGNC">        1604 :     function cancelTransferOwnership() external virtual onlyOwner {</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">        1602 :         require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());</span></span>
+<span id="L195"><span class="lineNum">     195</span> <span class="tlaGNC">        1600 :         require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());</span></span>
+<span id="L196"><span class="lineNum">     196</span>              : </span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaGNC">        1600 :         _resetPendingAddress(pendingOwnership);</span></span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">        1600 :         emit OwnershipTransferCanceled();</span></span>
+<span id="L199"><span class="lineNum">     199</span>              :     }</span>
+<span id="L200"><span class="lineNum">     200</span>              : </span>
+<span id="L201"><span class="lineNum">     201</span>              :     /// @inheritdoc IManageableOracle</span>
+<span id="L202"><span class="lineNum">     202</span> <span class="tlaGNC">        1604 :     function cancelRenounceOwnership() external virtual onlyOwner {</span></span>
+<span id="L203"><span class="lineNum">     203</span> <span class="tlaGNC">        1602 :         require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());</span></span>
+<span id="L204"><span class="lineNum">     204</span> <span class="tlaGNC">        1600 :         require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());</span></span>
+<span id="L205"><span class="lineNum">     205</span>              : </span>
+<span id="L206"><span class="lineNum">     206</span> <span class="tlaGNC">        1600 :         _resetPendingAddress(pendingOwnership);</span></span>
+<span id="L207"><span class="lineNum">     207</span> <span class="tlaGNC">        1600 :         emit OwnershipRenounceCanceled();</span></span>
+<span id="L208"><span class="lineNum">     208</span>              :     }</span>
+<span id="L209"><span class="lineNum">     209</span>              : </span>
+<span id="L210"><span class="lineNum">     210</span>              :     /// @inheritdoc ISiloOracle</span>
+<span id="L211"><span class="lineNum">     211</span> <span class="tlaGNC">           2 :     function beforeQuote(address _baseToken) external virtual {</span></span>
+<span id="L212"><span class="lineNum">     212</span> <span class="tlaGNC">           2 :         oracle.beforeQuote(_baseToken);</span></span>
+<span id="L213"><span class="lineNum">     213</span>              :     }</span>
+<span id="L214"><span class="lineNum">     214</span>              : </span>
+<span id="L215"><span class="lineNum">     215</span>              :     /// @inheritdoc ISiloOracle</span>
+<span id="L216"><span class="lineNum">     216</span> <span class="tlaGNC">          39 :     function quote(uint256 _baseAmount, address _baseToken) external view virtual returns (uint256 quoteAmount) {</span></span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaGNC">          39 :         quoteAmount = oracle.quote(_baseAmount, _baseToken);</span></span>
+<span id="L218"><span class="lineNum">     218</span>              :     }</span>
+<span id="L219"><span class="lineNum">     219</span>              : </span>
+<span id="L220"><span class="lineNum">     220</span>              :     /// @inheritdoc IVersioned</span>
+<span id="L221"><span class="lineNum">     221</span>              :     // solhint-disable-next-line func-name-mixedcase</span>
+<span id="L222"><span class="lineNum">     222</span> <span class="tlaGNC">           2 :     function VERSION() external pure override returns (string memory version) {</span></span>
+<span id="L223"><span class="lineNum">     223</span> <span class="tlaGNC">           2 :         version = &quot;ManageableOracle 4.0.0&quot;;</span></span>
+<span id="L224"><span class="lineNum">     224</span>              :     }</span>
+<span id="L225"><span class="lineNum">     225</span>              : </span>
+<span id="L226"><span class="lineNum">     226</span>              :     /// @inheritdoc IManageableOracle</span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">          12 :     function oracleVerification(ISiloOracle _oracle, address _baseToken) public view virtual {</span></span>
+<span id="L228"><span class="lineNum">     228</span> <span class="tlaGNC">        1697 :         require(address(_oracle) != address(0), ZeroOracle());</span></span>
+<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">        1695 :         require(_oracle.quoteToken() == quoteToken, QuoteTokenMustBeTheSame());</span></span>
+<span id="L230"><span class="lineNum">     230</span>              : </span>
+<span id="L231"><span class="lineNum">     231</span>              :         // sanity check</span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">        1693 :         try _oracle.quote(10 ** baseTokenDecimals, _baseToken) returns (uint256 price) {</span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">        1689 :             require(price != 0, OracleQuoteFailed());</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">           4 :         } catch (bytes memory reason) {</span></span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">           4 :             RevertLib.revertBytes(reason, OracleQuoteFailed.selector);</span></span>
+<span id="L236"><span class="lineNum">     236</span>              :         }</span>
+<span id="L237"><span class="lineNum">     237</span>              :     }</span>
 <span id="L238"><span class="lineNum">     238</span>              : </span>
-<span id="L239"><span class="lineNum">     239</span>              :         // sanity check</span>
-<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">          92 :         try _oracle.quote(10 ** baseTokenDecimals, _baseToken) returns (uint256 price) {</span></span>
-<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">          88 :             require(price != 0, OracleQuoteFailed());</span></span>
-<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">           4 :         } catch (bytes memory reason) {</span></span>
-<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">           4 :             RevertLib.revertBytes(reason, OracleQuoteFailed.selector);</span></span>
-<span id="L244"><span class="lineNum">     244</span>              :         }</span>
-<span id="L245"><span class="lineNum">     245</span>              :     }</span>
-<span id="L246"><span class="lineNum">     246</span>              : </span>
-<span id="L247"><span class="lineNum">     247</span>              :     /// @notice Internal initialization function for ManageableOracle</span>
-<span id="L248"><span class="lineNum">     248</span>              :     /// @param _oracle Initial oracle address</span>
-<span id="L249"><span class="lineNum">     249</span>              :     /// @param _owner Address that will own the contract</span>
-<span id="L250"><span class="lineNum">     250</span>              :     /// @param _timelock Initial time lock duration</span>
-<span id="L251"><span class="lineNum">     251</span>              :     /// @param _baseToken Base token address for the oracle</span>
-<span id="L252"><span class="lineNum">     252</span>              :     // solhint-disable-next-line func-name-mixedcase</span>
-<span id="L253"><span class="lineNum">     253</span> <span class="tlaGNC">          90 :     function __ManageableOracle_init(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken)</span></span>
-<span id="L254"><span class="lineNum">     254</span>              :         internal</span>
-<span id="L255"><span class="lineNum">     255</span>              :         virtual</span>
-<span id="L256"><span class="lineNum">     256</span>              :         onlyInitializing</span>
-<span id="L257"><span class="lineNum">     257</span>              :     {</span>
-<span id="L258"><span class="lineNum">     258</span> <span class="tlaGNC">          90 :         require(address(_oracle) != address(0), ZeroOracle());</span></span>
-<span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">          89 :         require(_baseToken != address(0), ZeroBaseToken());</span></span>
-<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">          88 :         require(_owner != address(0), ZeroOwner());</span></span>
-<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">          87 :         require(_timelock &gt;= MIN_TIMELOCK &amp;&amp; _timelock &lt;= MAX_TIMELOCK, InvalidTimelock());</span></span>
-<span id="L262"><span class="lineNum">     262</span>              : </span>
-<span id="L263"><span class="lineNum">     263</span> <span class="tlaGNC">          85 :         quoteToken = _oracle.quoteToken();</span></span>
-<span id="L264"><span class="lineNum">     264</span> <span class="tlaGNC">          85 :         baseToken = _baseToken;</span></span>
-<span id="L265"><span class="lineNum">     265</span> <span class="tlaGNC">          85 :         baseTokenDecimals = TokenHelper.assertAndGetDecimals(_baseToken);</span></span>
-<span id="L266"><span class="lineNum">     266</span> <span class="tlaGNC">          85 :         require(baseTokenDecimals != 0, BaseTokenDecimalsMustBeGreaterThanZero());</span></span>
-<span id="L267"><span class="lineNum">     267</span>              : </span>
-<span id="L268"><span class="lineNum">     268</span> <span class="tlaGNC">          84 :         oracle = _oracle;</span></span>
-<span id="L269"><span class="lineNum">     269</span> <span class="tlaGNC">          84 :         timelock = _timelock;</span></span>
-<span id="L270"><span class="lineNum">     270</span>              : </span>
-<span id="L271"><span class="lineNum">     271</span> <span class="tlaGNC">          84 :         oracleVerification(_oracle, _baseToken);</span></span>
-<span id="L272"><span class="lineNum">     272</span>              : </span>
-<span id="L273"><span class="lineNum">     273</span> <span class="tlaGNC">          83 :         _transferOwnership(_owner);</span></span>
-<span id="L274"><span class="lineNum">     274</span>              : </span>
-<span id="L275"><span class="lineNum">     275</span> <span class="tlaGNC">          83 :         emit OracleUpdated(_oracle);</span></span>
-<span id="L276"><span class="lineNum">     276</span> <span class="tlaGNC">          83 :         emit TimelockUpdated(_timelock);</span></span>
-<span id="L277"><span class="lineNum">     277</span>              :     }</span>
-<span id="L278"><span class="lineNum">     278</span>              : </span>
-<span id="L279"><span class="lineNum">     279</span> <span class="tlaGNC">        4810 :     function _resetPendingAddress(PendingAddress storage _pending) internal virtual {</span></span>
-<span id="L280"><span class="lineNum">     280</span> <span class="tlaGNC">        4810 :         _pending.value = address(0);</span></span>
-<span id="L281"><span class="lineNum">     281</span> <span class="tlaGNC">        4810 :         _pending.validAt = 0;</span></span>
-<span id="L282"><span class="lineNum">     282</span>              :     }</span>
-<span id="L283"><span class="lineNum">     283</span>              : </span>
-<span id="L284"><span class="lineNum">     284</span> <span class="tlaGNC">        1604 :     function _resetPendingUint192(PendingUint192 storage _pending) internal virtual {</span></span>
-<span id="L285"><span class="lineNum">     285</span> <span class="tlaGNC">        1604 :         _pending.value = 0;</span></span>
-<span id="L286"><span class="lineNum">     286</span> <span class="tlaGNC">        1604 :         _pending.validAt = 0;</span></span>
-<span id="L287"><span class="lineNum">     287</span>              :     }</span>
-<span id="L288"><span class="lineNum">     288</span>              : </span>
-<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">          89 :     function _transferOwnership(address _newOwner) internal virtual {</span></span>
-<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">          89 :         address oldOwner = owner;</span></span>
-<span id="L291"><span class="lineNum">     291</span> <span class="tlaGNC">          89 :         owner = _newOwner;</span></span>
-<span id="L292"><span class="lineNum">     292</span> <span class="tlaGNC">          89 :         emit OwnershipTransferred(oldOwner, _newOwner);</span></span>
-<span id="L293"><span class="lineNum">     293</span>              :     }</span>
-<span id="L294"><span class="lineNum">     294</span>              : }</span>
+<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">        4810 :     function _resetPendingAddress(PendingAddress storage _pending) internal virtual {</span></span>
+<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">        4810 :         _pending.value = address(0);</span></span>
+<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">        4810 :         _pending.validAt = 0;</span></span>
+<span id="L242"><span class="lineNum">     242</span>              :     }</span>
+<span id="L243"><span class="lineNum">     243</span>              : </span>
+<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC">        1604 :     function _resetPendingUint192(PendingUint192 storage _pending) internal virtual {</span></span>
+<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">        1604 :         _pending.value = 0;</span></span>
+<span id="L246"><span class="lineNum">     246</span> <span class="tlaGNC">        1604 :         _pending.validAt = 0;</span></span>
+<span id="L247"><span class="lineNum">     247</span>              :     }</span>
+<span id="L248"><span class="lineNum">     248</span>              : </span>
+<span id="L249"><span class="lineNum">     249</span> <span class="tlaGNC">          86 :     function _transferOwnership(address _newOwner) internal virtual {</span></span>
+<span id="L250"><span class="lineNum">     250</span> <span class="tlaGNC">          86 :         address oldOwner = owner;</span></span>
+<span id="L251"><span class="lineNum">     251</span> <span class="tlaGNC">          86 :         owner = _newOwner;</span></span>
+<span id="L252"><span class="lineNum">     252</span> <span class="tlaGNC">          86 :         emit OwnershipTransferred(oldOwner, _newOwner);</span></span>
+<span id="L253"><span class="lineNum">     253</span>              :     }</span>
+<span id="L254"><span class="lineNum">     254</span>              : }</span>
         </pre>
               </td>
             </tr>
