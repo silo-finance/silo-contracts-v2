@@ -63,6 +63,11 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
         _;
     }
 
+    modifier whenNotPending(uint256 _validAt) {
+        require(_validAt == 0, PendingUpdate());
+        _;
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -96,42 +101,37 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     }
 
     /// @inheritdoc IManageableOracle
-    function proposeOracle(ISiloOracle _oracle) external virtual onlyOwner {
-        require(pendingOracle.validAt == 0, PendingUpdate());
-
+    function proposeOracle(ISiloOracle _oracle) external virtual onlyOwner whenNotPending(pendingOracle.validAt) {
         oracleVerification(_oracle);
 
         pendingOracle.update(address(_oracle), timelock);
-
         emit OracleProposed(_oracle, pendingOracle.validAt);
     }
 
     /// @inheritdoc IManageableOracle
-    function proposeTimelock(uint32 _timelock) external virtual onlyOwner {
-        require(pendingTimelock.validAt == 0, PendingUpdate());
+    function proposeTimelock(uint32 _timelock) external virtual onlyOwner whenNotPending(pendingTimelock.validAt) {
         require(_timelock >= MIN_TIMELOCK && _timelock <= MAX_TIMELOCK, InvalidTimelock());
 
         pendingTimelock.update(uint184(_timelock), timelock);
-
         emit TimelockProposed(_timelock, pendingTimelock.validAt);
     }
 
     /// @inheritdoc IManageableOracle
-    function proposeTransferOwnership(address _newOwner) external virtual onlyOwner {
-        require(pendingOwnership.validAt == 0, PendingUpdate());
+    function proposeTransferOwnership(address _newOwner)
+        external
+        virtual
+        onlyOwner
+        whenNotPending(pendingOwnership.validAt)
+    {
         require(_newOwner != address(0), ZeroOwner());
 
         pendingOwnership.update(_newOwner, timelock);
-
         emit OwnershipTransferProposed(_newOwner, pendingOwnership.validAt);
     }
 
     /// @inheritdoc IManageableOracle
-    function proposeRenounceOwnership() external virtual onlyOwner {
-        require(pendingOwnership.validAt == 0, PendingUpdate());
-
+    function proposeRenounceOwnership() external virtual onlyOwner whenNotPending(pendingOwnership.validAt) {
         pendingOwnership.update(address(0), timelock);
-
         emit OwnershipRenounceProposed(pendingOwnership.validAt);
     }
 
