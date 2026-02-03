@@ -2,7 +2,7 @@
     "ADAPTER_yINJ_WINJ": {
         "baseToken": "yINJ",
         "quoteToken": "WINJ",
-        "primaryAggregator": "ADAPTER_yINJ_INJ",
+        "primaryAggregator": "YINJ_TO_INJ_ADAPTER",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
