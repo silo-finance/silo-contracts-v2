@@ -10,14 +10,14 @@ import {SiloOraclesContracts} from "./SiloOraclesContracts.sol";
 /*
 
 FOUNDRY_PROFILE=oracles \
-        forge script silo-oracles/deploy/YinjToInjAdapterDeploy.sol \
+        ../injective-foundry/target/release/forge script silo-oracles/deploy/YinjToInjAdapterDeploy.sol \
         --ffi --rpc-url $RPC_INJECTIVE --broadcast --verify \
         --verifier blockscout \
         --verifier-url $VERIFIER_URL_INJECTIVE
 
 Resume verification:
     FOUNDRY_PROFILE=oracles \
-        forge script silo-oracles/deploy/YinjToInjAdapterDeploy.sol \
+        ../injective-foundry/target/release/forge script silo-oracles/deploy/YinjToInjAdapterDeploy.sol \
         --ffi --rpc-url $RPC_INJECTIVE \
         --verify \
         --verifier blockscout \
@@ -25,8 +25,20 @@ Resume verification:
         --private-key $PRIVATE_KEY \
         --resume
  */
+ interface IBankModule {
+    function mint(address recipient, uint256 amount) external payable returns (bool);
+    function totalSupply(address) external view returns (uint256);
+}
+
 contract YinjToInjAdapterDeploy is CommonDeploy {
+    address public constant BANK_PRECOMPILE = address(0x64);
+    address public constant YINJ = 0x2d6E0e0c209D79b43f5d3D62e93D6A9f1e9317BD;
+    address public constant BYINJ = 0x913DD99a3326ecaB24A26B817f707CaE07Df7e45;
+    uint256 public constant YINJ_TOTAL_SUPPLY = 225177260588439321975142;
+    uint256 public constant BYINJ_TOTAL_SUPPLY = 231823129690205125835646;
+
     function run() public returns (YinjToInjAdapter adapter) {
+        mockBankModule();
         uint256 deployerPrivateKey = uint256(vm.envBytes32("PRIVATE_KEY"));
 
         IYInjPriceOracle yinjOracle = IYInjPriceOracle(getAddress(AddrKey.YINJ_PRICE_ORACLE));
@@ -38,5 +50,20 @@ contract YinjToInjAdapterDeploy is CommonDeploy {
         vm.stopBroadcast();
 
         _registerDeployment(address(adapter), SiloOraclesContracts.YINJ_TO_INJ_ADAPTER);
+    }
+
+    // This function helps to bypass the failure of deployment tx simulation.
+    function mockBankModule() public {
+        vm.mockCall(
+            BANK_PRECOMPILE,
+            abi.encodeWithSelector(IBankModule.totalSupply.selector, YINJ),
+            abi.encode(YINJ_TOTAL_SUPPLY)
+        );
+
+        vm.mockCall(
+            BANK_PRECOMPILE,
+            abi.encodeWithSelector(IBankModule.totalSupply.selector, BYINJ),
+            abi.encode(BYINJ_TOTAL_SUPPLY)
+        );
     }
 }
