@@ -84,9 +84,6 @@ interface IManageableOracle {
     ///      thereby disabling any functionality that is only available to the owner.
     function acceptRenounceOwnership() external;
 
-    // solhint-disable-next-line func-name-mixedcase
-    function DEAD_ADDRESS() external view returns (address);
-
     /// @notice Verify that the oracle is valid and can provide quotes for the base token
     /// @param _oracle Oracle address to verify
     /// @dev This function checks that:
@@ -120,7 +117,7 @@ interface IManageableOracle {
     /// @notice Get the pending ownership change (if any)
     /// @return value The pending owner address
     /// @return validAt The timestamp at which the pending ownership change becomes valid
-    /// @dev If address is DEAD_ADDRESS (0xdead), it means pending renounce, otherwise pending transfer
+    /// @dev If address is zero, it means pending renounce, otherwise pending transfer
     function pendingOwnership() external view returns (address value, uint64 validAt);
 
     /// @notice Get the base token address

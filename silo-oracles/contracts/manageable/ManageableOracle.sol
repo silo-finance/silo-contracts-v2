@@ -17,8 +17,6 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     using PendingLib for PendingAddress;
     using PendingLib for PendingUint192;
 
-    address public constant DEAD_ADDRESS = address(0xdead);
-
     /// @dev Minimum time lock duration
     uint32 public constant MIN_TIMELOCK = 1 days;
 
@@ -45,7 +43,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     /// @dev Pending time lock duration
     PendingUint192 public pendingTimelock;
 
-    /// @dev Pending ownership change (DEAD_ADDRESS means renounce, otherwise transfer)
+    /// @dev Pending ownership change (zero address means renounce, otherwise transfer)
     /// @notice Only one type of ownership change can be pending at a time (either transfer or renounce)
     PendingAddress public pendingOwnership;
 
@@ -122,7 +120,6 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     function proposeTransferOwnership(address _newOwner) external virtual onlyOwner {
         require(pendingOwnership.validAt == 0, PendingUpdate());
         require(_newOwner != address(0), ZeroOwner());
-        require(_newOwner != DEAD_ADDRESS, UseRenounceOwnership());
 
         pendingOwnership.update(_newOwner, timelock);
 
@@ -133,7 +130,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     function proposeRenounceOwnership() external virtual onlyOwner {
         require(pendingOwnership.validAt == 0, PendingUpdate());
 
-        pendingOwnership.update(DEAD_ADDRESS, timelock);
+        pendingOwnership.update(address(0), timelock);
 
         emit OwnershipRenounceProposed(pendingOwnership.validAt);
     }
@@ -154,7 +151,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
 
     /// @dev The new owner accepts the ownership transfer.
     function acceptOwnership() external virtual afterTimelock(pendingOwnership.validAt) {
-        require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());
+        require(pendingOwnership.value != address(0), InvalidOwnershipChangeType());
         require(pendingOwnership.value == msg.sender, OnlyOwner());
 
         _resetPendingAddress(pendingOwnership);
@@ -163,7 +160,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
 
     /// @inheritdoc IManageableOracle
     function acceptRenounceOwnership() external virtual onlyOwner afterTimelock(pendingOwnership.validAt) {
-        require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
+        require(pendingOwnership.value == address(0), InvalidOwnershipChangeType());
         require(pendingOracle.validAt == 0, PendingOracleUpdate());
         require(pendingTimelock.validAt == 0, PendingTimelockUpdate());
 
@@ -190,7 +187,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     /// @inheritdoc IManageableOracle
     function cancelTransferOwnership() external virtual onlyOwner {
         require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());
-        require(pendingOwnership.value != DEAD_ADDRESS, InvalidOwnershipChangeType());
+        require(pendingOwnership.value != address(0), InvalidOwnershipChangeType());
 
         _resetPendingAddress(pendingOwnership);
         emit OwnershipTransferCanceled();
@@ -199,7 +196,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     /// @inheritdoc IManageableOracle
     function cancelRenounceOwnership() external virtual onlyOwner {
         require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());
-        require(pendingOwnership.value == DEAD_ADDRESS, InvalidOwnershipChangeType());
+        require(pendingOwnership.value == address(0), InvalidOwnershipChangeType());
 
         _resetPendingAddress(pendingOwnership);
         emit OwnershipRenounceCanceled();

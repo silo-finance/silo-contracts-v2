@@ -384,7 +384,7 @@ abstract contract ManageableOracleBase is Test {
         vm.prank(owner);
         oracle.proposeRenounceOwnership();
         (address pendingOwnershipValue, uint64 pendingOwnershipValidAt) = oracle.pendingOwnership();
-        assertEq(pendingOwnershipValue, oracle.DEAD_ADDRESS(), "invalid pendingOwnership value after propose");
+        assertEq(pendingOwnershipValue, address(0), "invalid pendingOwnership value after propose");
         assertEq(pendingOwnershipValidAt, proposeTime + timelock, "invalid pendingOwnership validAt after propose");
 
         vm.prank(owner);
