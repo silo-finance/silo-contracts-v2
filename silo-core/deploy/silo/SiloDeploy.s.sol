@@ -35,6 +35,7 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 import {IsContract} from "silo-core/contracts/lib/IsContract.sol";
 import {PriceFormatter} from "silo-core/deploy/lib/PriceFormatter.sol";
 import {PTLinearOracleTxLib} from "../lib/PTLinearOracleTxLib.sol";
+import {InjectiveDeploymentHelper} from "silo-oracles/deploy/injective/InjectiveDeploymentHelper.sol";
 
 /// @dev use `SiloDeployWithDeployerOwner` or `SiloDeployWithHookReceiverOwner`
 abstract contract SiloDeploy is CommonDeploy {
@@ -58,6 +59,11 @@ abstract contract SiloDeploy is CommonDeploy {
     }
 
     function run() public virtual returns (ISiloConfig siloConfig) {
+        if (ChainsLib.getChainId() == ChainsLib.INJECTIVE_CHAIN_ID) {
+            InjectiveDeploymentHelper injectiveHelper = new InjectiveDeploymentHelper();
+            injectiveHelper.mockBankModule();
+        }
+
         console2.log("[SiloCommonDeploy] run()");
 
         SiloConfigData siloData = new SiloConfigData();
