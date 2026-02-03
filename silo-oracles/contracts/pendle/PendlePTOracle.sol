@@ -77,10 +77,10 @@ contract PendlePTOracle is ISiloOracle, Aggregator, IVersioned {
         QUOTE_TOKEN = _underlyingOracle.quoteToken();
     }
 
-    // @inheritdoc ISiloOracle
+    /// @inheritdoc ISiloOracle
     function beforeQuote(address) external virtual {}
 
-    // @inheritdoc ISiloOracle
+    /// @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken)
         public
         view
@@ -105,7 +105,7 @@ contract PendlePTOracle is ISiloOracle, Aggregator, IVersioned {
         require(quoteAmount != 0, ZeroPrice());
     }
 
-    // @inheritdoc ISiloOracle
+    /// @inheritdoc ISiloOracle
     function quoteToken() external virtual view returns (address) {
         return QUOTE_TOKEN;
     }
