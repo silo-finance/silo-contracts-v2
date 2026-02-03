@@ -6,7 +6,7 @@ import {IManageableOracle} from "silo-oracles/contracts/interfaces/IManageableOr
 
 /// @notice Factory for creating ManageableOracle instances
 interface IManageableOracleFactory {
-    event ManageableOracleCreated(address indexed oracle, address indexed owner);
+    event ManageableOracleCreated(address indexed oracle);
 
     error DeployerCannotBeZero();
     error ZeroFactory();

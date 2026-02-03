@@ -112,7 +112,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     function proposeTimelock(uint32 _timelock) external virtual onlyOwner whenNotPending(pendingTimelock.validAt) {
         require(_timelock >= MIN_TIMELOCK && _timelock <= MAX_TIMELOCK, InvalidTimelock());
 
-        pendingTimelock.update(uint184(_timelock), timelock);
+        pendingTimelock.update(_timelock, timelock);
         emit TimelockProposed(_timelock, pendingTimelock.validAt);
     }
 

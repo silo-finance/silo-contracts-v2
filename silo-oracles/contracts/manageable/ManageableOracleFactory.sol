@@ -24,7 +24,7 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
         public
         returns (IManageableOracle manageableOracle)
     {
-        manageableOracle = _createOracle(_externalSalt, _owner);
+        manageableOracle = _createOracle(_externalSalt);
         manageableOracle.initialize(_oracle, _owner, _timelock);
     }
 
@@ -70,18 +70,14 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
 
     /// @dev Internal helper to create and register a ManageableOracle instance
     /// @param _externalSalt External salt for the CREATE2 deterministic deployment
-    /// @param _owner Address that will own the contract
     /// @return manageableOracle The created ManageableOracle instance
-    function _createOracle(bytes32 _externalSalt, address _owner)
-        internal
-        returns (IManageableOracle manageableOracle)
-    {
+    function _createOracle(bytes32 _externalSalt) internal returns (IManageableOracle manageableOracle) {
         bytes32 salt = _salt(_externalSalt);
 
         manageableOracle = IManageableOracle(Clones.cloneDeterministic(address(ORACLE_IMPLEMENTATION), salt));
 
         createdInFactory[address(manageableOracle)] = true;
 
-        emit ManageableOracleCreated(address(manageableOracle), _owner);
+        emit ManageableOracleCreated(address(manageableOracle));
     }
 }

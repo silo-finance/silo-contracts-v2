@@ -44,7 +44,7 @@ abstract contract ManageableOracleBase is Test {
     */
     function test_ManageableOracle_creation_emitsAllEvents() public {
         vm.expectEmit(true, true, true, true, address(factory));
-        emit IManageableOracleFactory.ManageableOracleCreated(_predictOracleAddress(), owner);
+        emit IManageableOracleFactory.ManageableOracleCreated(_predictOracleAddress());
 
         vm.expectEmit(true, true, true, true);
         emit IManageableOracle.OwnershipTransferred(address(0), owner);
