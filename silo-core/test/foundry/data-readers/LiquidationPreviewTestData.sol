@@ -123,10 +123,10 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 0.1e18
             }),
             output: Output({
-                collateralAssetsToLiquidate: 4230769230769230776,
-                debtAssetsToRepay: 480769230769230770,
-                // (one - 480769230769230770n) * 80n * one / ((10n * one - 4230769230769230776n) * 10n)
-                ltvAfterLiquidation: 720000000000000000 // this is minimal acceptable LTV
+                collateralAssetsToLiquidate: 4230769230769230767,
+                debtAssetsToRepay: 480769230769230769,
+                // (one - 480769230769230769n) * 80n * one / ((10n * one - 4230769230769230767n) * 10n)
+                ltvAfterLiquidation: 720000000000000000 + 1 // this is minimal acceptable LTV
             })
         });
 
@@ -143,10 +143,10 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 0.1e18
             }),
             output: Output({
-                collateralAssetsToLiquidate: 87964862992139997, // 79.2e18 / 900 => 0.88,
-                debtAssetsToRepay: 0.899640644237795418e18,
-                // (one - 899640644237795418n) * 80n * one / ((10n * one - 87964862992139997n) * 900n) = 900000000000000n
-                ltvAfterLiquidation: 0.0009e18
+                collateralAssetsToLiquidate: 87964862992139996, // 79.2e18 / 900 => 0.88,
+                debtAssetsToRepay: 0.899640644237795417e18,
+                // (one - 899640644237795417n) * 80n * one / ((10n * one - 87964862992139996n) * 900n) = 900000000000000n
+                ltvAfterLiquidation: 0.0009e18 + 1
             })
         });
 
@@ -164,9 +164,9 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 0.01e18
             }),
             output: Output({
-                collateralAssetsToLiquidate: 9864687385108740,
-                debtAssetsToRepay: 109878943646013189,
-                ltvAfterLiquidation: 7920000000000000
+                collateralAssetsToLiquidate: 9864687385108739,
+                debtAssetsToRepay: 109878943646013188,
+                ltvAfterLiquidation: 7920000000000000 + 1 // +1 rounding up
             })
         });
 
@@ -184,7 +184,7 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 0.01e18
             }),
             output: Output({
-                collateralAssetsToLiquidate: uint256(80e18 + 80e18 * 0.01e18 / 1e18) / 9 + 1, // +1 rounding up
+                collateralAssetsToLiquidate: uint256(80e18 + 80e18 * 0.01e18 / 1e18) / 9,
                 debtAssetsToRepay: 1e18,
                 ltvAfterLiquidation: 0
             })
@@ -287,8 +287,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 50000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 2792749271687079546301190,
-                debtAssetsToRepay: 11492435273764137171865238,
+                collateralAssetsToLiquidate: 2792749271687079546301119,
+                debtAssetsToRepay: 11492435273764137171865237,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
@@ -305,7 +305,7 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 50000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 14362637136981253300362875,
+                collateralAssetsToLiquidate: 14362637136981253300362874,
                 debtAssetsToRepay: 9018325386785717343215963,
                 ltvAfterLiquidation: 0
             })
@@ -323,8 +323,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 50000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 18474255093756855404629533,
-                debtAssetsToRepay: 241449730415823411607968,
+                collateralAssetsToLiquidate: 18474255093756855404628954,
+                debtAssetsToRepay: 241449730415823411607967,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
@@ -341,8 +341,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 50000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 10273449327492703514848314,
-                debtAssetsToRepay: 1611253902752546059828058,
+                collateralAssetsToLiquidate: 10273449327492703514847604,
+                debtAssetsToRepay: 1611253902752546059828057,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
@@ -395,8 +395,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 50000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 238718948463517172820541,
-                debtAssetsToRepay: 84723755264071880164121,
+                collateralAssetsToLiquidate: 238718948463517172820532,
+                debtAssetsToRepay: 84723755264071880164120,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
@@ -413,8 +413,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 50000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 28554771372480184033084129,
-                debtAssetsToRepay: 5091565717302692707653875,
+                collateralAssetsToLiquidate: 28554771372480184033083279,
+                debtAssetsToRepay: 5091565717302692707653874,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
@@ -431,8 +431,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 50000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 17166309238095333629222980,
-                debtAssetsToRepay: 1607255688123597739928316,
+                collateralAssetsToLiquidate: 17166309238095333629222610,
+                debtAssetsToRepay: 1607255688123597739928315,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
@@ -449,9 +449,9 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 50000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 12674595183626450396175234,
-                debtAssetsToRepay: 3468564406385661516716528,
-                ltvAfterLiquidation: 720000000000000000
+                collateralAssetsToLiquidate: 12674595183626450396174949,
+                debtAssetsToRepay: 3468564406385661516716527,
+                ltvAfterLiquidation: 720000000000000001
             })
         });
 
@@ -503,9 +503,9 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 50000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 5696539116320879174944091,
-                debtAssetsToRepay: 4249855825838393848398908,
-                ltvAfterLiquidation: 720000000000000000
+                collateralAssetsToLiquidate: 5696539116320879174943871,
+                debtAssetsToRepay: 4249855825838393848398907,
+                ltvAfterLiquidation: 720000000000000001
             })
         });
 
@@ -557,7 +557,7 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 50000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 19639760878005673042696268,
+                collateralAssetsToLiquidate: 19639760878005673042696267,
                 debtAssetsToRepay: 641420040349362704686345,
                 ltvAfterLiquidation: 0
             })
@@ -611,7 +611,7 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 50000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 20613720089689323026511390,
+                collateralAssetsToLiquidate: 20613720089689323026511389,
                 debtAssetsToRepay: 9770279804639415139945898,
                 ltvAfterLiquidation: 0
             })
@@ -809,9 +809,9 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 190000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 77630713327855247962426662964568653386,
-                debtAssetsToRepay: 1753971804286240760538306164372228708654754,
-                ltvAfterLiquidation: 720000000000000000
+                collateralAssetsToLiquidate: 77630713327855247962426662945558607094,
+                debtAssetsToRepay: 1753971804286240760538306164372228708654753,
+                ltvAfterLiquidation: 720000000000000001
             })
         });
 
@@ -989,9 +989,9 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 3215860885291074451890710361491662,
-                debtAssetsToRepay: 142334553764806119891300444859811494331,
-                ltvAfterLiquidation: 720000000000000000
+                collateralAssetsToLiquidate: 3215860885291074451890710361491649,
+                debtAssetsToRepay: 142334553764806119891300444859811494330,
+                ltvAfterLiquidation: 720000000000000001
             })
         });
 
@@ -1007,7 +1007,7 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 8333258112373594073700010292873237,
+                collateralAssetsToLiquidate: 8333258112373594073700010292873236,
                 debtAssetsToRepay: 530788527594814053793392617889530837588,
                 ltvAfterLiquidation: 0
             })
@@ -1025,8 +1025,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 1506659541728438492698905093874557,
-                debtAssetsToRepay: 465925560128015371060232631372082384471,
+                collateralAssetsToLiquidate: 1506659541728438492698905093874550,
+                debtAssetsToRepay: 465925560128015371060232631372082384470,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
@@ -1043,7 +1043,7 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 8563460516521775351143723211516174,
+                collateralAssetsToLiquidate: 8563460516521775351143723211516173,
                 debtAssetsToRepay: 53125938687417459730729672898356426521,
                 ltvAfterLiquidation: 0
             })
@@ -1061,9 +1061,9 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 5986269027222440691415133463695352,
-                debtAssetsToRepay: 595982378009271053797814950923029284014,
-                ltvAfterLiquidation: 720000000000000000
+                collateralAssetsToLiquidate: 5986269027222440691415133463695333,
+                debtAssetsToRepay: 595982378009271053797814950923029284013,
+                ltvAfterLiquidation: 720000000000000001
             })
         });
 
@@ -1097,7 +1097,7 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 8411144809661844997897827429540723,
+                collateralAssetsToLiquidate: 8411144809661844997897827429540722,
                 debtAssetsToRepay: 197353098435899630892014214919856752097,
                 ltvAfterLiquidation: 0
             })
@@ -1115,8 +1115,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 3819468729351619263467411139801799,
-                debtAssetsToRepay: 383014693052724626184116357720764995490,
+                collateralAssetsToLiquidate: 3819468729351619263467411139801782,
+                debtAssetsToRepay: 383014693052724626184116357720764995489,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
@@ -1133,7 +1133,7 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 425687921628000298657212852049270,
+                collateralAssetsToLiquidate: 425687921628000298657212852049268,
                 debtAssetsToRepay: 934631476227770093828439712524414062500,
                 ltvAfterLiquidation: 1489191397126934729
             })
@@ -1151,7 +1151,7 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 7188855098399170585409175070189337,
+                collateralAssetsToLiquidate: 7188855098399170585409175070189336,
                 debtAssetsToRepay: 571495663135262676729008391447771324771,
                 ltvAfterLiquidation: 0
             })
@@ -1169,7 +1169,7 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 8408507851188602770534883804586368,
+                collateralAssetsToLiquidate: 8408507851188602770534883804586367,
                 debtAssetsToRepay: 342710637502585910790341547435177930783,
                 ltvAfterLiquidation: 0
             })
@@ -1205,8 +1205,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 2167430476553243907434848274584379,
-                debtAssetsToRepay: 570068557146273106523628933553188754656,
+                collateralAssetsToLiquidate: 2167430476553243907434848274584372,
+                debtAssetsToRepay: 570068557146273106523628933553188754655,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
@@ -1223,8 +1223,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 4522557938380823853155485189119473,
-                debtAssetsToRepay: 387341747931294853008703385877570112155,
+                collateralAssetsToLiquidate: 4522557938380823853155485189119456,
+                debtAssetsToRepay: 387341747931294853008703385877570112154,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
@@ -1241,8 +1241,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 1569811504587904063703992159787987,
-                debtAssetsToRepay: 182145306848823388345888319965605412826,
+                collateralAssetsToLiquidate: 1569811504587904063703992159787982,
+                debtAssetsToRepay: 182145306848823388345888319965605412825,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
@@ -1331,9 +1331,9 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 10000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 317756354314645990608472187614785,
-                debtAssetsToRepay: 479534977381793379174499982449298890334,
-                ltvAfterLiquidation: 720000000000000000
+                collateralAssetsToLiquidate: 317756354314645990608472187614782,
+                debtAssetsToRepay: 479534977381793379174499982449298890333,
+                ltvAfterLiquidation: 720000000000000001
             })
         });
 
@@ -1421,7 +1421,7 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 140000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 1375819254402693,
+                collateralAssetsToLiquidate: 1375819254402692,
                 debtAssetsToRepay: 776166576854687597566921,
                 ltvAfterLiquidation: 0
             })
@@ -1475,8 +1475,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 140000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 747665887074833601,
-                debtAssetsToRepay: 331979108783670339381219,
+                collateralAssetsToLiquidate: 747665887074833600,
+                debtAssetsToRepay: 331979108783670339381218,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
@@ -1547,8 +1547,8 @@ contract LiquidationPreviewTestData {
                 liquidationFee: 140000000000000000
             }),
             output: Output({
-                collateralAssetsToLiquidate: 164194034197117103,
-                debtAssetsToRepay: 183164621873326227593965,
+                collateralAssetsToLiquidate: 164194034197117102,
+                debtAssetsToRepay: 183164621873326227593964,
                 ltvAfterLiquidation: 720000000000000000
             })
         });
