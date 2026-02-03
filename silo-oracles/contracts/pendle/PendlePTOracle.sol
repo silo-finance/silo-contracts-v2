@@ -10,6 +10,8 @@ import {IPendleSYTokenLike} from "silo-oracles/contracts/pendle/interfaces/IPend
 import {Math} from "openzeppelin5/utils/math/Math.sol";
 import {Aggregator} from "../_common/Aggregator.sol";
 
+// solhint-disable ordering
+
 /// @notice PendlePTOracle is an oracle, which multiplies the underlying PT token price by PtToSyRate from Pendle.
 /// This oracle must be deployed using PendlePTOracleFactory contract. PendlePTOracle decimals are equal to underlying
 /// oracle's decimals. TWAP duration is constant and equal to 30 minutes. UNDERLYING_ORACLE must return the price of
@@ -79,22 +81,6 @@ contract PendlePTOracle is ISiloOracle, Aggregator, IVersioned {
     function beforeQuote(address) external virtual {}
 
     // @inheritdoc ISiloOracle
-    function quoteToken() external virtual view returns (address) {
-        return QUOTE_TOKEN;
-    }
-
-    /// @inheritdoc IVersioned
-    // solhint-disable-next-line func-name-mixedcase
-    function VERSION() external pure override returns (string memory version) {
-        version = "PendlePTOracle 4.0.0";
-    }
-
-    /// @inheritdoc Aggregator
-    function baseToken() public view virtual override returns (address token) {
-        return PT_TOKEN;
-    }
-
-    /// @inheritdoc ISiloOracle
     function quote(uint256 _baseAmount, address _baseToken)
         public
         view
@@ -117,6 +103,22 @@ contract PendlePTOracle is ISiloOracle, Aggregator, IVersioned {
         }
 
         require(quoteAmount != 0, ZeroPrice());
+    }
+
+    // @inheritdoc ISiloOracle
+    function quoteToken() external virtual view returns (address) {
+        return QUOTE_TOKEN;
+    }
+
+    /// @inheritdoc IVersioned
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure override returns (string memory version) {
+        version = "PendlePTOracle 4.0.0";
+    }
+
+    /// @inheritdoc Aggregator
+    function baseToken() public view virtual override returns (address token) {
+        return PT_TOKEN;
     }
 
     function getPtToken(address _market) public virtual view returns (address ptToken) {
