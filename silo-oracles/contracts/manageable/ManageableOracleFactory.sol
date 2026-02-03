@@ -24,7 +24,7 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
         public
         returns (IManageableOracle manageableOracle)
     {
-        manageableOracle = _createOracle(_externalSalt);
+        manageableOracle = _deployOracle(_externalSalt);
         manageableOracle.initialize(_oracle, _owner, _timelock);
     }
 
@@ -36,7 +36,7 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
         uint32 _timelock,
         bytes32 _externalSalt
     ) external returns (IManageableOracle manageableOracle) {
-        address underlyingOracle = _createUnderlyingOracle(_underlyingOracleFactory, _underlyingOracleInitData);
+        address underlyingOracle = _deployUnderlyingOracle(_underlyingOracleFactory, _underlyingOracleInitData);
         manageableOracle = create(ISiloOracle(underlyingOracle), _owner, _timelock, _externalSalt);
     }
 
@@ -55,9 +55,9 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
         predictedAddress = Clones.predictDeterministicAddress(address(ORACLE_IMPLEMENTATION), salt);
     }
 
-    function _createUnderlyingOracle(address _underlyingOracleFactory, bytes calldata _underlyingOracleInitData)
+    function _deployUnderlyingOracle(address _underlyingOracleFactory, bytes calldata _underlyingOracleInitData)
         internal
-        returns (address underlyinOracle)
+        returns (address underlyingOracle)
     {
         require(_underlyingOracleFactory != address(0), ZeroFactory());
 
@@ -65,13 +65,13 @@ contract ManageableOracleFactory is Create2Factory, IManageableOracleFactory {
         (bool success, bytes memory data) = _underlyingOracleFactory.call(_underlyingOracleInitData);
         require(success && data.length == 32, FailedToCreateUnderlyingOracle());
 
-        underlyinOracle = abi.decode(data, (address));
+        underlyingOracle = abi.decode(data, (address));
     }
 
     /// @dev Internal helper to create and register a ManageableOracle instance
     /// @param _externalSalt External salt for the CREATE2 deterministic deployment
     /// @return manageableOracle The created ManageableOracle instance
-    function _createOracle(bytes32 _externalSalt) internal returns (IManageableOracle manageableOracle) {
+    function _deployOracle(bytes32 _externalSalt) internal returns (IManageableOracle manageableOracle) {
         bytes32 salt = _salt(_externalSalt);
 
         manageableOracle = IManageableOracle(Clones.cloneDeterministic(address(ORACLE_IMPLEMENTATION), salt));
