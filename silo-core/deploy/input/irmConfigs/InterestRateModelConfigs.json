@@ -1,5 +1,20 @@
 [
   {
+    "name": "testConfig",
+    "config": {
+      "uopt": 10,
+      "ucrit": 8,
+      "ulow": 9,
+      "ki": 4,
+      "kcrit": 3,
+      "klow": 5,
+      "klin": 6,
+      "beta": 2,
+      "ri": 7,
+      "Tcrit": 1
+    }
+  },
+  {
     "name": "defaultAsset",
     "config": {
       "uopt": 500000000000000000,
