@@ -5,7 +5,8 @@ import {CommonDeploy} from "../CommonDeploy.sol";
 import {AddrKey} from "common/addresses/AddrKey.sol";
 import {YinjToInjAdapter} from "silo-oracles/contracts/custom/yINJ/YinjToInjAdapter.sol";
 import {IYInjPriceOracle} from "silo-oracles/contracts/custom/yINJ/interfaces/IYInjPriceOracle.sol";
- interface IBankModule {
+
+interface IBankModule {
     function mint(address recipient, uint256 amount) external payable returns (bool);
     function totalSupply(address) external view returns (uint256);
 }
