@@ -67,6 +67,11 @@ contract YinjToInjAdapterTest is Test {
         );
     }
 
+    function test_YinjToInjAdapter_decimals() public view {
+        assertEq(adapter.decimals(), 18, "Oracle decimals are 18");
+        assertEq(adapter.decimals(), adapter.ORACLE_DECIMALS(), "Oracle decimals equal to underlying decimals");
+    }
+
     function test_YinjToInjAdapter_constructor_reverts() public {
         vm.expectRevert();
         new YinjToInjAdapter(IYInjPriceOracle(address(YINJ)));
