@@ -157,6 +157,7 @@ src = 'silo-oracles/contracts'
 out = 'cache/foundry/out/silo-oracles'
 test = 'silo-oracles/test'
 broadcast = 'silo-oracles/broadcast'
+injective = true
 
 [fuzz]
 runs = 800
