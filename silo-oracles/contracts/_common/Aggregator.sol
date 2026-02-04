@@ -55,6 +55,7 @@ abstract contract Aggregator is AggregatorV3Interface {
         return (0, 0, 0, 0, 0);
     }
     
+    /// @notice token that is getting priced by oracle
     function baseToken() public view virtual returns (address token);
 
     function quote(uint256 _baseAmount, address _baseToken) public view virtual returns (uint256 quoteAmount);
