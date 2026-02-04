@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [3.17.0] - 2026-01-30
+### Markets
+- agETH / WETH new market on Mainnet
+- hgETH / WETH new market on Mainnet
+- PT-sw-avUSDx(avUSD)-2026-05-15 / USDC new market on Avalanche
+- PT-savUSD(avUSD)-2026-05-15 / USDC new market on Avalanche
+- PT-savUSD(avUSD)-2026-05-15 / USDC new market on Avalanche
+
+### Added
+- static-4-6 IRM config
+
 ## [3.16.0] - 2026-01-13
 ### Markets
 - weETH / WETH V2 new market on Arbitrum

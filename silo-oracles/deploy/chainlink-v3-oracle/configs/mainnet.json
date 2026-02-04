@@ -72,6 +72,28 @@
         "normalizationMultiplier": 0,
         "invertSecondPrice": false
     },
+    "CHAINLINK_WETH_USD": {
+        "baseToken": "WETH",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "CHAINLINK_ETH_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e8,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "EORACLE_hgETH_USD": {
+        "baseToken": "hgETH",
+        "quoteToken": "SILO_VIRTUAL_USD_8",
+        "primaryAggregator": "eOracle_hgETH_USD_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
     "ADAPTER_HARDCODE_wstETH_WETH": {
         "baseToken": "wstETH",
         "quoteToken": "WETH",
@@ -160,6 +182,17 @@
         "baseToken": "PT-USDf-29JAN2026",
         "quoteToken": "USDC",
         "primaryAggregator": "LINEAR_ORACLE_PT-USDf-29JAN2026_USDf_aggregator",
+        "primaryHeartbeat": 87001,
+        "secondaryAggregator": "",
+        "secondaryHeartbeat": 0,
+        "normalizationDivider": 1e18,
+        "normalizationMultiplier": 0,
+        "invertSecondPrice": false
+    },
+    "CHAINLINK_rsETH_WETH": {
+        "baseToken": "rsETH",
+        "quoteToken": "WETH",
+        "primaryAggregator": "CHAINLINK_rsETH_ETH_AGGREGATOR",
         "primaryHeartbeat": 87001,
         "secondaryAggregator": "",
         "secondaryHeartbeat": 0,
