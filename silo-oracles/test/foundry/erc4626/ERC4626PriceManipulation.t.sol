@@ -87,7 +87,7 @@ contract ERC4626PriceManipulation is IntegrationTest {
         uint256 priceBeforeDonation = _getPrice();
 
         vm.prank(_attacker);
-        _asset.transfer(address(_vault), attackerBalance);
+        assertTrue(_asset.transfer(address(_vault), attackerBalance));
 
         _logPrice("\tAfter 100% donation\n");
         _logVaultSharesAndAssets();
