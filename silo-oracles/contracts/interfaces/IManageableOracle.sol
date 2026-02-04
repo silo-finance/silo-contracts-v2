@@ -17,6 +17,7 @@ interface IManageableOracle {
     event OwnershipRenounceCanceled();
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
+    error NoChange();
     error QuoteTokenMustBeTheSame();
     error BaseTokenMustBeTheSame();
     error PendingUpdate();

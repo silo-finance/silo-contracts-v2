@@ -102,6 +102,8 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
 
     /// @inheritdoc IManageableOracle
     function proposeOracle(ISiloOracle _oracle) external virtual onlyOwner whenNotPending(pendingOracle.validAt) {
+        require(address(_oracle) != address(oracle), NoChange());
+
         oracleVerification(_oracle);
 
         pendingOracle.update(address(_oracle), timelock);
@@ -110,6 +112,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
 
     /// @inheritdoc IManageableOracle
     function proposeTimelock(uint32 _timelock) external virtual onlyOwner whenNotPending(pendingTimelock.validAt) {
+        require(_timelock != timelock, NoChange());
         require(_timelock >= MIN_TIMELOCK && _timelock <= MAX_TIMELOCK, InvalidTimelock());
 
         pendingTimelock.update(_timelock, timelock);
@@ -123,6 +126,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
         onlyOwner
         whenNotPending(pendingOwnership.validAt)
     {
+        require(_newOwner != owner, NoChange());
         require(_newOwner != address(0), ZeroOwner());
 
         pendingOwnership.update(_newOwner, timelock);

@@ -169,6 +169,97 @@ abstract contract ManageableOracleBase is Test {
     }
 
     /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_whenNotPending_proposeOracle
+    */
+    function test_whenNotPending_proposeOracle() public {
+        SiloOracleMock1 otherOracleMock = new SiloOracleMock1();
+        otherOracleMock.setQuoteToken(oracleMock.quoteToken());
+        SiloOracleMock1 yetAnotherOracleMock = new SiloOracleMock1();
+        yetAnotherOracleMock.setQuoteToken(oracleMock.quoteToken());
+
+        vm.startPrank(owner);
+        oracle.proposeOracle(ISiloOracle(address(otherOracleMock)));
+        (address pendingOracleValue,) = oracle.pendingOracle();
+        assertEq(pendingOracleValue, address(otherOracleMock), "pending oracle should be set");
+
+        vm.expectRevert(IManageableOracle.PendingUpdate.selector);
+        oracle.proposeOracle(ISiloOracle(address(yetAnotherOracleMock)));
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_whenNotPending_proposeTimelock
+    */
+    function test_whenNotPending_proposeTimelock() public {
+        uint32 newTimelock = 2 days;
+        uint32 anotherTimelock = 3 days;
+        vm.startPrank(owner);
+
+        oracle.proposeTimelock(newTimelock);
+        (uint192 pendingTimelockValue,) = oracle.pendingTimelock();
+        assertEq(pendingTimelockValue, newTimelock, "pending timelock should be set");
+
+        vm.expectRevert(IManageableOracle.PendingUpdate.selector);
+        oracle.proposeTimelock(anotherTimelock);
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_whenNotPending_proposeTransferOwnership
+    */
+    function test_whenNotPending_proposeTransferOwnership() public {
+        address newOwner = makeAddr("NewOwner");
+        address anotherNewOwner = makeAddr("AnotherNewOwner");
+        vm.startPrank(owner);
+
+        oracle.proposeTransferOwnership(newOwner);
+        (address pendingOwnershipValue,) = oracle.pendingOwnership();
+        assertEq(pendingOwnershipValue, newOwner, "pending ownership should be set");
+
+        vm.expectRevert(IManageableOracle.PendingUpdate.selector);
+        oracle.proposeTransferOwnership(anotherNewOwner);
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_whenNotPending_proposeRenounceOwnership
+    */
+    function test_whenNotPending_proposeRenounceOwnership() public {
+        vm.startPrank(owner);
+        oracle.proposeRenounceOwnership();
+        (address pendingOwnershipValue, uint64 pendingOwnershipValidAt) = oracle.pendingOwnership();
+        assertEq(pendingOwnershipValue, address(0), "pending renounce: value should be zero");
+        assertTrue(pendingOwnershipValidAt != 0, "pending renounce: validAt should be set");
+
+        vm.expectRevert(IManageableOracle.PendingUpdate.selector);
+        oracle.proposeRenounceOwnership();
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_NoChange_proposeOracle_revert_whenSameOracle
+    */
+    function test_NoChange_proposeOracle_revert_whenSameOracle() public {
+        vm.expectRevert(IManageableOracle.NoChange.selector);
+        vm.prank(owner);
+        oracle.proposeOracle(ISiloOracle(address(oracleMock)));
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_NoChange_proposeTimelock_revert_whenSameTimelock
+    */
+    function test_NoChange_proposeTimelock_revert_whenSameTimelock() public {
+        vm.expectRevert(IManageableOracle.NoChange.selector);
+        vm.prank(owner);
+        oracle.proposeTimelock(timelock);
+    }
+
+    /*
+        FOUNDRY_PROFILE=oracles forge test --mt test_NoChange_proposeTransferOwnership_revert_whenSameOwner
+    */
+    function test_NoChange_proposeTransferOwnership_revert_whenSameOwner() public {
+        vm.expectRevert(IManageableOracle.NoChange.selector);
+        vm.prank(owner);
+        oracle.proposeTransferOwnership(owner);
+    }
+
+    /*
         FOUNDRY_PROFILE=oracles forge test --mt test_onlyOwner_proposeOracle_revert_whenNotOwner
     */
     function test_onlyOwner_proposeOracle_revert_whenNotOwner() public {
