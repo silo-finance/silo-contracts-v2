@@ -32,16 +32,16 @@
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
-            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">7</td>
             <td class="headerCovTableEntry">0</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-03 06:51:35</td>
+            <td class="headerValue">2026-02-04 11:05:13</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
-            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">3</td>
             <td class="headerCovTableEntry">0</td>
           </tr>
                   <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
@@ -79,15 +79,20 @@
 <span id="L17"><span class="lineNum">      17</span>              : contract PendleLPTToAssetOracle is PendleLPTOracle {</span>
 <span id="L18"><span class="lineNum">      18</span>              :     constructor(ISiloOracle _underlyingOracle, address _market) PendleLPTOracle(_underlyingOracle, _market) {}</span>
 <span id="L19"><span class="lineNum">      19</span>              : </span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaUNC tlaBgUNC">           0 :     function _getRateLpToUnderlying() internal view override returns (uint256) {</span></span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 :         return PENDLE_ORACLE.getLpToAssetRate(PENDLE_MARKET, TWAP_DURATION);</span></span>
-<span id="L22"><span class="lineNum">      22</span>              :     }</span>
-<span id="L23"><span class="lineNum">      23</span>              : </span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaUNC">           0 :     function _getUnderlyingToken() internal virtual view override returns (address token) {</span></span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :         (address syToken,,) = IPendleMarketV3Like(PENDLE_MARKET).readTokens();</span></span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaUNC">           0 :         (, token,) = IPendleSYTokenLike(syToken).assetInfo();</span></span>
+<span id="L20"><span class="lineNum">      20</span>              :     // solhint-disable-next-line func-name-mixedcase</span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC tlaBgUNC">           0 :     function VERSION() external pure override virtual returns (string memory version) {</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC">           0 :         version = &quot;PendleLPTToAssetOracle 4.0.0&quot;;</span></span>
+<span id="L23"><span class="lineNum">      23</span>              :     }</span>
+<span id="L24"><span class="lineNum">      24</span>              : </span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :     function _getRateLpToUnderlying() internal view override returns (uint256) {</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaUNC">           0 :         return PENDLE_ORACLE.getLpToAssetRate(PENDLE_MARKET, TWAP_DURATION);</span></span>
 <span id="L27"><span class="lineNum">      27</span>              :     }</span>
-<span id="L28"><span class="lineNum">      28</span>              : }</span>
+<span id="L28"><span class="lineNum">      28</span>              : </span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaUNC">           0 :     function _getUnderlyingToken() internal virtual view override returns (address token) {</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaUNC">           0 :         (address syToken,,) = IPendleMarketV3Like(PENDLE_MARKET).readTokens();</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaUNC">           0 :         (, token,) = IPendleSYTokenLike(syToken).assetInfo();</span></span>
+<span id="L32"><span class="lineNum">      32</span>              :     }</span>
+<span id="L33"><span class="lineNum">      33</span>              : }</span>
         </pre>
               </td>
             </tr>

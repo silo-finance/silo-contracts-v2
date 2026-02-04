@@ -32,16 +32,16 @@
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
-            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">11</td>
             <td class="headerCovTableEntry">0</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-03 06:51:35</td>
+            <td class="headerValue">2026-02-04 11:05:13</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
-            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">5</td>
             <td class="headerCovTableEntry">0</td>
           </tr>
                   <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
@@ -64,35 +64,56 @@
 <span id="L2"><span class="lineNum">       2</span>              : pragma solidity 0.8.28;</span>
 <span id="L3"><span class="lineNum">       3</span>              : </span>
 <span id="L4"><span class="lineNum">       4</span>              : import {ISiloOracle} from &quot;silo-core/contracts/interfaces/ISiloOracle.sol&quot;;</span>
-<span id="L5"><span class="lineNum">       5</span>              : import {IsAVAX} from &quot;silo-oracles/contracts/interfaces/IsAVAX.sol&quot;;</span>
-<span id="L6"><span class="lineNum">       6</span>              : </span>
-<span id="L7"><span class="lineNum">       7</span>              : /// @dev sAVAXOracle is a custom oracle for tAVAX/wAVAX market</span>
-<span id="L8"><span class="lineNum">       8</span>              : contract sAVAXOracle is ISiloOracle { // solhint-disable-line contract-name-camelcase</span>
-<span id="L9"><span class="lineNum">       9</span>              :     IsAVAX public constant S_AVAX = IsAVAX(0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE);</span>
-<span id="L10"><span class="lineNum">      10</span>              :     address public constant IAU_SAVAX = 0x5Ac32E4c756bD57630eAdF216668Ba16fA4635a2;</span>
-<span id="L11"><span class="lineNum">      11</span>              : </span>
-<span id="L12"><span class="lineNum">      12</span>              :     error AssetNotSupported();</span>
-<span id="L13"><span class="lineNum">      13</span>              :     error ZeroPrice();</span>
-<span id="L14"><span class="lineNum">      14</span>              : </span>
-<span id="L15"><span class="lineNum">      15</span>              :     /// @inheritdoc ISiloOracle</span>
-<span id="L16"><span class="lineNum">      16</span> <span class="tlaUNC tlaBgUNC">           0 :     function beforeQuote(address _baseToken) external view {</span></span>
-<span id="L17"><span class="lineNum">      17</span>              :         // only for an ISiloOracle interface implementation</span>
-<span id="L18"><span class="lineNum">      18</span>              :     }</span>
-<span id="L19"><span class="lineNum">      19</span>              : </span>
-<span id="L20"><span class="lineNum">      20</span>              :     /// @inheritdoc ISiloOracle</span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 :     function quote(uint256 _baseAmount, address _baseToken) external view returns (uint256 quoteAmount) {</span></span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC">           0 :         require(_baseToken == IAU_SAVAX, AssetNotSupported());</span></span>
+<span id="L5"><span class="lineNum">       5</span>              : import {IVersioned} from &quot;silo-core/contracts/interfaces/IVersioned.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {IsAVAX} from &quot;silo-oracles/contracts/interfaces/IsAVAX.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : import {Aggregator} from &quot;../../_common/Aggregator.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : </span>
+<span id="L9"><span class="lineNum">       9</span>              : // solhint-disable ordering</span>
+<span id="L10"><span class="lineNum">      10</span>              : </span>
+<span id="L11"><span class="lineNum">      11</span>              : /// @dev sAVAXOracle is a custom oracle for tAVAX/wAVAX market</span>
+<span id="L12"><span class="lineNum">      12</span>              : contract sAVAXOracle is ISiloOracle, Aggregator, IVersioned { // solhint-disable-line contract-name-camelcase</span>
+<span id="L13"><span class="lineNum">      13</span>              :     IsAVAX public constant S_AVAX = IsAVAX(0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE);</span>
+<span id="L14"><span class="lineNum">      14</span>              :     address public constant IAU_SAVAX = 0x5Ac32E4c756bD57630eAdF216668Ba16fA4635a2;</span>
+<span id="L15"><span class="lineNum">      15</span>              : </span>
+<span id="L16"><span class="lineNum">      16</span>              :     error AssetNotSupported();</span>
+<span id="L17"><span class="lineNum">      17</span>              :     error ZeroPrice();</span>
+<span id="L18"><span class="lineNum">      18</span>              : </span>
+<span id="L19"><span class="lineNum">      19</span>              :     /// @inheritdoc ISiloOracle</span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaUNC tlaBgUNC">           0 :     function beforeQuote(address _baseToken) external view {</span></span>
+<span id="L21"><span class="lineNum">      21</span>              :         // only for an ISiloOracle interface implementation</span>
+<span id="L22"><span class="lineNum">      22</span>              :     }</span>
 <span id="L23"><span class="lineNum">      23</span>              : </span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaUNC">           0 :         quoteAmount = S_AVAX.getPooledAvaxByShares(_baseAmount);</span></span>
-<span id="L25"><span class="lineNum">      25</span>              : </span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaUNC">           0 :         if (quoteAmount == 0) revert ZeroPrice();</span></span>
-<span id="L27"><span class="lineNum">      27</span>              :     }</span>
-<span id="L28"><span class="lineNum">      28</span>              : </span>
-<span id="L29"><span class="lineNum">      29</span>              :     /// @inheritdoc ISiloOracle</span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaUNC">           0 :     function quoteToken() external view virtual returns (address) {</span></span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaUNC">           0 :         return 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7; // WAVAX</span></span>
-<span id="L32"><span class="lineNum">      32</span>              :     }</span>
-<span id="L33"><span class="lineNum">      33</span>              : }</span>
+<span id="L24"><span class="lineNum">      24</span>              :     /// @inheritdoc ISiloOracle</span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :     function quote(uint256 _baseAmount, address _baseToken)</span></span>
+<span id="L26"><span class="lineNum">      26</span>              :         public</span>
+<span id="L27"><span class="lineNum">      27</span>              :         view</span>
+<span id="L28"><span class="lineNum">      28</span>              :         virtual</span>
+<span id="L29"><span class="lineNum">      29</span>              :         override(Aggregator, ISiloOracle)</span>
+<span id="L30"><span class="lineNum">      30</span>              :         returns (uint256 quoteAmount)</span>
+<span id="L31"><span class="lineNum">      31</span>              :     {</span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaUNC">           0 :         require(_baseToken == IAU_SAVAX, AssetNotSupported());</span></span>
+<span id="L33"><span class="lineNum">      33</span>              : </span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC">           0 :         quoteAmount = S_AVAX.getPooledAvaxByShares(_baseAmount);</span></span>
+<span id="L35"><span class="lineNum">      35</span>              : </span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :         if (quoteAmount == 0) revert ZeroPrice();</span></span>
+<span id="L37"><span class="lineNum">      37</span>              :     }</span>
+<span id="L38"><span class="lineNum">      38</span>              : </span>
+<span id="L39"><span class="lineNum">      39</span>              :     /// @inheritdoc ISiloOracle</span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaUNC">           0 :     function quoteToken() external view virtual returns (address) {</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaUNC">           0 :         return 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7; // WAVAX</span></span>
+<span id="L42"><span class="lineNum">      42</span>              :     }</span>
+<span id="L43"><span class="lineNum">      43</span>              : </span>
+<span id="L44"><span class="lineNum">      44</span>              :     /// @inheritdoc IVersioned</span>
+<span id="L45"><span class="lineNum">      45</span>              :     // solhint-disable-next-line func-name-mixedcase</span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaUNC">           0 :     function VERSION() external pure override returns (string memory version) {</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaUNC">           0 :         version = &quot;sAVAXOracle 4.0.0&quot;;</span></span>
+<span id="L48"><span class="lineNum">      48</span>              :     }</span>
+<span id="L49"><span class="lineNum">      49</span>              : </span>
+<span id="L50"><span class="lineNum">      50</span>              :     /// @inheritdoc Aggregator</span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaUNC">           0 :     function baseToken() public view virtual override returns (address token) {</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaUNC">           0 :         return IAU_SAVAX;</span></span>
+<span id="L53"><span class="lineNum">      53</span>              :     }</span>
+<span id="L54"><span class="lineNum">      54</span>              : }</span>
         </pre>
               </td>
             </tr>

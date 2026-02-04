@@ -32,16 +32,16 @@
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
-            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">6</td>
             <td class="headerCovTableEntry">0</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-03 06:51:35</td>
+            <td class="headerValue">2026-02-04 11:05:13</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
-            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">3</td>
             <td class="headerCovTableEntry">0</td>
           </tr>
                   <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
@@ -79,10 +79,15 @@
 <span id="L17"><span class="lineNum">      17</span> <span class="tlaUNC">           0 :         LPT_WRAPPER = _lptWrapper;</span></span>
 <span id="L18"><span class="lineNum">      18</span>              :     }</span>
 <span id="L19"><span class="lineNum">      19</span>              : </span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaUNC">           0 :     function _getBaseToken() internal view override returns (address baseToken) {</span></span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 :         baseToken = address(LPT_WRAPPER);</span></span>
-<span id="L22"><span class="lineNum">      22</span>              :     }</span>
-<span id="L23"><span class="lineNum">      23</span>              : }</span>
+<span id="L20"><span class="lineNum">      20</span>              :     // solhint-disable-next-line func-name-mixedcase</span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 :     function VERSION() external pure override virtual returns (string memory version) {</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC">           0 :         version = &quot;PendleWrapperLPTToAssetOracle 4.0.0&quot;;</span></span>
+<span id="L23"><span class="lineNum">      23</span>              :     }</span>
+<span id="L24"><span class="lineNum">      24</span>              : </span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :     function _getBaseToken() internal view override returns (address baseToken) {</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaUNC">           0 :         baseToken = address(LPT_WRAPPER);</span></span>
+<span id="L27"><span class="lineNum">      27</span>              :     }</span>
+<span id="L28"><span class="lineNum">      28</span>              : }</span>
         </pre>
               </td>
             </tr>

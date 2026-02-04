@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-03 06:51:35</td>
+            <td class="headerValue">2026-02-04 11:05:13</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -77,77 +77,72 @@
 <span id="L15"><span class="lineNum">      15</span>              : </span>
 <span id="L16"><span class="lineNum">      16</span>              :     mapping(address oracle =&gt; bool created) public createdInFactory;</span>
 <span id="L17"><span class="lineNum">      17</span>              : </span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC tlaBgGNC">          85 :     constructor() {</span></span>
-<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">          85 :         ORACLE_IMPLEMENTATION = new ManageableOracle();</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC tlaBgGNC">          99 :     constructor() {</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">          99 :         ORACLE_IMPLEMENTATION = new ManageableOracle();</span></span>
 <span id="L20"><span class="lineNum">      20</span>              :     }</span>
 <span id="L21"><span class="lineNum">      21</span>              : </span>
 <span id="L22"><span class="lineNum">      22</span>              :     /// @inheritdoc IManageableOracleFactory</span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">          42 :     function create(ISiloOracle _oracle, address _owner, uint32 _timelock, address _baseToken, bytes32 _externalSalt)</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">          49 :     function create(ISiloOracle _oracle, address _owner, uint32 _timelock, bytes32 _externalSalt)</span></span>
 <span id="L24"><span class="lineNum">      24</span>              :         public</span>
 <span id="L25"><span class="lineNum">      25</span>              :         returns (IManageableOracle manageableOracle)</span>
 <span id="L26"><span class="lineNum">      26</span>              :     {</span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">          80 :         manageableOracle = _createOracle(_externalSalt, _owner);</span></span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">          80 :         manageableOracle.initialize(_oracle, _owner, _timelock, _baseToken);</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">          94 :         manageableOracle = _deployOracle(_externalSalt);</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">          94 :         manageableOracle.initialize(_oracle, _owner, _timelock);</span></span>
 <span id="L29"><span class="lineNum">      29</span>              :     }</span>
 <span id="L30"><span class="lineNum">      30</span>              : </span>
 <span id="L31"><span class="lineNum">      31</span>              :     /// @inheritdoc IManageableOracleFactory</span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">          38 :     function create(</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">          45 :     function create(</span></span>
 <span id="L33"><span class="lineNum">      33</span>              :         address _underlyingOracleFactory,</span>
 <span id="L34"><span class="lineNum">      34</span>              :         bytes calldata _underlyingOracleInitData,</span>
 <span id="L35"><span class="lineNum">      35</span>              :         address _owner,</span>
 <span id="L36"><span class="lineNum">      36</span>              :         uint32 _timelock,</span>
-<span id="L37"><span class="lineNum">      37</span>              :         address _baseToken,</span>
-<span id="L38"><span class="lineNum">      38</span>              :         bytes32 _externalSalt</span>
-<span id="L39"><span class="lineNum">      39</span>              :     ) external returns (IManageableOracle manageableOracle) {</span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">          38 :         address underlyingOracle = _createUnderlyingOracle(_underlyingOracleFactory, _underlyingOracleInitData);</span></span>
-<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">          38 :         manageableOracle = create(ISiloOracle(underlyingOracle), _owner, _timelock, _baseToken, _externalSalt);</span></span>
-<span id="L42"><span class="lineNum">      42</span>              :     }</span>
-<span id="L43"><span class="lineNum">      43</span>              : </span>
-<span id="L44"><span class="lineNum">      44</span>              :     /// @notice Predict the deterministic address of a ManageableOracle that would be created</span>
-<span id="L45"><span class="lineNum">      45</span>              :     /// @param _deployer Address of the account that will deploy the oracle</span>
-<span id="L46"><span class="lineNum">      46</span>              :     /// @param _externalSalt External salt for the CREATE2 deterministic deployment</span>
-<span id="L47"><span class="lineNum">      47</span>              :     /// @return predictedAddress The address where the ManageableOracle would be deployed</span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">           4 :     function predictAddress(address _deployer, bytes32 _externalSalt)</span></span>
-<span id="L49"><span class="lineNum">      49</span>              :         external</span>
-<span id="L50"><span class="lineNum">      50</span>              :         view</span>
-<span id="L51"><span class="lineNum">      51</span>              :         returns (address predictedAddress)</span>
-<span id="L52"><span class="lineNum">      52</span>              :     {</span>
-<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">           4 :         require(_deployer != address(0), DeployerCannotBeZero());</span></span>
-<span id="L54"><span class="lineNum">      54</span>              : </span>
-<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">           4 :         bytes32 salt = _createSalt(_deployer, _externalSalt);</span></span>
-<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">           4 :         predictedAddress = Clones.predictDeterministicAddress(address(ORACLE_IMPLEMENTATION), salt);</span></span>
-<span id="L57"><span class="lineNum">      57</span>              :     }</span>
-<span id="L58"><span class="lineNum">      58</span>              : </span>
-<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">          38 :     function _createUnderlyingOracle(</span></span>
-<span id="L60"><span class="lineNum">      60</span>              :         address _underlyingOracleFactory,</span>
-<span id="L61"><span class="lineNum">      61</span>              :         bytes calldata _underlyingOracleInitData</span>
-<span id="L62"><span class="lineNum">      62</span>              :     ) internal returns (address underlyinOracle) {</span>
-<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">          38 :         require(_underlyingOracleFactory != address(0), ZeroFactory());</span></span>
-<span id="L64"><span class="lineNum">      64</span>              : </span>
-<span id="L65"><span class="lineNum">      65</span>              :         // solhint-disable-next-line avoid-low-level-calls</span>
-<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">          38 :         (bool success, bytes memory data) = _underlyingOracleFactory.call(_underlyingOracleInitData);</span></span>
-<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">          38 :         require(success &amp;&amp; data.length == 32, FailedToCreateUnderlyingOracle());</span></span>
-<span id="L68"><span class="lineNum">      68</span>              : </span>
-<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">          38 :         underlyinOracle = abi.decode(data, (address));</span></span>
-<span id="L70"><span class="lineNum">      70</span>              :     }</span>
-<span id="L71"><span class="lineNum">      71</span>              : </span>
-<span id="L72"><span class="lineNum">      72</span>              :     /// @dev Internal helper to create and register a ManageableOracle instance</span>
-<span id="L73"><span class="lineNum">      73</span>              :     /// @param _externalSalt External salt for the CREATE2 deterministic deployment</span>
-<span id="L74"><span class="lineNum">      74</span>              :     /// @param _owner Address that will own the contract</span>
-<span id="L75"><span class="lineNum">      75</span>              :     /// @return manageableOracle The created ManageableOracle instance</span>
-<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">          80 :     function _createOracle(bytes32 _externalSalt, address _owner)</span></span>
-<span id="L77"><span class="lineNum">      77</span>              :         internal</span>
-<span id="L78"><span class="lineNum">      78</span>              :         returns (IManageableOracle manageableOracle)</span>
-<span id="L79"><span class="lineNum">      79</span>              :     {</span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">          80 :         bytes32 salt = _salt(_externalSalt);</span></span>
-<span id="L81"><span class="lineNum">      81</span>              : </span>
-<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">          80 :         manageableOracle = IManageableOracle(Clones.cloneDeterministic(address(ORACLE_IMPLEMENTATION), salt));</span></span>
-<span id="L83"><span class="lineNum">      83</span>              : </span>
-<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">          80 :         createdInFactory[address(manageableOracle)] = true;</span></span>
-<span id="L85"><span class="lineNum">      85</span>              : </span>
-<span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">          80 :         emit ManageableOracleCreated(address(manageableOracle), _owner);</span></span>
-<span id="L87"><span class="lineNum">      87</span>              :     }</span>
-<span id="L88"><span class="lineNum">      88</span>              : }</span>
+<span id="L37"><span class="lineNum">      37</span>              :         bytes32 _externalSalt</span>
+<span id="L38"><span class="lineNum">      38</span>              :     ) external returns (IManageableOracle manageableOracle) {</span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">          45 :         address underlyingOracle = _deployUnderlyingOracle(_underlyingOracleFactory, _underlyingOracleInitData);</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">          45 :         manageableOracle = create(ISiloOracle(underlyingOracle), _owner, _timelock, _externalSalt);</span></span>
+<span id="L41"><span class="lineNum">      41</span>              :     }</span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span>              :     /// @notice Predict the deterministic address of a ManageableOracle that would be created</span>
+<span id="L44"><span class="lineNum">      44</span>              :     /// @param _deployer Address of the account that will deploy the oracle</span>
+<span id="L45"><span class="lineNum">      45</span>              :     /// @param _externalSalt External salt for the CREATE2 deterministic deployment</span>
+<span id="L46"><span class="lineNum">      46</span>              :     /// @return predictedAddress The address where the ManageableOracle would be deployed</span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">           4 :     function predictAddress(address _deployer, bytes32 _externalSalt)</span></span>
+<span id="L48"><span class="lineNum">      48</span>              :         external</span>
+<span id="L49"><span class="lineNum">      49</span>              :         view</span>
+<span id="L50"><span class="lineNum">      50</span>              :         returns (address predictedAddress)</span>
+<span id="L51"><span class="lineNum">      51</span>              :     {</span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">           4 :         require(_deployer != address(0), DeployerCannotBeZero());</span></span>
+<span id="L53"><span class="lineNum">      53</span>              : </span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">           4 :         bytes32 salt = _createSalt(_deployer, _externalSalt);</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">           4 :         predictedAddress = Clones.predictDeterministicAddress(address(ORACLE_IMPLEMENTATION), salt);</span></span>
+<span id="L56"><span class="lineNum">      56</span>              :     }</span>
+<span id="L57"><span class="lineNum">      57</span>              : </span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">          45 :     function _deployUnderlyingOracle(address _underlyingOracleFactory, bytes calldata _underlyingOracleInitData)</span></span>
+<span id="L59"><span class="lineNum">      59</span>              :         internal</span>
+<span id="L60"><span class="lineNum">      60</span>              :         returns (address underlyingOracle)</span>
+<span id="L61"><span class="lineNum">      61</span>              :     {</span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">          45 :         require(_underlyingOracleFactory != address(0), ZeroFactory());</span></span>
+<span id="L63"><span class="lineNum">      63</span>              : </span>
+<span id="L64"><span class="lineNum">      64</span>              :         // solhint-disable-next-line avoid-low-level-calls</span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">          45 :         (bool success, bytes memory data) = _underlyingOracleFactory.call(_underlyingOracleInitData);</span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">          45 :         require(success &amp;&amp; data.length == 32, FailedToCreateUnderlyingOracle());</span></span>
+<span id="L67"><span class="lineNum">      67</span>              : </span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">          45 :         underlyingOracle = abi.decode(data, (address));</span></span>
+<span id="L69"><span class="lineNum">      69</span>              :     }</span>
+<span id="L70"><span class="lineNum">      70</span>              : </span>
+<span id="L71"><span class="lineNum">      71</span>              :     /// @dev Internal helper to create and register a ManageableOracle instance</span>
+<span id="L72"><span class="lineNum">      72</span>              :     /// @param _externalSalt External salt for the CREATE2 deterministic deployment</span>
+<span id="L73"><span class="lineNum">      73</span>              :     /// @return manageableOracle The created ManageableOracle instance</span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">          94 :     function _deployOracle(bytes32 _externalSalt) internal returns (IManageableOracle manageableOracle) {</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">          94 :         bytes32 salt = _salt(_externalSalt);</span></span>
+<span id="L76"><span class="lineNum">      76</span>              : </span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">          94 :         manageableOracle = IManageableOracle(Clones.cloneDeterministic(address(ORACLE_IMPLEMENTATION), salt));</span></span>
+<span id="L78"><span class="lineNum">      78</span>              : </span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">          94 :         createdInFactory[address(manageableOracle)] = true;</span></span>
+<span id="L80"><span class="lineNum">      80</span>              : </span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">          94 :         emit ManageableOracleCreated(address(manageableOracle));</span></span>
+<span id="L82"><span class="lineNum">      82</span>              :     }</span>
+<span id="L83"><span class="lineNum">      83</span>              : }</span>
         </pre>
               </td>
             </tr>
