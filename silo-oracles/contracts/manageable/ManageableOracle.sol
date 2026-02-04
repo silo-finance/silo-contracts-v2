@@ -21,7 +21,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     uint32 public constant MIN_TIMELOCK = 1 days;
 
     /// @dev Maximum time lock duration
-    uint32 public constant MAX_TIMELOCK = 7 days;
+    uint32 public constant MAX_TIMELOCK = 14 days;
 
     address public owner;
 
@@ -48,7 +48,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     PendingAddress public pendingOwnership;
 
     /// @dev Base token address (set during initialization)
-    address internal _requiredBaseToken;
+    address internal _baseTokenInternal;
 
     /// @dev Modifier to check if timelock has elapsed
     modifier afterTimelock(uint64 _validAt) {
@@ -60,6 +60,11 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     /// @dev Modifier to check if the caller is the owner
     modifier onlyOwner() {
         require(msg.sender == owner, OnlyOwner());
+        _;
+    }
+
+    modifier whenPending(uint256 _validAt) {
+        require(_validAt != 0, NoPendingUpdateToCancel());
         _;
     }
 
@@ -84,7 +89,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
 
         quoteToken = _oracle.quoteToken();
         address baseTokenCached = Aggregator(address(_oracle)).baseToken();
-        _requiredBaseToken = baseTokenCached;
+        _baseTokenInternal = baseTokenCached;
         baseTokenDecimals = TokenHelper.assertAndGetDecimals(baseTokenCached);
 
         require(baseTokenDecimals != 0, BaseTokenDecimalsMustBeGreaterThanZero());
@@ -173,24 +178,19 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     }
 
     /// @inheritdoc IManageableOracle
-    function cancelOracle() external virtual onlyOwner {
-        require(pendingOracle.validAt != 0, NoPendingUpdateToCancel());
-
+    function cancelOracle() external virtual onlyOwner whenPending(pendingOracle.validAt) {
         _resetPendingAddress(pendingOracle);
         emit OracleProposalCanceled();
     }
 
     /// @inheritdoc IManageableOracle
-    function cancelTimelock() external virtual onlyOwner {
-        require(pendingTimelock.validAt != 0, NoPendingUpdateToCancel());
-
+    function cancelTimelock() external virtual onlyOwner whenPending(pendingTimelock.validAt) {
         _resetPendingUint192(pendingTimelock);
         emit TimelockProposalCanceled();
     }
 
     /// @inheritdoc IManageableOracle
-    function cancelTransferOwnership() external virtual onlyOwner {
-        require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());
+    function cancelTransferOwnership() external virtual onlyOwner whenPending(pendingOwnership.validAt) {
         require(pendingOwnership.value != address(0), InvalidOwnershipChangeType());
 
         _resetPendingAddress(pendingOwnership);
@@ -198,8 +198,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     }
 
     /// @inheritdoc IManageableOracle
-    function cancelRenounceOwnership() external virtual onlyOwner {
-        require(pendingOwnership.validAt != 0, NoPendingUpdateToCancel());
+    function cancelRenounceOwnership() external virtual onlyOwner whenPending(pendingOwnership.validAt) {
         require(pendingOwnership.value == address(0), InvalidOwnershipChangeType());
 
         _resetPendingAddress(pendingOwnership);
@@ -218,7 +217,7 @@ contract ManageableOracle is Aggregator, ISiloOracle, IManageableOracle, Initial
     }
 
     function baseToken() public view virtual override(Aggregator, IManageableOracle) returns (address) {
-        return _requiredBaseToken;
+        return _baseTokenInternal;
     }
 
     /// @inheritdoc ISiloOracle
