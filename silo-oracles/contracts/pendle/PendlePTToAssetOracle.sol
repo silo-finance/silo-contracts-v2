@@ -124,6 +124,7 @@ contract PendlePTToAssetOracle is ISiloOracle, Aggregator, IVersioned {
     }
 
     /// @inheritdoc Aggregator
+    /// @dev This is equal to PT token address.
     function baseToken() public view virtual override returns (address token) {
         return PT_TOKEN;
     }
