@@ -176,6 +176,21 @@ FOUNDRY_PROFILE=core_test forge snapshot --desc --check --no-match-test "_skip_"
 FOUNDRY_PROFILE=core_test forge snapshot --diff --desc --no-match-test "_skip_" --no-match-contract "SiloIntegrationTest" --ffi
 ```
 
+## Auditing tools 
+
+### Echidna
+
+https://github.com/crytic/echidna
+
+### Slither
+
+https://github.com/crytic/slither
+
+- slither is installed by default with echidna
+- for `dot` preview use `brew install graphviz`
+- try different [print engines](https://github.com/crytic/slither/wiki/Printer-documentation) eg `slither ./silo-core/contracts/hooks/SiloHookV2.sol --print <printer>`
+- check `audits/scripts/generate_call_graphs.py`
+
 ## Deployment
 
 set env variable `PRIVATE_KEY` then run
