@@ -55,6 +55,10 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
         _setReceiveApproval(owner, _msgSender(), _amount);
     }
 
+    function decimalsOffset() external view virtual override returns (uint256) {
+        return 0;
+    }
+
     /// @inheritdoc IERC20R
     function decreaseReceiveAllowance(address _owner, uint256 _subtractedValue) public virtual override {
         NonReentrantLib.nonReentrant(ShareTokenLib.getShareTokenStorage().siloConfig);
