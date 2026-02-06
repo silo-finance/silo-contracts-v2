@@ -13,6 +13,7 @@ import {Hook} from "../lib/Hook.sol";
 import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
+import {SiloMathLib} from "../lib/SiloMathLib.sol";
 
 
 /// @title ShareToken
@@ -102,6 +103,10 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         $.transferWithChecks = false;
         _transfer(_from, _to, _amount);
         $.transferWithChecks = true;
+    }
+
+    function decimalsOffset() external view virtual returns (uint256) {
+        return SiloMathLib._DECIMALS_OFFSET;
     }
 
     function silo() external view virtual returns (ISilo) {
