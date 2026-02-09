@@ -5,6 +5,9 @@ import {Test} from "forge-std/Test.sol";
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ERC4626Oracle} from "silo-oracles/contracts/erc4626/ERC4626Oracle.sol";
 
+import {ERC4626Mock} from "openzeppelin5/mocks/token/ERC4626Mock.sol";
+import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
+
 import {ERC4626OracleHardcodeQuoteFactoryDeploy} from
     "silo-oracles/deploy/erc4626/ERC4626OracleHardcodeQuoteFactoryDeploy.sol";
 
@@ -18,14 +21,15 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 
 // FOUNDRY_PROFILE=oracles forge test --mc ERC4626OracleHardcodeQuoteTest
 contract ERC4626OracleHardcodeQuoteTest is Test {
-    IERC4626 vault = IERC4626(0x9F0dF7799f6FDAd409300080cfF680f5A23df4b1);
+    IERC4626 vault;
     address quoteToken = address(12345);
     IERC4626OracleHardcodeQuoteFactory factory;
     ISiloOracle oracle;
     address underlyingAsset;
 
     function setUp() public {
-        vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 41707056);
+        address underlying = address(new ERC20Mock());
+        vault = IERC4626(address(new ERC4626Mock(underlying)));
 
         ERC4626OracleHardcodeQuoteFactoryDeploy factoryDeploy = new ERC4626OracleHardcodeQuoteFactoryDeploy();
         factoryDeploy.disableDeploymentsSync();
