@@ -5,6 +5,9 @@ import {Test} from "forge-std/Test.sol";
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 
+import {ERC4626Mock} from "openzeppelin5/mocks/token/ERC4626Mock.sol";
+import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
+
 import {ERC4626OracleFactoryDeploy} from "silo-oracles/deploy/erc4626/ERC4626OracleFactoryDeploy.sol";
 import {ERC4626OracleFactory} from "silo-oracles/contracts/erc4626/ERC4626OracleFactory.sol";
 import {IERC4626OracleFactory} from "silo-oracles/contracts/interfaces/IERC4626OracleFactory.sol";
@@ -15,10 +18,11 @@ import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
 contract ERC4626OracleTest is Test {
     IERC4626OracleFactory internal _factory;
 
-    address internal _wosVault = 0x9F0dF7799f6FDAd409300080cfF680f5A23df4b1;
+    address internal _wosVault;
 
     function setUp() public {
-        vm.createSelectFork(string(abi.encodePacked(vm.envString("RPC_SONIC"))), 5685582);
+        address underlying = address(new ERC20Mock());
+        _wosVault = address(new ERC4626Mock(underlying));
 
         ERC4626OracleFactoryDeploy factoryDeploy = new ERC4626OracleFactoryDeploy();
         factoryDeploy.disableDeploymentsSync();
