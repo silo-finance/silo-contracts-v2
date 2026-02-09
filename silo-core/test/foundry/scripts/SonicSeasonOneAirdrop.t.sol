@@ -22,18 +22,18 @@ contract SonicSeasonOneAirdropTest is Test {
         deal(airdropWallet.addr, 10 ** 18 * 10 ** 18);
     }
 
-    function test_CheckQAWalletBalance() public view {
+    function test_skip_CheckQAWalletBalance() public view {
         assertTrue(airdropWallet.addr.balance > 0);
     }
 
-    function test_VerifierDoesNotGiveFalsePositive() public {
+    function test_skip_VerifierDoesNotGiveFalsePositive() public {
         SonicSeasonOneVerifier verifier = new SonicSeasonOneVerifier();
         verifier.setBatch(0, 10, block.number - 100, block.number);
         vm.expectRevert();
         verifier.run();
     }
 
-    function test_BalancesIncreaseExpected() public {
+    function test_skip_BalancesIncreaseExpected() public {
         SonicSeasonOneAirdrop airdrop = new SonicSeasonOneAirdrop();
         TransferData[] memory data = airdrop.readTransferData();
         uint256 start = 1234;

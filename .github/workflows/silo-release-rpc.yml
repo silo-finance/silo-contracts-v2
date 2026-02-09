@@ -70,3 +70,45 @@ jobs:
 
             -   name: Run oracle tests (ERC4626PriceManipulation)
                 run: FOUNDRY_PROFILE=oracles forge test --mc "ERC4626PriceManipulation" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "BackwardsCompatibleGaugeLikeTest" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "SiloIncentivesControllerGaugeLikeIntegrationTest" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "LeverageWstkscUSDTest" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "Tutorial" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "SiloDeployerIntegrationTest" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "SiloLensCompatibilityTest" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "SiloRouterV2ActionsTest" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "SiloRouterPendleLPTsTest" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "SiloVerifierScriptTest" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "EggsSonicPriceProvider" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "PendleRewardsClaimerTest" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "DexSwapEnsoSonicTest" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "DexSwapOdosSonicTest" -vv --ffi
+
+            -   name: Run core tests
+                run: FOUNDRY_PROFILE=core_test forge test --mc "LiquidationHelperOdosTest" -vv --ffi

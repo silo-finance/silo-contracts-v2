@@ -4,6 +4,8 @@ pragma solidity ^0.8.28;
 import {IntegrationTest} from "silo-foundry-utils/networks/IntegrationTest.sol";
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 
+import {SiloLens} from "silo-core/contracts/SiloLens.sol";
+
 import {SiloLensDeploy} from "silo-core/deploy/SiloLensDeploy.s.sol";
 import {ISiloLens} from "silo-core/contracts/interfaces/ISiloLens.sol";
 import {ISilo} from "silo-core/contracts/interfaces/ISilo.sol";
@@ -35,6 +37,20 @@ contract SiloLensCompatibilityTest is IntegrationTest {
         _lens = deploy.run();
 
         _initializeSilosForChain(ChainsLib.SONIC_ALIAS);
+    }
+
+    /*
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_SiloLens_forking_getSiloIncentivesControllerProgramsNames -vvv
+    */
+    function test_SiloLens_forking_getSiloIncentivesControllerProgramsNames() public {
+        vm.createSelectFork(vm.envString("RPC_SONIC"), 26894678);
+
+        address siloIncentivesController = 0xdc5B289bB15C3FEE96d106a607B13cCA8092F4F9;
+
+        ISiloLens siloLens = new SiloLens();
+        string[] memory programsNames = siloLens.getSiloIncentivesControllerProgramsNames(siloIncentivesController);
+
+        assertEq(programsNames.length, 2);
     }
 
     // FOUNDRY_PROFILE=core_test forge test --mt test_siloLens_compatibility --ffi -vv
