@@ -763,21 +763,15 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         // price is set 1:1 so we can use collateral as max debt
         (IShareToken collateralShareToken, IShareToken protectedShareToken, IShareToken debtShareToken) =
             _getBorrowerShareTokens(borrower);
-        uint256 collateralPreview =
-            collateralSilo.previewRedeem(collateralShareToken.balanceOf(borrower), ISilo.CollateralType.Collateral);
-        uint256 protectedPreview =
-            collateralSilo.previewRedeem(protectedShareToken.balanceOf(borrower), ISilo.CollateralType.Protected);
-        // we need to create 0 collateral, +2 should cover full collateral and price is 1:1 so we can use as maxDebt
-        uint256 maxDebtToCover = collateralPreview + protectedPreview + 2;
 
         token0.setOnDemand(false);
         token1.setOnDemand(false);
 
         _printRevenue(debtSilo);
 
-        console2.log("BEFORE DEFAULTING #1, using maxDebtToCover: ", maxDebtToCover);
+        console2.log("BEFORE DEFAULTING #1");
 
-        try defaulting.liquidationCallByDefaulting(borrower, maxDebtToCover) {
+        try defaulting.liquidationCallByDefaulting(borrower) {
             // nothing to do
         } catch (bytes memory data) {
             bytes4 errorType = bytes4(data);
