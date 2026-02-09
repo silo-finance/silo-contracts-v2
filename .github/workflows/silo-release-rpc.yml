@@ -14,15 +14,9 @@ env:
 
 on:
     push:
-        branches:
-            - 'release/**'
-            - 'hotfix/**'
 
     pull_request:
         types: [ready_for_review]
-        branches:
-            - 'release/**'
-            - 'hotfix/**'
 
 jobs:
     silo-rpc-tests:
