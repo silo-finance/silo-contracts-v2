@@ -100,4 +100,4 @@ jobs:
           FOUNDRY_PROFILE=oracles forge build --sizes
 
       - name: Run Forge tests
-        run: FOUNDRY_PROFILE=oracles forge test -vv --no-match-test "_skip_" --ffi --nmc "WrappedMetaVaultOracleAdapterTest|PendleWrapperLPTOracle|PendlePTOracleTest|PendleLPTOracleTest"
+        run: FOUNDRY_PROFILE=oracles forge test -vv --no-match-test "_skip_" --ffi --nmc "WrappedMetaVaultOracleAdapterTest|PendleWrapperLPTOracle|PendlePTOracleTest|ERC4626PriceManipulation"

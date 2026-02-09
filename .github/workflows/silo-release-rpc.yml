@@ -54,16 +54,19 @@ jobs:
                     ../../silo-foundry-utils --version
 
             -   name: Run vaults tests
-                run: FOUNDRY_PROFILE=vaults_tests forge test --no-match-test "_skip_" --mc "SiloVaultDeployerTest" -v --ffi
+                run: FOUNDRY_PROFILE=vaults_tests forge test --mc "SiloVaultDeployerTest" -vv --ffi
 
             -   name: Run oracle tests (WrappedMetaVaultOracleAdapterTest)
-                run: FOUNDRY_PROFILE=oracles forge test --no-match-test "_skip_" --mc "WrappedMetaVaultOracleAdapterTest" -v --ffi
+                run: FOUNDRY_PROFILE=oracles forge test --mc "WrappedMetaVaultOracleAdapterTest" -vv --ffi
 
             -   name: Run oracle tests (PendleWrapperLPTOracle)
-                run: FOUNDRY_PROFILE=oracles forge test --no-match-test "_skip_" --mc "PendleWrapperLPTOracle" -v --ffi
+                run: FOUNDRY_PROFILE=oracles forge test --mc "PendleWrapperLPTOracle" -vv --ffi
             
             -   name: Run oracle tests (PendlePTOracleTest)
-                run: FOUNDRY_PROFILE=oracles forge test --no-match-test "_skip_" --mc "PendlePTOracleTest" -v --ffi
+                run: FOUNDRY_PROFILE=oracles forge test --mc "PendlePTOracleTest" -vv --ffi
 
             -   name: Run oracle tests (PendleLPTOracleTest)
-                run: FOUNDRY_PROFILE=oracles forge test --no-match-test "_skip_" --mc "PendleLPTOracleTest" -v --ffi
+                run: FOUNDRY_PROFILE=oracles forge test --mc "PendleLPTOracleTest" -vv --ffi
+
+            -   name: Run oracle tests (ERC4626PriceManipulation)
+                run: FOUNDRY_PROFILE=oracles forge test --mc "ERC4626PriceManipulation" -vv --ffi
