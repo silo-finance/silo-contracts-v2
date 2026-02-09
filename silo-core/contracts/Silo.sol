@@ -53,7 +53,8 @@ contract Silo is ISilo, ShareCollateralToken {
     }
 
     /// @inheritdoc IVersioned
-    function VERSION() external pure virtual override returns (string memory) { // solhint-disable-line func-name-mixedcase
+    // solhint-disable-next-line func-name-mixedcase
+    function VERSION() external pure virtual override returns (string memory) {
         return "Silo 4.0.0";
     }
 
