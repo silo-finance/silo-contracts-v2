@@ -1653,7 +1653,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
         _printMaxLiquidation(borrower);
 
         // we only want cases when it is possible, but it can fail with diff errors eg ZeroQuote
-        vm.assume(_tryDefaulting(borrower, 1));
+        vm.assume(_tryDefaulting(borrower));
 
         console2.log("liquidation done");
 
