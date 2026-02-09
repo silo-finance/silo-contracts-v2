@@ -29,6 +29,7 @@ import {SiloConfigReentrancyTest} from "../methods/share-token/SiloConfigReentra
 import {SymbolReentrancyTest} from "../methods/share-token/SymbolReentrancyTest.sol";
 import {SynchronizeHooksReentrancyTest} from "../methods/share-token/SynchronizeHooksReentrancyTest.sol";
 import {TotalSupplyReentrancyTest} from "../methods/share-token/TotalSupplyReentrancyTest.sol";
+import {VersionReentrancyTest} from "../methods/silo-hook-v2/VersionReentrancyTest.sol";
 
 abstract contract ShareTokenMethodsRegistry is IMethodsRegistry {
     mapping(bytes4 methodSig => IMethodReentrancyTest) public methods;
@@ -58,6 +59,8 @@ abstract contract ShareTokenMethodsRegistry is IMethodsRegistry {
         _registerMethod(new SymbolReentrancyTest());
         _registerMethod(new SynchronizeHooksReentrancyTest());
         _registerMethod(new TotalSupplyReentrancyTest());
+        _registerMethod(new VersionReentrancyTest());
+
     }
 
     function supportedMethodsLength() external view returns (uint256) {
