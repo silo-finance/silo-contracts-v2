@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: agpl-3.0
+// SPDX-License-Identifier: LicenseRef-LICENSE_SILOV3
 pragma solidity 0.8.28;
 
 library DistributionTypes {

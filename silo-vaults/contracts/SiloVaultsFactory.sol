@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: LicenseRef-LICENSE_SILOV3
 pragma solidity 0.8.28;
 
 import {Create2} from "openzeppelin5/utils/Create2.sol";
