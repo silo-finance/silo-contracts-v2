@@ -7,6 +7,7 @@ import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 import {ERC20RStorageLib} from "../lib/ERC20RStorageLib.sol";
 import {IShareTokenInitializable} from "../interfaces/IShareTokenInitializable.sol";
+import {IVersioned} from "../interfaces/IVersioned.sol";
 
 /// @title ShareDebtToken
 /// @notice ERC20 compatible token representing debt in Silo

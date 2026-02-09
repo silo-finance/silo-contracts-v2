@@ -121,6 +121,7 @@ contract SiloMethodsRegistry is IMethodsRegistry {
         _registerMethod(new ConvertToSharesReentrancyTest());
         _registerMethod(new ConvertToSharesWithTypeReentrancyTest());
         _registerMethod(new DecimalsReentrancyTest());
+        _registerMethod(new DecimalsOffsetReentrancyTest());
         _registerMethod(new DepositReentrancyTest());
         _registerMethod(new DepositWithTypeReentrancyTest());
         _registerMethod(new DomainSeparatorReentrancyTest());

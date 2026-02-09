@@ -5,6 +5,7 @@ import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 import {SiloMathLib} from "../lib/SiloMathLib.sol";
 import {ShareCollateralTokenLib} from "../lib/ShareCollateralTokenLib.sol";
 import {IShareToken, ShareToken, ISilo} from "./ShareToken.sol";
+import {IVersioned} from "../interfaces/IVersioned.sol";
 
 /// @title ShareCollateralToken
 /// @notice ERC20 compatible token representing collateral in Silo
