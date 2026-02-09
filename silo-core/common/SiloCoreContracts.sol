@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-LICENSE_SILOV3
+// SPDX-License-Identifier: LicenseRef-LICENSE-SILOV3
 pragma solidity >=0.7.6 <0.9.0;
 
 import {Deployments} from "silo-foundry-utils/lib/Deployments.sol";

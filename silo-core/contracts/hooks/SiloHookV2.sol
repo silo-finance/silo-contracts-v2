@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-LICENSE_SILOV3
+// SPDX-License-Identifier: LicenseRef-LICENSE-SILOV3
 pragma solidity 0.8.28;
 
 import {ISiloConfig} from "silo-core/contracts/interfaces/ISiloConfig.sol";

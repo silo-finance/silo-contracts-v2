@@ -35,7 +35,7 @@ pragma solidity ...
    Generic identifier for Business Source License 1.1 from the [official SPDX list](https://spdx.org/licenses/BUSL-1.1.html). Does not point to a specific file with parameters (Licensor, Change Date, Additional Use Grant).  
    Still valid if the repository has only one BSL and its full text is in `LICENSE_SILOV3`.
 
-2. **`LicenseRef-LICENSE_SILOV3`** (recommended for Silo V3)  
+2. **`LicenseRef-LICENSE-SILOV3`** (recommended for Silo V3)  
    According to the [official SPDX 3.0.1 specification - License Expressions](https://spdx.github.io/spdx-spec/v3.0.1/annexes/spdx-license-expressions/), the **`LicenseRef-`** prefix denotes a **user defined license reference** – a license outside the official SPDX list that refers to a specific document in the repository.  
    
    **Syntax:** `LicenseRef-<idstring>`, where `<idstring>` can contain letters, digits, periods (`.`), and hyphens (`-`).  
@@ -47,7 +47,7 @@ pragma solidity ...
    DocumentRef-spdx-tool-1.2:LicenseRef-MIT-Style-2
    ```
    
-   Using `LicenseRef-LICENSE_SILOV3` makes it clear that a file is subject to the **exact** terms from the `LICENSE_SILOV3` file (Silo V3), not the generic BSL 1.1.
+   Using `LicenseRef-LICENSE-SILOV3` makes it clear that a file is subject to the **exact** terms from the `LICENSE_SILOV3` file (Silo V3), not the generic BSL 1.1.
    
    **Official Sources:**
    - [SPDX License Expressions - Simple license expressions](https://spdx.github.io/spdx-spec/v3.0.1/annexes/spdx-license-expressions/#simple-license-expressions) – definition of `LicenseRef-` syntax
@@ -58,7 +58,7 @@ pragma solidity ...
 For files covered by the Silo V3 license (file `LICENSE_SILOV3`):
 
 ```solidity
-// SPDX-License-Identifier: LicenseRef-LICENSE_SILOV3
+// SPDX-License-Identifier: LicenseRef-LICENSE-SILOV3
 pragma solidity 0.8.28;
 ```
 
@@ -69,7 +69,7 @@ For files from external libraries (e.g., MIT, GPL-2.0-or-later), keep their orig
 Files in `silo-core/contracts/` that are **Silo V3's own code** (not forks from another license) should have in the first line:
 
 ```solidity
-// SPDX-License-Identifier: LicenseRef-LICENSE_SILOV3
+// SPDX-License-Identifier: LicenseRef-LICENSE-SILOV3
 ```
 
 Files with other licenses (e.g., GPL-2.0-or-later, MIT) in their header remain unchanged unless you intentionally migrate them to the Silo V3 license.
@@ -77,7 +77,7 @@ Files with other licenses (e.g., GPL-2.0-or-later, MIT) in their header remain u
 ## Summary
 
 - **License file:** in repo root, e.g., `LICENSE_SILOV3` (uppercase).
-- **In Solidity:** first line: `// SPDX-License-Identifier: LicenseRef-LICENSE_SILOV3` for code covered by Silo V3 license.
+- **In Solidity:** first line: `// SPDX-License-Identifier: LicenseRef-LICENSE-SILOV3` for code covered by Silo V3 license.
 - Full license text (parameters, Change Date, Additional Use Grant) is in the `LICENSE_SILOV3` file.
 
 ## Sources and Documentation
@@ -102,4 +102,4 @@ According to the [official SPDX specification](https://spdx.github.io/spdx-spec/
 
 > "An SPDX user defined license reference: `["DocumentRef-"1*(idstring)":"]"LicenseRef-"1*(idstring)`
 
-`LicenseRef-` is an **official SPDX mechanism** for marking custom licenses that are not on the official SPDX list. In the case of Silo V3, the BSL 1.1 license has **parameterized values** (Licensor, Change Date, Additional Use Grant) that differ between versions (V2 vs V3), so using `LicenseRef-LICENSE_SILOV3` unambiguously points to a specific license document in the repository.
+`LicenseRef-` is an **official SPDX mechanism** for marking custom licenses that are not on the official SPDX list. In the case of Silo V3, the BSL 1.1 license has **parameterized values** (Licensor, Change Date, Additional Use Grant) that differ between versions (V2 vs V3), so using `LicenseRef-LICENSE-SILOV3` unambiguously points to a specific license document in the repository.
