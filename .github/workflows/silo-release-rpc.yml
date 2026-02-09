@@ -44,6 +44,14 @@ jobs:
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
 
+            -   name: Cache Foundry RPC (all chains and blocks)
+                uses: actions/cache@v4
+                with:
+                    path: ~/.foundry/cache/rpc
+                    key: foundry-rpc-${{ runner.os }}-v1
+                    restore-keys: |
+                        foundry-rpc-${{ runner.os }}-
+
             -   name: Run vaults tests
                 run: FOUNDRY_PROFILE=vaults_tests forge test --mc "SiloVaultDeployerTest" -vv --ffi
 
@@ -89,8 +97,9 @@ jobs:
             -   name: Run core tests
                 run: FOUNDRY_PROFILE=core_test forge test --mc "SiloVerifierScriptTest" -vv --ffi
 
-            -   name: Run core tests
-                run: FOUNDRY_PROFILE=core_test forge test --mc "EggsSonicPriceProvider" -vv --ffi
+            -   name: Run core tests (EggsSonicPriceProvider, uses RPC cache when available)
+                run: 
+                    FOUNDRY_PROFILE=core_test forge test --fork-url $RPC_SONIC --fork-block-number 10053279 --mc "EggsSonicPriceProvider" -vv --ffi
 
             -   name: Run core tests
                 run: FOUNDRY_PROFILE=core_test forge test --mc "PendleRewardsClaimerTest" -vv --ffi
