@@ -21,6 +21,11 @@ abstract contract ShareCollateralToken is ShareToken {
         _burn(_owner, _amount);
     }
 
+    /// @inheritdoc IVersioned
+    function VERSION() external pure virtual returns (string memory) { // solhint-disable-line func-name-mixedcase
+        return "ShareCollateralToken 4.0.0";
+    }
+
     /// @dev Check if sender is solvent after the transfer
     function _afterTokenTransfer(address _sender, address _recipient, uint256 _amount) internal virtual override {
         IShareToken.ShareTokenStorage storage $ = ShareTokenLib.getShareTokenStorage();

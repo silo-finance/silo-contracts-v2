@@ -55,10 +55,14 @@ contract ShareDebtToken is IERC20R, ShareToken, IShareTokenInitializable {
         _setReceiveApproval(owner, _msgSender(), _amount);
     }
 
-    /// @dev offset value uses by vaults to calculate the conversion rate between assets and shares
-    /// it determines how many shares are minted for 1 asset eg. with offset 3, 1 asset = 1000 shares
+    /// @inheritdoc IShareToken
     function decimalsOffset() external view virtual override returns (uint256) {
         return 0;
+    }
+
+    /// @inheritdoc IVersioned
+    function VERSION() external pure virtual returns (string memory) { // solhint-disable-line func-name-mixedcase
+        return "ShareDebtToken 4.0.0";
     }
 
     /// @inheritdoc IERC20R

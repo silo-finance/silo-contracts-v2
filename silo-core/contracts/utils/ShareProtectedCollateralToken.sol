@@ -18,6 +18,12 @@ contract ShareProtectedCollateralToken is ShareCollateralToken, IShareTokenIniti
         (success, result) = ShareTokenLib.callOnBehalfOfShareToken(_target, _value, _callType, _input);
     }
 
+    /// @inheritdoc IVersioned
+    function VERSION() external pure virtual override returns (string memory) {
+        // solhint-disable-line func-name-mixedcase
+        return "ShareProtectedCollateralToken 4.0.0";
+    }
+
     /// @inheritdoc IShareTokenInitializable
     function initialize(ISilo _silo, address _hookReceiver, uint24 _tokenType) external virtual {
         _shareTokenInitialize(_silo, _hookReceiver, _tokenType);

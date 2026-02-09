@@ -13,6 +13,7 @@ import {BurnReentrancyTest} from "../methods/share-token/BurnReentrancyTest.sol"
 import {CallOnBehalfOfShareTokenReentrancyTest} from
     "../methods/share-token/CallOnBehalfOfShareTokenReentrancyTest.sol";
 import {DecimalsReentrancyTest} from "../methods/share-token/DecimalsReentrancyTest.sol";
+import {DecimalsOffsetReentrancyTest} from "../methods/share-token/DecimalsOffsetReentrancyTest.sol";
 import {Eip712DomainReentrancyTest} from "../methods/share-token/Eip712DomainReentrancyTest.sol";
 import {ForwardTransferFromNoChecksReentrancyTest} from
     "../methods/share-token/ForwardTransferFromNoChecksReentrancyTest.sol";
@@ -42,6 +43,7 @@ abstract contract ShareTokenMethodsRegistry is IMethodsRegistry {
         _registerMethod(new BurnReentrancyTest());
         _registerMethod(new CallOnBehalfOfShareTokenReentrancyTest());
         _registerMethod(new DecimalsReentrancyTest());
+        _registerMethod(new DecimalsOffsetReentrancyTest());
         _registerMethod(new Eip712DomainReentrancyTest());
         _registerMethod(new ForwardTransferFromNoChecksReentrancyTest());
         _registerMethod(new HookReceiverReentrancyTest());

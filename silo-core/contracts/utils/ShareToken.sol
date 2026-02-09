@@ -14,6 +14,7 @@ import {CallBeforeQuoteLib} from "../lib/CallBeforeQuoteLib.sol";
 import {NonReentrantLib} from "../lib/NonReentrantLib.sol";
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 import {SiloMathLib} from "../lib/SiloMathLib.sol";
+import {IVersioned} from "../interfaces/IVersioned.sol";
 
 
 /// @title ShareToken
@@ -58,7 +59,7 @@ import {SiloMathLib} from "../lib/SiloMathLib.sol";
 ///
 /// _Available since v4.7._
 /// @custom:security-contact security@silo.finance
-abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
+abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken, IVersioned {
     using Hook for uint24;
     using CallBeforeQuoteLib for ISiloConfig.ConfigData;
 
@@ -105,9 +106,7 @@ abstract contract ShareToken is ERC20PermitUpgradeable, IShareToken {
         $.transferWithChecks = true;
     }
 
-    /// @dev offset value uses by vaults to calculate the conversion rate between assets and shares
-    /// it determines how many shares are minted for 1 asset eg. with offset 3, 1 asset = 1000 shares
-    /// notice, that 1:1000 ratio can change when shares value changes eg due to interest accrual.
+    /// @inheritdoc IShareToken
     function decimalsOffset() external view virtual returns (uint256) {
         return SiloMathLib._DECIMALS_OFFSET;
     }
