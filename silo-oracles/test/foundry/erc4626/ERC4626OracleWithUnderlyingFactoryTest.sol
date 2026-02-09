@@ -6,6 +6,10 @@ import {AddrLib} from "silo-foundry-utils/lib/AddrLib.sol";
 
 import {IERC4626} from "openzeppelin5/interfaces/IERC4626.sol";
 import {ISiloOracle} from "silo-core/contracts/interfaces/ISiloOracle.sol";
+import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
+
+import {ERC4626Mock} from "openzeppelin5/mocks/token/ERC4626Mock.sol";
+import {ERC20Mock} from "openzeppelin5/mocks/token/ERC20Mock.sol";
 
 import {ERC4626OracleWithUnderlyingFactoryDeploy} from
     "../../../deploy/erc4626/ERC4626OracleWithUnderlyingFactoryDeploy.s.sol";
@@ -22,11 +26,13 @@ import {IERC4626OracleWithUnderlying} from "silo-oracles/contracts/interfaces/IE
 contract ERC4626OracleWithUnderlyingFactoryTest is Test {
     ERC4626OracleWithUnderlying oracle;
     address wstUSR;
+    ERC20Mock underlying;
     ERC4626OracleWithUnderlyingDeploy deployer;
     ERC4626OracleWithUnderlyingFactory factory;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("RPC_MAINNET"), 23489520); // forking block Jun 12 2025
+        underlying = new ERC20Mock();
+        wstUSR = address(new ERC4626Mock(address(underlying)));
 
         AddrLib.init();
 
@@ -38,8 +44,6 @@ contract ERC4626OracleWithUnderlyingFactoryTest is Test {
         AddrLib.setAddress(SiloOraclesFactoriesContracts.ERC4626_ORACLE_UNDERLYING_FACTORY, address(factory));
 
         deployer = new ERC4626OracleWithUnderlyingDeploy();
-
-        wstUSR = AddrLib.getAddress("wstUSR");
     }
 
     /*
@@ -57,7 +61,29 @@ contract ERC4626OracleWithUnderlyingFactoryTest is Test {
     FOUNDRY_PROFILE=oracles forge test --mt test_deploy_wrappedVault_revertsWhenValutNotMatchOracle --ffi -vv
      */
     function test_deploy_wrappedVault_revertsWhenValutNotMatchOracle() public {
-        deployer.setUseConfig("wstUSR", "CHAINLINK_USDC_USD");
+        address oracle = makeAddr("not for wstUSR");
+
+        AddrLib.setAddress("wstUSR", wstUSR);
+        AddrLib.setAddress("not for wstUSR", oracle);
+        deployer.setUseConfig("wstUSR", "not for wstUSR");
+
+        vm.mockCall(
+            makeAddr("invalid wstUSR"),
+            abi.encodeWithSelector(IERC20Metadata.symbol.selector),
+            abi.encode("invalid wstUSR")
+        );
+
+        vm.mockCall(
+            oracle,
+            abi.encodeWithSelector(ISiloOracle.quoteToken.selector),
+            abi.encode(address(1))
+        );
+
+        vm.mockCallRevert(
+            oracle,
+            abi.encodeWithSelector(ISiloOracle.quote.selector, 1e18, address(underlying)),
+            abi.encodeWithSelector(IERC4626OracleWithUnderlying.AssetNotSupported.selector)
+        );
 
         vm.expectRevert(IERC4626OracleWithUnderlying.AssetNotSupported.selector);
         deployer.run();
