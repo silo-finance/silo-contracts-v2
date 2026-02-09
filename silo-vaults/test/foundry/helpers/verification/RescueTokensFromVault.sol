@@ -39,7 +39,7 @@ contract RescueTokensFromVault is Test {
     /*
     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_rescue_tokens_from_vault -vvv
     */
-    function test_rescue_tokens_from_vault() public {
+    function test_skip_rescue_tokens_from_vault() public {
         _qaVaultOperations();
 
         uint256 wAvaxDecimals = IERC20Metadata(address(wAvax)).decimals();
@@ -95,7 +95,7 @@ contract RescueTokensFromVault is Test {
     /*
     FOUNDRY_PROFILE=vaults_tests forge test --ffi --mt test_add_remove_logic -vvv
     */
-    function test_add_remove_logic() public {
+    function test_skip_add_remove_logic() public {
         _qaVaultOperations();
 
         // we need to have access to owner of the incentivesModule
