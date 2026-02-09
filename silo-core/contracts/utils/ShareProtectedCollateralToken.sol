@@ -5,6 +5,7 @@ import {ShareCollateralToken} from "./ShareCollateralToken.sol";
 import {ShareTokenLib} from "../lib/ShareTokenLib.sol";
 import {ISilo} from "../interfaces/ISilo.sol";
 import {IShareTokenInitializable} from "../interfaces/IShareTokenInitializable.sol";
+import {IVersioned} from "../interfaces/IVersioned.sol";
 
 contract ShareProtectedCollateralToken is ShareCollateralToken, IShareTokenInitializable {
     /// @inheritdoc IShareTokenInitializable

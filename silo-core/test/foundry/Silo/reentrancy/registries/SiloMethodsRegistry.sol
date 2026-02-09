@@ -22,6 +22,7 @@ import {ConvertToAssetsWithTypeReentrancyTest} from "../methods/silo/ConvertToAs
 import {ConvertToSharesReentrancyTest} from "../methods/silo/ConvertToSharesReentrancyTest.sol";
 import {ConvertToSharesWithTypeReentrancyTest} from "../methods/silo/ConvertToSharesWithTypeReentrancyTest.sol";
 import {DecimalsReentrancyTest} from "../methods/silo/DecimalsReentrancyTest.sol";
+import {DecimalsOffsetReentrancyTest} from "../methods/share-token/DecimalsOffsetReentrancyTest.sol";
 import {DepositReentrancyTest} from "../methods/silo/DepositReentrancyTest.sol";
 import {DepositWithTypeReentrancyTest} from "../methods/silo/DepositWithTypeReentrancyTest.sol";
 import {DomainSeparatorReentrancyTest} from "../methods/silo/DomainSeparatorReentrancyTest.sol";
