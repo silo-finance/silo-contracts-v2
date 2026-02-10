@@ -196,7 +196,7 @@ jobs:
                         foundry-rpc-${{ runner.os }}-
 
             -   name: ${{ matrix.match-contract }}
-                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc "${{ matrix.match-contract }}"" --ffi -vv
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc "${{ matrix.match-contract }}" --ffi -vv
 
     MaxLiquidationTest:
         strategy:
