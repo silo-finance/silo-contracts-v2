@@ -56,7 +56,14 @@ jobs:
                     echo "=== Foundry build cache BEFORE tests ==="
                     if [ -d cache ]; then
                         du -sh cache || true
-                        find cache -maxdepth 3 -type f | head -n 40
+                        echo "--- solidity-files-cache.json (compiler dependency cache) ---"
+                        find cache -maxdepth 2 -type f -name 'solidity-files-cache.json' | head -n 5 || true
+                        echo "--- compiled artifacts under cache/foundry/out (first 40 files) ---"
+                        if [ -d cache/foundry/out ]; then
+                            find cache/foundry/out -maxdepth 4 -type f | head -n 40
+                        else
+                            echo "cache/foundry/out does not exist yet"
+                        fi
                     else
                         echo "cache/ directory does not exist yet (first run or cache miss)"
                     fi
@@ -95,7 +102,14 @@ jobs:
                     echo "=== Foundry build cache AFTER first test (SiloVaultDeployerTest) ==="
                     if [ -d cache ]; then
                         du -sh cache || true
-                        find cache -maxdepth 3 -type f | head -n 40
+                        echo "--- solidity-files-cache.json (compiler dependency cache) ---"
+                        find cache -maxdepth 2 -type f -name 'solidity-files-cache.json' | head -n 5 || true
+                        echo "--- compiled artifacts under cache/foundry/out (first 40 files) ---"
+                        if [ -d cache/foundry/out ]; then
+                            find cache/foundry/out -maxdepth 4 -type f | head -n 40
+                        else
+                            echo "cache/foundry/out does not exist (unexpected if tests compiled contracts)"
+                        fi
                     else
                         echo "cache/ directory missing after test (unexpected)"
                     fi
