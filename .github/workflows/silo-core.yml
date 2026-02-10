@@ -142,8 +142,8 @@ jobs:
             matrix:
                 match-contract: [
                     ERC4626ComplianceTest,
-                    "PartialLiquidation1weiTest|InterestOverflowTest",
-                    "MaxWithdrawAndFractionsTest|LiquidationHelperTest|MaxLiquidationWithChunksTest|MaxLiquidationDustWithChunksTest|MaxWithdrawTest|MaxLiquidationLTV100FullWithChunksTest",
+                    PartialLiquidation1weiTest|InterestOverflowTest,
+                    MaxWithdrawAndFractionsTest|LiquidationHelperTest|MaxLiquidationWithChunksTest|MaxLiquidationDustWithChunksTest|MaxWithdrawTest|MaxLiquidationLTV100FullWithChunksTest,
                     MaxBorrow,
                     MaxDepositTest,
                     MaxLiquidationBadDebt,
@@ -196,7 +196,7 @@ jobs:
                         foundry-rpc-${{ runner.os }}-
 
             -   name: ${{ matrix.match-contract }}
-                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc ${{ matrix.match-contract }} --ffi -vv
+                run: FOUNDRY_PROFILE=core_test forge test --no-match-test "_skip_" --mc "${{ matrix.match-contract }}"" --ffi -vv
 
     MaxLiquidationTest:
         strategy:
@@ -259,7 +259,7 @@ jobs:
                 match-test: [
                     DefaultingLiquidationBorrowable0Test,
                     DefaultingLiquidationBorrowable1Test,
-                    DefaultingLiquidation --nmc "DefaultingLiquidationBorrowable"
+                    DefaultingLiquidation --nmc DefaultingLiquidationBorrowable
                ]
 
         runs-on: ubuntu-latest
