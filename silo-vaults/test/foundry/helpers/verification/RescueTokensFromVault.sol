@@ -6,15 +6,15 @@ import {console2} from "forge-std/console2.sol";
 
 import {ChainsLib} from "silo-foundry-utils/lib/ChainsLib.sol";
 import {Ownable} from "openzeppelin5/access/Ownable.sol";
-import {SiloVault} from "../../../contracts/SiloVault.sol";
+import {SiloVault} from "silo-vaults/contracts/SiloVault.sol";
 import {IERC20} from "openzeppelin5/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin5/token/ERC20/extensions/IERC20Metadata.sol";
 
-import {IIncentivesClaimingLogic} from "../../../contracts/interfaces/IIncentivesClaimingLogic.sol";
+import {IIncentivesClaimingLogic} from "silo-vaults/contracts/interfaces/IIncentivesClaimingLogic.sol";
 import {SiloIncentivesControllerCLFactory} from
-    "../../../contracts/incentives/claiming-logics/SiloIncentivesControllerCLFactory.sol";
+    "silo-vaults/contracts/incentives/claiming-logics/SiloIncentivesControllerCLFactory.sol";
 import {SiloVaultsContracts, SiloVaultsDeployments} from "silo-vaults/common/SiloVaultsContracts.sol";
-import {IVaultIncentivesModule} from "../../../contracts/interfaces/IVaultIncentivesModule.sol";
+import {IVaultIncentivesModule} from "silo-vaults/contracts/interfaces/IVaultIncentivesModule.sol";
 
 import {RescueWAVAX} from "silo-vaults/contracts/utils/RescueWAVAX.sol";
 
