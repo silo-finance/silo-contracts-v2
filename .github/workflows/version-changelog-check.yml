@@ -13,11 +13,12 @@ on:
 jobs:
   version-changelog-check:
     runs-on: ubuntu-latest
-    # PR: only when source is release/* or hotfix/*. Push: always (we're on master).
+    # Only for: push to master, or PR into master (from release/* or hotfix/*). Never for PR into release/*.
     if: |
       github.event_name == 'push' ||
-      startsWith(github.event.pull_request.head.ref, 'release/') ||
-      startsWith(github.event.pull_request.head.ref, 'hotfix/')
+      (github.event_name == 'pull_request' && github.base_ref == 'master' &&
+        (startsWith(github.event.pull_request.head.ref, 'release/') ||
+         startsWith(github.event.pull_request.head.ref, 'hotfix/')))
 
     steps:
     - name: Checkout code
