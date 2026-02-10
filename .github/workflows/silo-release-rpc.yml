@@ -77,7 +77,7 @@ jobs:
                 run: |
                     forge cache ls 2>&1 || echo "No cache yet (first fork test will create it)"
 
-            -   name: Run vaults tests
+            -   name: Run vaults tests (SiloVaultDeployerTest)
                 run: FOUNDRY_PROFILE=vaults_tests forge test --mc "SiloVaultDeployerTest" -vv --ffi
 
             -   name: Run oracle tests (WrappedMetaVaultOracleAdapterTest)
