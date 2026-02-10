@@ -761,8 +761,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
         // first do normal liquidation with sTokens, to remove whole collateral,
         // price is set 1:1 so we can use collateral as max debt
-        (IShareToken collateralShareToken, IShareToken protectedShareToken, IShareToken debtShareToken) =
-            _getBorrowerShareTokens(borrower);
+        (, IShareToken protectedShareToken, IShareToken debtShareToken) = _getBorrowerShareTokens(borrower);
 
         token0.setOnDemand(false);
         token1.setOnDemand(false);
