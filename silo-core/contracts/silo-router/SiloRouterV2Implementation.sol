@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: LicenseRef-LICENSE-SILOV3
+// SPDX-License-Identifier: BUSL-1.1
+
 pragma solidity 0.8.28;
 
 import {Address} from "openzeppelin5/utils/Address.sol";
