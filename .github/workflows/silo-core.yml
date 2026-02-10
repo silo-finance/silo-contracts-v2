@@ -142,8 +142,8 @@ jobs:
             matrix:
                 match-contract: [
                     ERC4626ComplianceTest,
-                    PartialLiquidation1weiTest|InterestOverflowTest,
-                    MaxWithdrawAndFractionsTest|LiquidationHelperTest|MaxLiquidationWithChunksTest|MaxLiquidationDustWithChunksTest|MaxWithdrawTest|MaxLiquidationLTV100FullWithChunksTest,
+                    "PartialLiquidation1weiTest|InterestOverflowTest",
+                    "MaxWithdrawAndFractionsTest|LiquidationHelperTest|MaxLiquidationWithChunksTest|MaxLiquidationDustWithChunksTest|MaxWithdrawTest|MaxLiquidationLTV100FullWithChunksTest",
                     MaxBorrow,
                     MaxDepositTest,
                     MaxLiquidationBadDebt,
