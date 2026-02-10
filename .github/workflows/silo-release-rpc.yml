@@ -95,7 +95,7 @@ jobs:
                     forge cache ls 2>&1 || echo "No cache yet (first fork test will create it)"
 
             -   name: Run vaults tests (SiloVaultDeployerTest)
-                run: FOUNDRY_PROFILE=vaults_tests forge test --mc "SiloVaultDeployerTest" -vv --ffi --build-info=0
+                run: FOUNDRY_PROFILE=vaults_tests forge test --mc "SiloVaultDeployerTest" -vv --ffi
 
             -   name: Show Foundry build cache (after first test)
                 run: |
