@@ -51,6 +51,16 @@ jobs:
                     restore-keys: |
                         foundry-build-v1-
 
+            -   name: Show Foundry build cache (before tests)
+                run: |
+                    echo "=== Foundry build cache BEFORE tests ==="
+                    if [ -d cache ]; then
+                        du -sh cache || true
+                        find cache -maxdepth 3 -type f | head -n 40
+                    else
+                        echo "cache/ directory does not exist yet (first run or cache miss)"
+                    fi
+
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
@@ -79,6 +89,16 @@ jobs:
 
             -   name: Run vaults tests (SiloVaultDeployerTest)
                 run: FOUNDRY_PROFILE=vaults_tests forge test --mc "SiloVaultDeployerTest" -vv --ffi
+
+            -   name: Show Foundry build cache (after first test)
+                run: |
+                    echo "=== Foundry build cache AFTER first test (SiloVaultDeployerTest) ==="
+                    if [ -d cache ]; then
+                        du -sh cache || true
+                        find cache -maxdepth 3 -type f | head -n 40
+                    else
+                        echo "cache/ directory missing after test (unexpected)"
+                    fi
 
             -   name: Run oracle tests (WrappedMetaVaultOracleAdapterTest)
                 run: FOUNDRY_PROFILE=oracles forge test --mc "WrappedMetaVaultOracleAdapterTest" -vv --ffi
