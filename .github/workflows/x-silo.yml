@@ -99,5 +99,19 @@ jobs:
           forge --version
           FOUNDRY_PROFILE=x_silo forge build --sizes
 
+      # Foundry RPC cache path is NOT configurable (foundry.toml cache_path = build artifacts only).
+      # Forge always writes to $HOME/.foundry/cache/rpc. On ubuntu-latest HOME=/home/runner, so we cache that path explicitly.
+      -   name: Cache Foundry RPC (all chains and blocks)
+          uses: actions/cache@v4
+          with:
+              path: ~/.foundry/cache/rpc
+              key: foundry-rpc-${{ runner.os }}-v1
+              restore-keys: |
+                  foundry-rpc-${{ runner.os }}-
+
+      -   name: Show Foundry RPC cache
+          run: |
+              forge cache ls 2>&1 || echo "No cache yet (first fork test will create it)"
+
       - name: Run Forge tests
         run: FOUNDRY_PROFILE=x_silo forge test -vv --no-match-test "_skip_" --ffi
