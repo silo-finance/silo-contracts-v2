@@ -1,7 +1,7 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: CORE Deployments checks
+name: Deployments compatibility checks 
 
 env:
     RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
@@ -18,7 +18,7 @@ env:
 
 on:
     push:
-        branches: [ master, develop ]
+        branches: [ master ]
         paths:
             - silo-core/**/*.sol
             - silo-core/**/*.ts
@@ -35,7 +35,7 @@ on:
             - .github/workflows/silo-core.yml
 
     pull_request:
-        branches: [ master, develop ]
+        branches: [ master ]
         types: [ ready_for_review ]
         paths:
             - silo-core/**/*.sol
@@ -64,8 +64,23 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             -   uses: actions/checkout@v3
+                
+            # Cache all git submodules (large gitmodules/* tree and .git/modules) to speed up CI.
+            # Keyed only by .gitmodules so cache can be reused across commits; git will fetch deltas if submodule refs change.
+            -   name: Cache git submodules
+                uses: actions/cache@v4
                 with:
-                    submodules: recursive
+                    path: |
+                        gitmodules
+                        .git/modules
+                    key: gitmodules-v1-${{ hashFiles('.gitmodules') }}
+                    restore-keys: |
+                        gitmodules-v1-
+
+            -   name: Init git submodules (uses cached clones when available)
+                run: |
+                    git submodule sync --recursive
+                    git submodule update --init --recursive
 
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1

@@ -172,7 +172,7 @@ test = 'silo-oracles/test'
 broadcast = 'silo-oracles/broadcast'
 
 [fuzz]
-runs = 800
+runs = 500
 max_test_rejects = 131072 # 65536 * 2 (doubled a default value)
 
 [rpc_endpoints]

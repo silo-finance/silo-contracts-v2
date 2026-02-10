@@ -13,7 +13,7 @@ import {SiloFixture} from "../_common/fixtures/SiloFixture.sol";
 import {MintableToken} from "../_common/MintableToken.sol";
 
 /*
-    forge test -vv --ffi --mc InterestOverflowTest
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc InterestOverflowTest
 
     this test checks scenario, when we overflow interest, in that case we should be able to repay and exit silo
 */
