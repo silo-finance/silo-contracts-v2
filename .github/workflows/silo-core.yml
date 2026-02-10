@@ -259,7 +259,7 @@ jobs:
                 match-test: [
                     DefaultingLiquidationBorrowable0Test,
                     DefaultingLiquidationBorrowable1Test,
-                    DefaultingLiquidation --no-match-test "DefaultingLiquidationBorrowable"
+                    DefaultingLiquidation --nmc "DefaultingLiquidationBorrowable"
                ]
 
         runs-on: ubuntu-latest
