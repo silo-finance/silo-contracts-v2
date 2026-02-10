@@ -52,9 +52,6 @@ jobs:
         with:
           version: v1.2.3
 
-      - name: Run submodule update
-        run: git submodule update --init --recursive
-
       - name: Build silo foundry utils
         working-directory: ./gitmodules/silo-foundry-utils
         run: |
