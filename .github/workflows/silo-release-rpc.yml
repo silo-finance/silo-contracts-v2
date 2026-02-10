@@ -41,33 +41,6 @@ jobs:
                     git submodule sync --recursive
                     git submodule update --init --recursive
 
-            # Cache Foundry build artifacts (compiler cache + compiled contracts) so forge test doesn't recompile everything every run.
-            # Foundry by default uses the local `cache` directory (see foundry.toml cache_path / out settings).
-            -   name: Cache Foundry build artifacts
-                uses: actions/cache@v4
-                with:
-                    path: cache
-                    key: foundry-build-v1-${{ runner.os }}
-                    restore-keys: |
-                        foundry-build-v1-
-
-            -   name: Show Foundry build cache (before tests)
-                run: |
-                    echo "=== Foundry build cache BEFORE tests ==="
-                    if [ -d cache ]; then
-                        du -sh cache || true
-                        echo "--- solidity-files-cache.json (compiler dependency cache) ---"
-                        find cache -maxdepth 2 -type f -name 'solidity-files-cache.json' | head -n 5 || true
-                        echo "--- compiled artifacts under cache/foundry/out (first 40 files) ---"
-                        if [ -d cache/foundry/out ]; then
-                            find cache/foundry/out -maxdepth 4 -type f | head -n 40
-                        else
-                            echo "cache/foundry/out does not exist yet"
-                        fi
-                    else
-                        echo "cache/ directory does not exist yet (first run or cache miss)"
-                    fi
-
             -   name: Install Foundry
                 uses: foundry-rs/foundry-toolchain@v1
                 with:
@@ -79,6 +52,13 @@ jobs:
                     cargo build --release
                     cp target/release/silo-foundry-utils ../../silo-foundry-utils
                     ../../silo-foundry-utils --version
+
+            # Pre-build all contracts/tests for profiles used below so each forge test runs on a warm build cache.
+            -   name: Build vaults tests (warm cache for SiloVaultDeployerTest)
+                run: FOUNDRY_PROFILE=vaults_tests forge build -vv
+
+            -   name: Build oracle tests (warm cache for oracle tests)
+                run: FOUNDRY_PROFILE=oracles forge build -vv
 
             # Foundry RPC cache path is NOT configurable (foundry.toml cache_path = build artifacts only).
             # Forge always writes to $HOME/.foundry/cache/rpc. On ubuntu-latest HOME=/home/runner, so we cache that path explicitly.
@@ -96,23 +76,6 @@ jobs:
 
             -   name: Run vaults tests (SiloVaultDeployerTest)
                 run: FOUNDRY_PROFILE=vaults_tests forge test --mc "SiloVaultDeployerTest" -vv --ffi
-
-            -   name: Show Foundry build cache (after first test)
-                run: |
-                    echo "=== Foundry build cache AFTER first test (SiloVaultDeployerTest) ==="
-                    if [ -d cache ]; then
-                        du -sh cache || true
-                        echo "--- solidity-files-cache.json (compiler dependency cache) ---"
-                        find cache -maxdepth 2 -type f -name 'solidity-files-cache.json' | head -n 5 || true
-                        echo "--- compiled artifacts under cache/foundry/out (first 40 files) ---"
-                        if [ -d cache/foundry/out ]; then
-                            find cache/foundry/out -maxdepth 4 -type f | head -n 40
-                        else
-                            echo "cache/foundry/out does not exist (unexpected if tests compiled contracts)"
-                        fi
-                    else
-                        echo "cache/ directory missing after test (unexpected)"
-                    fi
 
             -   name: Run oracle tests (WrappedMetaVaultOracleAdapterTest)
                 run: FOUNDRY_PROFILE=oracles forge test --mc "WrappedMetaVaultOracleAdapterTest" -vv --ffi
