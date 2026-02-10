@@ -14,9 +14,9 @@ import {ISiloFactory} from "silo-core/contracts/interfaces/ISiloFactory.sol";
 import {SiloHarness} from "silo-core/test/foundry/_mocks/SiloHarness.sol";
 
 /*
-    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc MaxWithdrawAndFractions
+    FOUNDRY_PROFILE=core_test forge test -vv --ffi --mc MaxWithdrawAndFractionsTest
 */
-contract MaxWithdrawAndFractions is SiloLittleHelper, Test {
+contract MaxWithdrawAndFractionsTest is SiloLittleHelper, Test {
     uint256 public snapshot;
     address public borrower = address(this);
     address public otherUser = makeAddr("otherUser");
