@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     
     # Only run if PR is NOT from release/* or hotfix/* branch
-    # if: |
-    #   !startsWith(github.event.pull_request.head.ref, 'release/') &&
-    #   !startsWith(github.event.pull_request.head.ref, 'hotfix/')
+    if: |
+      !startsWith(github.event.pull_request.head.ref, 'release/') &&
+      !startsWith(github.event.pull_request.head.ref, 'hotfix/')
     
     steps:
       - name: Checkout code
