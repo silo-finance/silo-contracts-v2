@@ -41,4 +41,5 @@ library AddrKey {
     string constant public wS = "wS";
     string constant public XSilo = "XSilo";
     string constant public WINJ = "WINJ";
+    string constant public YINJ_PRICE_ORACLE = "YInjPriceOracle";
 }

@@ -178,6 +178,38 @@ FOUNDRY_PROFILE=core_test forge snapshot --diff --desc --no-match-test "_skip_" 
 
 ## Deployment
 
+### Injective
+
+- we need custom build foundry from INJ repo
+```
+git clone https://github.com/InjectiveLabs/foundry.git
+cd foundry
+foundryup -p . 
+```
+
+
+- we need `injective = true` flag in foundry in order to fix
+"call to non-contract address 0x0000000000000000000000000000000000000064"
+- we don't have any way to fetch total supply of tokens from bank module inside foundry?
+  - I try with: forking/no forking (latest block)
+  - tests 
+  - and scripts (with broadcast flag as well)
+  everywhere totalSupply is 0. 
+
+  
+so there is no way to read eg balance or total suply in foundry??
+
+
+"you have to mint seed supply" wdym by that comment?
+
+
+ariant of untagged enum ResponseData res="{\"message\":\"OK\",\"result\":[{\"Address\":\"0xd9003177dc465aaa89e20678675dca7fa5f5cad5\"}],\"status\":\"1\"}"
+2026-02-11T12:00:13.271000Z ERROR etherscan: Failed to deserialize response: data did not match any variant of untagged enum ResponseData res="{\"message\":\"OK\",\"result\":[{\"Address\":\"0x143514cfa5e66ec945bb19a024627c8bde524156\"}],\"status\":\"1\"}"
+2026-02-11T12:00:13.271017Z ERROR etherscan: Failed to deserialize response: data did not match any variant of untagged enum ResponseData res="{\"message\":\"OK\",\"result\":[{\"Address\":\"0x5aadfb43ef8daf45dd80f4676345b7676f1d70e3\"}],\"status\":\"1\"}"
+2026-02-11T12:00:13.355782Z ERROR etherscan: Failed to deserialize response: data did not match any variant of untagged enum ResponseData res="{\"message\":\"OK\",\"result\":[{\"Address\":\"0x7109709ecfa91a80626ff3989d68f67f5b1dd12d\"}],\"status\":\"1\"}"
+
+
+
 ### Silo Core
 1. set env variable `PRIVATE_KEY` then run
 1. some adjustment is needed for new blockchain, I will use `Injective` as example:
