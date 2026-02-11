@@ -18,6 +18,7 @@ always_use_create_2_factory = true
 src = 'silo-core/contracts'
 out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
+injective = true
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
@@ -33,6 +34,7 @@ src = 'silo-core/contracts'
 test = 'silo-core/test/foundry'
 out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
+injective = true
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
@@ -71,6 +73,7 @@ fs_permissions = [
 src = 'silo-core/test'
 out = 'cache/foundry/out/silo-core'
 broadcast = 'silo-core/broadcast'
+injective = true
 
 fs_permissions = [
     { access = "read", path = "./cache/foundry/"},
