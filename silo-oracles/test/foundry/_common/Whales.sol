@@ -35,7 +35,7 @@ contract Whales is TokensGenerator {
         } else {
             emit log_named_address("whale", whale);
             vm.prank(whale);
-            IERC20(_asset).transfer(_recipient, _amount);
+            require(IERC20(_asset).transfer(_recipient, _amount));
         }
     }
 }

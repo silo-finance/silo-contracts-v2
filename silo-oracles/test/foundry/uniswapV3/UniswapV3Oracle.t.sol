@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import "../../../constants/Ethereum.sol";
 
+import "../interfaces/IERC20Metadata.sol";
 import "../../../contracts/_common/OracleFactory.sol";
 import "../../../contracts/uniswapV3/UniswapV3OracleFactory.sol";
 import "../_common/UniswapPools.sol";
@@ -28,6 +29,18 @@ contract UniswapV3OracleTest is UniswapPools {
         );
 
         PRICE_PROVIDER = factory.create(config, bytes32(0));
+    }
+
+    function test_UniswapV3Oracle_VERSION() public view {
+        assertEq(PRICE_PROVIDER.VERSION(), "UniswapV3Oracle 4.0.0", "VERSION");
+    }
+
+    function test_UniswapV3Oracle_baseToken() public view {
+        address baseTokenAddr = PRICE_PROVIDER.baseToken();
+        assertEq(baseTokenAddr, address(tokens["WETH"]), "baseToken");
+
+        uint256 amount = 10 ** IERC20Metadata(baseTokenAddr).decimals();
+        PRICE_PROVIDER.quote(amount, baseTokenAddr);
     }
 
     /*
