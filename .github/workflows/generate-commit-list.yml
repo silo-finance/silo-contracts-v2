@@ -135,12 +135,6 @@ jobs:
           cat commits_bullets.txt
           echo '```'
           echo ""
-          echo "### Instructions:"
-          echo "1. Copy the markdown block above"
-          echo "2. Add it to the CHANGELOG.md file under the \"## Unreleased\" section"
-          echo "3. Replace the \"## Unreleased\" section with the new version entry"
-          echo "4. Update the date to the actual release date"
-          echo ""
           echo "### Commit Details:"
           echo ""
           cat commits_bullets.txt
