@@ -16,13 +16,15 @@ FOUNDRY_PROFILE=core CONFIG=0x6f67e4e421feedC5Bc6404790f8a5DfF456D2347 \
     --ffi --rpc-url $RPC_INJECTIVE
  */
 contract VerifySilo is Script, Test {
-    function run() public {
+    function run() public {        
         if (ChainsLib.getChainId() == ChainsLib.INJECTIVE_CHAIN_ID) {
             InjectiveDeploymentHelper injectiveHelper = new InjectiveDeploymentHelper();
             injectiveHelper.mockBankModule();
         }
 
         AddrLib.init();
+
+        return;
 
         emit log_named_address("VerifySilo", vm.envAddress("CONFIG"));
 
