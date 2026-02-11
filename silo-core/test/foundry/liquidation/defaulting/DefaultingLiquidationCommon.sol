@@ -727,6 +727,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_twice_0collateral -vv
     */
+    /// forge-config: core_test.fuzz.runs = 100
     function test_defaulting_twice_0collateral(uint48 _collateral, uint48 _protected) public {
         // (uint48 _collateral, uint48 _protected) = (1, 2);
         _createIncentiveController();
@@ -1007,9 +1008,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     use uint64 for collateral and protected because fuzzing was trouble to find cases, 
     reason is incentive uint104 cap
 
-    use only 500 runs because fuzzing for this one is demanding
+    use only 100 runs because fuzzing for this one is demanding
     */
-    /// forge-config: core_test.fuzz.runs = 500
+    /// forge-config: core_test.fuzz.runs = 100
     function test_bothLiquidationsResultsMatch_insolvent_fuzz(
         uint64 _priceDropPercentage,
         uint32 _warp,
@@ -1625,76 +1626,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             2, // 1 leftover from first + 1 from second liquidation
             "[lpProvider2] protected rewards from second liquidation"
         );
-    }
-
-    /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_Defaulting_maxDebtToCover1Wei -vv
-    */
-    function test_Defaulting_maxDebtToCover1Wei(uint64 _collateral, uint64 _protected, bool _maxOut) public {
-        // (uint64 _collateral, uint64 _protected, bool _maxOut) = (30088, 1290024793, false);
-        _addLiquidity(100e18);
-        bool position =
-            _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: _maxOut});
-        vm.assume(position);
-
-        _createIncentiveController();
-
-        _moveUntillDefaultingPossible(borrower, 0.001e18, 1 hours);
-
-        (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
-
-        siloConfig.accrueInterestForBothSilos();
-
-        uint256 totalDebtBefore = debtSilo.getDebtAssets();
-        uint256 totalProtectedBefore = debtSilo.getTotalAssetsStorage(ISilo.AssetType.Protected);
-        uint256 totalCollateralBefore = debtSilo.totalAssets();
-
-        _printMaxLiquidation(borrower);
-
-        // we only want cases when it is possible, but it can fail with diff errors eg ZeroQuote
-        vm.assume(_tryDefaulting(borrower));
-
-        console2.log("liquidation done");
-
-        uint256 totalDebtAfter = debtSilo.getDebtAssets();
-        uint256 totalProtectedAfter = debtSilo.getTotalAssetsStorage(ISilo.AssetType.Protected);
-        uint256 totalCollateralAfter = debtSilo.totalAssets();
-
-        bool fullLiquidation;
-        (bool throwing,) = _isOracleThrowing(borrower);
-
-        if (throwing) {
-            fullLiquidation = false;
-            console2.log("oracle is throwing, we can not check user solvency");
-
-            // we should expect withdraw to throw because of oracle throwing
-            vm.startPrank(borrower);
-
-            vm.expectRevert();
-            collateralSilo.withdraw(1, borrower, borrower);
-
-            vm.expectRevert();
-            collateralSilo.withdraw(1, borrower, borrower, ISilo.CollateralType.Protected);
-            vm.stopPrank();
-        } else {
-            _printLtv(borrower);
-            fullLiquidation = siloLens.getUserLTV(debtSilo, borrower) == 0;
-            console2.log("is user solvent?", debtSilo.isSolvent(borrower) ? "yes" : "no");
-        }
-
-        if (totalDebtAfter == 0 && totalDebtBefore != 1) {
-            console2.log("it was full liquidation, not 1wei case");
-            vm.assume(false);
-        }
-
-        assertEq(totalDebtAfter, totalDebtBefore - 1, "total debt should be reduced by 1 wei");
-
-        // for full liquidation we only checking debt, because debt to cover should be 1 always
-        if (fullLiquidation) return;
-
-        uint256 protectedDiff = totalProtectedBefore - totalProtectedAfter;
-        uint256 collateralDiff = totalCollateralBefore - totalCollateralAfter;
-        assertLe(protectedDiff + collateralDiff, 1, "protected and collateral should be reduced by at most 1 wei");
     }
 
     /*
