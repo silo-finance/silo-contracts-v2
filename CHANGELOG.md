@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [3.18.0] - 2026-02-11
+### Markets
+- sUSDp / USDC new market on Avalanche
+- ezETH / WETH new market on Arbitrum
+
 ## [3.17.0] - 2026-01-30
 ### Markets
 - agETH / WETH new market on Mainnet
