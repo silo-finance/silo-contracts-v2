@@ -9,8 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write  # Required for sticky comment
-    # TODO: Restore restriction - only run on release/hotfix PRs
-    # if: startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix/')
+    # Only run on PRs from release or hotfix branches
+    if: startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix/')
     
     steps:
     - name: Checkout code
@@ -18,19 +18,20 @@ jobs:
       with:
         fetch-depth: 0  # Fetch full history to compare with previous releases
         
-    - name: Extract version from branch name (or package.json for testing)
+    - name: Extract version from branch name
       id: extract-version
       run: |
+        # Extract version from branch name (e.g., release/3.10.0 -> 3.10.0)
         BRANCH_NAME=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
         if [[ $BRANCH_NAME =~ ^(release|hotfix)/(.+)$ ]]; then
           VERSION=${BASH_REMATCH[2]}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION from branch: $BRANCH_NAME"
         else
-          # Fallback for testing on feature branches
-          VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "0.0.0-test")
-          echo "Using version from package.json (test mode): $VERSION"
+          echo "Branch name does not match expected pattern (release/* or hotfix/*)"
+          echo "Branch name: $BRANCH_NAME"
+          exit 1
         fi
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
         
     - name: Get commits since last release
       id: get-commits
