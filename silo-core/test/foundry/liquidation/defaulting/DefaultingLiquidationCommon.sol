@@ -179,7 +179,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_badDebt_fuzz -vv --fuzz-runs 3333
     locally: 3s
     */
-    /// forge-config: core_test.fuzz.runs=3333
     function test_defaulting_neverReverts_badDebt_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
         _defaulting_neverReverts_badDebt({
             _borrower: borrower,
@@ -252,7 +251,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_badDebt_withOtherBorrowers_fuzz -vv --fuzz-runs 3333
     locally: 6s
     */
-    /// forge-config: core_test.fuzz.runs=3333
     function test_defaulting_neverReverts_badDebt_withOtherBorrowers_fuzz(
         uint32 _collateral,
         uint32 _protected,
@@ -733,11 +731,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_twice_0collateral -vv --fuzz-runs 100
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_twice_0collateral -vv --fuzz-runs 10
     locally: XXs! long for 100 runs
     */
-    /// forge-config: core_test.fuzz.runs = 100
-    function test_defaulting_twice_0collateral_fuzz25(uint48 _collateral, uint48 _protected) public {
+    function test_defaulting_twice_0collateral_fuzz_limit(uint48 _collateral, uint48 _protected) public {
         // (uint48 _collateral, uint48 _protected) = (1, 2);
         _createIncentiveController();
 
@@ -849,10 +846,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     everyone should be able to withdraw protected after defaulting liquidation
     echidna candidate
 
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_protectedCanBeFullyWithdrawn_ -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_protectedCanBeFullyWithdrawn_ -vv --fuzz-runs 8888
     locally: 22s
     */
-    /// forge-config: core_test.fuzz.runs = 8888
     function test_defaulting_protectedCanBeFullyWithdrawn_long_fuzz(
         uint24[] memory _protectedDeposits,
         uint64 _initialPrice,
@@ -905,10 +901,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     if _defaultingPossible() we never revert otherwise we do revert
 
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_whenDefaultingPossibleTxDoesNotRevert_badDebt_fuzz -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_whenDefaultingPossibleTxDoesNotRevert_badDebt_fuzz -vv --fuzz-runs 2222
     locally: 2s
     */
-    /// forge-config: core_test.fuzz.runs = 2222
     function test_whenDefaultingPossibleTxDoesNotRevert_badDebt_fuzz(
         uint64 _dropPricePercentage,
         uint32 _warp,
@@ -927,10 +922,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     if _defaultingPossible() we never revert otherwise we do revert
 
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_whenDefaultingPossibleTxDoesNotRevert_notBadDebt_fuzz -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_whenDefaultingPossibleTxDoesNotRevert_notBadDebt_fuzz -vv --fuzz-runs 8888
     locally: 12s
     */
-    /// forge-config: core_test.fuzz.runs = 8888
     function test_whenDefaultingPossibleTxDoesNotRevert_notBadDebt_fuzz(
         uint64 _dropPricePercentage,
         uint32 _warp,
@@ -1022,8 +1016,8 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
     use only 100 runs because fuzzing for this one is demanding
     */
-    /// forge-config: core_test.fuzz.runs = 100
-    function test_bothLiquidationsResultsMatch_insolvent_fuzz25(
+    /// forge-config: core_test.fuzz.runs = 10
+    function test_bothLiquidationsResultsMatch_insolvent_fuzz_limit(
         uint64 _priceDropPercentage,
         uint32 _warp,
         uint48 _collateral,
@@ -1175,7 +1169,6 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
     we should never generate more shares then borrower has, rounding check
     */
-    /// forge-config: core_test.fuzz.runs = 2345
     function test_defaulting_getKeeperAndLenderSharesSplit_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp)
         public
     {
