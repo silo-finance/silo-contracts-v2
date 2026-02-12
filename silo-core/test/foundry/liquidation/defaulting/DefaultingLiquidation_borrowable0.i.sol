@@ -306,7 +306,7 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_bothLiquidationsResultsMatch_insolvent_fuzz -vv --mc DefaultingLiquidationTwo1Test
     */
     /// forge-config: core_test.fuzz.runs = 100
-    function test_bothLiquidationsResultsMatch_insolvent_fuzz100(
+    function test_bothLiquidationsResultsMatch_insolvent_fuzz25(
         uint64 _dropPercentage,
         uint32 _warp,
         uint48 _collateral,
@@ -315,7 +315,7 @@ contract DefaultingLiquidationBorrowable0Test is DefaultingLiquidationCommon {
         _dropPercentage = 0.061e18;
         _warp = 5 days;
 
-        super.test_bothLiquidationsResultsMatch_insolvent_fuzz100(_dropPercentage, _warp, _collateral, _protected);
+        super.test_bothLiquidationsResultsMatch_insolvent_fuzz25(_dropPercentage, _warp, _collateral, _protected);
     }
 
     /*
