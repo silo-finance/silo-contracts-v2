@@ -737,7 +737,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     locally: XXs! long for 100 runs
     */
     /// forge-config: core_test.fuzz.runs = 100
-    function test_defaulting_twice_0collateral_fuzz100(uint48 _collateral, uint48 _protected) public {
+    function test_defaulting_twice_0collateral_fuzz25(uint48 _collateral, uint48 _protected) public {
         // (uint48 _collateral, uint48 _protected) = (1, 2);
         _createIncentiveController();
 
@@ -1023,7 +1023,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     use only 100 runs because fuzzing for this one is demanding
     */
     /// forge-config: core_test.fuzz.runs = 100
-    function test_bothLiquidationsResultsMatch_insolvent_fuzz100(
+    function test_bothLiquidationsResultsMatch_insolvent_fuzz25(
         uint64 _priceDropPercentage,
         uint32 _warp,
         uint48 _collateral,
