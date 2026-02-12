@@ -177,6 +177,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_badDebt_fuzz -vv --fuzz-runs 3333
+    locally: 3s
     */
     /// forge-config: core_test.fuzz.runs=3333
     function test_defaulting_neverReverts_badDebt_fuzz(uint32 _collateral, uint32 _protected, uint32 _warp) public {
@@ -191,6 +192,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     when we use high amoutst, only immediate distrobution can overflow
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_ImmediateDistributionOverflows -vv --mc DefaultingLiquidationBorrowable0Test
+    locally: 2s
     */
     function test_defaulting_ImmediateDistributionOverflows_fuzz(uint256 _collateral, uint32 _warp) public {
         _defaulting_ImmediateDistributionOverflows(_collateral, _warp);
@@ -248,6 +250,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_badDebt_withOtherBorrowers_fuzz -vv --fuzz-runs 3333
+    locally: 6s
     */
     /// forge-config: core_test.fuzz.runs=3333
     function test_defaulting_neverReverts_badDebt_withOtherBorrowers_fuzz(
@@ -370,15 +373,17 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_fuzz -vv
+    locally: 57s on silo0
     */
-    function test_defaulting_neverReverts_insolvency_fuzz(uint32 _collateral, uint32 _protected) public {
+    function test_defaulting_neverReverts_insolvency_long_fuzz(uint32 _collateral, uint32 _protected) public {
         _defaulting_neverReverts_insolvency({_borrower: borrower, _collateral: _collateral, _protected: _protected});
     }
 
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_neverReverts_insolvency_withOtherBorrowers_fuzz -vv
+    locally: 63s
     */
-    function test_defaulting_neverReverts_insolvency_withOtherBorrowers_fuzz(uint32 _collateral, uint32 _protected)
+    function test_defaulting_neverReverts_insolvency_withOtherBorrowers_long_fuzz(uint32 _collateral, uint32 _protected)
         public
     {
         _addLiquidity(Math.max(_collateral, _protected));
@@ -474,9 +479,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_when_0collateral_oneBorrower -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_when_0collateral_oneBorrower_fuzz -vv
+    locally: 4s
     */
-    function test_defaulting_when_0collateral_oneBorrower(uint96 _collateral, uint96 _protected) public {
+    function test_defaulting_when_0collateral_oneBorrower_fuzz(uint96 _collateral, uint96 _protected) public {
         _setCollateralPrice(1.3e18); // we need high price at begin for this test, because we need to end up wit 1:1
         _addLiquidity(uint256(_collateral) + _protected);
 
@@ -572,9 +578,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_when_0collateral_otherBorrower_wipeOutShares -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_when_0collateral_otherBorrower_wipeOutShares_fuzz -vv
+    locally: 5s
     */
-    function test_defaulting_when_0collateral_otherBorrower_wipeOutShares(uint96 _collateral, uint96 _protected)
+    function test_defaulting_when_0collateral_otherBorrower_wipeOutShares_fuzz(uint96 _collateral, uint96 _protected)
         public
     {
         _defaulting_when_0collateral_otherBorrower({
@@ -585,9 +592,10 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_when_0collateral_otherBorrower_withDustShares -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_when_0collateral_otherBorrower_withDustShares_fuzz -vv
+    locally: 5s
     */
-    function test_defaulting_when_0collateral_otherBorrower_withDustShares(uint96 _collateral, uint96 _protected)
+    function test_defaulting_when_0collateral_otherBorrower_withDustShares_fuzz(uint96 _collateral, uint96 _protected)
         public
     {
         _defaulting_when_0collateral_otherBorrower({
@@ -725,10 +733,11 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_twice_0collateral -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_twice_0collateral -vv --fuzz-runs 100
+    locally: XXs! long for 100 runs
     */
     /// forge-config: core_test.fuzz.runs = 100
-    function test_defaulting_twice_0collateral(uint48 _collateral, uint48 _protected) public {
+    function test_defaulting_twice_0collateral_fuzz100(uint48 _collateral, uint48 _protected) public {
         // (uint48 _collateral, uint48 _protected) = (1, 2);
         _createIncentiveController();
 
@@ -840,10 +849,11 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     everyone should be able to withdraw protected after defaulting liquidation
     echidna candidate
 
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_protectedCanBeFullyWithdrawn_fuzz -vv
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_protectedCanBeFullyWithdrawn_ -vv
+    locally: 22s
     */
     /// forge-config: core_test.fuzz.runs = 8888
-    function test_defaulting_protectedCanBeFullyWithdrawn_fuzz(
+    function test_defaulting_protectedCanBeFullyWithdrawn_long_fuzz(
         uint24[] memory _protectedDeposits,
         uint64 _initialPrice,
         uint64 _changePrice,
@@ -896,6 +906,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     if _defaultingPossible() we never revert otherwise we do revert
 
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_whenDefaultingPossibleTxDoesNotRevert_badDebt_fuzz -vv
+    locally: 2s
     */
     /// forge-config: core_test.fuzz.runs = 2222
     function test_whenDefaultingPossibleTxDoesNotRevert_badDebt_fuzz(
@@ -917,6 +928,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     if _defaultingPossible() we never revert otherwise we do revert
 
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_whenDefaultingPossibleTxDoesNotRevert_notBadDebt_fuzz -vv
+    locally: 12s
     */
     /// forge-config: core_test.fuzz.runs = 8888
     function test_whenDefaultingPossibleTxDoesNotRevert_notBadDebt_fuzz(
@@ -1011,7 +1023,7 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     use only 100 runs because fuzzing for this one is demanding
     */
     /// forge-config: core_test.fuzz.runs = 100
-    function test_bothLiquidationsResultsMatch_insolvent_fuzz(
+    function test_bothLiquidationsResultsMatch_insolvent_fuzz100(
         uint64 _priceDropPercentage,
         uint32 _warp,
         uint48 _collateral,
@@ -1257,16 +1269,18 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_everyoneCanClaim_badDebt -vv
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_everyoneCanClaim_badDebt -vv --mc DefaultingLiquidationBorrowable1Test
+    locally: 10s
     */
-    function test_incentiveDistribution_everyoneCanClaim_badDebt(uint48 _collateral, uint48 _protected) public {
+    function test_incentiveDistribution_everyoneCanClaim_badDebt_fuzz(uint48 _collateral, uint48 _protected) public {
         // (uint48 _collateral, uint48 _protected) = (17829408, 331553767526);
         _incentiveDistribution_everyoneCanClaim(_collateral, _protected, true);
     }
 
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_everyoneCanClaim_insolvent -vv
+    locally: 55s
     */
-    function test_incentiveDistribution_everyoneCanClaim_insolvent(uint64 _collateral, uint64 _protected) public {
+    function test_incentiveDistribution_everyoneCanClaim_insolvent_long_fuzz(uint64 _collateral, uint64 _protected) public {
         _incentiveDistribution_everyoneCanClaim(_collateral, _protected, false);
     }
 
@@ -1412,14 +1426,15 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_defaultingIsProRata_badDebt -vv
     */
-    function test_incentiveDistribution_defaultingIsProRata_badDebt(uint64 _collateral, uint64 _protected) public {
+    function test_incentiveDistribution_defaultingIsProRata_badDebt_fuzz(uint64 _collateral, uint64 _protected) public {
         _incentiveDistribution_defaultingIsProRata(_collateral, _protected, true);
     }
 
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_defaultingIsProRata_insolvent -vv
+    locally: 10s
     */
-    function test_incentiveDistribution_defaultingIsProRata_insolvent(uint64 _collateral, uint64 _protected) public {
+    function test_incentiveDistribution_defaultingIsProRata_insolvent_fuzz(uint64 _collateral, uint64 _protected) public {
         _incentiveDistribution_defaultingIsProRata(_collateral, _protected, false);
     }
 
@@ -1504,8 +1519,9 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
 
     /*
     FOUNDRY_PROFILE=core_test forge test --ffi --mt test_incentiveDistribution_twoRewardsReceivers -vv
+    locally: 40s
     */
-    function test_incentiveDistribution_twoRewardsReceivers(uint64 _collateral, uint64 _protected) public {
+    function test_incentiveDistribution_twoRewardsReceivers_long_fuzz(uint64 _collateral, uint64 _protected) public {
         // (uint64 _collateral, uint64 _protected) = (27125091, 30817190);
         vm.assume(uint256(_collateral) + _protected > 0);
 

@@ -257,8 +257,12 @@ jobs:
         strategy:
             matrix:
                 match-test: [
-                    DefaultingLiquidationBorrowable0Test,
-                    DefaultingLiquidationBorrowable1Test,
+                    DefaultingLiquidationBorrowable0Test --mt long_fuzz,
+                    DefaultingLiquidationBorrowable0Test --mt fuzz100 --fuzz-runs 100,
+                    DefaultingLiquidationBorrowable0Test --nmt "long_fuzz,fuzz100",
+                    DefaultingLiquidationBorrowable1Test --mt long_fuzz,
+                    DefaultingLiquidationBorrowable1Test --mt fuzz100 --fuzz-runs 100,
+                    DefaultingLiquidationBorrowable1Test --nmt "long_fuzz,fuzz100",
                     DefaultingLiquidation --nmc DefaultingLiquidationBorrowable
                ]
 
