@@ -59,7 +59,7 @@ abstract contract PartialLiquidationByDefaulting is IPartialLiquidationByDefault
     /// @inheritdoc IPartialLiquidationByDefaulting
     // solhint-disable-next-line function-max-lines, code-complexity
     function liquidationCallByDefaulting(address _borrower)
-        public
+        external
         virtual
         nonReentrant
         onlyAllowedOrPublic
