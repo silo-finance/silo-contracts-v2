@@ -3,8 +3,6 @@ pragma solidity 0.8.28;
 
 import {CommonDeploy} from "./_CommonDeploy.sol";
 
-import {InterestRateModelV2FactoryDeploy} from "./InterestRateModelV2FactoryDeploy.s.sol";
-import {InterestRateModelV2Deploy} from "./InterestRateModelV2Deploy.s.sol";
 import {SiloHookV1Deploy} from "./SiloHookV1Deploy.s.sol";
 import {SiloHookV2Deploy} from "./SiloHookV2Deploy.s.sol";
 import {SiloDeployerDeploy} from "./SiloDeployerDeploy.s.sol";
@@ -24,9 +22,6 @@ import {DKinkIRMFactoryDeploy} from "silo-core/deploy/DKinkIRMFactoryDeploy.s.so
  */
 contract MainnetDeploy is CommonDeploy {
     function run() public {
-        InterestRateModelV2FactoryDeploy interestRateModelV2ConfigFactoryDeploy =
-            new InterestRateModelV2FactoryDeploy();
-        InterestRateModelV2Deploy interestRateModelV2Deploy = new InterestRateModelV2Deploy();
         SiloHookV1Deploy siloHookV1Deploy = new SiloHookV1Deploy();
         SiloHookV2Deploy siloHookV2Deploy = new SiloHookV2Deploy();
         SiloDeployerDeploy siloDeployerDeploy = new SiloDeployerDeploy();
@@ -43,9 +38,7 @@ contract MainnetDeploy is CommonDeploy {
         // TODO this way will deploy factory multiple times, the fix is inside 
         // https://github.com/silo-finance/silo-contracts-v2/pull/1649
         _deploySiloFactory();
-        interestRateModelV2ConfigFactoryDeploy.run();
         dkinkIRMFactoryDeploy.run();
-        interestRateModelV2Deploy.run();
         siloHookV1Deploy.run();
         siloHookV2Deploy.run();
         siloDeployerDeploy.run();
