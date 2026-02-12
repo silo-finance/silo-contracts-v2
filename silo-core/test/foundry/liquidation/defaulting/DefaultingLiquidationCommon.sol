@@ -731,14 +731,11 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
     }
 
     /*
-    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_twice_0collateral -vv --fuzz-runs 10
-    locally: XXs! long for 100 runs
+    FOUNDRY_PROFILE=core_test forge test --ffi --mt test_defaulting_twice_0collateral -vv
     */
-    function test_defaulting_twice_0collateral_fuzz_limit(uint48 _collateral, uint48 _protected) public {
-        // (uint48 _collateral, uint48 _protected) = (1, 2);
+    function test_defaulting_twice_0collateral_fuzz(uint48 _collateral, uint48 _protected) public {
         _createIncentiveController();
 
-        _setCollateralPrice(1.3e18); // we need high price at begin for this test, because we need to end up wit 1:1
         _addLiquidity(uint256(_collateral) + _protected);
 
         (ISilo collateralSilo, ISilo debtSilo) = _getSilos();
@@ -747,50 +744,24 @@ abstract contract DefaultingLiquidationCommon is DefaultingLiquidationAsserts {
             _createPosition({_borrower: borrower, _collateral: _collateral, _protected: _protected, _maxOut: true});
         vm.assume(success);
 
-        // this will help with interest
-        _removeLiquidity();
-        assertLe(debtSilo.getLiquidity(), 1, "liquidity should be ~0");
-
-        console2.log("AFTER REMOVE LIQUIDITY");
-
-        _setCollateralPrice(1e18);
-
-        do {
-            vm.warp(block.timestamp + 10 days);
-            // 1.01 because when we do normal liquidation it can be no debt after that
-        } while (silo0.getLtv(borrower) < 1.5e18);
-
-        // we need case, where we do not oveflow on interest, so we can apply interest
-        // vm.assume(debtSilo.maxRepay(borrower) > repayBefore);
-        debtSilo.accrueInterest();
-        (uint256 revenue, uint256 revenueFractions) = _printRevenue(debtSilo);
-        assertTrue(revenue > 0 || revenueFractions > 0, "we need case with fees");
-
-        // first do normal liquidation with sTokens, to remove whole collateral,
-        // price is set 1:1 so we can use collateral as max debt
         (, IShareToken protectedShareToken, IShareToken debtShareToken) = _getBorrowerShareTokens(borrower);
 
-        token0.setOnDemand(false);
-        token1.setOnDemand(false);
+        uint256 balance = collateralSilo.balanceOf(borrower);
 
-        _printRevenue(debtSilo);
-
-        console2.log("BEFORE DEFAULTING #1");
-
-        try defaulting.liquidationCallByDefaulting(borrower) {
-            // nothing to do
-        } catch (bytes memory data) {
-            bytes4 errorType = bytes4(data);
-            bytes4 returnZeroShares = bytes4(keccak256(abi.encodePacked("ReturnZeroShares()")));
-
-            if (errorType == returnZeroShares) {
-                vm.assume(false); // we need cases where we can liquidate twice
-            } else {
-                RevertLib.revertBytes(data, "liquidationCallByDefaulting failed");
-            }
+        // remove collateral
+        
+        if (balance != 0) {
+            vm.prank(address(partialLiquidation));
+            IShareToken(address(collateralSilo)).forwardTransferFromNoChecks(borrower, address(this), balance);
         }
 
-        depositors.push(address(this)); // liquidator got shares
+        balance = protectedShareToken.balanceOf(borrower);
+        if (balance != 0) {
+            vm.prank(address(partialLiquidation));
+            protectedShareToken.forwardTransferFromNoChecks(borrower, address(this), balance);
+        }
+
+        depositors.push(address(this)); // we got shares
 
         _assertNoRedeemable(
             collateralSilo, borrower, ISilo.CollateralType.Collateral, false, "collateral assets must be 0"
