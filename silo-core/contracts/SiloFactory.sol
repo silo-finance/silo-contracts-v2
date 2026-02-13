@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
+
 pragma solidity 0.8.28;
 
 import {Strings} from "openzeppelin5/utils/Strings.sol";
@@ -13,8 +14,9 @@ import {ISiloConfig, SiloConfig} from "./SiloConfig.sol";
 import {Hook} from "./lib/Hook.sol";
 import {Views} from "./lib/Views.sol";
 import {CloneDeterministic} from "./lib/CloneDeterministic.sol";
+import {IVersioned} from "./interfaces/IVersioned.sol";
 
-contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
+contract SiloFactory is ISiloFactory, ERC721, Ownable2Step, IVersioned {
     /// @dev max fee is 50%, 1e18 == 100%
     uint256 public constant MAX_FEE = 0.5e18;
 
@@ -123,6 +125,9 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             address(silo1),
             address(_siloConfig)
         );
+
+        _emitEventAboutSiloContracts(_siloConfig, silo0);
+        _emitEventAboutSiloContracts(_siloConfig, silo1);
     }
 
     /// @inheritdoc ISiloFactory
@@ -205,6 +210,11 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
         return Views.validateSiloInitData(_initData, _daoFeeRange, maxDeployerFee, maxFlashloanFee, maxLiquidationFee);
     }
 
+    /// @inheritdoc IVersioned
+    function VERSION() external pure virtual returns (string memory) { // solhint-disable-line func-name-mixedcase
+        return "SiloFactory 4.0.0";
+    }
+
     /// @inheritdoc ERC721
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         _requireOwned(tokenId);
@@ -215,6 +225,15 @@ contract SiloFactory is ISiloFactory, ERC721, Ownable2Step {
             "/",
             Strings.toHexString(idToSiloConfig[tokenId])
         );
+    }
+
+    function _emitEventAboutSiloContracts(ISiloConfig _siloConfig, ISilo _silo) internal virtual {
+        (
+            address protectedShareToken, address collateralShareToken, address debtShareToken
+        ) = _siloConfig.getShareTokens(address(_silo));
+
+        emit NewSiloShareTokens(protectedShareToken, collateralShareToken, debtShareToken);
+        emit NewSiloHook(address(_silo), IShareToken(address(_silo)).hookReceiver());
     }
 
     function _createValidateSilosAndShareTokens(
